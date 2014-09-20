@@ -8,6 +8,10 @@ handlers:
 - url: /
   static_dir: doc
 
+- url: /
+  static_files: doc/index.html
+  upload: doc/index.html
+
 skip_files:
 - ^(.*/)?#.*#$
 - ^(.*/)?.*~$
