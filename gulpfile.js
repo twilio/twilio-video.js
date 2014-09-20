@@ -1,14 +1,16 @@
 var gulp = require('gulp');
-var gutil = require('gutil');
+var runSequence = require('run-sequence');
 
-gulp.task('default', ['test', 'build'], function(){});
-
-gulp.task('watch', function() {
-  gulp.watch(['./lib/**', './test/**'], ['test', 'build']);
+gulp.task('default', function(done) {
+  runSequence('clean', ['test', 'lint'], 'build', done);
 });
 
-// Building
-// ========
+gulp.task('watch', function() {
+  gulp.watch(['./lib/**', './test/**'], ['test', 'lint', 'build']);
+});
+
+// Build
+// =====
 
 function getBundleName(minified) {
   var minified = typeof minified === 'undefined' ? false : minified;
@@ -26,41 +28,36 @@ var source = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
 
-gulp.task('build', function() {
-  var bundler = browserify({
-    entries: ['./lib/browser.js'],
-    debug: true
-  });
-  var bundler = function() {
+var bundler = browserify({
+  entries: ['./lib/browser.js'],
+  debug: true
+});
+
+function build(bundler) {
+  return function() {
     return bundler
       .bundle()
-      .on('error', gutil.log)
-      .pipe(source(getBundlerName()))
+      .pipe(source(getBundleName()))
       .pipe(buffer())
       .pipe(sourcemaps.init({ loadMaps: true }))
         // Add transformation tasks to the pipeline here.
         .pipe(uglify())
-      .pipe(sourcemaps.write('./'))*/
+      .pipe(sourcemaps.write('./'))
       .pipe(gulp.dest('./dist/'));
   };
+}
+
+gulp.task('build', ['clean-dist'], function() {
+  return build(bundler)();
 });
 
 var watchify = require('watchify');
 
 gulp.task('watch-build', function() {
-  var bundler = browserify({
-    entries: ['./lib/browser.js'],
-    debug: true
-  });
-  bundler = watchify(bundler, watchify.args);
-  bundler.on('update', rebundle);
-  function rebundle() {
-    return bundler.bundle()
-      .on('error', gutil.log)
-      .pipe(source(getBundlerName()))
-      .pipe(gulp.dest('./dist/'));
-  }
-  return rebundle();
+  watchifiedBundler = watchify(bundler, watchify.args);
+  var rebuild = build(watchifiedBundler);
+  watchifiedBundler.on('update', rebuild);
+  return rebuild();
 });
 
 // Test
@@ -68,7 +65,7 @@ gulp.task('watch-build', function() {
 
 var mocha = require('gulp-mocha');
 
-gulp.task('test', ['unit-test', 'functional-test'], function(){});
+gulp.task('test', ['unit-test', 'functional-test']);
 
 gulp.task('watch-test', function() {
   gulp.watch(['./lib/**', './test/**'], ['test']);
@@ -84,8 +81,7 @@ gulp.task('unit-test', function() {
       globals: {
         assert: require('assert')
       }
-    }))
-    .on('error', gutil.log);
+    }));
 });
 
 gulp.task('watch-unit-test', function() {
@@ -103,7 +99,6 @@ gulp.task('functional-test', function() {
         assert: require('assert')
       }
     }))
-    .on('error', gutil.log);
 });
 
 gulp.task('watch-functional-test', function() {
@@ -113,5 +108,65 @@ gulp.task('watch-functional-test', function() {
 // Lint
 // ====
 
+var jshint = require('gulp-jshint');
+var stylish = require('jshint-stylish');
+
 gulp.task('lint', function() {
+  return gulp.src('./lib/**.js')
+    .pipe(jshint())
+    .pipe(jshint.reporter(stylish))
+    .pipe(jshint.reporter('fail'));
+});
+
+// Doc
+// ===
+
+// JSDoc
+// -----
+
+var jsdoc = require('gulp-jsdoc');
+var template = require('jaguarjs-jsdoc');
+
+gulp.task('doc', function() {
+  return gulp.src('./lib/**.js')
+    .pipe(jsdoc('./doc/'));
+});
+
+// Publish
+// -------
+
+var spawn = require('child_process').spawn;
+
+gulp.task('publish-doc', ['doc'], function(callback) {
+  function done(error) {
+    if (callback) {
+      callback(error);
+      callback = null;
+    }
+  }
+  var update = spawn('appcfg.py',
+                     'update . --oauth2'.split(' '),
+                     { stdio: 'inherit' });
+  update.on('error', done);
+  update.on('close', function(code) {
+    if (code) {
+      done(new Error('child process exited with code ' + code));
+    }
+    done();
+  });
+});
+
+// Clean
+// =====
+
+var del = require('del');
+
+gulp.task('clean', ['clean-dist', 'clean-doc']);
+
+gulp.task('clean-dist', function(done) {
+  del(['./dist/'], done);
+});
+
+gulp.task('clean-doc', function(done) {
+  del(['./doc/'], done);
 });

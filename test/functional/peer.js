@@ -1,12 +1,16 @@
-var Peer = require('../../src/peer');
-var PeerSession = require('../../src/session/peersession');
-var PSTNSession = require('../../src/session/pstnsession');
-var SIPSession = require('../../src/session/sipsession');
-var TwiMLSession = require('../../src/session/twimlsession');
+var Peer = require('../../lib/peer');
+var PeerSession = require('../../lib/session/peersession');
+var PSTNSession = require('../../lib/session/pstnsession');
+var SIPSession = require('../../lib/session/sipsession');
+var TwiMLSession = require('../../lib/session/twimlsession');
 
-var server = require('../server');
+var server = null;
 
 describe('Peer', function() {
+
+  before(function() {
+    server = require('../server');
+  });
 
   it('constructor accepts callback to be called once registered', function(done) {
     var peer = new Peer('ws://127.0.0.1:8080', 'mark', done);
@@ -54,6 +58,10 @@ describe('Peer', function() {
         done();
       });
     });
+  });
+
+  after(function() {
+    server.close();
   });
 
 });
