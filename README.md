@@ -41,8 +41,8 @@ Testing
 
 Unit and functional tests are defined in
 
-- `./test/unit/'
-- `./test/functional/'
+- `./test/unit/`
+- `./test/functional/`
 
 Unit tests can be run with
 
@@ -71,7 +71,7 @@ You can generate docs using
 $ gulp doc
 ```
 
-And you can publish these to [simple-signaling.appspot.com](simple-signaling.appspot.com)
+And you can publish these to [simple-signaling.appspot.com](//simple-signaling.appspot.com)
 with
 
 ```
