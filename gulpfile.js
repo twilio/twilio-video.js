@@ -114,7 +114,8 @@ var stylish = require('jshint-stylish');
 gulp.task('lint', function() {
   return gulp.src('./lib/**.js')
     .pipe(jshint({
-      evil: true
+      evil: true,
+      laxbreak: true
     }))
     .pipe(jshint.reporter(stylish))
     .pipe(jshint.reporter('fail'));
