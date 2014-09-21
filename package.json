@@ -30,6 +30,7 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0",
     "watchify": "^1.0.2",
+    "wrtc": "https://github.com/markandrus/node-webrtc/archive/getStats.tar.gz",
     "ws": "0.4.31"
   },
   "engines": {

@@ -60,6 +60,44 @@ describe('Peer', function() {
     });
   });
 
+  it('call works', function(done) {
+    var peer = new Peer('ws://127.0.0.1:8080', 'mark', function(error) {
+      if (error) {
+        return done(error);
+      }
+      peer.call('twiml1.cheerful-owl.twil.io', function(error, session) {
+        if (error) {
+          return done(error);
+        }
+        if (!(session instanceof TwiMLSession)) {
+          return done(new Error('Session is not an instance of TwiMLSession'));
+        }
+        done();
+      });
+    });
+  });
+
+  it('call accepts constraints', function(done) {
+    var constraints = {
+      audio: true,
+      video: false
+    };
+    var peer = new Peer('ws://127.0.0.1:8080', 'mark', function(error) {
+      if (error) {
+        return done(error);
+      }
+      peer.call('twiml1.cheerful-owl.twil.io', constraints, function(error, session) {
+        if (error) {
+          return done(error);
+        }
+        if (!(session instanceof TwiMLSession)) {
+          return done(new Error('Session is not an instance of TwiMLSession'));
+        }
+        done();
+      });
+    });
+  });
+
   after(function() {
     server.close();
   });
