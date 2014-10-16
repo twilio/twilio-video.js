@@ -40,5 +40,8 @@
   "private": true,
   "scripts": {
     "test": "gulp test"
+  },
+  "dependencies": {
+    "sip.js": "^0.6.2"
   }
 }
