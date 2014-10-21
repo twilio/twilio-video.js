@@ -1,0 +1,11 @@
+--- sip.js	2014-07-08 12:01:40.000000000 -0700
++++ sip.js	2014-07-11 13:58:53.000000000 -0700
+@@ -7229,7 +7229,7 @@
+   setDescription: {writable: true, value: function setDescription (sdp, onSuccess, onFailure) {
+     var rawDescription = {
+       type: this.hasOffer('local') ? 'answer' : 'offer',
+-      sdp: sdp
++      sdp: sdp.replace(/UDP\/TLS\/RTP\/SAVPF/, 'RTP/SAVPF')
+     };
+ 
+     this.emit('setDescription', rawDescription);

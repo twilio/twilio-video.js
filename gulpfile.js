@@ -19,6 +19,19 @@ function getBundleName(minified) {
   return name + '.' + version + '.' + (minified ? 'min.' : '') + 'js';
 };
 
+// Patch
+// -----
+
+var shell = require('gulp-shell');
+
+var patches = [
+  'patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true',
+  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true',
+  'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
+];
+
+gulp.task('patch', shell.task(patches));
+
 // Browserify
 // ----------
 
@@ -91,14 +104,23 @@ gulp.task('watch-unit-test', function() {
 // Functional
 // ----------
 
-gulp.task('functional-test', function() {
-  return gulp.src(['test/functional/*.js'], { read: false })
-    .pipe(mocha({
-      reporter: 'spec',
-      globals: {
-        assert: require('assert')
-      }
-    }))
+var getVars = require('./test/environment');
+
+gulp.task('functional-test', function(callback) {
+  getVars.then(function(vars) {
+    for (var name in vars) {
+      var value = vars[name];
+      process.env[name] = value;
+    }
+    gulp.src(['test/functional/*.js'], { read: false })
+      .pipe(mocha({
+        reporter: 'spec',
+        globals: {
+          assert: require('assert')
+        }
+      }))
+      .pipe(callback);
+  });
 });
 
 gulp.task('watch-functional-test', function() {
