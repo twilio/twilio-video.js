@@ -5,10 +5,11 @@ global.WebSocket = require('ws');
 var assert = require('assert');
 var twilio = require('twilio');
 
-var IncomingCall = require('../../lib/incomingcall');
-var OutgoingCall = require('../../lib/outgoingcall');
-var Peer = require('../../lib/peer2');
-var SIPTransportFactory = require('../../lib/siptransport').SIPTransportFactory;
+var calls = require('../../lib/calls');
+var IncomingCall = calls.IncomingCall;
+var OutgoingCall = calls.OutgoingCall;
+var Peer = require('../../lib/peer');
+var SipUAFactory = require('../../lib/signaling/sip');
 
 var ACCOUNT_SID = process.env.ACCOUNT_SID || 'AC123';
 var API_HOST = process.env.API_HOST;
@@ -26,7 +27,7 @@ describe('Peer', function() {
   this.timeout(0);
 
   beforeEach(function() {
-    transportFactory = SIPTransportFactory.getInstance(options);
+    transportFactory = SipUAFactory.getInstance(options);
     peer = new Peer();
   });
 

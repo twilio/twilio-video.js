@@ -23,15 +23,13 @@ function getVar(friendlyName, name) {
  * @returns {Promise<object>}
  */
 function getVars(pairs) {
-  var names = pairs.map(function(pair) { return pair[1]; });
-  var gotVars = Q([]);
   return pairs.reduce(function(result, pair) {
     return result.then(function(object) {
       var friendlyName = pair[0];
       var name = pair[1];
       return getVar(friendlyName, name).then(function(value) {
         object[name] = value;
-        return object;
+        return Q(object);
       });
     });
   }, Q({}));

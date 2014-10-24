@@ -13,10 +13,9 @@ gulp.task('watch', function() {
 // =====
 
 function getBundleName(minified) {
-  var minified = typeof minified === 'undefined' ? false : minified;
   var name = require('./package.json').name;
   var version = require('./package.json').version;
-  return name + '.' + version + '.' + (minified ? 'min.' : '') + 'js';
+  return name + '.' + version + '.' + (!!minified ? 'min.' : '') + 'js';
 };
 
 // Patch
@@ -42,7 +41,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var uglify = require('gulp-uglify');
 
 var bundler = browserify({
-  entries: ['./lib/browser.js'],
+  entries: ['./browser/index.js'],
   debug: true
 });
 
@@ -69,6 +68,42 @@ var watchify = require('watchify');
 gulp.task('watch-build', function() {
   watchifiedBundler = watchify(bundler, watchify.args);
   var rebuild = build(watchifiedBundler);
+  watchifiedBundler.on('update', rebuild);
+  return rebuild();
+});
+
+// ### twilio.js 1.2 Adapter
+
+var adapterBundler = browserify({
+  entries: ['./browser/1.2-adapter.js'],
+  debug: true
+});
+
+function getAdapterBundleName(minified) {
+  return 'twilio.' + (!!minified ? 'min.' : '') + 'js';
+};
+
+function buildAdapter(bundler) {
+  return function() {
+    return bundler
+      .bundle()
+      .pipe(source(getAdapterBundleName()))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+        // Add transformation tasks to the pipeline here.
+        // .pipe(uglify())
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('./dist/twiliojs/1.2/'));
+  };
+}
+
+gulp.task('build-adapter', function() {
+  return buildAdapter(adapterBundler)();
+});
+
+gulp.task('watch-build-adapter', function() {
+  watchifiedBundler = watchify(adapterBundler, watchify.args);
+  var rebuild = buildAdapter(watchifiedBundler);
   watchifiedBundler.on('update', rebuild);
   return rebuild();
 });
@@ -137,7 +172,11 @@ gulp.task('lint', function() {
   return gulp.src('./lib/**.js')
     .pipe(jshint({
       evil: true,
-      laxbreak: true
+      // globalstrict: true,
+      laxbreak: true,
+      node: true,
+      strict: true,
+      sub: true
     }))
     .pipe(jshint.reporter(stylish))
     .pipe(jshint.reporter('fail'));
@@ -153,7 +192,7 @@ var jsdoc = require('gulp-jsdoc');
 var template = require('jaguarjs-jsdoc');
 
 gulp.task('doc', function() {
-  return gulp.src('./lib/**.js')
+  return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
     .pipe(jsdoc('./doc/'));
 });
 
@@ -162,7 +201,7 @@ gulp.task('doc', function() {
 
 var spawn = require('child_process').spawn;
 
-gulp.task('publish-doc', ['doc'], function(callback) {
+gulp.task('publish', ['doc'], function(callback) {
   function done(error) {
     if (callback) {
       callback(error);
@@ -170,7 +209,7 @@ gulp.task('publish-doc', ['doc'], function(callback) {
     }
   }
   var update = spawn('appcfg.py',
-                     'update . --oauth2'.split(' '),
+                     'update www --oauth2'.split(' '),
                      { stdio: 'inherit' });
   update.on('error', done);
   update.on('close', function(code) {

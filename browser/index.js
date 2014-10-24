@@ -1,4 +1,6 @@
-var Peer = require('./peer');
+'use strict';
+
+var Peer = require('../lib/peer');
 
 /**
  * The {@link Twilio} namespace exposes {@link Peer}.

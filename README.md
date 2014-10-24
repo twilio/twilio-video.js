@@ -36,6 +36,17 @@ $ gulp build
 The resulting file is minified and paired with a source map,
 `./dist/twilio-simple-signaling.${VERSION}.js.map`.
 
+`gulp build` also builds the twilio.js 1.2 adapter (see below).
+
+### twilio.js 1.2 Adapter
+
+This project also includes a twilio.js 1.2 compatible wrapper around the new
+`Peer` and `Call` objects. To build this separately, run
+
+```
+$ gulp build-adapter
+```
+
 Testing
 -------
 
