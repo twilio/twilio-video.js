@@ -1,8 +1,8 @@
 application: simple-signaling
-version: 2
+version: 3
 runtime: python27
 api_version: 1
-threadsafe: yes
+threadsafe: true
 
 # index files
 handlers:
@@ -16,9 +16,9 @@ handlers:
   upload: index.html
 
 # For folders without trailing slashes - ideally a 301 redirect
-- url: /([^\.]+)([^/])
-  static_files: \1\2/index.html
-  upload: (.+)/index.html
+# - url: /([^\.]+)([^/])
+#   static_files: \1\2/index.html
+#   upload: (.+)/index.html
 
 # Redirect Everything else
 - url: /(.+)
