@@ -139,9 +139,8 @@ gulp.task('watch-unit-test', function() {
 // Functional
 // ----------
 
-var getVars = require('./test/environment');
-
 gulp.task('functional-test', function(callback) {
+  var getVars = require('./test/environment');
   getVars.then(function(vars) {
     for (var name in vars) {
       var value = vars[name];
