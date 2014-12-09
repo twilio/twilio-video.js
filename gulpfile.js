@@ -2,11 +2,11 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 
 gulp.task('default', function(done) {
-  runSequence('clean', ['test', 'lint'], ['doc', 'build'], done);
+  runSequence('clean', 'lint', 'test', 'build', 'doc', done);
 });
 
 gulp.task('watch', function() {
-  gulp.watch(['./lib/**', './test/**'], ['test', 'lint', 'build']);
+  gulp.watch(['./lib/**', './test/**'], ['lint', 'test', 'build']);
 });
 
 // Build
@@ -113,7 +113,9 @@ gulp.task('watch-build-adapter', function() {
 
 var mocha = require('gulp-mocha');
 
-gulp.task('test', ['unit-test', 'functional-test']);
+gulp.task('test', function() {
+  runSequence('unit-test', 'functional-test');
+});
 
 gulp.task('watch-test', function() {
   gulp.watch(['./lib/**', './test/**'], ['test']);
@@ -174,6 +176,10 @@ gulp.task('lint', function() {
       // globalstrict: true,
       laxbreak: true,
       node: true,
+      predef: [
+        'atob',
+        'btoa'
+      ],
       strict: true,
       sub: true
     }))

@@ -8,7 +8,7 @@ var twilio = require('twilio');
 var calls = require('../../lib/calls');
 var IncomingCall = calls.IncomingCall;
 var OutgoingCall = calls.OutgoingCall;
-var Peer = require('../../lib/peer');
+var Endpoint = require('../../lib/endpoint');
 var SipUAFactory = require('../../lib/signaling/sip');
 
 var ACCOUNT_SID = process.env.ACCOUNT_SID || 'AC123';
@@ -20,15 +20,15 @@ var WS_SERVER = process.env.WS_SERVER;
 
 var options = { 'debug': DEBUG, 'wsServer': WS_SERVER };
 var transportFactory = null;
-var peer = null;
+var endpoint = null;
 
-describe('Peer', function() {
+describe('Endpoint', function() {
 
   this.timeout(0);
 
   beforeEach(function() {
     transportFactory = SipUAFactory.getInstance(options);
-    peer = new Peer();
+    endpoint = new Endpoint();
   });
 
   afterEach(function() {
@@ -41,44 +41,44 @@ describe('Peer', function() {
   });
 
   it('#auth with invalid capability token throws error', function() {
-    assert.throws(peer.auth.bind(peer, 'xyz'));
+    assert.throws(endpoint.auth.bind(endpoint, 'xyz'));
   });
 
   it('#auth with valid capability token works', function() {
     var token = makeOutgoingCapabilityToken();
-    peer.auth(token);
-    assert.equal(token, peer.capabilityToken.capabilityTokenString);
+    endpoint.auth(token);
+    assert.equal(token, endpoint.capabilityToken.capabilityTokenString);
   });
 
   it('#auth with incoming capability token triggers REGISTER', function(done) {
     var token = makeIncomingCapabilityToken('foo');
-    peer.auth(token);
-    peer.once('registered', done);
-    peer.once('error', done);
+    endpoint.auth(token);
+    endpoint.once('registered', done);
+    endpoint.once('error', done);
   });
 
   it('#call fails without outgoing capability', function() {
-    assert.throws(peer.call.bind(peer, 'beta'));
-    assert.equal(0, peer.calls.length);
+    assert.throws(endpoint.call.bind(endpoint, 'beta'));
+    assert.equal(0, endpoint.calls.length);
   });
 
   it('#call works with outgoing capability', function() {
-    peer.auth(makeOutgoingCapabilityToken());
-    var call = peer.call('beta');
+    endpoint.auth(makeOutgoingCapabilityToken());
+    var call = endpoint.call('beta');
     assert(call instanceof OutgoingCall);
-    assert.equal(1, peer.calls.length);
+    assert.equal(1, endpoint.calls.length);
     call.cancel();
-    assert.equal(0, peer.calls.length);
+    assert.equal(0, endpoint.calls.length);
   });
 
   it('"incoming" raised on incoming call', function(done) {
     var clientName = makeClientName(); 
-    peer.auth(makeIncomingCapabilityToken(clientName));
-    peer.once('error', done);
+    endpoint.auth(makeIncomingCapabilityToken(clientName));
+    endpoint.once('error', done);
 
     // Once we've registered, trigger an outbound-api call and save its SID.
     var callSid = null;
-    peer.once('registered', function() {
+    endpoint.once('registered', function() {
       var rest = new twilio.RestClient(ACCOUNT_SID, AUTH_TOKEN, { host: API_HOST });
       rest.makeCall({
         from: '+16024925066',
@@ -92,12 +92,12 @@ describe('Peer', function() {
     });
 
     // When "incoming" is raised, reject the call and compare its SID.
-    peer.once('incoming', function(call) {
+    endpoint.once('incoming', function(call) {
       try {
         assert(call instanceof IncomingCall);
         assert.equal(callSid, call.sid);
         call.reject();
-        assert.equal(0, peer.calls.length);
+        assert.equal(0, endpoint.calls.length);
       } catch (error) {
         return done(error);
       }
@@ -107,12 +107,12 @@ describe('Peer', function() {
 
   it('IncomingCall#accept updates .calls', function(done) {
     var clientName = makeClientName();
-    peer.auth(makeIncomingCapabilityToken(clientName));
-    peer.once('error', done);
+    endpoint.auth(makeIncomingCapabilityToken(clientName));
+    endpoint.once('error', done);
 
     // Once we've registered, trigger an outbound-api call and save its SID.
     var callSid = null;
-    peer.once('registered', function() {
+    endpoint.once('registered', function() {
       var rest = new twilio.RestClient(ACCOUNT_SID, AUTH_TOKEN, { host: API_HOST });
       rest.makeCall({
         from: '+16024925066',
@@ -126,15 +126,15 @@ describe('Peer', function() {
     });
 
     // When "incoming" is raised, accept the call and compare its SID.
-    peer.once('incoming', function(call) {
+    endpoint.once('incoming', function(call) {
       try {
         assert(call instanceof IncomingCall);
-        assert.equal(0, peer.calls.length);
+        assert.equal(0, endpoint.calls.length);
         assert.equal(callSid, call.sid);
         call.accept();
-        assert.equal(1, peer.calls.length);
+        assert.equal(1, endpoint.calls.length);
         call.hangup();
-        assert.equal(0, peer.calls.length);
+        assert.equal(0, endpoint.calls.length);
       } catch (error) {
         return done(error);
       }

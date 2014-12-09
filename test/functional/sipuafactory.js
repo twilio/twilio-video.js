@@ -8,8 +8,8 @@ var DEBUG = process.env.DEBUG === 'true';
 var WS_SERVER = process.env.WS_SERVER;
 
 var options = { 'debug': DEBUG, 'wsServer': WS_SERVER };
-var peer1 = { name: 'peer1', uuid: '456' };
-var peer2 = { name: 'peer2', uuid: '789' };
+var endpoint1 = { name: 'endpoint1', uuid: '456' };
+var endpoint2 = { name: 'endpoint2', uuid: '789' };
 var sipua1 = null;
 var sipua2 = null;
 var sipUAFactory = null;
@@ -27,47 +27,47 @@ describe('SipUAFactory', function() {
     sipua2 = null;
   });
 
-  it('#addPeer works', function() {
-    assert(!sipUAFactory.hasPeer(peer1));
-    assert(!sipUAFactory.hasPeer(peer2));
-    assert.equal(0, sipUAFactory.peers.length);
+  it('#addEndpoint works', function() {
+    assert(!sipUAFactory.hasEndpoint(endpoint1));
+    assert(!sipUAFactory.hasEndpoint(endpoint2));
+    assert.equal(0, sipUAFactory.endpoints.length);
     assert.equal(0, sipUAFactory.uas.length);
-    sipua1 = sipUAFactory.addPeer(peer1);
-    sipua2 = sipUAFactory.addPeer(peer2);
-    assert(sipUAFactory.hasPeer(peer1));
-    assert(sipUAFactory.hasPeer(peer2));
-    assert.equal(2, sipUAFactory.peers.length);
+    sipua1 = sipUAFactory.addEndpoint(endpoint1);
+    sipua2 = sipUAFactory.addEndpoint(endpoint2);
+    assert(sipUAFactory.hasEndpoint(endpoint1));
+    assert(sipUAFactory.hasEndpoint(endpoint2));
+    assert.equal(2, sipUAFactory.endpoints.length);
     assert.equal(2, sipUAFactory.uas.length);
   });
 
-  it('#addPeer throws error if Peer added twice', function() {
-    assert(!sipUAFactory.hasPeer(peer1));
-    assert.equal(0, sipUAFactory.peers.length);
+  it('#addEndpoint throws error if Endpoint added twice', function() {
+    assert(!sipUAFactory.hasEndpoint(endpoint1));
+    assert.equal(0, sipUAFactory.endpoints.length);
     assert.equal(0, sipUAFactory.uas.length);
-    sipua1 = sipUAFactory.addPeer(peer1);
-    assert.throws(sipUAFactory.addPeer.bind(null, peer1));
-    assert(sipUAFactory.hasPeer(peer1));
-    assert.equal(1, sipUAFactory.peers.length);
+    sipua1 = sipUAFactory.addEndpoint(endpoint1);
+    assert.throws(sipUAFactory.addEndpoint.bind(null, endpoint1));
+    assert(sipUAFactory.hasEndpoint(endpoint1));
+    assert.equal(1, sipUAFactory.endpoints.length);
     assert.equal(1, sipUAFactory.uas.length);
   });
 
-  it('#removePeer works', function() {
-    assert(!sipUAFactory.hasPeer(peer1));
-    assert(!sipUAFactory.hasPeer(peer2));
-    assert.equal(0, sipUAFactory.peers.length);
+  it('#removeEndpoint works', function() {
+    assert(!sipUAFactory.hasEndpoint(endpoint1));
+    assert(!sipUAFactory.hasEndpoint(endpoint2));
+    assert.equal(0, sipUAFactory.endpoints.length);
     assert.equal(0, sipUAFactory.uas.length);
-    sipua1 = sipUAFactory.addPeer(peer1);
-    sipua2 = sipUAFactory.addPeer(peer2);
-    sipUAFactory.removePeer(peer1);
-    sipUAFactory.removePeer(peer2);
-    assert(!sipUAFactory.hasPeer(peer1));
-    assert(!sipUAFactory.hasPeer(peer2));
-    assert.equal(0, sipUAFactory.peers.length);
+    sipua1 = sipUAFactory.addEndpoint(endpoint1);
+    sipua2 = sipUAFactory.addEndpoint(endpoint2);
+    sipUAFactory.removeEndpoint(endpoint1);
+    sipUAFactory.removeEndpoint(endpoint2);
+    assert(!sipUAFactory.hasEndpoint(endpoint1));
+    assert(!sipUAFactory.hasEndpoint(endpoint2));
+    assert.equal(0, sipUAFactory.endpoints.length);
     assert.equal(0, sipUAFactory.uas.length);
   });
 
-  it('#removePeer returns null for non-existant Peer', function() {
-    assert.equal(null, sipUAFactory.removePeer(peer1));
+  it('#removeEndpoint returns null for non-existant Endpoint', function() {
+    assert.equal(null, sipUAFactory.removeEndpoint(endpoint1));
   });
 
 });

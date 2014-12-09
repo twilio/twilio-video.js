@@ -1,17 +1,17 @@
 'use strict';
 
-var Peer = require('../lib/peer');
+var Endpoint = require('../lib/endpoint');
 
 /**
- * The {@link Twilio} namespace exposes {@link Peer}.
+ * The {@link Twilio} namespace exposes {@link Endpoint}.
  * @class
- * @property {Peer} Peer
+ * @property {Endpoint} Endpoint
  */
 function Twilio() {
   if (!(this instanceof Twilio)) {
     return new Twilio();
   }
-  this.Peer = Peer;
+  this.Endpoint = Endpoint;
   return this;
 }
 

@@ -14,17 +14,17 @@ function isConnect(request) {
   return request.type === CONNECT ? CONNECT : null;
 }
 
-var PEER = 'peer';
+var endpoint = 'endpoint';
 var TWIML = 'twiml';
 
 var targets = {
-  'peer1@cheerful-owl.twil.io': PEER,
+  'endpoint1@cheerful-owl.twil.io': endpoint,
   'twiml1.cheerful-owl.twil.io': TWIML
 }
 
 function handleConnect(request) {
   var domain = request.domain;
-  var peer = request.peer;
+  var endpoint = request.endpoint;
   var target = request.target && request.target.name;
   var type = targets[target];
   if (!type) {
@@ -33,7 +33,7 @@ function handleConnect(request) {
   return {
     domain: domain,
     type: CONNECT,
-    peer: peer,
+    endpoint: endpoint,
     target: {
       name: target,
       type: type
@@ -47,11 +47,11 @@ function isRegister(request) {
 
 function handleRegister(request) {
   var domain = request.domain;
-  var peer = request.peer;
+  var endpoint = request.endpoint;
   return {
     domain: domain,
     type: REGISTER,
-    peer: peer
+    endpoint: endpoint
   };
 }
 
