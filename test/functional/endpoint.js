@@ -5,9 +5,9 @@ global.WebSocket = require('ws');
 var assert = require('assert');
 var twilio = require('twilio');
 
-var calls = require('../../lib/calls');
-var IncomingCall = calls.IncomingCall;
-var OutgoingCall = calls.OutgoingCall;
+var session = require('../../lib/session');
+var IncomingSession = session.IncomingSession;
+var OutgoingSession = session.OutgoingSession;
 var Endpoint = require('../../lib/endpoint');
 var SipUAFactory = require('../../lib/signaling/sip');
 
@@ -59,16 +59,16 @@ describe('Endpoint', function() {
 
   it('#call fails without outgoing capability', function() {
     assert.throws(endpoint.call.bind(endpoint, 'beta'));
-    assert.equal(0, endpoint.calls.length);
+    assert.equal(0, endpoint.sessions.length);
   });
 
   it('#call works with outgoing capability', function() {
     endpoint.auth(makeOutgoingCapabilityToken());
-    var call = endpoint.call('beta');
-    assert(call instanceof OutgoingCall);
-    assert.equal(1, endpoint.calls.length);
-    call.cancel();
-    assert.equal(0, endpoint.calls.length);
+    var session = endpoint.call('beta');
+    assert(session instanceof OutgoingSession);
+    assert.equal(1, endpoint.sessions.length);
+    session.cancel();
+    assert.equal(0, endpoint.sessions.length);
   });
 
   it('"incoming" raised on incoming call', function(done) {
@@ -77,27 +77,27 @@ describe('Endpoint', function() {
     endpoint.once('error', done);
 
     // Once we've registered, trigger an outbound-api call and save its SID.
-    var callSid = null;
+    var sessionsid = null;
     endpoint.once('registered', function() {
       var rest = new twilio.RestClient(ACCOUNT_SID, AUTH_TOKEN, { host: API_HOST });
-      rest.makeCall({
+      rest.makeSession({
         from: '+16024925066',
         to: 'client:' + clientName,
         ApplicationSid: APP_SID
       }, function(error, call) {
         if (error)
           return done(error);
-        callSid = call.sid;
+        sessionsid = call.sid;
       });
     });
 
     // When "incoming" is raised, reject the call and compare its SID.
-    endpoint.once('incoming', function(call) {
+    endpoint.once('incoming', function(session) {
       try {
-        assert(call instanceof IncomingCall);
-        assert.equal(callSid, call.sid);
-        call.reject();
-        assert.equal(0, endpoint.calls.length);
+        assert(session instanceof IncomingSession);
+        assert.equal(sessionsid, session.sid);
+        session.reject();
+        assert.equal(0, endpoint.sessions.length);
       } catch (error) {
         return done(error);
       }
@@ -105,36 +105,36 @@ describe('Endpoint', function() {
     });
   });
 
-  it('IncomingCall#accept updates .calls', function(done) {
+  it('IncomingSession#accept updates .sessions', function(done) {
     var clientName = makeClientName();
     endpoint.auth(makeIncomingCapabilityToken(clientName));
     endpoint.once('error', done);
 
     // Once we've registered, trigger an outbound-api call and save its SID.
-    var callSid = null;
+    var sessionsid = null;
     endpoint.once('registered', function() {
       var rest = new twilio.RestClient(ACCOUNT_SID, AUTH_TOKEN, { host: API_HOST });
-      rest.makeCall({
+      rest.makeSession({
         from: '+16024925066',
         to: 'client:' + clientName,
         ApplicationSid: APP_SID
-      }, function(error, call) {
+      }, function(error, session) {
         if (error)
           return done(error);
-        callSid = call.sid;
+        sessionsid = session.sid;
       });
     });
 
     // When "incoming" is raised, accept the call and compare its SID.
-    endpoint.once('incoming', function(call) {
+    endpoint.once('incoming', function(session) {
       try {
-        assert(call instanceof IncomingCall);
-        assert.equal(0, endpoint.calls.length);
-        assert.equal(callSid, call.sid);
-        call.accept();
-        assert.equal(1, endpoint.calls.length);
-        call.hangup();
-        assert.equal(0, endpoint.calls.length);
+        assert(session instanceof IncomingSession);
+        assert.equal(0, endpoint.sessions.length);
+        assert.equal(sessionsid, session.sid);
+        session.accept();
+        assert.equal(1, endpoint.sessions.length);
+        session.hangup();
+        assert.equal(0, endpoint.sessions.length);
       } catch (error) {
         return done(error);
       }
