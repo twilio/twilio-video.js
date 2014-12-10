@@ -45,6 +45,8 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "es6-map": "^0.1.1",
+    "es6-set": "^0.1.1",
     "sip.js": "^0.6.2"
   }
 }

@@ -178,7 +178,9 @@ gulp.task('lint', function() {
       node: true,
       predef: [
         'atob',
-        'btoa'
+        'btoa',
+        '-Map',
+        '-Set'
       ],
       strict: true,
       sub: true
