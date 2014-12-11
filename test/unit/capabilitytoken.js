@@ -1,8 +1,8 @@
 var exec = require('child_process').exec;
 var twilio = require('twilio');
 
-var CapabilityToken = require('../../lib/capabilitytoken')
-var constants = require('../../lib/constants');
+var CapabilityToken = require('../../lib/token/capabilitytoken')
+var constants = require('../../lib/util/constants');
 var util = require('../../lib/util');
 
 var ACCOUNT_SID = 'AC123';

@@ -72,42 +72,6 @@ gulp.task('watch-build', function() {
   return rebuild();
 });
 
-// ### twilio.js 1.2 Adapter
-
-var adapterBundler = browserify({
-  entries: ['./browser/1.2-adapter.js'],
-  debug: true
-});
-
-function getAdapterBundleName(minified) {
-  return 'twilio.' + (!!minified ? 'min.' : '') + 'js';
-};
-
-function buildAdapter(bundler) {
-  return function() {
-    return bundler
-      .bundle()
-      .pipe(source(getAdapterBundleName()))
-      .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
-        // Add transformation tasks to the pipeline here.
-        // .pipe(uglify())
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest('./dist/twiliojs/1.2/'));
-  };
-}
-
-gulp.task('build-adapter', function() {
-  return buildAdapter(adapterBundler)();
-});
-
-gulp.task('watch-build-adapter', function() {
-  watchifiedBundler = watchify(adapterBundler, watchify.args);
-  var rebuild = buildAdapter(watchifiedBundler);
-  watchifiedBundler.on('update', rebuild);
-  return rebuild();
-});
-
 // Test
 // ====
 
@@ -199,8 +163,13 @@ var jsdoc = require('gulp-jsdoc');
 var template = require('jaguarjs-jsdoc');
 
 gulp.task('doc', function() {
-  return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
-    .pipe(jsdoc('./doc/'));
+  // return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
+  return gulp.src([
+      './lib/endpoint.js',
+      './lib/participant.js',
+      './lib/session.js',
+      './lib/token/index.js'
+    ]).pipe(jsdoc('./doc/'));
 });
 
 // Publish
