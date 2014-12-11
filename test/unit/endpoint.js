@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var Q = require('q');
 
 var Endpoint = require('../../lib/endpoint');
 var getToken = require('../token');
@@ -15,6 +16,7 @@ describe('Endpoint', function() {
   var apiHost = process.env.API_HOST;
 
   var token = null;
+  var endpoint = null;
 
   before(function(done) {
     getToken(accountSid, authToken, address, apiHost)
@@ -24,68 +26,98 @@ describe('Endpoint', function() {
       }, done);
   });
 
+  beforeEach(function() {
+    endpoint = new Endpoint(token);
+  });
+
   it('constructor works', function() {
-    var endpoint = new Endpoint(token);
     assert.equal(address, endpoint.address);
   });
 
   it('#createSession works inviting self', function() {
-    var endpoint = new Endpoint(token);
-    var session = endpoint.createSession(endpoint);
-    assert(session instanceof Session);
-    if (!session.participants.has(endpoint)) {
-      throw new Error('Endpoint missing from Session');
-    }
+    var session = createSession(endpoint, endpoint);
+    assert.equal(1, session.participants.size);
   });
 
   it('#createSession works inviting address', function() {
-    var endpoint = new Endpoint(token);
-    var session = endpoint.createSession('bob@twil.io');
-    assert(session instanceof Session);
-    var participantAddresses = getParticipantAddresses(session);
-    if (!participantAddresses.has('bob@twil.io')) {
-      throw new Error('Participant "bob@twil.io" missing from Session');
-    }
+    var address = 'bob@twil.io';
+    createSession(endpoint, address);
   });
 
   it('#createSession works inviting addresses', function() {
-    var endpoint = new Endpoint(token);
-    var addresses = ['bob@twil.io', 'charles@twil.io'];
-    var session = endpoint.createSession(addresses);
-    assert(session instanceof Session);
-    var participantAddresses = getParticipantAddresses(session);
-    addresses.forEach(function(address) {
-      if (!participantAddresses.has(address)) {
-        throw new Error('Participant "' + address + '" missing from Session');
-      }
-    });
+    var addresses = [
+      'bob@twil.io',
+      'charles@twil.io'
+    ];
+    createSession(endpoint, addresses);
+  });
+
+  it('#createSession works inviting Endpoint', function() {
+    var endpoint2 = new Endpoint(token);
+    createSession(endpoint, endpoint2);
+  });
+
+  it('#createSession works inviting Endpoints', function() {
+    var endpoints = [
+      new Endpoint(token),
+      new Endpoint(token)
+    ];
+    createSession(endpoint, endpoints);
   });
 
   it('#createSession works inviting Participant', function() {
-    var endpoint = new Endpoint(token);
     var participant = new Participant('bob@twil.io');
-    var session = endpoint.createSession(participant);
-    assert(session instanceof Session);
-    if (!session.participants.has(participant)) {
-      throw new Error('Participant "bob@twil.io" missing from Session');
-    }
+    createSession(endpoint, participant);
   });
 
   it('#createSession works inviting Participants', function() {
-    var endpoint = new Endpoint(token);
     var participants = [
       new Participant('bob@twil.io'),
       new Participant('charles@twil.io')
     ];
+    createSession(endpoint, participants);
+  });
+
+  it('#createSession works inviting addresses, Endpoints, & Participants',
+    function() {
+      var participants = [
+        new Endpoint(token),
+        'bob@twil.io',
+        new Participant('charles@twil.io')
+      ];
+      var session = createSession(endpoint, participants);
+      assert.equal(4, session.participants.size);
+    }
+  );
+
+  it('#createSession works without participants', function() {
+    var session = createSession(endpoint, []);
+    assert.equal(1, session.participants.size);
+  });
+
+  function createSession(endpoint, participants) {
     var session = endpoint.createSession(participants);
     assert(session instanceof Session);
+    sessionContainsParticipants(session, participants);
+    return session;
+  }
+
+  function sessionContainsParticipants(session, participants) {
+    var participants = session.participants;
+    var participantAddresses = getParticipantAddresses(session);
     participants.forEach(function(participant) {
-      if (!session.participants.has(participant)) {
+      var present;
+      if (typeof participant === 'string') {
+        present = participantAddresses.has(participant);
+      } else {
+        present = participants.has(participant);
+      }
+      if (!present) {
         throw new Error('Participant "' + participant.address +
           '" missing from Session');
       }
     });
-  });
+  }
 
   function getParticipantAddresses(session) {
     return session.participants.map(function(participant) {
