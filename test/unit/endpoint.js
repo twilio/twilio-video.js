@@ -44,54 +44,6 @@ describe('Endpoint', function() {
     allParticipantsJoined(session, address, done);
   });
 
-  function allParticipantsLeft(session, participants, done) {
-    var finished = false;
-    var n = (typeof participants === 'string' ||
-             participants instanceof Participant) ? 1 : participants.length;
-    session.on('participantLeft', function(participant) {
-      try {
-        sessionDoesNotContainParticipants(session, participant);
-      } catch (e) {
-        if (!finished) {
-          finished = true;
-          return done(e);
-        }
-      }
-      if (--n === 0) {
-        try {
-          sessionDoesNotContainParticipants(session, participants);
-        } catch (e) {
-          return done(e);
-        }
-        done();
-      }
-    });
-  }
-
-  function allParticipantsJoined(session, participants, done) {
-    var finished = false;
-    var n = (typeof participants === 'string' ||
-             participants instanceof Participant) ? 1 : participants.length;
-    session.on('participantJoined', function(participant) {
-      try {
-        sessionContainsParticipants(session, participant);
-      } catch (e) {
-        if (!finished) {
-          finished = true;
-          return done(e);
-        }
-      }
-      if (--n === 0) {
-        try {
-          sessionContainsParticipants(session, participants);
-        } catch (e) {
-          return done(e);
-        }
-        done();
-      }
-    });
-  }
-
   it('#createSession works inviting addresses', function(done) {
     var addresses = [
       'bob@twil.io',
@@ -155,10 +107,64 @@ describe('Endpoint', function() {
   });
 
   it('#leave works', function(done) {
-    var session = createSession(endpoint, session);
-    endpoint.leave(session);
-    allParticipantsLeft(session, endpoint, done);
+    var endpoint2 = new Endpoint(token);
+    var session = createSession(endpoint, endpoint2);
+    allParticipantsJoined(session, endpoint2, function(error) {
+      if (error) {
+        return done(error);
+      }
+      endpoint.leave(session);
+      allParticipantsLeft(session, endpoint, done);
+    });
   });
+
+  function allParticipantsLeft(session, participants, done) {
+    var finished = false;
+    var n = (typeof participants === 'string' ||
+             participants instanceof Participant) ? 1 : participants.length;
+    session.on('participantLeft', function(participant) {
+      try {
+        sessionDoesNotContainParticipants(session, participant);
+      } catch (e) {
+        if (!finished) {
+          finished = true;
+          return done(e);
+        }
+      }
+      if (--n === 0) {
+        try {
+          sessionDoesNotContainParticipants(session, participants);
+        } catch (e) {
+          return done(e);
+        }
+        done();
+      }
+    });
+  }
+
+  function allParticipantsJoined(session, participants, done) {
+    var finished = false;
+    var n = (typeof participants === 'string' ||
+             participants instanceof Participant) ? 1 : participants.length;
+    session.on('participantJoined', function(participant) {
+      try {
+        sessionContainsParticipants(session, participant);
+      } catch (e) {
+        if (!finished) {
+          finished = true;
+          return done(e);
+        }
+      }
+      if (--n === 0) {
+        try {
+          sessionContainsParticipants(session, participants);
+        } catch (e) {
+          return done(e);
+        }
+        done();
+      }
+    });
+  }
 
   function createSession(endpoint, participants) {
     var session = endpoint.createSession(participants);
