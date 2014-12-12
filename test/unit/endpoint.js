@@ -9,6 +9,8 @@ var Session = require('../../lib/session');
 
 describe('Endpoint', function() {
 
+  this.timeout(0);
+
   var accountSid = process.env.ACCOUNT_SID;
   var authToken = process.env.AUTH_TOKEN;
   var address = 'alice@twil.io';
