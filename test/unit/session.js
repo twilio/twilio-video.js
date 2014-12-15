@@ -2,10 +2,17 @@
 
 var assert = require('assert');
 
-var Endpoint = require('../../lib/endpoint');
+var _Endpoint = require('../../lib/endpoint');
 var getToken = require('../token').getExpiredToken;
 var Participant = require('../../lib/participant');
 var Session = require('../../lib/session');
+var UserAgent = require('../../lib/sip/useragent');
+
+function Endpoint(token, options) {
+  options = options || {};
+  options['userAgent'] = UserAgent;
+  return new _Endpoint(token, options);
+}
 
 describe('Session', function() {
 

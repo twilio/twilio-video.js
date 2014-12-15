@@ -78,7 +78,7 @@ gulp.task('watch-build', function() {
 var mocha = require('gulp-mocha');
 
 gulp.task('test', function() {
-  runSequence('unit-test', 'functional-test');
+  runSequence('unit-test');
 });
 
 gulp.task('watch-test', function() {
@@ -100,31 +100,6 @@ gulp.task('unit-test', function() {
 
 gulp.task('watch-unit-test', function() {
   gulp.watch(['lib/**', 'test/unit/*.js'], ['unit-test']);
-});
-
-// Functional
-// ----------
-
-gulp.task('functional-test', function(callback) {
-  var getVars = require('./test/environment');
-  getVars.then(function(vars) {
-    for (var name in vars) {
-      var value = vars[name];
-      process.env[name] = value;
-    }
-    gulp.src(['test/functional/*.js'], { read: false })
-      .pipe(mocha({
-        reporter: 'spec',
-        globals: {
-          assert: require('assert')
-        }
-      }))
-      .pipe(callback);
-  });
-});
-
-gulp.task('watch-functional-test', function() {
-  gulp.watch(['lib/**', 'test/functional/*.js'], ['functional-test']);
 });
 
 // Lint
