@@ -25,8 +25,8 @@ var shell = require('gulp-shell');
 
 var patches = [
   'patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true',
-  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true',
-  'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
+  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true'
+  // 'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
 ];
 
 gulp.task('patch', shell.task(patches));
@@ -78,7 +78,7 @@ gulp.task('watch-build', function() {
 var mocha = require('gulp-mocha');
 
 gulp.task('test', function() {
-  runSequence('unit-test');
+  runSequence('unit-test', 'integration-test');
 });
 
 gulp.task('watch-test', function() {
@@ -98,8 +98,17 @@ gulp.task('unit-test', function() {
     }));
 });
 
-gulp.task('watch-unit-test', function() {
-  gulp.watch(['lib/**', 'test/unit/*.js'], ['unit-test']);
+// Integration
+// -----------
+
+gulp.task('integration-test', function() {
+  return gulp.src(['test/integration/*.js'], { read: false })
+    .pipe(mocha({
+      reporter: 'spec',
+      globals: {
+        assert: require('assert')
+      }
+    }));
 });
 
 // Lint
