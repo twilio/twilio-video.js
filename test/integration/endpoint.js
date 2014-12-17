@@ -12,7 +12,7 @@ mockWebRTC(global);
 
 function Endpoint(token, options) {
   options = options || {};
-  options['debug'] = false;
+  options['debug'] = process.env.DEBUG === 'true';
   // options['wsServer'] = 'ws://54.173.170.237:5082';
   options['register'] = false;
   options['registrarServer'] = 'twil.io';
