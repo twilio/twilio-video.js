@@ -3,7 +3,7 @@ Signal
 
 This is the development repository for the Signal JavaScript library.
 
-[Click here to review the API.](//simple-signaling.appspot.com/)
+[Click here to review the API.](//simple-signaling.appspot.com/doc/Endpoint.html)
 
 This project is based around [gulp](//gulpjs.com/). As such, there are a number
 of tasks you may wish to run. But first, make sure you've installed everything.
