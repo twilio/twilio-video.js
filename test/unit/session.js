@@ -4,14 +4,22 @@ var assert = require('assert');
 
 var _Endpoint = require('../../lib/endpoint');
 var getToken = require('../token').getExpiredToken;
+var Log = require('../../lib/util/log');
 var Participant = require('../../lib/participant');
-var Session = require('../../lib/session');
+var _Session = require('../../lib/session');
 var UserAgent = require('../../lib/sip/useragent');
 
 function Endpoint(token, options) {
   options = options || {};
   options['userAgent'] = UserAgent;
+  options['logLevel'] = Log.ERROR;
   return new _Endpoint(token, options);
+}
+
+function Session(creator, participants, render, options) {
+  options = options || {};
+  options['logLevel'] = Log.ERROR;
+  return new _Session(creator, participants, render, options);
 }
 
 describe('Session', function() {
@@ -40,7 +48,7 @@ describe('Session', function() {
 
   afterEach(function() {
     Participant._reset();
-    Session._reset();
+    _Session._reset();
   });
 
   it('constructor works', function() {
