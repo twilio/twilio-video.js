@@ -4,6 +4,7 @@ var assert = require('assert');
 
 var _Endpoint = require('../../lib/endpoint');
 var getToken = require('../token').getLiveToken;
+var Log = require('../../lib/util/log');
 var mockWebRTC = require('../mockwebrtc.js');
 var Q = require('q');
 
@@ -13,6 +14,7 @@ function Endpoint(token, options) {
   options = options || {};
   options['debug'] = false;
   options['register'] = false;
+  options['logLevel'] = Log.ERROR;
   return new _Endpoint(token, options);
 }
 
