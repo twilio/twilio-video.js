@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var Q = require('q');
 
 var _Endpoint = require('../../lib/endpoint');
 var getToken = require('../token').getExpiredToken;
@@ -37,19 +38,24 @@ describe('Endpoint', function() {
     });
   });
 
+  afterEach(function() {
+    Participant._reset();
+    Session._reset();
+  });
+
   it('constructor works', function() {
     assert.equal(address, endpoint.address);
   });
 
-  it('#createSession works inviting self', function() {
+  it('#createSession works inviting self', function(done) {
     var session = createSession(endpoint, endpoint);
-    assert.equal(1, session.participants.size);
+    allParticipantsJoined(session, endpoint, done);
   });
 
   it('#createSession works inviting address', function(done) {
     var address = 'bob@twil.io';
     var session = createSession(endpoint, address);
-    allParticipantsJoined(session, address, done);
+    allParticipantsJoined(session, [endpoint, address], done);
   });
 
   it('#createSession works inviting addresses', function(done) {
@@ -58,28 +64,37 @@ describe('Endpoint', function() {
       'charles@twil.io'
     ];
     var session = createSession(endpoint, addresses);
-    allParticipantsJoined(session, addresses, done);
+    allParticipantsJoined(session, [endpoint].concat(addresses), done);
   });
 
   it('#createSession works inviting Endpoint', function(done) {
-    var endpoint2 = new Endpoint(token);
-    var session = createSession(endpoint, endpoint2);
-    allParticipantsJoined(session, endpoint2, done);
+    getToken(accountSid, authToken, 'bob@twil.io', apiHost)
+      .done(function(token) {
+        var endpoint2 = new Endpoint(token);
+        var session = createSession(endpoint, endpoint2);
+        allParticipantsJoined(session, [endpoint, endpoint2], done);
+      }, done);
   });
 
   it('#createSession works inviting Endpoints', function(done) {
-    var endpoints = [
-      new Endpoint(token),
-      new Endpoint(token)
+    // TODO(mroberts): Need to test using Endpoints with the same name.
+    var tokens = [
+      getToken(accountSid, authToken, 'bob@twil.io', apiHost),
+      getToken(accountSid, authToken, 'charles@twil.io', apiHost)
     ];
-    var session = createSession(endpoint, endpoints);
-    allParticipantsJoined(session, endpoints, done);
+    Q.all(tokens).done(function(tokens) {
+      var endpoints = tokens.map(function(token) {
+        return new Endpoint(token);
+      });
+      var session = createSession(endpoint, endpoints);
+      allParticipantsJoined(session, [endpoint].concat(endpoints), done);
+    }, done);
   });
 
   it('#createSession works inviting Participant', function(done) {
     var participant = new Participant('bob@twil.io');
     var session = createSession(endpoint, participant);
-    allParticipantsJoined(session, participant, done);
+    allParticipantsJoined(session, [endpoint, participant], done);
   });
 
   it('#createSession works inviting Participants', function(done) {
@@ -88,7 +103,7 @@ describe('Endpoint', function() {
       new Participant('charles@twil.io')
     ];
     var session = createSession(endpoint, participants);
-    allParticipantsJoined(session, participants, done);
+    allParticipantsJoined(session, [endpoint].concat(participants), done);
   });
 
   it('#createSession works inviting addresses, Endpoints, & Participants',
@@ -99,13 +114,13 @@ describe('Endpoint', function() {
         new Participant('charles@twil.io')
       ];
       var session = createSession(endpoint, participants);
-      allParticipantsJoined(session, participants, done);
+      allParticipantsJoined(session, [endpoint].concat(participants), done);
     }
   );
 
-  it('#createSession works without participants', function() {
+  it('#createSession works without participants', function(done) {
     var session = createSession(endpoint, []);
-    assert.equal(1, session.participants.size);
+    allParticipantsJoined(session, endpoint, done);
   });
 
   it('#join works', function(done) {
@@ -117,7 +132,7 @@ describe('Endpoint', function() {
   it('#leave works', function(done) {
     var endpoint2 = new Endpoint(token);
     var session = createSession(endpoint, endpoint2);
-    allParticipantsJoined(session, endpoint2, function(error) {
+    allParticipantsJoined(session, [endpoint, endpoint2], function(error) {
       if (error) {
         return done(error);
       }

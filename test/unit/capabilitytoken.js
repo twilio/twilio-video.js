@@ -1,4 +1,3 @@
-var exec = require('child_process').exec;
 var twilio = require('twilio');
 
 var CapabilityToken = require('../../lib/token/capabilitytoken')

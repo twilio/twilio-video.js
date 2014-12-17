@@ -38,6 +38,11 @@ describe('Session', function() {
     session = new Session(creator);
   });
 
+  afterEach(function() {
+    Participant._reset();
+    Session._reset();
+  });
+
   it('constructor works', function() {
     // :-)
   });
