@@ -1,7 +1,7 @@
-Twilio Simple Signaling
-=======================
+Signal
+======
 
-This is the development repository for twilio-simple-signaling.
+This is the development repository for the Signal JavaScript library.
 
 [Click here to review the API.](//simple-signaling.appspot.com/)
 
@@ -26,7 +26,7 @@ Now, you can run `gulp` to automatically
 Building
 --------
 
-Run the following to build `./dist/twilio-simple-signaling.${VERSION}.js`.
+Run the following to build `./dist/twilio-signal.${VERSION}.js`.
 `${VERSION}` is read from `./package.json`.
 
 ```
@@ -116,10 +116,10 @@ function MyClass(param1, param2) {
 
   Object.defineProperties(this, {
     // Private
-    _foo: {
+    '_foo': {
       value: 'foo'
     },
-    _bar: {
+    '_bar': {
       get: function() {
         return bar;
       },
@@ -128,7 +128,7 @@ function MyClass(param1, param2) {
       }
     },
     // Public
-    bar: {
+    'bar': {
       get: function() {
         return bar;
       }
