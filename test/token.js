@@ -52,6 +52,7 @@ function withStunTurnToken(accountSid, authToken, address, stunTurnToken) {
   return stunTurnToken.then(function(stunTurnToken) {
     var capabilityToken = new twilio.Capability(accountSid, authToken);
     capabilityToken.allowClientIncoming(address);
+    capabilityToken.allowClientOutgoing('APbf44e584f6698872d0fafbdb7e738c5f');
     return JSON.stringify({
       capabilityToken: capabilityToken.generate(),
       stunTurnToken: stunTurnToken

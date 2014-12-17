@@ -13,7 +13,9 @@ mockWebRTC(global);
 function Endpoint(token, options) {
   options = options || {};
   options['debug'] = false;
+  // options['wsServer'] = 'ws://54.173.170.237:5082';
   options['register'] = false;
+  options['registrarServer'] = 'twil.io';
   options['logLevel'] = Log.ERROR;
   return new _Endpoint(token, options);
 }
