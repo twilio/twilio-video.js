@@ -126,13 +126,13 @@ describe('Endpoint', function() {
   it('#join works', function(done) {
     var session = new Session();
     endpoint.join(session);
-    allParticipantsJoined(session, endpoint, done);
+    allParticipantsJoined(Q(session), endpoint, done);
   });
 
   it('#leave works', function(done) {
     var endpoint2 = new Endpoint(token);
     var session = createSession(endpoint, endpoint2);
-    allParticipantsJoined(session, [endpoint, endpoint2], function(error) {
+    allParticipantsJoined(session, [endpoint, endpoint2], function(error, session) {
       if (error) {
         return done(error);
       }
@@ -166,32 +166,34 @@ describe('Endpoint', function() {
   }
 
   function allParticipantsJoined(session, participants, done) {
-    var finished = false;
-    var n = (typeof participants === 'string' ||
-             participants instanceof Participant) ? 1 : participants.length;
-    session.on('participantJoined', function(participant) {
-      try {
-        sessionContainsParticipants(session, participant);
-      } catch (e) {
-        if (!finished) {
-          finished = true;
-          return done(e);
-        }
-      }
-      if (--n === 0) {
+    session.done(function(session) {
+      var finished = false;
+      var n = (typeof participants === 'string' ||
+               participants instanceof Participant) ? 1 : participants.length;
+      session.on('participantJoined', function(participant) {
         try {
-          sessionContainsParticipants(session, participants);
+          sessionContainsParticipants(session, participant);
         } catch (e) {
-          return done(e);
+          if (!finished) {
+            finished = true;
+            return done(e);
+          }
         }
-        done();
-      }
-    });
+        if (--n === 0) {
+          try {
+            sessionContainsParticipants(session, participants);
+          } catch (e) {
+            return done(e);
+          }
+          done(null, session);
+        }
+      });
+    }, done);
   }
 
   function createSession(endpoint, participants) {
     var session = endpoint.createSession(participants);
-    assert(session instanceof Session);
+    // assert(session instanceof Session);
     // sessionContainsParticipants(session, participants);
     return session;
   }
