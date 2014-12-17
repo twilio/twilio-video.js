@@ -34,26 +34,15 @@ $ gulp build
 ```
 
 The resulting file is minified and paired with a source map,
-`./dist/twilio-simple-signaling.${VERSION}.js.map`.
-
-`gulp build` also builds the twilio.js 1.2 adapter (see below).
-
-### twilio.js 1.2 Adapter
-
-This project also includes a twilio.js 1.2 compatible wrapper around the new
-`Peer` and `Call` objects. To build this separately, run
-
-```
-$ gulp build-adapter
-```
+`./dist/twilio-signal.${VERSION}.js.map`.
 
 Testing
 -------
 
-Unit and functional tests are defined in
+Unit and integration tests are defined in
 
 - `./test/unit/`
-- `./test/functional/`
+- `./test/integration/`
 
 Unit tests can be run with
 
@@ -61,13 +50,13 @@ Unit tests can be run with
 $ gulp unit-test
 ```
 
-While functional tests can be run with
+While integration tests can be run with
 
 ```
-$ gulp functional-test
+$ gulp integration-test
 ```
 
-To run both unit and functional tests, use
+To run both unit and integration tests, use
 
 ```
 $ gulp test
@@ -146,7 +135,7 @@ function MyClass(param1, param2) {
     }
   });
 
-  return this;
+  return Object.freeze(this);
 }
 
 // Optionally inherit from EventEmitter (or some other class).
