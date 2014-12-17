@@ -34,26 +34,15 @@ $ gulp build
 ```
 
 The resulting file is minified and paired with a source map,
-`./dist/twilio-simple-signaling.${VERSION}.js.map`.
-
-`gulp build` also builds the twilio.js 1.2 adapter (see below).
-
-### twilio.js 1.2 Adapter
-
-This project also includes a twilio.js 1.2 compatible wrapper around the new
-`Peer` and `Call` objects. To build this separately, run
-
-```
-$ gulp build-adapter
-```
+`./dist/twilio-signal.${VERSION}.js.map`.
 
 Testing
 -------
 
-Unit and functional tests are defined in
+Unit and integration tests are defined in
 
 - `./test/unit/`
-- `./test/functional/`
+- `./test/integration/`
 
 Unit tests can be run with
 
@@ -61,13 +50,13 @@ Unit tests can be run with
 $ gulp unit-test
 ```
 
-While functional tests can be run with
+While integration tests can be run with
 
 ```
-$ gulp functional-test
+$ gulp integration-test
 ```
 
-To run both unit and functional tests, use
+To run both unit and integration tests, use
 
 ```
 $ gulp test
@@ -101,3 +90,69 @@ You can lint using
 ```
 $ gulp lint
 ```
+
+Contributing
+------------
+
+Classes should be formatted as follows:
+
+```javascript
+'use strict';  // All files should be strict-mode.
+
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
+
+function MyClass(param1, param2) {
+  // Unless your class can also be used as a mixin, we want to guard against
+  // accidental invocations without the `new` operator.
+  if (!(this instanceof MyClass)) {
+    return new MyClass(param1, param2);
+  }
+
+  // Optionally inherit from EventEmitter.
+  EventEmitter.call(this);
+
+  var bar = 'bar';
+
+  Object.defineProperties(this, {
+    // Private
+    _foo: {
+      value: 'foo'
+    },
+    _bar: {
+      get: function() {
+        return bar;
+      },
+      set: function(_bar) {
+        bar = _bar;
+      }
+    },
+    // Public
+    bar: {
+      get: function() {
+        return bar;
+      }
+    }
+  });
+
+  return Object.freeze(this);
+}
+
+// Optionally inherit from EventEmitter (or some other class).
+inherits(MyClass, EventEmitter);
+
+MyClass.someClassMethod = function someClassMethod() {
+  // Do something.
+};
+
+MyClass.prototype.someInstanceMethod = function someInstanceMethod() {
+  // Do something, preferrably returning `this` to support fluent-style.
+  return this;
+};
+
+module.exports = MyClass;
+```
+
+Notice how "private" variables are prefixed with an underscore. Additionally,
+the use of getters and setters on the private variable `_bar` but only a getter
+on `bar` allows us to control who can modify `bar`.

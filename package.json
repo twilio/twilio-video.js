@@ -1,7 +1,7 @@
 {
-  "name": "twilio-simple-signaling",
-  "title": "twilio-simple-signaling.js",
-  "description": "Twilio Simple Signaling",
+  "name": "twilio-signal",
+  "title": "Signal",
+  "description": "Signal",
   "version": "0.0.1",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
@@ -21,20 +21,16 @@
     "gulp-shell": "^0.2.10",
     "gulp-sourcemaps": "^1.2.2",
     "gulp-uglify": "^1.0.1",
-    "jaguarjs-jsdoc": "0.0.1",
     "jsdoc": "^3.3.0-alpha9",
     "jshint-stylish": "^1.0.0",
     "mocha": "^1.21.5",
     "promptly": "^0.2.0",
     "q": "^1.0.1",
     "run-sequence": "^0.3.7",
-    "sip.js": "~0.6.0",
     "twilio": "*",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.0.0",
-    "watchify": "^1.0.2",
-    "wrtc": "https://github.com/markandrus/node-webrtc/archive/getStats.tar.gz",
-    "ws": "0.4.31"
+    "watchify": "^1.0.2"
   },
   "engines": {
     "node": ">=0.8"
@@ -45,6 +41,9 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "sip.js": "^0.6.2"
+    "es6-map": "^0.1.1",
+    "es6-set": "^0.1.1",
+    "sip.js": "^0.6.4",
+    "ws": "^0.6.3"
   }
 }

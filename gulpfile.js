@@ -2,11 +2,11 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 
 gulp.task('default', function(done) {
-  runSequence('clean', ['test', 'lint'], ['doc', 'build'], done);
+  runSequence('clean', 'lint', 'test', 'build', 'doc', done);
 });
 
 gulp.task('watch', function() {
-  gulp.watch(['./lib/**', './test/**'], ['test', 'lint', 'build']);
+  gulp.watch(['./lib/**', './test/**'], ['lint', 'test', 'build']);
 });
 
 // Build
@@ -25,8 +25,8 @@ var shell = require('gulp-shell');
 
 var patches = [
   'patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true',
-  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true',
-  'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
+  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true'
+  // 'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
 ];
 
 gulp.task('patch', shell.task(patches));
@@ -72,48 +72,14 @@ gulp.task('watch-build', function() {
   return rebuild();
 });
 
-// ### twilio.js 1.2 Adapter
-
-var adapterBundler = browserify({
-  entries: ['./browser/1.2-adapter.js'],
-  debug: true
-});
-
-function getAdapterBundleName(minified) {
-  return 'twilio.' + (!!minified ? 'min.' : '') + 'js';
-};
-
-function buildAdapter(bundler) {
-  return function() {
-    return bundler
-      .bundle()
-      .pipe(source(getAdapterBundleName()))
-      .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
-        // Add transformation tasks to the pipeline here.
-        // .pipe(uglify())
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest('./dist/twiliojs/1.2/'));
-  };
-}
-
-gulp.task('build-adapter', function() {
-  return buildAdapter(adapterBundler)();
-});
-
-gulp.task('watch-build-adapter', function() {
-  watchifiedBundler = watchify(adapterBundler, watchify.args);
-  var rebuild = buildAdapter(watchifiedBundler);
-  watchifiedBundler.on('update', rebuild);
-  return rebuild();
-});
-
 // Test
 // ====
 
 var mocha = require('gulp-mocha');
 
-gulp.task('test', ['unit-test', 'functional-test']);
+gulp.task('test', function() {
+  runSequence('unit-test', 'integration-test');
+});
 
 gulp.task('watch-test', function() {
   gulp.watch(['./lib/**', './test/**'], ['test']);
@@ -132,33 +98,17 @@ gulp.task('unit-test', function() {
     }));
 });
 
-gulp.task('watch-unit-test', function() {
-  gulp.watch(['lib/**', 'test/unit/*.js'], ['unit-test']);
-});
+// Integration
+// -----------
 
-// Functional
-// ----------
-
-gulp.task('functional-test', function(callback) {
-  var getVars = require('./test/environment');
-  getVars.then(function(vars) {
-    for (var name in vars) {
-      var value = vars[name];
-      process.env[name] = value;
-    }
-    gulp.src(['test/functional/*.js'], { read: false })
-      .pipe(mocha({
-        reporter: 'spec',
-        globals: {
-          assert: require('assert')
-        }
-      }))
-      .pipe(callback);
-  });
-});
-
-gulp.task('watch-functional-test', function() {
-  gulp.watch(['lib/**', 'test/functional/*.js'], ['functional-test']);
+gulp.task('integration-test', function() {
+  return gulp.src(['test/integration/*.js'], { read: false })
+    .pipe(mocha({
+      reporter: 'spec',
+      globals: {
+        assert: require('assert')
+      }
+    }));
 });
 
 // Lint
@@ -174,6 +124,12 @@ gulp.task('lint', function() {
       // globalstrict: true,
       laxbreak: true,
       node: true,
+      predef: [
+        'atob',
+        'btoa',
+        '-Map',
+        '-Set'
+      ],
       strict: true,
       sub: true
     }))
@@ -191,8 +147,13 @@ var jsdoc = require('gulp-jsdoc');
 var template = require('jaguarjs-jsdoc');
 
 gulp.task('doc', function() {
-  return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
-    .pipe(jsdoc('./doc/'));
+  // return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
+  return gulp.src([
+      './lib/endpoint.js',
+      './lib/participant.js',
+      './lib/session.js',
+      './lib/token/index.js'
+    ]).pipe(jsdoc('./doc/'));
 });
 
 // Publish
