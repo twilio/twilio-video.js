@@ -18,7 +18,7 @@ $ npm install
 Now, you can run `gulp` to automatically
 
 - Clean
-- Run functional and unit tests
+- Run unit and integration tests
 - Lint using [JSHint](//github.com/jshint/jshint/)
 - Generate [JSDoc](//usejsdoc.org/) documentation
 - Build using [Browserify](http://browserify.org/) and [UglifyJS](https://github.com/mishoo/UglifyJS2), as well as generate [source maps](//docs.google.com/a/twilio.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k)
