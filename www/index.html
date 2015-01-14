@@ -1,0 +1,186 @@
+<!doctype html>
+<html>
+<head>
+<title>Twilio Client Dialer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/bootstrap.min.css">
+<style>
+body, html {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  overflow-y: hidden;
+  /*padding: 1em;*/
+}
+img {
+  padding-top: 1.25em;
+  padding-bottom: 1.5em;
+  display: block;
+  margin: 0 auto;
+}
+table {
+  width: 100%;
+  text-align: center;
+}
+table .btn {
+  width: 100%;
+  height: 4em;
+  border-radius: 0;
+}
+form button {
+  width: 100%;
+}
+form label {
+  position: relative;
+  top: -0.5em;
+}
+#table-top {
+  margin-top: 1.5em;
+}
+#table-top button {
+  border-bottom: 0;
+  border-right: 0;
+}
+#table-top-row-2 button, #table-top-row-3 button, #table-top-row-4 button {
+  border-radius: 0;
+}
+table button {
+  position: relative;
+}
+table button::after {
+  display: block;
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  bottom: 1em;
+  left: 0;
+  font-size: 10px;
+}
+#js-btn-2::after { content: "ABC"; } #js-btn-2 { padding-bottom: 1em; }
+#js-btn-3::after { content: "DEF"; } #js-btn-3 { padding-bottom: 1em; }
+#js-btn-4::after { content: "GHI"; } #js-btn-4 { padding-bottom: 1em; }
+#js-btn-5::after { content: "JKL"; } #js-btn-5 { padding-bottom: 1em; }
+#js-btn-6::after { content: "MNO"; } #js-btn-6 { padding-bottom: 1em; }
+#js-btn-7::after { content: "PQRS"; } #js-btn-7 { padding-bottom: 1em; }
+#js-btn-8::after { content: "TUV"; } #js-btn-8 { padding-bottom: 1em; }
+#js-btn-9::after { content: "WXYZ"; } #js-btn-9 { padding-bottom: 1em; }
+#js-btn-0::after { content: "+"; } #js-btn-0 { padding-bottom: 1em; }
+#js-btn-mute::after { content: "Audio"; } #js-btn-mute { padding-bottom: 1em; }
+#js-btn-pause::after { content: "Video"; } #js-btn-pause { padding-bottom: 1em; }
+#js-btn-1 {
+  border-radius: 4px 0 0 0;
+}
+#js-btn-3 {
+  border-radius: 0 4px 0 0;
+}
+#js-btn-3, #js-btn-6, #js-btn-9, #js-btn-pound {
+  border-right: 1px solid #ccc !important;
+}
+#js-btn-mute {
+  border-right: 0;
+  border-radius: 0 0 0 4px;
+}
+#js-btn-pause {
+  border-radius: 0 0 4px 0;
+}
+#table-bottom {
+  margin-bottom: 1.5em;
+}
+#table-bottom td {
+  width: 50%;
+}
+p {
+  text-align: center;
+}
+#left-panel {
+  width: 209px;
+  /*margin: 0 auto;*/
+  /*float: right;*/
+  height: 100%;
+  padding: 1em;
+  box-sizing: content-box;
+  background: white;
+  border-right: 1px solid #ddd;
+}
+.alert {
+  padding: 0;
+  border: 0;
+  background: 0;
+  margin: 0;
+  margin-top: 15px;
+}
+</style>
+<script src="dist/twilio-signal.0.0.1.js"></script>
+</head>
+<body>
+
+<!-- #left-panel -->
+<div id="left-panel">
+
+<div>
+  <img id="js-status-img" src="img/twilio41x41gray.png">
+  <p id="js-status-text">You are offline.</p>
+  <hr>
+</div>
+
+<div id="js-login-panel">
+  <form>
+    <div class="form-group" id="js-login-form-group">
+      <label for="js-login-value">Name</label>
+      <input type="text" class="form-control" id="js-login-value">
+    </div>
+    <button type="submit" class="btn btn-success" id="js-login-btn">Log In</button>
+  </form>
+  <div class="alert alert-danger hidden small" id="js-login-alert"></div>
+  <hr>
+</div>
+
+<div id="js-call-panel">
+  <form>
+    <div class="form-group">
+      <label for="js-call-value">Call</label>
+      <input type="text" class="form-control" id="js-call-value" disabled="true">
+    </div>
+    <div class="alert alert-danger hidden small" id="js-call-alert"></div>
+    <table id="table-top">
+      <tr id="table-top-row-1">
+        <td><button id="js-btn-1" class="btn btn-default js-btn" disabled="true">1</button></td>
+        <td><button id="js-btn-2" class="btn btn-default js-btn" disabled="true">2</button></td>
+        <td><button id="js-btn-3" class="btn btn-default js-btn" disabled="true">3</button></td>
+      </tr>
+      <tr id="table-top-row-2">
+        <td><button id="js-btn-4" class="btn btn-default js-btn" disabled="true">4</button></td>
+        <td><button id="js-btn-5" class="btn btn-default js-btn" disabled="true">5</button></td>
+        <td><button id="js-btn-6" class="btn btn-default js-btn" disabled="true">6</button></td>
+      </tr>
+      <tr id="table-top-row-3">
+        <td><button id="js-btn-7" class="btn btn-default js-btn" disabled="true">7</button></td>
+        <td><button id="js-btn-8" class="btn btn-default js-btn" disabled="true">8</button></td>
+        <td><button id="js-btn-9" class="btn btn-default js-btn" disabled="true">9</button></td>
+      </tr>
+      <tr id="table-top-row-4">
+        <td><button id="js-btn-star" class="btn btn-default js-btn" disabled="true">*</button></td>
+        <td><button id="js-btn-0" class="btn btn-default js-btn" disabled="true">0</button></td>
+        <td><button id="js-btn-pound" class="btn btn-default js-btn" disabled="true">#</button></td>
+      </tr>
+    </table>
+    <table id="table-middle">
+      <tr>
+        <td><button id="js-btn-call" class="btn btn-success js-btn" disabled="true">Call</button></td>
+      </tr>
+    </table>
+    <table id="table-bottom">
+      <tr>
+        <td><button id="js-btn-mute" class="btn btn-default js-btn" disabled="true">Mute</button></td>
+        <td><button id="js-btn-pause" class="btn btn-default js-btn" disabled="true">Pause</button></td>
+      </tr>
+    </table>
+  </form>
+</div>
+
+</div>
+<!--/#left-panel -->
+
+<script src="js/index.js"></script>
+</body>
+</html>

@@ -15,4 +15,4 @@ function Twilio() {
   return this;
 }
 
-module.exports = new Twilio();
+global.Twilio = module.exports = new Twilio();

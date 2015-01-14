@@ -1,34 +1,46 @@
 application: simple-signaling
-version: 3
+version: 4
 runtime: python27
 api_version: 1
 threadsafe: true
 
-# index files
 handlers:
-- url: /(.+)/
-  static_files: \1/index.html
-  upload: (.+)/index.html
-
-# site root
 - url: /
   static_files: index.html
   upload: index.html
 
-# For folders without trailing slashes - ideally a 301 redirect
-# - url: /([^\.]+)([^/])
-#   static_files: \1\2/index.html
-#   upload: (.+)/index.html
+- url: /index.html
+  static_files: index.html
+  upload: index.html
 
-# Redirect Everything else
-- url: /(.+)
-  static_files: \1
-  upload: (.+)
+- url: /css/bootstrap.min.css
+  static_files: css/bootstrap.min.css
+  upload: css/bootstrap.min.css
 
-# skip_files:
-# - ^(.*/)?#.*#$
-# - ^(.*/)?.*~$
-# - ^(.*/)?.*\.py[co]$
-# - ^(.*/)?.*/RCS/.*$
-# - ^(.*/)?\..*$
-# - ^([^doc]).*$
+- url: /img/twilio41x41.png
+  static_files: img/twilio41x41.png
+  upload: img/twilio41x41.png
+
+- url: /img/twilio41x41gray.png
+  static_files: img/twilio41x41gray.png
+  upload: img/twilio41x41gray.png
+
+- url: /js/index.js
+  static_files: js/index.js
+  upload: js/index.js
+
+- url: /js/twilio-signal.0.0.1.js
+  static_files: js/twilio-signal.0.0.1.js
+  upload: js/twilio-signal.0.0.1.js
+
+- url: /token
+  script: main.app
+
+skip_files:
+- ^(.*/)?#.*#$
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*/RCS/.*$
+- ^(.*/)?\..*$
+- twilio_credentials.json.example
+- venv
