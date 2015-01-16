@@ -106,6 +106,7 @@ function logIn(name, next) {
             callback(null, xhr.responseText);
           } catch (e) {
             callback(e.message);
+            throw e;
           }
           break;
         default:
@@ -121,10 +122,16 @@ function logIn(name, next) {
       return next(error);
     }
     var endpoint = new Twilio.Endpoint(token, {
-      'debug': 'true',
+      'debug': true,
+      'register': false,
       'registrarServer': 'twil.io'
+//      'registrarServer': 'twil.io'
     });
-    next(null, endpoint);
+    endpoint.register().done(function() {
+      next(null, endpoint);
+    }, function(error) {
+      next(error);
+    });
   }
 }
 

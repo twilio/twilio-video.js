@@ -1,4 +1,11 @@
+*.pyc
 dist
 doc
 node_modules
 out
+www/httplib2
+www/js/twilio-signal.*
+www/six.py
+www/twilio
+www/twilio_credentials.json
+www/venv

@@ -37,8 +37,8 @@ gulp.task('patch', shell.task(patches));
 var buffer = require('vinyl-buffer');
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
-var sourcemaps = require('gulp-sourcemaps');
-var uglify = require('gulp-uglify');
+/* var sourcemaps = require('gulp-sourcemaps');
+var uglify = require('gulp-uglify'); */
 
 var bundler = browserify({
   entries: ['./browser/index.js'],
@@ -51,10 +51,10 @@ function build(bundler) {
       .bundle()
       .pipe(source(getBundleName()))
       .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
+      /* .pipe(sourcemaps.init({ loadMaps: true }))
         // Add transformation tasks to the pipeline here.
         .pipe(uglify())
-      .pipe(sourcemaps.write('./'))
+      .pipe(sourcemaps.write('./')) */
       .pipe(gulp.dest('./dist/'));
   };
 }
@@ -78,7 +78,8 @@ gulp.task('watch-build', function() {
 var mocha = require('gulp-mocha');
 
 gulp.task('test', function() {
-  runSequence('unit-test', 'integration-test');
+  // runSequence('unit-test', 'integration-test');
+  runSequence('unit-test');
 });
 
 gulp.task('watch-test', function() {
@@ -144,7 +145,6 @@ gulp.task('lint', function() {
 // -----
 
 var jsdoc = require('gulp-jsdoc');
-var template = require('jaguarjs-jsdoc');
 
 gulp.task('doc', function() {
   // return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
