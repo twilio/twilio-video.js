@@ -5,10 +5,6 @@ gulp.task('default', function(done) {
   runSequence('clean', 'lint', 'test', 'build', 'doc', done);
 });
 
-gulp.task('watch', function() {
-  gulp.watch(['./lib/**', './test/**'], ['lint', 'test', 'build']);
-});
-
 // Build
 // =====
 
@@ -63,15 +59,6 @@ gulp.task('build', ['clean-dist'], function() {
   return build(bundler)();
 });
 
-var watchify = require('watchify');
-
-gulp.task('watch-build', function() {
-  watchifiedBundler = watchify(bundler, watchify.args);
-  var rebuild = build(watchifiedBundler);
-  watchifiedBundler.on('update', rebuild);
-  return rebuild();
-});
-
 // Test
 // ====
 
@@ -80,10 +67,6 @@ var mocha = require('gulp-mocha');
 gulp.task('test', function() {
   // runSequence('unit-test', 'integration-test');
   runSequence('unit-test');
-});
-
-gulp.task('watch-test', function() {
-  gulp.watch(['./lib/**', './test/**'], ['test']);
 });
 
 // Unit

@@ -29,13 +29,9 @@ handlers:
   static_files: js/index.js
   upload: js/index.js
 
-- url: /js/twilio-signal.0.0.1.js
-  static_files: js/twilio-signal.0.0.1.js
-  upload: js/twilio-signal.0.0.1.js
-
-- url: /js/twilio-signal.0.0.1.js.map
-  static_files: js/twilio-signal.0.0.1.js.map
-  upload: js/twilio-signal.0.0.1.js.map
+- url: /js/twilio-signal.js
+  static_files: js/twilio-signal.js
+  upload: js/twilio-signal.js
 
 - url: /token
   script: main.app

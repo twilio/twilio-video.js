@@ -3,92 +3,76 @@ Signal
 
 This is the development repository for the Signal JavaScript library.
 
-[Click here to review the API.](//simple-signaling.appspot.com/doc/Endpoint.html)
+You must have [Node](http://nodejs.org/) install to build and test this project.
 
-This project is based around [gulp](//gulpjs.com/). As such, there are a number
-of tasks you may wish to run. But first, make sure you've installed everything.
-
-Clone this repo, and then, from the project directory, run
-
-```
-$ npm install -g gulp
-$ npm install
-```
-
-Now, you can run `gulp` to automatically
-
-- Clean
-- Run unit and integration tests
-- Lint using [JSHint](//github.com/jshint/jshint/)
-- Generate [JSDoc](//usejsdoc.org/) documentation
-- Build using [Browserify](http://browserify.org/) and [UglifyJS](https://github.com/mishoo/UglifyJS2), as well as generate [source maps](//docs.google.com/a/twilio.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k)
+Try the demo at [simple-signaling.appspot.com](http://simple-signaling.appspot.com).
 
 Building
 --------
 
-Run the following to build `./dist/twilio-signal.${VERSION}.js`.
-`${VERSION}` is read from `./package.json`.
+Run `make` to build `dist/twilio-signal.${VERSION}.js`. `${VERSION}` is read from `package.json`.
 
 ```
-$ gulp build
+$ make
 ```
-
-The resulting file is minified and paired with a source map,
-`./dist/twilio-signal.${VERSION}.js.map`.
 
 Testing
 -------
 
-Unit and integration tests are defined in
+### Demo Application
 
-- `./test/unit/`
-- `./test/integration/`
+A demo application is included in `www` that allows you to place peer-to-peer calls. You can run it locally with
 
-Unit tests can be run with
+```
+$ make serve
+```
+
+This will prompt you to setup a `www/twilio_credentials.json` file including account SIDs and authentication tokens. These should _not_ be checked into this repository. Once running, you can navigate to [localhost:8080](http://localhost:8080) to test.
+
+This application also lives at [simple-signaling.appspot.com](http://simple-signaling.appspot.com). Once you have confirmed your changes work, you can push to Google App Engine with
+
+```
+$ make publish
+```
+
+### Unit & Integration Tests
+
+Unit and integration tests use [Mocha](http://mochajs.org/) and are defined in
+
+- `test/unit/`
+- `test/integration/`
+
+You can run both with
+
+```
+$ make test
+```
+
+Or, if you have [gulp](http://gulpjs.com/) installed, run
 
 ```
 $ gulp unit-test
-```
-
-While integration tests can be run with
-
-```
 $ gulp integration-test
 ```
 
-To run both unit and integration tests, use
+Documentation
+-------------
+
+Documentation is generated using [JSDoc](http://usejsdoc.org/). You can generate documentation with
 
 ```
-$ gulp test
-```
-
-Docs
-----
-
-You can generate docs using
-
-```
-$ gulp doc
-```
-
-And you can publish these to [simple-signaling.appspot.com](//simple-signaling.appspot.com)
-with
-
-```
-$ gulp publish-doc
+$ make doc
 ```
 
 Linting
 -------
 
-Try to follow the linter's advice. If you find a well-understood pattern that
-proves to be useful but is rejected by the linter, add it to the list of
-exceptions.
+Linting is provided by [JSHint](https://github.com/jshint/jshint/). Try to follow the linter's advice. If you find a well-understood pattern that proves to be useful but is rejected by the linter, add it to the list of exceptions.
 
 You can lint using
 
 ```
-$ gulp lint
+$ make lint
 ```
 
 Contributing
@@ -153,6 +137,4 @@ MyClass.prototype.someInstanceMethod = function someInstanceMethod() {
 module.exports = MyClass;
 ```
 
-Notice how "private" variables are prefixed with an underscore. Additionally,
-the use of getters and setters on the private variable `_bar` but only a getter
-on `bar` allows us to control who can modify `bar`.
+Notice how "private" variables are prefixed with an underscore. Additionally, the use of getters and setters on the private variable `_bar` but only a getter on `bar` allows us to control who can modify `bar`.
