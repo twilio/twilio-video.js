@@ -1,9 +1,7 @@
 Signal
 ======
 
-This is the development repository for the Signal JavaScript library.
-
-You must have [Node](http://nodejs.org/) install to build and test this project.
+This is the development repository for the Signal JavaScript library.  You must have [Node](http://nodejs.org/) installed to build and test this project.
 
 Try the demo at [simple-signaling.appspot.com](http://simple-signaling.appspot.com).
 
@@ -21,13 +19,13 @@ Testing
 
 ### Demo Application
 
-A demo application is included in `www` that allows you to place peer-to-peer calls. You can run it locally with
+A demo application is included in `www` that allows you to place peer-to-peer calls. You can run it locally at [localhost:8080](http://localhost:8080) with
 
 ```
 $ make serve
 ```
 
-This will prompt you to setup a `www/twilio_credentials.json` file including account SIDs and authentication tokens. These should _not_ be checked into this repository. Once running, you can navigate to [localhost:8080](http://localhost:8080) to test.
+This will prompt you to setup a `www/twilio_credentials.json` file including account SIDs and authentication tokens. This file should _not_ be checked into this repository.
 
 This application also lives at [simple-signaling.appspot.com](http://simple-signaling.appspot.com). Once you have confirmed your changes work, you can push to Google App Engine with
 
