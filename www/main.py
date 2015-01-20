@@ -26,6 +26,8 @@ class Token(webapp2.RequestHandler):
         name = self.request.GET.get('name', None)
         if name:
             capability.allow_client_incoming(name)
+        # Dummy Application SID for the outgoing capability
+        capability.allow_client_outgoing('AP00000000000000000000000000000000')
         capability_token = capability.generate()
         client = TwilioRestClient(account_sid[realm], auth_token[realm],
                 base='https://api.{}twilio.com'.format(

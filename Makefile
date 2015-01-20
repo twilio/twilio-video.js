@@ -1,14 +1,18 @@
 gulp=./node_modules/gulp/bin/gulp.js
 
+all:
+	make clean
+	make dist/twilio-signal.js
+
 dist/twilio-signal.js: node_modules
-	$(gulp) build
-	cp dist/twilio-signal.*.js dist/twilio-signal.js
+	$(gulp) build && cp dist/twilio-signal.*.js dist/twilio-signal.js
 
 doc: node_modules
 	$(gulp) doc
 
 node_modules:
 	npm install
+	$(gulp) patch
 
 www: www/twilio_credentials.json www/js/twilio-signal.js
 	@cd www; \
@@ -32,8 +36,6 @@ www/js/twilio-signal.js: dist/twilio-signal.js
 
 .PHONY: all clean clean-all clean-doc clean-node_modules clean-www lint \
 	publish serve test
-
-all: dist/twilio-signal.js
 
 clean:
 	rm -rf dist
