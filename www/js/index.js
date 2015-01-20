@@ -23,7 +23,6 @@ function setupLoginBtn(loginBtn) {
         if (error) {
           return restore(error);
         }
-        loggedIn = null;
         didLogOut();
       });
     } else {
@@ -36,12 +35,61 @@ function setupLoginBtn(loginBtn) {
         if (error) {
           return restore(error);
         }
-        loggedIn = endpoint;
-        didLogIn(name);
+        endpoint.on('invite', function(participant, session) {
+          if (loggedIn !== endpoint || (callInProgress && callInProgress !== session)) {
+            return;
+          }
+          var name = participant.address;
+          incoming(name, endpoint, session);
+        });
+        didLogIn(endpoint);
       });
     }
   };
   return loginBtn;
+}
+
+var incomingStatus = document.getElementById('js-incoming-status');
+var incomingPanel = document.getElementById('js-incoming-panel');
+var acceptBtn = document.getElementById('js-btn-accept');
+var ignoreBtn = setupIgnoreBtn(document.getElementById('js-btn-ignore'));
+
+function setAcceptBtnOnClick(name, session) {
+  acceptBtn.onclick = function onclick(e) {
+    e.preventDefault();
+    if (loggedIn) {
+      loggedIn.join(session)
+        .done(function() {
+          hide(incomingPanel);
+          enableDialer();
+          didCall(session);
+          callValue.value = name;
+        }, function(error) {
+          hide(incomingPanel);
+          enableDialer();
+          console.log(error);
+        });
+    }
+  };
+  return acceptBtn;
+}
+
+function setupIgnoreBtn(ignoreBtn) {
+  ignoreBtn.onclick = function onclick(e) {
+    e.preventDefault();
+    ignoreBtn.blur();
+    hide(incomingPanel);
+    incomingStatus.innerText = 'No one is calling you.';
+    enabledDialer();
+  };
+  return setupIgnoreBtn;
+}
+
+function incoming(name, endpoint, session) {
+  disableDialer();
+  incomingStatus.innerHTML = '<b>' + name + '</b> is calling you.';
+  unhide(incomingPanel);
+  setAcceptBtnOnClick(name, session);
 }
 
 function loggingOut() {
@@ -135,7 +183,9 @@ function logIn(name, next) {
   }
 }
 
-function didLogIn(name) {
+function didLogIn(endpoint) {
+  loggedIn = endpoint;
+  var name = endpoint.address;
   loginBtn.innerText = 'Log Out';
   loginBtn.className = loginBtn.className.replace(/btn-success/, 'btn-danger');
   loginBtn.disabled = false;
@@ -147,7 +197,7 @@ function didLogIn(name) {
 // Call
 // ====
 
-var callInProgress = false;
+var callInProgress = null;
 
 var callValue = document.getElementById('js-call-value');
 
@@ -253,12 +303,23 @@ function setupCallBtn(callBtn) {
     var restore;
     if (callInProgress) {
       restore = hangingUp();
-      // TODO: Hangup
-      return didHangUp();
+      // Hangup
+      return loggedIn.leave(callInProgress)
+        .done(function() {
+          callInProgress = null;
+          return didHangUp();
+        }, function(error) {
+          restore(error.message);
+        });
     }
     restore = calling();
-    // TODO: Call
-    didCall();
+    // Call
+    loggedIn.createSession(callValue.value)
+      .done(function(session) {
+        didCall(session);
+      }, function(error) {
+        restore(error.message);
+      });
   };
   return callBtn;
 }
@@ -324,8 +385,8 @@ function calling() {
   };
 }
 
-function didCall() {
-  callInProgress = true;
+function didCall(session) {
+  callInProgress = session;
   callBtn.innerText = 'Hang Up';
   callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
   callBtn.disabled = false;

@@ -27,8 +27,18 @@ table .btn {
   height: 4em;
   border-radius: 0;
 }
-form button {
+#js-incoming-text {
+  position: relative;
+  top: -0.25em;
+}
+#js-login-btn {
   width: 100%;
+}
+.btn-group {
+  width: 100%;
+}
+#js-btn-accept, #js-btn-ignore {
+  width: 50%;
 }
 form label {
   position: relative;
@@ -121,6 +131,17 @@ p {
 <div>
   <img id="js-status-img" src="img/twilio41x41gray.png">
   <p id="js-status-text">You are offline.</p>
+  <hr>
+</div>
+
+<div id="js-incoming-panel" class="hidden">
+  <p id="js-incoming-status">No one is calling you.</p>
+  <form>
+    <div class="btn-group">
+      <button type="button" class="btn btn-success" id="js-btn-accept">Accept</button>
+      <button type="button" class="btn btn-default" id="js-btn-ignore">Ignore</button>
+    </div>
+  </form>
   <hr>
 </div>
 
