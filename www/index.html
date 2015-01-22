@@ -120,6 +120,29 @@ p {
   margin-top: 15px;
   overflow-x: hidden;
 }
+#js-center {
+  position: absolute;
+  left: 238px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.js-remote-video-div {
+  padding: 1em;
+  float: left;
+  width: 75%;
+  float: left;
+}
+.js-local-video-div {
+  padding-top: 1em;
+  width: 25%;
+  float: left;
+  padding-right: 1em;
+}
+video {
+  width: 100%;
+  margin-bottom: 1em;
+}
 </style>
 <script src="js/twilio-signal.js" charset="utf-8"></script>
 </head>
@@ -202,6 +225,9 @@ p {
 
 </div>
 <!--/#left-panel -->
+
+<div id="js-center">
+</div>
 
 <script src="js/index.js"></script>
 </body>

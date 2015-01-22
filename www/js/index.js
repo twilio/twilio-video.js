@@ -1,5 +1,24 @@
 'use strict';
 
+var realm = getURLParameter('realm') || 'stage';
+var wsServer = makeWSServer(realm);
+
+function makeWSServer(realm) {
+  switch (realm) {
+    case 'prod':
+      return 'ws://public-sip0.us1.twilio.com';
+    default:
+      return 'ws://public-sip0.' + realm + '-us1.twilio.com';
+  }
+}
+
+function getURLParameter(name) {
+  return decodeURIComponent(
+      (new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [,''])[1]
+        .replace(/\+/g, '%20')
+    ) || null;
+}
+
 // Log In
 // ======
 
@@ -144,8 +163,9 @@ function loggingIn() {
 }
 
 function logIn(name, next) {
+  name = encodeURIComponent(name);
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'token?name=' + name, true);
+  xhr.open('GET', 'token?realm=' + realm + '&name=' + name, true);
   xhr.ontimeout = function ontimeout() {
     callback('Timed-out getting token from server.');
   };
@@ -175,8 +195,8 @@ function logIn(name, next) {
     var endpoint = new Twilio.Endpoint(token, {
       'debug': true,
       'register': false,
-      'registrarServer': 'twil.io'
-//      'registrarServer': 'twil.io'
+      'registrarServer': 'twil.io',
+      'wsServer': wsServer
     });
     endpoint.register().done(function() {
       next(null, endpoint);
@@ -351,6 +371,7 @@ function hangingUp() {
 
 function didHangUp() {
   callInProgress = null;
+  stopDisplayingSession(callInProgress);
   callValue.disabled = false;
   callBtn.innerText = 'Call';
   callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
@@ -390,6 +411,7 @@ function calling() {
 
 function didCall(session) {
   callInProgress = session;
+  startDisplayingSession(callInProgress);
   callBtn.innerText = 'Hang Up';
   callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
   callBtn.disabled = false;
@@ -398,6 +420,56 @@ function didCall(session) {
   });
   muteBtn.disabled = false;
   pauseBtn.disabled = false;
+}
+
+// Session Display
+// ---------------
+
+var center = document.getElementById('js-center');
+var videoDiv = null;
+var remoteVideos = null;
+var localVideos = null;
+
+function startDisplayingSession(session) {
+  var remoteVideoDiv = document.createElement('div');
+  remoteVideoDiv.className += ' js-remote-video-div';
+  var remoteStreams = session.getRemoteStreams();
+  remoteVideos = remoteStreams.forEach(function(remoteStream) {
+    var remoteVideo = remoteStream.attach();
+    remoteVideo.className += ' js-remote-video';
+    remoteVideoDiv.appendChild(remoteVideo);
+    return remoteVideo;
+  });
+
+  var localVideoDiv = document.createElement('div');
+  localVideoDiv.className += ' js-local-video-div';
+  var localStreams = session.getLocalStreams(loggedIn);
+  localVideos = localStreams.forEach(function(localStream) {
+    var localVideo = localStream.attach();
+    localVideo.className += ' js-local-video';
+    localVideoDiv.appendChild(localVideo);
+    return localVideo;
+  });
+
+  var videoDiv = document.createElement('div');
+  videoDiv.className += ' js-video-div';
+  videoDiv.appendChild(remoteVideoDiv);
+  videoDiv.appendChild(localVideoDiv);
+
+  center.appendChild(videoDiv);
+}
+
+function stopDisplayingSession(session) {
+  remoteVideos.forEach(function(remoteVideo) {
+    remoteVideo.pause();
+  });
+  remoteVideos = null;
+  localVideos.forEach(function(localVideo) {
+    localVideo.pause();
+  });
+  localVideos = null;
+  center.removeChild(videoDiv);
+  videoDiv = null;
 }
 
 // Utilities
