@@ -1,7 +1,11 @@
 Signal
 ======
 
-This is the development repository for the Signal JavaScript library.  You must have [Node](http://nodejs.org/) installed to build and test this project.
+This is the development repository for the Signal JavaScript library. You must have the following installed to build and test this project:
+
+- [Node](http://nodejs.org/)
+- [Google App Engine Python SDK](https://storage.googleapis.com/appengine-sdks/featured/GoogleAppEngineLauncher-1.9.17.dmg)
+- `www/twilio_credentials.json` (see the included example file)
 
 Try the demo at [simple-signaling.appspot.com](http://simple-signaling.appspot.com).
 
