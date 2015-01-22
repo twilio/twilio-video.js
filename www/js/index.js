@@ -108,8 +108,11 @@ function loggingOut() {
 }
 
 function logOut(callback) {
-  // TODO: Log out.
-  callback();
+  loggedIn.unregister().done(function() {
+    callback();
+  }, function(error) {
+    callback(error);
+  });
 }
 
 function didLogOut() {
