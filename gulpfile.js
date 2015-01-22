@@ -21,8 +21,7 @@ var shell = require('gulp-shell');
 
 var patches = [
   'patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true',
-  'patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/replace_udptlsrtpsavpf_with_rtpsavpf.patch; true'
-  // 'patch -F 0 -N node_modules/sip.js/src/WebRTC.js <patch/use_wrtc_for_webrtc_in_node.patch; true'
+  'patch -N node_modules/sip.js/src/Hacks.js <patch/disable_masking.patch; true'
 ];
 
 gulp.task('patch', shell.task(patches));

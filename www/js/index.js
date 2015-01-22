@@ -75,15 +75,21 @@ var ignoreBtn = setupIgnoreBtn(document.getElementById('js-btn-ignore'));
 
 function setAcceptBtnOnClick(name, session) {
   acceptBtn.onclick = function onclick(e) {
+    acceptBtn.disabled = true;
+    ignoreBtn.disabled = true;
     e.preventDefault();
     if (loggedIn) {
       loggedIn.join(session)
         .done(function() {
+          acceptBtn.disabled = false;
+          ignoreBtn.disabled = false;
           hide(incomingPanel);
           enableDialer();
           didCall(session);
           callValue.value = name;
         }, function(error) {
+          acceptBtn.disabled = false;
+          ignoreBtn.disabled = false;
           hide(incomingPanel);
           enableDialer();
           console.log(error);
@@ -101,7 +107,7 @@ function setupIgnoreBtn(ignoreBtn) {
     incomingStatus.innerText = 'No one is calling you.';
     enabledDialer();
   };
-  return setupIgnoreBtn;
+  return ignoreBtn;
 }
 
 function incoming(name, endpoint, session) {
@@ -330,7 +336,7 @@ function setupCallBtn(callBtn) {
       return loggedIn.leave(callInProgress)
         .done(function() {
           callInProgress = null;
-          return didHangUp();
+          return; // didHangUp();
         }, function(error) {
           restore(error.message);
         });
@@ -420,6 +426,9 @@ function didCall(session) {
   });
   muteBtn.disabled = false;
   pauseBtn.disabled = false;
+  session.once('participantLeft', function() {
+    didHangUp();
+  });
 }
 
 // Session Display
@@ -434,7 +443,7 @@ function startDisplayingSession(session) {
   var remoteVideoDiv = document.createElement('div');
   remoteVideoDiv.className += ' js-remote-video-div';
   var remoteStreams = session.getRemoteStreams();
-  remoteVideos = remoteStreams.forEach(function(remoteStream) {
+  remoteVideos = remoteStreams.map(function(remoteStream) {
     var remoteVideo = remoteStream.attach();
     remoteVideo.className += ' js-remote-video';
     remoteVideoDiv.appendChild(remoteVideo);
@@ -444,14 +453,14 @@ function startDisplayingSession(session) {
   var localVideoDiv = document.createElement('div');
   localVideoDiv.className += ' js-local-video-div';
   var localStreams = session.getLocalStreams(loggedIn);
-  localVideos = localStreams.forEach(function(localStream) {
+  localVideos = localStreams.map(function(localStream) {
     var localVideo = localStream.attach();
     localVideo.className += ' js-local-video';
     localVideoDiv.appendChild(localVideo);
     return localVideo;
   });
 
-  var videoDiv = document.createElement('div');
+  videoDiv = document.createElement('div');
   videoDiv.className += ' js-video-div';
   videoDiv.appendChild(remoteVideoDiv);
   videoDiv.appendChild(localVideoDiv);
