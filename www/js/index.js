@@ -54,7 +54,7 @@ function setupLoginBtn(loginBtn) {
         if (error) {
           return restore(error);
         }
-        endpoint.on('invite', function(participant, session) {
+        endpoint.on('invite', function(session, participant) {
           if (loggedIn !== endpoint || (callInProgress && callInProgress !== session)) {
             return;
           }

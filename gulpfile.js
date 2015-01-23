@@ -2,7 +2,7 @@ var gulp = require('gulp');
 var runSequence = require('run-sequence');
 
 gulp.task('default', function(done) {
-  runSequence('clean', 'lint', 'test', 'build', 'doc', done);
+  runSequence('clean', 'test', 'build', 'doc', done);
 });
 
 // Build
@@ -54,7 +54,7 @@ function build(bundler) {
   };
 }
 
-gulp.task('build', ['clean-dist'], function() {
+gulp.task('build', ['clean-dist', 'lint'], function() {
   return build(bundler)();
 });
 
@@ -134,7 +134,8 @@ gulp.task('doc', function() {
       './lib/endpoint.js',
       './lib/participant.js',
       './lib/session.js',
-      './lib/token/index.js'
+      './lib/token/index.js',
+      './lib/media/stream.js'
     ]).pipe(jsdoc('./doc/'));
 });
 

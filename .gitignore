@@ -3,6 +3,7 @@ dist
 doc
 node_modules
 out
+www/doc
 www/httplib2
 www/js/twilio-signal.*
 www/six.py

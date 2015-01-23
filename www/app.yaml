@@ -17,6 +17,16 @@ handlers:
   static_files: css/bootstrap.min.css
   upload: css/bootstrap.min.css
 
+- url: /doc
+  script: main.app
+
+- url: /doc/
+  static_files: doc/index.html
+  upload: doc/index.html
+
+- url: /doc/
+  static_dir: doc
+
 - url: /img/twilio41x41.png
   static_files: img/twilio41x41.png
   upload: img/twilio41x41.png

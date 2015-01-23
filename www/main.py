@@ -3,6 +3,7 @@ import json
 
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
+from webapp2_extras.routes import RedirectRoute
 
 DEFAULT_REALM = 'dev'
 
@@ -54,5 +55,6 @@ class Token(webapp2.RequestHandler):
         self.response.write(json.dumps(token))
 
 app = webapp2.WSGIApplication([
+    RedirectRoute('/doc', redirect_to='/doc/'),
     ('/token', Token),
 ], debug=True)

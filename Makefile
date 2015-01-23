@@ -8,6 +8,7 @@ dist/twilio-signal.js: node_modules
 	$(gulp) build && cp dist/twilio-signal.*.js dist/twilio-signal.js
 
 doc: node_modules
+	make clean-doc
 	$(gulp) doc
 
 node_modules:
@@ -34,7 +35,7 @@ www/twilio_credentials.json:
 www/js/twilio-signal.js: dist/twilio-signal.js
 	cp dist/twilio-signal.js www/js/twilio-signal.js
 
-.PHONY: all clean clean-all clean-doc clean-node_modules clean-www lint \
+.PHONY: all clean clean-all clean-doc clean-node_modules clean-www doc lint \
 	publish serve test
 
 clean:
@@ -44,17 +45,19 @@ clean-all: clean clean-doc clean-node_modules clean-www
 
 clean-doc:
 	rm -rf doc
+	rm -rf www/doc
 
 clean-node_modules:
 	rm -rf node_modules
 
 clean-www:
-	rm -rf www/js/twilio-signal.js www/venv www/httplib2 www/six.py www/twilio
+	rm -rf www/js/twilio-signal.js www/doc www/venv www/httplib2 www/six.py www/twilio
 
 lint: node_modules
 	$(gulp) lint
 
-publish: www
+publish: doc www
+	cp -R doc www/doc
 	appcfg.py update www --oauth2
 
 serve: www
