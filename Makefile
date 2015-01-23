@@ -45,7 +45,6 @@ clean-all: clean clean-doc clean-node_modules clean-www
 
 clean-doc:
 	rm -rf doc
-	rm -rf www/doc
 
 clean-node_modules:
 	rm -rf node_modules
@@ -57,6 +56,7 @@ lint: node_modules
 	$(gulp) lint
 
 publish: doc www
+	rm -rf www/doc
 	cp -R doc www/doc
 	appcfg.py update www --oauth2
 

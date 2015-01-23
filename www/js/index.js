@@ -87,6 +87,7 @@ function setAcceptBtnOnClick(name, session) {
           enableDialer();
           didCall(session);
           callValue.value = name;
+          callValue.disabled = true;
         }, function(error) {
           acceptBtn.disabled = false;
           ignoreBtn.disabled = false;
@@ -301,8 +302,11 @@ function setupMuteBtn(muteBtn) {
     if (!callInProgress) {
       return;
     }
-    // TODO: Mute audio.
+    // TODO(mroberts): Rethink loggedIn...
     muted = !muted;
+    if (loggedIn) {
+      loggedIn.muteAudio(muted);
+    }
     muteBtn.innerText = muted ? 'Unmute' : 'Mute';
   };
   return muteBtn;
@@ -315,8 +319,11 @@ function setupPauseBtn(pauseBtn) {
     if (!callInProgress) {
       return;
     }
-    // TODO: Pause video.
+    // TODO(mroberts): Rethink loggedIn...
     paused = !paused;
+    if (loggedIn) {
+      loggedIn.pauseVideo(paused);
+    }
     pauseBtn.innerText = paused ? 'Unpause' : 'Pause';
   };
   return pauseBtn;
