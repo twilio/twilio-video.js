@@ -105,7 +105,7 @@ function setupIgnoreBtn(ignoreBtn) {
     e.preventDefault();
     ignoreBtn.blur();
     hide(incomingPanel);
-    incomingStatus.innerText = 'No one is calling you.';
+    incomingStatus.innerHTML = 'No one is calling you.';
     enabledDialer();
   };
   return ignoreBtn;
@@ -127,7 +127,7 @@ function loggingOut() {
     loginBtn.disabled = false;
     statusText.innerHTML = prevStatus;
     if (error) {
-      loginAlert.innerText = error;
+      loginAlert.innerHTML = error;
       unhide(loginAlert);
     }
   };
@@ -142,12 +142,12 @@ function logOut(callback) {
 }
 
 function didLogOut() {
-  loginBtn.innerText = 'Log In';
+  loginBtn.innerHTML = 'Log In';
   loginBtn.className = loginBtn.className.replace(/btn-danger/, 'btn-success');
   loginBtn.disabled = false;
   loginValue.disabled = false;
   statusImg.src = 'img/twilio41x41gray.png';
-  statusText.innerText = 'You are offline.';
+  statusText.innerHTML = 'You are offline.';
   disableDialer();
 }
 
@@ -162,7 +162,7 @@ function loggingIn() {
     loginValue.disabled = false;
     statusText.innerHTML = prevStatus;
     if (error) {
-      loginAlert.innerText = error;
+      loginAlert.innerHTML = error;
       unhide(loginAlert);
       console.log(loginAlert);
     }
@@ -216,7 +216,7 @@ function logIn(name, next) {
 function didLogIn(endpoint) {
   loggedIn = endpoint;
   var name = endpoint.address;
-  loginBtn.innerText = 'Log Out';
+  loginBtn.innerHTML = 'Log Out';
   loginBtn.className = loginBtn.className.replace(/btn-success/, 'btn-danger');
   loginBtn.disabled = false;
   statusImg.src = 'img/twilio41x41.png';
@@ -307,7 +307,7 @@ function setupMuteBtn(muteBtn) {
     if (loggedIn) {
       loggedIn.muteAudio(muted);
     }
-    muteBtn.innerText = muted ? 'Unmute' : 'Mute';
+    muteBtn.innerHTML = muted ? 'Unmute' : 'Mute';
   };
   return muteBtn;
 }
@@ -324,7 +324,7 @@ function setupPauseBtn(pauseBtn) {
     if (loggedIn) {
       loggedIn.pauseVideo(paused);
     }
-    pauseBtn.innerText = paused ? 'Unpause' : 'Pause';
+    pauseBtn.innerHTML = paused ? 'Unpause' : 'Pause';
   };
   return pauseBtn;
 }
@@ -376,7 +376,7 @@ function hangingUp() {
     muteBtn.disabled = false;
     pauseBtn.disabled = false;
     if (error) {
-      callAlert.innerText = error;
+      callAlert.innerHTML = error;
       unhide(callAlert);
     }
   };
@@ -386,7 +386,7 @@ function didHangUp() {
   callInProgress = null;
   stopDisplayingSession(callInProgress);
   callValue.disabled = false;
-  callBtn.innerText = 'Call';
+  callBtn.innerHTML = 'Call';
   callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
   callBtn.disabled = false;
   dtmfBtns.forEach(function(btn) {
@@ -395,8 +395,8 @@ function didHangUp() {
   // TODO: Unmute/unpause
   muted = false;
   paused = false;
-  muteBtn.innerText = 'Mute';
-  pauseBtn.innerText = 'Pause';
+  muteBtn.innerHTML = 'Mute';
+  pauseBtn.innerHTML = 'Pause';
   if (!loggedIn) {
     disableDialer();
   }
@@ -416,7 +416,7 @@ function calling() {
       btn.disabled = false;
     });
     if (error) {
-      callAlert.innerText = error;
+      callAlert.innerHTML = error;
       unhide(callAlert);
     }
   };
@@ -425,7 +425,7 @@ function calling() {
 function didCall(session) {
   callInProgress = session;
   startDisplayingSession(callInProgress);
-  callBtn.innerText = 'Hang Up';
+  callBtn.innerHTML = 'Hang Up';
   callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
   callBtn.disabled = false;
   dtmfBtns.forEach(function(btn) {
