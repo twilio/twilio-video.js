@@ -7,7 +7,7 @@ This is the development repository for the Signal JavaScript library. You must h
 - [Google App Engine Python SDK](https://storage.googleapis.com/appengine-sdks/featured/GoogleAppEngineLauncher-1.9.17.dmg)
 - `www/twilio_credentials.json` (see the included example file)
 
-Try the demo at [simple-signaling.appspot.com](http://simple-signaling.appspot.com).
+Try the demo at [simple-signaling.appspot.com](http://simple-signaling.appspot.com) or read the docs at [simple-signaling.appspot.com/doc](http://simple-signaling.appspot.com/doc).
 
 Building
 --------
