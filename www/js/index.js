@@ -142,6 +142,7 @@ function logOut(callback) {
 }
 
 function didLogOut() {
+  loggedIn = null;
   loginBtn.innerHTML = 'Log In';
   loginBtn.className = loginBtn.className.replace(/btn-danger/, 'btn-success');
   loginBtn.disabled = false;
