@@ -172,7 +172,7 @@ function loggingIn() {
 function logIn(name, next) {
   name = encodeURIComponent(name);
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'token?realm=' + realm + '&name=' + name, true);
+  xhr.open('GET', 'config?&name=' + name, true);
   xhr.ontimeout = function ontimeout() {
     callback('Timed-out getting token from server.');
   };
@@ -181,7 +181,9 @@ function logIn(name, next) {
       switch (xhr.status) {
         case 200:
           try {
-            callback(null, xhr.responseText);
+            var config = JSON.parse(xhr.responseText);
+            config['token'] = JSON.stringify(config['token']);
+            callback(null, config);
           } catch (e) {
             callback(e.message);
             throw e;
@@ -195,15 +197,15 @@ function logIn(name, next) {
   };
   xhr.send();
 
-  function callback(error, token) {
+  function callback(error, config) {
     if (error) {
       return next(error);
     }
-    var endpoint = new Twilio.Endpoint(token, {
+    var endpoint = new Twilio.Endpoint(config['token'], {
       'debug': true,
       'register': false,
       'registrarServer': 'twil.io',
-      'wsServer': wsServer
+      'wsServer': 'ws://' + config['wsServer']
     });
     endpoint.register().done(function() {
       next(null, endpoint);
