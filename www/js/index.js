@@ -173,7 +173,7 @@ function loggingIn() {
 function logIn(name, next) {
   name = encodeURIComponent(name);
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'config?&name=' + name, true);
+  xhr.open('GET', 'config?name=' + name, true);
   xhr.ontimeout = function ontimeout() {
     callback('Timed-out getting token from server.');
   };

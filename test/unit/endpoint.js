@@ -8,7 +8,7 @@ var getToken = require('../token').getExpiredToken;
 var Log = require('../../lib/util/log');
 var Participant = require('../../lib/participant');
 var _Session = require('../../lib/session');
-var UserAgent = require('../../lib/sip/useragent');
+var UserAgent = require('../../lib/signaling/useragent');
 
 function Endpoint(token, options) {
   options = options || {};
