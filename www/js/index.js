@@ -1,16 +1,6 @@
 'use strict';
 
 var realm = getURLParameter('realm') || 'stage';
-var wsServer = makeWSServer(realm);
-
-function makeWSServer(realm) {
-  switch (realm) {
-    case 'prod':
-      return 'ws://public-sip0.us1.twilio.com';
-    default:
-      return 'ws://public-sip0.' + realm + '-us1.twilio.com';
-  }
-}
 
 function getURLParameter(name) {
   return decodeURIComponent(

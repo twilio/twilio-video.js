@@ -34,9 +34,9 @@ if os.path.isfile('basic_auth.json'):
         }
         basic_auth_file.close()
 
-def make_ws_server(realm):
+def make_ws_server(realm, account_sid):
     if realm == 'prod':
-        return 'public-sip0.twilio.com'
+        return '{}.sip.twilio.com'.format(account_sid)
     else:
         return 'public-sip0.{}-us1.twilio.com'.format(realm)
 
@@ -72,7 +72,7 @@ def make_token(realm, name):
 def make_config(realm, name):
     return {
         'token': make_token(realm, name),
-        'wsServer': make_ws_server(realm)
+        'wsServer': make_ws_server(realm, account_sid[realm])
     }
 
 def login_required(handler_method):
