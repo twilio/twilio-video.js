@@ -36,7 +36,7 @@ if os.path.isfile('basic_auth.json'):
 
 def make_ws_server(realm, account_sid):
     if realm == 'prod':
-        return '{}.sip.twilio.com'.format(account_sid)
+        return 'public-sip0.us1.twilio.com'
     else:
         return 'public-sip0.{}-us1.twilio.com'.format(realm)
 
