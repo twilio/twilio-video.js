@@ -71,21 +71,23 @@ function setAcceptBtnOnClick(name, session) {
     if (loggedIn) {
       loggedIn.join(session)
         .done(function() {
-          stopFlicker(statusImg);
-          acceptBtn.disabled = false;
-          ignoreBtn.disabled = false;
-          hide(incomingPanel);
-          enableDialer();
-          didCall(session);
-          callValue.value = name;
-          callValue.disabled = true;
+          stopFlicker(statusImg, function() {
+            acceptBtn.disabled = false;
+            ignoreBtn.disabled = false;
+            hide(incomingPanel);
+            enableDialer();
+            didCall(session);
+            callValue.value = name;
+            callValue.disabled = true;
+          });
         }, function(error) {
-          stopFlicker(statusImg);
-          acceptBtn.disabled = false;
-          ignoreBtn.disabled = false;
-          hide(incomingPanel);
-          enableDialer();
-          console.log(error);
+          stopFlicker(statusImg, function() {
+            acceptBtn.disabled = false;
+            ignoreBtn.disabled = false;
+            hide(incomingPanel);
+            enableDialer();
+            console.log(error);
+          });
         });
     }
   };
@@ -94,12 +96,13 @@ function setAcceptBtnOnClick(name, session) {
 
 function setupIgnoreBtn(ignoreBtn) {
   ignoreBtn.onclick = function onclick(e) {
-    stopFlicker(statusImg);
     e.preventDefault();
     ignoreBtn.blur();
     hide(incomingPanel);
-    incomingStatus.innerHTML = 'No one is calling you.';
-    enabledDialer();
+    stopFlicker(statusImg, function() {
+      incomingStatus.innerHTML = 'No one is calling you.';
+      enabledDialer();
+    });
   };
   return ignoreBtn;
 }
@@ -119,13 +122,14 @@ function loggingOut() {
   statusText.innerHTML = 'Logging out&hellip;';
   hide(loginAlert);
   return function restore(error) {
-    loginBtn.disabled = false;
-    stopFlicker(statusImg);
-    statusText.innerHTML = prevStatus;
-    if (error) {
-      loginAlert.innerHTML = error;
-      unhide(loginAlert);
-    }
+    stopFlicker(statusImg, function() {
+      loginBtn.disabled = false;
+      statusText.innerHTML = prevStatus;
+      if (error) {
+        loginAlert.innerHTML = error;
+        unhide(loginAlert);
+      }
+    });
   };
 }
 
@@ -139,13 +143,14 @@ function logOut(callback) {
 
 function didLogOut() {
   loggedIn = null;
-  loginBtn.innerHTML = 'Log In';
-  loginBtn.className = loginBtn.className.replace(/btn-danger/, 'btn-success');
-  loginBtn.disabled = false;
-  loginValue.disabled = false;
-  stopFlicker(statusImg);
-  statusImg.src = 'img/twilio41x41gray.png';
-  statusText.innerHTML = 'You are offline.';
+  stopFlicker(statusImg, function() {
+    loginBtn.innerHTML = 'Log In';
+    loginBtn.className = loginBtn.className.replace(/btn-danger/, 'btn-success');
+    loginBtn.disabled = false;
+    loginValue.disabled = false;
+    statusImg.src = 'img/twilio41x41gray.png';
+    statusText.innerHTML = 'You are offline.';
+  });
   disableDialer();
 }
 
@@ -157,15 +162,16 @@ function loggingIn() {
   statusText.innerHTML = 'Logging in&hellip;';
   hide(loginAlert);
   return function restore(error) {
-    loginBtn.disabled = false;
-    loginValue.disabled = false;
-    stopFlicker(statusImg);
-    statusText.innerHTML = prevStatus;
-    if (error) {
-      loginAlert.innerHTML = error;
-      unhide(loginAlert);
-      console.log(loginAlert);
-    }
+    stopFlicker(statusImg, function() {
+      loginBtn.disabled = false;
+      loginValue.disabled = false;
+      statusText.innerHTML = prevStatus;
+      if (error) {
+        loginAlert.innerHTML = error;
+        unhide(loginAlert);
+        console.log(loginAlert);
+      }
+    });
   };
 }
 
@@ -218,13 +224,14 @@ function logIn(name, next) {
 function didLogIn(endpoint) {
   loggedIn = endpoint;
   var name = endpoint.address;
-  loginBtn.innerHTML = 'Log Out';
-  loginBtn.className = loginBtn.className.replace(/btn-success/, 'btn-danger');
-  loginBtn.disabled = false;
-  stopFlicker(statusImg);
-  statusImg.src = 'img/twilio41x41.png';
-  statusText.innerHTML = 'You are online as <b>' + name + '</b>.';
-  enableDialer();
+  stopFlicker(statusImg, function() {
+    loginBtn.innerHTML = 'Log Out';
+    loginBtn.className = loginBtn.className.replace(/btn-success/, 'btn-danger');
+    loginBtn.disabled = false;
+    statusImg.src = 'img/twilio41x41.png';
+    statusText.innerHTML = 'You are online as <b>' + name + '</b>.';
+    enableDialer();
+  });
 }
 
 // Call
@@ -400,24 +407,25 @@ function hangingUp() {
 }
 
 function didHangUp() {
-  stopFlicker(statusImg);
   callInProgress = null;
   stopDisplayingSession(callInProgress);
-  callValue.disabled = false;
-  callBtn.innerHTML = 'Call';
-  callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
-  callBtn.disabled = false;
-  dtmfBtns.forEach(function(btn) {
-    btn.disabled = false;
+  stopFlicker(statusImg, function() {
+    callValue.disabled = false;
+    callBtn.innerHTML = 'Call';
+    callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
+    callBtn.disabled = false;
+    dtmfBtns.forEach(function(btn) {
+      btn.disabled = false;
+    });
+    // TODO: Unmute/unpause
+    muted = false;
+    paused = false;
+    muteBtn.innerHTML = 'Mute';
+    pauseBtn.innerHTML = 'Pause';
+    if (!loggedIn) {
+      disableDialer();
+    }
   });
-  // TODO: Unmute/unpause
-  muted = false;
-  paused = false;
-  muteBtn.innerHTML = 'Mute';
-  pauseBtn.innerHTML = 'Pause';
-  if (!loggedIn) {
-    disableDialer();
-  }
 }
 
 function calling() {
@@ -431,33 +439,35 @@ function calling() {
   });
   hide(callAlert);
   return function restore(error) {
-    stopFlicker(statusImg);
-    callValue.disabled = false;
-    // callBtn.disabled = false;
-    callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
-    callBtn.innerHTML = 'Call';
-    dtmfBtns.forEach(function(btn) {
-      btn.disabled = false;
+    stopFlicker(statusImg, function() {
+      callValue.disabled = false;
+      // callBtn.disabled = false;
+      callBtn.className = callBtn.className.replace(/btn-danger/, 'btn-success');
+      callBtn.innerHTML = 'Call';
+      dtmfBtns.forEach(function(btn) {
+        btn.disabled = false;
+      });
+      if (error) {
+        callAlert.innerHTML = error;
+        unhide(callAlert);
+      }
     });
-    if (error) {
-      callAlert.innerHTML = error;
-      unhide(callAlert);
-    }
   };
 }
 
 function didCall(session) {
-  stopFlicker(statusImg);
   callInProgress = session;
   startDisplayingSession(callInProgress);
-  callBtn.innerHTML = 'Hang Up';
-  callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
-  callBtn.disabled = false;
-  dtmfBtns.forEach(function(btn) {
-    btn.disabled = false;
+  stopFlicker(statusImg, function() {
+    callBtn.innerHTML = 'Hang Up';
+    callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
+    callBtn.disabled = false;
+    dtmfBtns.forEach(function(btn) {
+      btn.disabled = false;
+    });
+    muteBtn.disabled = false;
+    pauseBtn.disabled = false;
   });
-  muteBtn.disabled = false;
-  pauseBtn.disabled = false;
   session.once('participantLeft', function() {
     didHangUp();
   });
@@ -516,8 +526,30 @@ function stopDisplayingSession(session) {
 // Utilities
 // ---------
 
-function stopFlicker(element) {
-  element.className = element.className.replace(/animate-flicker/, '');
+function stopFlicker(element, callback) {
+  var event;
+  function stop() {
+    element.removeEventListener(event, stop);
+    element.className = element.className.replace(/animate-flicker/, '');
+    callback();
+  }
+  if (element.className.match(/ animate-flicker/)) {
+    var animationEvents = {
+      animation: 'animationiteration',
+      OAnimation: 'oAnimationIteration',
+      MozAnimation: 'animationiteration',
+      WebkitAnimation: 'webkitAnimationIteration'
+    };
+    for (var name in animationEvents) {
+      if (element.style[name] !== undefined) {
+        event = animationEvents[name];
+        element.addEventListener(event, stop);
+        break;
+      }
+    }
+  } else {
+    callback();
+  }
 }
 
 function startFlicker(element) {

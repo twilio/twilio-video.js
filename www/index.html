@@ -145,29 +145,25 @@ video {
 }
 @keyframes flickerAnimation {
   0%   { opacity: 1; transform: rotateY( 0deg ); }
-  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
-  100% { opacity: 1; transform: rotateY( 360deg ); }
+  100% { opacity: 0.5; transform: rotateY( 180deg ); }
 }
 @-o-keyframes flickerAnimation{
   0%   { opacity: 1; transform: rotateY( 0deg ); }
-  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
-  100% { opacity: 1; transform: rotateY( 360deg ); }
+  100% { opacity: 0.5; transform: rotateY( 180deg ); }
 }
 @-moz-keyframes flickerAnimation{
   0%   { opacity: 1; transform: rotateY( 0deg ); }
-  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
-  100% { opacity: 1; transform: rotateY( 360deg ); }
+  100% { opacity: 0.5; transform: rotateY( 180deg ); }
 }
 @-webkit-keyframes flickerAnimation{
   0%   { opacity: 1; transform: rotateY( 0deg ); }
-  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
-  100% { opacity: 1; transform: rotateY( 360deg ); }
+  100% { opacity: 0.5; transform: rotateY( 180deg ); }
 }
 .animate-flicker {
-   -webkit-animation: flickerAnimation 1s infinite;
-      -moz-animation: flickerAnimation 1s infinite;
-        -o-animation: flickerAnimation 1s infinite;
-           animation: flickerAnimation 1s infinite;
+   -webkit-animation: flickerAnimation 0.5s ease-out alternate infinite;
+      -moz-animation: flickerAnimation 0.5s ease-out alternate infinite;
+        -o-animation: flickerAnimation 0.5s ease-out alternate infinite;
+           animation: flickerAnimation 0.5s ease-out alternate infinite;
 }
 </style>
 <script src="js/twilio-signal.js" charset="utf-8"></script>
