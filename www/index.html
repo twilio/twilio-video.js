@@ -143,6 +143,32 @@ video {
   width: 100%;
   margin-bottom: 1em;
 }
+@keyframes flickerAnimation {
+  0%   { opacity: 1; transform: rotateY( 0deg ); }
+  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
+  100% { opacity: 1; transform: rotateY( 360deg ); }
+}
+@-o-keyframes flickerAnimation{
+  0%   { opacity: 1; transform: rotateY( 0deg ); }
+  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
+  100% { opacity: 1; transform: rotateY( 360deg ); }
+}
+@-moz-keyframes flickerAnimation{
+  0%   { opacity: 1; transform: rotateY( 0deg ); }
+  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
+  100% { opacity: 1; transform: rotateY( 360deg ); }
+}
+@-webkit-keyframes flickerAnimation{
+  0%   { opacity: 1; transform: rotateY( 0deg ); }
+  50%  { opacity: 0.5; transform: rotateY( 180deg ); }
+  100% { opacity: 1; transform: rotateY( 360deg ); }
+}
+.animate-flicker {
+   -webkit-animation: flickerAnimation 1s infinite;
+      -moz-animation: flickerAnimation 1s infinite;
+        -o-animation: flickerAnimation 1s infinite;
+           animation: flickerAnimation 1s infinite;
+}
 </style>
 <script src="js/twilio-signal.js" charset="utf-8"></script>
 </head>
