@@ -231,6 +231,7 @@ function didLogIn(endpoint) {
     statusImg.src = 'img/twilio41x41.png';
     statusText.innerHTML = 'You are online as <b>' + name + '</b>.';
     enableDialer();
+    callValue.focus();
   });
 }
 
@@ -424,6 +425,8 @@ function didHangUp() {
     pauseBtn.innerHTML = 'Pause';
     if (!loggedIn) {
       disableDialer();
+    } else {
+      callValue.focus();
     }
   });
 }
