@@ -101,7 +101,7 @@ function setupIgnoreBtn(ignoreBtn) {
     hide(incomingPanel);
     stopFlicker(statusImg, function() {
       incomingStatus.innerHTML = 'No one is calling you.';
-      enabledDialer();
+      enableDialer();
     });
   };
   return ignoreBtn;
