@@ -65,14 +65,14 @@ def make_token(realm, name):
             'ttl': stun_turn_token.ttl
         }
     return {
-        'capabilityToken': capability_token,
-        'stunTurnToken': stun_turn_token
+        'capability_token': capability_token,
+        'stun_turn_token': stun_turn_token
     }
 
 def make_config(realm, name):
     return {
         'token': make_token(realm, name),
-        'wsServer': make_ws_server(realm, account_sid[realm])
+        'ws_server': make_ws_server(realm, account_sid[realm])
     }
 
 def login_required(handler_method):

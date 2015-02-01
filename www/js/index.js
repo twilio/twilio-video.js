@@ -211,7 +211,7 @@ function logIn(name, next) {
       'debug': true,
       'register': false,
       'registrarServer': 'twil.io',
-      'wsServer': 'ws://' + config['wsServer']
+      'wsServer': 'ws://' + config['ws_server']
     });
     endpoint.register().done(function() {
       next(null, endpoint);
