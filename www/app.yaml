@@ -42,6 +42,10 @@ handlers:
 - url: /js/twilio-signal.js
   script: main.app
 
+- url: /public/js/twilio-signal.js
+  static_files: js/twilio-signal.js
+  upload: js/twilio-signal.js
+
 - url: /token
   script: main.app
 
