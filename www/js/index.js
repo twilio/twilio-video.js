@@ -605,6 +605,66 @@ function startFlicker(element) {
   }
 }
 
+function flipPanel(element, callback) {
+  var event;
+  function next() {
+    hide(element);
+    element.removeEventListener(event, next);
+    element.className = element.className.replace(/animate-flip/, '');
+    if (callback) {
+      callback();
+    }
+  }
+  if (!element.className.match(/ animate-flip/)) {
+    element.className += ' animate-flip';
+    var animationEvents = {
+      animation: 'animationend',
+      OAnimation: 'oAnimationEnd',
+      MozAnimation: 'animationend',
+      WebkitAnimation: 'webkitAnimationEnd'
+    };
+    for (var name in animationEvents) {
+      if (element.style[name] !== undefined) {
+        event = animationEvents[name];
+        element.addEventListener(event, next);
+        break;
+      }
+    }
+  } else if (callback) {
+    callback();
+  }
+}
+
+function unflipPanel(element, callback) {
+  var event;
+  function next() {
+    element.removeEventListener(event, next);
+    element.className = element.className.replace(/animate-unflip/, '');
+    if (callback) {
+      callback();
+    }
+  }
+  if (!element.className.match(/ animate-unflip/)) {
+    unhide(element);
+    element.className += ' animate-unflip';
+    var animationEvents = {
+      animation: 'animationend',
+      OAnimation: 'oAnimationEnd',
+      MozAnimation: 'animationend',
+      WebkitAnimation: 'webkitAnimationEnd'
+    };
+    for (var name in animationEvents) {
+      if (element.style[name] !== undefined) {
+        event = animationEvents[name];
+        element.addEventListener(event, next);
+        break;
+      }
+    }
+  } else if (callback) {
+    callback();
+  }
+}
+
 function unhide(element) {
   element.className = element.className.replace(/hidden/, '');
 }
@@ -614,3 +674,23 @@ function hide(element) {
     element.className += ' hidden';
   }
 }
+
+// Settings
+// ========
+
+var mainPanel = document.getElementById('js-main-panel');
+var settingsBtn = document.getElementById('js-settings');
+var settingsPanel = document.getElementById('js-settings-panel');
+var settingsBackBtn = document.getElementById('js-back');
+
+settingsBtn.onclick = function() {
+  flipPanel(mainPanel, function() {
+    unflipPanel(settingsPanel);
+  });
+};
+
+settingsBackBtn.onclick = function() {
+  flipPanel(settingsPanel, function() {
+    unflipPanel(mainPanel);
+  });
+};

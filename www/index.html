@@ -102,7 +102,7 @@ table button::after {
 p {
   text-align: center;
 }
-#left-panel {
+.left-panel {
   width: 209px;
   /*margin: 0 auto;*/
   /*float: right;*/
@@ -111,6 +111,13 @@ p {
   box-sizing: content-box;
   background: white;
   border-right: 1px solid #ddd;
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+#js-main-panel {
+}
+#js-settings-panel {
 }
 .alert {
   padding: 0;
@@ -165,13 +172,57 @@ video {
         -o-animation: flickerAnimation 0.5s ease-out alternate infinite;
            animation: flickerAnimation 0.5s ease-out alternate infinite;
 }
+@keyframes unflipAnim {
+  0%   { transform: rotateY( 90deg ); }
+  100% { transform: rotateY( 0deg ); }
+}
+@-o-keyframes unflipAnim {
+  0%   { transform: rotateY( 90deg ); }
+  100% { transform: rotateY( 0deg ); }
+}
+@-moz-keyframes unflipAnim {
+  0%   { transform: rotateY( 90deg ); }
+  100% { transform: rotateY( 0deg ); }
+}
+@-webkit-keyframes unflipAnim {
+  0%   { transform: rotateY( 90deg ); }
+  100% { transform: rotateY( 0deg ); }
+}
+.animate-unflip {
+   -webkit-animation: unflipAnim 0.25s ease-out;
+      -moz-animation: unflipAnim 0.25s ease-out;
+        -o-animation: unflipAnim 0.25s ease-out;
+           animation: unflipAnim 0.25s ease-out;
+}
+@keyframes flipAnim {
+  0%   { transform: rotateY( 0deg ); }
+  100% { transform: rotateY( 90deg ); }
+}
+@-o-keyframes flipAnim {
+  0%   { transform: rotateY( 0deg ); }
+  100% { transform: rotateY( 90deg ); }
+}
+@-moz-keyframes flipAnim {
+  0%   { transform: rotateY( 0deg ); }
+  100% { transform: rotateY( 90deg ); }
+}
+@-webkit-keyframes flipAnim {
+  0%   { transform: rotateY( 0deg ); }
+  100% { transform: rotateY( 90deg ); }
+}
+.animate-flip {
+   -webkit-animation: flipAnim 0.25s ease-out;
+      -moz-animation: flipAnim 0.25s ease-out;
+        -o-animation: flipAnim 0.25s ease-out;
+           animation: flipAnim 0.25s ease-out;
+}
 </style>
 <script src="/sdk/signal/v0.3/js/signal.min.js"></script>
 </head>
 <body>
 
-<!-- #left-panel -->
-<div id="left-panel">
+<!-- .left-panel -->
+<div class="left-panel" id="js-main-panel">
 
 <div>
   <img id="js-status-img" src="img/twilio41x41gray.png">
@@ -246,8 +297,31 @@ video {
   </form>
 </div>
 
+<p><small><a href="#" id="js-settings">Settings</a></small></p>
+
 </div>
-<!--/#left-panel -->
+<!--/.left-panel -->
+
+<div class="left-panel hidden" id="js-settings-panel">
+  <form style="margin-top: 1em">
+    <div class="form-group" id="js-wsserver-form-group">
+      <label for="js-wsserver-value">WebSocket Server</label>
+      <input type="text" class="form-control" id="js-wsserver-value" disabled="true">
+    </div>
+    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
+    <hr>
+    <div class="form-group" id="js-wsserver-form-group">
+      <label for="js-registrar-value">Registrar</label>
+      <input type="text" class="form-control" id="js-registrar-value" disabled="true">
+    </div>
+    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
+    <!--<button type="submit" class="btn btn-success" id="js-login-btn">Log In</button>-->
+  </form>
+  <p><small><a href="#" id="js-back">Back</a></small></p>
+</div>
+
+<div class="left-panel" style="background: #eee; z-index: -9999">
+</div>
 
 <div id="js-center">
 </div>

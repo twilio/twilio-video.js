@@ -13,6 +13,22 @@ handlers:
   static_files: css/bootstrap.min.css
   upload: css/bootstrap.min.css
 
+- url: /fonts/glyphicons-halflings-regular.eot
+  static_files: fonts/glyphicons-halflings-regular.eot
+  upload: fonts/glyphicons-halflings-regular.eot
+
+- url: /fonts/glyphicons-halflings-regular.svg
+  static_files: fonts/glyphicons-halflings-regular.svg
+  upload: fonts/glyphicons-halflings-regular.svg
+
+- url: /fonts/glyphicons-halflings-regular.ttf
+  static_files: fonts/glyphicons-halflings-regular.ttf
+  upload: fonts/glyphicons-halflings-regular.ttf
+
+- url: /fonts/glyphicons-halflings-regular.woff
+  static_files: fonts/glyphicons-halflings-regular.woff
+  upload: fonts/glyphicons-halflings-regular.woff
+
 - url: /img/twilio41x41.png
   static_files: img/twilio41x41.png
   upload: img/twilio41x41.png
