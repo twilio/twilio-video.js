@@ -140,7 +140,12 @@ app = webapp2.WSGIApplication([
     RedirectRoute('/doc/', redirect_to='/doc/index.html'),
     ('/(index\.html)', Static('')),
     ('/(doc/.+)', Static('doc')),
+    RedirectRoute('/js/twilio-signal.js',
+        redirect_to='/public/js/twilio-signal.js'),
     ('/(js/.+)', Static('js')),
     ('/token\??.*', Token),
     ('/config\??.*', Config),
+    RedirectRoute('/public/ios/TwilioSignal.tar.bz2',
+        redirect_to=('https://s3-eu-west-1.amazonaws.com/'
+                     'twiliosignal/TwilioSignal.tar.bz2')),
 ], debug=True)
