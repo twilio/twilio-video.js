@@ -1,4 +1,7 @@
-VERSION=$(shell grep '^  "version": "\d.\d.\d",$$' <package.json | grep -o '\d.\d.\d')
+VERSION=$(shell \
+	grep '^  "version": "[0-9]\+.[0-9]\+.[0-9]\+",$$' <package.json \
+		| grep -o '[0-9]\+.[0-9]\+.[0-9]\+')
+
 gulp=./node_modules/gulp/bin/gulp.js
 
 all:

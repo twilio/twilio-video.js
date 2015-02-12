@@ -11,6 +11,5 @@ build:
 contents:
   include:
     - dist
-    - doc
 install:
   prefix: /mnt/signal-js
