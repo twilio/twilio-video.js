@@ -1,11 +1,15 @@
+VERSION=$(shell grep '^  "version": "\d.\d.\d",$$' <package.json | grep -o '\d.\d.\d')
 gulp=./node_modules/gulp/bin/gulp.js
 
 all:
 	make clean
-	make dist/twilio-signal.js
+	make dist/$(VERSION)/twilio-signal.js
 
-dist/twilio-signal.js: node_modules
-	$(gulp) build && cp dist/twilio-signal.*.js dist/twilio-signal.js
+dist/$(VERSION)/twilio-signal.js: node_modules
+	$(gulp) build || exit 1
+	cd dist/$(VERSION); \
+		ln -s twilio-signal.$(VERSION).js twilio-signal.js; \
+		ln -s twilio-signal.$(VERSION).min.js twilio-signal.min.js;
 
 doc: node_modules
 	make clean-doc
@@ -16,7 +20,7 @@ node_modules:
 	$(gulp) patch
 
 www: www/twilio_credentials.json www/js/twilio-signal.js
-	@cd www; \
+	cd www; \
 		bash -c \
 			'virtualenv-2.7 venv; source venv/bin/activate; pip install twilio'; \
 		rm -f httplib2 six.py twilio; \
@@ -38,8 +42,9 @@ www/twilio_credentials.json:
 		exit 1; \
 	fi
 
-www/js/twilio-signal.js: dist/twilio-signal.js
-	cp dist/twilio-signal.js www/js/twilio-signal.js
+www/js/twilio-signal.js: dist/$(VERSION)/twilio-signal.js
+	cp dist/$(VERSION)/twilio-signal.$(VERSION).js www/js/twilio-signal.js; \
+	cp dist/$(VERSION)/twilio-signal.$(VERSION).min.js www/js/twilio-signal.min.js;
 
 .PHONY: all clean clean-all clean-doc clean-node_modules clean-www doc lint \
 	publish serve test

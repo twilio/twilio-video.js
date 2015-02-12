@@ -8,9 +8,11 @@ gulp.task('default', function(done) {
 // Build
 // =====
 
+var package = require('./package');
+var name = package.name;
+var version = package.version;
+
 function getBundleName(minified) {
-  var name = require('./package.json').name;
-  var version = require('./package.json').version;
   return name + '.' + version + '.' + (!!minified ? 'min.' : '') + 'js';
 };
 
@@ -32,25 +34,30 @@ gulp.task('patch', shell.task(patches));
 var buffer = require('vinyl-buffer');
 var browserify = require('browserify');
 var source = require('vinyl-source-stream');
-/* var sourcemaps = require('gulp-sourcemaps');
-var uglify = require('gulp-uglify'); */
+var sourcemaps = require('gulp-sourcemaps');
+var uglify = require('gulp-uglify');
 
-var bundler = browserify({
-  entries: ['./browser/index.js'],
-  debug: true
-});
+function bundler(minified) {
+  var dest = './dist/' + version + '/';
+  var unminified = browserify({
+      entries: ['./browser/index.js'],
+      debug: true
+    })
+    .bundle()
+    .pipe(source(getBundleName(minified)))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({ loadMaps: true }))
+  unminified = !minified ? unminified : unminified
+    .pipe(uglify())
+  return unminified
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(dest));
+}
 
 function build(bundler) {
   return function() {
-    return bundler
-      .bundle()
-      .pipe(source(getBundleName()))
-      .pipe(buffer())
-      /* .pipe(sourcemaps.init({ loadMaps: true }))
-        // Add transformation tasks to the pipeline here.
-        .pipe(uglify())
-      .pipe(sourcemaps.write('./')) */
-      .pipe(gulp.dest('./dist/'));
+    bundler(false);
+    return bundler(true);
   };
 }
 

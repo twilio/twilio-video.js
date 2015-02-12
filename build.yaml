@@ -1,0 +1,16 @@
+name: signal-js
+targets:
+  - cent6
+build:
+  dependencies:
+    - nodejs
+  commands:
+    - make
+    - make doc
+    - cp -R doc dist/`ls dist | head -n 1`
+contents:
+  include:
+    - dist
+    - doc
+install:
+  prefix: /mnt/signal-js
