@@ -77,7 +77,7 @@ publish: www/basic_auth.json doc www
 		-E twilio_default_realm:prod
 
 serve: www
-	dev_appserver.py www --skip_sdk_update_check
+	dev_appserver.py www --host 0.0.0.0 --skip_sdk_update_check
 
 test: node_modules
 	$(gulp) test
