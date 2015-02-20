@@ -3,14 +3,16 @@ VERSION=$(shell \
 		| grep -o '[0-9]\+.[0-9]\+.[0-9]\+')
 
 gulp=./node_modules/gulp/bin/gulp.js
+mocha=node_modules/mocha/bin/mocha
+mocha_phantomjs=node_modules/mocha-phantomjs/bin/mocha-phantomjs
 
 all:
 	make clean
-	make dist/$(VERSION)/twilio-signal.js
+	make build/$(VERSION)/twilio-signal.js
 
-dist/$(VERSION)/twilio-signal.js: node_modules
+build/$(VERSION)/twilio-signal.js: node_modules
 	$(gulp) build || exit 1
-	cd dist/$(VERSION); \
+	cd build/$(VERSION); \
 		ln -s twilio-signal.$(VERSION).js twilio-signal.js; \
 		ln -s twilio-signal.$(VERSION).min.js twilio-signal.min.js;
 
@@ -45,15 +47,15 @@ www/twilio_credentials.json:
 		exit 1; \
 	fi
 
-www/js/twilio-signal.js: dist/$(VERSION)/twilio-signal.js
-	cp dist/$(VERSION)/twilio-signal.$(VERSION).js www/js/twilio-signal.js; \
-	cp dist/$(VERSION)/twilio-signal.$(VERSION).min.js www/js/twilio-signal.min.js;
+www/js/twilio-signal.js: build/$(VERSION)/twilio-signal.js
+	cp build/$(VERSION)/twilio-signal.$(VERSION).js www/js/twilio-signal.js; \
+	cp build/$(VERSION)/twilio-signal.$(VERSION).min.js www/js/twilio-signal.min.js;
 
 .PHONY: all clean clean-all clean-doc clean-node_modules clean-www doc lint \
 	publish serve test
 
 clean:
-	rm -rf dist
+	rm -rf build
 
 clean-all: clean clean-doc clean-node_modules clean-www
 
@@ -80,4 +82,27 @@ serve: www
 	dev_appserver.py www --skip_sdk_update_check
 
 test: node_modules
-	$(gulp) test
+	@$(mocha) --reporter=spec test/spec/index.js
+
+browser-test: build/$(VERSION)/twilio-signal.js \
+							build/$(VERSION)/test/index.js \
+							build/$(VERSION)/test/index.html \
+							build/$(VERSION)/test/bower_components
+	@cd build/$(VERSION); \
+		python -m SimpleHTTPServer 9999 & \
+		PID=$$?; \
+		cd ../..; \
+	$(mocha_phantomjs) -s webSecurityEnabled=false --reporter=spec http://localhost:9999/test/index.html; \
+	kill -9 $${PID}
+
+build/$(VERSION)/test/index.js: test/spec/*.js
+	@$(gulp) build-browser-test
+
+build/$(VERSION)/test/index.html: test/index.html
+	@cp test/index.html build/$(VERSION)/test/index.html
+
+build/$(VERSION)/test/bower_components: test/bower_components
+	@ln -s ../../../test/bower_components build/$(VERSION)/test/bower_components
+
+test/bower_components: test/bower.json
+	@cd test && bower install

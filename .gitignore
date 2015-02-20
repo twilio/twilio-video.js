@@ -1,8 +1,9 @@
 *.pyc
-dist
+build
 doc
 node_modules
 out
+test/bower_components
 www/basic_auth.json
 www/doc
 www/httplib2

@@ -1,117 +1,33 @@
-var gulp = require('gulp');
-var runSequence = require('run-sequence');
+'use strict';
 
-gulp.task('default', function(done) {
-  runSequence('clean', 'test', 'build', 'doc', done);
-});
-
-// Build
-// =====
-
-var package = require('./package');
-var name = package.name;
-var version = package.version;
-
-function getBundleName(minified) {
-  return name + '.' + version + '.' + (!!minified ? 'min.' : '') + 'js';
-};
-
-// Patch
-// -----
-
-var shell = require('gulp-shell');
-
-var patches = [
-  'patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true',
-  'patch -N node_modules/sip.js/src/Hacks.js <patch/disable_masking.patch; true'
-];
-
-gulp.task('patch', shell.task(patches));
-
-// Browserify
-// ----------
-
-var buffer = require('vinyl-buffer');
 var browserify = require('browserify');
+var buffer = require('vinyl-buffer');
+var del = require('del');
+var gulp = require('gulp');
+var jsdoc = require('gulp-jsdoc');
+var jshint = require('gulp-jshint');
+var runSequence = require('run-sequence');
+var shell = require('gulp-shell');
 var source = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
+var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
 
-function bundler(minified) {
-  var dest = './dist/' + version + '/';
-  var unminified = browserify({
-      entries: ['./browser/index.js'],
-      debug: true
-    })
-    .bundle()
-    .pipe(source(getBundleName(minified)))
-    .pipe(buffer())
-    .pipe(sourcemaps.init({ loadMaps: true }))
-  unminified = !minified ? unminified : unminified
-    .pipe(uglify())
-  return unminified
-    .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest(dest));
-}
+var pkg = require('./package');
+var name = pkg.name;
+var version = pkg.version;
 
-function build(bundler) {
-  return function() {
-    bundler(false);
-    return bundler(true);
-  };
-}
-
-gulp.task('build', ['clean-dist', 'lint'], function() {
-  return build(bundler)();
-});
-
-// Test
-// ====
-
-var mocha = require('gulp-mocha');
-
-gulp.task('test', function() {
-  // runSequence('unit-test', 'integration-test');
-  runSequence('unit-test');
-});
-
-// Unit
-// ----
-
-gulp.task('unit-test', function() {
-  return gulp.src(['test/unit/*.js'], { read: false })
-    .pipe(mocha({
-      reporter: 'spec',
-      globals: {
-        assert: require('assert')
-      }
-    }));
-});
-
-// Integration
-// -----------
-
-gulp.task('integration-test', function() {
-  return gulp.src(['test/integration/*.js'], { read: false })
-    .pipe(mocha({
-      reporter: 'spec',
-      globals: {
-        assert: require('assert')
-      }
-    }));
-});
-
-// Lint
-// ====
-
-var jshint = require('gulp-jshint');
-var stylish = require('jshint-stylish');
+gulp.task('patch', shell.task([
+  'patch -N node_modules/sip.js/src/SanityCheck.js ' +
+    '<patch/disable_rfc3261_18_1_2.patch; true',
+  'patch -N node_modules/sip.js/src/Hacks.js ' +
+    '<patch/disable_masking.patch; true'
+]));
 
 gulp.task('lint', function() {
   return gulp.src('./lib/**.js')
     .pipe(jshint({
       evil: true,
-      // globalstrict: true,
       laxbreak: true,
       node: true,
       predef: [
@@ -127,60 +43,61 @@ gulp.task('lint', function() {
     .pipe(jshint.reporter('fail'));
 });
 
-// Doc
-// ===
+gulp.task('test', shell.task('make test'));
 
-// JSDoc
-// -----
+gulp.task('build', function(done) {
+  function bundler(minified) {
+    var dest = './build/' + version + '/';
+    var bundleName = name + '.' + version + '.' +
+                     (!!minified ? 'min.' : '') + 'js';
+    var unminified = browserify({
+        entries: ['./browser/index.js'],
+        debug: true
+      }).bundle()
+      .pipe(source(bundleName))
+      .pipe(buffer())
+      .pipe(sourcemaps.init({ loadMaps: true }))
+    unminified = !minified ? unminified : unminified
+      .pipe(uglify())
+    return unminified
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest(dest));
+  }
+  function build(bundler) {
+    return function() {
+      // WARN: We are racing here. I haven't seen any issues yet, but, if they
+      // ever arise, suspect the following code.
+      bundler(false);
+      var result = bundler(true);
+      result.once('end', done);
+      return result;
+    };
+  }
+  // return runSequence('lint', 'test', build(bundler));
+  return runSequence('lint', build(bundler));
+});
 
-var jsdoc = require('gulp-jsdoc');
+gulp.task('build-browser-test', function() {
+  function bundler() {
+    var dest = './build/' + version + '/test/';
+    var bundleName = 'index.js';
+    return browserify({
+        entries: ['./test/spec/index.js'],
+        debug: true
+      }).bundle()
+      .pipe(source(bundleName))
+      .pipe(buffer())
+      .pipe(gulp.dest(dest));
+  }
+  return bundler();
+});
 
 gulp.task('doc', function() {
-  // return gulp.src(['./lib/**.js', './lib/**/**.js', './lib/**/**/**.js'])
   return gulp.src([
       './lib/endpoint.js',
       './lib/participant.js',
       './lib/session.js',
       './lib/token/index.js',
       './lib/media/stream.js'
-    ]).pipe(jsdoc('./doc/'));
-});
-
-// Publish
-// -------
-
-var spawn = require('child_process').spawn;
-
-gulp.task('publish', ['doc'], function(callback) {
-  function done(error) {
-    if (callback) {
-      callback(error);
-      callback = null;
-    }
-  }
-  var update = spawn('appcfg.py',
-                     'update www --oauth2'.split(' '),
-                     { stdio: 'inherit' });
-  update.on('error', done);
-  update.on('close', function(code) {
-    if (code) {
-      done(new Error('child process exited with code ' + code));
-    }
-    done();
-  });
-});
-
-// Clean
-// =====
-
-var del = require('del');
-
-gulp.task('clean', ['clean-dist', 'clean-doc']);
-
-gulp.task('clean-dist', function(done) {
-  del(['./dist/'], done);
-});
-
-gulp.task('clean-doc', function(done) {
-  del(['./doc/'], done);
+    ]).pipe(jsdoc('./build/' + version + '/doc/'));
 });

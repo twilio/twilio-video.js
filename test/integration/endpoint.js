@@ -1,169 +1,53 @@
-'use strict';
+Endpoint = typeof Twilio === 'undefined'
+         ? require('../../lib/endpoint')
+         : Twilio.Endpoint;
 
-var assert = require('assert');
-
-var _Endpoint = require('../../lib/endpoint');
-var getToken = require('../token').getLiveToken;
-var Log = require('../../lib/util/log');
-var mockWebRTC = require('../mockwebrtc.js');
-var Q = require('q');
-
-mockWebRTC(global);
-
-function Endpoint(token, options) {
-  options = options || {};
-  options['debug'] = process.env.DEBUG === 'true';
-  // options['wsServer'] = 'ws://54.173.170.237:5082';
-  options['register'] = false;
-  options['registrarServer'] = 'twil.io';
-  options['logLevel'] = Log.ERROR;
-  return new _Endpoint(token, options);
-}
+/*
+getToken = typeof getToken === 'undefined'
+         ? require('../token').getLiveToken
+         : getToken;
+         */
 
 describe('Endpoint', function() {
   this.timeout(30 * 1000); // 30 seconds
-
-  var accountSid = process.env.ACCOUNT_SID;
-  var authToken = process.env.AUTH_TOKEN;
-  var address = 'alice';
-  var apiHost = process.env.API_HOST;
-
-  var token = null;
-  var endpoint = null;
-
-  before(function(done) {
-    getToken(accountSid, authToken, address, apiHost)
-      .done(function(_token) {
-        token = _token;
-        done();
-      }, done);
-  });
-
-  beforeEach(function() {
-    endpoint = new Endpoint(token);
-  });
-
-  it('constructor works', function() {
-    assert.equal(address, endpoint.address);
-    assert.equal(false, endpoint.online);
-    assert.equal(true, endpoint.offline);
-    closeWebSocket(endpoint);
-  });
-
-  it('#register works', function(done) {
-    register(endpoint, function(error) {
-      if (error) {
-        closeWebSocket(endpoint);
-        return done(error);
+  
+  function createEndpoint(name) {
+    /*return getToken(process.env.accountSid, process.env.authToken, name)
+      .then(function(token) {
+        var endpoint = new Endpoint(token, {
+          register: false
+        });
+        return endpoint.register();
+      });*/
+    var token = {
+      "capability_token": "eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9.eyJpc3MiOiAiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyIsICJzY29wZSI6ICJzY29wZTpjbGllbnQ6b3V0Z29pbmc_YXBwU2lkPUFQMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCAiZXhwIjogMTQyNDM4NzE0NH0.hwuENHlfsXP547SihJ7ylTbpFfYOwBiWnPuxROX8g4Q",
+      "stun_turn_token": {
+        "username": "3d86a32a6a46c2792f2dc23e9214d3d744069844f39c61ec99b72a31eeafc8b6",
+        "password": "1Pgc4/KVwZRZ52BX6FQBGMk1QUrgNVI6Knm6kLfKJFM=",
+        "date_updated": "Thu, 19 Feb 2015 22:05:44 +0000",
+        "account_sid": "AC96ccc904753b3364f24211e8d9746a93",
+        "ttl": "86400",
+        "date_created": "Thu, 19 Feb 2015 22:05:44 +0000",
+        "ice_servers": [{
+          "url": "stun:global.stun.twilio.com:3478?transport=udp"
+        }, {
+          "url": "turn:global.turn.twilio.com:3478?transport=udp",
+          "username": "3d86a32a6a46c2792f2dc23e9214d3d744069844f39c61ec99b72a31eeafc8b6",
+          "credential": "1Pgc4/KVwZRZ52BX6FQBGMk1QUrgNVI6Knm6kLfKJFM="
+        }]
       }
-      closeWebSocket(endpoint);
-      done();
-    });
-  });
-
-/*
-  it('#unregister works', function(done) {
-    register(endpoint, function(error) {
-      if (error) {
-        closeWebSocket(endpoint);
-        return done(error);
-      }
-      unregister(endpoint, function(error) {
-        if (error) {
-          closeWebSocket(endpoint);
-          return done(error);
-        }
-        closeWebSocket(endpoint);
-        done();
-      });
-    });
-  });
-*/
-
-  it('#createSession sends INVITE to another Endpoint', function(done) {
-    getToken(accountSid, authToken, 'bob', apiHost).done(function(token2) {
-      var endpoint2 = new Endpoint(token2);
-      Q.all([endpoint.register(), endpoint2.register()]).done(
-        function(endpoints) {
-          var session = endpoint.createSession(endpoint2);
-          session.then(function(session) {
-            endpoint2.on('invite', function(_session) {
-              try {
-                assert.equal(session, _session);
-              } catch (e) {
-                closeWebSocket(endpoint);
-                closeWebSocket(endpoint2);
-                return done(e);
-              }
-              closeWebSocket(endpoint);
-              closeWebSocket(endpoint2);
-              done();
-            });
-          });
-        }, done);
-    }, done);
-  });
-
-/*
-  it('#join works on Session raised by \'invite\'', function(done) {
-    getToken(accountSid, authToken, 'bob', apiHost).done(function(token2) {
-      var endpoint2 = new Endpoint(token2);
-      Q.all([endpoint.register(), endpoint2.register()]).done(
-        function(endpoints) {
-          var session = endpoint.createSession(endpoint2);
-          session.then(function(session) {
-            endpoint2.on('invite', function(_session) {
-              try {
-                assert.equal(session, _session);
-              } catch (e) {
-                closeWebSocket(endpoint);
-                closeWebSocket(endpoint2);
-                return done(e);
-              }
-              endpoint2.join(_session);
-              _session.once('participantJoined', function(participant) {
-                closeWebSocket(endpoint);
-                closeWebSocket(endpoint2);
-                try {
-                  assert.equal(endpoint2, participant);
-                } catch (e) {
-                  return done(e);
-                }
-                done();
-              });
-            });
-          });
-        }, done);
-    }, done);
-  });
-*/
-
-  function closeWebSocket(endpoint) {
-    endpoint._userAgent._ua.stop();
+    };
+    // var endpoint = new Endpoint(JSON.stringify(token), {
+    //   register: false
+    // });
+    // return endpoint.register();
   }
 
-  function register(endpoint, done) {
-    endpoint.register().done(function() {
-      try {
-        assert.equal(false, endpoint.offline);
-        assert.equal(true, endpoint.online);
-      } catch (e) {
-        return done(e);
-      }
-      done();
-    }, done);
-  }
-
-  function unregister(endpoint, done) {
-    endpoint.unregister().done(function() {
-      try {
-        assert.equal(true, endpoint.offline);
-        assert.equal(false, endpoint.online);
-      } catch (e) {
-        return done(e);
-      }
-      done();
-    }, done);
-  }
+  describe('constructor', function(done) {
+    // createEndpoint('alice')
+    //   .then(function() {
+    //     done();
+    //   }, done);
+  });
 
 });

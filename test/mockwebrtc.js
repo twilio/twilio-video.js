@@ -181,16 +181,17 @@ URL.createObjectURL = createObjectURL;
 
 URL.revokeObjectURL = revokeObjectURL;
 
-function mockWebRTC(global) {
-  global.window = global;
-  global.WebSocket = WebSocket;
-  global.navigator = navigator;
-  global.RTCDataChannel = RTCDataChannel;
-  global.RTCPeerConnection = RTCPeerConnection;
-  global.RTCSessionDescription = RTCSessionDescription;
-  global.attachMediaStream = attachMediaStream;
-  global.URL = URL;
-  return global;
+function mockWebRTC(_global) {
+  _global = _global || global;
+  _global.window = _global;
+  _global.WebSocket = WebSocket;
+  _global.navigator = navigator;
+  _global.RTCDataChannel = RTCDataChannel;
+  _global.RTCPeerConnection = RTCPeerConnection;
+  _global.RTCSessionDescription = RTCSessionDescription;
+  _global.attachMediaStream = attachMediaStream;
+  _global.URL = URL;
+  return _global;
 }
 
 module.exports = mockWebRTC;
