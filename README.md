@@ -4,6 +4,7 @@ Signal
 This is the development repository for the Signal JavaScript library. You must have the following installed to build and test this project:
 
 - [Node](http://nodejs.org/)
+- Python [`virtualenv`](http://docs.python-guide.org/en/latest/dev/virtualenvs/) 
 - [Google App Engine Python SDK](https://storage.googleapis.com/appengine-sdks/featured/GoogleAppEngineLauncher-1.9.17.dmg)
 - `www/twilio_credentials.json` (see the included example file)
 
