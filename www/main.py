@@ -5,6 +5,7 @@ import os
 import os.path
 import webapp2
 
+import twilio
 from twilio.rest import TwilioRestClient
 from twilio.util import TwilioCapability
 from webapp2_extras.routes import RedirectRoute
@@ -52,7 +53,8 @@ def make_token(realm, name):
                     (realm + '.') if realm != 'prod' else ''))
     try:
         stun_turn_token = client.tokens.create()
-    except Exception:
+    except twilio.TwilioRestException as e:
+        print "Exception:", e
         stun_turn_token = None
     if stun_turn_token:
         stun_turn_token = {

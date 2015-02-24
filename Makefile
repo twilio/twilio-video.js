@@ -25,7 +25,7 @@ node_modules:
 www: www/twilio_credentials.json www/js/twilio-signal.js
 	cd www; \
 		bash -c \
-			'virtualenv-2.7 venv; source venv/bin/activate; pip install twilio'; \
+			'virtualenv venv; source venv/bin/activate; pip install -r requirements.txt'; \
 		rm -f httplib2 six.py twilio; \
 		ln -s venv/lib/python2.7/site-packages/httplib2 .; \
 		ln -s venv/lib/python2.7/site-packages/six.py .; \
