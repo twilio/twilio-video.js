@@ -38,7 +38,7 @@ describe('Endpoint', function() {
 
   var session = null;
 
-  it('construct a new Endpoint, Alice', function(done) {
+  it('construct a new Endpoint, Alice (' + aliceName + ')', function(done) {
     createEndpoint(aliceName)
       .then(function(endpoint) {
         alice = endpoint;
@@ -91,7 +91,7 @@ describe('Endpoint', function() {
       }, done);
   });
 
-  it('construct a new Endpoint, Bob', function(done) {
+  it('construct a new Endpoint, Bob (' + bobName + ')', function(done) {
     createEndpoint(bobName)
       .then(function(endpoint) {
         bob = endpoint;
