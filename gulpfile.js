@@ -111,6 +111,7 @@ gulp.task('lint', function() {
   return gulp.src('./lib/**.js')
     .pipe(jshint({
       evil: true,
+      futurehostile: true,
       // globalstrict: true,
       laxbreak: true,
       node: true,
