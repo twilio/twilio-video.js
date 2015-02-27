@@ -23,7 +23,9 @@ describe('Endpoint', function() {
     return getToken(accountSid, authToken, name)
       .then(function(token) {
         return new Endpoint(token, {
-          register: false
+          register: false,
+          debug: false,
+          logLevel: 3
         });
       });
   }
@@ -113,8 +115,8 @@ describe('Endpoint', function() {
 
     alice.createSession(bob)
       .then(function(_session) {
-        aliceCreatedSession.resolve();
         session = _session;
+        aliceCreatedSession.resolve();
       }, function(error) {
         aliceCreatedSession.reject(error)
       });
@@ -145,7 +147,7 @@ describe('Endpoint', function() {
     }, done);
   });
 
-  it('Alice leaves Session; Bob receives "participantLeft" event', function(done) {
+  /*it('Alice leaves Session; Bob receives "participantLeft" event', function(done) {
     var aliceLeaves = Q.defer();
     var bobReceivesEvent = Q.defer();
 
@@ -164,6 +166,33 @@ describe('Endpoint', function() {
       .then(function() {
         done();
       }, done);
-  });
+  });*/
+
+  /*it('Bob leaves Session; Alice receives "participantLeft" event', function(done) {
+    console.log(session);
+    session.participants.forEach(function(participant) {
+      console.log('- ' + participant.address);
+    });
+    console.log('\n\n~~~\n\n');
+
+    var bobLeaves = Q.defer();
+    var aliceReceivesEvent = Q.defer();
+
+    bob.leave(session)
+      .then(function() {
+        bobLeaves.resolve()
+      }, function(error) {
+        bobLeaves.reject(error);
+      });
+
+    session.once('participantLeft', function(participant) {
+      aliceReceivesEvent.resolve();
+    });
+
+    Q.all([bobLeaves.promise, aliceReceivesEvent.promise])
+      .then(function() {
+        done();
+      }, done);
+  });*/
 
 });

@@ -43,7 +43,7 @@ function getUserMedia(constraints, successCallback, errorCallback) {
   });
 };
 
-navigator.getUserMedia = getUserMedia;
+navigator.webkitGetUserMedia = getUserMedia;
 
 function RTCDataChannel(label) {
   this.label = label;
@@ -183,7 +183,8 @@ URL.revokeObjectURL = revokeObjectURL;
 
 function mockWebRTC(_global) {
   _global = _global || global;
-  _global.window = _global;
+  var _window = _global.window = _global;
+  _window.addEventListener = function addEventListener(){};
   _global.WebSocket = WebSocket;
   _global.navigator = navigator;
   _global.RTCDataChannel = RTCDataChannel;
