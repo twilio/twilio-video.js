@@ -94,10 +94,13 @@ gulp.task('build-browser-test', function() {
 
 gulp.task('doc', function() {
   return gulp.src([
-      './lib/endpoint.js',
+      /*'./lib/endpoint.js',
       './lib/participant.js',
       './lib/session.js',
       './lib/token/index.js',
-      './lib/media/stream.js'
+      './lib/media/stream.js'*/
+      './lib/**.js',
+      './lib/**/**.js',
+      './lib/**/**/**.js'
     ]).pipe(jsdoc('./build/' + version + '/doc/'));
 });

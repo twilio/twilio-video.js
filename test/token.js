@@ -61,6 +61,14 @@ function withStunTurnToken(accountSid, authToken, address, stunTurnToken) {
   });
 }
 
+function getCapabilityToken(accountSid, authToken, address) {
+  var twilio = require('twilio');
+  var capabilityToken = new twilio.Capability(accountSid, authToken);
+  capabilityToken.allowClientIncoming(address);
+  capabilityToken.allowClientOutgoing('AP00000000000000000000000000000000');
+  return capabilityToken.generate();
+}
+
 function getBrowserToken(accountSid, authToken, address) {
   var deferred = Q.defer();
   var xhr = new XMLHttpRequest();
@@ -93,3 +101,4 @@ function getBrowserToken(accountSid, authToken, address) {
 module.exports.getLiveToken = getLiveToken;
 module.exports.getExpiredToken = getExpiredToken;
 module.exports.getBrowserToken = getBrowserToken;
+module.exports.getCapabilityToken = getCapabilityToken;
