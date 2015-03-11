@@ -96,7 +96,7 @@ describe('SIPJSUserAgent', function() {
     var dialog = null;
 
     it('emits "invite"', function(done) {
-      ua2.invite(ua1Name).then(null, function() {
+      ua2.invite(ua1Name).then(null, function(error) {
         if (ist === null) {
           done(new Error('InviteClientTransaction failed'));
         }
@@ -104,8 +104,8 @@ describe('SIPJSUserAgent', function() {
       ua1.once('invite', function(_ist) {
         ist = _ist;
         try {
-          assert.equal(ist.to, ua1);
-          assert.equal(ist.from.user, ua2Name);
+          assert.equal(ua1, ist.userAgent);
+          assert.equal(ua2Name, ist.from.user);
           assert(ist.sid);
         } catch (e) {
           return done(e);
