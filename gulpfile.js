@@ -94,13 +94,21 @@ gulp.task('build-browser-test', function() {
 
 gulp.task('doc', function() {
   return gulp.src([
-      /*'./lib/endpoint.js',
-      './lib/participant.js',
-      './lib/session.js',
-      './lib/token/index.js',
-      './lib/media/stream.js'*/
-      './lib/**.js',
-      './lib/**/**.js',
-      './lib/**/**/**.js'
+      './lib/conversation.js',
+      './lib/endpoint.js',
+      './lib/invite.js',
+      './lib/media/sound.js',
+      './lib/media/stream.js',
+      './lib/remoteendpoint.js',
+      './lib/signaling/dialog.js',
+      './lib/signaling/invitetransaction/index.js',
+      './lib/signaling/invitetransaction/inviteclienttransaction.js',
+      './lib/signaling/invitetransaction/inviteservertransaction.js',
+      './lib/signaling/invitetransaction/sipjsinviteclienttransaction.js',
+      './lib/signaling/invitetransaction/sipjsinviteservertransaction.js',
+      './lib/signalng/sipjsuseragent.js',
+      './lib/signalng/useragent.js',
+      './lib/signaling/sipjsdialog.js',
+      './lib/token.js'
     ]).pipe(jsdoc('./build/' + version + '/doc/'));
 });

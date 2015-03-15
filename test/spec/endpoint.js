@@ -23,13 +23,13 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   describe('constructor', function() {
     var receivedEvent = false;
 
-    it('emits "registered"', function(done) {
+    it('emits "listen"', function(done) {
       alice = new Endpoint(aliceToken, { debug: false });
-      alice.once('registered', function() {
+      alice.once('listen', function() {
         receivedEvent = true;
         done();
       });
-      alice.once('registrationFailed', function(error) {
+      alice.once('listenFailed', function(error) {
         done(error);
       });
     });
@@ -38,20 +38,20 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       assert.equal(aliceName, alice.address);
     });
 
-    describe('#unregister', function() {
+    describe('#unlisten', function() {
       var receivedEvent = false;
 
-      it('updates .registered', function(done) {
-        alice.unregister().then(function() {
-          assert(!alice.registered);
+      it('updates .listening', function(done) {
+        alice.unlisten().then(function() {
+          assert(!alice.listening);
         }).then(null, done);
-        alice.once('unregistered', function() {
+        alice.once('unlisten', function() {
           receivedEvent = true;
           done();
         });
       });
 
-      it('emits "unregistered"', function() {
+      it('emits "unlisten"', function() {
         assert(receivedEvent);
       });
 
@@ -59,23 +59,23 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         assert.equal(aliceName, alice.address);
       });
 
-      describe('#register (with new Token)', function() {
+      describe('#listen (with new Token)', function() {
         var aliceName = null;
         var aliceToken = null;
         var receiveEvent = false;
 
-        it('updates .registered', function(done) {
+        it('updates .listening', function(done) {
           aliceName = randomName();
           aliceToken = getCapabilityToken(aliceName);
-          alice.register(aliceToken).then(function() {
-            assert(alice.registered);
+          alice.listen(aliceToken).then(function() {
+            assert(alice.listening);
           }).then(done, done);
-          alice.once('registered', function() {
+          alice.once('listen', function() {
             receivedEvent = true;
           });
         });
 
-        it('emits "registered"', function() {
+        it('emits "listen"', function() {
           assert(receivedEvent);
         });
 
@@ -129,11 +129,11 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
   });
 
-  describe('#createConversation', function() {
+  describe('#invite', function() {
     var conversation = null;
 
     it('updates .conversations', function(done) {
-      alice.createConversation(uaName).then(function(_conversation) {
+      alice.invite(uaName).then(function(_conversation) {
         conversation = _conversation;
         assert(alice.conversations.has(conversation));
       }).then(done, done);

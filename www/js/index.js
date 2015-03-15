@@ -44,12 +44,11 @@ function setupLoginBtn(loginBtn) {
         if (error) {
           return restore(error);
         }
-        endpoint.on('invite', function(session, participant) {
-          if (loggedIn !== endpoint || (callInProgress && callInProgress !== session)) {
+        endpoint.on('invite', function(invite) {
+          if (loggedIn !== endpoint || (callInProgress && callInProgress !== invite.conversation)) {
             return;
           }
-          var name = participant.address;
-          incoming(name, endpoint, session, participant);
+          incoming(invite);
         });
         didLogIn(endpoint);
       });
@@ -63,21 +62,21 @@ var incomingPanel = document.getElementById('js-incoming-panel');
 var acceptBtn = document.getElementById('js-btn-accept');
 var ignoreBtn = setupIgnoreBtn(document.getElementById('js-btn-ignore'));
 
-function setAcceptBtnOnClick(name, session) {
+function setAcceptBtnOnClick(invite) {
   acceptBtn.onclick = function onclick(e) {
     acceptBtn.disabled = true;
     ignoreBtn.disabled = true;
     e.preventDefault();
     if (loggedIn) {
-      loggedIn.join(session)
-        .done(function() {
+      invite.accept()
+        .done(function(conversation) {
           stopFlicker(statusImg, function() {
             acceptBtn.disabled = false;
             ignoreBtn.disabled = false;
             hide(incomingPanel);
             enableDialer();
-            didCall(session);
-            callValue.value = name;
+            didCall(conversation);
+            callValue.value = invite.from;
             callValue.disabled = true;
           });
         }, function(error) {
@@ -107,12 +106,12 @@ function setupIgnoreBtn(ignoreBtn) {
   return ignoreBtn;
 }
 
-function incoming(name, endpoint, session) {
+function incoming(invite) {
   startFlicker(statusImg);
   disableDialer();
-  incomingStatus.innerHTML = '<b>' + name + '</b> is calling you.';
+  incomingStatus.innerHTML = '<b>' + invite.from + '</b> is calling you.';
   unhide(incomingPanel);
-  setAcceptBtnOnClick(name, session);
+  setAcceptBtnOnClick(invite);
 }
 
 function loggingOut() {
@@ -134,7 +133,7 @@ function loggingOut() {
 }
 
 function logOut(callback) {
-  loggedIn.unregister().done(function() {
+  loggedIn.unlisten().done(function() {
     callback();
   }, function(error) {
     callback(error);
@@ -188,7 +187,7 @@ function logIn(name, next) {
         case 200:
           try {
             var config = JSON.parse(xhr.responseText);
-            config['token'] = JSON.stringify(config['token']);
+            // config['token'] = JSON.stringify(config['token']);
             callback(null, config);
           } catch (e) {
             callback(e.message);
@@ -207,13 +206,13 @@ function logIn(name, next) {
     if (error) {
       return next(error);
     }
-    var endpoint = new Twilio.Endpoint(config['token'], {
+    var endpoint = new Twilio.Endpoint(config['token']['capability_token'], {
       'debug': true,
       'register': false,
       'registrarServer': 'twil.io',
       'wsServer': 'ws://' + config['ws_server']
     });
-    endpoint.register().done(function() {
+    endpoint.listen().done(function() {
       next(null, endpoint);
     }, function(error) {
       next(error);
@@ -367,15 +366,16 @@ function setupCallBtn(callBtn) {
     }
     restore = calling();
     // Call
-    loggedIn.createSession(callValue.value)
-      .done(function(session) {
-        cancel = function cancel() {
-          loggedIn.leave(session);
-          restore();
-        };
-        session.once('participantJoined', function() {
+    loggedIn.invite(callValue.value)
+      .done(function(conversation) {
+        // FIXME(mroberts): ...
+        // cancel = function cancel() {
+        //   loggedIn.leave(conversation);
+        //   restore();
+        // };
+        conversation.once('remoteEndpointJoined', function(remoteEndpoint) {
           cancel = null;
-          didCall(session);
+          didCall(conversation);
         });
       }, function(error) {
         restore(error.message);
@@ -409,7 +409,7 @@ function hangingUp() {
 
 function didHangUp() {
   callInProgress = null;
-  stopDisplayingSession(callInProgress);
+  stopDisplayingConversation(callInProgress);
   stopFlicker(statusImg, function() {
     callValue.disabled = false;
     callBtn.innerHTML = 'Call';
@@ -458,9 +458,9 @@ function calling() {
   };
 }
 
-function didCall(session) {
-  callInProgress = session;
-  startDisplayingSession(callInProgress);
+function didCall(conversation) {
+  callInProgress = conversation;
+  startDisplayingConversation(conversation);
   stopFlicker(statusImg, function() {
     callBtn.innerHTML = 'Hang Up';
     callBtn.className = callBtn.className.replace(/btn-success/, 'btn-danger');
@@ -471,12 +471,12 @@ function didCall(session) {
     muteBtn.disabled = false;
     pauseBtn.disabled = false;
   });
-  session.once('participantLeft', function() {
+  conversation.once('remoteEndpointLeft', function(remoteEndpoint) {
     didHangUp();
   });
 }
 
-// Session Display
+// Conversation Display
 // ---------------
 
 var center = document.getElementById('js-center');
@@ -484,10 +484,10 @@ var videoDiv = null;
 var remoteVideos = null;
 var localVideos = null;
 
-function startDisplayingSession(session) {
+function startDisplayingConversation(conversation) {
   var remoteVideoDiv = document.createElement('div');
   remoteVideoDiv.className += ' js-remote-video-div';
-  var remoteStreams = session.getRemoteStreams();
+  var remoteStreams = conversation.getRemoteStreams();
   remoteVideos = remoteStreams.map(function(remoteStream) {
     var remoteVideo = remoteStream.attach();
     remoteVideo.className += ' js-remote-video';
@@ -497,7 +497,7 @@ function startDisplayingSession(session) {
 
   var localVideoDiv = document.createElement('div');
   localVideoDiv.className += ' js-local-video-div';
-  var localStreams = session.getLocalStreams(loggedIn);
+  var localStreams = conversation.getLocalStreams(loggedIn);
   localVideos = localStreams.map(function(localStream) {
     var localVideo = localStream.attach();
     localVideo.className += ' js-local-video';
@@ -513,7 +513,7 @@ function startDisplayingSession(session) {
   center.appendChild(videoDiv);
 }
 
-function stopDisplayingSession(session) {
+function stopDisplayingConversation() {
   remoteVideos.forEach(function(remoteVideo) {
     remoteVideo.pause();
   });
