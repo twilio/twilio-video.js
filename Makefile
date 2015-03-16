@@ -35,7 +35,7 @@ MOCHA=node_modules/mocha/bin/mocha
 MOCHA_PHANTOMJS=node_modules/mocha-phantomjs/bin/mocha-phantomjs
 UGLIFY=node_modules/uglify-js/bin/uglifyjs
 
-INFO=@echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
+INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 
 all: $(ALL)
 
@@ -68,7 +68,7 @@ www: www/twilio_credentials.json www/httplib2 www/six.py www/twilio www/sdk
 .PHONY: all clean clean-all clean-www doc lint publish serve test
 
 node_modules: package.json
-	$(call INFO,"Installing node_modules")
+	@$(call INFO,"Installing node_modules")
 	npm install
 	$(GULP) patch
 
@@ -87,56 +87,56 @@ $(MOCHA_PHANTOMJS): node_modules
 $(UGLIFY): node_modules
 
 $(PUBLIC_DOCS): $(RELEASE_DOCS)
-	$(call INFO,"Symlinking public docs to release docs")
+	@$(call INFO,"Symlinking public docs to release docs")
 	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/docs .)
 
 $(PUBLIC_LOADER): $(RELEASE_LOADER)
-	$(call INFO,"Symlinking public loader to release loader")
+	@$(call INFO,"Symlinking public loader to release loader")
 	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT)-loader.js $(PRODUCT).js)
 
 $(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
-	$(call INFO,"Symlinking minified public loader to minified release loader")
+	@$(call INFO,"Symlinking minified public loader to minified release loader")
 	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT)-loader.min.js $(PRODUCT).min.js)
 
 $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
-	$(call INFO,"Generating release docs")
-	$(JSDOC) $? -d $(RELEASE_DOCS)
+	@$(call INFO,"Generating release docs")
+	$(JSDOC) $(LIB_FILES) -d $(RELEASE_DOCS)
 
 # $(RELEASE_LOADER): $(SRC_FILES)
 $(RELEASE_LOADER): $(RELEASE)
 	@# cp src/$(PRODUCT)-loader.js $(RELEASE_LOADER)
-	$(call INFO,"Symlinking release loader to release")
+	@$(call INFO,"Symlinking release loader to release")
 	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).js $(PRODUCT)-loader.js)
 
 # $(RELEASE_LOADER_MIN): $(UGLIFY) $(RELEASE_LOADER)
 $(RELEASE_LOADER_MIN): $(RELEASE_MIN)
 	@# cp $(UGLIFY) $(RELEASE_LOADER) -o $(RELEASE_LOADER_MIN)
-	$(call INFO,"Symlinking minified release loader to minified release")
+	@$(call INFO,"Symlinking minified release loader to minified release")
 	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).min.js $(PRODUCT)-loader.min.js)
 
 $(RELEASE): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
-	$(call INFO,"Building release")
+	@$(call INFO,"Building release")
 	@mkdir -p $(RELEASE_ROOT)
 	$(BROWSERIFY) src/$(PRODUCT).js -o $(RELEASE)
 
 $(RELEASE_MIN): $(UGLIFY) $(RELEASE)
-	$(call INFO,"Minifying release")
+	@$(call INFO,"Minifying release")
 	$(UGLIFY) $(RELEASE) -o $(RELEASE_MIN)
 
 .LINTED: $(JSHINT) $(LIB_FILES) $(SRC_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_LINT}" ]]; then \
-		echo "[$$(date "+%H:%M:%S")] Linting\033[0m"; \
+		$(call INFO,"Linting"); \
 		make lint && touch .LINTED; \
 	else \
-		echo "[$$(date "+%H:%M:%S")] Skipped linting\033[0m"; \
+		$(call INFO,"Skipped linting"); \
 	fi
 
 .TESTED: $(MOCHA) $(LIB_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_TEST}" ]]; then \
-		echo "[$$(date "+%H:%M:%S")] Testing\033[0m"; \
+		$(call INFO,"Testing"); \
 		make test && touch .TESTED; \
 	else \
-		echo "[$$(date "+%H:%M:%S")] Skipped testing\033[0m"; \
+		$(call INFO,"Skipped testing"); \
 	fi
 
 www/basic_auth.json:
@@ -153,7 +153,7 @@ www/twilio_credentials.json:
 	fi
 
 www/venv:
-	$(call INFO,"Creating virtualenv")
+	@$(call INFO,"Creating virtualenv")
 	(cd www; bash -c 'virtualenv venv; source venv/bin/activate; pip install -r requirements.txt')
 
 www/venv/lib/python2.7/site-packages/httplib2: www/venv
@@ -163,19 +163,19 @@ www/venv/lib/python2.7/site-packages/six.py: www/venv
 www/venv/lib/python2.7/site-packages/twilio: www/venv
 
 www/httplib2: www/venv/lib/python2.7/site-packages/httplib2
-	$(call INFO,"Symlinking httplib2")
+	@$(call INFO,"Symlinking httplib2")
 	(cd www; ln -s -f venv/lib/python2.7/site-packages/httplib2 .)
 
 www/six.py: www/venv/lib/python2.7/site-packages/six.py
-	$(call INFO,"Symlinking six.py")
+	@$(call INFO,"Symlinking six.py")
 	(cd www; ln -s -f venv/lib/python2.7/site-packages/six.py .)
 
 www/twilio: www/venv/lib/python2.7/site-packages/twilio
-	$(call INFO,"Symlinking twilio")
+	@$(call INFO,"Symlinking twilio")
 	(cd www; ln -s -f venv/lib/python2.7/site-packages/twilio .)
 
 www/sdk: $(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN)
-	$(call INFO,"Symlinking sdk")
+	@$(call INFO,"Symlinking sdk")
 	(cd www; ln -s -f ../build/sdk .; touch sdk)
 
 # browser-test: build/$(RELEASE_VERSION)/twilio-signal.js \

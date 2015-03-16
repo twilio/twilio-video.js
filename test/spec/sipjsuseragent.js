@@ -105,7 +105,7 @@ describe('SIPJSUserAgent', function() {
         ist = _ist;
         try {
           assert.equal(ua1, ist.userAgent);
-          assert.equal(ua2Name, ist.from.user);
+          assert.equal(ua2Name, ist.from);
           assert(ist.sid);
         } catch (e) {
           return done(e);

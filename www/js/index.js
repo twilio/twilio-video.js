@@ -472,6 +472,9 @@ function didCall(conversation) {
     pauseBtn.disabled = false;
   });
   conversation.once('remoteEndpointLeft', function(remoteEndpoint) {
+    if (loggedIn) {
+      loggedIn.leave(conversation);
+    }
     didHangUp();
   });
 }
