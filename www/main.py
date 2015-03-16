@@ -54,7 +54,7 @@ def make_token(realm, name):
     try:
         stun_turn_token = client.tokens.create()
     except twilio.TwilioRestException as e:
-        print "Exception:", e
+        print 'Exception: ', e
         stun_turn_token = None
     if stun_turn_token:
         stun_turn_token = {
