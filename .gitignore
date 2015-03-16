@@ -1,4 +1,6 @@
 *.pyc
+.LINTED
+.TESTED
 build
 doc
 node_modules
@@ -7,8 +9,8 @@ test/bower_components
 www/basic_auth.json
 www/doc
 www/httplib2
-www/js/twilio-signal.*
 www/six.py
+www/sdk
 www/twilio
 www/twilio_credentials.json
 www/venv

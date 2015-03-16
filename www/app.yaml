@@ -39,7 +39,10 @@ handlers:
 - url: /js/index.js
   script: main.app
 
-- url: /js/twilio-signal.js
+- url: /sdk
+  script: main.app
+
+- url: /sdk/(.*)
   script: main.app
 
 - url: /public/ios/TwilioSignal.tar.bz2
