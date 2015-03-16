@@ -373,7 +373,7 @@ function setupCallBtn(callBtn) {
         //   loggedIn.leave(conversation);
         //   restore();
         // };
-        conversation.once('remoteEndpointJoined', function(remoteEndpoint) {
+        conversation.once('participantJoined', function(participant) {
           cancel = null;
           didCall(conversation);
         });
@@ -471,7 +471,7 @@ function didCall(conversation) {
     muteBtn.disabled = false;
     pauseBtn.disabled = false;
   });
-  conversation.once('remoteEndpointLeft', function(remoteEndpoint) {
+  conversation.once('participantLeft', function(participant) {
     if (loggedIn) {
       loggedIn.leave(conversation);
     }
