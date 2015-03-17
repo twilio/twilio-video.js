@@ -2,7 +2,6 @@
 
 var browserify = require('browserify');
 var buffer = require('vinyl-buffer');
-var del = require('del');
 var gulp = require('gulp');
 var jsdoc = require('gulp-jsdoc');
 var jshint = require('gulp-jshint');
