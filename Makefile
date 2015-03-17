@@ -25,6 +25,7 @@ ALL=$(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN) $(RELEASE_LOADER) $(RELEASE_LOADER_MIN
 LIB_FILES=$(shell find lib -name \*.js)
 SRC_FILES=$(shell find src -name \*.js)
 TEST_FILES=$(shell find test -name \*.js)
+PUBLIC_LIB_FILES=lib/conversation.js lib/endpoint.js lib/invite.js lib/media/stream.js lib/token.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
@@ -51,8 +52,7 @@ lint:
 	$(GULP) lint
 
 publish: www/basic_auth.json www
-	rm -rf www/doc
-	cp -R doc www/doc
+	(cd www; ln -s -f sdk/$(PRODUCT)/$(PUBLIC_VERSION)/docs doc)
 	appcfg.py update www --oauth2 \
 		-E twilio_allowed_realms:prod \
 		-E twilio_default_realm:prod
@@ -72,7 +72,7 @@ www: www/twilio_credentials.json www/httplib2 www/six.py www/twilio www/sdk
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")
-	npm install
+	npm install && touch node_modules
 	$(GULP) patch
 
 $(BROWSERIFY): node_modules
@@ -103,7 +103,7 @@ $(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
 
 $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
-	$(JSDOC) $(LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 
 # $(RELEASE_LOADER): $(SRC_FILES)
 $(RELEASE_LOADER): $(RELEASE)
