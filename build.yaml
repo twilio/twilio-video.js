@@ -5,10 +5,12 @@ build:
   dependencies:
     - nodejs
   commands:
+    - make clean
     - make
+    - rm -rf sdk
     - mv build/sdk .
 contents:
   include:
     - sdk
 install:
-  prefix: /mnt/sdk
+  prefix: /mnt
