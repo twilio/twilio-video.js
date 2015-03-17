@@ -42,20 +42,13 @@ $ make publish
 
 Unit and integration tests use [Mocha](http://mochajs.org/) and are defined in
 
-- `test/unit/`
+- `test/spec/`
 - `test/integration/`
 
 You can run both with
 
 ```
 $ make test
-```
-
-Or, if you have [gulp](http://gulpjs.com/) installed, run
-
-```
-$ gulp unit-test
-$ gulp integration-test
 ```
 
 Documentation
