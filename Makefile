@@ -57,6 +57,9 @@ publish: www/basic_auth.json www
 		-E twilio_allowed_realms:prod \
 		-E twilio_default_realm:prod
 
+release-version:
+	@echo $(RELEASE_VERSION)
+
 serve: www
 	dev_appserver.py www --skip_sdk_update_check
 
