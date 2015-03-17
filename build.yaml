@@ -6,8 +6,9 @@ build:
     - nodejs
   commands:
     - make
+    - mv build/sdk .
 contents:
   include:
-    - build/sdk
+    - sdk
 install:
   prefix: /mnt/sdk
