@@ -6,6 +6,7 @@ var Q = require('q');
 var util = require('./util');
 
 var UserAgent = require('../../lib/signaling/useragent');
+var Token = require('../../lib/token');
 
 var accountSid = process.env['ACCOUNT_SID'];
 var authToken = process.env['AUTH_TOKEN'];
@@ -13,14 +14,14 @@ var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
 describe('UserAgent', function() {
-  var token = getCapabilityToken('ua1');
+  var token = new Token(getCapabilityToken('ua1'));
   var ua1 = null;
 
   describe('constructor', function() {
     it('sets .token', function() {
       ua1 = new UserAgent(token);
       assert(!ua1.registered);
-      assert.equal(token, ua1.token.capabilityTokenString);
+      assert.equal(token, ua1.token);
     });
   });
 
@@ -57,11 +58,11 @@ describe('UserAgent', function() {
       });
 
       it('does not update .token', function() {
-        assert.equal(token, ua1.token.capabilityTokenString);
+        assert.equal(token, ua1.token);
       });
 
       describe('#register (again, with new Token)', function() {
-        token = getCapabilityToken('ua1');
+        token = new Token(getCapabilityToken('ua1'));
         var receivedEvent = false;
 
         it('updates .registered', function(done) {
@@ -78,7 +79,7 @@ describe('UserAgent', function() {
         });
 
         it('updates .token', function() {
-          assert.equal(token, ua1.token.capabilityTokenString);
+          assert.equal(token, ua1.token);
         });
       });
     });
