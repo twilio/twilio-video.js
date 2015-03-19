@@ -48,6 +48,12 @@ clean-www:
 
 clean-all: clean clean-www
 
+docs:
+	@$(call INFO,"Generating docs")
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
+	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
+
 lint:
 	$(GULP) lint
 
@@ -68,7 +74,7 @@ test:
 
 www: www/twilio_credentials.json www/httplib2 www/six.py www/twilio www/sdk
 
-.PHONY: all clean clean-all clean-www doc lint publish serve test
+.PHONY: all clean clean-all clean-www docs lint publish serve test
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")
@@ -104,6 +110,8 @@ $(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
 $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
+	scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
 # $(RELEASE_LOADER): $(SRC_FILES)
 $(RELEASE_LOADER): $(RELEASE)

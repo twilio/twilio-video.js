@@ -13,6 +13,7 @@
   ],
   "devDependencies": {
     "browserify": "^9.0.3",
+    "cheerio": "^0.18.0",
     "gulp": "^3.8.8",
     "gulp-jsdoc": "^0.1.4",
     "gulp-jshint": "1.8.0",
