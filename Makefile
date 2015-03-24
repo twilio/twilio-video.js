@@ -34,7 +34,7 @@ JSDOC=node_modules/jsdoc/jsdoc.js
 JSHINT=node_modules/jshint/bin/jshint
 MOCHA=node_modules/mocha/bin/mocha
 MOCHA_PHANTOMJS=node_modules/mocha-phantomjs/bin/mocha-phantomjs
-UGLIFY=node_modules/uglify-js/bin/uglifyjs
+UGLIFY=node_modules/uglify-js/bin/uglifyjs -b ascii-only
 
 INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 
