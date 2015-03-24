@@ -4,3 +4,4 @@ if (typeof window === 'undefined') {
 require('./useragent');
 require('./sipjsuseragent');
 require('./endpoint');
+require('./conversation');
