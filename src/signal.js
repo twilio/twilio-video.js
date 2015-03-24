@@ -1,27 +1,9 @@
 'use strict';
 
-var Endpoint = require('../lib/endpoint');
-var Stream = require('../lib/media/stream');
+global.Twilio = global.Twilio || new function Twilio(){};
 
-/**
- * The {@link Twilio} namespace exposes {@link Endpoint} and {@link Stream}.
- * @class
- * @property {Endpoint} Endpoint
- * @property {Stream} Stream
- */
-function Twilio() {
-  if (!(this instanceof Twilio)) {
-    return new Twilio();
-  }
-  Object.defineProperties(this, {
-    'Endpoint': {
-      value: Endpoint
-    },
-    'Stream': {
-      value: Stream
-    }
-  });
-  return Object.freeze(this);
-}
+var Twilio = global['Twilio'];
+var Signal = Twilio['Signal'] = Twilio['Signal'] || new function Signal(){};
 
-global.Twilio = module.exports = new Twilio();
+Signal['Endpoint'] = require('../lib/endpoint');
+Signal['Stream'] = require('../lib/media/stream');
