@@ -37,8 +37,8 @@ table .btn {
 .btn-group {
   width: 100%;
 }
-#js-btn-accept, #js-btn-ignore {
-  width: 50%;
+#js-btn-accept, #js-btn-reject, #js-btn-ignore {
+  width: 33.33%;
 }
 form label {
   position: relative;
@@ -166,7 +166,7 @@ video {
            animation: flickerAnimation 0.5s ease-out alternate infinite;
 }
 </style>
-<script src="/sdk/signal/v1.0/js/signal.js" charset="utf-8"></script>
+<script src="/sdk/signal/v0.0/js/signal.min.js"></script>
 </head>
 <body>
 
@@ -184,6 +184,7 @@ video {
   <form>
     <div class="btn-group">
       <button type="button" class="btn btn-success" id="js-btn-accept">Accept</button>
+      <button type="button" class="btn btn-danger" id="js-btn-reject">Reject</button>
       <button type="button" class="btn btn-default" id="js-btn-ignore">Ignore</button>
     </div>
   </form>

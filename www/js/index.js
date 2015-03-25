@@ -60,18 +60,21 @@ function setupLoginBtn(loginBtn) {
 var incomingStatus = document.getElementById('js-incoming-status');
 var incomingPanel = document.getElementById('js-incoming-panel');
 var acceptBtn = document.getElementById('js-btn-accept');
+var rejectBtn = document.getElementById('js-btn-reject');
 var ignoreBtn = setupIgnoreBtn(document.getElementById('js-btn-ignore'));
 
 function setAcceptBtnOnClick(invite) {
   acceptBtn.onclick = function onclick(e) {
-    acceptBtn.disabled = true;
-    ignoreBtn.disabled = true;
     e.preventDefault();
     if (loggedIn) {
+      acceptBtn.disabled = true;
+      rejectBtn.disabled = true;
+      ignoreBtn.disabled = true;
       invite.accept()
         .done(function(conversation) {
           stopFlicker(statusImg, function() {
             acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
             ignoreBtn.disabled = false;
             hide(incomingPanel);
             enableDialer();
@@ -82,6 +85,7 @@ function setAcceptBtnOnClick(invite) {
         }, function(error) {
           stopFlicker(statusImg, function() {
             acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
             ignoreBtn.disabled = false;
             hide(incomingPanel);
             enableDialer();
@@ -91,6 +95,37 @@ function setAcceptBtnOnClick(invite) {
     }
   };
   return acceptBtn;
+}
+
+function setRejectBtnOnClick(invite) {
+  rejectBtn.onclick = function onclick(e) {
+    e.preventDefault();
+    if (loggedIn) {
+      acceptBtn.disabled = true;
+      rejectBtn.disabled = true;
+      ignoreBtn.disabled = true;
+      invite.reject()
+        .done(function(conversation) {
+          stopFlicker(statusImg, function() {
+            acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
+            ignoreBtn.disabled = false;
+            hide(incomingPanel);
+            enableDialer();
+          });
+        }, function(error) {
+          stopFlicker(statusImg, function() {
+            acceptBtn.disabled = false;
+            rejectBtn.disabled = false;
+            ignoreBtn.disabled = false;
+            hide(incomingPanel);
+            enableDialer();
+            console.log(error);
+          });
+        });
+    }
+  };
+  return rejectBtn;
 }
 
 function setupIgnoreBtn(ignoreBtn) {
@@ -112,6 +147,7 @@ function incoming(invite) {
   incomingStatus.innerHTML = '<b>' + invite.from + '</b> is calling you.';
   unhide(incomingPanel);
   setAcceptBtnOnClick(invite);
+  setRejectBtnOnClick(invite);
 }
 
 function loggingOut() {
@@ -175,6 +211,25 @@ function loggingIn() {
 }
 
 function logIn(name, next) {
+  function callback(error, config) {
+    if (error) {
+      return next(error);
+    }
+    console.log('Got here');
+    var endpoint = new Twilio.Signal.Endpoint(config['token']['capability_token'], {
+      'debug': true,
+      'register': false,
+      'registrarServer': 'twil.io',
+      'wsServer': 'ws://' + config['ws_server']
+    });
+    console.log('Got there');
+    endpoint.listen().done(function() {
+      next(null, endpoint);
+    }, function(error) {
+      next(error);
+    });
+  }
+
   name = encodeURIComponent(name);
   var xhr = new XMLHttpRequest();
   xhr.open('GET', 'config?name=' + name, true);
@@ -201,23 +256,6 @@ function logIn(name, next) {
     }
   };
   xhr.send();
-
-  function callback(error, config) {
-    if (error) {
-      return next(error);
-    }
-    var endpoint = new Twilio.Endpoint(config['token']['capability_token'], {
-      'debug': true,
-      'register': false,
-      'registrarServer': 'twil.io',
-      'wsServer': 'ws://' + config['ws_server']
-    });
-    endpoint.listen().done(function() {
-      next(null, endpoint);
-    }, function(error) {
-      next(error);
-    });
-  }
 }
 
 function didLogIn(endpoint) {
