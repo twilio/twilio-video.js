@@ -52,6 +52,7 @@ docs:
 	@$(call INFO,"Generating docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
 	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
 lint:
@@ -110,7 +111,8 @@ $(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
 $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
-	scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
 	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
 # $(RELEASE_LOADER): $(SRC_FILES)
