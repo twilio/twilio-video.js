@@ -2,7 +2,7 @@
   "name": "twilio-signal",
   "title": "Signal",
   "description": "Signal",
-  "version": "0.0.2",
+  "version": "0.2.0",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "keywords": [
