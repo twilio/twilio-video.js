@@ -89,7 +89,7 @@ describe('SIPJSUserAgent', function() {
   });
 
   var ua2Name = randomName();
-  var ua2 = new SIPJSUserAgent(getCapabilityToken(ua2Name), { debug: true });
+  var ua2 = new SIPJSUserAgent(getCapabilityToken(ua2Name), { debug: false });
 
   describe('Receive incoming call', function() {
     var ist = null;
@@ -97,7 +97,7 @@ describe('SIPJSUserAgent', function() {
 
     it('emits "invite"', function(done) {
       var options = {};
-      options['inviteWithoutSdp'] = true;
+      // options['inviteWithoutSdp'] = true;
       ua2.invite(ua1Name, options).then(null, function(error) {
         if (ist === null) {
           done(new Error('InviteClientTransaction failed'));
@@ -144,7 +144,7 @@ describe('SIPJSUserAgent', function() {
     describe('InviteServerTransaction#reject', function() {
       it('updates .inviteServerTransactions', function(done) {
         var options = {};
-        options['inviteWithoutSdp'] = true;
+        // options['inviteWithoutSdp'] = true;
         var ict = ua2.invite(ua1Name, options);
         ua1.once('invite', function(ist) {
           try {
@@ -165,7 +165,7 @@ describe('SIPJSUserAgent', function() {
     describe('InviteServerTransaction canceled', function() {
       it('updates .inviteServerTransactions', function(done) {
         var options = {};
-        options['inviteWithoutSdp'] = true;
+        // options['inviteWithoutSdp'] = true;
         var ict = ua2.invite(ua1Name, options);
         ua1.once('invite', function(ist) {
           try {
@@ -192,7 +192,7 @@ describe('SIPJSUserAgent', function() {
     it('returns a SIPJSInviteClientTransaction', function(done) {
       ua2.register().then(function() {
         var options = {};
-        options['inviteWithoutSdp'] = true;
+        // options['inviteWithoutSdp'] = true;
         ict = ua1.invite(ua2Name, options);
         ict.then(null, function() {
           if (ist === null) {
@@ -237,7 +237,7 @@ describe('SIPJSUserAgent', function() {
     describe('InviteClientTransaction#cancel', function() {
       it('updates .inviteClientTransactions', function(done) {
         var options = {};
-        options['inviteWithoutSdp'] = true;
+        // options['inviteWithoutSdp'] = true;
         var ict = ua1.invite(ua2Name, options);
         ua2.once('invite', function(ist) {
           try {
@@ -258,7 +258,7 @@ describe('SIPJSUserAgent', function() {
     describe('InviteClientTransaction rejected', function() {
       it('updates .inviteClientTransactions', function(done) {
         var options = {};
-        options['inviteWithoutSdp'] = true;
+        // options['inviteWithoutSdp'] = true;
         var ict = ua1.invite(ua2Name, options);
         ua2.once('invite', function(ist) {
           try {
