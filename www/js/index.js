@@ -221,7 +221,7 @@ function logIn(name, next) {
       'register': false,
       'registrarServer': 'twil.io',
       'wsServer': 'ws://' + config['ws_server'],
-      'inviteWithoutSdp': true
+      // 'inviteWithoutSdp': true
     });
     console.log('Got there');
     endpoint.listen().done(function() {
