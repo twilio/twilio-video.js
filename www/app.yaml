@@ -6,7 +6,7 @@ threadsafe: true
 
 env_variables:
   twilio_allowed_realms: dev,stage,prod
-  twilio_default_realm: prod
+  twilio_default_realm: dev
 
 handlers:
 - url: /css/bootstrap.min.css
