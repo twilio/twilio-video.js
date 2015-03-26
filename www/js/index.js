@@ -89,7 +89,7 @@ function setAcceptBtnOnClick(invite) {
             ignoreBtn.disabled = false;
             hide(incomingPanel);
             enableDialer();
-            console.log(error);
+            console.error(error);
           });
         });
     }
@@ -120,7 +120,7 @@ function setRejectBtnOnClick(invite) {
             ignoreBtn.disabled = false;
             hide(incomingPanel);
             enableDialer();
-            console.log(error);
+            console.error(error);
           });
         });
     }
@@ -204,7 +204,7 @@ function loggingIn() {
       if (error) {
         loginAlert.innerHTML = error;
         unhide(loginAlert);
-        console.log(loginAlert);
+        console.error(loginAlert);
       }
     });
   };
@@ -215,15 +215,17 @@ function logIn(name, next) {
     if (error) {
       return next(error);
     }
-    console.log('Got here');
+    var stunTurnToken = config['token']['stun_turn_token'];
+    var iceServers = stunTurnToken ? stunTurnToken['ice_servers'] : null;
+    var inviteWithoutSdp = false;
     var endpoint = new Twilio.Signal.Endpoint(config['token']['capability_token'], {
       'debug': true,
+      // 'iceServers': iceServers,
       'register': false,
       'registrarServer': 'twil.io',
       'wsServer': 'ws://' + config['ws_server'],
-      // 'inviteWithoutSdp': true
+      'inviteWithoutSdp': inviteWithoutSdp
     });
-    console.log('Got there');
     endpoint.listen().done(function() {
       next(null, endpoint);
     }, function(error) {
