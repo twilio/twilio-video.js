@@ -396,8 +396,8 @@ function setupMuteBtn(muteBtn) {
     }
     // TODO(mroberts): Rethink loggedIn...
     muted = !muted;
-    if (loggedIn) {
-      loggedIn.muteAudio(muted);
+    if (callInProgress && callInProgress.getLocalStream()) {
+      callInProgress.getLocalStream().muted = muted;
     }
     muteBtn.innerHTML = muted ? 'Unmute' : 'Mute';
   };
@@ -413,8 +413,8 @@ function setupPauseBtn(pauseBtn) {
     }
     // TODO(mroberts): Rethink loggedIn...
     paused = !paused;
-    if (loggedIn) {
-      loggedIn.pauseVideo(paused);
+    if (callInProgress && callInProgress.getLocalStream()) {
+      callInProgress.getLocalStream().paused = paused;
     }
     pauseBtn.innerHTML = paused ? 'Unpause' : 'Pause';
   };
