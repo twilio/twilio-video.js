@@ -20,6 +20,10 @@ var previewDiv = document.getElementById('js-preview-video');
 var previewVideo = null;
 
 function setupPreviewBtn(previewBtn) {
+  if (navigator.mozGetUserMedia) {
+    return;
+  }
+  previewBtn.disabled = false;
   previewBtn.onclick = function onclick(e) {
     e.preventDefault();
     previewBtn.blur();
