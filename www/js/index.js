@@ -12,7 +12,6 @@ function getURLParameter(name) {
 // Preview
 // =======
 
-var localStream = null;
 var previewStream = null;
 var previewBtn = setupPreviewBtn(document.getElementById('js-preview-btn'));
 var previewClose = setupPreviewClose(document.getElementById('js-preview-close'));
@@ -20,28 +19,15 @@ var previewDiv = document.getElementById('js-preview-video');
 var previewVideo = null;
 
 function setupPreviewBtn(previewBtn) {
-  if (navigator.mozGetUserMedia) {
-    return;
-  }
-  previewBtn.disabled = false;
   previewBtn.onclick = function onclick(e) {
     e.preventDefault();
     previewBtn.blur();
-    Twilio.Signal.Stream.getUserMedia().then(function(_localStream) {
-      function next(_previewStream) {
-        previewStream = _previewStream;
-        previewVideo = previewStream.attach();
-        previewDiv.appendChild(previewVideo);
-        hide(previewBtn);
-        unhide(previewDiv);
-      }
-      localStream = _localStream;
-      if (!localStream.mediaStream.clone) {
-        console.error("Firefox does not yet support MediaStream.clone(). We'll have to request an additional Stream.");
-        Twilio.Signal.Stream.getUserMedia().then(next);
-      } else {
-        next(localStream.clone());
-      }
+    Twilio.Signal.Stream.getUserMedia().then(function(_previewStream) {
+      previewStream = _previewStream;
+      previewVideo = previewStream.attach();
+      previewDiv.appendChild(previewVideo);
+      hide(previewBtn);
+      unhide(previewDiv);
     });
   };
   return previewBtn;
@@ -51,7 +37,6 @@ function setupPreviewClose(previewClose) {
   previewClose.onclick = function onclick(e) {
     e.preventDefault();
     previewClose.blur();
-    localStream = null;
     previewStream.stop();
     previewStream = null;
     previewDiv.removeChild(previewVideo);
@@ -123,8 +108,8 @@ function setAcceptBtnOnClick(invite) {
       rejectBtn.disabled = true;
       ignoreBtn.disabled = true;
       var options = {};
-      if (localStream) {
-        options['stream'] = localStream;
+      if (previewStream && previewStream.mediaStream.clone) {
+        options['stream'] = previewStream.clone();
       }
       invite.accept(options)
         .done(function(conversation) {
@@ -453,6 +438,7 @@ function setupCallBtn(callBtn) {
     } if (callInProgress) {
       restore = hangingUp();
       // Hangup
+      callInProgress.getLocalStream().stop();
       return loggedIn.leave(callInProgress)
         .done(function() {
           callInProgress = null;
@@ -464,8 +450,8 @@ function setupCallBtn(callBtn) {
     restore = calling();
     // Call
     var options = {};
-    if (localStream) {
-      options['stream'] = localStream;
+    if (previewStream && previewStream.mediaStream.clone) {
+      options['stream'] = previewStream.clone();
     }
     loggedIn.invite(callValue.value, options)
       .done(function(conversation) {
@@ -574,6 +560,7 @@ function didCall(conversation) {
   });
   conversation.once('participantLeft', function(participant) {
     if (loggedIn) {
+      conversation.getLocalStream().stop();
       loggedIn.leave(conversation);
     }
     didHangUp();
@@ -586,7 +573,7 @@ function didCall(conversation) {
 var center = document.getElementById('js-center');
 var videoDiv = null;
 var remoteVideos = null;
-var localVideos = null;
+var localVideo = null;
 
 function startDisplayingConversation(conversation) {
   var remoteVideoDiv = document.createElement('div');
@@ -601,13 +588,10 @@ function startDisplayingConversation(conversation) {
 
   var localVideoDiv = document.createElement('div');
   localVideoDiv.className += ' js-local-video-div';
-  var localStreams = conversation.getLocalStreams(loggedIn);
-  localVideos = localStreams.map(function(localStream) {
-    var localVideo = localStream.attach();
-    localVideo.className += ' js-local-video';
-    localVideoDiv.appendChild(localVideo);
-    return localVideo;
-  });
+  var localStream = conversation.getLocalStream();
+  var localVideo = localStream.attach();
+  localVideo.className += ' js-local-video';
+  localVideoDiv.appendChild(localVideo);
 
   videoDiv = document.createElement('div');
   videoDiv.className += ' js-video-div';
@@ -622,10 +606,10 @@ function stopDisplayingConversation() {
     remoteVideo.pause();
   });
   remoteVideos = null;
-  localVideos.forEach(function(localVideo) {
+  if (localVideo) {
     localVideo.pause();
-  });
-  localVideos = null;
+    localVideo = null;
+  }
   center.removeChild(videoDiv);
   videoDiv = null;
 }
