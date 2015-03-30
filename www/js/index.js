@@ -107,7 +107,11 @@ function setAcceptBtnOnClick(invite) {
       acceptBtn.disabled = true;
       rejectBtn.disabled = true;
       ignoreBtn.disabled = true;
-      invite.accept()
+      var options = {};
+      if (localStream) {
+        options['stream'] = localStream;
+      }
+      invite.accept(options)
         .done(function(conversation) {
           stopFlicker(statusImg, function() {
             acceptBtn.disabled = false;
