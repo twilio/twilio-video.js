@@ -3,7 +3,7 @@
 <head>
 <title>Twilio Client Dialer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="css/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 <style>
 body, html {
   height: 100%;
@@ -31,7 +31,24 @@ table .btn {
   position: relative;
   top: -0.25em;
 }
-#js-login-btn {
+#js-preview-video {
+  position: relative;
+}
+#js-preview-video > video {
+  background: black;
+  border-radius: 4px;
+  margin: 0;
+  width: 209px;
+  height: 157px;
+}
+#js-preview-close {
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 9999;
+}
+#js-login-btn, #js-preview-btn {
   width: 100%;
 }
 .btn-group {
@@ -242,6 +259,16 @@ video {
   <hr>
 </div>
 
+<div id="js-preview-panel">
+  <div id="js-preview-video" class="hidden">
+    <button type="submit" class="btn btn-default btn-xs" id="js-preview-close">&#x2715;</button>
+  </div>
+  <form>
+    <button type="submit" class="btn btn-default" id="js-preview-btn">Preview Video</button>
+  </form>
+  <hr>
+</div>
+
 <div id="js-login-panel">
   <form>
     <div class="form-group" id="js-login-form-group">
@@ -317,7 +344,7 @@ video {
     <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
     <!--<button type="submit" class="btn btn-success" id="js-login-btn">Log In</button>-->
   </form>
-  <p><small><a href="#" id="js-back">Back</a></small></p>
+  <p style="margin-top: 1.5em"><small><a href="#" id="js-back">Back</a></small></p>
 </div>
 
 <div class="left-panel" style="background: #eee; z-index: -9999">

@@ -9,6 +9,43 @@ function getURLParameter(name) {
     ) || null;
 }
 
+// Preview
+// =======
+
+var localStream = null;
+var previewBtn = setupPreviewBtn(document.getElementById('js-preview-btn'));
+var previewClose = setupPreviewClose(document.getElementById('js-preview-close'));
+var previewDiv = document.getElementById('js-preview-video');
+var previewVideo = null;
+
+function setupPreviewBtn(previewBtn) {
+  previewBtn.onclick = function onclick(e) {
+    e.preventDefault();
+    previewBtn.blur();
+    Twilio.Signal.Stream.getUserMedia().then(function(_localStream) {
+      localStream = _localStream;
+      previewVideo = localStream.attach();
+      previewDiv.appendChild(previewVideo);
+      hide(previewBtn);
+      unhide(previewDiv);
+    });
+  };
+  return previewBtn;
+}
+
+function setupPreviewClose(previewClose) {
+  previewClose.onclick = function onclick(e) {
+    e.preventDefault();
+    previewClose.blur();
+    localStream.stop();
+    localStream = null;
+    previewDiv.removeChild(previewVideo);
+    hide(previewDiv);
+    unhide(previewBtn);
+  };
+  return previewClose;
+}
+
 // Log In
 // ======
 
@@ -222,7 +259,7 @@ function logIn(name, next) {
       'debug': true,
       'iceServers': iceServers,
       'register': false,
-      'registrarServer': 'twil.io',
+      // 'registrarServer': 'twil.io',
       'wsServer': 'ws://' + config['ws_server'],
       'inviteWithoutSdp': inviteWithoutSdp
     });
@@ -407,7 +444,11 @@ function setupCallBtn(callBtn) {
     }
     restore = calling();
     // Call
-    loggedIn.invite(callValue.value)
+    var options = {};
+    if (localStream) {
+      options['stream'] = localStream;
+    }
+    loggedIn.invite(callValue.value, options)
       .done(function(conversation) {
         // FIXME(mroberts): ...
         // cancel = function cancel() {
