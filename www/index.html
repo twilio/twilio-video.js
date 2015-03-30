@@ -47,6 +47,7 @@ table .btn {
   top: 4px;
   right: 4px;
   z-index: 9999;
+  width: 22px;
 }
 #js-login-btn, #js-preview-btn {
   width: 100%;
@@ -324,7 +325,7 @@ video {
   </form>
 </div>
 
-<p><small><a href="#" id="js-settings">Settings</a></small></p>
+<p class="hidden"><small><a href="#" id="js-settings">Settings</a></small></p>
 
 </div>
 <!--/.left-panel -->
@@ -332,17 +333,22 @@ video {
 <div class="left-panel hidden" id="js-settings-panel">
   <form style="margin-top: 1em">
     <div class="form-group" id="js-wsserver-form-group">
+      <label for="js-token-value">Capability Token</label>
+      <input type="text" class="form-control" id="js-token-value" disabled="true">
+    </div>
+    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
+    <hr>
+    <div class="form-group" id="js-wsserver-form-group">
       <label for="js-wsserver-value">WebSocket Server</label>
       <input type="text" class="form-control" id="js-wsserver-value" disabled="true">
     </div>
     <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
     <hr>
-    <div class="form-group" id="js-wsserver-form-group">
-      <label for="js-registrar-value">Registrar</label>
-      <input type="text" class="form-control" id="js-registrar-value" disabled="true">
+    <div class="form-group" id="js-iceservers-form-group">
+      <label for="js-iceservers-value">ICE Servers</label>
+      <input type="text" class="form-control" id="js-icsservers-value" disabled="true">
     </div>
     <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
-    <!--<button type="submit" class="btn btn-success" id="js-login-btn">Log In</button>-->
   </form>
   <p style="margin-top: 1.5em"><small><a href="#" id="js-back">Back</a></small></p>
 </div>

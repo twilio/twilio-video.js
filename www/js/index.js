@@ -13,6 +13,7 @@ function getURLParameter(name) {
 // =======
 
 var localStream = null;
+var previewStream = null;
 var previewBtn = setupPreviewBtn(document.getElementById('js-preview-btn'));
 var previewClose = setupPreviewClose(document.getElementById('js-preview-close'));
 var previewDiv = document.getElementById('js-preview-video');
@@ -23,11 +24,20 @@ function setupPreviewBtn(previewBtn) {
     e.preventDefault();
     previewBtn.blur();
     Twilio.Signal.Stream.getUserMedia().then(function(_localStream) {
+      function next(_previewStream) {
+        previewStream = _previewStream;
+        previewVideo = previewStream.attach();
+        previewDiv.appendChild(previewVideo);
+        hide(previewBtn);
+        unhide(previewDiv);
+      }
       localStream = _localStream;
-      previewVideo = localStream.attach();
-      previewDiv.appendChild(previewVideo);
-      hide(previewBtn);
-      unhide(previewDiv);
+      if (!localStream.mediaStream.clone) {
+        console.error("Firefox does not yet support MediaStream.clone(). We'll have to request an additional Stream.");
+        Twilio.Signal.Stream.getUserMedia().then(next);
+      } else {
+        next(localStream.clone());
+      }
     });
   };
   return previewBtn;
@@ -37,8 +47,9 @@ function setupPreviewClose(previewClose) {
   previewClose.onclick = function onclick(e) {
     e.preventDefault();
     previewClose.blur();
-    localStream.stop();
     localStream = null;
+    previewStream.stop();
+    previewStream = null;
     previewDiv.removeChild(previewVideo);
     hide(previewDiv);
     unhide(previewBtn);
