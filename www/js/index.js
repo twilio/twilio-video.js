@@ -743,17 +743,5 @@ function getStats(onSuccess, onFailure) {
   if (!callInProgress) {
     return onFailure(new Error('No call in progress!'));
   }
-  var dialog = null;
-  callInProgress._dialogs.forEach(function(_dialog) {
-    // NOTE: There should only be one.
-    dialog = _dialog;
-  });
-  var peerConnection = dialog.session.mediaHandler.peerConnection;
-  if (navigator.webkitGetUserMedia) {
-    peerConnection.getStats(onSuccess, onFailure);
-  } else if (navigator.mozGetUserMedia) {
-    peerConnection.getStats(null, onSuccess, onFailure);
-  } else {
-    onFailure(new Error('PeerConnection.getStats not supported!'));
-  }
+  callInProgress.getStats().then(onSuccess, onFailure);
 }
