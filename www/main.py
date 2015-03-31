@@ -35,6 +35,12 @@ if os.path.isfile('basic_auth.json'):
         }
         basic_auth_file.close()
 
+def make_event_gateway(realm):
+    if realm == 'prod':
+        return 'eventgw.twilio.com'
+    else:
+        return 'eventgw.{}.twilio.com'.format(realm)
+
 def make_ws_server(realm, account_sid):
     if realm == 'prod':
         return 'public-sip0.us1.twilio.com'
@@ -73,6 +79,7 @@ def make_token(realm, name):
 
 def make_config(realm, name):
     return {
+        'event_gateway': make_event_gateway(realm),
         'token': make_token(realm, name),
         'ws_server': make_ws_server(realm, account_sid[realm])
     }

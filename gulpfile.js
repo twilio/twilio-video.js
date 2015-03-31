@@ -34,6 +34,7 @@ gulp.task('lint', function() {
       predef: [
         'atob',
         'btoa',
+        'XMLHttpRequest',
         '-Map',
         '-Set'
       ],

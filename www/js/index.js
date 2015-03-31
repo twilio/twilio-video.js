@@ -261,6 +261,7 @@ function logIn(name, next) {
     var inviteWithoutSdp = false;
     var endpoint = new Twilio.Signal.Endpoint(config['token']['capability_token'], {
       'debug': true,
+      'eventGateway': config['event_gateway'],
       'iceServers': iceServers,
       'register': false,
       // 'registrarServer': 'twil.io',
