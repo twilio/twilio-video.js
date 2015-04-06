@@ -41,11 +41,11 @@ def make_event_gateway(realm):
     else:
         return 'eventgw.{}.twilio.com'.format(realm)
 
-def make_ws_server(realm, account_sid):
+def make_ws_server(realm):
     if realm == 'prod':
         return 'public-sip00.us1.twilio.com'
     else:
-        return 'public-sip00.{}-us1.twilio.com'.format(realm)
+        return 'public-sip0.{}-us1.twilio.com'.format(realm)
 
 def make_token(realm, name):
     capability = TwilioCapability(account_sid[realm], auth_token[realm])
@@ -53,7 +53,9 @@ def make_token(realm, name):
         capability.allow_client_incoming(name)
     # Dummy Application SID for the outgoing capability
     capability.allow_client_outgoing('AP00000000000000000000000000000000')
-    capability_token = capability.generate()
+    return capability.generate()
+
+def make_ice_servers(realm):
     client = TwilioRestClient(account_sid[realm], auth_token[realm],
             base='https://api.{}twilio.com'.format(
                     (realm + '.') if realm != 'prod' else ''))
@@ -63,26 +65,21 @@ def make_token(realm, name):
         print 'Exception: ', e
         stun_turn_token = None
     if stun_turn_token:
-        stun_turn_token = {
-            'date_updated': stun_turn_token.date_updated,
-            'username': stun_turn_token.username,
-            'account_sid': stun_turn_token.account_sid,
-            'password': stun_turn_token.password,
-            'date_created': stun_turn_token.date_created,
-            'ice_servers': stun_turn_token.ice_servers,
-            'ttl': stun_turn_token.ttl
-        }
-    return {
-        'capability_token': capability_token,
-        'stun_turn_token': stun_turn_token
-    }
+        return json.dumps(stun_turn_token.ice_servers)
+    else:
+        return None
 
-def make_config(realm, name):
-    return {
+def make_config(realm, name=None):
+    config = {
+        'realm': realm,
         'event_gateway': make_event_gateway(realm),
-        'token': make_token(realm, name),
-        'ws_server': make_ws_server(realm, account_sid[realm])
+        'ws_server': make_ws_server(realm)
     }
+    if realm == 'prod':
+        config['ice_servers'] = make_ice_servers(realm)
+    if name:
+        config['capability_token'] = make_token(realm, name)
+    return config
 
 def login_required(handler_method):
     def check_login(self, *args, **kwargs):

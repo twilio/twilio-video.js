@@ -9,25 +9,9 @@ env_variables:
   twilio_default_realm: dev
 
 handlers:
-- url: /css/bootstrap.min.css
-  static_files: css/bootstrap.min.css
-  upload: css/bootstrap.min.css
-
-- url: /fonts/glyphicons-halflings-regular.eot
-  static_files: fonts/glyphicons-halflings-regular.eot
-  upload: fonts/glyphicons-halflings-regular.eot
-
-- url: /fonts/glyphicons-halflings-regular.svg
-  static_files: fonts/glyphicons-halflings-regular.svg
-  upload: fonts/glyphicons-halflings-regular.svg
-
-- url: /fonts/glyphicons-halflings-regular.ttf
-  static_files: fonts/glyphicons-halflings-regular.ttf
-  upload: fonts/glyphicons-halflings-regular.ttf
-
-- url: /fonts/glyphicons-halflings-regular.woff
-  static_files: fonts/glyphicons-halflings-regular.woff
-  upload: fonts/glyphicons-halflings-regular.woff
+- url: /css/index.css
+  static_files: css/index.css
+  upload: css/index.css
 
 - url: /img/twilio41x41.png
   static_files: img/twilio41x41.png
@@ -60,13 +44,6 @@ handlers:
 
 - url: /sdk/(.*)
   script: main.app
-
-- url: /public/ios/TwilioSignal.tar.bz2
-  script: main.app
-
-- url: /public/js/twilio-signal.js
-  static_files: js/twilio-signal.js
-  upload: js/twilio-signal.js
 
 - url: /token
   script: main.app

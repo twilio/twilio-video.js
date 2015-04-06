@@ -1,6 +1,6 @@
 'use strict';
 
-var realm = getURLParameter('realm') || 'stage';
+var realm = getURLParameter('realm');
 
 function getURLParameter(name) {
   return decodeURIComponent(
@@ -256,17 +256,20 @@ function logIn(name, next) {
     if (error) {
       return next(error);
     }
-    var stunTurnToken = config['token']['stun_turn_token'];
-    var iceServers = stunTurnToken ? stunTurnToken['ice_servers'] : null;
-    var inviteWithoutSdp = false;
-    var endpoint = new Twilio.Signal.Endpoint(config['token']['capability_token'], {
-      'debug': true,
-      'eventGateway': config['event_gateway'],
+    var iceServers = getSetting('iceservers');
+    if (iceServers && iceServers !== '') {
+      iceServers = JSON.parse(iceServers);
+    } else {
+      iceServers = null;
+    }
+    var endpoint = new Twilio.Signal.Endpoint(getSetting('token'), {
+      'debug': getDebug(),
+      'eventGateway': getSetting('eventgw'),
       'iceServers': iceServers,
       'register': false,
       // 'registrarServer': 'twil.io',
-      'wsServer': 'ws://' + config['ws_server'],
-      'inviteWithoutSdp': inviteWithoutSdp
+      'wsServer': 'ws://' + getSetting('wsserver'),
+      'inviteWithoutSdp': getInviteWithoutSDP()
     });
     endpoint.listen().done(function() {
       next(null, endpoint);
@@ -274,33 +277,7 @@ function logIn(name, next) {
       next(error);
     });
   }
-
-  name = encodeURIComponent(name);
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', 'config?name=' + name, true);
-  xhr.ontimeout = function ontimeout() {
-    callback('Timed-out getting token from server.');
-  };
-  xhr.onreadystatechange = function onreadystatechange() {
-    if (xhr.readyState === 4) {
-      switch (xhr.status) {
-        case 200:
-          try {
-            var config = JSON.parse(xhr.responseText);
-            // config['token'] = JSON.stringify(config['token']);
-            callback(null, config);
-          } catch (e) {
-            callback(e.message);
-            throw e;
-          }
-          break;
-        default:
-          callback('Getting token from the server failed with "'
-                 + xhr.status + ' ' + xhr.statusText + '"');
-      }
-    }
-  };
-  xhr.send();
+  updateConfig(realm, name, callback);
 }
 
 function didLogIn(endpoint) {
@@ -764,3 +741,206 @@ function checkScrollbarVisible() {
 window.onresize = checkScrollbarVisible;
 
 checkScrollbarVisible();
+
+// Settings
+// ========
+
+var defaultSettings = {};
+var settings = {};
+
+var editableSettings = [
+  'wsserver',
+  'eventgw',
+  'token',
+  'iceservers',
+  'conversations-service'
+];
+
+editableSettings.forEach(function(editableSetting) {
+  var formGroupId = '#js-' + editableSetting + '-form-group';
+  var input = document.querySelectorAll(formGroupId + ' input')[0];
+  var button = document.querySelectorAll(formGroupId + ' .btn')[0];
+  var icon = document.querySelectorAll(formGroupId + ' .btn span')[0];
+  button.onclick = function onclick(e) {
+    e.preventDefault();
+    button.blur();
+    if (input.disabled) {
+      input.disabled = false;
+      input.value = settings[editableSetting] = defaultSettings[editableSetting];
+      icon.classList.add('glyphicon-remove');
+      icon.classList.remove('glyphicon-pencil');
+    } else {
+      input.disabled = true;
+      input.value = defaultSettings[editableSetting];
+      delete settings[editableSetting];
+      icon.classList.add('glyphicon-pencil');
+      icon.classList.remove('glyphicon-remove');
+    }
+  };
+  input.onchange = function onchange(e) {
+    e.preventDefault();
+    settings[editableSetting] = input.value;
+  };
+  defaultSettings[editableSetting] = null;
+});
+
+function getSetting(setting) {
+  return setting in settings ? settings[setting] : defaultSettings[setting];
+}
+
+var inviteWithoutSDP = false;
+
+function getInviteWithoutSDP() {
+  return inviteWithoutSDP;
+}
+
+function setInviteWithoutSDP(_inviteWithoutSDP) {
+  inviteWithoutSDP = _inviteWithoutSDP;
+}
+
+var inviteWithoutSDPToggle = document.getElementById('js-invite-without-sdp-setting');
+inviteWithoutSDPToggle.onchange = function onchange(e) {
+  setInviteWithoutSDP(!getInviteWithoutSDP());
+}
+
+var debug = true;
+
+function getDebug() {
+  return debug;
+}
+
+function setDebug(_debug) {
+  debug = _debug;
+}
+
+var debugToggle = document.getElementById('js-debug-setting');
+debugToggle.onchange = function onchange(e) {
+  setDebug(!getDebug());
+}
+
+function setupRealmBtns(realmBtns) {
+  var realms = ['dev', 'stage', 'prod'];
+  [].forEach.call(realmBtns, function(realmBtn, i) {
+    realmBtn.onclick = function onclick(e) {
+      e.preventDefault();
+      realmBtn.blur();
+      console.log(realms[i]);
+      setRealm[realms[i]];
+      updateConfig(realms[i]);
+    };
+  });
+  return realmBtns;
+}
+
+var realmBtns = setupRealmBtns(document.querySelectorAll('.realms .btn'));
+
+function setRealm(_realm) {
+  console.log(_realm);
+  realm = _realm;
+  [].forEach.call(realmBtns, function(realmBtn) {
+    realmBtn.classList.remove('active');
+  });
+  var realmInputs = document.querySelectorAll('.realms input');
+  [].forEach.call(realmInputs, function(realmInput) {
+    realmInput.checked = false;
+  });
+  var realmIndex;
+  switch (realm) {
+    case 'dev':
+      realmIndex = 0;
+      break;
+    case 'stage':
+      realmIndex = 1;
+      break;
+    case 'prod':
+      realmIndex = 2;
+      break;
+  }
+  realmBtns[realmIndex].classList.add('active');
+  realmInputs[realmIndex].checked = true;
+}
+
+function setDefaultSetting(editableSetting, value) {
+  defaultSettings[editableSetting] = value;
+  var formGroupId = '#js-' + editableSetting + '-form-group';
+  var input = document.querySelectorAll(formGroupId + ' input')[0];
+  if (input.disabled) {
+    input.value = value;
+  }
+}
+
+function getConfig(realm, name, next) {
+  var xhr = new XMLHttpRequest();
+  var configUrl = 'config';
+  var configParams = [];
+  if (realm) {
+    configParams.push('realm=' + realm);
+  }
+  if (name) {
+    name = encodeURIComponent(name);
+    configParams.push('name=' + name);
+  }
+  configUrl += '?' + configParams.join('&');
+  xhr.open('GET', configUrl, true);
+  xhr.ontimeout = function ontimeout() {
+    next('Timed-out getting config from server.');
+  };
+  xhr.onreadystatechange = function onreadystatechange() {
+    if (xhr.readyState === 4) {
+      switch (xhr.status) {
+        case 200:
+          try {
+            var config = JSON.parse(xhr.responseText);
+            next(null, config);
+          } catch (e) {
+            next(e.message);
+            throw e;
+          }
+          break;
+        default:
+          next('Getting config from the server failed with "'
+                 + xhr.status + ' ' + xhr.statusText + '"');
+      }
+    }
+  };
+  xhr.send();
+}
+
+function withConfig(error, config, next) {
+  if (error) {
+    if (next) {
+      next(error);
+    }
+    return;
+  }
+  setRealm(config['realm']);
+  setDefaultSetting('wsserver', config['ws_server']);
+  setDefaultSetting('eventgw', config['event_gateway']);
+  if (config['ice_servers']) {
+    setDefaultSetting('iceservers', config['ice_servers']);
+  } else {
+    setDefaultSetting('iceservers', '');
+  }
+  if (config['capability_token']) {
+    setDefaultSetting('token', config['capability_token']);
+  } else {
+    setDefaultSetting('token', '');
+  }
+  if (next) {
+    next(error, config);
+  }
+};
+
+function updateConfig(realm, name, next) {
+  var callback;
+  if (!next) {
+    callback = withConfig;
+  } else {
+    callback = function callback(error, config) {
+      withConfig(error, config, next);
+    };
+  }
+  getConfig(realm, name, callback);
+}
+
+updateConfig(realm);

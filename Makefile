@@ -61,7 +61,6 @@ lint:
 publish: www/basic_auth.json www
 	(cd www; ln -s -f sdk/$(PRODUCT)/$(PUBLIC_VERSION)/docs doc)
 	appcfg.py update www --oauth2 \
-		-E twilio_allowed_realms:prod \
 		-E twilio_default_realm:prod
 
 release-version:
