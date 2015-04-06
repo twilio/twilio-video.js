@@ -27,6 +27,11 @@ table .btn {
   height: 4em;
   border-radius: 0;
 }
+.realms .btn {
+  width: 33.33%;
+  position: relative;
+  top: 0;
+}
 #js-incoming-text {
   position: relative;
   top: -0.25em;
@@ -124,14 +129,22 @@ p {
   width: 209px;
   /*margin: 0 auto;*/
   /*float: right;*/
-  height: 100%;
   padding: 1em;
   box-sizing: content-box;
   background: white;
   border-right: 1px solid #ddd;
+}
+#left-panel-wrapper {
+  padding-right: 1em;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   position: absolute;
   left: 0;
   top: 0;
+}
+.scrollbar-visible {
+  padding-left: 1em;
 }
 #js-main-panel {
 }
@@ -240,7 +253,8 @@ video {
 <body>
 
 <!-- .left-panel -->
-<div class="left-panel" id="js-main-panel">
+<div id="left-panel-wrapper">
+<div class="left-panel" id="js-main-panel" style="border-bottom: 1px solid #ccc">
 
 <div>
   <img id="js-status-img" src="img/twilio41x41gray.png">
@@ -330,35 +344,78 @@ video {
 </div>
 <!--/.left-panel -->
 
-<div class="left-panel hidden" id="js-settings-panel">
+<div class="left-panel hidden" id="js-settings-panel" style="border-bottom: 1px solid #ccc">
+  <h3>Settings</h3>
+  <p style="text-align: left">Override the parameters passed to the <code>Endpoint</code> constructor. Most of these require that you log out and log back in.</p>
+  <hr>
   <form style="margin-top: 1em">
+    <label>Realm</label>
+    <div class="realms btn-group" data-toggle="buttons">
+      <label class="btn btn-success active">
+        <input type="radio" name="options" id="option1" autocomplete="off" checked> dev
+      </label>
+      <label class="btn btn-warning">
+          <input type="radio" name="options" id="option2" autocomplete="off"> stage
+      </label>
+      <label class="btn btn-danger">
+          <input type="radio" name="options" id="option3" autocomplete="off"> prod
+      </label>
+    </div>
+    <hr>
+    <div class="checkbox" style="position: relative; top: 0.5em;">
+      <label>
+        <input type="checkbox" value="">
+        Debug
+      </label>
+      <label>
+        <input type="checkbox" value="">
+        INVITE without SDP
+      </label>
+    </div>
+    <hr>
+    <div class="form-group" id="js-wsserver-form-group">
+      <label for="js-wsserver-value">WebSocket Server</label>
+      <div class="input-group">
+        <input type="text" class="form-control" disabled>
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-pencil"></span></button>
+        </span>
+      </div>
+    </div>
+    <hr>
+    <div class="form-group" id="js-eventgw-form-group">
+      <label for="js-eventgw-value">Event Gateway</label>
+      <div class="input-group">
+        <input type="text" class="form-control" disabled>
+        <span class="input-group-btn">
+          <button class="btn btn-default" type="button"><span class="glyphicon glyphicon-pencil"></span></button>
+        </span>
+      </div>
+    </div>
+    <hr>
     <div class="form-group" id="js-wsserver-form-group">
       <label for="js-token-value">Capability Token</label>
       <input type="text" class="form-control" id="js-token-value" disabled="true">
     </div>
-    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
-    <hr>
-    <div class="form-group" id="js-wsserver-form-group">
-      <label for="js-wsserver-value">WebSocket Server</label>
-      <input type="text" class="form-control" id="js-wsserver-value" disabled="true">
-    </div>
-    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
     <hr>
     <div class="form-group" id="js-iceservers-form-group">
       <label for="js-iceservers-value">ICE Servers</label>
       <input type="text" class="form-control" id="js-icsservers-value" disabled="true">
     </div>
-    <button type="button" class="btn btn-default js-btn-override" style="width: 100%">Override</button>
   </form>
   <p style="margin-top: 1.5em"><small><a href="#" id="js-back">Back</a></small></p>
 </div>
 
-<div class="left-panel" style="background: #eee; z-index: -9999">
+</div>
+
+<div class="left-panel" style="background: #eee; z-index: -9999; position: absolute; left: 0; top: 0; height: 100%">
 </div>
 
 <div id="js-center">
 </div>
 
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 <script src="js/index.js"></script>
 </body>
 </html>

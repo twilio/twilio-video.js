@@ -712,12 +712,14 @@ function unflipPanel(element, callback) {
 
 function unhide(element) {
   element.className = element.className.replace(/hidden/, '');
+  checkScrollbarVisible();
 }
 
 function hide(element) {
-  if (!element.className.match(/ hidden/)) {
+  if (!element.className.match(/hidden/)) {
     element.className += ' hidden';
   }
+  checkScrollbarVisible();
 }
 
 // Settings
@@ -746,3 +748,19 @@ function getStats(onSuccess, onFailure) {
   }
   callInProgress.getStats().then(onSuccess, onFailure);
 }
+
+function checkScrollbarVisible() {
+  var leftPanelWrapper = document.getElementById('left-panel-wrapper');
+  var scrollbarVisible = leftPanelWrapper.clientHeight < leftPanelWrapper.scrollHeight;
+  if (scrollbarVisible) {
+    if (!center.className.match(/scrollbar-visible/)) {
+      center.className += ' scrollbar-visible';
+    }
+  } else {
+    center.className = center.className.replace(/scrollbar-visible/, '');
+  }
+}
+
+window.onresize = checkScrollbarVisible;
+
+checkScrollbarVisible();

@@ -43,9 +43,9 @@ def make_event_gateway(realm):
 
 def make_ws_server(realm, account_sid):
     if realm == 'prod':
-        return 'public-sip0.us1.twilio.com'
+        return 'public-sip00.us1.twilio.com'
     else:
-        return 'public-sip0.{}-us1.twilio.com'.format(realm)
+        return 'public-sip00.{}-us1.twilio.com'.format(realm)
 
 def make_token(realm, name):
     capability = TwilioCapability(account_sid[realm], auth_token[realm])
