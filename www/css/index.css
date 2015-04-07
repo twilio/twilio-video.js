@@ -39,7 +39,7 @@ table .btn {
   width: 209px;
   height: 157px;
 }
-#js-preview-close {
+#js-preview-close, .inset-btn {
   box-shadow: 0 0 5px rgba(0,0,0,0.5);
   position: absolute;
   top: 4px;
@@ -47,8 +47,14 @@ table .btn {
   z-index: 9999;
   width: 22px;
 }
-#js-login-btn, #js-preview-btn {
+#js-login-btn, #js-preview-btn, #js-invite-btn, #js-leave-btn {
   width: 100%;
+}
+#js-invite-btn {
+  margin-bottom: 16px;
+}
+#js-leave-btn {
+  margin-bottom: 1.5em;
 }
 .btn-group {
   width: 100%;
@@ -159,16 +165,21 @@ p {
   bottom: 0;
 }
 .js-remote-video-div {
+  position: relative;
   padding: 1em;
   float: left;
   width: 75%;
   float: left;
 }
 .js-local-video-div {
+  position: relative;
   padding-top: 1em;
   width: 25%;
   float: left;
   padding-right: 1em;
+}
+.js-remote-video-div video, .js-local-video-div video {
+  border-radius: 4px;
 }
 video {
   width: 100%;
@@ -239,4 +250,22 @@ video {
       -moz-animation: flipAnim 0.25s ease-out;
         -o-animation: flipAnim 0.25s ease-out;
            animation: flipAnim 0.25s ease-out;
+}
+.tooltip {
+  left: 1.5em !important;
+}
+.mute-remote {
+  font-size: 11px;
+  margin-top: 14px;
+  margin-right: 14px;
+  height: 22px;
+}
+.pause-remote {
+  font-size: 11px;
+  margin-top: 40px;
+  margin-right: 14px;
+  height: 22px;
+}
+.js-participant {
+  margin-bottom: 1em;
 }

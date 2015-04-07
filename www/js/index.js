@@ -118,10 +118,13 @@ function setAcceptBtnOnClick(invite) {
             rejectBtn.disabled = false;
             ignoreBtn.disabled = false;
             hide(incomingPanel);
-            enableDialer();
-            didCall(conversation);
-            callValue.value = invite.from;
-            callValue.disabled = true;
+            // enableDialer();
+            // didCall(conversation);
+            // callValue.value = invite.from;
+            // callValue.disabled = true;
+
+            enableConversationDialer();
+            didAddParticipant(conversation, invite.from);
           });
         }, function(error) {
           stopFlicker(statusImg, function() {
@@ -129,8 +132,10 @@ function setAcceptBtnOnClick(invite) {
             rejectBtn.disabled = false;
             ignoreBtn.disabled = false;
             hide(incomingPanel);
-            enableDialer();
+            // enableDialer();
             console.error(error);
+
+            enableConversationDialer();
           });
         });
     }
@@ -189,6 +194,8 @@ function incoming(invite) {
   unhide(incomingPanel);
   setAcceptBtnOnClick(invite);
   setRejectBtnOnClick(invite);
+
+  disableConversationDialer();
 }
 
 function loggingOut() {
@@ -290,9 +297,247 @@ function didLogIn(endpoint) {
     statusImg.src = 'img/twilio41x41.png';
     statusText.innerHTML = 'You are online as <b>' + name + '</b>.';
     enableDialer();
-    callValue.focus();
+    enableConversationDialer();
+    // callValue.focus();
+    getParticipantInputs()[0].focus();
   });
 }
+
+// Conversation
+// ============
+
+var conversationAlert = document.getElementById('js-conversation-alert');
+var leaveBtn = setupLeaveBtn(document.getElementById('js-leave-btn'));
+
+function getParticipantInputs() {
+  return [].slice.call(document.getElementsByClassName('js-participant-name'));
+}
+
+function getParticipantBtns() {
+  return [].slice.call(document.getElementsByClassName('js-participant-action'));
+}
+
+function enableConversationDialer() {
+  getParticipantInputs().forEach(function(element) {
+    element.disabled = false;
+  });
+  getParticipantBtns().forEach(function(element) {
+    element.disabled = false;
+  });
+}
+
+function disableConversationDialer() {
+  if (!callInProgress) {
+    getParticipantInputs().forEach(function(element) {
+      element.disabled = true;
+    });
+    getParticipantBtns().forEach(function(element) {
+      element.disabled = true;
+    });
+  }
+}
+
+var cancelAddParticipant = null;
+
+function addingParticipant() {
+  startFlicker(statusImg);
+  getParticipantInputs().forEach(function(input) {
+    input.disabled = true;
+  });
+  getParticipantBtns().forEach(function(btn) {
+    btn.classList.add('btn-danger');
+    btn.classList.remove('btn-success');
+    btn.innerHTML = '<span class="glyphicon glyphicon-remove-sign"></span>';
+  });
+  hide(conversationAlert);
+  return function restore(error) {
+    stopFlicker(statusImg, function() {
+      if (loggedIn) {
+        enableConversationDialer();
+        getParticipantBtns().forEach(function(btn) {
+          btn.classList.add('btn-success');
+          btn.classList.remove('btn-danger');
+          btn.innerHTML = '<span class="glyphicon glyphicon-plus-sign"></span>';
+        });
+      }
+      if (error) {
+        conversationAlert.innerHTML = error;
+        unhide(conversationAlert);
+      }
+    });
+  };
+}
+
+function didAddParticipant(conversation, participant) {
+  callInProgress = conversation;
+  startDisplayingConversation(conversation);
+  stopFlicker(statusImg, function() {
+    leaveBtn.disabled = false;
+    getParticipantInputs().forEach(function(input) {
+      input.disabled = true;
+      input.value = participant;
+      input.classList.remove('js-participant-name');
+    });
+    getParticipantBtns().forEach(function(btn) {
+      btn.classList.remove('js-participant-action');
+      btn.classList.add('btn-default');
+      btn.classList.remove('btn-danger');
+      // btn.innerHTML = '<span class="glyphicon glyphicon-ok-sign"></span>';
+      btn.disabled = true;
+      btn.parentNode.classList.add('hidden');
+      btn.parentNode.parentNode.classList.remove('input-group');
+    });
+    var conversationsService = getSetting('conversations-service');
+    if (conversationsService && !conversationsService !== '') {
+      createNewAddParticipantLine();
+    }
+  });
+  conversation.once('participantLeft', function(participant) {
+    if (loggedIn) {
+      conversation.getLocalStream().stop();
+      loggedIn.leave(conversation);
+    }
+    didLeave();
+  });
+}
+
+function addParticipantFromAPI(sid, participant, next) {
+  console.info('Adding Participant via REST API...');
+  next = next || function(){};
+  console.log('Conversation SID:', sid);
+  // FIXME(mroberts): Ugh, this is not correct.
+  participant = participant + '@' + loggedIn.token.accountSid + '.twil.io';
+  console.log('Participant:', participant);
+  var xhr = new XMLHttpRequest();
+  var conversationsServiceURL = 'https://' + getSetting('conversations-service') + ':8080/rtc-orchestrator-server-0.0.1-SNAPSHOT/rest/v1/conversations/' + sid;
+  xhr.open('POST', conversationsServiceURL, true);
+  xhr.ontimeout = function ontimeout() {
+    next('Timed-out adding Participant via REST API.');
+  };
+  xhr.onreadystatechange = function onreadystatechange() {
+    if (xhr.readyState === 4) {
+      switch (xhr.status) {
+        case 200:
+          try {
+            var response = xhr.responseText;
+            console.info(response);
+            next(null);
+          } catch (e) {
+            next(e.message);
+            throw e;
+          }
+          break;
+        default:
+          next('Adding Participant via REST API failed with "'
+                 + xhr.status + ' ' + xhr.statusText + '"');
+      }
+    }
+  };
+  xhr.send();
+}
+
+function setupAddParticipantBtn(input, btn) {
+  btn.onclick = function onclick(e) {
+    e.preventDefault();
+    btn.blur();
+    if (cancelAddParticipant) {
+      cancelAddParticipant();
+      cancelAddParticipant = null;
+      return;
+    }
+    if (callInProgress) {
+      // TODO(mroberts): POST to Conversations Service.
+      return addParticipantFromAPI(callInProgress.sid, input.value);
+    }
+    var restore = addingParticipant();
+    var options = {};
+    if (previewStream && previewStream.mediaStream.clone) {
+      options['stream'] = previewStream.clone();
+    }
+    var invite = loggedIn.invite(input.value, options)
+      .then(function(conversation) {
+        conversation.once('participantJoined', function(participant) {
+          cancelAddParticipant = null;
+          didAddParticipant(conversation, participant);
+        });
+      }, function(error) {
+        restore(error.message);
+      });
+    // cancelAddParticipant = function cancelAddParticipant() {
+    //   invite.cancel();
+    // };
+  };
+  return btn;
+}
+
+setupAddParticipantBtn(getParticipantInputs()[0], getParticipantBtns()[0]);
+
+function createNewAddParticipantLine() {
+  var line = document.createElement('div');
+  line.className = 'input-group js-participant';
+  line.innerHTML = [
+    '<input type="text" class="form-control js-participant-name">'
+  , '<span class="input-group-btn">'
+  , '  <button class="btn btn-success js-participant-action" type="submit"><span class="glyphicon glyphicon-plus-sign"></span></button>'
+  , '</span>'
+  ].join('\n');
+  document.querySelectorAll('#js-conversation-panel .form-group')[0].appendChild(line);
+  setupAddParticipantBtn(getParticipantInputs()[0], getParticipantBtns()[0]);
+}
+
+function leaving() {
+  leaveBtn.disabled = true;
+  startFlicker(statusImg);
+  disableConversationDialer();
+  return function restore(error) {
+    leaveBtn.disabled = false;
+    stopFlicker(statusImg);
+    if (loggedIn) {
+      enableConversationDialer();
+    }
+    if (error) {
+      conversationAlert.innerHTML = error;
+      unhide(conversationAlert);
+    }
+  };
+}
+
+function didLeave() {
+  leaveBtn.disabled = true;
+  stopDisplayingConversation(callInProgress);
+  callInProgress = null;
+  stopFlicker(statusImg, function() {
+    [].forEach.call(document.getElementsByClassName('js-participant'), function(element) {
+      element.remove();
+    });
+    createNewAddParticipantLine();
+    if (loggedIn) {
+      enableConversationDialer();
+    }
+  });
+}
+
+function setupLeaveBtn(btn) {
+  btn.onclick = function onclick(e) {
+    e.preventDefault();
+    btn.blur();
+    // TODO(mroberts): Move .leave to Conversation
+    if (!callInProgress || !loggedIn) {
+      return;
+    }
+    var restore = leaving();
+    loggedIn.leave(callInProgress)
+      .then(function() {
+        didLeave();
+      }, function(error) {
+        restore(error);
+      });
+  };
+  return btn;
+}
+
+// Add Participant
+// ---------------
 
 // Call
 // ====
@@ -561,6 +806,47 @@ function startDisplayingConversation(conversation) {
     var remoteVideo = remoteStream.attach();
     remoteVideo.className += ' js-remote-video';
     remoteVideoDiv.appendChild(remoteVideo);
+
+    var muteRemoteBtn = document.createElement('button');
+    muteRemoteBtn.classList.add('inset-btn');
+    muteRemoteBtn.classList.add('btn');
+    muteRemoteBtn.classList.add('btn-default');
+    muteRemoteBtn.classList.add('btn-xs');
+    muteRemoteBtn.classList.add('mute-remote');
+    muteRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-volume-off"></span>';
+    muteRemoteBtn.onclick = function onclick(e) {
+      e.preventDefault();
+      muteRemoteBtn.blur();
+      if (remoteVideo.muted) {
+        remoteVideo.muted = false;
+        muteRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-volume-off"></span>';
+      } else {
+        remoteVideo.muted = true;
+        muteRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-volume-up"></span>';
+      }
+    };
+    remoteVideoDiv.appendChild(muteRemoteBtn);
+
+    var pauseRemoteBtn = document.createElement('button');
+    pauseRemoteBtn.classList.add('inset-btn');
+    pauseRemoteBtn.classList.add('btn');
+    pauseRemoteBtn.classList.add('btn-default');
+    pauseRemoteBtn.classList.add('btn-xs');
+    pauseRemoteBtn.classList.add('pause-remote');
+    pauseRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-pause"></span>';
+    pauseRemoteBtn.onclick = function onclick(e) {
+      e.preventDefault();
+      pauseRemoteBtn.blur();
+      if (remoteVideo.paused) {
+        remoteVideo.play();
+        pauseRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-pause"></span>';
+      } else {
+        remoteVideo.pause();
+        pauseRemoteBtn.innerHTML = '<span class="glyphicon glyphicon-play"></span>';
+      }
+    };
+    remoteVideoDiv.appendChild(pauseRemoteBtn);
+
     return remoteVideo;
   });
 
@@ -575,6 +861,46 @@ function startDisplayingConversation(conversation) {
   videoDiv.className += ' js-video-div';
   videoDiv.appendChild(remoteVideoDiv);
   videoDiv.appendChild(localVideoDiv);
+
+    var muteLocalBtn = document.createElement('button');
+    muteLocalBtn.classList.add('inset-btn');
+    muteLocalBtn.classList.add('btn');
+    muteLocalBtn.classList.add('btn-default');
+    muteLocalBtn.classList.add('btn-xs');
+    muteLocalBtn.classList.add('mute-remote');
+    muteLocalBtn.innerHTML = '<span class="glyphicon glyphicon-volume-off"></span>';
+    muteLocalBtn.onclick = function onclick(e) {
+      e.preventDefault();
+      muteLocalBtn.blur();
+      if (localStream.muted) {
+        localStream.muted = false;
+        muteLocalBtn.innerHTML = '<span class="glyphicon glyphicon-volume-off"></span>';
+      } else {
+        localStream.muted = true;
+        muteLocalBtn.innerHTML = '<span class="glyphicon glyphicon-volume-up"></span>';
+      }
+    };
+    videoDiv.appendChild(muteLocalBtn);
+
+    var pauseLocalBtn = document.createElement('button');
+    pauseLocalBtn.classList.add('inset-btn');
+    pauseLocalBtn.classList.add('btn');
+    pauseLocalBtn.classList.add('btn-default');
+    pauseLocalBtn.classList.add('btn-xs');
+    pauseLocalBtn.classList.add('pause-remote');
+    pauseLocalBtn.innerHTML = '<span class="glyphicon glyphicon-pause"></span>';
+    pauseLocalBtn.onclick = function onclick(e) {
+      e.preventDefault();
+      pauseLocalBtn.blur();
+      if (localStream.paused) {
+        localStream.paused = false;
+        pauseLocalBtn.innerHTML = '<span class="glyphicon glyphicon-pause"></span>';
+      } else {
+        localStream.paused = true;
+        pauseLocalBtn.innerHTML = '<span class="glyphicon glyphicon-play"></span>';
+      }
+    };
+    videoDiv.appendChild(pauseLocalBtn);
 
   center.appendChild(videoDiv);
 }
