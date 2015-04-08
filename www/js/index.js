@@ -82,9 +82,9 @@ function setupLoginBtn(loginBtn) {
           return restore(error);
         }
         endpoint.on('invite', function(invite) {
-          if (loggedIn !== endpoint || (callInProgress && callInProgress !== invite.conversation)) {
-            return;
-          }
+          // if (loggedIn !== endpoint || (callInProgress && callInProgress !== invite.conversation)) {
+          //   return;
+          // }
           incoming(invite);
         });
         didLogIn(endpoint);
@@ -404,12 +404,11 @@ function didAddParticipant(conversation, participant) {
 function addParticipantFromAPI(sid, participant, next) {
   console.info('Adding Participant via REST API...');
   next = next || function(){};
-  console.log('Conversation SID:', sid);
   // FIXME(mroberts): Ugh, this is not correct.
-  participant = participant + '@' + loggedIn.token.accountSid + '.twil.io';
-  console.log('Participant:', participant);
+  var accountSid = loggedIn.token.accountSid;
+  participant = participant + '@' + accountSid.toLowerCase() + '.twil.io';
   var xhr = new XMLHttpRequest();
-  var conversationsServiceURL = 'https://' + getSetting('conversations-service') + ':8080/rtc-orchestrator-server-0.0.1-SNAPSHOT/rest/v1/conversations/' + sid;
+  var conversationsServiceURL = 'http://' + getSetting('conversations-service') + ':8080/rtc-orchestrator-server-0.0.1-SNAPSHOT/rest/v1/' + accountSid + '/conversations/' + sid;
   xhr.open('POST', conversationsServiceURL, true);
   xhr.ontimeout = function ontimeout() {
     next('Timed-out adding Participant via REST API.');
@@ -433,7 +432,17 @@ function addParticipantFromAPI(sid, participant, next) {
       }
     }
   };
-  xhr.send();
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  var payload = JSON.stringify({
+    'friendlyName': participant,
+    'address': {
+      'addressType': 'CLIENT',
+      'address': 'sip:' + participant,
+    }
+  });
+  // console.info('$ curl -H "Content-Type: application/json" -X POST -d \'' + payload + '\' ' + conversationsServiceURL);
+  // FIXME(mroberts): Needs CORS support from Ameya.
+  xhr.send(payload);
 }
 
 function setupAddParticipantBtn(input, btn) {

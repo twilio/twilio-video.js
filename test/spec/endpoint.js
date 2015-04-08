@@ -109,6 +109,10 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
+    it('invite.conversationSid', function() {
+      assert(invite.conversationSid);
+    });
+
     describe('Invite#accept', function() {
       var conversation = null;
 

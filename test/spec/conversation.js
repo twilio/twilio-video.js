@@ -53,6 +53,10 @@ describe('Conversation (SIPJSUserAgent)', function() {
     }).then(done, done);
   });
 
+  it('.sid', function() {
+    assert(conversation.sid);
+  });
+
   it('.participants contains Participant address', function() {
     assert(conversation.participants.has(bobName));
     assert.equal(1, conversation.participants.size);

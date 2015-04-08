@@ -90,6 +90,9 @@ describe('UserAgent', function() {
     var ist = Q.defer();
     EventEmitter.call(ist.promise);
 
+    ist.callSid = dialog.callSid = 'CA123';
+    ist.conversationSid = dialog.conversationSid = 'CO456';
+
     it('emits "invite"', function(done) {
       ua1._handleInviteServerTransaction(ist.promise)
       ua1.once('invite', done.bind(null, null));
@@ -97,6 +100,14 @@ describe('UserAgent', function() {
 
     it('updates .inviteServerTransactions', function() {
       assert(ua1.inviteServerTransactions.has(ist.promise));
+    });
+
+    it('inviteServerTransaction.callSid', function() {
+      assert(ist.callSid);
+    });
+
+    it('inviteServerTransaction.conversationSid', function() {
+      assert(ist.conversationSid);
     });
 
     describe('InviteServerTransaction#accept', function() {
@@ -109,6 +120,14 @@ describe('UserAgent', function() {
 
       it('updates .dialogs', function() {
         assert(ua1.dialogs.has(dialog));
+      });
+
+      it('dialog.callSid', function() {
+        assert(dialog.callSid);
+      });
+
+      it('dialog.conversationSid', function() {
+        assert(dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {
@@ -170,6 +189,9 @@ describe('UserAgent', function() {
     var dialog = new EventEmitter();
     var ict = null;
 
+    dialog.callSid = 'CA123';
+    dialog.conversationSid = 'CO123';
+
     it ('returns an InviteClientTransaction', function() {
       ict = ua1.invite('foo');
       assert(ict);
@@ -194,6 +216,14 @@ describe('UserAgent', function() {
 
       it('updates .dialogs', function() {
         assert(ua1.dialogs.has(dialog));
+      });
+
+      it('dialog.callSid', function() {
+        assert(dialog.callSid);
+      });
+
+      it('dialog.conversationSid', function() {
+        assert(dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {

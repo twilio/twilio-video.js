@@ -111,7 +111,7 @@ describe('SIPJSUserAgent', function() {
         try {
           assert.equal(ua1, ist.userAgent);
           assert.equal(ua2Name, ist.from);
-          assert(ist.sid);
+          assert(ist.callSid);
         } catch (e) {
           return done(e);
         }
@@ -121,6 +121,14 @@ describe('SIPJSUserAgent', function() {
 
     it('updates .inviteServerTransactions', function() {
       assert(ua1.inviteServerTransactions.has(ist));
+    });
+
+    it('inviteServerTransaction.callSid', function() {
+      assert(ist.callSid);
+    });
+
+    it('inviteServerTransaction.conversationSid', function() {
+      assert(ist.conversationSid);
     });
 
     describe('InviteServerTransaction#accept', function() {
@@ -133,6 +141,14 @@ describe('SIPJSUserAgent', function() {
 
       it('updates .dialogs', function() {
         assert(ua1.dialogs.has(dialog));
+      });
+
+      it('dialog.callSid', function() {
+        assert(dialog.callSid);
+      });
+
+      it('dialog.conversationSid', function() {
+        assert(dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {
@@ -220,6 +236,14 @@ describe('SIPJSUserAgent', function() {
 
       it('updates .dialogs', function() {
         assert(ua1.dialogs.has(dialog));
+      });
+
+      it('dialog.callSid', function() {
+        assert(dialog.callSid);
+      });
+
+      it('dialog.conversationSid', function() {
+        assert(dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {
