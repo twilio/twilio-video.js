@@ -30,16 +30,8 @@ describe('Conversation (SIPJSUserAgent)', function() {
 
   before(function setupConversaton(done) {
     alice = new Endpoint(aliceToken);
-    var aliceListensDeferred = Q.defer();
-    alice.once('listen', function() {
-      aliceListensDeferred.resolve();
-    });
-    var aliceListens = aliceListensDeferred.promise;
-
     bob = new SIPJSUserAgent(bobToken);
-    var bobRegisters = bob.register();
-
-    Q.all([aliceListens, bobRegisters]).then(function() {
+    Q.all([alice.listen(), bob.register()]).then(function() {
       bob.on('invite', function(ist) {
         ist.accept().then(function(_dialog) {
           dialog = _dialog;
@@ -53,7 +45,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
     }).then(done, done);
   });
 
-  it('.sid', function() {
+  it.skip('.sid', function() {
     assert(conversation.sid);
   });
 

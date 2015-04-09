@@ -1,5 +1,6 @@
 # Version
-PRODUCT=signal
+PRODUCT_SUFFIX=conversations
+PRODUCT=twilio-$(PRODUCT_SUFFIX)
 MAJOR=$(shell sed -n 's/^  "version": "\([0-9]*\).[0-9]*.[0-9]*",$$/\1/gp' package.json)
 MINOR=$(shell sed -n 's/^  "version": "[0-9]*.\([0-9]*\).[0-9]*",$$/\1/gp' package.json)
 PATCH=$(shell sed -n 's/^  "version": "[0-9]*.[0-9]*.\([0-9]*\)",$$/\1/gp' package.json)
@@ -9,7 +10,7 @@ PUBLIC_VERSION=v$(MAJOR).$(MINOR)
 RELEASE_VERSION=$(MAJOR).$(MINOR).$(PATCH).b$(BUILD)-$(COMMIT)
 
 # Artifacts
-PUBLIC_ROOT=build/sdk/$(PRODUCT)/$(PUBLIC_VERSION)/js
+PUBLIC_ROOT=build/sdk/$(PRODUCT_SUFFIX)/$(PUBLIC_VERSION)/js
 PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
 PUBLIC_LOADER=$(PUBLIC_ROOT)/$(PRODUCT).js
 PUBLIC_LOADER_MIN=$(PUBLIC_ROOT)/$(PRODUCT).min.js
@@ -52,7 +53,7 @@ docs:
 	@$(call INFO,"Generating docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
 lint:
@@ -69,8 +70,15 @@ release-version:
 serve: www
 	dev_appserver.py www --skip_sdk_update_check
 
-test:
+test: test.json
 	$(MOCHA) --reporter=spec test/spec/index.js
+
+test.json:
+	@if [ ! -f test.json ]; then \
+		echo "\n\nYou need to create \`test.json'."; \
+		echo "See \`test.json.example'.\n\n"; \
+		exit 1; \
+	fi
 
 www: www/twilio_credentials.json www/httplib2 www/six.py www/twilio www/sdk
 
@@ -111,7 +119,7 @@ $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
 # $(RELEASE_LOADER): $(SRC_FILES)
@@ -190,7 +198,7 @@ www/sdk: $(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN)
 	@$(call INFO,"Symlinking sdk")
 	(cd www; ln -s -f ../build/sdk .; touch sdk)
 
-# browser-test: build/$(RELEASE_VERSION)/twilio-signal.js \
+# browser-test: build/$(RELEASE_VERSION)/twilio-conversations.js \
 # 							build/$(RELEASE_VERSION)/test/index.js \
 # 							build/$(RELEASE_VERSION)/test/index.html \
 # 							build/$(RELEASE_VERSION)/test/bower_components

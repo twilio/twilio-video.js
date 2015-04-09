@@ -22,7 +22,7 @@ function setupPreviewBtn(previewBtn) {
   previewBtn.onclick = function onclick(e) {
     e.preventDefault();
     previewBtn.blur();
-    Twilio.Signal.Stream.getUserMedia().then(function(_previewStream) {
+    Twilio.getUserMedia().then(function(_previewStream) {
       previewStream = _previewStream;
       previewVideo = previewStream.attach();
       previewDiv.appendChild(previewVideo);
@@ -109,10 +109,13 @@ function setAcceptBtnOnClick(invite) {
       ignoreBtn.disabled = true;
       var options = {};
       if (previewStream && previewStream.mediaStream.clone) {
-        options['stream'] = previewStream.clone();
+        options['localStream'] = previewStream.clone();
       }
       invite.accept(options)
         .done(function(conversation) {
+          conversation.on('participantJoined', function(participant) {
+            didAddParticipant(conversation, participant);
+          });
           stopFlicker(statusImg, function() {
             acceptBtn.disabled = false;
             rejectBtn.disabled = false;
@@ -124,7 +127,8 @@ function setAcceptBtnOnClick(invite) {
             // callValue.disabled = true;
 
             enableConversationDialer();
-            didAddParticipant(conversation, invite.from);
+            // FIXME(mroberts): Kinda weird how this works...
+            // didAddParticipant(conversation, invite.from);
           });
         }, function(error) {
           stopFlicker(statusImg, function() {
@@ -269,16 +273,13 @@ function logIn(name, next) {
     } else {
       iceServers = null;
     }
-    var endpoint = new Twilio.Signal.Endpoint(getSetting('token'), {
+    Twilio.Endpoint.createWithToken(getSetting('token'), {
       'debug': getDebug(),
       'eventGateway': getSetting('eventgw'),
       'iceServers': iceServers,
-      'register': false,
-      // 'registrarServer': 'twil.io',
       'wsServer': 'ws://' + getSetting('wsserver'),
       'inviteWithoutSdp': getInviteWithoutSDP()
-    });
-    endpoint.listen().done(function() {
+    }).then(function(endpoint) {
       next(null, endpoint);
     }, function(error) {
       next(error);
@@ -370,7 +371,7 @@ function addingParticipant() {
 
 function didAddParticipant(conversation, participant) {
   callInProgress = conversation;
-  startDisplayingConversation(conversation);
+  startDisplayingConversation(conversation, participant);
   stopFlicker(statusImg, function() {
     leaveBtn.disabled = false;
     getParticipantInputs().forEach(function(input) {
@@ -395,7 +396,7 @@ function didAddParticipant(conversation, participant) {
   conversation.once('participantLeft', function(participant) {
     if (loggedIn) {
       conversation.getLocalStream().stop();
-      loggedIn.leave(conversation);
+      conversation.leave();
     }
     didLeave();
   });
@@ -454,18 +455,28 @@ function setupAddParticipantBtn(input, btn) {
       cancelAddParticipant = null;
       return;
     }
+    var restore = addingParticipant();
     if (callInProgress) {
       // TODO(mroberts): POST to Conversations Service.
-      return addParticipantFromAPI(callInProgress.sid, input.value);
+      return addParticipantFromAPI(callInProgress.sid, input.value, function(error) {
+        if (error) {
+          // FIXME(mroberts): ...
+          return;
+        }
+        /* callInProgress.once('participantJoined', function(participant) {
+          didAddParticipant(callInProgress, participant);
+        }, function(error) {
+          restore(error.message);
+        }); */
+      });
     }
-    var restore = addingParticipant();
     var options = {};
     if (previewStream && previewStream.mediaStream.clone) {
-      options['stream'] = previewStream.clone();
+      options['localStream'] = previewStream.clone();
     }
     var invite = loggedIn.invite(input.value, options)
       .then(function(conversation) {
-        conversation.once('participantJoined', function(participant) {
+        conversation.on('participantJoined', function(participant) {
           cancelAddParticipant = null;
           didAddParticipant(conversation, participant);
         });
@@ -535,7 +546,7 @@ function setupLeaveBtn(btn) {
       return;
     }
     var restore = leaving();
-    loggedIn.leave(callInProgress)
+    callInProgress.leave()
       .then(function() {
         didLeave();
       }, function(error) {
@@ -671,7 +682,7 @@ function setupCallBtn(callBtn) {
       restore = hangingUp();
       // Hangup
       callInProgress.getLocalStream().stop();
-      return loggedIn.leave(callInProgress)
+      return callInProgress.leave()
         .done(function() {
           callInProgress = null;
           return; // didHangUp();
@@ -683,13 +694,13 @@ function setupCallBtn(callBtn) {
     // Call
     var options = {};
     if (previewStream && previewStream.mediaStream.clone) {
-      options['stream'] = previewStream.clone();
+      options['localStream'] = previewStream.clone();
     }
     loggedIn.invite(callValue.value, options)
       .done(function(conversation) {
         // FIXME(mroberts): ...
         // cancel = function cancel() {
-        //   loggedIn.leave(conversation);
+        //   conversation.leave();
         //   restore();
         // };
         conversation.once('participantJoined', function(participant) {
@@ -793,7 +804,7 @@ function didCall(conversation) {
   conversation.once('participantLeft', function(participant) {
     if (loggedIn) {
       conversation.getLocalStream().stop();
-      loggedIn.leave(conversation);
+      conversation.leave();
     }
     didHangUp();
   });
@@ -807,10 +818,10 @@ var videoDiv = null;
 var remoteVideos = null;
 var localVideo = null;
 
-function startDisplayingConversation(conversation) {
+function startDisplayingConversation(conversation, participant) {
   var remoteVideoDiv = document.createElement('div');
   remoteVideoDiv.className += ' js-remote-video-div';
-  var remoteStreams = conversation.getRemoteStreams();
+  var remoteStreams = participant ? [conversation.getRemoteStream(participant)] : conversation.getRemoteStreams();
   remoteVideos = remoteStreams.map(function(remoteStream) {
     var remoteVideo = remoteStream.attach();
     remoteVideo.className += ' js-remote-video';

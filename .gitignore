@@ -5,6 +5,7 @@ build
 doc
 node_modules
 out
+test.json
 test/bower_components
 www/basic_auth.json
 www/doc

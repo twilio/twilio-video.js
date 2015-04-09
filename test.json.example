@@ -1,0 +1,6 @@
+{
+  "accountSid": null,
+  "authToken": null,
+  "conversationsService": "bar.com",
+  "wsServer": "foo.com"
+}

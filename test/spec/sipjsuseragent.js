@@ -9,8 +9,10 @@ var util = require('./util');
 
 var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 
-var accountSid = process.env['ACCOUNT_SID'];
-var authToken = process.env['AUTH_TOKEN'];
+var config = require('../../test');
+var accountSid = config['accountSid'];
+var authToken = config['authToken'];
+var wsServer = 'ws://' + config['wsServer'];
 var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
@@ -20,7 +22,7 @@ describe('SIPJSUserAgent', function() {
   var ua1 = null;
 
   var options = {};
-  // options['debug'] = true;
+  options['wsServer'] = wsServer;
   var inviteOptions = {};
   // inviteOptions['inviteWithoutSdp'] = true;
 
@@ -100,6 +102,10 @@ describe('SIPJSUserAgent', function() {
     var ist = null;
     var dialog = null;
 
+    it('ua2 registers...', function(done) {
+      ua2.register().then(function() { done(); }, done);
+    });
+
     it('emits "invite"', function(done) {
       ua2.invite(ua1Name, inviteOptions).then(null, function(error) {
         if (ist === null) {
@@ -127,7 +133,7 @@ describe('SIPJSUserAgent', function() {
       assert(ist.callSid);
     });
 
-    it('inviteServerTransaction.conversationSid', function() {
+    it.skip('inviteServerTransaction.conversationSid', function() {
       assert(ist.conversationSid);
     });
 
@@ -147,7 +153,7 @@ describe('SIPJSUserAgent', function() {
         assert(dialog.callSid);
       });
 
-      it('dialog.conversationSid', function() {
+      it.skip('dialog.conversationSid', function() {
         assert(dialog.conversationSid);
       });
 
@@ -205,7 +211,8 @@ describe('SIPJSUserAgent', function() {
     var dialog = null;
 
     it('returns a SIPJSInviteClientTransaction', function(done) {
-      ua2.register().then(function() {
+      // FIXME(mroberts): ...
+      // ua2.register().then(function() {
         ict = ua1.invite(ua2Name, inviteOptions);
         ict.then(null, function() {
           if (ist === null) {
@@ -217,7 +224,7 @@ describe('SIPJSUserAgent', function() {
           done();
         });
         assert(ict);
-      }).then(null, done);
+      // }).then(null, done);
     });
 
     it('updates .inviteClientTransactions', function() {
@@ -242,7 +249,7 @@ describe('SIPJSUserAgent', function() {
         assert(dialog.callSid);
       });
 
-      it('dialog.conversationSid', function() {
+      it.skip('dialog.conversationSid', function() {
         assert(dialog.conversationSid);
       });
 

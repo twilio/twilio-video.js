@@ -21,17 +21,15 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   var alice = null;
 
   describe('constructor', function() {
-    var receivedEvent = false;
-
-    it('emits "listen"', function(done) {
+    before(function(done) {
       alice = new Endpoint(aliceToken, { debug: false });
-      alice.once('listen', function() {
-        receivedEvent = true;
+      alice.listen().then(function() {
         done();
-      });
-      alice.once('listenFailed', function(error) {
-        done(error);
-      });
+      }, done);
+    });
+
+    it('sets .listening', function() {
+      assert(alice.listening);
     });
 
     it('sets .address', function() {
@@ -39,20 +37,14 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     describe('#unlisten', function() {
-      var receivedEvent = false;
-
-      it('updates .listening', function(done) {
+      before(function(done) {
         alice.unlisten().then(function() {
-          assert(!alice.listening);
-        }).then(null, done);
-        alice.once('unlisten', function() {
-          receivedEvent = true;
           done();
-        });
+        }, done);
       });
 
-      it('emits "unlisten"', function() {
-        assert(receivedEvent);
+      it('updates .listening', function() {
+        assert(!alice.listening);
       });
 
       it('does not update .address', function() {
@@ -62,21 +54,17 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       describe('#listen (with new Token)', function() {
         var aliceName = null;
         var aliceToken = null;
-        var receiveEvent = false;
 
-        it('updates .listening', function(done) {
+        before(function(done) {
           aliceName = randomName();
           aliceToken = getCapabilityToken(aliceName);
           alice.listen(aliceToken).then(function() {
-            assert(alice.listening);
-          }).then(done, done);
-          alice.once('listen', function() {
-            receivedEvent = true;
-          });
+            done();
+          }, done);
         });
 
-        it('emits "listen"', function() {
-          assert(receivedEvent);
+        it('updates .listening', function() {
+          assert(alice.listening);
         });
 
         it('updates .address', function() {
@@ -109,7 +97,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
-    it('invite.conversationSid', function() {
+    it.skip('invite.conversationSid', function() {
       assert(invite.conversationSid);
     });
 
@@ -123,9 +111,9 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         }).then(done, done);
       });
 
-      describe('#leave', function() {
+      describe('Conversation#leave', function() {
         it('updates .conversations', function(done) {
-          alice.leave(conversation).then(function() {
+          conversation.leave().then(function() {
             assert(!alice.conversations.has(conversation));
           }).then(done, done);
         });
@@ -146,9 +134,9 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
-    describe('#leave', function() {
+    describe('Conversation#leave', function() {
       it('updates .conversations', function(done) {
-        alice.leave(conversation).then(function() {
+        conversation.leave().then(function() {
           assert(!alice.conversations.has(conversation));
         }).then(done, done);
       });

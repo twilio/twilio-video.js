@@ -1,5 +1,5 @@
 #!/usr/local/bin/node
-/*var cheerio = require('cheerio');
+var cheerio = require('cheerio');
 var fs = require('fs');
 
 var releaseDocs = process.argv[2];
@@ -7,19 +7,22 @@ if (!releaseDocs) {
   process.exit(1);
 }
 
-var classNames = [
-  'Endpoint'
+var triples = [
+  ['Endpoint', 'createWithToken', 'Twilio.Endpoint'],
+  ['Stream', 'getUserMedia', 'Twilio']
 ];
 
 console.log('Prefixing public constructors from');
-classNames.forEach(function(className) {
+triples.forEach(function(triple) {
+  var className = triple[0];
+  var methodName = triple[1];
+  var prefix = triple[2];
   console.log(' - ' + className);
   var classPath = releaseDocs + '/' + className + '.html';
   var classFile = fs.readFileSync(classPath, 'utf8');
   var $ = cheerio.load(classFile);
-  var div = $('.container-overview');
-  var name = $('h4.name', div);
-  name.html(name.html().replace(/new /, 'new Twilio.Signal.'));
+  var method = $('#\\.' + methodName);
+  method.html(method.html().replace(methodName, prefix + '.' + methodName));
   classFile = $.html();
   fs.writeFileSync(classPath, classFile, 'utf8');
-});*/
+});

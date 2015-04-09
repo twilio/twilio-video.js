@@ -4,11 +4,11 @@ var Q = require('q');
 var https = require('https');
 
 /**
- * Generate a Signal token.
+ * Generate a token.
  * @param {string} accountSid - account SID
  * @param {string} authToken - authentication token
  * @param {string} address - the address to register
- * @returns {Promise<string>} Signal token
+ * @returns {Promise<string>} token
  */
 function getLiveToken(accountSid, authToken, address, apiHost) {
 
