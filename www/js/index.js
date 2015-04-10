@@ -376,7 +376,7 @@ function didAddParticipant(conversation, participant) {
     leaveBtn.disabled = false;
     getParticipantInputs().forEach(function(input) {
       input.disabled = true;
-      input.value = participant;
+      input.value = participant.address;
       input.classList.remove('js-participant-name');
     });
     getParticipantBtns().forEach(function(btn) {
@@ -395,7 +395,7 @@ function didAddParticipant(conversation, participant) {
   });
   conversation.once('participantLeft', function(participant) {
     if (loggedIn) {
-      conversation.getLocalStream().stop();
+      conversation.localStream.stop();
       conversation.leave();
     }
     didLeave();
@@ -821,7 +821,7 @@ var localVideo = null;
 function startDisplayingConversation(conversation, participant) {
   var remoteVideoDiv = document.createElement('div');
   remoteVideoDiv.className += ' js-remote-video-div';
-  var remoteStreams = participant ? [conversation.getRemoteStream(participant)] : conversation.getRemoteStreams();
+  var remoteStreams = [participant.stream];
   remoteVideos = remoteStreams.map(function(remoteStream) {
     var remoteVideo = remoteStream.attach();
     remoteVideo.className += ' js-remote-video';
@@ -872,7 +872,7 @@ function startDisplayingConversation(conversation, participant) {
 
   var localVideoDiv = document.createElement('div');
   localVideoDiv.className += ' js-local-video-div';
-  var localStream = conversation.getLocalStream();
+  var localStream = conversation.localStream;
   var localVideo = localStream.attach();
   localVideo.className += ' js-local-video';
   localVideoDiv.appendChild(localVideo);

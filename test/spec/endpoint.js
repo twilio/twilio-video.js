@@ -125,7 +125,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     var conversation = null;
 
     it('updates .conversations', function(done) {
-      alice.invite(uaName).then(function(_conversation) {
+      alice.createConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
         assert(alice.conversations.has(conversation));
       }).then(done, done);

@@ -37,10 +37,10 @@ describe('Conversation (SIPJSUserAgent)', function() {
           dialog = _dialog;
         });
       });
-      return alice.invite(bobName);
+      return alice.createConversation(bobName);
     }).then(function(_conversation) {
       conversation = _conversation;
-      assert(conversation.participants.has(bobName));
+      assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));
       assert.equal(1, conversation.participants.size);
     }).then(done, done);
   });
@@ -50,18 +50,12 @@ describe('Conversation (SIPJSUserAgent)', function() {
   });
 
   it('.participants contains Participant address', function() {
-    assert(conversation.participants.has(bobName));
+    assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));
     assert.equal(1, conversation.participants.size);
   });
 
-  it('.getLocalStream() works', function() {
-    var localStream = conversation.getLocalStream();
-    assert(localStream);
-  });
-
-  it('.getRemoteStream() works', function() {
-    var remoteStream = conversation.getRemoteStream(bobName);
-    assert(remoteStream);
+  it('.localStream', function() {
+    assert(conversation.localStream);
   });
 });
 

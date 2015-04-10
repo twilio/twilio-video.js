@@ -26,7 +26,7 @@ ALL=$(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN) $(RELEASE_LOADER) $(RELEASE_LOADER_MIN
 LIB_FILES=$(shell find lib -name \*.js)
 SRC_FILES=$(shell find src -name \*.js)
 TEST_FILES=$(shell find test -name \*.js)
-PUBLIC_LIB_FILES=lib/conversation.js lib/endpoint.js lib/invite.js lib/media/stream.js
+PUBLIC_LIB_FILES=lib/conversation.js lib/endpoint.js lib/invite.js lib/participant.js lib/media/stream.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js

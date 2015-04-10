@@ -11,6 +11,7 @@ var classNames = [
   'Conversation',
   'Endpoint',
   'Invite',
+  'Participant',
   'Stream'
 ];
 
