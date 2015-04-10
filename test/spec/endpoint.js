@@ -10,8 +10,9 @@ var util = require('./util');
 var Endpoint = require('../../lib/endpoint');
 var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 
-var accountSid = process.env['ACCOUNT_SID'];
-var authToken = process.env['AUTH_TOKEN'];
+var config = require('../../test');
+var accountSid = config['accountSid'];
+var authToken = config['authToken'];
 var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
