@@ -22,6 +22,7 @@ describe('SIPJSUserAgent', function() {
   var ua1 = null;
 
   var options = {};
+  options['debug'] = true;
   options['wsServer'] = wsServer;
   var inviteOptions = {};
   // inviteOptions['inviteWithoutSdp'] = true;

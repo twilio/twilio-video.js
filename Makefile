@@ -44,10 +44,7 @@ all: $(ALL)
 clean:
 	rm -rf build .LINTED .TESTED
 
-clean-www:
-	rm -rf www/venv www/httplib2 www/six.py www/twilio www/sdk
-
-clean-all: clean clean-www
+clean-all: clean
 
 docs:
 	@$(call INFO,"Generating docs")
@@ -59,16 +56,14 @@ docs:
 lint:
 	$(GULP) lint
 
-publish: www/basic_auth.json www
-	(cd www; ln -s -f sdk/$(PRODUCT)/$(PUBLIC_VERSION)/docs doc)
-	appcfg.py update www --oauth2 \
-		-E twilio_default_realm:prod
+publish: simple-signaling.appspot.com
+	cd simple-signaling.appspot.com && make publish
 
 release-version:
 	@echo $(RELEASE_VERSION)
 
-serve: www
-	dev_appserver.py www --skip_sdk_update_check
+serve: simple-signaling.appspot.com
+	cd simple-signaling.appspot.com && make serve
 
 test: test.json
 	$(MOCHA) --reporter=spec test/spec/index.js
@@ -80,9 +75,11 @@ test.json:
 		exit 1; \
 	fi
 
-www: www/twilio_credentials.json www/httplib2 www/six.py www/twilio www/sdk
+simple-signaling.appspot.com:
+	git submodule init
+	git submodule update
 
-.PHONY: all clean clean-all clean-www docs lint publish serve test
+.PHONY: all clean clean-all docs lint publish serve test
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")
@@ -158,56 +155,3 @@ $(RELEASE_MIN): $(UGLIFY) $(RELEASE)
 	else \
 		$(call INFO,"Skipped testing"); \
 	fi
-
-www/basic_auth.json:
-	@if [ ! -f www/basic_auth.json ]; then \
-		echo "\n\nYou probably should not be publishing!\n\n"; \
-		exit 1; \
-	fi
-
-www/twilio_credentials.json:
-	@if [ ! -f www/twilio_credentials.json ]; then \
-		echo "\n\nYou need to create \`www/twilio_credentials.json'."; \
-		echo "See \`www/twilio_credentials.json.example'.\n\n"; \
-		exit 1; \
-	fi
-
-www/venv:
-	@$(call INFO,"Creating virtualenv")
-	(cd www; bash -c 'virtualenv venv; source venv/bin/activate; pip install -r requirements.txt')
-
-www/venv/lib/python2.7/site-packages/httplib2: www/venv
-
-www/venv/lib/python2.7/site-packages/six.py: www/venv
-
-www/venv/lib/python2.7/site-packages/twilio: www/venv
-
-www/httplib2: www/venv/lib/python2.7/site-packages/httplib2
-	@$(call INFO,"Symlinking httplib2")
-	(cd www; ln -s -f venv/lib/python2.7/site-packages/httplib2 .)
-
-www/six.py: www/venv/lib/python2.7/site-packages/six.py
-	@$(call INFO,"Symlinking six.py")
-	(cd www; ln -s -f venv/lib/python2.7/site-packages/six.py .)
-
-www/twilio: www/venv/lib/python2.7/site-packages/twilio
-	@$(call INFO,"Symlinking twilio")
-	(cd www; ln -s -f venv/lib/python2.7/site-packages/twilio .)
-
-www/sdk: $(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN)
-	@$(call INFO,"Symlinking sdk")
-	(cd www; ln -s -f ../build/sdk .; touch sdk)
-
-# browser-test: build/$(RELEASE_VERSION)/twilio-conversations.js \
-# 							build/$(RELEASE_VERSION)/test/index.js \
-# 							build/$(RELEASE_VERSION)/test/index.html \
-# 							build/$(RELEASE_VERSION)/test/bower_components
-# 	@cd build/$(RELEASE_VERSION); \
-# 		python -m SimpleHTTPServer 9999 & \
-# 		PID=$$?; \
-# 		cd ../..; \
-# 	$(mocha_phantomjs) -s webSecurityEnabled=false --reporter=spec http://localhost:9999/test/index.html; \
-# 	kill -9 $${PID}
-
-# test/bower_components: test/bower.json
-# 	@cd test && bower install
