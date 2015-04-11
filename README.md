@@ -17,7 +17,7 @@ $ make
 Testing
 -------
 
-The [source code for simple-signaling.appspot.com] is included as a git submodule of this repository, allowing you to test builds locally at [localhost:8080](http://localhost:8080) by running
+The [source code for simple-signaling.appspot.com](//code.hq.twilio.com/client/simple-signaling.appspot.com) is included as a git submodule of this repository, allowing you to test builds locally at [localhost:8080](http://localhost:8080) by running
 
 ```
 $ make serve
