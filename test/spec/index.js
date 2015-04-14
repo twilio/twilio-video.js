@@ -1,8 +1,8 @@
 if (typeof window === 'undefined') {
   require('../mockwebrtc')();
 }
-// require('./useragent');
+require('./useragent');
 require('./sipjsuseragent');
-// require('./endpoint');
-// require('./conversation');
-// require('./invite');
+require('./endpoint');
+require('./conversation');
+require('./invite');
