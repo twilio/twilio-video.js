@@ -62,7 +62,7 @@ publish: simple-signaling.appspot.com
 release-version:
 	@echo $(RELEASE_VERSION)
 
-serve: simple-signaling.appspot.com
+serve: simple-signaling.appspot.com/sdk
 	cd simple-signaling.appspot.com && make serve
 
 test: test.json
@@ -78,6 +78,9 @@ test.json:
 simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
+
+simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
+	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
 .PHONY: all clean clean-all docs lint publish serve test
 
