@@ -20,7 +20,9 @@ gulp.task('patch', shell.task([
   'patch -N node_modules/sip.js/src/SanityCheck.js ' +
     '<patch/disable_rfc3261_18_1_2.patch; true',
   'patch -N node_modules/sip.js/src/Hacks.js ' +
-    '<patch/disable_masking.patch; true'
+    '<patch/disable_masking.patch; true',
+  'patch -N -d node_modules/sip.js/src ' +
+    '<patch/always_send_cancel.patch; true'
 ]));
 
 gulp.task('lint', function() {

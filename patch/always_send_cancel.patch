@@ -1,0 +1,44 @@
+diff -rupN Session.js Session.js
+--- Session.js	2015-04-16 13:18:31.000000000 -0700
++++ Session.js	2015-04-16 13:19:24.000000000 -0700
+@@ -2107,15 +2107,15 @@ InviteClientContext.prototype = {
+     }
+ 
+     // Check Session Status
+-    if (this.status === C.STATUS_NULL ||
+-        (this.status === C.STATUS_INVITE_SENT && !this.received_100)) {
+-      this.isCanceled = true;
+-      this.cancelReason = cancel_reason;
+-    } else if (this.status === C.STATUS_INVITE_SENT ||
+-               this.status === C.STATUS_1XX_RECEIVED ||
+-               this.status === C.STATUS_EARLY_MEDIA) {
++    // if (this.status === C.STATUS_NULL ||
++    //     (this.status === C.STATUS_INVITE_SENT && !this.received_100)) {
++    //   this.isCanceled = true;
++    //   this.cancelReason = cancel_reason;
++    // } else if (this.status === C.STATUS_INVITE_SENT ||
++    //            this.status === C.STATUS_1XX_RECEIVED ||
++    //            this.status === C.STATUS_EARLY_MEDIA) {
+       this.request.cancel(cancel_reason);
+-    }
++    // }
+ 
+     return this.canceled();
+   },
+diff -rupN Transactions.js Transactions.js
+--- Transactions.js	2015-04-16 13:18:31.000000000 -0700
++++ Transactions.js	2015-04-16 13:18:52.000000000 -0700
+@@ -264,10 +264,10 @@ InviteClientTransaction.prototype.cancel
+ 
+   this.cancel += 'Content-Length: 0\r\n\r\n';
+ 
+-  // Send only if a provisional response (>100) has been received.
+-  if(this.state === C.STATUS_PROCEEDING) {
++  // // Send only if a provisional response (>100) has been received.
++  // if(this.state === C.STATUS_PROCEEDING) {
+     this.transport.send(this.cancel);
+-  }
++  // }
+ };
+ 
+ InviteClientTransaction.prototype.receiveResponse = function(response) {
