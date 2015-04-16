@@ -13,7 +13,7 @@ var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 var config = require('../../test');
 var accountSid = config['accountSid'];
 var authToken = config['authToken'];
-var wsServer = 'ws://' + config['wsServer'];
+var wsServer = config['wsServer'];
 var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
@@ -101,15 +101,24 @@ describe('SIPJSUserAgent', function() {
   var ua2 = new SIPJSUserAgent(getCapabilityToken(ua2Name), options);
 
   describe('Receive incoming call', function() {
+    var ict = null;
     var ist = null;
-    var dialog = null;
+    var ua1Dialog = null;
+    var ua2Dialog = null;
+
+    before(function(done) {
+      ua2.register().then(function() {
+        done();
+      }, done);
+    });
 
     it('ua2 registers...', function(done) {
       ua2.register().then(function() { done(); }, done);
     });
 
     it('emits "invite"', function(done) {
-      ua2.invite(ua1Name, inviteOptions).then(null, function(error) {
+      ict = ua2.invite(ua1Name, inviteOptions);
+      ict.then(null, function(error) {
         if (ist === null) {
           done(new Error('InviteClientTransaction failed'));
         }
@@ -141,29 +150,43 @@ describe('SIPJSUserAgent', function() {
 
     describe('InviteServerTransaction#accept', function() {
       it('updates .inviteServerTransactions', function(done) {
-        ist.accept().then(function(_dialog) {
-          assert(!ua1.inviteServerTransactions.has(ist));
-          dialog = _dialog;
-        }).then(done, done);
+        Q.all([
+          ict.then(function(_dialog) {
+            ua2Dialog = _dialog;
+          }),
+          ist.accept().then(function(_dialog) {
+            assert(!ua1.inviteServerTransactions.has(ist));
+            ua1Dialog = _dialog;
+          })
+        ]).then(function() {
+          done();
+        }, done);
       });
 
       it('updates .dialogs', function() {
-        assert(ua1.dialogs.has(dialog));
+        assert(ua1.dialogs.has(ua1Dialog));
       });
 
       it('dialog.callSid', function() {
-        assert(dialog.callSid);
+        assert(ua1Dialog.callSid);
       });
 
       it.skip('dialog.conversationSid', function() {
-        assert(dialog.conversationSid);
+        assert(ua1Dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {
         it('updates .dialogs', function(done) {
-          dialog.end().then(function() {
-            assert(!ua1.dialogs.has(dialog));
-          }).then(done, done);
+          Q.all([
+            ua1Dialog.end().then(function() {
+              assert(!ua1.dialogs.has(ua1Dialog));
+            }),
+            ua2Dialog.end().then(function() {
+              assert(!ua2.dialogs.has(ua2Dialog));
+            })
+          ]).then(function() {
+            done();
+          }, done);
         });
       });
     });
@@ -210,7 +233,8 @@ describe('SIPJSUserAgent', function() {
   describe('#invite', function() {
     var ict = null;
     var ist = null;
-    var dialog = null;
+    var ua1Dialog = null;
+    var ua2Dialog = null;
 
     it('returns a SIPJSInviteClientTransaction', function(done) {
       // FIXME(mroberts): ...
@@ -235,31 +259,39 @@ describe('SIPJSUserAgent', function() {
 
     describe('InviteClientTransaction accepted', function() {
       it('updates .inviteClientTransactions', function(done) {
-        ist.accept().then(function() {
-          return ict;
-        }).then(function(_dialog) {
-          assert(!ua1.inviteClientTransactions.has(ict));
-          dialog = _dialog;
-        }).then(done, done);
+        Q.all([
+          ict.then(function(_dialog) {
+            assert(!ua1.inviteClientTransactions.has(ict));
+            ua1Dialog = _dialog;
+          }),
+          ist.accept().then(function(_dialog) {
+            ua2Dialog = _dialog;
+          })
+        ]).then(function() {
+          done();
+        }, done);
       });
 
       it('updates .dialogs', function() {
-        assert(ua1.dialogs.has(dialog));
+        assert(ua1.dialogs.has(ua1Dialog));
       });
 
       it('dialog.callSid', function() {
-        assert(dialog.callSid);
+        assert(ua1Dialog.callSid);
       });
 
       it.skip('dialog.conversationSid', function() {
-        assert(dialog.conversationSid);
+        assert(ua1Dialog.conversationSid);
       });
 
       describe('Dialog "ended" event', function() {
         it('updates .dialogs', function(done) {
-          dialog.end().then(function() {
-            assert(!ua1.dialogs.has(dialog));
+          ua1Dialog.end().then(function() {
+            assert(!ua1.dialogs.has(ua1Dialog));
           }).then(done, done);
+          ua2Dialog.end().then(function() {
+            assert(!ua2.dialog.has(ua2Dialog));
+          });
         });
       });
     });

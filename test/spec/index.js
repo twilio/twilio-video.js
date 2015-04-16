@@ -6,3 +6,4 @@ require('./sipjsuseragent');
 require('./endpoint');
 require('./conversation');
 require('./invite');
+require('./util').test();
