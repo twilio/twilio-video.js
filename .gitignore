@@ -1,4 +1,5 @@
 *.pyc
+*.sw*
 .LINTED
 .TESTED
 build
