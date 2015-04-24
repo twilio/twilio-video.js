@@ -135,6 +135,19 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
+    it('should be cancelable', function(done) {
+      var canceled = false;
+
+      var invite = alice.createConversation(uaName);
+      invite.then(function() {
+        assert.fail('cancel was not fired');
+      }, function(reason) {
+        assert(reason.message === 'canceled');
+      }).then(done, done);
+
+      invite.cancel();
+    });
+
     describe('Conversation#leave', function() {
       it('updates .conversations', function(done) {
         conversation.leave().then(function() {
