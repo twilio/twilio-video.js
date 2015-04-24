@@ -199,6 +199,7 @@ describe('UserAgent', function() {
     });
 
     it('updates .inviteClientTransactions', function() {
+      console.log(ua1.inviteClientTransactions);
       assert(ua1.inviteClientTransactions.has(ict));
     });
 
