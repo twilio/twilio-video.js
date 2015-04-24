@@ -1,0 +1,60 @@
+--- Session.js	2014-11-24 14:22:26.000000000 -0800
++++ Session.js	2015-04-23 17:44:00.000000000 -0700
+@@ -238,16 +238,19 @@
+       extraHeaders.push('Refer-To: '+ target);
+     }
+ 
++    extraHeaders.push('Allow-Events: refer');
++    extraHeaders.push('Event: refer;id=' + Math.floor((Math.random() * 1000) + 1));
++
+     // Send the request
+     this.sendRequest(SIP.C.REFER, {
+       extraHeaders: extraHeaders,
+       body: options.body,
+-      receiveResponse: function() {}
++      receiveResponse: options.receiveResponse || function() {}
+     });
+     // hang up only if we transferred to a SIP address
+-    if (target.scheme.match("^sips?$")) {
+-      this.terminate();
+-    }
++//    if (target.scheme.match("^sips?$")) {
++//      this.terminate();
++//    }
+     return this;
+   },
+ 
+@@ -721,6 +724,9 @@
+           }
+         }
+         break;
++      case SIP.C.NOTIFY:
++        request.reply(200, 'OK');
++        break;
+     }
+   },
+ 
+@@ -2107,15 +2113,15 @@
+     }
+ 
+     // Check Session Status
+-    if (this.status === C.STATUS_NULL ||
+-        (this.status === C.STATUS_INVITE_SENT && !this.received_100)) {
+-      this.isCanceled = true;
+-      this.cancelReason = cancel_reason;
+-    } else if (this.status === C.STATUS_INVITE_SENT ||
+-               this.status === C.STATUS_1XX_RECEIVED ||
+-               this.status === C.STATUS_EARLY_MEDIA) {
++    // if (this.status === C.STATUS_NULL ||
++    //     (this.status === C.STATUS_INVITE_SENT && !this.received_100)) {
++    //   this.isCanceled = true;
++    //   this.cancelReason = cancel_reason;
++    // } else if (this.status === C.STATUS_INVITE_SENT ||
++    //            this.status === C.STATUS_1XX_RECEIVED ||
++    //            this.status === C.STATUS_EARLY_MEDIA) {
+       this.request.cancel(cancel_reason);
+-    }
++    // }
+ 
+     return this.canceled();
+   },

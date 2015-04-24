@@ -21,7 +21,9 @@ gulp.task('patch', shell.task([
     '<patch/disable_rfc3261_18_1_2.patch; true',
   'patch -N node_modules/sip.js/src/Hacks.js ' +
     '<patch/disable_masking.patch; true',
-  'patch -N -d node_modules/sip.js/src ' +
+  'patch -N node_modules/sip.js/src/Session.js ' +
+    '<patch/refer.patch; true',
+  'patch -N node_modules/sip.js/src/Transactions.js ' +
     '<patch/always_send_cancel.patch; true'
 ]));
 
