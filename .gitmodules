@@ -1,3 +1,3 @@
 [submodule "simple-signaling.appspot.com"]
 	path = simple-signaling.appspot.com
-	url = https://code.hq.twilio.com/client/simple-signaling.appspot.com.git
+	url = git@code.hq.twilio.com:client/simple-signaling.appspot.com.git
