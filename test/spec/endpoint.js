@@ -13,6 +13,7 @@ var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 var config = require('../../test');
 var accountSid = config['accountSid'];
 var authToken = config['authToken'];
+var wsServer = config['wsServer'];
 var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
@@ -21,9 +22,13 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   var aliceToken = getCapabilityToken(aliceName);
   var alice = null;
 
+  var options = {};
+  options['debug'] = false;
+  options['wsServer'] = wsServer;
+
   describe('constructor', function() {
     before(function(done) {
-      alice = new Endpoint(aliceToken, { debug: false });
+      alice = new Endpoint(aliceToken, options);
       alice.listen().then(function() {
         done();
       }, done);
@@ -86,7 +91,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     it('emits "invite"', function(done) {
       uaName = randomName();
       uaToken = getCapabilityToken(uaName);
-      ua = new SIPJSUserAgent(uaToken, { debug: false });
+      ua = new SIPJSUserAgent(uaToken, options);
       ua.register().then(function() {
         ict = ua.invite(alice.address);
       }, function(error) {

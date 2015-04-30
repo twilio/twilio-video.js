@@ -1,6 +1,5 @@
 {
   "accountSid": null,
   "authToken": null,
-  "conversationsService": "bar.com",
-  "wsServer": "foo.com"
+  "wsServer": "wss://public-endpoint0.us1.twilio.com"
 }
