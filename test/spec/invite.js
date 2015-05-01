@@ -12,6 +12,7 @@ var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 var config = require('../../test');
 var accountSid = config['accountSid'];
 var authToken = config['authToken'];
+var wsServer = config['wsServer'];
 var getCapabilityToken =
   require('../token').getCapabilityToken.bind(null, accountSid, authToken);
 
@@ -34,10 +35,14 @@ describe('Invite (SIPJSUserAgent)', function() {
   var conversation = null;
   var dialog = null;
 
+  var options = {};
+  options['debug'] = false;
+  options['wsServer'] = wsServer;
+
   before(function allRegister(done) {
-    alice = new Endpoint(aliceToken);
-    bob = new SIPJSUserAgent(bobToken);
-    charlie = new SIPJSUserAgent(charlieToken);
+    alice = new Endpoint(aliceToken, options);
+    bob = new SIPJSUserAgent(bobToken, options);
+    charlie = new SIPJSUserAgent(charlieToken, options);
 
     Q.all([alice.listen(), bob.register(), charlie.register()]).then(function() {
       done();
