@@ -22,61 +22,89 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   var aliceToken = getCapabilityToken(aliceName);
   var alice = null;
 
-  var options = {};
-  options['debug'] = false;
-  options['wsServer'] = wsServer;
+  var options = {
+    debug: false,
+    wsServer: wsServer,
+    logLevel: 'off'
+  };
+
+  var createEndpoint = function(options) {
+    return new Endpoint(aliceToken, options);
+  };
 
   describe('constructor', function() {
-    before(function(done) {
+    it('should return an instance of Endpoint', function() {
       alice = new Endpoint(aliceToken, options);
-      alice.listen().then(function() {
+      assert(alice instanceof Endpoint);
+    });
+
+    it('should validate logLevel', function() {
+      assert.throws(createEndpoint.bind(this, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
+    });
+
+    it('should validate ICE servers', function() {
+      assert.throws(createEndpoint.bind(this, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
+    });
+
+    it('should validate token', function() {
+      assert.throws(function() {
+        new Endpoint('abc');
+      }, /INVALID_TOKEN/);
+    });
+  });
+
+  describe('#listen', function() {
+    it('should return a promise', function(done) {
+      alice.listen().then(
+        function() { done(); }, 
+        function() { done(); }
+      );
+    });
+
+    it('should set .isListening', function() {
+      assert(alice.isListening);
+    });
+
+    it('should set .address', function() {
+      assert.equal(aliceName, alice.address);
+    });
+  });
+
+  describe('#unlisten', function() {
+    before(function(done) {
+      alice.unlisten().then(
+        function() { done(); },
+        function() { done(); }
+      );
+    });
+
+    it('updates .isListening', function() {
+      assert(!alice.listening);
+    });
+
+    it('does not update .address', function() {
+      assert.equal(aliceName, alice.address);
+    });
+  });
+
+  describe('#listen (with new Token)', function() {
+    var aliceName = null;
+    var aliceToken = null;
+
+    before(function(done) {
+      aliceName = randomName();
+      aliceToken = getCapabilityToken(aliceName);
+      alice.listen(aliceToken).then(function() {
         done();
       }, done);
     });
 
-    it('sets .listening', function() {
-      assert(alice.listening);
+    it('updates .listening', function() {
+      assert(alice.isListening);
     });
 
-    it('sets .address', function() {
+    it('updates .address', function() {
       assert.equal(aliceName, alice.address);
-    });
-
-    describe('#unlisten', function() {
-      before(function(done) {
-        alice.unlisten().then(function() {
-          done();
-        }, done);
-      });
-
-      it('updates .listening', function() {
-        assert(!alice.listening);
-      });
-
-      it('does not update .address', function() {
-        assert.equal(aliceName, alice.address);
-      });
-
-      describe('#listen (with new Token)', function() {
-        var aliceName = null;
-        var aliceToken = null;
-
-        before(function(done) {
-          aliceName = randomName();
-          aliceToken = getCapabilityToken(aliceName);
-          alice.listen(aliceToken).then(function() {
-            done();
-          }, done);
-        });
-
-        it('updates .listening', function() {
-          assert(alice.listening);
-        });
-
-        it('updates .address', function() {
-          assert.equal(aliceName, alice.address);
-        });
-      });
     });
   });
 
@@ -127,10 +155,26 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
   });
 
-  describe('#invite', function() {
+  describe('#createConversation', function() {
     var conversation = null;
 
-    it('updates .conversations', function(done) {
+    var createConversation = function(name, options) {
+      return alice.createConversation(name, options);
+    };
+
+    it('should validate an address was passed', function() {
+      assert.throws(createConversation.bind(this), /INVALID_ARGUMENT/);
+    });
+
+    it('should validate localStream', function() {
+      assert.throws(createConversation.bind(this, uaName, { localStream: 'foo' }), /INVALID_ARGUMENT/);
+    });
+
+    it('should validate localStreamConstraints', function() {
+      assert.throws(createConversation.bind(this, uaName, { localStreamConstraints: 'foo' }), /INVALID_ARGUMENT/);
+    });
+
+    it('should update .conversations', function(done) {
       alice.createConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
         assert(alice.conversations.has(conversation));

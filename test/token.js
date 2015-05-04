@@ -2,6 +2,7 @@
 
 var Q = require('q');
 var https = require('https');
+var Token = require('../lib/token');
 
 /**
  * Generate a token.
@@ -66,7 +67,7 @@ function getCapabilityToken(accountSid, authToken, address) {
   var capabilityToken = new twilio.Capability(accountSid, authToken);
   capabilityToken.allowClientIncoming(address);
   capabilityToken.allowClientOutgoing('AP00000000000000000000000000000000');
-  return capabilityToken.generate();
+  return new Token(capabilityToken.generate());
 }
 
 function getBrowserToken(accountSid, authToken, address) {
