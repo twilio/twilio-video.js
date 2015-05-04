@@ -1,0 +1,11 @@
+--- MediaHandler.js	2015-05-04 09:31:15.000000000 -0700
++++ MediaHandler.js	2015-05-04 09:31:45.000000000 -0700
+@@ -432,7 +432,7 @@
+     }
+ 
+     function onSetLocalDescriptionSuccess() {
+-      if (self.peerConnection.iceGatheringState === 'complete' && (self.peerConnection.iceConnectionState === 'connected' || self.peerConnection.iceConnectionState === 'completed')) {
++      if (self.peerConnection.iceConnectionState === 'connected' || self.peerConnection.iceConnectionState === 'completed') {
+         readySuccess();
+       } else {
+         self.onIceCompleted = function(pc) {

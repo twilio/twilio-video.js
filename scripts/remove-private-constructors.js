@@ -11,7 +11,10 @@ var classNames = [
   'Conversation',
   'Invite',
   'Participant',
-  'Stream'
+  'Track',
+  'AudioTrack',
+  'VideoTrack',
+  'Media'
 ];
 
 console.log('Stripping private constructors from');

@@ -8,7 +8,9 @@ if (!releaseDocs) {
 }
 
 var triples = [
-  ['Stream', 'getUserMedia', 'Twilio']
+  // NOTE(mroberts): Leaving this code commented out, because we may want
+  // similar functionality later.
+  // ['Stream', 'getUserMedia', 'Twilio']
 ];
 
 console.log('Prefixing public constructors from');

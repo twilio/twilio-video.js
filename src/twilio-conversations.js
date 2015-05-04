@@ -1,8 +1,7 @@
 'use strict';
 
 var Endpoint = require('../lib/endpoint');
-var Stream = require('../lib/media/stream');
-var getUserMedia = Stream.getUserMedia;
+var getUserMedia = require('../lib/webrtc/getusermedia');
 
 function Twilio() {
   Object.defineProperties(this, {
