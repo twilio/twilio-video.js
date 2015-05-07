@@ -9,7 +9,6 @@ if (!releaseDocs) {
 
 var classNames = [
   'Conversation',
-  'Endpoint',
   'Invite',
   'Participant',
   'Stream'

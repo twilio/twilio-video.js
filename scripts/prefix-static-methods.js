@@ -8,7 +8,6 @@ if (!releaseDocs) {
 }
 
 var triples = [
-  ['Endpoint', 'createWithToken', 'Twilio.Endpoint'],
   ['Stream', 'getUserMedia', 'Twilio']
 ];
 
