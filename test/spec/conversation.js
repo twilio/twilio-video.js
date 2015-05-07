@@ -37,13 +37,15 @@ describe('Conversation (SIPJSUserAgent)', function() {
   before(function setupConversaton(done) {
     alice = new Endpoint(aliceToken, options);
     bob = new SIPJSUserAgent(bobToken, options);
-    Q.all([alice.listen(), bob.register()]).then(function() {
-      bob.on('invite', function(ist) {
-        ist.accept().then(function(_dialog) {
-          dialog = _dialog;
+    bob.connect().then(function() {
+      return Q.all([alice.listen(), bob.register()]).then(function() {
+        bob.on('invite', function(ist) {
+          ist.accept().then(function(_dialog) {
+            dialog = _dialog;
+          });
         });
+        return alice.createConversation(bobName);
       });
-      return alice.createConversation(bobName);
     }).then(function(_conversation) {
       conversation = _conversation;
       assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));

@@ -26,36 +26,55 @@ describe('SIPJSUserAgent', function() {
   options['debug'] = false;
   options['wsServer'] = wsServer;
   var inviteOptions = {};
-  // inviteOptions['inviteWithoutSdp'] = true;
 
   describe('constructor', function() {
-    it('sets .token', function() {
+    before(function() {
       ua1 = new SIPJSUserAgent(token, options);
+    });
+
+    it('should set .token', function() {
+      assert.equal(token, ua1.token);
+    });
+
+    it('should not automatically connect', function() {
+      assert(!ua1.isConnected);
+    });
+
+    it('should not automatically register', function() {
       assert(!ua1.registered);
-      assert.equal(token, ua1.token.capabilityTokenString);
     });
   });
   
   describe('#register (without Token)', function() {
     var receivedEvent = false;
 
-    it('updates .registered', function(done) {
+    it('should register when not connected', function(done) {
       ua1.register().then(function() {
-        assert(ua1.registered);
+        assert(ua1.isRegistered);
       }).then(done, done);
+
       ua1.once('registered', function() {
         receivedEvent = true;
       });
     });
 
-    it('emits "registered"', function() {
+    it('should emit "registered" event', function() {
       assert(receivedEvent);
+    });
+
+    it('should register when already connected', function(done) {
+      ua1 = new SIPJSUserAgent(token, options);
+      ua1.connect().then(function() {
+        return ua1.register();
+      }).then(function() {
+        assert(ua1.isRegistered);
+      }).then(done, done);
     });
 
     describe('#unregister', function() {
       var receivedEvent = false;
 
-      it('updates .registered', function(done) {
+      it('should update .registered', function(done) {
         ua1.unregister().then(function() {
           assert(!ua1.registered);
         }).then(done, done);
@@ -64,34 +83,34 @@ describe('SIPJSUserAgent', function() {
         });
       });
 
-      it('emits "unregistered"', function() {
+      it('should emit "unregistered" event', function() {
         assert(receivedEvent);
       });
 
-      it('does not update .token', function() {
-        assert.equal(token, ua1.token.capabilityTokenString);
+      it('should not change .token', function() {
+        assert.equal(token, ua1.token);
       });
 
-      describe('#register (again, with new Token)', function() {
+      describe('#register (with Token)', function() {
         ua1Name = randomName();
         token = getCapabilityToken(ua1Name);
         var receivedEvent = false;
 
-        it('updates .registered', function(done) {
+        it('should register', function(done) {
           ua1.register(token).then(function() {
-            assert(ua1.registered);
+            assert(ua1.isRegistered);
           }).then(done, done);
           ua1.once('registered', function() {
             receivedEvent = true;
           });
         });
 
-        it('emits "registered"', function() {
+        it('should emit "registered" event', function() {
           assert(receivedEvent);
         });
 
-        it('updates .token', function() {
-          assert.equal(token, ua1.token.capabilityTokenString);
+        it('should update .token', function() {
+          assert.equal(token, ua1.token);
         });
       });
     });
@@ -105,7 +124,9 @@ describe('SIPJSUserAgent', function() {
     var ua1Ist = null;
 
     before(function ua2CallsUA1(done) {
-      ua2Ict = ua2.invite(ua1Name, inviteOptions);
+      ua2.connect().then(function() {
+        ua2Ict = ua2.invite(ua1Name, inviteOptions);
+      });
       ua1.once('invite', function(ist) {
         ua1Ist = ist;
         done();
@@ -242,12 +263,12 @@ describe('SIPJSUserAgent', function() {
           } catch (e) {
             return done(e);
           }
-          ua1Ist.reject().then(done, function() {
+          ua1Ist.reject().then(function() {
+            done();
+          }, function() {
             assert(ua1Ist.rejected);
             assert(!ua1.inviteServerTransactions.has(ua1Ist));
-            ua2Ict.then(done, function() {
-              done();
-            });
+            done();
           }).then(null, done);
         });
       });

@@ -29,9 +29,9 @@ describe('UserAgent', function() {
   describe('#register (without Token)', function() {
     var receivedEvent = false;
 
-    it('updates .registered', function(done) {
+    it('updates .isRegistered', function(done) {
       ua1.register().then(function() {
-        assert(ua1.registered);
+        assert(ua1.isRegistered);
       }).then(done, done);
       ua1.once('registered', function() {
         receivedEvent = true;
@@ -66,9 +66,9 @@ describe('UserAgent', function() {
         token = new Token(getCapabilityToken('ua1'));
         var receivedEvent = false;
 
-        it('updates .registered', function(done) {
+        it('updates .isRegistered', function(done) {
           ua1.register(token).then(function() {
-            assert(ua1.registered);
+            assert(ua1.isRegistered);
           }).then(done, done);
           ua1.once('registered', function() {
             receivedEvent = true;
@@ -199,7 +199,6 @@ describe('UserAgent', function() {
     });
 
     it('updates .inviteClientTransactions', function() {
-      console.log(ua1.inviteClientTransactions);
       assert(ua1.inviteClientTransactions.has(ict));
     });
 

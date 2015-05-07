@@ -44,9 +44,8 @@ describe('Invite (SIPJSUserAgent)', function() {
     bob = new SIPJSUserAgent(bobToken, options);
     charlie = new SIPJSUserAgent(charlieToken, options);
 
-    Q.all([alice.listen(), bob.register(), charlie.register()]).then(function() {
-      done();
-    }, done);
+    return Q.all([alice.listen(), bob.register(), charlie.register()])
+      .then(function() { done(); }, done);
   });
 
   describe('Receive multiple invitations to a Conversation', function() {
