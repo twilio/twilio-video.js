@@ -1,5 +1,7 @@
 {
   "accountSid": null,
   "authToken": null,
+  "signingKeySecret": null,
+  "signingKeySid": null,
   "wsServer": "wss://public-endpoint0.us1.twilio.com"
 }

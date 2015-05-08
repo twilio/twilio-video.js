@@ -6,16 +6,17 @@ var Q = require('q');
 var util = require('./util');
 
 var UserAgent = require('../../lib/signaling/useragent');
-var Token = require('../../lib/token');
+var Token = require('../../lib/scopedauthenticationtoken');
 
 var config = require('../../test');
 var accountSid = config['accountSid'];
-var authToken = config['authToken'];
-var getCapabilityToken =
-  require('../token').getCapabilityToken.bind(null, accountSid, authToken);
+var signingKeySid = config['signingKeySid'];
+var signingKeySecret = config['signingKeySecret'];
+var getToken = require('../token').getToken.bind(null, accountSid,
+  signingKeySid, signingKeySecret);
 
 describe('UserAgent', function() {
-  var token = new Token(getCapabilityToken('ua1'));
+  var token = getToken('ua1');
   var ua1 = null;
 
   describe('constructor', function() {
@@ -63,7 +64,7 @@ describe('UserAgent', function() {
       });
 
       describe('#register (again, with new Token)', function() {
-        token = new Token(getCapabilityToken('ua1'));
+        token = getToken('ua1');
         var receivedEvent = false;
 
         it('updates .isRegistered', function(done) {
