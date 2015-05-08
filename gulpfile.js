@@ -39,6 +39,7 @@ gulp.task('lint', function() {
         'atob',
         'btoa',
         'XMLHttpRequest',
+        'navigator',
         '-Map',
         '-Set'
       ],
