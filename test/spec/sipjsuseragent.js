@@ -12,14 +12,17 @@ var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 
 var config = require('../../test');
 var accountSid = config['accountSid'];
-var authToken = config['authToken'];
+var signingKeySid = config['signingKeySid'];
+var signingKeySecret = config['signingKeySecret'];
 var wsServer = config['wsServer'];
-var getCapabilityToken =
-  require('../token').getCapabilityToken.bind(null, accountSid, authToken);
+var getToken = require('../token').getToken.bind(null, accountSid,
+  signingKeySid, signingKeySecret);
+
+var Token = require('../../lib/scopedauthenticationtoken');
 
 describe('SIPJSUserAgent', function() {
   var ua1Name = randomName();
-  var token = getCapabilityToken(ua1Name);
+  var token = getToken(ua1Name);
   var ua1 = null;
 
   var options = {};
@@ -93,7 +96,7 @@ describe('SIPJSUserAgent', function() {
 
       describe('#register (with Token)', function() {
         ua1Name = randomName();
-        token = getCapabilityToken(ua1Name);
+        token = getToken(ua1Name);
         var receivedEvent = false;
 
         it('should register', function(done) {
@@ -117,7 +120,7 @@ describe('SIPJSUserAgent', function() {
   });
 
   var ua2Name = randomName();
-  var ua2 = new SIPJSUserAgent(getCapabilityToken(ua2Name), { 'wsServer': wsServer, 'debug': false });
+  var ua2 = new SIPJSUserAgent(getToken(ua2Name), { 'wsServer': wsServer, 'debug': false });
 
   describe('ua2.invite(ua1Name)', function() {
     var ua2Ict = null;

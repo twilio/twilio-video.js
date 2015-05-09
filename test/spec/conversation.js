@@ -11,20 +11,24 @@ var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
 
 var config = require('../../test');
 var accountSid = config['accountSid'];
-var authToken = config['authToken'];
+var accountSid = config['accountSid'];
+var signingKeySid = config['signingKeySid'];
+var signingKeySecret = config['signingKeySecret'];
 var wsServer = config['wsServer'];
-var getCapabilityToken =
-  require('../token').getCapabilityToken.bind(null, accountSid, authToken);
+var getToken = require('../token').getToken.bind(null, accountSid,
+  signingKeySid, signingKeySecret);
+
+var Token = require('../../lib/scopedauthenticationtoken');
 
 describe('Conversation (SIPJSUserAgent)', function() {
   // Alice is an Endpoint.
   var aliceName = randomName();
-  var aliceToken = getCapabilityToken(aliceName);
+  var aliceToken = getToken(aliceName);
   var alice = null;
 
   // Bob is a UserAgent.
   var bobName = randomName();
-  var bobToken = getCapabilityToken(bobName);
+  var bobToken = getToken(bobName);
   var bob = null;
 
   var conversation = null;

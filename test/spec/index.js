@@ -9,3 +9,4 @@ require('./conversation');
 require('./invite');
 require('./util').test();
 require('./cancelablepromise');
+require('./scopedauthenticationtoken');
