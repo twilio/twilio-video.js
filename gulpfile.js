@@ -24,7 +24,9 @@ gulp.task('patch', shell.task([
   'patch -N node_modules/sip.js/src/Session.js ' +
     '<patch/refer.patch; true',
   'patch -N node_modules/sip.js/src/Transactions.js ' +
-    '<patch/always_send_cancel.patch; true'
+    '<patch/always_send_cancel.patch; true',
+  'patch -N node_modules/sip.js/src/Grammar/dist/Grammar.js ' +
+    '<patch/disable_lowercasing_host.patch; true'
 ]));
 
 gulp.task('lint', function() {
