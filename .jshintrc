@@ -1,0 +1,20 @@
+{
+  "evil": true,
+  "futurehostile": true,
+  "laxbreak": true,
+  "node": true,
+  "predef": [
+    "-Map",
+    "-Set",
+    "atob",
+    "btoa",
+    "document",
+    "mozMediaStream",
+    "navigator",
+    "webkitMediaStream",
+    "window",
+    "XMLHttpRequest"
+  ],
+  "strict": true,
+  "sub": true
+}
