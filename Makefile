@@ -20,17 +20,31 @@ RELEASE_LOADER=$(RELEASE_ROOT)/$(PRODUCT)-loader.js
 RELEASE_LOADER_MIN=$(RELEASE_ROOT)/$(PRODUCT)-loader.min.js
 RELEASE=$(RELEASE_ROOT)/$(PRODUCT).js
 RELEASE_MIN=$(RELEASE_ROOT)/$(PRODUCT).min.js
+ALL= \
+	$(PUBLIC_LOADER) \
+	$(PUBLIC_LOADER_MIN) \
+	$(RELEASE_LOADER) \
+	$(RELEASE_LOADER_MIN) \
+	$(REALEASE) \
+	$(RELEASE_MIN) \
+	$(PUBLIC_DOCS) \
+	$(RELEASE_DOCS)
 
-ALL=$(PUBLIC_LOADER) $(PUBLIC_LOADER_MIN) $(RELEASE_LOADER) $(RELEASE_LOADER_MIN) $(REALEASE) $(RELEASE_MIN) $(PUBLIC_DOCS) $(RELEASE_DOCS)
-
+# Sources
 LIB_FILES=$(shell find lib -name \*.js)
 SRC_FILES=$(shell find src -name \*.js)
 TEST_FILES=$(shell find test -name \*.js)
-PUBLIC_LIB_FILES=lib/conversation.js lib/endpoint.js lib/invite.js lib/participant.js lib/media/stream.js
+
+# Public APIs (we generate JSDoc for these)
+PUBLIC_LIB_FILES= \
+	lib/conversation.js \
+	lib/endpoint.js \
+	lib/invite.js \
+	lib/participant.js \
+	lib/media/stream.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
-GULP=node_modules/gulp/bin/gulp.js
 JSDOC=node_modules/jsdoc/jsdoc.js
 JSHINT=node_modules/jshint/bin/jshint
 MOCHA=node_modules/mocha/bin/mocha
@@ -51,10 +65,22 @@ docs:
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
-	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
-lint:
-	$(GULP) lint
+lint: node_modules
+	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js
+
+patch:	node_modules
+	@$(call INFO,"Patching SIP.js")
+	@patch -N node_modules/sip.js/src/SanityCheck.js \
+		<patch/disable_rfc3261_18_1_2.patch; true; \
+	patch -N node_modules/sip.js/src/Hacks.js \
+		<patch/disable_masking.patch; true; \
+	patch -N node_modules/sip.js/src/Session.js \
+		<patch/refer.patch; true; \
+	patch -N node_modules/sip.js/src/Transactions.js \
+		<patch/always_send_cancel.patch; true; \
+	patch -N node_modules/sip.js/src/Grammar/dist/Grammar.js \
+		<patch/disable_lowercasing_host.patch; true
 
 publish: simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && make publish
@@ -82,16 +108,13 @@ simple-signaling.appspot.com:
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
-.PHONY: all clean clean-all docs lint publish serve test
+.PHONY: all clean clean-all docs lint patch publish serve test
 
-node_modules: package.json
+node_modules: package.json patch
 	@$(call INFO,"Installing node_modules")
 	npm install && touch node_modules
-	$(GULP) patch
 
 $(BROWSERIFY): node_modules
-
-$(GULP): node_modules
 
 $(JSDOC): node_modules
 
@@ -120,17 +143,12 @@ $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
-	@# sed -i original 's/    color: #0095dd;/    color: #e12127;/' $(RELEASE_DOCS)/styles/jsdoc-default.css
 
-# $(RELEASE_LOADER): $(SRC_FILES)
 $(RELEASE_LOADER): $(RELEASE)
-	@# cp src/$(PRODUCT)-loader.js $(RELEASE_LOADER)
 	@$(call INFO,"Symlinking release loader to release")
 	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).js $(PRODUCT)-loader.js)
 
-# $(RELEASE_LOADER_MIN): $(UGLIFY) $(RELEASE_LOADER)
 $(RELEASE_LOADER_MIN): $(RELEASE_MIN)
-	@# cp $(UGLIFY) $(RELEASE_LOADER) -o $(RELEASE_LOADER_MIN)
 	@$(call INFO,"Symlinking minified release loader to minified release")
 	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).min.js $(PRODUCT)-loader.min.js)
 
