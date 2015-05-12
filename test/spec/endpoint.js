@@ -143,7 +143,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
-    it.skip('invite.conversationSid', function() {
+    it('invite.conversationSid', function() {
       assert(invite.conversationSid);
     });
 

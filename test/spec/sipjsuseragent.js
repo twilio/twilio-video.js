@@ -277,7 +277,7 @@ describe('SIPJSUserAgent', function() {
       });
     });
 
-    describe.skip('InviteServerTransaction canceled', function() {
+    describe('InviteServerTransaction canceled', function() {
       it('updates .inviteServerTransactions', function(done) {
         var ua2Ict = ua2.invite(ua1Name, inviteOptions);
         ua1.once('invite', function(ist) {
@@ -349,7 +349,7 @@ describe('SIPJSUserAgent', function() {
         assert(ua1Dialog.callSid);
       });
 
-      it.skip('dialog.conversationSid', function() {
+      it('dialog.conversationSid', function() {
         assert(ua1Dialog.conversationSid);
       });
 

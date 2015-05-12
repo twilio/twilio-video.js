@@ -57,7 +57,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
     }).then(done, done);
   });
 
-  it.skip('.sid', function() {
+  it('.sid', function() {
     assert(conversation.sid);
   });
 
