@@ -110,9 +110,10 @@ simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 
 .PHONY: all clean clean-all docs lint patch publish serve test
 
-node_modules: package.json patch
+node_modules: package.json
 	@$(call INFO,"Installing node_modules")
 	npm install && touch node_modules
+	make patch
 
 $(BROWSERIFY): node_modules
 

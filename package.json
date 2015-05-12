@@ -36,6 +36,7 @@
     "es6-map": "^0.1.1",
     "es6-set": "^0.1.1",
     "sip.js": "^0.6.4",
-    "ws": "^0.6.3"
+    "ws": "^0.6.3",
+    "xmlhttprequest": "https://github.com/markandrus/node-XMLHttpRequest.git"
   }
 }
