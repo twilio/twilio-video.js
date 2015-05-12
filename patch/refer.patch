@@ -1,8 +1,8 @@
---- Session.js	2014-11-24 14:22:26.000000000 -0800
-+++ Session.js	2015-04-23 17:44:00.000000000 -0700
-@@ -238,16 +238,19 @@
-       extraHeaders.push('Refer-To: '+ target);
-     }
+--- Session.js	2015-05-11 16:22:34.000000000 -0700
++++ Session.js	2015-05-11 16:26:46.000000000 -0700
+@@ -232,6 +232,9 @@
+     extraHeaders.push('Allow: '+ SIP.Utils.getAllowedMethods(this.ua));
+     extraHeaders.push('Refer-To: '+ target);
  
 +    extraHeaders.push('Allow-Events: refer');
 +    extraHeaders.push('Event: refer;id=' + Math.floor((Math.random() * 1000) + 1));
@@ -10,21 +10,20 @@
      // Send the request
      this.sendRequest(SIP.C.REFER, {
        extraHeaders: extraHeaders,
-       body: options.body,
--      receiveResponse: function() {}
-+      receiveResponse: options.receiveResponse || function() {}
+@@ -241,9 +244,9 @@
+           return;
+         }
+         // hang up only if we transferred to a SIP address
+-        if (withReplaces || (target.scheme && target.scheme.match("^sips?$"))) {
+-          this.terminate();
+-        }
++        // if (withReplaces || (target.scheme && target.scheme.match("^sips?$"))) {
++        //   this.terminate();
++        // }
+       }.bind(this)
      });
-     // hang up only if we transferred to a SIP address
--    if (target.scheme.match("^sips?$")) {
--      this.terminate();
--    }
-+//    if (target.scheme.match("^sips?$")) {
-+//      this.terminate();
-+//    }
      return this;
-   },
- 
-@@ -721,6 +724,9 @@
+@@ -723,6 +726,9 @@
            }
          }
          break;
@@ -34,8 +33,8 @@
      }
    },
  
-@@ -2107,15 +2113,15 @@
-     }
+@@ -2128,15 +2134,19 @@
+     var cancel_reason = SIP.Utils.getCancelReason(options.status_code, options.reason_phrase);
  
      // Check Session Status
 -    if (this.status === C.STATUS_NULL ||
@@ -52,8 +51,11 @@
 +    // } else if (this.status === C.STATUS_INVITE_SENT ||
 +    //            this.status === C.STATUS_1XX_RECEIVED ||
 +    //            this.status === C.STATUS_EARLY_MEDIA) {
++    try {
        this.request.cancel(cancel_reason);
--    }
++    } catch (error) {
++      // Do nothing.
+     }
 +    // }
  
      return this.canceled();
