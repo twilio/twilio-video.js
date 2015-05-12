@@ -165,7 +165,7 @@ $(RELEASE): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 
 $(RELEASE_MIN): $(CLOSURE) $(RELEASE)
 	@$(call INFO,"Minifying release")
-	$(CLOSURE) $(RELEASE) --charset=US_ASCII > $(RELEASE_MIN)
+	$(CLOSURE) $(RELEASE) --language_in=ECMASCRIPT5 >$(RELEASE_MIN)
 
 .LINTED: $(JSHINT) $(LIB_FILES) $(SRC_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_LINT}" ]]; then \
