@@ -31,14 +31,21 @@ describe('Conversation (SIPJSUserAgent)', function() {
   var bobToken = getToken(bobName);
   var bob = null;
 
+  // Charlie is a UserAgent.
+  var charlieName = randomName();
+  var charlieToken = getToken(charlieName);
+  var charlie = null;
+
   var conversation = null;
   var dialog = null;
 
   var options = {};
   options['debug'] = false;
   options['wsServer'] = wsServer;
+  options['logLevel'] = 'off';
 
   before(function setupConversaton(done) {
+    this.timeout(0);
     alice = new Endpoint(aliceToken, options);
     bob = new SIPJSUserAgent(bobToken, options);
     bob.connect().then(function() {
@@ -55,6 +62,28 @@ describe('Conversation (SIPJSUserAgent)', function() {
       assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));
       assert.equal(1, conversation.participants.size);
     }).then(done, done);
+  });
+
+  describe('#invite', function() {
+    before(function setupCharlie() {
+      charlie = new SIPJSUserAgent(charlieToken, options);
+    });
+
+    it('should throw an exception if no participantAddress is passed', function() {
+      assert.throws(conversation.invite.bind(conversation));
+    });
+
+    it('should throw an exception if participantAddress is not a string', function() {
+      assert.throws(conversation.invite.bind(conversation, charlie));
+    });
+
+    it('should return a promise<Dialog>', function(done) {
+      conversation.invite(charlieName)
+        .then(
+          function(dialog) { assert.equal(typeof dialog.conversationSid, 'string'); },
+          function() { assert.fail(null, null, 'promise was rejected'); })
+        .then(done, done);
+    });
   });
 
   it('.sid', function() {
