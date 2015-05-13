@@ -14,6 +14,7 @@
   "devDependencies": {
     "browserify": "^9.0.3",
     "cheerio": "^0.18.0",
+    "closurecompiler": "^1.5.1",
     "jsdoc": "^3.3.0-beta2",
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.0",

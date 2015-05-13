@@ -50,7 +50,7 @@ JSDOC=node_modules/jsdoc/jsdoc.js
 JSHINT=node_modules/jshint/bin/jshint
 MOCHA=node_modules/mocha/bin/mocha
 MOCHA_PHANTOMJS=node_modules/mocha-phantomjs/bin/mocha-phantomjs
-# CLOSURE=node_modules/closurecompiler/bin/ccjs
+CLOSURE=node_modules/closurecompiler/bin/ccjs
 
 INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 
@@ -130,7 +130,7 @@ $(MOCHA): node_modules
 
 $(MOCHA_PHANTOMJS): node_modules
 
-# $(CLOSURE): node_modules
+$(CLOSURE): node_modules
 
 $(PUBLIC_DOCS): $(RELEASE_DOCS)
 	@$(call INFO,"Symlinking public docs to release docs")
@@ -163,11 +163,9 @@ $(RELEASE): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@mkdir -p $(RELEASE_ROOT)
 	$(BROWSERIFY) src/$(PRODUCT).js -o $(RELEASE)
 
-# $(RELEASE_MIN): $(CLOSURE) $(RELEASE)
-$(RELEASE_MIN): $(RELEASE)
+$(RELEASE_MIN): $(CLOSURE) $(RELEASE)
 	@$(call INFO,"Minifying release")
-	# $(CLOSURE) $(RELEASE) --language_in=ECMASCRIPT5 >$(RELEASE_MIN)
-	cp $(RELEASE) $(RELEASE_MIN)
+	$(CLOSURE) $(RELEASE) --language_in=ECMASCRIPT5 >$(RELEASE_MIN)
 
 .LINTED: $(JSHINT) $(LIB_FILES) $(SRC_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_LINT}" ]]; then \
