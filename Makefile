@@ -41,7 +41,8 @@ PUBLIC_LIB_FILES= \
 	lib/endpoint.js \
 	lib/invite.js \
 	lib/participant.js \
-	lib/media/stream.js
+	lib/media/index.js \
+	lib/media/track.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
@@ -80,7 +81,11 @@ patch:	node_modules
 	patch -N node_modules/sip.js/src/Transactions.js \
 		<patch/always_send_cancel.patch; true; \
 	patch -N node_modules/sip.js/src/Grammar/dist/Grammar.js \
-		<patch/disable_lowercasing_host.patch; true
+		<patch/disable_lowercasing_host.patch; true; \
+	patch -N node_modules/sip.js/src/Session.js \
+		<patch/enable_reinvite_support.patch; true; \
+	patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js \
+		<patch/renegotiation.patch; true
 
 publish: simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && make publish
@@ -160,7 +165,7 @@ $(RELEASE): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 
 $(RELEASE_MIN): $(CLOSURE) $(RELEASE)
 	@$(call INFO,"Minifying release")
-	$(CLOSURE) $(RELEASE) --charset=US_ASCII > $(RELEASE_MIN)
+	$(CLOSURE) $(RELEASE) --language_in=ECMASCRIPT5 >$(RELEASE_MIN)
 
 .LINTED: $(JSHINT) $(LIB_FILES) $(SRC_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_LINT}" ]]; then \

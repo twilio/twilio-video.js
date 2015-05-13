@@ -66,8 +66,8 @@ describe('Conversation (SIPJSUserAgent)', function() {
     assert.equal(1, conversation.participants.size);
   });
 
-  it('.localStream', function() {
-    assert(conversation.localStream);
+  it('.localMedia', function() {
+    assert(conversation.localMedia);
   });
 });
 
