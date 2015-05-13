@@ -57,6 +57,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   });
 
   describe('#listen', function() {
+    this.timeout(10000);
     it('should return a promise', function(done) {
       alice.listen().then(
         function() { done(); }, 
@@ -129,6 +130,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     var invite = null;
 
     it('emits "invite"', function(done) {
+      this.timeout(10000);
       uaName = randomName();
       uaToken = getToken(uaName);
       ua = new SIPJSUserAgent(uaToken, options);
