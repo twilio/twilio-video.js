@@ -2,6 +2,7 @@
 
 var Endpoint = require('../lib/endpoint');
 var getUserMedia = require('../lib/webrtc/getusermedia');
+var LocalMedia = require('../lib/media').LocalMedia;
 
 function Twilio() {
   Object.defineProperties(this, {
@@ -12,6 +13,10 @@ function Twilio() {
     getUserMedia: {
       enumerable: true,
       value: getUserMedia
+    },
+    LocalMedia: {
+      enumerable: true,
+      value: LocalMedia
     }
   });
   return this;
