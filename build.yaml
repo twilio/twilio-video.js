@@ -3,7 +3,7 @@ targets:
   - cent6
 build:
   dependencies:
-    - nodejs
+    - node
   commands:
     - make clean
     - make
