@@ -63,11 +63,9 @@ describe('CancelablePromise', function() {
 
       cp.then(function() {
         assert.fail('Promise was not canceled');
-        done();
       },function(reason) {
         assert(reason.message === 'canceled');
-        done();
-      });
+      }).then(done, done);
 
       setTimeout(function() {
         deferred.resolve();
