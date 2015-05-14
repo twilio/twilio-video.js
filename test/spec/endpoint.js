@@ -166,6 +166,26 @@ describe('Endpoint (SIPJSUserAgent)', function() {
           }).then(done, done);
         });
       });
+
+      describe('Remote party hangs up', function() {
+        var conversation = null;
+
+        before(function(done) {
+          ua.invite(aliceName).then(null, done);
+          alice.on('invite', function(invite) {
+            invite.accept().then(function(_conversation) {
+              conversation = _conversation;
+              assert(alice.conversations.has(conversation));
+            }).then(function() {
+              conversation.leave();
+            }).then(done, done);
+          });
+        });
+
+        it('updates .conversations', function() {
+          assert(!alice.conversations.has(conversation));
+        });
+      });
     });
   });
 

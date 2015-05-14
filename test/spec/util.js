@@ -15,6 +15,22 @@ function test() {
       assert(util.getTurnServers(iceServers));
     });
 
+    describe('parseConversationSIDFromContactHeader', function() {
+      var conversationSid = 'CV123';
+
+      it('should parse contact headers with display names', function() {
+        var contactHeader = '"fud" <sip:CV123@172.18.8.202:443;transport=wss>';
+        assert.equal(conversationSid,
+          util.parseConversationSIDFromContactHeader(contactHeader));
+      });
+
+      it('should parse contact headers without display names', function() {
+        var contactHeader = '<sip:CV123@172.18.8.202:443;transport=wss>';
+        assert.equal(conversationSid,
+          util.parseConversationSIDFromContactHeader(contactHeader));
+      });
+    });
+
     describe('parseUserAgent', function() {
       var matchesUA = function(uaString, name, version) {
         var spec = util.parseUserAgent(uaString);
