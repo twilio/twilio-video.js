@@ -5,8 +5,6 @@
   "laxbreak": true,
   "node": true,
   "predef": [
-    "-Map",
-    "-Set",
     "atob",
     "btoa",
     "document",
