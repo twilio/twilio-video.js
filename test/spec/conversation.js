@@ -36,6 +36,11 @@ describe('Conversation (SIPJSUserAgent)', function() {
   var charlieToken = getToken(charlieName);
   var charlie = null;
 
+  // Donald is a UserAgent.
+  var donaldName = randomName();
+  var donaldToken = getToken(donaldName);
+  var donald = null;
+
   var conversation = null;
   var dialog = null;
 
@@ -65,8 +70,26 @@ describe('Conversation (SIPJSUserAgent)', function() {
   });
 
   describe('#invite', function() {
-    before(function setupCharlie() {
+    before(function setupCharlie(done) {
       charlie = new SIPJSUserAgent(charlieToken, options);
+      charlie.on('invite', function(invite) {
+        invite.accept();
+      });
+
+      charlie.connect().then(function() {
+        return charlie.register();
+      }).then(function() { done(); }, done);
+    });
+
+    before(function setupDonald(done) {
+      donald = new SIPJSUserAgent(donaldToken, options);
+      donald.on('invite', function(invite) {
+        invite.accept();
+      });
+
+      donald.connect().then(function() {
+        return donald.register();
+      }).then(function() { done(); }, done);
     });
 
     it('should throw an exception if no participantAddress is passed', function() {
@@ -77,10 +100,10 @@ describe('Conversation (SIPJSUserAgent)', function() {
       assert.throws(conversation.invite.bind(conversation, charlie));
     });
 
-    it('should return a promise<Dialog>', function(done) {
+    it('should return a promise<Participant>', function(done) {
       conversation.invite(charlieName)
         .then(
-          function(dialog) { assert.equal(typeof dialog.conversationSid, 'string'); },
+          function(participant) { assert.equal(participant.address, charlieName); },
           function() { assert.fail(null, null, 'promise was rejected'); })
         .then(done, done);
     });
