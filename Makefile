@@ -153,7 +153,7 @@ $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-private-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 	./scripts/reorder-navigation.js $(RELEASE_DOCS)
 
