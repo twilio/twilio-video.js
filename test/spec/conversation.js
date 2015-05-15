@@ -64,7 +64,11 @@ describe('Conversation (SIPJSUserAgent)', function() {
       });
     }).then(function(_conversation) {
       conversation = _conversation;
-      assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));
+      var hasBob = false;
+      conversation.participants.forEach(function(participant) {
+        hasBob = hasBob || participant.address === bobName;
+      });
+      assert(hasBob);
       assert.equal(1, conversation.participants.size);
     }).then(done, done);
   });
@@ -114,7 +118,11 @@ describe('Conversation (SIPJSUserAgent)', function() {
   });
 
   it('.participants contains Participant address', function() {
-    assert(conversation.participants.map(function(participant) { return participant.address; }).has(bobName));
+    var hasBob = false;
+    conversation.participants.forEach(function(participant) {
+      hasBob = hasBob || participant.address === bobName;
+    });
+    assert(hasBob);
     assert.equal(1, conversation.participants.size);
   });
 
