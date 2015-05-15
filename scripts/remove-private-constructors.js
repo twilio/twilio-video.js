@@ -9,12 +9,14 @@ if (!releaseDocs) {
 
 var classNames = [
   'Conversation',
-  'Invite',
-  'Participant',
-  'Track',
   'AudioTrack',
-  'VideoTrack',
-  'Media'
+  'Invite',
+  'LocalMedia',
+  'Media',
+  'Participant',
+  'ScopedAuthenticationToken',
+  'Track',
+  'VideoTrack'
 ];
 
 console.log('Stripping private constructors from');

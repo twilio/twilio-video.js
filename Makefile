@@ -67,6 +67,7 @@ docs:
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
+	./scripts/reorder-navigation.js $(RELEASE_DOCS)
 
 lint: node_modules
 	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js
@@ -150,6 +151,7 @@ $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
+	./scripts/reorder-navigation.js $(RELEASE_DOCS)
 
 $(RELEASE_LOADER): $(RELEASE)
 	@$(call INFO,"Symlinking release loader to release")
