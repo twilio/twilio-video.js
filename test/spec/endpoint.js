@@ -119,6 +119,10 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   var uaToken = null;
   var ua = null;
 
+  var ua2Name = null;
+  var ua2Token = null;
+  var ua2 = null;
+
   describe('Receive incoming call', function() {
     before(function(done) {
       alice.listen().then(function() {
@@ -209,6 +213,21 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       }).then(done, done);
 
       invite.cancel();
+    });
+
+    it('should auto-reject associated invites after it is canceled', function(done) {
+      this.timeout(5000);
+      var invite;
+
+      ua2Name = randomName();
+      ua2Token = getToken(ua2Name);
+      ua2 = new SIPJSUserAgent(ua2Token, options);
+
+      ua2.register().then(function() {
+        invite = alice.createConversation([uaName, ua2Name]);
+        invite.cancel();
+        assert.equal(alice._canceledConversations.size, 1);
+      }).then(done, done);
     });
 
     describe('Conversation#leave', function() {
