@@ -3,12 +3,17 @@
 var jwt = require('jsonwebtoken');
 var AccessToken = require('../lib/accesstoken');
 
-function getAccessToken(accountSid, signingKeySid, signingKeySecret, address) {
+function getAccessToken(accountSid, signingKeySid, signingKeySecret, address, duration) {
   var now = new Date();
+
   var anHourBeforeNow = new Date(now.getTime());
   anHourBeforeNow.setHours(anHourBeforeNow.getHours() - 1);
+
   var anHourFromNow = new Date(now.getTime());
   anHourFromNow.setHours(anHourFromNow.getHours() + 1);
+
+  var expires = duration ? now.getTime() + duration : 0;
+
   var payload = {
     sub: accountSid,
     iss: signingKeySid,
@@ -18,8 +23,8 @@ function getAccessToken(accountSid, signingKeySid, signingKeySecret, address) {
       { res: 'sip:' + address + '@' + accountSid + '.endpoint.twilio.com',
         act: [ 'invite', 'listen' ] }
     ],
-    exp: anHourFromNow / 1000,
-    nbf: anHourBeforeNow / 1000,
+    exp: (expires ? expires : anHourFromNow) / 1000,
+    nbf: anHourBeforeNow / 1000
   };
   return new AccessToken(jwt.sign(payload, signingKeySecret, {
     headers: {

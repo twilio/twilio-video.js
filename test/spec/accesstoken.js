@@ -3,6 +3,13 @@
 var assert = require('assert');
 var Token = require('../../lib/accesstoken');
 
+var config = require('../../test');
+var accountSid = config['accountSid'];
+var signingKeySid = config['signingKeySid'];
+var signingKeySecret = config['signingKeySecret'];
+var getToken = require('../token').getToken.bind(null, accountSid,
+  signingKeySid, signingKeySecret);
+
 describe('AccessToken', function() {
   describe('an AccessToken which grants "invite" and "listen" actions', function() {
     var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfSx7InJlcyI6InNpcDptYXJrQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJpbnZpdGUiLCJsaXN0ZW4iXX1dLCJleHAiOjE0MzEyMTMwODYuMDIsIm5iZiI6MTQzMTIwNTg4Ni4wMiwianRpIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOUlRZ0ZveW5LZUtSR1ViV0JsIn0.2mZItSIBBlClDGeh_CxazwfzSqben7cv9ED_Gi0UYqQ';
@@ -164,9 +171,26 @@ describe('AccessToken', function() {
     });
   });
 
-  describe('an invalid accessToken', function() {
+  describe('an invalid AccessToken', function() {
     it('does not parse', function() {
       assert.throws(Token.bind(null, 'foobar'));
     });
   });
+
+  describe('AccessToken#expires', function() {
+    it('should be emitted when the AccessToken expires', function(done) {
+      var tokenName = randomName();
+      var jwt = getToken(tokenName, 10);
+      var accessToken = new Token(jwt);
+
+      accessToken.on('expired', function(token) {
+        assert.equal(token, accessToken);
+        done();
+      });
+    });
+  });
 });
+
+function randomName() {
+  return Math.random().toString(36).slice(2);
+}
