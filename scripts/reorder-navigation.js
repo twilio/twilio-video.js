@@ -8,16 +8,17 @@ if (!releaseDocs) {
 }
 
 var classNames = [
-  'Endpoint',
-    'Invite',
-    'ScopedAuthenticationToken',
+  'AccessToken',
+  'AudioTrack',
   'Conversation',
-    'Participant',
+  'Endpoint',
+  'index',
+  'Invite',
+  'LocalMedia',
   'Media',
-    'LocalMedia',
-    'Track',
-      'AudioTrack',
-      'VideoTrack'
+  'Participant',
+  'Track',
+  'VideoTrack'
 ];
 
 console.log('Rewriting navigation in');
@@ -30,8 +31,8 @@ classNames.forEach(function(className) {
   nav.html([
     '<li><a href="Endpoint.html">Endpoint</a>' +
       '<ul style="margin-left: 1em">' +
+        '<li><a href="AccessToken.html">AccessToken</a></li>' +
         '<li><a href="Invite.html">Invite</a></li>' +
-        '<li><a href="ScopedAuthenticationToken.html">ScopedAuthenticationToken</a></li>' +
       '</ul>' +
     '</li>' +
     '<li><a href="Conversation.html">Conversation</a>' +

@@ -1,9 +1,9 @@
 'use strict';
 
 var jwt = require('jsonwebtoken');
-var ScopedAuthenticationToken = require('../lib/scopedauthenticationtoken');
+var AccessToken = require('../lib/accesstoken');
 
-function getScopedAuthenticationToken(accountSid, signingKeySid, signingKeySecret, address) {
+function getAccessToken(accountSid, signingKeySid, signingKeySecret, address) {
   var now = new Date();
   var anHourBeforeNow = new Date(now.getTime());
   anHourBeforeNow.setHours(anHourBeforeNow.getHours() - 1);
@@ -21,7 +21,7 @@ function getScopedAuthenticationToken(accountSid, signingKeySid, signingKeySecre
     exp: anHourFromNow / 1000,
     nbf: anHourBeforeNow / 1000,
   };
-  return new ScopedAuthenticationToken(jwt.sign(payload, signingKeySecret, {
+  return new AccessToken(jwt.sign(payload, signingKeySecret, {
     headers: {
       cty: 'twilio-sat;v=1'
     },
@@ -29,4 +29,4 @@ function getScopedAuthenticationToken(accountSid, signingKeySid, signingKeySecre
   }));
 }
 
-module.exports.getToken = getScopedAuthenticationToken;
+module.exports.getToken = getAccessToken;

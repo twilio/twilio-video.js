@@ -17,7 +17,7 @@ var wsServer = config['wsServer'];
 var getToken = require('../token').getToken.bind(null, accountSid,
   signingKeySid, signingKeySecret);
 
-var Token = require('../../lib/scopedauthenticationtoken');
+var Token = require('../../lib/accesstoken');
 
 describe('Invite (SIPJSUserAgent)', function() {
   // Alice is an Endpoint.

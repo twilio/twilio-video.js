@@ -1,11 +1,16 @@
 'use strict';
 
+var AccessToken = require('../lib/accesstoken');
 var Endpoint = require('../lib/endpoint');
 var getUserMedia = require('../lib/webrtc/getusermedia');
 var LocalMedia = require('../lib/media').LocalMedia;
 
 function Twilio() {
   Object.defineProperties(this, {
+    AccessToken: {
+      enumerable: true,
+      value: AccessToken
+    },
     Endpoint: {
       enumerable: true,
       value: Endpoint

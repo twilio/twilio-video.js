@@ -11,10 +11,8 @@ var classNames = [
   'Conversation',
   'AudioTrack',
   'Invite',
-  'LocalMedia',
   'Media',
   'Participant',
-  'ScopedAuthenticationToken',
   'Track',
   'VideoTrack'
 ];

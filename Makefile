@@ -37,13 +37,13 @@ TEST_FILES=$(shell find test -name \*.js)
 
 # Public APIs (we generate JSDoc for these)
 PUBLIC_LIB_FILES= \
+	lib/accesstoken.js \
 	lib/conversation.js \
 	lib/endpoint.js \
 	lib/invite.js \
 	lib/media/index.js \
 	lib/media/track.js \
-	lib/participant.js \
-	lib/scopedauthenticationtoken.js
+	lib/participant.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
@@ -66,6 +66,7 @@ docs:
 	@$(call INFO,"Generating docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 	./scripts/reorder-navigation.js $(RELEASE_DOCS)
 
@@ -150,6 +151,7 @@ $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
 	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
+	./scripts/prefix-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 	./scripts/reorder-navigation.js $(RELEASE_DOCS)
 

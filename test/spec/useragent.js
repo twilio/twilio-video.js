@@ -6,7 +6,7 @@ var Q = require('q');
 var util = require('./util');
 
 var UserAgent = require('../../lib/signaling/useragent');
-var Token = require('../../lib/scopedauthenticationtoken');
+var Token = require('../../lib/accesstoken');
 
 var config = require('../../test');
 var accountSid = config['accountSid'];

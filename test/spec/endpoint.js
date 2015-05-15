@@ -18,7 +18,7 @@ var wsServer = config['wsServer'];
 var getToken = require('../token').getToken.bind(null, accountSid,
   signingKeySid, signingKeySecret);
 
-var Token = require('../../lib/scopedauthenticationtoken');
+var Token = require('../../lib/accesstoken');
 
 describe('Endpoint (SIPJSUserAgent)', function() {
   var aliceName = randomName();
@@ -92,7 +92,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   });
 
   // FIXME(mroberts): We have a regression with the new
-  // ScopedAuthenticationTokens; refer to the comment in Endpoint#listen for
+  // AccessToken; refer to the comment in Endpoint#listen for
   // more information.
   /*describe('#listen (with new Token)', function() {
     var aliceName = null;
