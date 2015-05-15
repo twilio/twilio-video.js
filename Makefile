@@ -40,9 +40,10 @@ PUBLIC_LIB_FILES= \
 	lib/conversation.js \
 	lib/endpoint.js \
 	lib/invite.js \
-	lib/participant.js \
 	lib/media/index.js \
-	lib/media/track.js
+	lib/media/track.js \
+	lib/participant.js \
+	lib/scopedauthenticationtoken.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
