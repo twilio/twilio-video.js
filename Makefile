@@ -20,6 +20,7 @@ RELEASE_LOADER=$(RELEASE_ROOT)/$(PRODUCT)-loader.js
 RELEASE_LOADER_MIN=$(RELEASE_ROOT)/$(PRODUCT)-loader.min.js
 RELEASE=$(RELEASE_ROOT)/$(PRODUCT).js
 RELEASE_MIN=$(RELEASE_ROOT)/$(PRODUCT).min.js
+
 ALL= \
 	$(PUBLIC_LOADER) \
 	$(PUBLIC_LOADER_MIN) \
@@ -52,6 +53,7 @@ JSHINT=node_modules/jshint/bin/jshint
 MOCHA=node_modules/mocha/bin/mocha
 MOCHA_PHANTOMJS=node_modules/mocha-phantomjs/bin/mocha-phantomjs
 CLOSURE=node_modules/closurecompiler/bin/ccjs
+JSDOC_CONF=jsdoc.conf
 
 INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 
@@ -64,7 +66,7 @@ clean-all: clean
 
 docs:
 	@$(call INFO,"Generating docs")
-	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 
@@ -147,7 +149,7 @@ $(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
 
 $(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
-	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) && touch $(RELEASE_DOCS)
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_DOCS)
 	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
 
