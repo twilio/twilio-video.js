@@ -33,7 +33,7 @@
     "test": "make test"
   },
   "dependencies": {
-    "sip.js": "^0.6.4",
+    "sip.js": "^0.7.0",
     "ws": "^0.6.3",
     "xmlhttprequest": "https://github.com/markandrus/node-XMLHttpRequest.git"
   }

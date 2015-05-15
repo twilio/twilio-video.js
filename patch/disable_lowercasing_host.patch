@@ -1,11 +1,11 @@
---- Grammar.js	2015-05-09 16:57:32.000000000 -0700
-+++ Grammar.js	2015-05-09 16:57:58.000000000 -0700
-@@ -183,7 +183,7 @@
+--- Grammar.js	2015-05-11 16:18:21.000000000 -0700
++++ Grammar.js	2015-05-11 16:18:44.000000000 -0700
+@@ -182,7 +182,7 @@
            function() {
-                               data.password = text(); },
+                               options.data.password = text(); },
            function() {
--                              data.host = text().toLowerCase();
-+                              data.host = text();
-                               return data.host; },
+-                              options.data.host = text().toLowerCase();
++                              options.data.host = text();
+                               return options.data.host; },
            function() {
-                             data.host_type = 'domain';
+                             options.data.host_type = 'domain';
