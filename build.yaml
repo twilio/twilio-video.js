@@ -4,6 +4,8 @@ targets:
 build:
   dependencies:
     - node
+    - zip
+    - pandoc
   commands:
     - make clean
     - make

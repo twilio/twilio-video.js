@@ -15,12 +15,12 @@ PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
 PUBLIC_LOADER=$(PUBLIC_ROOT)/$(PRODUCT).js
 PUBLIC_LOADER_MIN=$(PUBLIC_ROOT)/$(PRODUCT).min.js
 RELEASE_ROOT=$(PUBLIC_ROOT)/releases/$(RELEASE_VERSION)
-RELEASE_DOCS=$(RELEASE_ROOT)/docs
+RELEASE_DOCS=$(RELEASE_ROOT)/docs/api
 RELEASE_LOADER=$(RELEASE_ROOT)/$(PRODUCT)-loader.js
 RELEASE_LOADER_MIN=$(RELEASE_ROOT)/$(PRODUCT)-loader.min.js
 RELEASE=$(RELEASE_ROOT)/$(PRODUCT).js
 RELEASE_MIN=$(RELEASE_ROOT)/$(PRODUCT).min.js
-
+PACKAGE_DOCS=javascript-rtc-sdk-docs
 ALL= \
 	$(PUBLIC_LOADER) \
 	$(PUBLIC_LOADER_MIN) \
@@ -29,7 +29,8 @@ ALL= \
 	$(REALEASE) \
 	$(RELEASE_MIN) \
 	$(PUBLIC_DOCS) \
-	$(RELEASE_DOCS)
+	$(PACKAGE_DOCS) \
+	$(RELEASE_DOCS) 
 
 # Sources
 LIB_FILES=$(shell find lib -name \*.js)
@@ -60,7 +61,7 @@ INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 all: $(ALL)
 
 clean:
-	rm -rf build .LINTED .TESTED
+	rm -rf build .LINTED .TESTED $(PACKAGE_DOCS)
 
 clean-all: clean
 
@@ -115,6 +116,14 @@ simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
 
+$(PACKAGE_DOCS): $(RELEASE_DOCS)
+	@$(call INFO,"Pulling SDK Docs - Converting")
+	rm -rf $(PACKAGE_DOCS)
+	git clone git@code.hq.twilio.com:cummack/javascript-rtc-sdk-docs
+	cp -r $(RELEASE_ROOT)/docs/api $(PACKAGE_DOCS)/api/
+	cd $(PACKAGE_DOCS) && make 
+	mv $(PACKAGE_DOCS)/build/twilio-rtc-js.zip $(RELEASE_ROOT)
+
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
@@ -137,7 +146,7 @@ $(MOCHA_PHANTOMJS): node_modules
 
 $(CLOSURE): node_modules
 
-$(PUBLIC_DOCS): $(RELEASE_DOCS)
+$(PUBLIC_DOCS): $(PACKAGE_DOCS)
 	@$(call INFO,"Symlinking public docs to release docs")
 	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/docs .)
 
