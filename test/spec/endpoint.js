@@ -72,6 +72,37 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     it('should set .address', function() {
       assert.equal(aliceName, alice.address);
     });
+
+    it('should emit tokenExpired when active token expires', function(done) {
+      var jwt = getToken(aliceName, 3000);
+      alice.listen(jwt);
+      alice.once('error', function(error) {
+        var nameRegex = /TOKEN_EXPIRED/i;
+        assert(nameRegex.test(error.name));
+        done();
+      });
+    });
+
+    it('should not emit tokenExpired when an inactive token expires', function(done) {
+      var jwt1 = getToken(aliceName, 3000);
+      var jwt2 = getToken(aliceName);
+      var hasFired = false;
+
+      alice.listen(jwt1).then(function() {
+        return alice.listen(jwt2);
+      });
+
+      alice.once('error', function(error) {
+        hasFired = true;
+      });
+
+      jwt1.once('expired', function() {
+        setTimeout(function() {
+          assert(!hasFired);
+          done();
+        }, 10);
+      });
+    });
   });
 
   describe('#unlisten', function() {
