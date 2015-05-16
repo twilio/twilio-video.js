@@ -1,4 +1,4 @@
-name: signal-js
+name: twilio-rtc-conversations-js
 targets:
   - cent6
 build:
