@@ -91,6 +91,8 @@ patch:	node_modules
 		<patch/enable_reinvite_support.patch; true; \
 	patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js \
 		<patch/renegotiation.patch; true
+	patch -N node_modules/sip.js/src/RegisterContext.js \
+		<patch/pass_headers_to_ua_stop.patch; true
 
 publish: simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && make publish
