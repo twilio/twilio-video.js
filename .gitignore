@@ -4,6 +4,7 @@
 .TESTED
 build
 doc
+javascript-rtc-sdk-docs
 node_modules
 out
 test.json

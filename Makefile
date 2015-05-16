@@ -1,6 +1,5 @@
 # Version
-PRODUCT_SUFFIX=conversations
-PRODUCT=twilio-$(PRODUCT_SUFFIX)
+PRODUCT=twilio-rtc-conversations
 MAJOR=$(shell sed -n 's/^  "version": "\([0-9]*\).[0-9]*.[0-9]*",$$/\1/gp' package.json)
 MINOR=$(shell sed -n 's/^  "version": "[0-9]*.\([0-9]*\).[0-9]*",$$/\1/gp' package.json)
 PATCH=$(shell sed -n 's/^  "version": "[0-9]*.[0-9]*.\([0-9]*\)",$$/\1/gp' package.json)
@@ -9,28 +8,29 @@ COMMIT=$(shell git rev-parse --short=7 HEAD)
 PUBLIC_VERSION=v$(MAJOR).$(MINOR)
 RELEASE_VERSION=$(MAJOR).$(MINOR).$(PATCH).b$(BUILD)-$(COMMIT)
 
-# Artifacts
-PUBLIC_ROOT=build/sdk/$(PRODUCT_SUFFIX)/$(PUBLIC_VERSION)/js
-PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
-PUBLIC_LOADER=$(PUBLIC_ROOT)/$(PRODUCT).js
-PUBLIC_LOADER_MIN=$(PUBLIC_ROOT)/$(PRODUCT).min.js
+PUBLIC_ROOT=build/sdk/js/$(PUBLIC_VERSION)
 RELEASE_ROOT=$(PUBLIC_ROOT)/releases/$(RELEASE_VERSION)
-RELEASE_DOCS=$(RELEASE_ROOT)/docs/api
-RELEASE_LOADER=$(RELEASE_ROOT)/$(PRODUCT)-loader.js
-RELEASE_LOADER_MIN=$(RELEASE_ROOT)/$(PRODUCT)-loader.min.js
-RELEASE=$(RELEASE_ROOT)/$(PRODUCT).js
-RELEASE_MIN=$(RELEASE_ROOT)/$(PRODUCT).min.js
-PACKAGE_DOCS=javascript-rtc-sdk-docs
+
+# Artifacts
+PUBLIC_JS=$(PUBLIC_ROOT)/$(PRODUCT).js
+PUBLIC_MIN_JS=$(PUBLIC_JS:%.js=%.min.js)
+PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
+PUBLIC_PACKAGE_DOCS=$(PUBLIC_ROOT)/twilio-rtc-js.zip
+
+RELEASE_JS=$(RELEASE_ROOT)/$(PRODUCT).js
+RELEASE_MIN_JS=$(RELEASE_JS:%.js=%.min.js)
+RELEASE_API_DOCS=$(RELEASE_ROOT)/docs/api
+RELEASE_PACKAGE_DOCS=$(RELEASE_ROOT)/twilio-rtc-js.zip
+
 ALL= \
-	$(PUBLIC_LOADER) \
-	$(PUBLIC_LOADER_MIN) \
-	$(RELEASE_LOADER) \
-	$(RELEASE_LOADER_MIN) \
-	$(REALEASE) \
-	$(RELEASE_MIN) \
 	$(PUBLIC_DOCS) \
-	$(PACKAGE_DOCS) \
-	$(RELEASE_DOCS) 
+	$(PUBLIC_JS) \
+	$(PUBLIC_MIN_JS) \
+	$(PUBLIC_PACKAGE_DOCS) \
+	$(RELEASE_JS) \
+	$(RELEASE_MIN_JS) \
+	$(RELEASE_API_DOCS) \
+	$(RELEASE_PACKAGE_DOCS)
 
 # Sources
 LIB_FILES=$(shell find lib -name \*.js)
@@ -61,17 +61,17 @@ INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 all: $(ALL)
 
 clean:
-	rm -rf build .LINTED .TESTED $(PACKAGE_DOCS)
+	rm -rf build .LINTED .TESTED javascript-rtc-sdk-docs
 
 clean-all: clean
 
 docs:
 	@$(call INFO,"Generating docs")
-	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_DOCS)
-	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
-	./scripts/reorder-navigation.js $(RELEASE_DOCS)
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_API_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_API_DOCS)
+	./scripts/remove-private-constructors.js $(RELEASE_API_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_API_DOCS)
+	./scripts/prefix-static-methods.js $(RELEASE_API_DOCS)
+	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
 
 lint: node_modules
 	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js
@@ -110,14 +110,18 @@ simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
 
-$(PACKAGE_DOCS): $(RELEASE_DOCS)
+$(PUBLIC_PACKAGE_DOCS): $(RELEASE_PACKAGE_DOCS)
+	@$(call INFO,"Symlinking release package docs")
+	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/twilio-rtc-sdk-docs.zip .
+
+$(RELEASE_PACKAGE_DOCS): $(RELEASE_API_DOCS)
 	@$(call INFO,"Pulling SDK Docs - Converting")
-	rm -rf $(PACKAGE_DOCS)
+	rm -rf $(RELEASE_PACKAGE_DOCS) javascript-rtc-sdk-docs
 	git clone git@code.hq.twilio.com:client/javascript-rtc-sdk-docs
-	mkdir -p $(PACKAGE_DOCS)/build/docs/api
-	cp -r $(RELEASE_ROOT)/docs/api $(PACKAGE_DOCS)/build/docs
-	cd $(PACKAGE_DOCS) && make
-	mv $(PACKAGE_DOCS)/twilio-rtc-js.zip $(RELEASE_ROOT)
+	mkdir -p javascript-rtc-sdk-docs/build/docs/api
+	cp -r $(RELEASE_API_DOCS) javascript-rtc-sdk-docs/build/docs
+	cd javascript-rtc-sdk-docs && make
+	mv javascript-rtc-sdk-docs/twilio-rtc-js.zip $(RELEASE_PACKAGE_DOCS)
 
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
@@ -141,42 +145,34 @@ $(MOCHA_PHANTOMJS): node_modules
 
 $(CLOSURE): node_modules
 
-$(PUBLIC_DOCS): $(PACKAGE_DOCS)
+$(PUBLIC_DOCS): $(RELEASE_PACKAGE_DOCS)
 	@$(call INFO,"Symlinking public docs to release docs")
 	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/docs .)
 
-$(PUBLIC_LOADER): $(RELEASE_LOADER)
-	@$(call INFO,"Symlinking public loader to release loader")
-	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT)-loader.js $(PRODUCT).js)
-
-$(PUBLIC_LOADER_MIN): $(RELEASE_LOADER_MIN)
-	@$(call INFO,"Symlinking minified public loader to minified release loader")
-	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT)-loader.min.js $(PRODUCT).min.js)
-
-$(RELEASE_DOCS): $(JSDOC) $(LIB_FILES)
+$(RELEASE_API_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
-	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_DOCS)
-	./scripts/remove-private-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-public-constructors.js $(RELEASE_DOCS)
-	./scripts/prefix-static-methods.js $(RELEASE_DOCS)
-	./scripts/reorder-navigation.js $(RELEASE_DOCS)
+	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_API_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_API_DOCS)
+	./scripts/remove-private-constructors.js $(RELEASE_API_DOCS)
+	./scripts/prefix-public-constructors.js $(RELEASE_API_DOCS)
+	./scripts/prefix-static-methods.js $(RELEASE_API_DOCS)
+	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
 
-$(RELEASE_LOADER): $(RELEASE)
-	@$(call INFO,"Symlinking release loader to release")
-	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).js $(PRODUCT)-loader.js)
+$(PUBLIC_JS): $(RELEASE_JS)
+	@$(call INFO,"Symlinking release JavaScript")
+	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT).js .
 
-$(RELEASE_LOADER_MIN): $(RELEASE_MIN)
-	@$(call INFO,"Symlinking minified release loader to minified release")
-	(cd $(RELEASE_ROOT); ln -s -f $(PRODUCT).min.js $(PRODUCT)-loader.min.js)
+$(PUBLIC_MIN_JS): $(RELEASE_MIN_JS)
+	@$(call INFO,"Symlinking minified release JavaScript")
+	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT).min.js .
 
-$(RELEASE): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
+$(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
 	@mkdir -p $(RELEASE_ROOT)
-	$(BROWSERIFY) src/$(PRODUCT).js -o $(RELEASE)
+	$(BROWSERIFY) src/$(PRODUCT).js -o $(RELEASE_JS)
 
-$(RELEASE_MIN): $(CLOSURE) $(RELEASE)
+$(RELEASE_MIN_JS): $(CLOSURE) $(RELEASE_JS)
 	@$(call INFO,"Minifying release")
-	$(CLOSURE) $(RELEASE) --language_in=ECMASCRIPT5 >$(RELEASE_MIN)
+	$(CLOSURE) $(RELEASE_JS) --language_in=ECMASCRIPT5 >$(RELEASE_MIN_JS)
 
 .LINTED: $(JSHINT) $(LIB_FILES) $(SRC_FILES) $(TEST_FILES)
 	@if [[ -z "${SKIP_LINT}" ]]; then \
