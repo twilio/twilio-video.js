@@ -112,7 +112,7 @@ simple-signaling.appspot.com:
 
 $(PUBLIC_PACKAGE_DOCS): $(RELEASE_PACKAGE_DOCS)
 	@$(call INFO,"Symlinking release package docs")
-	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/twilio-rtc-sdk-docs.zip .
+	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/twilio-rtc-js.zip .
 
 $(RELEASE_PACKAGE_DOCS): $(RELEASE_API_DOCS)
 	@$(call INFO,"Pulling SDK Docs - Converting")
