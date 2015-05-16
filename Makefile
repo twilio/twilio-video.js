@@ -8,10 +8,15 @@ COMMIT=$(shell git rev-parse --short=7 HEAD)
 PUBLIC_VERSION=v$(MAJOR).$(MINOR)
 RELEASE_VERSION=$(MAJOR).$(MINOR).$(PATCH).b$(BUILD)-$(COMMIT)
 
-PUBLIC_ROOT=build/sdk/js/$(PUBLIC_VERSION)
-RELEASE_ROOT=$(PUBLIC_ROOT)/releases/$(RELEASE_VERSION)
+ROOT=build/sdk/rtc/js
+PUBLIC_ROOT=$(ROOT)/conversations/$(PUBLIC_VERSION)
+RELEASE_ROOT=$(ROOT)/conversations/releases/$(RELEASE_VERSION)
 
 # Artifacts
+JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).js
+MIN_JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).min.js
+PACKAGE_DOCS=$(ROOT)/$(PUBLIC_VERSION)/twilio-rtc-js.zip
+
 PUBLIC_JS=$(PUBLIC_ROOT)/$(PRODUCT).js
 PUBLIC_MIN_JS=$(PUBLIC_JS:%.js=%.min.js)
 PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
@@ -23,6 +28,9 @@ RELEASE_API_DOCS=$(RELEASE_ROOT)/docs/api
 RELEASE_PACKAGE_DOCS=$(RELEASE_ROOT)/twilio-rtc-js.zip
 
 ALL= \
+	$(JS) \
+	$(MIN_JS) \
+	$(PACKAGE_DOCS) \
 	$(PUBLIC_DOCS) \
 	$(PUBLIC_JS) \
 	$(PUBLIC_MIN_JS) \
@@ -112,7 +120,7 @@ simple-signaling.appspot.com:
 
 $(PUBLIC_PACKAGE_DOCS): $(RELEASE_PACKAGE_DOCS)
 	@$(call INFO,"Symlinking release package docs")
-	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/twilio-rtc-js.zip .
+	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/twilio-rtc-js.zip .
 
 $(RELEASE_PACKAGE_DOCS): $(RELEASE_API_DOCS)
 	@$(call INFO,"Pulling SDK Docs - Converting")
@@ -147,7 +155,8 @@ $(CLOSURE): node_modules
 
 $(PUBLIC_DOCS): $(RELEASE_PACKAGE_DOCS)
 	@$(call INFO,"Symlinking public docs to release docs")
-	(cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/docs .)
+	mkdir -p $(PUBLIC_ROOT)
+	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/docs .
 
 $(RELEASE_API_DOCS): $(JSDOC) $(LIB_FILES)
 	@$(call INFO,"Generating release docs")
@@ -157,13 +166,30 @@ $(RELEASE_API_DOCS): $(JSDOC) $(LIB_FILES)
 	./scripts/prefix-static-methods.js $(RELEASE_API_DOCS)
 	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
 
+$(JS): $(PUBLIC_JS)
+	@$(call INFO,"Symlinking public JavaScript")
+	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
+	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/$(PRODUCT).js
+
+$(MIN_JS): $(PUBLIC_MIN_JS)
+	@$(call INFO,"Symlinking minified public JavaScript")
+	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
+	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/$(PRODUCT).min.js
+
+$(PACKAGE_DOCS): $(PUBLIC_PACKAGE_DOCS)
+	@$(call INFO,"Symlinking public package docs")
+	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
+	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-js.zip
+
 $(PUBLIC_JS): $(RELEASE_JS)
 	@$(call INFO,"Symlinking release JavaScript")
-	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT).js .
+	mkdir -p $(PUBLIC_ROOT)
+	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/$(PRODUCT).js .
 
 $(PUBLIC_MIN_JS): $(RELEASE_MIN_JS)
 	@$(call INFO,"Symlinking minified release JavaScript")
-	cd $(PUBLIC_ROOT); ln -s -f releases/$(RELEASE_VERSION)/$(PRODUCT).min.js .
+	mkdir -p $(PUBLIC_ROOT)
+	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/$(PRODUCT).min.js .
 
 $(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
