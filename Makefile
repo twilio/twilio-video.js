@@ -119,10 +119,11 @@ simple-signaling.appspot.com:
 $(PACKAGE_DOCS): $(RELEASE_DOCS)
 	@$(call INFO,"Pulling SDK Docs - Converting")
 	rm -rf $(PACKAGE_DOCS)
-	git clone git@code.hq.twilio.com:cummack/javascript-rtc-sdk-docs
-	cp -r $(RELEASE_ROOT)/docs/api $(PACKAGE_DOCS)/api/
-	cd $(PACKAGE_DOCS) && make 
-	mv $(PACKAGE_DOCS)/build/twilio-rtc-js.zip $(RELEASE_ROOT)
+	git clone git@code.hq.twilio.com:client/javascript-rtc-sdk-docs
+	mkdir -p $(PACKAGE_DOCS)/build/docs/api
+	cp -r $(RELEASE_ROOT)/docs/api $(PACKAGE_DOCS)/build/docs
+	cd $(PACKAGE_DOCS) && make
+	mv $(PACKAGE_DOCS)/twilio-rtc-js.zip $(RELEASE_ROOT)
 
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
