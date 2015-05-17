@@ -17,6 +17,10 @@ JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).js
 MIN_JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).min.js
 PACKAGE_DOCS=$(ROOT)/$(PUBLIC_VERSION)/twilio-rtc-js.zip
 
+LATEST_JS=$(ROOT)/latest/$(PRODUCT).js
+LATEST_MIN_JS=$(ROOT)/latest/$(PRODUCT).min.js
+LATEST_PACKAGE_DOCS=$(ROOT)/latest/twilio-rtc-js.zip
+
 PUBLIC_JS=$(PUBLIC_ROOT)/$(PRODUCT).js
 PUBLIC_MIN_JS=$(PUBLIC_JS:%.js=%.min.js)
 PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
@@ -31,6 +35,9 @@ ALL= \
 	$(JS) \
 	$(MIN_JS) \
 	$(PACKAGE_DOCS) \
+	$(LATEST_JS) \
+	$(LATEST_MIN_JS) \
+	$(LATEST_PACKAGE_DOCS) \
 	$(PUBLIC_DOCS) \
 	$(PUBLIC_JS) \
 	$(PUBLIC_MIN_JS) \
@@ -181,6 +188,11 @@ $(PACKAGE_DOCS): $(PUBLIC_PACKAGE_DOCS)
 	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
 	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-js.zip
 
+$(LATEST_PACKAGE_DOCS): $(LATEST_PACKAGE_DOCS)
+	@$(call INFO,"Symlinking latest package docs")
+	mkdir -p $(ROOT)/latest
+	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-js.zip
+
 $(PUBLIC_JS): $(RELEASE_JS)
 	@$(call INFO,"Symlinking release JavaScript")
 	mkdir -p $(PUBLIC_ROOT)
@@ -190,6 +202,16 @@ $(PUBLIC_MIN_JS): $(RELEASE_MIN_JS)
 	@$(call INFO,"Symlinking minified release JavaScript")
 	mkdir -p $(PUBLIC_ROOT)
 	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/$(PRODUCT).min.js .
+
+$(LATEST_JS): $(LATEST_JS)
+	@$(call INFO,"Symlinking latest JavaScript")
+	mkdir -p $(ROOT)/latest
+	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-conversations.js
+
+$(LATEST_MIN_JS): $(LATEST_MIN_JS)
+	@$(call INFO,"Symlinking latest minified JavaScript")
+	mkdir -p $(ROOT)/latest
+	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-conversations.min.js
 
 $(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
