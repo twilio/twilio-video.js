@@ -70,7 +70,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should register', function() {
-      assert(alice.isRegistered);
+      assert(alice._isRegistered);
     });
 
     it('should set .address', function() {
@@ -121,6 +121,10 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       assert(!alice.isListening);
     });
 
+    it('should not need to be registered', function() {
+      assert(!alice._needsRegistration);
+    });
+
     it('should unregister', function() {
       assert(!alice.isRegistered);
     });
@@ -136,6 +140,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     var ua = null;
 
     it('should not emit "invite" events', function setupUA(done) {
+      this.timeout(6000);
       uaName = randomName();
       uaToken = getToken(uaName);
       ua = new SIPJSUserAgent(uaToken, options);
@@ -149,7 +154,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       function receivedInvite() {
         done(new Error('Emitted "invite" event'));
       }
-      alice.on('invite', receivedInvite);
+      alice.once('invite', receivedInvite);
     });
   });
 
@@ -226,14 +231,8 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         assert(!alice.isListening);
       });
 
-      it('should not unregister', function() {
-        assert(alice.isRegistered);
-      });
-
-      after(function listen(done) {
-        alice.listen().then(function() {
-          done();
-        }, done);
+      it('should still need to be registered', function() {
+        assert(alice._needsRegistration);
       });
     });
 
@@ -253,14 +252,28 @@ describe('Endpoint (SIPJSUserAgent)', function() {
             assert(!alice.conversations.has(conversation));
           }).then(done, done);
         });
+
+        it('should not need to be registered', function() {
+          assert(!alice._needsRegistration);
+        });
+
+        it('should unregister', function(done) {
+          alice._userAgent.once('unregistered', function() {
+            done();
+          });
+        });
       });
 
       describe('Remote party hangs up', function() {
         var conversation = null;
 
         before(function(done) {
-          ua.invite(aliceName).then(null, done);
-          alice.on('invite', function(invite) {
+          alice.listen().then(function() {
+            return ua.invite(aliceName).then(null, done);
+          }).then(function() {
+            done();
+          }, done);
+          alice.once('invite', function(invite) {
             invite.accept().then(function(_conversation) {
               conversation = _conversation;
               assert(alice.conversations.has(conversation));
@@ -345,8 +358,8 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         assert(!alice.isListening);
       });
 
-      it('should not unregister', function() {
-        assert(alice.isRegistered);
+      it('should still need to be registered', function() {
+        assert(alice._needsRegistration);
       });
     });
 
@@ -355,6 +368,16 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         conversation.leave().then(function() {
           assert(!alice.conversations.has(conversation));
         }).then(done, done);
+      });
+
+      it('should not need to be registered', function() {
+        assert(!alice._needsRegistration);
+      });
+
+      it('should unregister', function(done) {
+        alice._userAgent.once('unregistered', function() {
+          done();
+        });
       });
     });
   });
