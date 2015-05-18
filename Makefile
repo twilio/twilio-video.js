@@ -186,7 +186,12 @@ $(LATEST_MIN_JS): $(LATEST_MIN_JS)
 $(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
 	@mkdir -p $(RELEASE_ROOT)
-	$(BROWSERIFY) src/$(PRODUCT).js -o $(RELEASE_JS)
+	echo "/** @license" >$(RELEASE_JS)
+	echo "$(PRODUCT).js $(PUBLIC_VERSION) ($(RELEASE_VERSION))" >>$(RELEASE_JS)
+	echo >>$(RELEASE_JS)
+	cat LICENSE >>$(RELEASE_JS)
+	echo "*/" >>$(RELEASE_JS)
+	$(BROWSERIFY) src/$(PRODUCT).js >>$(RELEASE_JS)
 
 $(RELEASE_MIN_JS): $(CLOSURE) $(RELEASE_JS)
 	@$(call INFO,"Minifying release")
