@@ -69,6 +69,10 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       assert(alice.isListening);
     });
 
+    it('should register', function() {
+      assert(alice._isRegistered);
+    });
+
     it('should set .address', function() {
       assert.equal(aliceName, alice.address);
     });
@@ -114,11 +118,43 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('updates .isListening', function() {
-      assert(!alice.listening);
+      assert(!alice.isListening);
+    });
+
+    it('should not need to be registered', function() {
+      assert(!alice._needsRegistration);
+    });
+
+    it('should unregister', function() {
+      assert(!alice.isRegistered);
     });
 
     it('does not update .address', function() {
       assert.equal(aliceName, alice.address);
+    });
+  });
+
+  describe('#unlisten (but still registered)', function() {
+    var uaName = null;
+    var uaToken = null;
+    var ua = null;
+
+    it('should not emit "invite" events', function setupUA(done) {
+      this.timeout(6000);
+      uaName = randomName();
+      uaToken = getToken(uaName);
+      ua = new SIPJSUserAgent(uaToken, options);
+      ua.invite(aliceName).then(function() {
+        alice.removeListener('invite', receivedInvite);
+        done(new Error('InviteClientTransaction succeeded'));
+      }, function(error) {
+        alice.removeListener('invite', receivedInvite);
+        done();
+      });
+      function receivedInvite() {
+        done(new Error('Emitted "invite" event'));
+      }
+      alice.once('invite', receivedInvite);
     });
   });
 
@@ -137,7 +173,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       }, done);
     });
 
-    it('updates .listening', function() {
+    it('updates .isListening', function() {
       assert(alice.isListening);
     });
 
@@ -184,6 +220,22 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       assert(invite.conversationSid);
     });
 
+    describe('#unlisten (with pending Invite)', function() {
+      before(function unlisten(done) {
+        alice.unlisten().then(function() {
+          done();
+        }, done);
+      });
+
+      it('should update .isListening', function() {
+        assert(!alice.isListening);
+      });
+
+      it('should still need to be registered', function() {
+        assert(alice._needsRegistration);
+      });
+    });
+
     describe('Invite#accept', function() {
       var conversation = null;
 
@@ -200,14 +252,28 @@ describe('Endpoint (SIPJSUserAgent)', function() {
             assert(!alice.conversations.has(conversation));
           }).then(done, done);
         });
+
+        it('should not need to be registered', function() {
+          assert(!alice._needsRegistration);
+        });
+
+        it('should unregister', function(done) {
+          alice._userAgent.once('unregistered', function() {
+            done();
+          });
+        });
       });
 
       describe('Remote party hangs up', function() {
         var conversation = null;
 
         before(function(done) {
-          ua.invite(aliceName).then(null, done);
-          alice.on('invite', function(invite) {
+          alice.listen().then(function() {
+            return ua.invite(aliceName).then(null, done);
+          }).then(function() {
+            done();
+          }, done);
+          alice.once('invite', function(invite) {
             invite.accept().then(function(_conversation) {
               conversation = _conversation;
               assert(alice.conversations.has(conversation));
@@ -281,11 +347,37 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       }).then(done, done);
     });
 
+    describe('#unlisten (while in a Conversation)', function() {
+      before(function unlisten(done) {
+        alice.unlisten().then(function() {
+          done();
+        }, done);
+      });
+
+      it('should update .isListening', function() {
+        assert(!alice.isListening);
+      });
+
+      it('should still need to be registered', function() {
+        assert(alice._needsRegistration);
+      });
+    });
+
     describe('Conversation#leave', function() {
       it('updates .conversations', function(done) {
         conversation.leave().then(function() {
           assert(!alice.conversations.has(conversation));
         }).then(done, done);
+      });
+
+      it('should not need to be registered', function() {
+        assert(!alice._needsRegistration);
+      });
+
+      it('should unregister', function(done) {
+        alice._userAgent.once('unregistered', function() {
+          done();
+        });
       });
     });
   });

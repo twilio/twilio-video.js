@@ -163,7 +163,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
     });
 
     // NOTE(mroberts): Disabled until this works in prod.
-    it.skip('should return an Array<Promise<Participant>> for multiple addresses in an array', function(done) {
+    it('should return an Array<Promise<Participant>> for multiple addresses in an array', function(done) {
       this.timeout(10000);
       Q.all(conversation.invite([charlieName, donaldName])).then(
           function(participants) {
