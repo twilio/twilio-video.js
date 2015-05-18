@@ -246,9 +246,9 @@ describe('Endpoint (SIPJSUserAgent)', function() {
         }).then(done, done);
       });
 
-      describe('Conversation#leave', function() {
+      describe('Conversation#disconnect', function() {
         it('updates .conversations', function(done) {
-          conversation.leave().then(function() {
+          conversation.disconnect().then(function() {
             assert(!alice.conversations.has(conversation));
           }).then(done, done);
         });
@@ -278,7 +278,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
               conversation = _conversation;
               assert(alice.conversations.has(conversation));
             }).then(function() {
-              conversation.leave();
+              conversation.disconnect();
             }).then(done, done);
           });
         });
@@ -363,9 +363,9 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
     });
 
-    describe('Conversation#leave', function() {
+    describe('Conversation#disconnect', function() {
       it('updates .conversations', function(done) {
-        conversation.leave().then(function() {
+        conversation.disconnect().then(function() {
           assert(!alice.conversations.has(conversation));
         }).then(done, done);
       });
