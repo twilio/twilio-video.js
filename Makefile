@@ -93,6 +93,7 @@ patch:	node_modules
 	patch -N node_modules/sip.js/src/Session.js <patch/enable_reinvite_support.patch; true;
 	patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/renegotiation.patch; true
 	patch -N node_modules/sip.js/src/RegisterContext.js <patch/pass_headers_to_ua_stop.patch; true
+	patch -N node_modules/sip.js/src/Transactions.js <patch/set_content_length_on_ack.patch; true
 
 publish: simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && make publish
