@@ -15,37 +15,29 @@ RELEASE_ROOT=$(ROOT)/conversations/releases/$(RELEASE_VERSION)
 # Artifacts
 JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).js
 MIN_JS=$(ROOT)/$(PUBLIC_VERSION)/$(PRODUCT).min.js
-PACKAGE_DOCS=$(ROOT)/$(PUBLIC_VERSION)/twilio-rtc-js.zip
 
 LATEST_JS=$(ROOT)/latest/$(PRODUCT).js
 LATEST_MIN_JS=$(ROOT)/latest/$(PRODUCT).min.js
-LATEST_PACKAGE_DOCS=$(ROOT)/latest/twilio-rtc-js.zip
 
 PUBLIC_JS=$(PUBLIC_ROOT)/$(PRODUCT).js
 PUBLIC_MIN_JS=$(PUBLIC_JS:%.js=%.min.js)
 PUBLIC_DOCS=$(PUBLIC_ROOT)/docs
-PUBLIC_PACKAGE_DOCS=$(PUBLIC_ROOT)/twilio-rtc-js.zip
 
 RELEASE_JS=$(RELEASE_ROOT)/$(PRODUCT).js
 RELEASE_MIN_JS=$(RELEASE_JS:%.js=%.min.js)
 RELEASE_API_DOCS=$(RELEASE_ROOT)/docs/api
-RELEASE_PACKAGE_DOCS=$(RELEASE_ROOT)/twilio-rtc-js.zip
 
 ALL= \
 	$(JS) \
 	$(MIN_JS) \
-	$(PACKAGE_DOCS) \
 	$(LATEST_JS) \
 	$(LATEST_MIN_JS) \
-	$(LATEST_PACKAGE_DOCS) \
 	$(PUBLIC_DOCS) \
 	$(PUBLIC_JS) \
 	$(PUBLIC_MIN_JS) \
-	$(PUBLIC_PACKAGE_DOCS) \
 	$(RELEASE_JS) \
 	$(RELEASE_MIN_JS) \
-	$(RELEASE_API_DOCS) \
-	$(RELEASE_PACKAGE_DOCS)
+	$(RELEASE_API_DOCS)
 
 # Sources
 LIB_FILES=$(shell find lib -name \*.js)
@@ -125,19 +117,6 @@ simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
 
-$(PUBLIC_PACKAGE_DOCS): $(RELEASE_PACKAGE_DOCS)
-	@$(call INFO,"Symlinking release package docs")
-	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/twilio-rtc-js.zip .
-
-$(RELEASE_PACKAGE_DOCS): $(RELEASE_API_DOCS)
-	@$(call INFO,"Pulling SDK Docs - Converting")
-	rm -rf $(RELEASE_PACKAGE_DOCS) javascript-rtc-sdk-docs
-	git clone git@code.hq.twilio.com:client/javascript-rtc-sdk-docs
-	mkdir -p javascript-rtc-sdk-docs/build/docs/api
-	cp -r $(RELEASE_API_DOCS) javascript-rtc-sdk-docs/build/docs
-	cd javascript-rtc-sdk-docs && make
-	mv javascript-rtc-sdk-docs/twilio-rtc-js.zip $(RELEASE_PACKAGE_DOCS)
-
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
@@ -160,7 +139,7 @@ $(MOCHA_PHANTOMJS): node_modules
 
 $(CLOSURE): node_modules
 
-$(PUBLIC_DOCS): $(RELEASE_PACKAGE_DOCS)
+$(PUBLIC_DOCS): $(RELEASE_API_DOCS)
 	@$(call INFO,"Symlinking public docs to release docs")
 	mkdir -p $(PUBLIC_ROOT)
 	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/docs .
@@ -183,16 +162,6 @@ $(MIN_JS): $(PUBLIC_MIN_JS)
 	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
 	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/$(PRODUCT).min.js
 
-$(PACKAGE_DOCS): $(PUBLIC_PACKAGE_DOCS)
-	@$(call INFO,"Symlinking public package docs")
-	mkdir -p $(ROOT)/$(PUBLIC_VERSION)
-	cd $(ROOT)/$(PUBLIC_VERSION); ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-js.zip
-
-$(LATEST_PACKAGE_DOCS): $(LATEST_PACKAGE_DOCS)
-	@$(call INFO,"Symlinking latest package docs")
-	mkdir -p $(ROOT)/latest
-	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-js.zip
-
 $(PUBLIC_JS): $(RELEASE_JS)
 	@$(call INFO,"Symlinking release JavaScript")
 	mkdir -p $(PUBLIC_ROOT)
@@ -206,12 +175,12 @@ $(PUBLIC_MIN_JS): $(RELEASE_MIN_JS)
 $(LATEST_JS): $(LATEST_JS)
 	@$(call INFO,"Symlinking latest JavaScript")
 	mkdir -p $(ROOT)/latest
-	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-conversations.js
+	cd $(ROOT)/latest; ln -s -f ../$(PUBLIC_VERSION)/twilio-rtc-conversations.js
 
 $(LATEST_MIN_JS): $(LATEST_MIN_JS)
 	@$(call INFO,"Symlinking latest minified JavaScript")
 	mkdir -p $(ROOT)/latest
-	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/twilio-rtc-conversations.min.js
+	cd $(ROOT)/latest; ln -s -f ../$(PUBLIC_VERSION)/twilio-rtc-conversations.min.js
 
 $(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
