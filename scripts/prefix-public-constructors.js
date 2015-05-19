@@ -8,9 +8,9 @@ if (!releaseDocs) {
 }
 
 var classNames = [
-  'AccessToken',
-  'Endpoint',
-  'LocalMedia'
+  'Twilio.AccessToken',
+  'Twilio.Endpoint',
+  'Twilio.LocalMedia'
 ];
 
 console.log('Prefixing public constructors from');
@@ -21,7 +21,7 @@ classNames.forEach(function(className) {
   var $ = cheerio.load(classFile);
   var div = $('.container-overview');
   var name = $('h4.name', div);
-  name.html(name.html().replace(/new /, 'new Twilio.'));
+  name.html(name.html().replace(/new /, 'new <span style="color: #999">Twilio.</span>'));
   classFile = $.html();
   fs.writeFileSync(classPath, classFile, 'utf8');
 });
