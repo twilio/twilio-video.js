@@ -1,3 +1,4 @@
+/** @namespace Twilio */
 'use strict';
 
 var AccessToken = require('../lib/accesstoken');

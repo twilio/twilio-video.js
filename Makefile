@@ -52,7 +52,9 @@ PUBLIC_LIB_FILES= \
 	lib/invite.js \
 	lib/media/index.js \
 	lib/media/track.js \
-	lib/participant.js
+	lib/participant.js \
+	lib/webrtc/getusermedia.js \
+	src/twilio-rtc-conversations.js
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
