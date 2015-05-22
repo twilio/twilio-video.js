@@ -35,6 +35,6 @@
   "dependencies": {
     "sip.js": "^0.7.0",
     "ws": "^0.6.3",
-    "xmlhttprequest": "https://github.com/markandrus/node-XMLHttpRequest.git"
+    "xmlhttprequest": "git+https://github.com/markandrus/node-XMLHttpRequest.git"
   }
 }
