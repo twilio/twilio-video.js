@@ -90,7 +90,6 @@ patch:	node_modules
 	patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true;
 	patch -N node_modules/sip.js/src/Hacks.js <patch/disable_masking.patch; true;
 	patch -N node_modules/sip.js/src/Session.js <patch/refer.patch; true;
-	patch -N node_modules/sip.js/src/Transactions.js <patch/always_send_cancel.patch; true;
 	patch -N node_modules/sip.js/src/Grammar/dist/Grammar.js <patch/disable_lowercasing_host.patch; true;
 	patch -N node_modules/sip.js/src/Session.js <patch/enable_reinvite_support.patch; true;
 	patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/renegotiation.patch; true

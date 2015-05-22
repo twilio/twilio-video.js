@@ -295,6 +295,36 @@ describe('SIPJSUserAgent', function() {
           });
         });
       });
+
+      it('should cancel the request after receiving 100 if called prior', function(done) {
+        var ua2Ict = ua2.invite(ua1Name, inviteOptions);
+
+        ua1.once('invite', function(ist) {
+          ist.then(function() {
+            throw Error('Invite was not canceled');
+          }, function() {
+            assert(ist.canceled);
+          }).then(done, done);
+        });
+
+        var sessionPoll = setInterval(function() {
+          if(!ua2Ict.session) { return; }
+
+          ua2Ict.cancel();
+          clearInterval(sessionPoll);
+        }, 10);
+      });
+
+      it('should not send the request if cancelled prior', function(done) {
+        var ua2Ict = ua2.invite(ua1Name, inviteOptions);
+        ua2Ict.cancel();
+
+        ua2Ict.then(function() {
+          throw Error('Invite was not canceled');
+        }, function() {
+          assert(ua2Ict.canceled);
+        }).then(done, done);
+      });
     });
   });
 
