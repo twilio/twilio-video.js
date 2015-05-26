@@ -33,7 +33,7 @@
     "test": "make test"
   },
   "dependencies": {
-    "sip.js": "^0.7.0",
+    "sip.js": "git+https://code.hq.twilio.com/client/SIP.js.git#stable-twilio",
     "ws": "^0.6.3",
     "xmlhttprequest": "git+https://github.com/markandrus/node-XMLHttpRequest.git"
   }
