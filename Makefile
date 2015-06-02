@@ -85,15 +85,6 @@ docs:
 lint: node_modules
 	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js
 
-patch:	node_modules
-	@$(call INFO,"Patching SIP.js")
-	patch -N node_modules/sip.js/src/SanityCheck.js <patch/disable_rfc3261_18_1_2.patch; true;
-	patch -N node_modules/sip.js/src/Hacks.js <patch/disable_masking.patch; true;
-	patch -N node_modules/sip.js/src/Session.js <patch/refer.patch; true;
-	patch -N node_modules/sip.js/src/Grammar/dist/Grammar.js <patch/disable_lowercasing_host.patch; true;
-	patch -N node_modules/sip.js/src/WebRTC/MediaHandler.js <patch/renegotiation.patch; true
-	patch -N node_modules/sip.js/src/Transactions.js <patch/set_content_length_on_ack.patch; true
-
 publish: simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && make publish
 
@@ -120,12 +111,11 @@ simple-signaling.appspot.com:
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
-.PHONY: all clean clean-all docs lint patch publish serve test
+.PHONY: all clean clean-all docs lint publish serve test
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")
 	npm install && touch node_modules
-	make patch
 
 $(BROWSERIFY): node_modules
 
