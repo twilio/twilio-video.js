@@ -2,7 +2,7 @@
   "name": "twilio-rtc-conversations",
   "title": "Twilio RTC Conversations",
   "description": "Twilio RTC Conversations JavaScript library",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "keywords": [
