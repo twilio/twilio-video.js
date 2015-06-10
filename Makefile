@@ -162,15 +162,15 @@ $(PUBLIC_MIN_JS): $(RELEASE_MIN_JS)
 	mkdir -p $(PUBLIC_ROOT)
 	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/$(PRODUCT).min.js .
 
-$(LATEST_JS): $(LATEST_JS)
+$(LATEST_JS): $(JS)
 	@$(call INFO,"Symlinking latest JavaScript")
 	mkdir -p $(ROOT)/latest
-	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/$(PRODUCT).js
+	cd $(ROOT)/latest; ln -s -f ../$(PUBLIC_VERSION)/twilio-rtc-conversations.js
 
-$(LATEST_MIN_JS): $(LATEST_MIN_JS)
+$(LATEST_MIN_JS): $(MIN_JS)
 	@$(call INFO,"Symlinking latest minified JavaScript")
 	mkdir -p $(ROOT)/latest
-	cd $(ROOT)/latest; ln -s -f ../conversations/$(PUBLIC_VERSION)/$(PRODUCT).min.js
+	cd $(ROOT)/latest; ln -s -f ../$(PUBLIC_VERSION)/twilio-rtc-conversations.min.js
 
 $(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
 	@$(call INFO,"Building release")
