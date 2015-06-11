@@ -1,7 +1,8 @@
 *.pyc
 *.sw*
+.INTEGRATION_TESTED
 .LINTED
-.TESTED
+.UNIT_TESTED
 build
 doc
 javascript-rtc-sdk-docs

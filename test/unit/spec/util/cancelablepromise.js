@@ -1,6 +1,6 @@
 'use strict';
 
-var CancelablePromise = require('../../lib/util/cancelablepromise');
+var CancelablePromise = require('../../../../lib/util/cancelablepromise');
 var assert = require('assert');
 var Q = require('q');
 
@@ -13,6 +13,14 @@ describe('CancelablePromise', function() {
 
       assert(cp1 instanceof CancelablePromise);
       assert(cp2 instanceof CancelablePromise);
+    });
+
+    it('should return the original if it already has a cancel function', function() {
+      var promise = Q.fcall(function(resolve, reject) { });
+      var cp1 = new CancelablePromise(promise);
+      var cp2 = new CancelablePromise(cp1);
+
+      assert.equal(cp1, cp2);
     });
   });
 
@@ -57,7 +65,7 @@ describe('CancelablePromise', function() {
   });
 
   describe('cancel', function() {
-    it('should cancel the promise', function(done) {
+    it('should reject the promise with a "canceled" error', function(done) {
       var deferred = Q.defer();
       var cp = CancelablePromise(deferred.promise);
 
@@ -75,25 +83,4 @@ describe('CancelablePromise', function() {
     });
   });
 });
-
-/*
-      cancelablePromises[0].then(function(result) {
-        assert(result === 'foo');
-        addOne();
-      }, function() {
-        assert.fail('Promise1 was not resolved');
-      });
-
-      cancelablePromises[1].then(function() {
-        assert.fail('Promise1 was not rejected');
-      }, function(result) {
-        assert(result === 'bar');
-        addOne();
-      });
-
-      deferred1.resolve('foo');
-      deferred2.reject('bar');
-    });
-  });
-});*/
 

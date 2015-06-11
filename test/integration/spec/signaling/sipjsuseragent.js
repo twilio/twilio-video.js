@@ -1,28 +1,18 @@
 'use strict';
 
-require('../mockwebrtc')();
-
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
-var util = require('./util');
 
-var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
-// var SIPJSUserAgent = require('../../lib/signaling/useragent');
+var SIPJSUserAgent = require('../../../../lib/signaling/sipjsuseragent');
 
-var config = require('../../test');
-var accountSid = config['accountSid'];
-var signingKeySid = config['signingKeySid'];
-var signingKeySecret = config['signingKeySecret'];
-var wsServer = config['wsServer'];
-var getToken = require('../token').getToken.bind(null, accountSid,
-  signingKeySid, signingKeySecret);
-
-var Token = require('../../lib/accesstoken');
+var credentials = require('../../../../test');
+var getToken = require('../../../lib/token').getToken.bind(null, credentials);
+var wsServer = credentials.wsServer;
 
 describe('SIPJSUserAgent', function() {
   var ua1Name = randomName();
-  var token = getToken(ua1Name);
+  var token = getToken({ address: ua1Name });
   var ua1 = null;
 
   var options = {};
@@ -47,7 +37,7 @@ describe('SIPJSUserAgent', function() {
       assert(!ua1.registered);
     });
   });
-  
+
   describe('#register (without Token)', function() {
     var receivedEvent = false;
 
@@ -96,7 +86,7 @@ describe('SIPJSUserAgent', function() {
 
       describe('#register (with Token)', function() {
         ua1Name = randomName();
-        token = getToken(ua1Name);
+        token = getToken({ address: ua1Name });
         var receivedEvent = false;
 
         it('should register', function(done) {
@@ -120,7 +110,7 @@ describe('SIPJSUserAgent', function() {
   });
 
   var ua2Name = randomName();
-  var ua2 = new SIPJSUserAgent(getToken(ua2Name), { 'wsServer': wsServer, 'debug': false });
+  var ua2 = new SIPJSUserAgent(getToken({ address: ua2Name }), { 'wsServer': wsServer, 'debug': false });
 
   describe('ua2.invite(ua1Name)', function() {
     var ua2Ict = null;
