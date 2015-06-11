@@ -69,7 +69,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should emit tokenExpired when active token expires', function(done) {
-      var jwt = getToken({ address: aliceName, duration: 3000 });
+      var jwt = getToken({ address: aliceName, duration: 500 });
       alice.listen(jwt);
       alice.once('error', function(error) {
         var nameRegex = /TOKEN_EXPIRED/i;
@@ -79,13 +79,13 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should not emit tokenExpired when an inactive token expires', function(done) {
-      var jwt1 = getToken({ address: aliceName, duration: 3000 });
+      var jwt1 = getToken({ address: aliceName, duration: 500 });
       var jwt2 = getToken({ address: aliceName });
       var hasFired = false;
 
       alice.listen(jwt1).then(function() {
         return alice.listen(jwt2);
-      });
+      }, done);
 
       alice.once('error', function(error) {
         hasFired = true;

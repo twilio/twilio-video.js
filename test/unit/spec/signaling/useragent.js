@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var MockICT = require('../../mock/inviteclienttransaction');
+var InviteClientTransaction = require('../../mock/inviteclienttransaction');
 var sinon = require('sinon');
 var Q = require('q');
 
@@ -20,56 +20,83 @@ describe('UserAgent', function() {
 
   beforeEach(function() {
     ua = new UserAgent(token, {
-      inviteClientTransactionFactory: MockICT
+      inviteClientTransactionFactory: InviteClientTransaction
     });
   });
 
-  describe('constructor', function() {
-    it('should set the userAgent.token property with the supplied token', function() {
+  describe('new UserAgent(token)', function() {
+    it('should set userAgent.token to the supplied AccessToken', function() {
       assert.equal(token, ua.token);
-    });
-
-    it('should initially set userAgent.isRegistered to false', function() {
-      assert(!ua.isRegistered);
     });
   });
 
   describe('#connect()', function() {
-    it('should return a promise that is fulfilled', function(done) {
-      ua.connect().then(function() { done(); });
-    });
+    context('when disconnected', function() {
+      it('should call UserAgent#_connect', function(done) {
+        ua._connect = sinon.spy(ua._connect);
+        ua.connect().then(function() {
+          sinon.assert.calledOnce(ua._connect);
+        }).then(done, done);
+      });
 
-    it('should call userAgent#_connect', function() {
-      ua._connect = sinon.spy(ua._connect);
-      ua.connect();
-      sinon.assert.calledOnce(ua._connect);
-    });
+      context('on success', function() {
+        it('should return a Promise that resolves to the UserAgent', function(done) {
+          ua.connect().then(function(_ua) {
+            assert.equal(ua, _ua);
+          }).then(done, done);
+        });
 
-    it('should set userAgent.isConnected to true', function(done) {
-      ua.connect().then(function() {
-        assert(ua.isConnected);
-        done();
+        it('should call UserAgent#_onConnectSuccess', function(done) {
+          ua._onConnectSuccess = sinon.spy(ua._onConnectSuccess);
+          ua.connect().then(function() {
+            sinon.assert.calledOnce(ua._onConnectSuccess);
+          }).then(done, done);
+        });
+      });
+
+      context('on failure', function() {
+        var error = new Error();
+
+        beforeEach(function() {
+          ua._connect = function() { return Promise.reject(error); };
+        });
+
+        it('should return a Promise that rejects with an Error', function(done) {
+          ua.connect().then(done, function(_error) {
+            assert.equal(error, _error);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onConnectFailure with an Error', function(done) {
+          ua._onConnectFailure = sinon.spy(ua._onConnectFailure);
+          ua.connect().then(done, function(_error) {
+            sinon.assert.calledWith(ua._onConnectFailure, error);
+          }).then(done, done);
+        });
       });
     });
 
-    it('should call userAgent._onConnectSuccess only if not already connected', function(done) {
-      ua._onConnectSuccess = sinon.spy(ua._onConnectSuccess);
-      ua.connect().then(function() {
-        return ua.connect();
-      }).then(function() {
-        sinon.assert.calledOnce(ua._onConnectSuccess);
-        done();
+    context('when connected', function() {
+      beforeEach(function(done) {
+        ua.connect().then(function() { done(); }, done);
       });
-    });
 
-    describe('#_connect()', function() {
-      it('should return a promise that is fulfilled', function(done) {
-        ua._connect().then(function() { done(); });
+      it('should return a Promise that resolves to the UserAgent', function(done) {
+        ua.connect().then(function(_ua) {
+          assert.equal(ua, _ua);
+        }).then(done, done);
+      });
+
+      it('should not call UserAgent#_connect', function(done) {
+        ua._connect = sinon.spy(ua._connect);
+        ua.connect().then(function() {
+          sinon.assert.notCalled(ua._connect);
+        }).then(done, done);
       });
     });
 
     describe('#_onConnectSuccess()', function() {
-      it('should set userAgent.isConnected to true on success', function() {
+      it('should set userAgent.isConnected to true', function() {
         ua._onConnectSuccess();
         assert(ua.isConnected);
       });
@@ -80,11 +107,11 @@ describe('UserAgent', function() {
       });
     });
 
-    describe('#_onConnectFailure()', function() {
+    describe('#_onConnectFailure(error)', function() {
       it('should throw the passed error', function() {
-        var tryOnConnectFailure = function() {
+        function tryOnConnectFailure() {
           ua._onConnectFailure(new Error('foo'));
-        };
+        }
 
         assert.throws(tryOnConnectFailure, /foo/);
       });
@@ -92,43 +119,72 @@ describe('UserAgent', function() {
   });
 
   describe('#disconnect()', function() {
-    beforeEach(function(done) {
-      ua.connect().then(function() { done(); });
+    context('when connected', function() {
+      beforeEach(function(done) {
+        ua.connect().then(function() { done(); }, done);
+      });
+
+      it('should call userAgent#_disconnect', function(done) {
+        ua._disconnect = sinon.spy(ua._disconnect);
+        ua.disconnect().then(function() {
+          sinon.assert.calledOnce(ua._disconnect);
+        }).then(done, done);
+      });
+
+      context('on success', function() {
+        it('should return a Promise that resolves to the UserAgent', function(done) {
+          ua.disconnect().then(function(_ua) {
+            assert.equal(ua, _ua);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onDisconnectSuccess', function(done) {
+          ua._disconnect = sinon.spy(ua._disconnect);
+          ua.disconnect().then(function() {
+            sinon.assert.calledOnce(ua._disconnect);
+          }).then(done, done);
+        });
+      });
+
+      context('on failure', function() {
+        var error = new Error();
+
+        beforeEach(function() {
+          ua._disconnect = function() { return Promise.reject(error); };
+        });
+
+        it('should return a Promise that rejects with an Error', function(done) {
+          ua.disconnect().then(done, function(_error) {
+            assert.equal(error, _error);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onDisconnectFailure with an Error', function(done) {
+          ua._onDisconnectFailure = sinon.spy(ua._onDisconnectFailure);
+          ua.disconnect().then(done, function() {
+            sinon.assert.calledWith(ua._onDisconnectFailure, error);
+          }).then(done, done);
+        });
+      });
     });
 
-    it('should return a promise that is fulfilled', function(done) {
-      ua.disconnect().then(function() { done(); });
-    });
+    context('when disconnected', function() {
+      it('should return a Promise that resolves to the UserAgent', function(done) {
+        ua.disconnect().then(function(_ua) {
+          assert.equal(ua, _ua);
+        }).then(done, done);
+      });
 
-    it('should call userAgent#_disconnect', function() {
-      ua._disconnect = sinon.spy(ua._disconnect);
-      ua.disconnect();
-      sinon.assert.calledOnce(ua._disconnect);
-    });
-
-    it('should set userAgent.isConnected to false', function(done) {
-      ua.disconnect().then(function() {
-        assert(!ua.isConnected);
-      }).then(done, done);
-    });
-
-    it('should call userAgent._onDisconnectSuccess only if already connected', function(done) {
-      ua._onDisconnectSuccess = sinon.spy(ua._onDisconnectSuccess);
-      ua.disconnect().then(function() {
-        return ua.disconnect();
-      }).then(function() {
-        sinon.assert.calledOnce(ua._onDisconnectSuccess);
-      }).then(done, done);
-    });
-
-    describe('#_disconnect()', function() {
-      it('should return a promise that is fulfilled', function(done) {
-        ua._disconnect().then(function() { done(); });
+      it('should not call userAgent#_disconnect', function(done) {
+        ua._disconnect = sinon.spy(ua._disconnect);
+        ua.disconnect().then(function() {
+          sinon.assert.notCalled(ua._disconnect);
+        }).then(done, done);
       });
     });
 
     describe('#_onDisconnectSuccess()', function() {
-      it('should set userAgent.isConnected to false on success', function() {
+      it('should set userAgent.isConnected to false', function() {
         ua._onDisconnectSuccess();
         assert(!ua.isConnected);
       });
@@ -139,7 +195,7 @@ describe('UserAgent', function() {
       });
     });
 
-    describe('#_onDisconnectFailure()', function() {
+    describe('#_onDisconnectFailure(error)', function() {
       it('should throw the passed error', function() {
         var tryOnDisconnectFailure = function() {
           ua._onDisconnectFailure(new Error('foo'));
@@ -150,27 +206,83 @@ describe('UserAgent', function() {
     });
   });
 
-  describe('#register(token)', function() {
-    it('should return a promise that is fulfilled', function(done) {
-      ua.register().then(function() { done(); });
-    });
-
-    it('should call userAgent#_register with passed token', function() {
-      var newToken = getToken({ address: 'ua2' });
-      ua._register = sinon.spy(ua._register);
-      ua.register(newToken);
-      sinon.assert.calledWith(ua._register, newToken);
-    });
-
-    it('should call userAgent#_register with UserAgent#token if not supplied', function() {
-      ua._register = sinon.spy(ua._register);
+  describe('#register()', function() {
+    it('should call UserAgent#register with userAgent.token', function() {
+      ua.register = sinon.spy(ua.register);
       ua.register();
-      sinon.assert.calledWith(ua._register, ua.token);
+      sinon.assert.calledWith(ua.register, ua.token);
+    });
+  });
+
+  describe('#register(token)', function() {
+    context('when unregistered', function() {
+      it('should call UserAgent#connect', function(done) {
+        ua.connect = sinon.spy(ua.connect);
+        ua.register().then(function() {
+          sinon.assert.calledOnce(ua.connect);
+        }).then(done, done);
+      });
+
+      it('should call UserAgent#_register with passed token', function(done) {
+        ua._register = sinon.spy(ua._register);
+        ua.register().then(function() {
+          sinon.assert.calledWith(ua._register, ua.token);
+        }).then(done, done);
+      });
+
+      context('on success', function() {
+        it('should return a Promise that resolves to the UserAgent', function(done) {
+          ua.register().then(function(_ua) {
+            assert.equal(ua, _ua);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onRegisterSuccess', function(done) {
+          ua._onRegisterSuccess = sinon.spy(ua._onRegisterSuccess);
+          ua.register().then(function() {
+            sinon.assert.calledOnce(ua._onRegisterSuccess);
+          }).then(done, done);
+        });
+      });
+
+      context('on failure', function() {
+        var error = new Error();
+
+        beforeEach(function() {
+          ua._register = function() { return Promise.reject(error); };
+        });
+
+        it('should return a Promise that rejects with an Error', function(done) {
+          ua.register().then(done, function(_error) {
+            assert.equal(error, _error);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onRegistrationFailure with an Error', function(done) {
+          ua._onRegisterFailure = sinon.spy(ua._onRegisterFailure);
+          ua.register().then(done, function() {
+            sinon.assert.calledWith(ua._onRegisterFailure, error);
+          }).then(done, done);
+        });
+      });
     });
 
-    describe('#_register(token)', function() {
-      it('should return a promise that is fulfilled', function(done) {
-        ua._register().then(function() { done(); });
+    context('when registered', function() {
+      beforeEach(function(done) {
+        ua.register().then(function() { done(); }, done);
+      });
+
+      it('should return a Promise that resolves to the UserAgent', function(done) {
+        ua.register().then(function(_ua) {
+          assert.equal(ua, _ua);
+        }).then(done, done);
+      });
+
+      it('should not call UserAgent#_register', function(done) {
+        ua._register = sinon.spy(ua._register);
+        ua.register().then(function() {
+          sinon.assert.notCalled(ua._register);
+        }).then(done, done);
       });
     });
 
@@ -180,55 +292,106 @@ describe('UserAgent', function() {
         assert(ua.isRegistered);
       });
 
-      it('should emit UserAgent#registered', function(done) {
-        ua.once('registered', function() { done(); });
-        ua._onRegisterSuccess();
-      });
-
       it('should update userAgent.token', function() {
         var newToken = getToken({ address: 'ua2' });
         ua._onRegisterSuccess(newToken);
         assert.equal(ua.token, newToken);
       });
+
+      it('should emit UserAgent#registered', function(done) {
+        ua.once('registered', function() { done(); });
+        ua._onRegisterSuccess();
+      });
     });
 
-    describe('#_onRegisterFailure()', function() {
-      it('should emit UserAgent#registrationFailed', function() {
-        ua.once('registrationFailed', function() { done(); });
-
-        try {
-          ua._onRegisterFailure(new Error('foo'));
-        } catch(e) { }
-      });
-
+    describe('#_onRegisterFailure(error)', function(done) {
       it('should throw the passed error', function() {
-        var tryOnRegisterFailure = function() {
+        function tryOnRegisterFailure() {
           ua._onRegisterFailure(new Error('foo'));
         };
 
         assert.throws(tryOnRegisterFailure, /foo/);
       });
+
+      it('should emit UserAgent#registrationFailed', function() {
+        ua.once('registrationFailed', function() { done(); });
+
+        try {
+          ua._onRegisterFailure(new Error());
+        } catch(e) { }
+      });
     });
   });
 
   describe('#unregister()', function() {
-    beforeEach(function(done) {
-      ua.register().then(function() { done(); });
+    context('when registered', function() {
+      beforeEach(function(done) {
+        ua.register().then(function() { done(); });
+      });
+
+      it('should call UserAgent#connect', function(done) {
+        ua.connect = sinon.spy(ua.connect);
+        ua.unregister().then(function() {
+          sinon.assert.calledOnce(ua.connect);
+        }).then(done, done);
+      });
+
+      it('should call UserAgent#_unregister', function(done) {
+        ua._unregister = sinon.spy(ua._unregister);
+        ua.unregister().then(function() {
+          sinon.assert.calledOnce(ua._unregister);
+        }).then(done, done);
+      });
+
+      context('on success', function() {
+        it('should return a Promise that resolves to the UserAgent', function(done) {
+          ua.unregister().then(function(_ua) {
+            assert.equal(ua, _ua);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onRegisterSuccess', function(done) {
+          ua._onUnregisterSuccess = sinon.spy(ua._onUnregisterSuccess);
+          ua.unregister().then(function() {
+            sinon.assert.calledOnce(ua._onUnregisterSuccess);
+          }).then(done, done);
+        });
+      });
+
+      context('on failure', function() {
+        var error = new Error();
+
+        beforeEach(function() {
+          ua._unregister = function() { return Promise.reject(error); };
+        });
+
+        it('should return a Promise that rejects with an Error', function(done) {
+          ua.unregister().then(done, function(_error) {
+            assert.equal(error, _error);
+          }).then(done, done);
+        });
+
+        it('should call UserAgent#_onUnregisterFailure with an Error', function(done) {
+          ua._onUnregisterFailure = sinon.spy(ua._onUnregisterFailure);
+          ua.unregister().then(done, function(_error) {
+            sinon.assert.calledWith(ua._onUnregisterFailure, error);
+          }).then(done, done);
+        });
+      });
     });
 
-    it('should return a promise that is fulfilled', function(done) {
-      ua.unregister().then(function() { done(); });
-    });
+    context('when unregistered', function() {
+      it('should return a Promise that resolves to the UserAgent', function(done) {
+        ua.unregister().then(function(_ua) {
+          assert.equal(ua, _ua);
+        }).then(done, done);
+      });
 
-    it('should call userAgent#_unregister', function() {
-      ua._unregister = sinon.spy(ua._unregister);
-      ua.unregister();
-      sinon.assert.calledOnce(ua._unregister);
-    });
-
-    describe('#_unregister()', function() {
-      it('should return a promise that is fulfilled', function(done) {
-        ua._unregister().then(function() { done(); });
+      it('should not call UserAgent#_unregister', function(done) {
+        ua._unregister = sinon.spy(ua._unregister);
+        ua.unregister().then(function() {
+          sinon.assert.notCalled(ua._unregister);
+        }).then(done, done);
       });
     });
 
@@ -244,7 +407,7 @@ describe('UserAgent', function() {
       });
     });
 
-    describe('#_onUnregisterFailure()', function() {
+    describe('#_onUnregisterFailure(error)', function() {
       it('should throw the passed error', function() {
         var tryOnUnregisterFailure = function() {
           ua._onUnregisterFailure(new Error('foo'));
@@ -255,78 +418,18 @@ describe('UserAgent', function() {
     });
   });
 
-  describe('#_handleInviteServerTransaction(ist)', function() {
-    var ist = Q.defer().promise;
-
-    it('should emit UserAgent#invite when invoked', function(done) {
-      ua.once('invite', function() { done(); });
-      ua._handleInviteServerTransaction(ist);
-    });
-
-    it('should add the supplied promise to userAgent.inviteServerTransactions', function() {
-      ua._handleInviteServerTransaction(ist);
-      assert(ua.inviteServerTransactions.has(ist));
-    });
-
-    describe('#_onAcceptSuccess(ist, dialog)', function() {
-      var dialog;
-      var deferred;
-      var ist;
-
-      beforeEach(function() {
-        dialog = new EventEmitter();
-        deferred = Q.defer();
-        ist = deferred.promise;
-        ua._handleInviteServerTransaction(ist)
-      });
-
-      it('should remove the supplied promise from userAgent.inviteServerTransactions', function() {
-        ua._onAcceptSuccess(ist, dialog);
-        assert(!ua.inviteServerTransactions.has(ist));
-      });
-    });
-
-    describe('#_onAcceptFailure(ist, error)', function() {
-      var dialog;
-      var deferred;
-      var ist;
-
-      beforeEach(function() {
-        dialog = new EventEmitter();
-        deferred = Q.defer();
-        ist = deferred.promise;
-        ua._handleInviteServerTransaction(ist)
-      });
-
-      it('should remove the promise from userAgent.inviteServerTransactions', function() {
-        try {
-          ua._onAcceptFailure(ist, new Error('foo'));
-        } catch(e) { }
-
-        assert(!ua.inviteServerTransactions.has(ist));
-      });
-
-      it('should throw the passed error', function() {
-        var tryOnAcceptFailure = function() {
-          ua._onAcceptFailure(ist, new Error('foo'));
-        };
-
-        assert.throws(tryOnAcceptFailure, /foo/);
-      });
-    });
-  });
-
-  describe('#invite(address, options)', function() {
+  describe('#invite(address)', function() {
     var dialog;
     var ict;
 
     beforeEach(function() {
+      ua.connect = sinon.spy(ua.connect);
       dialog = new EventEmitter();
       ict = ua.invite('foo');
     });
 
     it('should return an instance of the supplied InviteClientTransactionFactory', function() {
-      assert(ict instanceof MockICT);
+      assert(ict instanceof InviteClientTransaction);
     });
 
     it('should add the returned instance to userAgent.inviteClientTransactions', function() {
@@ -334,19 +437,19 @@ describe('UserAgent', function() {
     });
 
     describe('#_onInviteSuccess(ict, dialog)', function() {
-      it('should remove the ICT from userAgent.inviteClientTransactions', function() {
+      it('should remove the InviteClientTransaction from userAgent.inviteClientTransactions', function() {
         ua._onInviteSuccess(ict, dialog);
         assert(!ua.inviteClientTransactions.has(ict));
       });
 
-      it('should add the passed dialog to userAgent.dialogs', function() {
+      it('should add the Dialog to userAgent.dialogs', function() {
         ua._onInviteSuccess(ict, dialog);
         assert(ua.dialogs.has(dialog));
       });
     });
 
     describe('#_onInviteFailure(ict, error)', function() {
-      it('should remove the promise from userAgent.inviteClientTransactions', function() {
+      it('should remove the InviteClientTransaction from userAgent.inviteClientTransactions', function() {
         try {
           ua._onInviteFailure(ict, new Error('foo'));
         } catch(e) { }
@@ -354,12 +457,66 @@ describe('UserAgent', function() {
         assert(!ua.inviteClientTransactions.has(ict));
       });
 
-      it('should throw the passed error', function() {
-        var tryOnInviteFailure = function() {
+      it('should throw the Error', function() {
+        function tryOnInviteFailure() {
           ua._onInviteFailure(ict, new Error('foo'));
         };
 
         assert.throws(tryOnInviteFailure, /foo/);
+      });
+    });
+  });
+
+  describe('#_handleInviteServerTransaction(ist)', function() {
+    var ist = Promise.resolve();
+
+    it('should emit UserAgent#invite', function(done) {
+      ua.once('invite', function() { done(); });
+      ua._handleInviteServerTransaction(ist);
+    });
+
+    it('should add the InviteServerTransaction to userAgent.inviteServerTransactions', function() {
+      ua._handleInviteServerTransaction(ist);
+      assert(ua.inviteServerTransactions.has(ist));
+    });
+
+    describe('#_onAcceptSuccess(ist, dialog)', function() {
+      var dialog = new EventEmitter();
+
+      beforeEach(function() {
+        ua._handleInviteServerTransaction(ist)
+      });
+
+      it('should remove the InviteServerTransaction from userAgent.inviteServerTransactions', function() {
+        ua._onAcceptSuccess(ist, dialog);
+        assert(!ua.inviteServerTransactions.has(ist));
+      });
+
+      it('should add the Dialog to userAgent.dialogs', function() {
+        ua._onAcceptSuccess(ist, dialog);
+        assert(ua.dialogs.has(dialog));
+      });
+    });
+
+    describe('#_onAcceptFailure(ist, error)', function() {
+      beforeEach(function() {
+        ua._handleInviteServerTransaction(ist);
+      });
+
+      it('should remove the InviteServerTransaction from userAgent.inviteServerTransactions', function() {
+        try {
+          ua._onAcceptFailure(ist, new Error('foo'));
+        } catch(e) { }
+
+        assert(!ua.inviteServerTransactions.has(ist));
+      });
+
+      it('should throw the Error', function() {
+        var tryOnAcceptFailure = function() {
+          ua._onAcceptFailure(ist, new Error('foo'));
+        };
+
+        assert.throws(tryOnAcceptFailure, /foo/);
       });
     });
   });
