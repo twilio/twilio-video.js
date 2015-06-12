@@ -1,14 +1,9 @@
 'use strict';
 
 var assert = require('assert');
-var Token = require('../../lib/accesstoken');
+var Token = require('../../../lib/accesstoken');
 
-var config = require('../../test');
-var accountSid = config['accountSid'];
-var signingKeySid = config['signingKeySid'];
-var signingKeySecret = config['signingKeySecret'];
-var getToken = require('../token').getToken.bind(null, accountSid,
-  signingKeySid, signingKeySecret);
+var getToken = require('../../lib/token').getToken;
 
 describe('AccessToken', function() {
   describe('an AccessToken which grants "invite" and "listen" actions', function() {
@@ -179,8 +174,14 @@ describe('AccessToken', function() {
 
   describe('AccessToken#expires', function() {
     it('should be emitted when the AccessToken expires', function(done) {
-      var tokenName = randomName();
-      var jwt = getToken(tokenName, 10);
+      var jwt = getToken({
+        accountSid: 'AC123',
+        signingKeySid: 'SK456',
+        signingKeySecret: '7890'
+      }, {
+        address: 'foo',
+        duration: 100
+      });
       var accessToken = new Token(jwt);
 
       accessToken.on('expired', function(token) {
@@ -190,7 +191,3 @@ describe('AccessToken', function() {
     });
   });
 });
-
-function randomName() {
-  return Math.random().toString(36).slice(2);
-}

@@ -40,9 +40,10 @@ ALL= \
 	$(RELEASE_API_DOCS)
 
 # Sources
+INTEGRATION_TEST_FILES=$(shell find test/integration -name \*.js)
 LIB_FILES=$(shell find lib -name \*.js)
 SRC_FILES=$(shell find src -name \*.js)
-TEST_FILES=$(shell find test -name \*.js)
+UNIT_TEST_FILES=$(shell find test/unit -name \*.js)
 
 # Public APIs (we generate JSDoc for these)
 PUBLIC_LIB_FILES= \
@@ -70,7 +71,7 @@ INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 all: $(ALL)
 
 clean:
-	rm -rf build .LINTED .TESTED javascript-rtc-sdk-docs
+	rm -rf build .INTEGRATION_TESTED .LINTED .UNIT_TESTED
 
 clean-all: clean
 
@@ -81,6 +82,9 @@ docs:
 	./scripts/prefix-public-constructors.js $(RELEASE_API_DOCS)
 	./scripts/prefix-static-methods.js $(RELEASE_API_DOCS)
 	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
+
+integration: node_modules test.json
+	$(MOCHA) --reporter=spec test/integration/index.js
 
 lint: node_modules
 	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js
@@ -94,8 +98,7 @@ release-version:
 serve: simple-signaling.appspot.com/sdk
 	cd simple-signaling.appspot.com && make serve
 
-test: test.json
-	$(MOCHA) --reporter=spec test/spec/index.js
+test: unit integration
 
 test.json:
 	@if [ ! -f test.json ]; then \
@@ -104,6 +107,9 @@ test.json:
 		exit 1; \
 	fi
 
+unit: node_modules
+	$(MOCHA) --reporter=spec test/unit/index.js
+
 simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
@@ -111,7 +117,7 @@ simple-signaling.appspot.com:
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
-.PHONY: all clean clean-all docs lint publish serve test
+.PHONY: all clean clean-all docs integration lint publish serve test unit
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")
@@ -172,7 +178,7 @@ $(LATEST_MIN_JS): $(MIN_JS)
 	mkdir -p $(ROOT)/latest
 	cd $(ROOT)/latest; ln -s -f ../$(PUBLIC_VERSION)/twilio-rtc-conversations.min.js
 
-$(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .TESTED
+$(RELEASE_JS): $(BROWSERIFY) $(LIB_FILES) $(SRC_FILES) .LINTED .UNIT_TESTED .INTEGRATION_TESTED
 	@$(call INFO,"Building release")
 	@mkdir -p $(RELEASE_ROOT)
 	echo "/** @license" >$(RELEASE_JS)
@@ -194,10 +200,18 @@ $(RELEASE_MIN_JS): $(CLOSURE) $(RELEASE_JS)
 		$(call INFO,"Skipped linting"); \
 	fi
 
-.TESTED: $(MOCHA) $(LIB_FILES) $(TEST_FILES)
-	@if [[ -z "${SKIP_TEST}" ]]; then \
-		$(call INFO,"Testing"); \
-		make test && touch .TESTED; \
+.INTEGRATION_TESTED: $(MOCHA) $(LIB_FILES) $(INTEGRATION_TEST_FILES)
+	@if [[ -z "${SKIP_TEST}" && -z "${SKIP_INTEGRATION_TEST}" ]]; then \
+		$(call INFO,"Running integration tests"); \
+		make integration && touch $@; \
 	else \
-		$(call INFO,"Skipped testing"); \
+		$(call INFO,"Skipped integration tests"); \
+	fi
+
+.UNIT_TESTED: $(MOCHA) $(LIB_FILES) $(UNIT_TEST_FILES)
+	@if [[ -z "${SKIP_TEST}" && -z "${SKIP_UNIT_TEST}" ]]; then \
+		$(call INFO,"Running unit tests"); \
+		make unit && touch $@; \
+	else \
+		$(call INFO,"Skipped unit tests"); \
 	fi

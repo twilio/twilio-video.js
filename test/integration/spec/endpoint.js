@@ -1,28 +1,19 @@
 'use strict';
 
-require('../mockwebrtc')();
-
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
-var util = require('./util');
 
-var Endpoint = require('../../lib/endpoint');
-var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
+var Endpoint = require('../../../lib/endpoint');
+var SIPJSUserAgent = require('../../../lib/signaling/sipjsuseragent');
 
-var config = require('../../test');
-var accountSid = config['accountSid'];
-var signingKeySid = config['signingKeySid'];
-var signingKeySecret = config['signingKeySecret'];
-var wsServer = config['wsServer'];
-var getToken = require('../token').getToken.bind(null, accountSid,
-  signingKeySid, signingKeySecret);
-
-var Token = require('../../lib/accesstoken');
+var credentials = require('../../../test');
+var getToken = require('../../lib/token').getToken.bind(null, credentials);
+var wsServer = credentials.wsServer;
 
 describe('Endpoint (SIPJSUserAgent)', function() {
   var aliceName = randomName();
-  var aliceToken = getToken(aliceName);
+  var aliceToken = getToken({ address: aliceName });
   var alice = null;
 
   var options = {
@@ -60,7 +51,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     this.timeout(10000);
     it('should return a promise', function(done) {
       alice.listen().then(
-        function() { done(); }, 
+        function() { done(); },
         function() { done(); }
       );
     });
@@ -78,7 +69,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should emit tokenExpired when active token expires', function(done) {
-      var jwt = getToken(aliceName, 3000);
+      var jwt = getToken({ address: aliceName, duration: 3000 });
       alice.listen(jwt);
       alice.once('error', function(error) {
         var nameRegex = /TOKEN_EXPIRED/i;
@@ -88,8 +79,8 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should not emit tokenExpired when an inactive token expires', function(done) {
-      var jwt1 = getToken(aliceName, 3000);
-      var jwt2 = getToken(aliceName);
+      var jwt1 = getToken({ address: aliceName, duration: 3000 });
+      var jwt2 = getToken({ address: aliceName });
       var hasFired = false;
 
       alice.listen(jwt1).then(function() {
@@ -142,7 +133,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     it('should not emit "invite" events', function setupUA(done) {
       this.timeout(6000);
       uaName = randomName();
-      uaToken = getToken(uaName);
+      uaToken = getToken({ address: uaName });
       ua = new SIPJSUserAgent(uaToken, options);
       ua.invite(aliceName).then(function() {
         alice.removeListener('invite', receivedInvite);
@@ -203,7 +194,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     it('emits "invite"', function(done) {
       this.timeout(10000);
       uaName = randomName();
-      uaToken = getToken(uaName);
+      uaToken = getToken({ address: uaName });
       ua = new SIPJSUserAgent(uaToken, options);
       ua.register().then(function() {
         ict = ua.invite(alice.address);
@@ -337,7 +328,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       var invite;
 
       ua2Name = randomName();
-      ua2Token = getToken(ua2Name);
+      ua2Token = getToken({ address: ua2Name });
       ua2 = new SIPJSUserAgent(ua2Token, options);
 
       ua2.register().then(function() {

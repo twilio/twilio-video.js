@@ -1,6 +1,6 @@
 'use strict';
 
-var util = require('../lib/util');
+var util = require('../../lib/util');
 
 var WebSocket = require('ws');
 

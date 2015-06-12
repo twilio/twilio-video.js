@@ -1,45 +1,35 @@
 'use strict';
 
-require('../mockwebrtc')();
-
 var assert = require('assert');
 var Q = require('q');
-var util = require('./util');
 
-var Endpoint = require('../../lib/endpoint');
-var SIPJSUserAgent = require('../../lib/signaling/sipjsuseragent');
+var Endpoint = require('../../../lib/endpoint');
+var SIPJSUserAgent = require('../../../lib/signaling/sipjsuseragent');
 
-var config = require('../../test');
-var accountSid = config['accountSid'];
-var accountSid = config['accountSid'];
-var signingKeySid = config['signingKeySid'];
-var signingKeySecret = config['signingKeySecret'];
-var wsServer = config['wsServer'];
-var getToken = require('../token').getToken.bind(null, accountSid,
-  signingKeySid, signingKeySecret);
-
-var Token = require('../../lib/accesstoken');
+var credentials = require('../../../test');
+var getToken = require('../../lib/token').getToken.bind(null, credentials);
+var wsServer = credentials.wsServer;
 
 describe('Conversation (SIPJSUserAgent)', function() {
   // Alice is an Endpoint.
   var aliceName = randomName();
-  var aliceToken = getToken(aliceName);
+  var aliceToken = getToken({ address: aliceName });
   var alice = null;
 
   // Bob is a UserAgent.
   var bobName = randomName();
-  var bobToken = getToken(bobName);
+  var bobToken = getToken({ address: bobName });
   var bob = null;
 
   // Charlie is a UserAgent.
   var charlieName = randomName();
-  var charlieToken = getToken(charlieName);
+  var charlieToken = getToken({ address: charlieName });
   var charlie = null;
   var charlieDialogs = [];
 
   // Donald is a UserAgent.
   var donaldName = randomName();
-  var donaldToken = getToken(donaldName);
+  var donaldToken = getToken({ address: donaldName });
   var donald = null;
   var donaldDialogs = [];
 
@@ -95,7 +85,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
       bob = new SIPJSUserAgent(bobToken, options);
       charlie = new SIPJSUserAgent(charlieToken, options);
       donald = new SIPJSUserAgent(donaldToken, options);
-  
+
       bob.on('invite', function(ist) {
         ist.accept().then(function(_dialog) { dialog = _dialog; });
       });
