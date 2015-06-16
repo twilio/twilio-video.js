@@ -1,18 +1,66 @@
 'use strict';
 
 var assert = require('assert');
-var constants = require('../../../../lib/util/constants');
+var constants = require('lib/util/constants');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
 var sinon = require('sinon');
-var util = require('../../../../lib/util');
+var util = require('lib/util');
+
 
 describe('util', function() {
   describe('decodeBase64', function() {
-    it('should correctly decode a Base64 string', function() {
-      assert.equal(util.base64.decode('Zm9v'), 'foo');
+    context('when atob is defined', function() {
+      var atob;
+
+      before(function() {
+        atob = global.atob;
+        global.atob = sinon.spy();
+      });
+
+      it('should use atob', function() {
+        util.base64.decode('foo');
+        sinon.assert.calledWith(global.atob, 'foo');
+      });
+
+      after(function() {
+        global.atob = atob;
+      });
+    });
+
+    context('when atob is not defined', function() {
+      it('should correctly decode a Base64 string', function() {
+        assert.equal(util.base64.decode('Zm9v'), 'foo');
+      });
     });
   });
+
+  describe('encodeBase64', function() {
+    context('when btoa is defined', function() {
+      var btoa;
+
+      before(function() {
+        btoa = global.btoa;
+        global.btoa = sinon.spy();
+      });
+
+      it('should use atob', function() {
+        util.base64.encode('foo');
+        sinon.assert.calledWith(global.btoa, 'foo');
+      });
+
+      after(function() {
+        global.btoa = btoa;
+      });
+    });
+
+    context('when btoa is not defined', function() {
+      it('should correctly decode a Base64 string', function() {
+        assert.equal(util.base64.decode('Zm9v'), 'foo');
+      });
+    });
+  });
+
 
   describe('encodeBase64', function() {
     it('should correctly encode a string to Base64', function() {
@@ -57,6 +105,12 @@ describe('util', function() {
       var params = util.fromURLFormEncoded('foo=bar&baz=qux');
       assert.equal(params.foo, 'bar');
       assert.equal(params.baz, 'qux');
+    });
+
+    it('should set params with empty right-side values to null', function() {
+      var params = util.fromURLFormEncoded('foo=bar&baz=');
+      assert.equal(params.foo, 'bar');
+      assert.equal(params.baz, null);
     });
 
     it('should return an empty object if params are undefined', function() {
@@ -275,6 +329,16 @@ describe('util', function() {
       var stunServers = util.getStunServers(iceServers);
       assert.equal(stunServers.length, 1);
     });
+
+    it('should ignore incorrect URLs', function() {
+      var iceServers = [
+        { url: 'stun://www.bar.com' },
+        { url: 'foo://www.qux.com' }
+      ];
+
+      var stunServers = util.getStunServers(iceServers);
+      assert.equal(stunServers.length, 1);
+    });
   });
 
   describe('getTurnServers', function() {
@@ -324,6 +388,12 @@ describe('util', function() {
       promise.catch(done);
       emitter.emit('bar');
     });
+
+    it('should not require a failure event', function(done) {
+      promise = util.promiseFromEvents(spy, emitter, 'foo');
+      promise.then(done);
+      emitter.emit('foo');
+    });
   });
 
   describe('parseConversationSIDFromContactHeader', function() {
@@ -352,6 +422,18 @@ describe('util', function() {
       var spec = util.parseUserAgent(uaString);
       return spec.name === name && spec.version === version;
     };
+
+    it('should return "Unknown" if the user agent is not valid', function() {
+      var spec = util.parseUserAgent('foobar browser');
+      assert.equal(spec.name, 'Unknown');
+      assert.equal(spec.version, 'Unknown');
+    });
+
+    it('should return "Unknown" if the user agent is not a valid IE string', function() {
+      var spec = util.parseUserAgent('Mozilla/5.0 (compatible, foo, bar 1.1; Trident/1.0;)');
+      assert.equal(spec.name, 'IE');
+      assert.equal(spec.version, 'Unknown');
+    });
 
     it('should return the correct object for a Chrome user agent', function() {
       var spec = util.parseUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36');
@@ -387,6 +469,57 @@ describe('util', function() {
       var spec = util.parseUserAgent('Mozilla/5.0 (compatible; MSIE 7.0; Windows NT 6.0; en-US)');
       assert.equal(spec.name, 'IE');
       assert.equal(spec.version, '7.0');
+    });
+  });
+
+  describe('fetchIceServers', function() {
+    var response = JSON.stringify({ 'ice_servers': 'foo' });
+
+    context('on success', function() {
+      it('should return the ice_servers sent in requestFactorys response', function() {
+        var thenable = {
+          then: sinon.spy(function(resolve, reject) {
+            assert.equal(resolve(response), 'foo');
+          })
+        };
+        var request = { post: sinon.spy(function() { return thenable; }) };
+
+        util.fetchIceServers('foo', {
+          requestFactory: request
+        });
+
+        sinon.assert.called(request.post);
+      });
+    });
+
+    context('on failure', function() {
+      it('should return a set of default ice servers', function() {
+        var thenable = {
+          then: sinon.spy(function(resolve, reject) {
+            assert.equal(typeof reject('foo'), 'object');
+          })
+        };
+        var request = { post: sinon.spy(function() { return thenable; }) };
+
+        util.fetchIceServers('foo', {
+          requestFactory: request
+        });
+      });
+
+      it('should warn if options.log is passed', function() {
+        var thenable = {
+          then: sinon.spy(function(resolve, reject) { reject('foo'); })
+        };
+        var request = { post: sinon.spy(function() { return thenable; }) };
+        var log = { warn: sinon.spy() };
+
+        util.fetchIceServers('foo', {
+          requestFactory: request,
+          log: log
+        });
+
+        sinon.assert.called(log.warn);
+      });
     });
   });
 
