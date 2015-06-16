@@ -59,12 +59,14 @@ PUBLIC_LIB_FILES= \
 
 # Tools
 BROWSERIFY=node_modules/browserify/bin/cmd.js
+CLOSURE=node_modules/closurecompiler/bin/ccjs
+ISTANBUL=node_modules/istanbul/lib/cli.js
 JSDOC=node_modules/jsdoc/jsdoc.js
+JSDOC_CONF=jsdoc.conf
 JSHINT=node_modules/jshint/bin/jshint
+_MOCHA=node_modules/mocha/bin/_mocha
 MOCHA=node_modules/mocha/bin/mocha
 MOCHA_PHANTOMJS=node_modules/mocha-phantomjs/bin/mocha-phantomjs
-CLOSURE=node_modules/closurecompiler/bin/ccjs
-JSDOC_CONF=jsdoc.conf
 
 INFO=echo "\033[1;34m[$$(date "+%H:%M:%S")] $(1)\033[0m"
 
@@ -110,6 +112,12 @@ test.json:
 unit: node_modules
 	$(MOCHA) --reporter=spec test/unit/index.js
 
+coverage: node_modules
+	node $(ISTANBUL) cover -x lib/util/constants.js $(_MOCHA) -- test/unit -R spec
+
+watch: node_modules
+	$(MOCHA) -w lib -w test/unit -R dot
+
 simple-signaling.appspot.com:
 	git submodule init
 	git submodule update
@@ -117,7 +125,7 @@ simple-signaling.appspot.com:
 simple-signaling.appspot.com/sdk: all simple-signaling.appspot.com
 	cd simple-signaling.appspot.com && ln -s -f ../build/sdk .
 
-.PHONY: all clean clean-all docs integration lint publish serve test unit
+.PHONY: all clean clean-all coverage docs integration lint publish serve test unit watch
 
 node_modules: package.json
 	@$(call INFO,"Installing node_modules")

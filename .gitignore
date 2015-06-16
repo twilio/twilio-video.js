@@ -4,6 +4,7 @@
 .LINTED
 .UNIT_TESTED
 build
+coverage
 doc
 javascript-rtc-sdk-docs
 node_modules
