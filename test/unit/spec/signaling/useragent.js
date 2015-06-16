@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var InviteClientTransaction = require('../../mock/inviteclienttransaction');
+var InviteClientTransaction = require('test/mock/inviteclienttransaction');
 var sinon = require('sinon');
 var Q = require('q');
 
