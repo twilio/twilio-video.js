@@ -6,9 +6,9 @@ var InviteClientTransaction = require('../../mock/inviteclienttransaction');
 var sinon = require('sinon');
 var Q = require('q');
 
-var UserAgent = require('../../../../lib/signaling/useragent');
+var UserAgent = require('lib/signaling/useragent');
 
-var getToken = require('../../../lib/token').getToken.bind(null, {
+var getToken = require('test/lib/token').getToken.bind(null, {
   accountSid: 'AC123',
   signingKeySid: 'SK456',
   signingKeySecret: '7890'

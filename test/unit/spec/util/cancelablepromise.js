@@ -1,6 +1,6 @@
 'use strict';
 
-var CancelablePromise = require('../../../../lib/util/cancelablepromise');
+var CancelablePromise = require('lib/util/cancelablepromise');
 var assert = require('assert');
 var Q = require('q');
 
