@@ -24,7 +24,8 @@ function getAccessToken(credentials, options) {
 
   var address = options.address || null;
   var duration = options.duration || null;
-  var grants = options.grants || ['invite', 'listen'];
+  var emptyGrants = options.emptyGrants;
+  var acts = options.acts || ['invite', 'listen'];
 
   var anHourBeforeNow = new Date(now.getTime());
   anHourBeforeNow.setHours(anHourBeforeNow.getHours() - 1);
@@ -48,8 +49,12 @@ function getAccessToken(credentials, options) {
   if (address) {
     payload.grants.push({
       res: 'sip:' + address + '@' + accountSid + '.endpoint.twilio.com',
-      act: grants
+      act: acts
     });
+  }
+
+  if(emptyGrants) {
+    payload.grants = undefined;
   }
 
   return new AccessToken(jwt.sign(payload, signingKeySecret, {
