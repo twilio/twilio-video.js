@@ -259,7 +259,7 @@ describe('SIPJSUserAgent', function() {
           ua1Ist.reject().then(function() {
             done();
           }, function() {
-            assert(ua1Ist.rejected);
+            assert.equal(ua1Ist.state, 'rejected');
             assert(!ua1.inviteServerTransactions.has(ua1Ist));
             done();
           }).then(null, done);
@@ -279,7 +279,7 @@ describe('SIPJSUserAgent', function() {
           }
           ua2Ict.cancel().then(done, function() {
             ua1Ist.then(done, function() {
-              assert(ua1Ist.canceled);
+              assert.equal(ua1Ist.state, 'canceled');
               assert(!ua1.inviteServerTransactions.has(ua1Ist));
             }).then(done, done);
           });
@@ -293,7 +293,7 @@ describe('SIPJSUserAgent', function() {
           ist.then(function() {
             throw Error('Invite was not canceled');
           }, function() {
-            assert(ist.canceled);
+            assert.equal(ist.state, 'canceled');
           }).then(done, done);
         });
 
@@ -312,7 +312,7 @@ describe('SIPJSUserAgent', function() {
         ua2Ict.then(function() {
           throw Error('Invite was not canceled');
         }, function() {
-          assert(ua2Ict.canceled);
+          assert.equal(ua2Ict.state, 'canceled');
         }).then(done, done);
       });
     });
