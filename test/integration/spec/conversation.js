@@ -3,11 +3,11 @@
 var assert = require('assert');
 var Q = require('q');
 
-var Endpoint = require('../../../lib/endpoint');
-var SIPJSUserAgent = require('../../../lib/signaling/sipjsuseragent');
+var Endpoint = require('lib/endpoint');
+var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
 
-var credentials = require('../../../test');
-var getToken = require('../../lib/token').getToken.bind(null, credentials);
+var credentials = require('test/twilio_credentials');
+var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
 describe('Conversation (SIPJSUserAgent)', function() {

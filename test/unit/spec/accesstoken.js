@@ -1,187 +1,115 @@
 'use strict';
 
 var assert = require('assert');
-var Token = require('../../../lib/accesstoken');
+var Token = require('lib/accesstoken');
 
-var getToken = require('../../lib/token').getToken;
+var config = require('test/twilio_credentials');
+var credentials = {
+  accountSid: config.accountSid,
+  signingKeySid: config.signingKeySid,
+  signingKeySecret: config.signingKeySecret
+};
+var getToken = require('test/lib/token').getToken.bind(null, credentials);
 
 describe('AccessToken', function() {
-  describe('an AccessToken which grants "invite" and "listen" actions', function() {
-    var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfSx7InJlcyI6InNpcDptYXJrQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJpbnZpdGUiLCJsaXN0ZW4iXX1dLCJleHAiOjE0MzEyMTMwODYuMDIsIm5iZiI6MTQzMTIwNTg4Ni4wMiwianRpIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOUlRZ0ZveW5LZUtSR1ViV0JsIn0.2mZItSIBBlClDGeh_CxazwfzSqben7cv9ED_Gi0UYqQ';
-
-    it('parses', function() {
-      assert(accessToken = new Token(accessToken));
-    });
-
-    it('should set .accountSid', function() {
-      assert(accessToken.accountSid);
-    });
-
-    it('should set .address', function() {
-      assert(accessToken.address);
-    });
-
-    it('should set .canInvite', function() {
-      assert(accessToken.canInvite);
-    });
-
-    it('should set .canListen', function() {
-      assert(accessToken.canListen);
-    });
-
-    it('should set .expires', function() {
-      assert(accessToken.expires instanceof Date);
-    });
-
-    it('should set .signingKeySid', function() {
-      assert(accessToken.signingKeySid);
-    });
-  });
-
-  describe('an AccessToken which grants "invite" only', function() {
-    var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfSx7InJlcyI6InNpcDptYXJrQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJpbnZpdGUiXX1dLCJleHAiOjE0MzEyMTMxMzguMjY0LCJuYmYiOjE0MzEyMDU5MzguMjY0LCJqdGkiOiJTSzllZGY5YWNiM2JkMjFmNTRjZTM0ODllMThjMDk2YmY5SVFnRm95bktlS1JHVWJXQmwifQ.sV0VQPegQQkbaExUGZ5LqrP63eItDiBOmk7qmf4DhnY';
-
-    it('parses', function() {
-      assert(accessToken = new Token(accessToken));
-    });
-
-    it('should set .accountSid', function() {
-      assert(accessToken.accountSid);
-    });
-
-    it('should set .address', function() {
-      assert(accessToken.address);
-    });
-
-    it('should set .canInvite', function() {
-      assert(accessToken.canInvite);
-    });
-
-    it('should not set .canListen', function() {
-      assert(!accessToken.canListen);
-    });
-
-    it('should set .expires', function() {
-      assert(accessToken.expires instanceof Date);
-    });
-
-    it('should set .signingKeySid', function() {
-      assert(accessToken.signingKeySid);
-    });
-  });
-
-  describe('an AccessToken which grants "listen" only', function() {
-    var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfSx7InJlcyI6InNpcDptYXJrQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJsaXN0ZW4iXX1dLCJleHAiOjE0MzEyMTMxNzUuODIyLCJuYmYiOjE0MzEyMDU5NzUuODIyLCJqdGkiOiJTSzllZGY5YWNiM2JkMjFmNTRjZTM0ODllMThjMDk2YmY5SVFnRm95bktlS1JHVWJXQmwifQ.kP0ji-9GVILynBfV-nJegj04BfT_MfZk59h1rOs42Gg';
-
-    it('parses', function() {
-      assert(accessToken = new Token(accessToken));
-    });
-
-    it('should set .accountSid', function() {
-      assert(accessToken.accountSid);
-    });
-
-    it('should set .address', function() {
-      assert(accessToken.address);
-    });
-
-    it('should not set .canInvite', function() {
-      assert(!accessToken.canInvite);
-    });
-
-    it('should set .canListen', function() {
-      assert(accessToken.canListen);
-    });
-
-    it('should set .expires', function() {
-      assert(accessToken.expires instanceof Date);
-    });
-
-    it('should set .signingKeySid', function() {
-      assert(accessToken.signingKeySid);
-    });
-  });
-
-  describe('an AccessToken which grants a SIP resource without actions', function() {
-    var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfSx7InJlcyI6InNpcDptYXJrQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6W119XSwiZXhwIjoxNDMxMjEzMjA5Ljg5NSwibmJmIjoxNDMxMjA2MDA5Ljg5NSwianRpIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOUlRZ0ZveW5LZUtSR1ViV0JsIn0.YPyej9HW1AICWV8KM6nh7bnSxf6KyFO67hCtYVJi2JA';
-
-    it('parses', function() {
-      assert(accessToken = new Token(accessToken));
-    });
-
-    it('should set .accountSid', function() {
-      assert(accessToken.accountSid);
-    });
-
-    it('should set .address', function() {
-      assert(accessToken.address);
-    });
-
-    it('should not set .canInvite', function() {
-      assert(!accessToken.canInvite);
-    });
-
-    it('should not set .canListen', function() {
-      assert(!accessToken.canListen);
-    });
-
-    it('should set .expires', function() {
-      assert(accessToken.expires instanceof Date);
-    });
-
-    it('should set .signingKeySid', function() {
-      assert(accessToken.signingKeySid);
-    });
-  });
-
-  describe('an AccessToken which does not include a SIP resource', function() {
-    var accessToken = 'eyJjdHkiOiJ0d2lsaW8tc2F0O3Y9MSIsInR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0.eyJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwiaXNzIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOSIsImdyYW50cyI6W3sicmVzIjoiaHR0cHM6Ly9hcGkudHdpbGlvLmNvbS8yMDEwLTA0LTAxL0FjY291bnRzL0FDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMvVG9rZW5zLmpzb24iLCJhY3QiOlsiUE9TVCJdfV0sImV4cCI6MTQzMTIxMzIzMS4yOTEsIm5iZiI6MTQzMTIwNjAzMS4yOTEsImp0aSI6IlNLOWVkZjlhY2IzYmQyMWY1NGNlMzQ4OWUxOGMwOTZiZjlJUWdGb3luS2VLUkdVYldCbCJ9.fnz8QlVE4cBEmJQxqE_P0FV0352WMjDCVNHGtLFszlc';
-
-    it('parses', function() {
-      assert(accessToken = new Token(accessToken));
-    });
-
-    it('should set .accountSid', function() {
-      assert(accessToken.accountSid);
-    });
-
-    it('should not set .address', function() {
-      assert(!accessToken.address);
-    });
-
-    it('should not set .canInvite', function() {
-      assert(!accessToken.canInvite);
-    });
-
-    it('should not set .canListen', function() {
-      assert(!accessToken.canListen);
-    });
-
-    it('should set .expires', function() {
-      assert(accessToken.expires instanceof Date);
-    });
-
-    it('should set .signingKeySid', function() {
-      assert(accessToken.signingKeySid);
-    });
-  });
-
-  describe('an invalid AccessToken', function() {
-    it('does not parse', function() {
+  describe('new AccessToken(jwt)', function() {
+    it('should throw an error if the JWT string is invalid', function() {
       assert.throws(Token.bind(null, 'foobar'));
     });
+
+    it('should correctly parse a JWT string (invite, listen)', function() {
+      var name = randomName();
+      var token = getToken({
+        address: name,
+        duration: 100,
+        acts: ['invite', 'listen']
+      });
+
+      var token = new Token(token);
+
+      assert.equal(token.accountSid, credentials.accountSid);
+      assert.equal(token.address, name);
+      assert.equal(token.signingKeySid, credentials.signingKeySid);
+      assert.equal(token.canInvite, true);
+      assert.equal(token.canListen, true);
+      assert(token.expires instanceof Date);
+    });
+
+    it('should correctly parse a JWT string (no acts)', function() {
+      var name = randomName();
+      var token = getToken({
+        address: name,
+        duration: 100,
+        acts: []
+      });
+
+      var token = new Token(token);
+
+      assert.equal(token.accountSid, credentials.accountSid);
+      assert.equal(token.address, name);
+      assert.equal(token.signingKeySid, credentials.signingKeySid);
+      assert.equal(token.canInvite, false);
+      assert.equal(token.canListen, false);
+      assert(token.expires instanceof Date);
+    });
+
+    it('should correctly parse a JWT string (no grants)', function() {
+      var name = randomName();
+      var token = getToken({
+        address: name,
+        duration: 100,
+        emptyGrants: true,
+        acts: []
+      });
+
+      var token = new Token(token);
+
+      assert.equal(token.accountSid, credentials.accountSid);
+      assert.equal(token.address, null);
+      assert.equal(token.signingKeySid, credentials.signingKeySid);
+      assert.equal(token.canInvite, false);
+      assert.equal(token.canListen, false);
+      assert(token.expires instanceof Date);
+    });
+
+    it('should correctly parse a JWT string (no sip resource)', function() {
+      var name = randomName();
+      var token = getToken();
+
+      var token = new Token(token);
+
+      assert.equal(token.accountSid, credentials.accountSid);
+      assert(!token.address);
+      assert.equal(token.signingKeySid, credentials.signingKeySid);
+      assert.equal(token.canInvite, false);
+      assert.equal(token.canListen, false);
+      assert(token.expires instanceof Date);
+    });
   });
 
-  describe('AccessToken#expires', function() {
-    it('should be emitted when the AccessToken expires', function(done) {
-      var jwt = getToken({
-        accountSid: 'AC123',
-        signingKeySid: 'SK456',
-        signingKeySecret: '7890'
-      }, {
-        address: 'foo',
-        duration: 100
-      });
+  describe('.isExpired', function() {
+    var accessToken;
+
+    beforeEach(function() {
+      var jwt = getToken({ address: 'foo', duration: 5 });
+      accessToken = new Token(jwt);
+    });
+
+    it('should be true if the expiration date has passed', function(done) {
+      setTimeout(function() {
+        assert.equal(accessToken.isExpired, true);
+        done();
+      }, 10);
+    });
+
+    it('should be false if the expiration date has not passed', function() {
+      assert.equal(accessToken.isExpired, false);
+    });
+  });
+
+  describe('events', function() {
+    it('should emit "expired" when the AccessToken expires', function(done) {
+      var jwt = getToken({ address: 'foo', duration: 10 });
       var accessToken = new Token(jwt);
 
       accessToken.on('expired', function(token) {
@@ -191,3 +119,7 @@ describe('AccessToken', function() {
     });
   });
 });
+
+function randomName() {
+  return Math.random().toString(36).slice(2);
+}
