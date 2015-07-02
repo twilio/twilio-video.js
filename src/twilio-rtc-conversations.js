@@ -1,7 +1,7 @@
 /* jshint strict: false, undef: false */
 /** @namespace Twilio */
 var component = require('lib');
-var componentName = 'Conversations';
+var componentName = null;
 
 // Uses CommonJS, AMD or browser globals to create a
 // module using UMD (Universal Module Definition).
@@ -12,6 +12,12 @@ var componentName = 'Conversations';
   // Browser globals
   } else {
     root.Twilio = root.Twilio || function Twilio() { };
-    root.Twilio[componentName] = component;
+    if (componentName) {
+      root.Twilio[componentName] = component;
+    } else {
+      for (componentName in component) {
+        root.Twilio[componentName] = component[componentName];
+      }
+    }
   }
 })(window || global || this);
