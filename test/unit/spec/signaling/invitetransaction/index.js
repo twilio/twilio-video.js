@@ -16,36 +16,6 @@ describe('InviteTransaction', function() {
     });
   });
 
-  describe('#_checkInviteTransactionState(inviteTransaction)', function() {
-    it('should throw an error if the transaction is accepted', function() {
-      invite._accepted = true;
-      assert.throws(InviteTransaction._checkInviteTransactionState.bind(null, invite));
-    });
-
-    it('should throw an error if the transaction is canceled', function() {
-      invite._canceled = true;
-      assert.throws(InviteTransaction._checkInviteTransactionState.bind(null, invite));
-    });
-
-    it('should throw an error if the transaction is rejected', function() {
-      invite._rejected = true;
-      assert.throws(InviteTransaction._checkInviteTransactionState.bind(null, invite));
-    });
-
-    it('should throw an error if the transaction is failed', function() {
-      invite._failed = true;
-      assert.throws(InviteTransaction._checkInviteTransactionState.bind(null, invite));
-    });
-
-    it('should not throw an error if the transaction has not been resolved', function() {
-      try {
-        InviteTransaction._checkInviteTransactionState(invite);
-      } catch(e) {
-        assert(false);
-      }
-    });
-  });
-
   describe('#then(onResolve, onReject)', function() {
     it('should pass a Dialog to onResolve if the Promise resolves', function(done) {
       invite.then(function(dialog) {
@@ -63,6 +33,27 @@ describe('InviteTransaction', function() {
     });
   });
 
+  describe('_setState', function() {
+    it('should throw an error if the state is not supplied', function() {
+      assert.throws(invite._setState.bind(invite));
+    });
+
+    it('should throw an error if the state is invalid', function() {
+      assert.throws(invite._setState.bind(invite, 'foobar'));
+    });
+
+    it('should return false and not change state if state has already been set', function() {
+      invite._setState('rejected');
+      assert(!invite._setState('failed'));
+      assert(invite.state, 'rejected');
+    });
+
+    it('should set and return true if valid', function() {
+      assert(invite._setState('accepted'));
+      assert(invite.state, 'accepted');
+    });
+  });
+
   describe('events', function() {
     it('should emit "accepted" with a Dialog if the Promise is fulfilled', function(done) {
       invite.on('accepted', function(dialog) {
@@ -75,13 +66,13 @@ describe('InviteTransaction', function() {
 
     it('should emit "canceled" if the Promise is rejected and the canceled flag is set', function(done) {
       invite.on('canceled', function() { done(); });
-      invite._canceled = true;
+      invite._setCanceled()
       invite._deferred.reject();
     });
 
     it('should emit "rejected" if the Promise is rejected and the rejected flag is set', function(done) {
       invite.on('rejected', function() { done(); });
-      invite._rejected = true;
+      invite._setRejected();
       invite._deferred.reject();
     });
 
