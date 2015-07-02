@@ -3,7 +3,7 @@
 var assert = require('assert');
 var Token = require('lib/accesstoken');
 
-var config = require('test/twilio_credentials');
+var config = require('../../../test.json');
 var credentials = {
   accountSid: config.accountSid,
   signingKeySid: config.signingKeySid,
