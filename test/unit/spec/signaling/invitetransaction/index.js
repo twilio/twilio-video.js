@@ -54,6 +54,34 @@ describe('InviteTransaction', function() {
     });
   });
 
+  describe('_setAccepted', function() {
+    it('should set .state to InviteTransaction.ACCEPTED', function() {
+      invite._setAccepted();
+      assert.equal(invite.state, InviteTransaction.ACCEPTED);
+    });
+  });
+
+  describe('_setRejected', function() {
+    it('should set .state to InviteTransaction.REJECTED', function() {
+      invite._setRejected();
+      assert.equal(invite.state, InviteTransaction.REJECTED);
+    });
+  });
+
+  describe('_setCanceled', function() {
+    it('should set .state to InviteTransaction.CANCELED', function() {
+      invite._setCanceled();
+      assert.equal(invite.state, InviteTransaction.CANCELED);
+    });
+  });
+
+  describe('_setFailed', function() {
+    it('should set .state to InviteTransaction.FAILED', function() {
+      invite._setFailed();
+      assert.equal(invite.state, InviteTransaction.FAILED);
+    });
+  });
+
   describe('events', function() {
     it('should emit "accepted" with a Dialog if the Promise is fulfilled', function(done) {
       invite.on('accepted', function(dialog) {
