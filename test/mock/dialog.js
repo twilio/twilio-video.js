@@ -2,8 +2,9 @@ var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var Media = require('lib/media');
 var sinon = require('sinon');
+var UserAgent = require('lib/signaling/useragent');
 
-var Dialog = module.exports = function Dialog(name) {
+var Dialog = module.exports = function Dialog(name, token) {
   EventEmitter.call(this);
 
   var createPromise = function() {
@@ -39,6 +40,9 @@ var Dialog = module.exports = function Dialog(name) {
     },
     remoteMedia: {
       value: remoteMedia
+    },
+    userAgent: {
+      value: new UserAgent(token)
     }
   });
 };
