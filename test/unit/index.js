@@ -28,4 +28,4 @@ require('./spec/util/request');
 require('./spec/util/twilioerror');
 
 require('./spec/webrtc/getstatistics');
-require('./spec/webrtc/getusermedia');
+

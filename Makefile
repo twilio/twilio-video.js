@@ -113,7 +113,10 @@ unit: node_modules
 	$(MOCHA) --reporter=spec test/unit/index.js
 
 coverage: node_modules
-	node $(ISTANBUL) cover -x lib/util/constants.js $(_MOCHA) -- test/unit -R spec
+	node $(ISTANBUL) cover \
+		-x lib/util/constants.js \
+		-x lib/webrtc/getusermedia.js \
+		$(_MOCHA) -- test/unit -R spec
 
 watch: node_modules
 	$(MOCHA) -w lib -w test/unit -R dot
