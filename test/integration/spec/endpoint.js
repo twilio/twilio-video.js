@@ -181,6 +181,9 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   var ua2Token = null;
   var ua2 = null;
 
+  var conversation = null;
+  var conversation2 = null;
+
   describe('Receive incoming call', function() {
     before(function(done) {
       alice.listen().then(function() {
@@ -228,8 +231,6 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     describe('Invite#accept', function() {
-      var conversation = null;
-
       it('updates .conversations', function(done) {
         invite.accept().then(function(_conversation) {
           conversation = _conversation;
@@ -256,8 +257,6 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       });
 
       describe('Remote party hangs up', function() {
-        var conversation = null;
-
         before(function(done) {
           alice.listen().then(function() {
             return ua.invite(aliceName).then(null, done);
@@ -282,7 +281,6 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   });
 
   describe('#createConversation', function() {
-    var conversation = null;
 
     var createConversation = function(name, options) {
       return alice.createConversation(name, options);
@@ -338,37 +336,98 @@ describe('Endpoint (SIPJSUserAgent)', function() {
       }).then(done, done);
     });
 
-    describe('#unlisten (while in a Conversation)', function() {
-      before(function unlisten(done) {
-        alice.unlisten().then(function() {
-          done();
-        }, done);
+    it('should not reject if primary invitee declines in a multi-invite', function(done) {
+      this.timeout(5000);
+
+      ua2Name = randomName();
+      ua2Token = getToken({ address: ua2Name });
+      ua2 = new SIPJSUserAgent(ua2Token, options);
+
+      var ua3Name = randomName();
+      var ua3Token = getToken({ address: ua3Name });
+      var ua3 = new SIPJSUserAgent(ua3Token, options);
+
+      var ua2Invite, ua3Invite;
+
+      function rejectThenAccept(invite1, invite2) {
+        alice._userAgent.inviteClientTransactions.forEach(function(ict) {
+          ict.session.once('rejected', function() {
+            invite2.accept();
+          });
+        });
+
+        invite1.reject();
+      }
+
+      ua2.on('invite', function(invite) {
+        ua2Invite = invite;
+        if (ua2Invite && ua3Invite) {
+          rejectThenAccept(ua2Invite, ua3Invite);
+        }
       });
 
-      it('should update .isListening', function() {
-        assert(!alice.isListening);
+      ua3.on('invite', function(invite) {
+        if (invite.from !== aliceName) { return; }
+
+        ua3Invite = invite;
+        if (ua2Invite && ua3Invite) {
+          rejectThenAccept(ua2Invite, ua3Invite);
+        }
       });
 
-      it('should still need to be registered', function() {
-        assert(alice._needsRegistration);
+      Q.all([ua2.register(), ua3.register()]).then(function() {
+        alice.createConversation([ua2Name, ua3Name])
+          .then(function(conversation) {
+            conversation2 = conversation;
+            done();
+          }, function() {
+            assert.fail('Promise was rejected');
+          }).catch(done);
       });
     });
 
-    describe('Conversation#disconnect', function() {
-      it('updates .conversations', function(done) {
-        conversation.disconnect().then(function() {
-          assert(!alice.conversations.has(conversation));
-        }).then(done, done);
+    after(function cleanupPending(done) {
+      alice._userAgent.inviteClientTransactions.forEach(function(ict) {
+        alice._userAgent.inviteClientTransactions.delete(ict);
+        alice._pendingConversations.delete(ict._cookie);
       });
 
-      it('should not need to be registered', function() {
-        assert(!alice._needsRegistration);
-      });
+      conversation2.disconnect().then(function() {
+        assert(!alice.conversations.has(conversation2));
+      }).then(done, done);
+    });
+  });
 
-      it('should unregister', function(done) {
-        alice._userAgent.once('unregistered', function() {
-          done();
-        });
+  describe('#unlisten (while in a Conversation)', function() {
+    before(function unlisten(done) {
+      alice.unlisten().then(function() {
+        done();
+      }, done);
+    });
+
+    it('should update .isListening', function() {
+      assert(!alice.isListening);
+    });
+
+    it('should still need to be registered', function() {
+      assert(alice._needsRegistration);
+    });
+  });
+
+  describe('Conversation#disconnect', function() {
+    it('updates .conversations', function(done) {
+      conversation.disconnect().then(function() {
+        assert(!alice.conversations.has(conversation));
+      }).then(done, done);
+    });
+
+    it('should not need to be registered', function() {
+      assert(!alice._needsRegistration);
+    });
+
+    it('should unregister', function(done) {
+      alice._userAgent.once('unregistered', function() {
+        done();
       });
     });
   });
