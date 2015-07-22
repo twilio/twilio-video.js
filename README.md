@@ -4,7 +4,6 @@ twilio-rtc-conversations.js
 This is the development repository for the Twilio RTC Conversations JavaScript library. You must have the following to test and build this project:
 
   * [Node](https://nodejs.org)
-  * [Pandoc](https://pandoc.org)
 
 Try the demo at [simple-signaling.appspot.com](https://simple-signaling.appspot.com).
 
@@ -28,13 +27,32 @@ $ make serve
 
 For more information, refer to the [client/simple-signaling.appspot.com](https://code.hq.twilio.com/client/simple-signaling.appspot.com) repository.
 
-### Specifications
+### Tests
 
-Specifications use [Mocha](http://mochajs.org) and are defined in `test/spec`. You can run these with
+Tests use [Mocha](http://mochajs.org) and are defined in `test`. You can run these with
 
 ```
 $ make test
 ```
+
+#### Unit
+
+Unit tests are defined in `test/unit` and can be run with
+
+
+```
+$ make unit
+```
+
+#### Integration
+
+Integration tests are defined in `test/integration` and can be run with
+
+```
+$ make integration
+```
+
+Integration tests require that you create a `test.json` file (see the included example file).
 
 Documentation
 -------------
