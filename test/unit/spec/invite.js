@@ -3,7 +3,7 @@
 var assert = require('assert');
 var Invite = require('lib/invite');
 var MockDialog = require('test/mock/dialog');
-var MockIST = require('test/mock/inviteServerTransaction');
+var MockIST = require('test/mock/inviteservertransaction');
 var sinon = require('sinon');
 
 describe('Invite', function() {
