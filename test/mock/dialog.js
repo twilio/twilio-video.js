@@ -21,8 +21,8 @@ var Dialog = module.exports = function Dialog(name, token) {
   };
 
   var remoteMedia = new Media();
-  remoteMedia.audioTracks.add({ });
-  remoteMedia.videoTracks.add({ });
+  remoteMedia.audioTracks.set('audio', { });
+  remoteMedia.videoTracks.set('video', { });
 
   Object.defineProperties(this, {
     end: {
