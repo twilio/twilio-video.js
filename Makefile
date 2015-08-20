@@ -52,7 +52,10 @@ PUBLIC_LIB_FILES= \
 	lib/endpoint.js \
 	lib/invite.js \
 	lib/media/index.js \
-	lib/media/track.js \
+	lib/media/localmedia.js \
+	lib/media/track/index.js \
+	lib/media/track/audiotrack.js \
+	lib/media/track/videotrack.js \
 	lib/participant.js \
 	lib/webrtc/getusermedia.js \
 	src/twilio-rtc-conversations.js
