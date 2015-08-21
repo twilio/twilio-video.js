@@ -219,7 +219,7 @@ describe('Conversation', function() {
 
   describe('Dialog events', function() {
     it('should remove the dialog in response to dialog#ended', function() {
-      dialog.emit('ended');
+      dialog.emit('ended', dialog);
       assert(!conversation._dialogs.has(dialog));
     });
   });

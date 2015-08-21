@@ -88,7 +88,7 @@ describe('StatsReporter', function() {
         }
 
         dialog.ended = true;
-        dialog.emit('ended');
+        dialog.emit('ended', dialog);
       });
     });
 
@@ -99,7 +99,7 @@ describe('StatsReporter', function() {
           published = true;
         };
 
-        dialog.emit('ended');
+        dialog.emit('ended', dialog);
 
         setTimeout(function() {
           assert(!published);
