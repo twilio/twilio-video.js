@@ -558,7 +558,7 @@ describe('UserAgent', function() {
     it('should fire the UserAgent#dialogEnded event when dialog emits Dialog#ended', function(done) {
       ua._dialogCreated(dialog);
       ua.once('dialogEnded', function() { done(); });
-      dialog.emit('ended');
+      dialog.emit('ended', dialog);
     });
 
     it('should remove the dialog from UserAgent.dialogs when dialog emits Dialog#failed', function() {
@@ -569,7 +569,7 @@ describe('UserAgent', function() {
 
     it('should remove the dialog from UserAgent.dialogs when dialog emits Dialog#ended', function() {
       ua._dialogCreated(dialog);
-      dialog.emit('ended');
+      dialog.emit('ended', dialog);
       assert(!ua.dialogs.has(dialog));
     });
   });

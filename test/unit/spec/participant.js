@@ -27,7 +27,7 @@ describe('Participant', function() {
         done();
       });
 
-      dialog.remoteMedia.emit('trackAdded');
+      participant.media.emit('trackAdded');
     });
 
     it('should re-emit trackRemoved from media', function(done) {
@@ -35,7 +35,7 @@ describe('Participant', function() {
         done();
       });
 
-      dialog.remoteMedia.emit('trackRemoved');
+      participant.media.emit('trackRemoved');
     });
   });
 });
