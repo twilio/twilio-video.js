@@ -10,6 +10,8 @@ require('./spec/statsreporter');
 require('./spec/media/index');
 require('./spec/media/track');
 
+require('./spec/signaling/conversationinfo');
+
 require('./spec/signaling/dialog');
 require('./spec/signaling/sipjsdialog');
 require('./spec/signaling/sipjsuseragent');
@@ -28,4 +30,3 @@ require('./spec/util/request');
 require('./spec/util/twilioerror');
 
 require('./spec/webrtc/getstatistics');
-
