@@ -286,7 +286,7 @@ describe('SIPJSUserAgent', function() {
         });
       });
 
-      it('should cancel the request after receiving 100 if called prior', function(done) {
+      it.skip('should cancel the request after receiving 100 if called prior', function(done) {
         var ua2Ict = ua2.invite(ua1Name, inviteOptions);
 
         ua1.once('invite', function(ist) {
