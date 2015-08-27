@@ -8,9 +8,9 @@ if (!releaseDocs) {
 }
 
 var classNames = [
-  'Twilio.AccessToken',
-  'Twilio.Endpoint',
-  'Twilio.LocalMedia'
+  'AccessToken',
+  'Endpoint',
+  'LocalMedia'
 ];
 
 console.log('Prefixing public constructors from');

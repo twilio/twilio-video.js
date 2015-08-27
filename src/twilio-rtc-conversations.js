@@ -1,5 +1,4 @@
 /* jshint strict: false, undef: false */
-/** @namespace Twilio */
 var component = require('lib');
 var componentName = null;
 
