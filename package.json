@@ -28,7 +28,7 @@
     "promptly": "^0.2.0",
     "q": "^1.0.1",
     "sinon": "^1.15.3",
-    "twilio": "*"
+    "twilio": "^2.3.0"
   },
   "engines": {
     "node": ">=0.12"
@@ -41,8 +41,8 @@
     "postinstall": "./scripts/postinstall.js"
   },
   "dependencies": {
-    "sip.js": "git+ssh://git@code.hq.twilio.com/client/SIP.js.git#stable-twilio",
+    "sip.js": "git+ssh://git@code.hq.twilio.com/client/SIP.js.git#a456c44da7a6913172f422746182ba6783068d93",
     "ws": "^0.6.3",
-    "xmlhttprequest": "git+https://github.com/markandrus/node-XMLHttpRequest.git"
+    "xmlhttprequest": "git+https://github.com/markandrus/node-XMLHttpRequest.git#aa0166c8f58a59adf264caf3aec5a39bffbe782a"
   }
 }
