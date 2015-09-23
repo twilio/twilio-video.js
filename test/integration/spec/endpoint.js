@@ -79,7 +79,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     });
 
     it('should not emit tokenExpired when an inactive token expires', function(done) {
-      var jwt1 = getToken({ address: aliceName, duration: 500 });
+      var jwt1 = getToken({ address: aliceName, duration: 1000 });
       var jwt2 = getToken({ address: aliceName });
       var hasFired = false;
 

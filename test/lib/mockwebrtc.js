@@ -16,6 +16,10 @@ MediaStream.prototype.clone = function clone() {
   return new MediaStream();
 };
 
+MediaStream.prototype.getTracks = function getTracks() {
+  return [];
+};
+
 MediaStream.prototype.getAudioTracks = function getAudioTracks() {
   return [];
 };
