@@ -24,6 +24,7 @@ require('./spec/signaling/invitetransaction/inviteservertransaction');
 require('./spec/util/cancelablepromise');
 require('./spec/util/index');
 require('./spec/util/log');
+require('./spec/util/multipart');
 require('./spec/util/request');
 require('./spec/util/twilioerror');
 
