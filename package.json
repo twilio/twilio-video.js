@@ -41,7 +41,7 @@
     "postinstall": "./scripts/postinstall.js"
   },
   "dependencies": {
-    "sip.js": "git+ssh://git@code.hq.twilio.com/client/SIP.js.git#a456c44da7a6913172f422746182ba6783068d93",
+    "sip.js": "git+ssh://git@code.hq.twilio.com/client/SIP.js.git#4e74f060191cdc8657737fdc7947af5eff871a4b",
     "ws": "^0.6.3",
     "xmlhttprequest": "git+https://github.com/markandrus/node-XMLHttpRequest.git#aa0166c8f58a59adf264caf3aec5a39bffbe782a"
   }

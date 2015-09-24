@@ -100,8 +100,12 @@ RTCPeerConnection.prototype.createAnswer = function createAnswer(successCallback
 
 RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description, successCallback, errorCallback) {
   this.localDescription = new RTCSessionDescription(description);
+  var self = this;
   setTimeout(function() {
     successCallback();
+    if (self.onicecandidate) {
+      self.onicecandidate.call(self, { candidate: null });
+    }
   });
 };
 
