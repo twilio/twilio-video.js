@@ -3,7 +3,7 @@
 var assert = require('assert');
 var Q = require('q');
 
-var Endpoint = require('lib/endpoint');
+var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
 
 var credentials = require('../../../test.json');
@@ -11,7 +11,7 @@ var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
 describe('Invite (SIPJSUserAgent)', function() {
-  // Alice is an Endpoint.
+  // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
   var alice = null;
@@ -34,7 +34,7 @@ describe('Invite (SIPJSUserAgent)', function() {
   options['wsServer'] = wsServer;
 
   before(function allRegister(done) {
-    alice = new Endpoint(aliceToken, options);
+    alice = new Client(aliceToken, options);
     bob = new SIPJSUserAgent(bobToken, options);
     charlie = new SIPJSUserAgent(charlieToken, options);
 

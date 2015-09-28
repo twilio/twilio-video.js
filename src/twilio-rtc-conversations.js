@@ -1,6 +1,6 @@
 /* jshint strict: false, undef: false */
 var component = require('lib');
-var componentName = null;
+var componentName = 'Conversations';
 
 // Uses CommonJS, AMD or browser globals to create a
 // module using UMD (Universal Module Definition).

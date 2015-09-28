@@ -4,14 +4,14 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
 
-var Endpoint = require('lib/endpoint');
+var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
 
 var credentials = require('../../../test.json');
 var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Endpoint (SIPJSUserAgent)', function() {
+describe('Client (SIPJSUserAgent)', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
   var alice = null;
@@ -22,27 +22,27 @@ describe('Endpoint (SIPJSUserAgent)', function() {
     logLevel: 'off'
   };
 
-  var createEndpoint = function(token, options) {
-    return new Endpoint(token, options);
+  var createClient = function(token, options) {
+    return new Client(token, options);
   };
 
   describe('constructor', function() {
-    it('should return an instance of Endpoint', function() {
-      alice = new Endpoint(aliceToken, options);
-      assert(alice instanceof Endpoint);
+    it('should return an instance of Client', function() {
+      alice = new Client(aliceToken, options);
+      assert(alice instanceof Client);
     });
 
     it('should validate logLevel', function() {
-      assert.throws(createEndpoint.bind(this, aliceToken, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
     });
 
     it('should validate ICE servers', function() {
-      assert.throws(createEndpoint.bind(this, aliceToken, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, aliceToken, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
     });
 
     it('should validate token', function() {
       assert.throws(function() {
-        new Endpoint('abc');
+        new Client('abc');
       }, /INVALID_TOKEN/);
     });
   });
@@ -150,7 +150,7 @@ describe('Endpoint (SIPJSUserAgent)', function() {
   });
 
   // FIXME(mroberts): We have a regression with the new
-  // AccessToken; refer to the comment in Endpoint#listen for
+  // AccessToken; refer to the comment in Client#listen for
   // more information.
   /*describe('#listen (with new Token)', function() {
     var aliceName = null;
