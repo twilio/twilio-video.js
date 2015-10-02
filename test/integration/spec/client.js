@@ -260,9 +260,7 @@ describe('Client (SIPJSUserAgent)', function() {
         before(function(done) {
           alice.listen().then(function() {
             return ua.invite(aliceName).then(null, done);
-          }).then(function() {
-            done();
-          }, done);
+          }).catch(done);
           alice.once('invite', function(invite) {
             invite.accept().then(function(_conversation) {
               conversation = _conversation;
