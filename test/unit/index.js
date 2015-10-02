@@ -1,8 +1,8 @@
 'use strict';
 
 require('./spec/accesstoken');
+require('./spec/client');
 require('./spec/conversation');
-require('./spec/endpoint');
 require('./spec/invite');
 require('./spec/participant');
 require('./spec/statsreporter');

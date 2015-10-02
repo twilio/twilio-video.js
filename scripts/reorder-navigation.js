@@ -10,8 +10,8 @@ if (!releaseDocs) {
 var classNames = [
   'AccessToken',
   'AudioTrack',
+  'Client',
   'Conversation',
-  'Endpoint',
   'index',
   'Invite',
   'LocalMedia',
@@ -29,9 +29,9 @@ classNames.forEach(function(className) {
   var $ = cheerio.load(classFile);
   var nav = $('nav h3:contains("Classes") + ul');
   nav.html([
-    '<li><a href="Endpoint.html"><span style="color: #999">Twilio.</span>Endpoint</a>' +
+    '<li><a href="Client.html"><span style="color: #999">Conversations.</span>Client</a>' +
       '<ul style="margin-left: 1em">' +
-        '<li><a href="AccessToken.html"><span style="color: #999">Twilio.</span>AccessToken</a></li>' +
+        '<li><a href="AccessToken.html"><span style="color: #999">Conversations.</span>AccessToken</a></li>' +
         '<li><a href="Invite.html">Invite</a></li>' +
       '</ul>' +
     '</li>' +
@@ -42,7 +42,7 @@ classNames.forEach(function(className) {
     '</li>' +
     '<li><a href="Media.html">Media</a>' +
       '<ul style="margin-left: 1em">' +
-        '<li><a href="LocalMedia.html"><span style="color: #999">Twilio.</span>LocalMedia</a></li>' +
+        '<li><a href="LocalMedia.html"><span style="color: #999">Conversations.</span>LocalMedia</a></li>' +
         '<li><a href="Track.html">Track</a>' +
           '<ul style="margin-left: 1em">' +
             '<li><a href="AudioTrack.html">AudioTrack</a></li>' +

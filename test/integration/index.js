@@ -3,6 +3,6 @@ if (typeof window === 'undefined') {
 }
 
 require('./spec/conversation');
-require('./spec/endpoint');
+require('./spec/client');
 require('./spec/invite');
 require('./spec/signaling/sipjsuseragent');

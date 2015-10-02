@@ -48,8 +48,8 @@ UNIT_TEST_FILES=$(shell find test/unit -name \*.js)
 # Public APIs (we generate JSDoc for these)
 PUBLIC_LIB_FILES= \
 	lib/accesstoken.js \
+	lib/client.js \
 	lib/conversation.js \
-	lib/endpoint.js \
 	lib/invite.js \
 	lib/media/index.js \
 	lib/media/localmedia.js \
