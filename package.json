@@ -20,7 +20,7 @@
     "cheerio": "^0.18.0",
     "closurecompiler": "^1.5.1",
     "istanbul": "^0.3.15",
-    "jsdoc": "^3.3.2",
+    "jsdoc": "https://github.com/jsdoc3/jsdoc.git#bd1cb9d1663bdccc68f1ba242a7882f020e78a03",
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.0",
     "jsonwebtoken": "^5.0.0",

@@ -150,17 +150,25 @@ $(MOCHA_PHANTOMJS): node_modules
 $(CLOSURE): node_modules
 
 $(PUBLIC_DOCS): $(RELEASE_API_DOCS)
-	@$(call INFO,"Symlinking public docs to release docs")
-	mkdir -p $(PUBLIC_ROOT)
-	cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/docs .
+	@if [[ ! -z "${SKIP_DOCS}" ]]; then \
+		$(call INFO,"Skipped public docs"); \
+	else \
+		$(call INFO,"Symlinking public docs to release docs"); \
+		mkdir -p $(PUBLIC_ROOT); \
+		cd $(PUBLIC_ROOT); ln -s -f ../releases/$(RELEASE_VERSION)/docs .; \
+	fi
 
 $(RELEASE_API_DOCS): $(JSDOC) $(LIB_FILES)
-	@$(call INFO,"Generating release docs")
-	$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_API_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_API_DOCS)
-	./scripts/remove-private-constructors.js $(RELEASE_API_DOCS)
-	./scripts/prefix-public-constructors.js $(RELEASE_API_DOCS)
-	./scripts/prefix-static-methods.js $(RELEASE_API_DOCS)
-	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
+	@if [[ ! -z "${SKIP_DOCS}" ]]; then \
+		$(call INFO,"Skipped release docs"); \
+	else \
+		$(call INFO,"Generating release docs"); \
+		$(JSDOC) $(PUBLIC_LIB_FILES) -d $(RELEASE_API_DOCS) -c ${JSDOC_CONF} && touch $(RELEASE_API_DOCS); \
+		./scripts/remove-private-constructors.js $(RELEASE_API_DOCS); \
+		./scripts/prefix-public-constructors.js $(RELEASE_API_DOCS); \
+		./scripts/prefix-static-methods.js $(RELEASE_API_DOCS); \
+		./scripts/reorder-navigation.js $(RELEASE_API_DOCS); \
+	fi
 
 $(JS): $(PUBLIC_JS)
 	@$(call INFO,"Symlinking public JavaScript")
