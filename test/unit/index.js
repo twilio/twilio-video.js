@@ -5,6 +5,7 @@ require('./spec/client');
 require('./spec/conversation');
 require('./spec/invite');
 require('./spec/participant');
+require('./spec/queueingeventemitter');
 require('./spec/statsreporter');
 
 require('./spec/media/index');
@@ -15,6 +16,7 @@ require('./spec/signaling/conversationinfo');
 require('./spec/signaling/dialog');
 require('./spec/signaling/sipjsdialog');
 require('./spec/signaling/sipjsuseragent');
+require('./spec/signaling/sipjsmediahandler');
 require('./spec/signaling/useragent');
 
 require('./spec/signaling/invitetransaction/index');
