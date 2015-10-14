@@ -50,7 +50,7 @@ describe('Conversation', function() {
 
         conversation.on('participantConnected', function(participant) {
           if (participant.address === 'baz') {
-            assert(conversation.participants.has(participant));
+            assert(conversation.participants.has(participant.sid));
             done();
           }
         });
@@ -76,7 +76,7 @@ describe('Conversation', function() {
 
     it('should emit a participantDisconnected event and remove that Participant', function(done) {
       conversation.on('participantDisconnected', function(participant) {
-        assert(!conversation.participants.has(participant));
+        assert(!conversation.participants.has(participant.sid));
         done();
       });
       conversation._removeDialog(dialog);
@@ -211,7 +211,7 @@ describe('Conversation', function() {
     });
 
     it('should not re-emit Participant events if the Participant is no longer in the conversation', function() {
-      conversation.participants.delete(participants['foo']);
+      conversation.participants.delete(participants['foo'].sid);
 
       var spy = new sinon.spy();
       conversation.on('trackAdded', spy);
