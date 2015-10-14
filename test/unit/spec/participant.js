@@ -3,6 +3,7 @@
 var assert = require('assert');
 var MockDialog = require('test/mock/dialog');
 var Participant = require('lib/participant');
+var util = require('lib/util');
 
 describe('Participant', function() {
   var dialog;
@@ -12,12 +13,12 @@ describe('Participant', function() {
 
   beforeEach(function() {
     dialog = new MockDialog('foo');
-    participant = new Participant(dialog);
+    participant = new Participant(util.makeUUID(), dialog);
   });
 
-  describe('new Participant(dialog)', function() {
+  describe('new Participant(sid, dialog)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Participant(dialog) instanceof Participant);
+      assert(Participant(util.makeUUID(), dialog) instanceof Participant);
     });
   });
 
