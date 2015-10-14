@@ -5,6 +5,7 @@ var inherits = require('util').inherits;
 var Media = require('lib/media');
 var sinon = require('sinon');
 var UserAgent = require('lib/signaling/useragent');
+var util = require('lib/util');
 
 var Dialog = module.exports = function Dialog(name, token) {
   EventEmitter.call(this);
@@ -30,6 +31,9 @@ var Dialog = module.exports = function Dialog(name, token) {
     },
     getStats: {
       value: createPromise()
+    },
+    participantSid: {
+      value: util.makeUUID()
     },
     peerConnection: {
       value: new EventEmitter()
