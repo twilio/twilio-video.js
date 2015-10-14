@@ -3,12 +3,13 @@
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var Media = require('lib/media');
+var QueueingEventEmitter = require('lib/queueingeventemitter');
 var sinon = require('sinon');
 var UserAgent = require('lib/signaling/useragent');
 var util = require('lib/util');
 
 var Dialog = module.exports = function Dialog(name, token) {
-  EventEmitter.call(this);
+  QueueingEventEmitter.call(this);
 
   var createPromise = function() {
     var spy = new sinon.spy(function() {
@@ -53,4 +54,4 @@ var Dialog = module.exports = function Dialog(name, token) {
   });
 };
 
-inherits(Dialog, EventEmitter);
+inherits(Dialog, QueueingEventEmitter);
