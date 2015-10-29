@@ -89,7 +89,10 @@ docs:
 	./scripts/reorder-navigation.js $(RELEASE_API_DOCS)
 
 integration: node_modules test.json
-	$(MOCHA) --reporter=spec test/integration/index.js
+	@$(call INFO,"Running integration tests with USE_CONVERSATION_EVENTS disabled")
+	@$(MOCHA) --reporter=spec test/integration/index.js
+	@$(call INFO,"Running integration tests with USE_CONVERSATION_EVENTS enabled")
+	@USE_CONVERSATION_EVENTS=true $(MOCHA) --reporter=spec test/integration/index.js
 
 lint: node_modules
 	$(JSHINT) $(LIB_FILES) $(SRC_FILES) --reporter node_modules/jshint-stylish/stylish.js

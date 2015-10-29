@@ -4,6 +4,7 @@ var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var Q = require('q');
 var sinon = require('sinon');
+var util = require('lib/util');
 
 function MockIST() {
   EventEmitter.call(this);
@@ -24,6 +25,9 @@ function MockIST() {
   Object.defineProperties(this, {
     accept: {
       value: createPromise()
+    },
+    from: {
+      value: util.makeURI('AC123', 'foo')
     },
     reject: {
       value: createPromise()
