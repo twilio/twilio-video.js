@@ -10,6 +10,8 @@ var credentials = require('../../../test.json');
 var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
+var useConversationEvents = process.env.USE_CONVERSATION_EVENTS;
+
 describe('Invite (SIPJSUserAgent)', function() {
   // Alice is an Client.
   var aliceName = randomName();
@@ -32,6 +34,7 @@ describe('Invite (SIPJSUserAgent)', function() {
   var options = {};
   options['debug'] = false;
   options['wsServer'] = wsServer;
+  options['useConversationEvents'] = useConversationEvents;
 
   before(function allRegister(done) {
     alice = new Client(aliceToken, options);

@@ -6,10 +6,13 @@ var Q = require('q');
 
 var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
+var util = require('lib/util');
 
 var credentials = require('../../../test.json');
 var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
+
+var useConversationEvents = process.env.USE_CONVERSATION_EVENTS;
 
 describe('Client (SIPJSUserAgent)', function() {
   var aliceName = randomName();
@@ -19,7 +22,8 @@ describe('Client (SIPJSUserAgent)', function() {
   var options = {
     debug: false,
     wsServer: wsServer,
-    logLevel: 'off'
+    logLevel: 'off',
+    useConversationEvents: useConversationEvents
   };
 
   var createClient = function(token, options) {
@@ -365,7 +369,9 @@ describe('Client (SIPJSUserAgent)', function() {
       });
 
       ua3.on('invite', function(invite) {
-        if (invite.from !== aliceName) { return; }
+        if (util.getUser(invite.from) !== aliceName) {
+          return;
+        }
 
         ua3Invite = invite;
         if (ua2Invite && ua3Invite) {

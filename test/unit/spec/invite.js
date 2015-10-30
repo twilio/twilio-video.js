@@ -5,6 +5,7 @@ var Invite = require('lib/invite');
 var MockDialog = require('test/mock/dialog');
 var MockIST = require('test/mock/inviteservertransaction');
 var sinon = require('sinon');
+var util = require('lib/util');
 
 describe('Invite', function() {
   var ist;
@@ -30,7 +31,7 @@ describe('Invite', function() {
       invite.accept({ localMedia: localMedia }).then(function(conversation) {
         assert(conversation._dialogs.size);
       }).then(done, done);
-      ist.accept.resolve(new MockDialog());
+      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
     });
 
     it('should not add a Dialog to the Conversation more than once', function(done) {
@@ -40,7 +41,7 @@ describe('Invite', function() {
         }).then(done, done);
       });
 
-      ist.accept.resolve(new MockDialog());
+      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
     });
 
     it('should return a Promise for the existing Conversation if the IST is already accepted', function(done) {
@@ -51,14 +52,14 @@ describe('Invite', function() {
         }).then(done, done);
       });
 
-      ist.accept.resolve(new MockDialog());
+      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
     });
 
     context('when it succeeds', function() {
       it('should emit accepted', function(done) {
         invite.on('accepted', function() { done(); });
         invite.accept({ localMedia: localMedia });
-        ist.accept.resolve(new MockDialog());
+        ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
       });
     });
 

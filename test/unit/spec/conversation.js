@@ -5,6 +5,7 @@ var assert = require('assert');
 var Conversation = require('lib/conversation');
 var MockDialog = require('test/mock/dialog');
 var sinon = require('sinon');
+var util = require('lib/util');
 
 var jwt = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1zYXQ7dj0xIn0.eyJleHAiOjE0NDM1NzU5NzQuODQ1MjQyLCJpc3MiOiJTSzllZGY5YWNiM2JkMjFmNTRjZTM0ODllMThjMDk2YmY5IiwibmJmIjoxNDQzNTc0MDU0Ljg0NTI0MiwiZ3JhbnRzIjpbeyJyZXMiOiJodHRwczovL2FwaS50d2lsaW8uY29tLzIwMTAtMDQtMDEvQWNjb3VudHMvQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5My9Ub2tlbnMuanNvbiIsImFjdCI6WyJQT1NUIl19LHsicmVzIjoic2lwOnlvQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJpbnZpdGUiLCJsaXN0ZW4iXX1dLCJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwianRpIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOWlxaEhmcG1yUUVLeGpBU0F3In0.d4eHbuTDQA499Zm1-SWjGWQ6zqQNnNv1iDI22Db7Umw';
 
@@ -19,8 +20,8 @@ describe('Conversation', function() {
   beforeEach(function(done) {
     conversation = new Conversation();
     token = new AccessToken(jwt);
-    dialog = new MockDialog('foo', token);
-    dialog2 = new MockDialog('bar', token);
+    dialog = new MockDialog(util.makeURI('AC123', 'foo'), token);
+    dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), token);
     conversation._addDialog(dialog);
     conversation._addDialog(dialog2);
     assert(dialog.userAgent.token);
@@ -46,7 +47,7 @@ describe('Conversation', function() {
       });
 
       it('should emit a participantConnected event and store that Participant', function(done) {
-        var dialog3 = new MockDialog('baz');
+        var dialog3 = new MockDialog(util.makeURI('AC123', 'baz'));
 
         conversation.on('participantConnected', function(participant) {
           if (participant.address === 'baz') {

@@ -3,6 +3,7 @@
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
+var util = require('lib/util');
 
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
 
@@ -152,7 +153,7 @@ describe('SIPJSUserAgent', function() {
       });
 
       it('.from', function() {
-        assert.equal(ua2Name, ua1Ist.from);
+        assert.equal(ua2Name, util.getUser(ua1Ist.from));
       });
 
       describe('#accept', function() {
