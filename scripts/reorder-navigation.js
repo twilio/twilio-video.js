@@ -7,28 +7,23 @@ if (!releaseDocs) {
   process.exit(1);
 }
 
-var classNames = [
-  'AccessToken',
-  'AudioTrack',
-  'Client',
-  'Conversation',
-  'index',
-  'Invite',
-  'LocalMedia',
-  'Media',
-  'Participant',
-  'Track',
-  'VideoTrack'
-];
+var files = fs.readdirSync(releaseDocs).filter(function(file) {
+  return file.endsWith('.html');
+});
 
 console.log('Rewriting navigation in');
-classNames.forEach(function(className) {
-  console.log(' - ' + className);
-  var classPath = releaseDocs + '/' + className + '.html';
-  var classFile = fs.readFileSync(classPath, 'utf8');
-  var $ = cheerio.load(classFile);
-  var nav = $('nav h3:contains("Classes") + ul');
+files.forEach(function(filePath) {
+  filePath = releaseDocs + '/' + filePath;
+  console.log(' - ' + filePath);
+  var file = fs.readFileSync(filePath, 'utf8');
+  var $ = cheerio.load(file);
+  var nav = $('nav');
   nav.html([
+    '<h2>' +
+      '<a href="index.html">Home</a>' +
+    '</h2>' +
+    '<h3>Classes</h3>' +
+    '<ul>' +
     '<li><a href="Client.html"><span style="color: #999">Conversations.</span>Client</a>' +
       '<ul style="margin-left: 1em">' +
         '<li><a href="AccessToken.html"><span style="color: #999">Conversations.</span>AccessToken</a></li>' +
@@ -50,9 +45,9 @@ classNames.forEach(function(className) {
           '</ul>' +
         '</li>' +
       '</ul>' +
-    '</li>'
+    '</li>' +
+    '</ul>'
   ].join());
-  classFile = $.html();
-  fs.writeFileSync(classPath, classFile, 'utf8');
-  $('nav h3 + ul')
+  file = $.html();
+  fs.writeFileSync(filePath, file, 'utf8');
 });
