@@ -50,7 +50,7 @@ describe('Conversation', function() {
         var dialog3 = new MockDialog(util.makeURI('AC123', 'baz'));
 
         conversation.on('participantConnected', function(participant) {
-          if (participant.address === 'baz') {
+          if (participant.identity === 'baz') {
             assert(conversation.participants.has(participant.sid));
             done();
           }
@@ -76,11 +76,12 @@ describe('Conversation', function() {
     });
 
     it('should emit a participantDisconnected event and remove that Participant', function(done) {
-      conversation.on('participantDisconnected', function(participant) {
+      conversation.once('participantDisconnected', function(participant) {
         assert(!conversation.participants.has(participant.sid));
         done();
       });
       conversation._removeDialog(dialog);
+      conversation._removeDialog(dialog2);
     });
 
     it('should emit ended event when there are no Dialogs left', function(done) {
@@ -93,11 +94,12 @@ describe('Conversation', function() {
     });
 
     it('should remove any associate dialogs before emitting participantDisconnected', function(done) {
-      conversation.on('participantDisconnected', function(participant) {
+      conversation.once('participantDisconnected', function(participant) {
         assert(!conversation._dialogs.has(participant._dialog));
         done();
       });
       conversation._removeDialog(dialog);
+      conversation._removeDialog(dialog2);
     });
   });
 
@@ -131,8 +133,8 @@ describe('Conversation', function() {
     });
   });
 
-  describe('#invite(participantAddress)', function() {
-    it('should throw an error if participantAddress is not provided', function() {
+  describe('#invite(identity)', function() {
+    it('should throw an error if identity is not provided', function() {
       assert.throws(conversation.invite);
     });
 
@@ -146,10 +148,10 @@ describe('Conversation', function() {
     });
   });
 
-  describe('#_invite(dialog, participantAddress, timeout)', function() {
+  describe('#_invite(dialog, identity, timeout)', function() {
     it('should emit participantFailed if the call times out', function(done) {
-      conversation.on('participantFailed', function(address) {
-        assert.equal(address, 'foo');
+      conversation.on('participantFailed', function(identity) {
+        assert.equal(identity, 'foo');
         done();
       });
 
@@ -157,8 +159,8 @@ describe('Conversation', function() {
     });
 
     it('should emit participantFailed if the refer fails', function(done) {
-      conversation.on('participantFailed', function(address) {
-        assert.equal(address, 'foo');
+      conversation.on('participantFailed', function(identity) {
+        assert.equal(identity, 'foo');
         done();
       });
 
@@ -170,7 +172,7 @@ describe('Conversation', function() {
       conversation._invite(dialog, 1000, 'foo').then(function() {
         done();
       });
-      conversation.emit('participantConnected', { address: 'foo' });
+      conversation.emit('participantConnected', { identity: 'foo' });
     });
 
     it('should not resolve if a different participant connects', function(done) {
@@ -181,7 +183,7 @@ describe('Conversation', function() {
         clearTimeout(timeout);
       }).then(done);
 
-      conversation.emit('participantConnected', { address: 'bar' });
+      conversation.emit('participantConnected', { identity: 'bar' });
     });
   });
 
@@ -191,7 +193,7 @@ describe('Conversation', function() {
     beforeEach(function() {
       participants = { };
       conversation.participants.forEach(function(participant) {
-        participants[participant.address] = participant;
+        participants[participant.identity] = participant;
       });
     });
 
