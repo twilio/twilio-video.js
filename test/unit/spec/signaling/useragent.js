@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var InviteClientTransaction = require('test/mock/inviteclienttransaction');
@@ -16,17 +17,18 @@ var getToken = require('test/lib/token').getToken.bind(null, {
 
 describe('UserAgent', function() {
   var token = getToken({ address: 'ua1' });
+  var accessManager = new AccessManager(token);
   var ua;
 
   beforeEach(function() {
-    ua = new UserAgent(token, {
+    ua = new UserAgent(accessManager, {
       inviteClientTransactionFactory: InviteClientTransaction
     });
   });
 
-  describe('new UserAgent(token)', function() {
-    it('should set userAgent.token to the supplied AccessToken', function() {
-      assert.equal(token, ua.token);
+  describe('new UserAgent(accessManager)', function() {
+    it('should set userAgent.accessManager to the supplied AccessManager', function() {
+      assert.equal(accessManager, ua.accessManager);
     });
   });
 
@@ -207,14 +209,6 @@ describe('UserAgent', function() {
   });
 
   describe('#register()', function() {
-    it('should call UserAgent#register with userAgent.token', function() {
-      ua.register = sinon.spy(ua.register);
-      ua.register();
-      sinon.assert.calledWith(ua.register, ua.token);
-    });
-  });
-
-  describe('#register(token)', function() {
     context('when unregistered', function() {
       it('should call UserAgent#connect', function(done) {
         ua.connect = sinon.spy(ua.connect);
@@ -223,10 +217,10 @@ describe('UserAgent', function() {
         }).then(done, done);
       });
 
-      it('should call UserAgent#_register with passed token', function(done) {
+      it('should call UserAgent#_register with userAgent.accessManager.token', function(done) {
         ua._register = sinon.spy(ua._register);
         ua.register().then(function() {
-          sinon.assert.calledWith(ua._register, ua.token);
+          sinon.assert.calledWith(ua._register, ua.accessManager.token);
         }).then(done, done);
       });
 
@@ -290,12 +284,6 @@ describe('UserAgent', function() {
       it('should set userAgent.isRegistered to true', function() {
         ua._onRegisterSuccess();
         assert(ua.isRegistered);
-      });
-
-      it('should update userAgent.token', function() {
-        var newToken = getToken({ address: 'ua2' });
-        ua._onRegisterSuccess(newToken);
-        assert.equal(ua.token, newToken);
       });
 
       it('should emit UserAgent#registered', function(done) {

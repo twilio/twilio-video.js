@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Q = require('q');
 
@@ -16,16 +17,19 @@ describe('Invite (SIPJSUserAgent)', function() {
   // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
+  var aliceManager = new AccessManager(aliceToken);
   var alice = null;
 
   // Bob is a UserAgent.
   var bobName = randomName();
   var bobToken = getToken({ address: bobName });
+  var bobManager = new AccessManager(bobToken);
   var bob = null;
 
   // Charlie is a UserAgent.
   var charlieName = randomName();
   var charlieToken = getToken({ address: charlieName });
+  var charlieManager = new AccessManager(charlieToken);
   var charlie = null;
 
   var conversation = null;
@@ -37,9 +41,9 @@ describe('Invite (SIPJSUserAgent)', function() {
   options['useConversationEvents'] = useConversationEvents;
 
   before(function allRegister(done) {
-    alice = new Client(aliceToken, options);
-    bob = new SIPJSUserAgent(bobToken, options);
-    charlie = new SIPJSUserAgent(charlieToken, options);
+    alice = new Client(aliceManager, options);
+    bob = new SIPJSUserAgent(bobManager, options);
+    charlie = new SIPJSUserAgent(charlieManager, options);
 
     return Q.all([alice.listen(), bob.register(), charlie.register()])
       .then(function() { done(); }, done);

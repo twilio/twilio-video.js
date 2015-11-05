@@ -26,7 +26,6 @@ files.forEach(function(filePath) {
     '<ul>' +
     '<li><a href="Client.html"><span style="color: #999">Conversations.</span>Client</a>' +
       '<ul style="margin-left: 1em">' +
-        '<li><a href="AccessToken.html"><span style="color: #999">Conversations.</span>AccessToken</a></li>' +
         '<li><a href="Invite.html">Invite</a></li>' +
       '</ul>' +
     '</li>' +

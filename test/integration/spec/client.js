@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
@@ -17,6 +18,7 @@ var useConversationEvents = process.env.USE_CONVERSATION_EVENTS;
 describe('Client (SIPJSUserAgent)', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
+  var aliceManager = new AccessManager(aliceToken);
   var alice = null;
 
   var options = {
@@ -27,27 +29,22 @@ describe('Client (SIPJSUserAgent)', function() {
   };
 
   var createClient = function(token, options) {
-    return new Client(token, options);
+    var accessManager = new AccessManager(token);
+    return new Client(accessManager, options);
   };
 
   describe('constructor', function() {
     it('should return an instance of Client', function() {
-      alice = new Client(aliceToken, options);
+      alice = new Client(aliceManager, options);
       assert(alice instanceof Client);
     });
 
     it('should validate logLevel', function() {
-      assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, aliceManager, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
     });
 
     it('should validate ICE servers', function() {
-      assert.throws(createClient.bind(this, aliceToken, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
-    });
-
-    it('should validate token', function() {
-      assert.throws(function() {
-        new Client('abc');
-      }, /INVALID_TOKEN/);
+      assert.throws(createClient.bind(this, aliceManager, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
     });
   });
 
@@ -74,32 +71,9 @@ describe('Client (SIPJSUserAgent)', function() {
 
     it('should emit tokenExpired when active token expires', function(done) {
       var jwt = getToken({ address: aliceName, duration: 500 });
-      alice.listen(jwt);
-      alice.once('error', function(error) {
-        var nameRegex = /TOKEN_EXPIRED/i;
-        assert(nameRegex.test(error.name));
+      alice.accessManager.updateToken(jwt);
+      alice.once('tokenExpired', function() {
         done();
-      });
-    });
-
-    it('should not emit tokenExpired when an inactive token expires', function(done) {
-      var jwt1 = getToken({ address: aliceName, duration: 1000 });
-      var jwt2 = getToken({ address: aliceName });
-      var hasFired = false;
-
-      alice.listen(jwt1).then(function() {
-        return alice.listen(jwt2);
-      }, done);
-
-      alice.once('error', function(error) {
-        hasFired = true;
-      });
-
-      jwt1.once('expired', function() {
-        setTimeout(function() {
-          assert(!hasFired);
-          done();
-        }, 10);
       });
     });
   });
@@ -132,13 +106,15 @@ describe('Client (SIPJSUserAgent)', function() {
   describe('#unlisten (but still registered)', function() {
     var uaName = null;
     var uaToken = null;
+    var uaManager = null;
     var ua = null;
 
     it('should not emit "invite" events', function setupUA(done) {
       this.timeout(6000);
       uaName = randomName();
       uaToken = getToken({ address: uaName });
-      ua = new SIPJSUserAgent(uaToken, options);
+      uaManager = new AccessManager(uaToken);
+      ua = new SIPJSUserAgent(uaManager, options);
       ua.invite(aliceName).then(function() {
         alice.removeListener('invite', receivedInvite);
         done(new Error('InviteClientTransaction succeeded'));
@@ -179,10 +155,12 @@ describe('Client (SIPJSUserAgent)', function() {
 
   var uaName = null;
   var uaToken = null;
+  var uaManager = null;
   var ua = null;
 
   var ua2Name = null;
   var ua2Token = null;
+  var ua2Manager = null;
   var ua2 = null;
 
   var conversation = null;
@@ -202,7 +180,8 @@ describe('Client (SIPJSUserAgent)', function() {
       this.timeout(10000);
       uaName = randomName();
       uaToken = getToken({ address: uaName });
-      ua = new SIPJSUserAgent(uaToken, options);
+      uaManager = new AccessManager(uaToken);
+      ua = new SIPJSUserAgent(uaManager, options);
       ua.register().then(function() {
         ict = ua.invite(alice.identity);
       }, function(error) {
@@ -329,7 +308,8 @@ describe('Client (SIPJSUserAgent)', function() {
 
       ua2Name = randomName();
       ua2Token = getToken({ address: ua2Name });
-      ua2 = new SIPJSUserAgent(ua2Token, options);
+      ua2Manager = new AccessManager(ua2Token);
+      ua2 = new SIPJSUserAgent(ua2Manager, options);
 
       ua2.register().then(function() {
         invite = alice.createConversation([uaName, ua2Name]);
@@ -343,11 +323,13 @@ describe('Client (SIPJSUserAgent)', function() {
 
       ua2Name = randomName();
       ua2Token = getToken({ address: ua2Name });
-      ua2 = new SIPJSUserAgent(ua2Token, options);
+      ua2Manager = new AccessManager(ua2Token);
+      ua2 = new SIPJSUserAgent(ua2Manager, options);
 
       var ua3Name = randomName();
       var ua3Token = getToken({ address: ua3Name });
-      var ua3 = new SIPJSUserAgent(ua3Token, options);
+      var ua3Manager = new AccessManager(ua3Token);
+      var ua3 = new SIPJSUserAgent(ua3Manager, options);
 
       var ua2Invite, ua3Invite;
 
