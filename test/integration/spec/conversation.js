@@ -71,10 +71,10 @@ describe('Conversation (SIPJSUserAgent)', function() {
       assert(conversation.localMedia);
     });
 
-    it('should set the .participants property to Participant address', function() {
+    it('should set the .participants property to Participant identity', function() {
       var hasBob = false;
       conversation.participants.forEach(function(participant) {
-        hasBob = hasBob || participant.address === bobName;
+        hasBob = hasBob || participant.identity === bobName;
       });
       assert(hasBob);
       assert.equal(1, conversation.participants.size);
@@ -131,37 +131,37 @@ describe('Conversation (SIPJSUserAgent)', function() {
       donaldDialogs = [];
     });
 
-    it('should throw an exception if no participantAddress is passed', function() {
+    it('should throw an exception if no identity is passed', function() {
       assert.throws(conversation.invite.bind(conversation));
     });
 
-    it('should throw an exception if participantAddress is not a string', function() {
+    it('should throw an exception if identity is not a string', function() {
       assert.throws(conversation.invite.bind(conversation, charlie));
     });
 
-    it('should return a Promise<Participant> for one address', function(done) {
+    it('should return a Promise<Participant> for one identity', function(done) {
       conversation.invite(charlieName)
         .then(
-          function(participant) { assert.equal(participant.address, charlieName); },
+          function(participant) { assert.equal(participant.identity, charlieName); },
           function() { assert.fail(null, null, 'promise was rejected'); })
         .then(done, done);
     });
 
-    it('should return an Array<Promise<Participant>> for one address in an array', function(done) {
+    it('should return an Array<Promise<Participant>> for one identity in an array', function(done) {
       conversation.invite([charlieName])[0]
         .then(
-          function(participant) { assert.equal(participant.address, charlieName); },
+          function(participant) { assert.equal(participant.identity, charlieName); },
           function() { assert.fail(null, null, 'promise was rejected'); })
         .then(done, done);
     });
 
     // NOTE(mroberts): Disabled until this works in prod.
-    it('should return an Array<Promise<Participant>> for multiple addresses in an array', function(done) {
+    it('should return an Array<Promise<Participant>> for multiple identities in an array', function(done) {
       this.timeout(10000);
       Q.all(conversation.invite([charlieName, donaldName])).then(
           function(participants) {
             var names = participants.map(function(participant) {
-              return participant.address;
+              return participant.identity;
             });
             assert(names.indexOf(charlieName) !== -1);
             assert(names.indexOf(donaldName) !== -1);

@@ -68,8 +68,8 @@ describe('Client (SIPJSUserAgent)', function() {
       assert(alice._isRegistered);
     });
 
-    it('should set .address', function() {
-      assert.equal(aliceName, alice.address);
+    it('should set .identity', function() {
+      assert.equal(aliceName, alice.identity);
     });
 
     it('should emit tokenExpired when active token expires', function(done) {
@@ -124,8 +124,8 @@ describe('Client (SIPJSUserAgent)', function() {
       assert(!alice.isRegistered);
     });
 
-    it('does not update .address', function() {
-      assert.equal(aliceName, alice.address);
+    it('does not update .identity', function() {
+      assert.equal(aliceName, alice.identity);
     });
   });
 
@@ -172,8 +172,8 @@ describe('Client (SIPJSUserAgent)', function() {
       assert(alice.isListening);
     });
 
-    it('updates .address', function() {
-      assert.equal(aliceName, alice.address);
+    it('updates .identity', function() {
+      assert.equal(aliceName, alice.identity);
     });
   });*/
 
@@ -204,7 +204,7 @@ describe('Client (SIPJSUserAgent)', function() {
       uaToken = getToken({ address: uaName });
       ua = new SIPJSUserAgent(uaToken, options);
       ua.register().then(function() {
-        ict = ua.invite(alice.address);
+        ict = ua.invite(alice.identity);
       }, function(error) {
         done(error);
       });
@@ -288,7 +288,7 @@ describe('Client (SIPJSUserAgent)', function() {
       return alice.createConversation(name, options);
     };
 
-    it('should validate an address was passed', function() {
+    it('should validate an identity was passed', function() {
       assert.throws(createConversation.bind(this), /INVALID_ARGUMENT/);
     });
 
