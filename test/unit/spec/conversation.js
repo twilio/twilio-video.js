@@ -1,6 +1,6 @@
 'use strict';
 
-var AccessToken = require('lib/accesstoken');
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Conversation = require('lib/conversation');
 var MockDialog = require('test/mock/dialog');
@@ -19,12 +19,13 @@ describe('Conversation', function() {
 
   beforeEach(function(done) {
     conversation = new Conversation();
-    token = new AccessToken(jwt);
-    dialog = new MockDialog(util.makeURI('AC123', 'foo'), token);
-    dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), token);
+    token = jwt;
+    var accessManager = new AccessManager(token);
+    dialog = new MockDialog(util.makeURI('AC123', 'foo'), accessManager);
+    dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), accessManager);
     conversation._addDialog(dialog);
     conversation._addDialog(dialog2);
-    assert(dialog.userAgent.token);
+    assert(dialog.userAgent.accessManager);
 
     // Make sure our addDialog events are done
     // firing before starting the test

@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var getToken = require('test/lib/token').getToken.bind(null, {
   accountSid: 'AP123',
@@ -34,7 +35,7 @@ describe('StatsReporter', function() {
   beforeEach(function() {
     xhr = new XHR();
     token = getToken('foo');
-    dialog = new MockDialog('foo', token);
+    dialog = new MockDialog('foo', new AccessManager(token));
     reporter = new StatsReporter('foo.bar', dialog, {
       logLevel: 'warn',
       post: function(requestParams) {

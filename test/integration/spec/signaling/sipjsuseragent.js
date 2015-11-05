@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Q = require('q');
@@ -14,6 +15,7 @@ var wsServer = credentials.wsServer;
 describe('SIPJSUserAgent', function() {
   var ua1Name = randomName();
   var token = getToken({ address: ua1Name });
+  var accessManager = new AccessManager(token);
   var ua1 = null;
 
   var options = {};
@@ -23,11 +25,11 @@ describe('SIPJSUserAgent', function() {
 
   describe('constructor', function() {
     before(function() {
-      ua1 = new SIPJSUserAgent(token, options);
+      ua1 = new SIPJSUserAgent(accessManager, options);
     });
 
-    it('should set .token', function() {
-      assert.equal(token, ua1.token);
+    it('should set .accessManager', function() {
+      assert.equal(accessManager, ua1.accessManager);
     });
 
     it('should not automatically connect', function() {
@@ -39,7 +41,7 @@ describe('SIPJSUserAgent', function() {
     });
   });
 
-  describe('#register (without Token)', function() {
+  describe('#register()', function() {
     var receivedEvent = false;
 
     it('should register when not connected', function(done) {
@@ -57,7 +59,7 @@ describe('SIPJSUserAgent', function() {
     });
 
     it('should register when already connected', function(done) {
-      ua1 = new SIPJSUserAgent(token, options);
+      ua1 = new SIPJSUserAgent(accessManager, options);
       ua1.connect().then(function() {
         return ua1.register();
       }).then(function() {
@@ -81,17 +83,11 @@ describe('SIPJSUserAgent', function() {
         assert(receivedEvent);
       });
 
-      it('should not change .token', function() {
-        assert.equal(token, ua1.token);
-      });
-
-      describe('#register (with Token)', function() {
-        ua1Name = randomName();
-        token = getToken({ address: ua1Name });
+      describe('#register()', function() {
         var receivedEvent = false;
 
         it('should register', function(done) {
-          ua1.register(token).then(function() {
+          ua1.register().then(function() {
             assert(ua1.isRegistered);
           }).then(done, done);
           ua1.once('registered', function() {
@@ -102,16 +98,12 @@ describe('SIPJSUserAgent', function() {
         it('should emit "registered" event', function() {
           assert(receivedEvent);
         });
-
-        it('should update .token', function() {
-          assert.equal(token, ua1.token);
-        });
       });
     });
   });
 
   var ua2Name = randomName();
-  var ua2 = new SIPJSUserAgent(getToken({ address: ua2Name }), { 'wsServer': wsServer, 'debug': false });
+  var ua2 = new SIPJSUserAgent(new AccessManager(getToken({ address: ua2Name })), { 'wsServer': wsServer, 'debug': false });
 
   describe('ua2.invite(ua1Name)', function() {
     var ua2Ict = null;

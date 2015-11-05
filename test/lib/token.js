@@ -1,7 +1,6 @@
 'use strict';
 
 var jwt = require('jsonwebtoken');
-var AccessToken = require('../../lib/accesstoken');
 
 /**
  * Credentials:
@@ -57,12 +56,12 @@ function getAccessToken(credentials, options) {
     payload.grants = undefined;
   }
 
-  return new AccessToken(jwt.sign(payload, signingKeySecret, {
+  return jwt.sign(payload, signingKeySecret, {
     headers: {
       cty: 'twilio-sat;v=1'
     },
     noTimestamp: true
-  }));
+  });
 }
 
 module.exports.getToken = getAccessToken;

@@ -1,6 +1,5 @@
 'use strict';
 
-require('./spec/accesstoken');
 require('./spec/client');
 require('./spec/conversation');
 require('./spec/invite');
