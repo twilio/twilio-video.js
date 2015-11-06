@@ -105,7 +105,7 @@ describe('util', function() {
     it('should use the correct system info when navigator and sdk version are set', function() {
       process.env.SDK_VERSION = 'v0.1.2.3';
       global.navigator = { userAgent: 'foo', platform: 'bar' };
-      var regHeaders = util.makeRegisterHeaders({ jwt: '' });
+      var regHeaders = util.makeRegisterHeaders('');
       var systemInfo = JSON.parse(regHeaders[1].slice(17));
 
       assert.equal(systemInfo.v, 'v0.1.2.3');
@@ -117,7 +117,7 @@ describe('util', function() {
       delete process.env.SDK_VERSION;
       delete global.navigator;
 
-      var regHeaders = util.makeRegisterHeaders({ jwt: '' });
+      var regHeaders = util.makeRegisterHeaders('');
       var systemInfo = JSON.parse(regHeaders[1].slice(17));
 
       assert.equal(systemInfo.v, 'unknown');
