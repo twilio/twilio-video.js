@@ -8,7 +8,7 @@ var sinon = require('sinon');
 var UserAgent = require('lib/signaling/useragent');
 var util = require('lib/util');
 
-var Dialog = module.exports = function Dialog(name, token) {
+var Dialog = module.exports = function Dialog(name, accessManager) {
   QueueingEventEmitter.call(this);
 
   var createPromise = function() {
@@ -43,13 +43,13 @@ var Dialog = module.exports = function Dialog(name, token) {
       value: createPromise()
     },
     remote: {
-      value: name
+      value: 'sip:' + name
     },
     remoteMedia: {
       value: remoteMedia
     },
     userAgent: {
-      value: new UserAgent(token)
+      value: new UserAgent(accessManager)
     }
   });
 };

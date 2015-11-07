@@ -1,4 +1,5 @@
 /* jshint strict: false, undef: false */
+var AccessToken = require('twilio-common').AccessToken;
 var component = require('lib');
 var componentName = 'Conversations';
 
@@ -11,6 +12,7 @@ var componentName = 'Conversations';
   // Browser globals
   } else {
     root.Twilio = root.Twilio || function Twilio() { };
+    root.Twilio.AccessToken = root.Twilio.AccessToken || AccessToken;
     if (componentName) {
       root.Twilio[componentName] = component;
     } else {

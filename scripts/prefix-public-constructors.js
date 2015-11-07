@@ -8,7 +8,6 @@ if (!releaseDocs) {
 }
 
 var classNames = [
-  'AccessToken',
   'Client',
   'LocalMedia'
 ];

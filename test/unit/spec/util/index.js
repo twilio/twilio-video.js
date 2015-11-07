@@ -9,32 +9,6 @@ var util = require('lib/util');
 
 
 describe('util', function() {
-  describe('decodeBase64', function() {
-    context('when atob is defined', function() {
-      var atob;
-
-      before(function() {
-        atob = global.atob;
-        global.atob = sinon.spy();
-      });
-
-      it('should use atob', function() {
-        util.base64.decode('foo');
-        sinon.assert.calledWith(global.atob, 'foo');
-      });
-
-      after(function() {
-        global.atob = atob;
-      });
-    });
-
-    context('when atob is not defined', function() {
-      it('should correctly decode a Base64 string', function() {
-        assert.equal(util.base64.decode('Zm9v'), 'foo');
-      });
-    });
-  });
-
   describe('encodeBase64', function() {
     context('when btoa is defined', function() {
       var btoa;
@@ -45,7 +19,7 @@ describe('util', function() {
       });
 
       it('should use atob', function() {
-        util.base64.encode('foo');
+        util.encodeBase64('foo');
         sinon.assert.calledWith(global.btoa, 'foo');
       });
 
@@ -53,24 +27,12 @@ describe('util', function() {
         global.btoa = btoa;
       });
     });
-
-    context('when btoa is not defined', function() {
-      it('should correctly decode a Base64 string', function() {
-        assert.equal(util.base64.decode('Zm9v'), 'foo');
-      });
-    });
   });
 
 
   describe('encodeBase64', function() {
     it('should correctly encode a string to Base64', function() {
-      assert.equal(util.base64.encode('bar'), 'YmFy');
-    });
-  });
-
-  describe('decodeBase64URL', function() {
-    it('should correctly decode a Base64url string', function() {
-      assert.equal(util.base64URL.decode('eyBmb286ICJiYXIiIH0'), '{ foo: "bar" }');
+      assert.equal(util.encodeBase64('bar'), 'YmFy');
     });
   });
 
@@ -135,7 +97,7 @@ describe('util', function() {
     });
 
     it('should use the jwt of the token passed in', function() {
-      var regHeaders = util.makeRegisterHeaders({ jwt: 'foobar' });
+      var regHeaders = util.makeRegisterHeaders('foobar');
       var tokenHeader = regHeaders[0];
       assert(/foobar$/.test(tokenHeader));
     });
@@ -181,21 +143,6 @@ describe('util', function() {
       var uri = util.makeURI('AC1234');
       var regex = new RegExp(constants.DEFAULT_PEER_NAME);
       assert(regex.test(uri));
-    });
-  });
-
-  describe('memoize', function() {
-    it('should only run the function once with the same arguments', function() {
-      var testFn = function(letter) { return letter; }
-      var spy = new sinon.spy(testFn);
-      var memo = util.memoize(spy);
-
-      assert.equal(memo('a'), 'a');
-      assert.equal(memo('b'), 'b');
-      assert.equal(memo('a'), 'a');
-
-      assert(spy.withArgs('a').calledOnce);
-      assert(spy.withArgs('b').calledOnce);
     });
   });
 
@@ -484,7 +431,7 @@ describe('util', function() {
         };
         var request = { post: sinon.spy(function() { return thenable; }) };
 
-        util.fetchIceServers('foo', {
+        util.fetchIceServers('AC123', 'foo', {
           requestFactory: request
         });
 
@@ -501,7 +448,7 @@ describe('util', function() {
         };
         var request = { post: sinon.spy(function() { return thenable; }) };
 
-        util.fetchIceServers('foo', {
+        util.fetchIceServers('AC123', 'foo', {
           requestFactory: request
         });
       });
@@ -513,7 +460,7 @@ describe('util', function() {
         var request = { post: sinon.spy(function() { return thenable; }) };
         var log = { warn: sinon.spy() };
 
-        util.fetchIceServers('foo', {
+        util.fetchIceServers('AC123', 'foo', {
           requestFactory: request,
           log: log
         });

@@ -1,5 +1,6 @@
 'use strict';
 
+var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Q = require('q');
 
@@ -16,22 +17,26 @@ describe('Conversation (SIPJSUserAgent)', function() {
   // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
+  var aliceManager = new AccessManager(aliceToken);
   var alice = null;
 
   // Bob is a UserAgent.
   var bobName = randomName();
   var bobToken = getToken({ address: bobName });
+  var bobManager = new AccessManager(bobToken);
   var bob = null;
 
   // Charlie is a UserAgent.
   var charlieName = randomName();
   var charlieToken = getToken({ address: charlieName });
+  var charlieManager = new AccessManager(charlieToken);
   var charlie = null;
   var charlieDialogs = [];
 
   // Donald is a UserAgent.
   var donaldName = randomName();
   var donaldToken = getToken({ address: donaldName });
+  var donaldManager = new AccessManager(donaldToken);
   var donald = null;
   var donaldDialogs = [];
 
@@ -47,8 +52,8 @@ describe('Conversation (SIPJSUserAgent)', function() {
   describe('constructor', function() {
     before(function setupClient(done) {
       this.timeout(10000);
-      alice = new Client(aliceToken, options);
-      bob = new SIPJSUserAgent(bobToken, options);
+      alice = new Client(aliceManager, options);
+      bob = new SIPJSUserAgent(bobManager, options);
 
       Q.all([alice.listen(), bob.connect()])
         .then(function() {
@@ -84,10 +89,10 @@ describe('Conversation (SIPJSUserAgent)', function() {
   describe('#invite', function() {
     before(function setupClientsAndAgents(done) {
       this.timeout(10000);
-      alice = new Client(aliceToken, options);
-      bob = new SIPJSUserAgent(bobToken, options);
-      charlie = new SIPJSUserAgent(charlieToken, options);
-      donald = new SIPJSUserAgent(donaldToken, options);
+      alice = new Client(aliceManager, options);
+      bob = new SIPJSUserAgent(bobManager, options);
+      charlie = new SIPJSUserAgent(charlieManager, options);
+      donald = new SIPJSUserAgent(donaldManager, options);
 
       bob.on('invite', function(ist) {
         ist.accept().then(function(_dialog) { dialog = _dialog; });
