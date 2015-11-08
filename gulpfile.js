@@ -9,9 +9,11 @@ var gulp = require('gulp');
 var newer = require('gulp-newer');
 var rename = require('gulp-rename');
 var replace = require('gulp-replace');
+var runSequence = require('run-sequence');
 var source = require('vinyl-source-stream');
 var spawn = require('child_process').spawn;
 var streamFromPromise = require('stream-from-promise');
+var streamToPromise = require('stream-to-promise');
 var through = require('through2');
 var uglify = require('gulp-uglify');
 var util = require('gulp-util');
@@ -23,7 +25,16 @@ var version = pkg.version;
 
 var license = 'LICENSE.md';
 var linted = '.linted';
+var mocha = 'node_modules/mocha/bin/_mocha';
 var jsdoc = 'node_modules/jsdoc/jsdoc.js';
+
+var integrationTested = '.integration-tested';
+var integrationTestGlob = 'test/integration/**/*.js';
+var integrationTestIndex = 'test/integration/index.js';
+
+var unitTested = '.unit-tested';
+var unitTestGlob = 'test/unit/**/*.js';
+var unitTestIndex = 'test/unit/index.js';
 
 var lib = 'lib';
 var libJsGlob = 'lib/**/*.js';
@@ -70,66 +81,157 @@ var privateConstructors = [
 
 gulp.task('default', [distMinJs, distDocs]);
 
-gulp.task('clean', function(done) {
-  Promise.all([
+gulp.task('clean', function() {
+  return Promise.all([
     del(dist),
+    del(integrationTested),
     del(linted),
-    del(srcBundleJs)
-  ]).then(function() { done() }, done);
+    del(srcBundleJs),
+    del(unitTested)
+  ]);
 });
 
 // Lint
 // ----
 
-gulp.task(linted, function(done) {
-  lint([libJsGlob, srcJs], newer(linted), function(error, changed) {
-    if (error) {
-      done(error);
-      return;
-    } else if (!changed) {
-      done();
-      return;
-    }
-    fs.writeFile(linted, '', done);
+gulp.task(linted, function() {
+  return lint([libJsGlob, srcJs], newer(linted))
+    .then(function(changed) {
+      if (changed.length) {
+        fs.writeFile(linted, '');
+      }
+    });
+});
+
+gulp.task('lint', function() {
+  return lint([libJsGlob, srcJs]);
+});
+
+function lint(files, filter) {
+  return new Promise(function(resolve, reject) {
+    return gulp.src(files, { read: false })
+      .pipe(filter || util.noop())
+      .pipe(then(function(files) {
+        if (files.length) {
+          var paths = getPaths(files);
+          var code = eslint.execute(paths.join(' '));
+          if (code) {
+            reject(new util.PluginError('lint', new Error('ESLint error')));
+            return;
+          }
+        }
+        resolve(files);
+      }));
   });
+}
+
+// Test
+// ----
+
+gulp.task('test', function() {
+  return runSequence('unit-test', 'integration-test');
 });
 
-gulp.task('lint', function(done) {
-  lint([libJsGlob, srcJs], done);
+// Unit Test
+// ---------
+
+gulp.task(unitTested, function() {
+  return unitTest([libJsGlob, unitTestGlob], newer(unitTested))
+    .then(function(changed) {
+      if (changed.length) {
+        fs.writeFile(unitTested, '');
+      }
+    });
 });
 
-function lint(files) {
-  var args = [].slice.call(arguments);
-  var filter = args.length === 3 ? args[1] : util.noop();
-  var done = args.length === 3 ? args[2] : args[1];
-  return gulp.src(files, { read: false })
-    .pipe(filter)
-    .pipe(then(function(files) {
-      if (files.length) {
-        var paths = getPaths(files);
-        var code = eslint.execute(paths.join(' '));
-        if (code) {
-          done(new util.PluginError('lint', new Error('ESLint error')));
+gulp.task('unit-test', function() {
+  return unitTest([libJsGlob, unitTestGlob]);
+});
+
+function unitTest(files, filter) {
+  return new Promise(function(resolve, reject) {
+    return gulp.src(files, { read: false })
+      .pipe(filter || util.noop())
+      .pipe(then(function(files) {
+        if (files.length) {
+          var child = spawn('node',
+            [mocha, unitTestIndex],
+            { stdio: 'inherit' });
+          child.on('close', function(code) {
+            if (code) {
+              reject(new util.PluginError('unit-test', new Error('Mocha error')));
+              return;
+            }
+            resolve(files);
+          });
           return;
         }
+        resolve(files);
+      }));
+  });
+}
+
+// Integration Test
+// ----------------
+
+gulp.task(integrationTested, function() {
+  return integrationTest([libJsGlob, integrationTestGlob], newer(integrationTested))
+    .then(function(changed) {
+      if (changed.length) {
+        fs.writeFile(integrationTested, '');
       }
-      done(null, files.length);
-    }));
+    });
+});
+
+gulp.task('integration-test', function() {
+  return integrationTest([libJsGlob, integrationTestGlob]);
+});
+
+function integrationTest(files, filter) {
+  return new Promise(function(resolve, reject) {
+    return gulp.src(files, { read: false })
+      .pipe(filter || util.noop())
+      .pipe(then(function(files) {
+        if (files.length) {
+          var child = spawn('node',
+            [mocha, integrationTestIndex],
+            { stdio: 'inherit' });
+          child.on('close', function(code) {
+            if (code) {
+              reject(new util.PluginError('integration-test', new Error('Mocha error')));
+              return;
+            }
+            resolve(files);
+          });
+          return;
+        }
+        resolve(files);
+      }));
+  });
 }
 
 // src/twilio-rtc-conversations-bundle.js
 // --------------------------------------
 
-gulp.task(srcBundleJs, function() {
-  return gulp.src(libJsGlob, { read: false })
-    .pipe(newer(srcBundleJs))
-    .pipe(then(function() {
-      var b = browserify();
-      b.add(main);
-      return b.bundle();
-    }))
-    .pipe(source(bundleJs))
-    .pipe(gulp.dest(src));
+gulp.task(srcBundleJs, function(done) {
+  return runSequence(
+    linted,
+    unitTested,
+    integrationTested,
+    function() {
+      return gulp.src(libJsGlob, { read: false })
+        .pipe(newer(srcBundleJs))
+        .pipe(then(function() {
+          var b = browserify();
+          b.add(main);
+          return b.bundle();
+        }))
+        .pipe(source(bundleJs))
+        .pipe(gulp.dest(src))
+        .once('error', done)
+        .once('end', done);
+    }
+  );
 });
 
 // dist/twilio-rtc-conversations.js
@@ -166,7 +268,7 @@ gulp.task(distJs, [srcBundleJs], function() {
 // dist/twilio-rtc-conversations.min.js
 // ------------------------------------
 
-gulp.task(distMinJs, [linted, distJs], function() {
+gulp.task(distMinJs, [distJs], function() {
   var firstComment = true;
   return gulp.src(distJs)
     .pipe(newer(distMinJs))

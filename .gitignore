@@ -1,8 +1,8 @@
 *.pyc
 *.sw*
-.INTEGRATION_TESTED
-.LINTED
-.UNIT_TESTED
+.integration-tested
+.linted
+.unit-tested
 coverage
 dist
 doc
