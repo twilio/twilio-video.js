@@ -13,7 +13,6 @@ var runSequence = require('run-sequence');
 var source = require('vinyl-source-stream');
 var spawn = require('child_process').spawn;
 var streamFromPromise = require('stream-from-promise');
-var streamToPromise = require('stream-to-promise');
 var through = require('through2');
 var uglify = require('gulp-uglify');
 var util = require('gulp-util');
@@ -95,6 +94,9 @@ gulp.task('clean', function() {
 // ----
 
 gulp.task(linted, function() {
+  if (process.env.SKIP_LINT) {
+    return;
+  }
   return lint([libJsGlob, srcJs], newer(linted))
     .then(function(changed) {
       if (changed.length) {
@@ -136,6 +138,9 @@ gulp.task('test', function() {
 // ---------
 
 gulp.task(unitTested, function() {
+  if (process.env.SKIP_TEST || process.env.SKIP_UNIT) {
+    return;
+  }
   return unitTest([libJsGlob, unitTestGlob], newer(unitTested))
     .then(function(changed) {
       if (changed.length) {
@@ -175,6 +180,9 @@ function unitTest(files, filter) {
 // ----------------
 
 gulp.task(integrationTested, function() {
+  if (process.env.SKIP_TEST || process.env.SKIP_INTEGRATION) {
+    return;
+  }
   return integrationTest([libJsGlob, integrationTestGlob], newer(integrationTested))
     .then(function(changed) {
       if (changed.length) {
@@ -243,22 +251,16 @@ gulp.task(distJs, [srcBundleJs], function() {
     .pipe(then(function(files) {
       var nameRegExp = /\${name}/;
       var versionRegExp = /\${version}/;
-
-      var srcBundleRegExp =
-        new RegExp("require\\('\\.\\/" + bundleJs.replace(/.js$/, '') + "'\\);");
       var srcBundleJsContents = files[0].contents;
-
-      var licenseRegExp = new RegExp('#include "' + license + '"');
       var licenseContents;
-
       return gulp.src(license)
         .pipe(then(function(files) {
           licenseContents = files[0].contents;
           return gulp.src(srcJs)
             .pipe(replace(nameRegExp, name))
             .pipe(replace(versionRegExp, version))
-            .pipe(replace(licenseRegExp, licenseContents))
-            .pipe(replace(srcBundleRegExp, srcBundleJsContents));
+            .pipe(replace('#include "' + license + '"', licenseContents))
+            .pipe(replace("require('./" + bundleJs.replace(/.js$/, '') + "');", srcBundleJsContents));
         }));
     }))
     .pipe(rename(js))
@@ -269,6 +271,9 @@ gulp.task(distJs, [srcBundleJs], function() {
 // ------------------------------------
 
 gulp.task(distMinJs, [distJs], function() {
+  if (process.env.SKIP_MINIFY) {
+    return;
+  }
   var firstComment = true;
   return gulp.src(distJs)
     .pipe(newer(distMinJs))
@@ -289,7 +294,10 @@ gulp.task(distMinJs, [distJs], function() {
 // ---------
 
 gulp.task(distDocs, function() {
-  gulp.src([libJsGlob, srcJs], { read: false })
+  if (process.env.SKIP_DOCS) {
+    return;
+  }
+  return gulp.src([libJsGlob, srcJs], { read: false })
     .pipe(newer(distDocs + '/index.html'))
     .pipe(thenP(function() {
       return del(distDocs).then(function() {
