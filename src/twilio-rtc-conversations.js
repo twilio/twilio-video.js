@@ -2,7 +2,7 @@
 
 #include "LICENSE.md"
  */
-/* jshint strict: false, undef: false */
+'use strict';
 (function(root) {
   var component = require('./twilio-rtc-conversations-bundle');
   /* globals define */
@@ -11,8 +11,8 @@
   } else {
     root.Twilio = root.Twilio || {};
     root.Twilio.AccessManager = root.Twilio.AccessManager || component.AccessManager;
-    for (componentName in component) {
+    for (var componentName in component) {
       root.Twilio[componentName] = component[componentName];
     }
   }
-})(window || global || this);
+})(window || global || /* eslint no-invalid-this:0 */ this);
