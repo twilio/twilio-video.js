@@ -164,7 +164,7 @@ function unitTest(files, filter) {
       .pipe(filter || util.noop())
       .pipe(then(function(files) {
         if (files.length) {
-          var child = spawn('node',
+          var child = safeSpawn('node',
             [mocha, unitTestIndex],
             { stdio: 'inherit' });
           child.on('close', function(code) {
@@ -206,7 +206,7 @@ function integrationTest(files, filter) {
       .pipe(filter || util.noop())
       .pipe(then(function(files) {
         if (files.length) {
-          var child = spawn('node',
+          var child = safeSpawn('node',
             [mocha, integrationTestIndex],
             { stdio: 'inherit' });
           child.on('close', function(code) {
@@ -307,7 +307,7 @@ gulp.task(distDocs, function() {
     .pipe(thenP(function() {
       return del(distDocs).then(function() {
         return new Promise(function(resolve, reject) {
-          var child = spawn('node',
+          var child = safeSpawn('node',
             [jsdoc, '-d', distDocs, '-c', 'jsdoc.conf'].concat(publicClasses),
             { stdio: 'inherit' });
           child.on('close', function(code) {
@@ -388,7 +388,7 @@ gulp.task(distDocs, function() {
 gulp.task('docs', [distDocs]);
 
 gulp.task('serve', [testAppSdk], function(done) {
-  var make = spawn('make',
+  var make = safeSpawn('make',
     ['-C', testApp, 'serve'],
     { stdio: 'inherit' });
   make.on('close', function(code) {
@@ -406,7 +406,7 @@ gulp.task(testApp, function(done) {
       done();
       return;
     }
-    var gitSubmoduleInit = spawn('git',
+    var gitSubmoduleInit = safeSpawn('git',
       ['submodule', 'init'],
       { stdio: 'inherit' });
     gitSubmoduleInit.on('close', function(code) {
@@ -414,7 +414,7 @@ gulp.task(testApp, function(done) {
         done(new util.PluginError(testApp, new Error('git error')));
         return;
       }
-      var gitSubmoduleUpdate = spawn('git',
+      var gitSubmoduleUpdate = safeSpawn('git',
         ['submodule', 'update'],
         { stdio: 'inherit' });
       gitSubmoduleUpdate.on('close', function(code) {
@@ -485,3 +485,22 @@ function map(fn) {
     return done();
   });
 }
+
+function safeSpawn() {
+  var child = spawn.apply(this, arguments);
+  safeSpawn._children.push(child);
+  return child;
+}
+
+safeSpawn._children = [];
+
+safeSpawn.killAll = function killAll() {
+  safeSpawn._children.splice(0).forEach(function(child) {
+    child.kill();
+  });
+};
+
+process.on('SIGINT', function() {
+  safeSpawn.killAll();
+  process.exit(1);
+});
