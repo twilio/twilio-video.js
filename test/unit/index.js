@@ -1,5 +1,9 @@
 'use strict';
 
+if (typeof window === 'undefined') {
+  require('../lib/mockwebrtc')();
+}
+
 require('./spec/client');
 require('./spec/conversation');
 require('./spec/invite');

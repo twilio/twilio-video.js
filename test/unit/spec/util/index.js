@@ -3,7 +3,6 @@
 var assert = require('assert');
 var constants = require('lib/util/constants');
 var EventEmitter = require('events').EventEmitter;
-var Q = require('q');
 var sinon = require('sinon');
 var util = require('lib/util');
 
@@ -162,11 +161,11 @@ describe('util', function() {
     it('should resolve when the first passed promise is accepted', function(done) {
       var spy = sinon.spy();
 
-      var p1 = Q.promise(function(resolve, reject) {
+      var p1 = new Promise(function(resolve, reject) {
         setTimeout(resolve.bind(null, 1), 10);
       });
 
-      var p2 = Q.promise(function(resolve, reject) {
+      var p2 = new Promise(function(resolve, reject) {
         setTimeout(resolve.bind(null, 2), 20);
       });
 
@@ -184,11 +183,11 @@ describe('util', function() {
     it('should resolve when the first passed promise is rejected', function(done) {
       var spy = sinon.spy();
 
-      var p1 = Q.promise(function(resolve, reject) {
+      var p1 = new Promise(function(resolve, reject) {
         setTimeout(reject.bind(null, 1), 10);
       });
 
-      var p2 = Q.promise(function(resolve, reject) {
+      var p2 = new Promise(function(resolve, reject) {
         setTimeout(reject.bind(null, 2), 20);
       });
 

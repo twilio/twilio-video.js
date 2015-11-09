@@ -2,12 +2,12 @@
 
 var CancelablePromise = require('lib/util/cancelablepromise');
 var assert = require('assert');
-var Q = require('q');
+var util = require('lib/util');
 
 describe('CancelablePromise', function() {
   describe('constructor', function() {
     it('should always return an instance of CancelablePromise', function() {
-      var promise = Q.fcall(function(resolve, reject) { });
+      var promise = new Promise(function() {});
       var cp1 = new CancelablePromise(promise);
       var cp2 = CancelablePromise(promise);
 
@@ -16,7 +16,7 @@ describe('CancelablePromise', function() {
     });
 
     it('should return the original if it already has a cancel function', function() {
-      var promise = Q.fcall(function(resolve, reject) { });
+      var promise = new Promise(function() {});
       var cp1 = new CancelablePromise(promise);
       var cp2 = new CancelablePromise(cp1);
 
@@ -26,8 +26,8 @@ describe('CancelablePromise', function() {
 
   describe('then', function() {
     it('should execute the then of original promise', function(done) {
-      var deferred1 = Q.defer();
-      var deferred2 = Q.defer();
+      var deferred1 = util.defer();
+      var deferred2 = util.defer();
 
       var cancelablePromises = [
         CancelablePromise(deferred1.promise),
@@ -39,7 +39,7 @@ describe('CancelablePromise', function() {
         cancelablePromises[1].then(null, function(result) { return 'bar'; })
       ]
 
-      Q.all(thens).then(function(result) {
+      Promise.all(thens).then(function(result) {
         assert(result[0] === 'foo');
         assert(result[1] === 'bar');
         done();
@@ -52,7 +52,7 @@ describe('CancelablePromise', function() {
 
   describe('catch', function() {
     it('should execute the catch of original promise', function(done) {
-      var deferred = Q.defer();
+      var deferred = util.defer();
       var cp = CancelablePromise(deferred.promise);
 
       cp.catch(function(result) {
@@ -66,7 +66,7 @@ describe('CancelablePromise', function() {
 
   describe('cancel', function() {
     it('should reject the promise with a "canceled" error', function(done) {
-      var deferred = Q.defer();
+      var deferred = util.defer();
       var cp = CancelablePromise(deferred.promise);
 
       cp.then(function() {

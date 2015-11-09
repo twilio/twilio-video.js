@@ -1,7 +1,9 @@
-var Q = require('q');
+'use strict';
+
+var util = require('lib/util');
 
 function InviteClientTransaction(ua, address, options) {
-  var deferred = Q.defer();
+  var deferred = util.defer();
 
   Object.defineProperties(this, {
     _deferred: { value: deferred },
@@ -15,9 +17,7 @@ InviteClientTransaction.prototype.then = function then(onResolve, onReject) {
 
 InviteClientTransaction.prototype.cancel = function cancel() {
   var self = this;
-  if(!this._promise.isFulfilled() && !this._promise.isRejected()) {
-    self._deferred.reject(self);
-  }
+  self._deferred.reject(self);
 };
 
 module.exports = InviteClientTransaction;

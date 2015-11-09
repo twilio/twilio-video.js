@@ -2,7 +2,6 @@
 
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
-var Q = require('q');
 
 var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
@@ -45,7 +44,7 @@ describe('Invite (SIPJSUserAgent)', function() {
     bob = new SIPJSUserAgent(bobManager, options);
     charlie = new SIPJSUserAgent(charlieManager, options);
 
-    return Q.all([alice.listen(), bob.register(), charlie.register()])
+    return Promise.all([alice.listen(), bob.register(), charlie.register()])
       .then(function() { done(); }, done);
   });
 
