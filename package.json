@@ -31,6 +31,7 @@
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.0",
     "jsonwebtoken": "^5.0.0",
+    "mkdirp": "^0.5.1",
     "mocha": "^2.2.5",
     "promptly": "^0.2.0",
     "run-sequence": "^1.1.4",

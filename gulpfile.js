@@ -6,6 +6,7 @@ var del = require('del');
 var eslint = require('eslint/lib/cli');
 var fs = require('fs');
 var gulp = require('gulp');
+var mkdirp = require('mkdirp');
 var newer = require('gulp-newer');
 var rename = require('gulp-rename');
 var replace = require('gulp-replace');
@@ -50,6 +51,10 @@ var distJs = dist + '/' + js;
 var distMinJs = dist + '/' + minJs;
 
 var distDocs = dist + '/docs';
+
+var testApp = 'simple-signaling.appspot.com';
+var testAppSdkPath = testApp + '/sdk/rtc/js/latest';
+var testAppSdk = testAppSdkPath + '/' + js;
 
 var publicClasses = [
   'lib/client.js',
@@ -381,6 +386,69 @@ gulp.task(distDocs, function() {
 });
 
 gulp.task('docs', [distDocs]);
+
+gulp.task('serve', [testAppSdk], function(done) {
+  var make = spawn('make',
+    ['-C', testApp, 'serve'],
+    { stdio: 'inherit' });
+  make.on('close', function(code) {
+    if (code) {
+      done(new util.PluginError('serve', new Error('make')));
+      return;
+    }
+    done();
+  });
+});
+
+gulp.task(testApp, function(done) {
+  fs.exists(testApp, function(exists) {
+    if (exists) {
+      done();
+      return;
+    }
+    var gitSubmoduleInit = spawn('git',
+      ['submodule', 'init'],
+      { stdio: 'inherit' });
+    gitSubmoduleInit.on('close', function(code) {
+      if (code) {
+        done(new util.PluginError(testApp, new Error('git error')));
+        return;
+      }
+      var gitSubmoduleUpdate = spawn('git',
+        ['submodule', 'update'],
+        { stdio: 'inherit' });
+      gitSubmoduleUpdate.on('close', function(code) {
+        if (code) {
+          done(new util.PluginError(testApp, new Error('git error')));
+          return;
+        }
+        done();
+      });
+    });
+  });
+});
+
+gulp.task(testAppSdk, [distJs, testApp], function(done) {
+  mkdirp(testAppSdkPath, function(error) {
+    if (error) {
+      done(error);
+      return;
+    }
+    fs.exists(testAppSdk, function(exists) {
+      if (exists) {
+        done();
+        return;
+      }
+      fs.symlink(testAppSdk, '../../../../' + distJs, function(error) {
+        if (error) {
+          done(error);
+          return;
+        }
+        done();
+      });
+    });
+  });
+});
 
 function getPaths(files) {
   return files.map(function(file) {
