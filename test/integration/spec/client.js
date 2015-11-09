@@ -3,7 +3,6 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var Q = require('q');
 
 var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
@@ -361,7 +360,7 @@ describe('Client (SIPJSUserAgent)', function() {
         }
       });
 
-      Q.all([ua2.register(), ua3.register()]).then(function() {
+      Promise.all([ua2.register(), ua3.register()]).then(function() {
         alice.createConversation([ua2Name, ua3Name])
           .then(function(conversation) {
             conversation2 = conversation;

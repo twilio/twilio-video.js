@@ -2,7 +2,6 @@
 
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
-var Q = require('q');
 var sinon = require('sinon');
 var util = require('lib/util');
 
@@ -10,7 +9,7 @@ function MockIST() {
   EventEmitter.call(this);
 
   function createPromise() {
-    var deferred = Q.defer();
+    var deferred = util.defer();
 
     var spy = new sinon.spy(function() {
       return deferred.promise;

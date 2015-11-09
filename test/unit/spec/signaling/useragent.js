@@ -5,7 +5,7 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var InviteClientTransaction = require('test/mock/inviteclienttransaction');
 var sinon = require('sinon');
-var Q = require('q');
+var util = require('lib/util');
 
 var UserAgent = require('lib/signaling/useragent');
 
@@ -516,7 +516,7 @@ describe('UserAgent', function() {
 
     beforeEach(function() {
       dialog = new EventEmitter();
-      deferred = Q.defer();
+      deferred = util.defer();
       ist = deferred.promise;
       ua._handleInviteServerTransaction(ist)
     });

@@ -38,7 +38,9 @@ MediaStream.prototype.removeTrack = function removeTrack(track) {
 MediaStream.prototype.stop = function stop() {
 };
 
-var navigator = {};
+var navigator = {
+  userAgent: 'foo'
+}
 
 function getUserMedia(constraints, successCallback, errorCallback) {
   var mediaStream = new MediaStream();
@@ -200,6 +202,10 @@ function mockWebRTC(_global) {
   _global.RTCSessionDescription = RTCSessionDescription;
   _global.attachMediaStream = attachMediaStream;
   _global.URL = URL;
+  _global.location = {
+    protocol: 'https',
+    host: 'bar'
+  }
   return _global;
 }
 

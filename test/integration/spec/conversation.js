@@ -2,7 +2,6 @@
 
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
-var Q = require('q');
 
 var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
@@ -55,7 +54,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
       alice = new Client(aliceManager, options);
       bob = new SIPJSUserAgent(bobManager, options);
 
-      Q.all([alice.listen(), bob.connect()])
+      Promise.all([alice.listen(), bob.connect()])
         .then(function() {
           return bob.register();
         }).then(function() {
@@ -115,9 +114,9 @@ describe('Conversation (SIPJSUserAgent)', function() {
         ist.session.mediaHandler.emit('addStream');
       });
 
-      Q.all([alice.listen(), bob.connect(), charlie.connect(), donald.connect()])
+      Promise.all([alice.listen(), bob.connect(), charlie.connect(), donald.connect()])
         .then(function() {
-          return Q.all([bob.register(), charlie.register(), donald.register()]);
+          return Promise.all([bob.register(), charlie.register(), donald.register()]);
         }).then(function() {
           return alice.createConversation(bobName);
         }).then(function(_conversation) {
@@ -163,7 +162,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
     // NOTE(mroberts): Disabled until this works in prod.
     it('should return an Array<Promise<Participant>> for multiple identities in an array', function(done) {
       this.timeout(10000);
-      Q.all(conversation.invite([charlieName, donaldName])).then(
+      Promise.all(conversation.invite([charlieName, donaldName])).then(
           function(participants) {
             var names = participants.map(function(participant) {
               return participant.identity;

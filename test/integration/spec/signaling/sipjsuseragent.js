@@ -3,7 +3,6 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var Q = require('q');
 var util = require('lib/util');
 
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
@@ -155,7 +154,7 @@ describe('SIPJSUserAgent', function() {
         this.timeout(0);
 
         before(function(done) {
-          Q.all([
+          Promise.all([
             ua2Ict.then(function(dialog) {
               ua2Dialog = dialog;
             }),
@@ -341,7 +340,7 @@ describe('SIPJSUserAgent', function() {
 
     describe('InviteClientTransaction accepted', function() {
       it('updates .inviteClientTransactions', function(done) {
-        Q.all([
+        Promise.all([
           ict.then(function(_dialog) {
             assert(!ua1.inviteClientTransactions.has(ict));
             ua1Dialog = _dialog;
