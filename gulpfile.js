@@ -223,8 +223,8 @@ function integrationTest(files, filter) {
   });
 }
 
-// src/twilio-rtc-conversations-bundle.js
-// --------------------------------------
+// src/twilio-conversations-bundle.js
+// ----------------------------------
 
 gulp.task(srcBundleJs, function(done) {
   return runSequence(
@@ -247,8 +247,8 @@ gulp.task(srcBundleJs, function(done) {
   );
 });
 
-// dist/twilio-rtc-conversations.js
-// --------------------------------
+// dist/twilio-conversations.js
+// ----------------------------
 
 gulp.task(distJs, [srcBundleJs], function() {
   return gulp.src(srcBundleJs)
@@ -272,8 +272,8 @@ gulp.task(distJs, [srcBundleJs], function() {
     .pipe(gulp.dest(dist));
 });
 
-// dist/twilio-rtc-conversations.min.js
-// ------------------------------------
+// dist/twilio-conversations.min.js
+// --------------------------------
 
 gulp.task(distMinJs, [distJs], function() {
   if (process.env.SKIP_MINIFY) {

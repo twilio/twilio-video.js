@@ -1,5 +1,5 @@
-twilio-rtc-conversations.js
-===========================
+twilio-conversations
+====================
 
 This is the development repository for the Twilio RTC Conversations JavaScript library. You must have the following to test and build this project:
 

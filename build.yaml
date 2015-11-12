@@ -1,4 +1,4 @@
-name: twilio-rtc-conversations-js
+name: twilio-conversations-js
 targets:
   - cent6
 build:

@@ -6,10 +6,9 @@
 coverage
 dist
 doc
-javascript-rtc-sdk-docs
 node_modules
 out
-src/twilio-rtc-conversations-bundle.js
+src/twilio-conversations-bundle.js
 test.json
 test/bower_components
 www/basic_auth.json

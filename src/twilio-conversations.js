@@ -4,7 +4,7 @@
  */
 /* eslint strict:0 */
 (function(root) {
-  var conversationsBundle = require('./twilio-rtc-conversations-bundle');
+  var conversationsBundle = require('./twilio-conversations-bundle');
   var Conversations = conversationsBundle(1);
   /* globals define */
   if (typeof define === 'function' && define.amd) {
