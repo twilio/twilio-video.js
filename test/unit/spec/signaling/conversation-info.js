@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var conversationInfo = require('lib/signaling/conversationinfo');
+var conversationInfo = require('lib/signaling/conversation-info');
 
 var fullNotification = JSON.stringify({
   "protocol_version": "V1",

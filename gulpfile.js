@@ -439,7 +439,7 @@ gulp.task(testAppSdk, [distJs, testApp], function(done) {
         done();
         return;
       }
-      fs.symlink(testAppSdk, '../../../../' + distJs, function(error) {
+      fs.symlink('../../../../../' + distJs, testAppSdk, function(error) {
         if (error) {
           done(error);
           return;
