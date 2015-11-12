@@ -14,7 +14,7 @@ require('./spec/statsreporter');
 require('./spec/media/index');
 require('./spec/media/track');
 
-require('./spec/signaling/conversationinfo');
+require('./spec/signaling/conversation-info');
 
 require('./spec/signaling/dialog');
 require('./spec/signaling/sipjsdialog');

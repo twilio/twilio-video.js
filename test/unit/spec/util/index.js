@@ -418,57 +418,6 @@ describe('util', function() {
     });
   });
 
-  describe('fetchIceServers', function() {
-    var response = JSON.stringify({ 'ice_servers': 'foo' });
-
-    context('on success', function() {
-      it('should return the ice_servers sent in requestFactorys response', function() {
-        var thenable = {
-          then: sinon.spy(function(resolve, reject) {
-            assert.equal(resolve(response), 'foo');
-          })
-        };
-        var request = { post: sinon.spy(function() { return thenable; }) };
-
-        util.fetchIceServers('AC123', 'foo', {
-          requestFactory: request
-        });
-
-        sinon.assert.called(request.post);
-      });
-    });
-
-    context('on failure', function() {
-      it('should return a set of default ice servers', function() {
-        var thenable = {
-          then: sinon.spy(function(resolve, reject) {
-            assert.equal(typeof reject('foo'), 'object');
-          })
-        };
-        var request = { post: sinon.spy(function() { return thenable; }) };
-
-        util.fetchIceServers('AC123', 'foo', {
-          requestFactory: request
-        });
-      });
-
-      it('should warn if options.log is passed', function() {
-        var thenable = {
-          then: sinon.spy(function(resolve, reject) { reject('foo'); })
-        };
-        var request = { post: sinon.spy(function() { return thenable; }) };
-        var log = { warn: sinon.spy() };
-
-        util.fetchIceServers('AC123', 'foo', {
-          requestFactory: request,
-          log: log
-        });
-
-        sinon.assert.called(log.warn);
-      });
-    });
-  });
-
   describe('getOrNull', function() {
     it('should return the value at the end of the path if it exists', function() {
       var foo = { bar: { baz: 'qux' } };
@@ -478,28 +427,6 @@ describe('util', function() {
     it('should return null if any link doesn\'t exist', function() {
       var foo = { bar: { baz: 'qux' } };
       assert.equal(util.getOrNull(foo, 'baz.bar.qux'), null);
-    });
-  });
-
-  describe('isValidIceServerArray', function() {
-    it('should return false if an array is not passed', function() {
-      assert(!util.isValidIceServerArray('foo'));
-    });
-
-    it('should return false if any of the objects passed don\'t have a url', function() {
-      var iceServers = [
-        { url: 'foo' },
-        { uri: 'bar' }
-      ];
-      assert(!util.isValidIceServerArray(iceServers));
-    });
-
-    it('should return true if the passed var is an array objects with url properties', function() {
-      var iceServers = [
-        { url: 'foo' },
-        { url: 'bar' }
-      ];
-      assert(util.isValidIceServerArray(iceServers));
     });
   });
 

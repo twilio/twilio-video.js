@@ -41,10 +41,6 @@ describe('Client (SIPJSUserAgent)', function() {
     it('should validate logLevel', function() {
       assert.throws(createClient.bind(this, aliceManager, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
     });
-
-    it('should validate ICE servers', function() {
-      assert.throws(createClient.bind(this, aliceManager, { iceServers: 'foo' }), /INVALID_ARGUMENT/);
-    });
   });
 
   describe('#listen', function() {
