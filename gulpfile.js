@@ -283,6 +283,9 @@ gulp.task(distMinJs, [distJs], function() {
   return gulp.src(distJs)
     .pipe(newer(distMinJs))
     .pipe(uglify({
+      output: {
+        ascii_only: true
+      },
       preserveComments: function() {
         if (firstComment) {
           firstComment = false;
