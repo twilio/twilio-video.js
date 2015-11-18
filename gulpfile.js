@@ -60,12 +60,13 @@ var testAppSdk = testAppSdkPath + '/' + js;
 var publicClasses = [
   'lib/client.js',
   'lib/conversation.js',
-  'lib/invite.js',
+  'lib/incominginvite.js',
   'lib/media/index.js',
   'lib/media/localmedia.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
   'lib/media/track/videotrack.js',
+  'lib/outgoinginvite.js',
   'lib/participant.js'
 ];
 
@@ -77,8 +78,9 @@ var publicConstructors = [
 var privateConstructors = [
   'AudioTrack',
   'Conversation',
-  'Invite',
+  'IncomingInvite',
   'Media',
+  'OutgoingInvite',
   'Participant',
   'Track',
   'VideoTrack'
@@ -374,7 +376,8 @@ gulp.task(distDocs, function() {
         '<ul>',
           '<li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a>',
             '<ul style="margin-left: 1em">',
-              '<li><a href="Invite.html">Invite</a></li>',
+              '<li><a href="IncomingInvite.html">IncomingInvite</a></li>',
+              '<li><a href="OutgoingInvite.html">OutgoingInvite</a></li>',
             '</ul>',
           '</li>',
           '<li><a href="Conversation.html">Conversation</a>',

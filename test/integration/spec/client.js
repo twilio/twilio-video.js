@@ -266,14 +266,6 @@ describe('Client (SIPJSUserAgent)', function() {
       assert.throws(createConversation.bind(this), /INVALID_ARGUMENT/);
     });
 
-    it('should validate localStream', function() {
-      assert.throws(createConversation.bind(this, uaName, { localStream: 'foo' }), /INVALID_ARGUMENT/);
-    });
-
-    it('should validate localStreamConstraints', function() {
-      assert.throws(createConversation.bind(this, uaName, { localStreamConstraints: 'foo' }), /INVALID_ARGUMENT/);
-    });
-
     it('should update .conversations', function(done) {
       alice.createConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
@@ -285,16 +277,7 @@ describe('Client (SIPJSUserAgent)', function() {
     });
 
     it('should be cancelable', function(done) {
-      var canceled = false;
-
-      var invite = alice.createConversation(uaName);
-      invite.then(function() {
-        assert.fail('cancel was not fired');
-      }, function(reason) {
-        assert(reason.message === 'canceled');
-      }).then(done, done);
-
-      invite.cancel();
+      alice.createConversation(uaName).cancel().then(done, done);
     });
 
     it('should auto-reject associated invites after it is canceled', function(done) {
@@ -306,11 +289,13 @@ describe('Client (SIPJSUserAgent)', function() {
       ua2Manager = new AccessManager(ua2Token);
       ua2 = new SIPJSUserAgent(ua2Manager, options);
 
+      var i = alice._canceledConversations.size;
       ua2.register().then(function() {
         invite = alice.createConversation([uaName, ua2Name]);
-        invite.cancel();
-        assert.equal(alice._canceledConversations.size, 1);
-      }).then(done, done);
+        invite.cancel().then(function() {
+          assert.equal(alice._canceledConversations.size, i + 1);
+        }).then(done, done);
+      }).catch(done);
     });
 
     it('should not reject if primary invitee declines in a multi-invite', function(done) {
@@ -370,7 +355,7 @@ describe('Client (SIPJSUserAgent)', function() {
     after(function cleanupPending(done) {
       alice._userAgent.inviteClientTransactions.forEach(function(ict) {
         alice._userAgent.inviteClientTransactions.delete(ict);
-        alice._pendingConversations.delete(ict._cookie);
+        alice._outgoingInvites.delete(ict._cookie);
       });
 
       conversation2.disconnect().then(function() {

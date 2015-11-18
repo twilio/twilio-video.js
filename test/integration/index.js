@@ -4,5 +4,5 @@ if (typeof window === 'undefined') {
 
 require('./spec/conversation');
 require('./spec/client');
-require('./spec/invite');
+require('./spec/incominginvite');
 require('./spec/signaling/sipjsuseragent');
