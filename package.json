@@ -45,8 +45,7 @@
   "engines": {
     "node": ">=0.12"
   },
-  "license": "MIT",
-  "private": true,
+  "license": "BSD-3-Clause",
   "main": "./lib/index.js",
   "scripts": {
     "test": "gulp test",
