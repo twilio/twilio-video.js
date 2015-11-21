@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "sip.js": "git+ssh://git@code.hq.twilio.com/client/SIP.js.git#4e74f060191cdc8657737fdc7947af5eff871a4b",
-    "twilio-common": "git+ssh://git@code.hq.twilio.com/client/twilio-common.js.git",
+    "twilio-common": "git@github.com:twilio/twilio-common.git#0.1.1",
     "ws": "^0.6.3",
     "xmlhttprequest": "^1.8.0"
   },

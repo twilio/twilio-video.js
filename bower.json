@@ -1,0 +1,34 @@
+{
+  "name": "twilio-conversations",
+  "version": "0.11.0-dev",
+  "description": "Twilio Conversations JavaScript library",
+  "license": "BSD",
+  "authors": [
+    "Mark Andrus Roberts <mroberts@twilio.com>"
+  ],
+  "main": "dist/twilio-conversations.min.js",
+  "keywords": [
+    "twilio",
+    "webrtc",
+    "library",
+    "javascript",
+    "conversations"
+  ],
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "ignore": [
+    "**/.*",
+    "*.json",
+    "*.md",
+    "bower_components",
+    "dist/docs",
+    "lib",
+    "node_modules",
+    "src",
+    "test",
+    "tests"
+  ]
+}
