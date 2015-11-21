@@ -6,8 +6,6 @@ var InviteServerTransaction = require('lib/signaling/invitetransaction/inviteser
 describe('InviteServerTransaction', function() {
   var ist;
 
-  this.timeout(50);
-
   beforeEach(function() {
     ist = new InviteServerTransaction();
   });

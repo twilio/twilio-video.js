@@ -15,8 +15,6 @@ describe('Conversation', function() {
   var dialog2;
   var token;
 
-  this.timeout(50);
-
   beforeEach(function(done) {
     conversation = new Conversation();
     token = jwt;

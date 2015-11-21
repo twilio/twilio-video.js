@@ -30,8 +30,6 @@ describe('StatsReporter', function() {
   var token;
   var xhr;
 
-  this.timeout(50);
-
   beforeEach(function() {
     xhr = new XHR();
     token = getToken('foo');

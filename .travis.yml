@@ -1,0 +1,11 @@
+language: node_js
+sudo: false
+node_js:
+  - '4.1'
+  - '4.0'
+before_script:
+  - npm install -g gulp
+script: SKIP_INTEGRATION=true gulp
+notifications:
+  slack:
+    secure: TPfDL3kIeBM0AV0u5oyqqdK88mjIggJBrwqdrkU2dJv8KjLzsZTrDjupscS3H2ksqSmDSvw8zsRYYq6SYGAjL9K1sjg2VCLKnvHVjLqto4WY0Hj34rK/yGcBw5Sc0S79gRtJPvq+Hx7IEzKNowf6hRkJkU2uwZn5AcLR+QcHjKxz5eXHWOoIj7vYsfgT//gP/OVlWtptxnU1Kaeiqu4+SPdm7WYtUiYhypr1kCNt47Z0T1HGKB/Xkk5nmigG01rzjouyB8Xi9xnrBbZ0+yrpGt0nBERuCaZD6VRR0/UWDH50IlMDkoq/Jc4O5jAiuhfIppnCHr+WWRKMmV+7ycpyfhLJgY2Uv0AW4V3PP0WydFc51D2EnHvLEXvtDQ6quKyV81gWsZ2EwdLi8XDQTQTVN6ZRGC79Zq1qNu2j+TLWomcJPILwFbGmhgSKtgqXCntfBfE+ca/KAZGqzxrFWTXbSgGSKTJHxfoqusyb1za6MXJHeB0Ki/Z8Y51DhYTrrfzpvZMyVmmFzNDMm+k/qOhEcGzfeTfEgKTbYh4Jef2T+lGUKhi1QeXfdj62oCJLnZsyk77+uQC5s0PknVhIfU2lVkhtEHCPgonBK0x+NbkNizLoNfvbnJCFQj5g+7GU7/RjsC+9zYuxAX3TFgCUXd9zAPo8Gjz60EOgqSxh8IB3Owg=

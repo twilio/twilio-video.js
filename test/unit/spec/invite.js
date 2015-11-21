@@ -12,8 +12,6 @@ describe('Invite', function() {
   var invite;
   var localMedia;
 
-  this.timeout(50);
-
   beforeEach(function() {
     localMedia = Promise.resolve({ });
     ist = new MockIST();
