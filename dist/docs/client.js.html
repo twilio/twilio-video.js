@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var inherits = require(&apos;util&apos;).inherits;
+
+var constants = require(&apos;./util/constants&apos;);
+var Conversation = require(&apos;./conversation&apos;);
+var CancelablePromise = require(&apos;./util/cancelablepromise&apos;);
+var E = constants.twilioErrors;
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var Invite = require(&apos;./invite&apos;);
+var Log = require(&apos;./util/log&apos;);
+var SIPJSUserAgent = require(&apos;./signaling/sipjsuseragent&apos;);
+var StatsReporter = require(&apos;./statsreporter&apos;);
+var util = require(&apos;./util&apos;);
+
+var LocalMedia = require(&apos;./media/localmedia&apos;);
+
+/**
+ * Constructs a new {@link Client} with an AccessManager.
+ * @class
+ * @classdesc Construct a {@link Client} using an AccessManager to create and
+ *   participate in {@link Conversation}s.
+ *   &lt;br&gt;&lt;br&gt;
+ *   AccessManager is provided by twilio-common.js, which must be included
+ *   alongside twilio-conversations.js.
+ * @param {AccessManager} accessManager - The {@link Client}&apos;s AccessManager
+ * @param {Client#ClientOptions} [options] - Options to override the
+ *   constructor&apos;s default behavior
+ * @property {AccessManager} accessManager - The {@link Client}&apos;s AccessManager
+ * @property {string} identity - The {@link Client}&apos;s identity
+ * @property {Set&lt;Conversation&gt;} conversations - The {@link Conversation}s this
+ *   {@link Client} is active in
+ * @property {bool} isListening - Whether the {@link Client} is listening for
+ *   {@link Invite}s to {@link Conversation}s
+ * @property {Set&lt;Invite&gt;} invites - The active {@link Invite}s this
+ *   {@link Client} has received
+ * @fires Client#invite
+ * @fires Client#error
+ * @fires Client#tokenExpired
+ */
+function Client(accessManager, options) {
+  if (!(this instanceof Client)) {
+    return new Client(accessManager, options);
+  }
+
+  var self = this;
+  EventEmitter.call(this);
+
+  options = util.withDefaults(options, {
+    eventGateway: constants.EVENT_GATEWAY,
+    logLevel: constants.DEFAULT_LOG_LEVEL,
+    useConversationEvents: true,
+    userAgent: SIPJSUserAgent
+  });
+
+  var logLevel = options.logLevel;
+
+  if (options.debug === true) {
+    logLevel = &apos;debug&apos;;
+    console.warn(&apos;Warning: ClientOptions.debug is deprecated and will be removed in a future release. Please see ClientOptions.logLevel.&apos;);
+  }
+
+  var log = new Log(&apos;Client&apos;, logLevel);
+
+  var canceledConversations = new Set();
+  var conversations = new Set();
+  var eventGateway = options.eventGateway;
+  var invites = new Set();
+  var isListening = false;
+  var pendingConversations = new Map();
+  var rejectedInvites = new Set();
+
+  var UserAgent = options.userAgent;
+  var userAgent = new UserAgent(accessManager, options);
+  userAgent.on(&apos;invite&apos;, function(inviteServerTransaction) {
+    var conversationSid = inviteServerTransaction.conversationSid;
+    var participantSid = inviteServerTransaction.participantSid;
+    var cookie = inviteServerTransaction.cookie;
+
+    // If this is a multi-invite reply, accept immediately.
+    var pendingConversation = self._pendingConversations.get(cookie);
+    if (pendingConversation) {
+      return inviteServerTransaction
+        .accept({ localMedia: pendingConversation.conversation.localMedia })
+        .then(pendingConversation.onReceiveInvite)
+        .catch(function(reason) {
+          var error = E.CONVERSATION_INVITE_FAILED.clone(reason.message || reason);
+          pendingConversation.conversation.emit(&apos;participantFailed&apos;, error);
+        });
+    }
+
+    // If this is canceled a multi-invite reply, reject immediately.
+    if (canceledConversations.has(cookie)) {
+      return inviteServerTransaction.reject();
+    }
+
+    // If we are already in the Conversation, accept immediately.
+    var activeConversation = null;
+    conversations.forEach(function(conversation) {
+      if (conversation.sid === conversationSid) {
+        activeConversation = activeConversation || conversation;
+      }
+    });
+
+    if (activeConversation) {
+      return inviteServerTransaction
+        .accept({ localMedia: activeConversation.localMedia })
+        .then(activeConversation._addDialog.bind(activeConversation));
+    }
+
+    // If we have already received and rejected an Invite for the conversation, reject.
+    if (rejectedInvites.has(conversationSid + participantSid)) {
+      return inviteServerTransaction.reject();
+    }
+
+    // If we have already received an Invite for the Conversation, add to existing Invite.
+    var activeInvite = null;
+    invites.forEach(function(invite) {
+      if (invite.conversationSid === conversationSid &amp;&amp; invite.participantSid === participantSid) {
+        activeInvite = activeInvite || invite;
+      }
+    });
+
+    if (activeInvite) {
+      return activeInvite._inviteServerTransactions.push(inviteServerTransaction);
+    }
+
+    // NOTE(mroberts): Only raise an Invite if we are listening for Invites.
+    if (!self.isListening) {
+      return inviteServerTransaction.reject();
+    }
+
+    // Otherwise, raise the Invite.
+    var invite = new Invite(inviteServerTransaction, self._options);
+    invites.add(invite);
+    invite._promise.then(function(conversation) {
+      invites.delete(invite);
+      conversations.add(conversation);
+      conversation.once(&apos;ended&apos;, function() {
+        conversations.delete(conversation);
+        self._unregisterIfNotNeeded();
+      });
+    }, function() {
+      invites.delete(invite);
+      self._unregisterIfNotNeeded();
+      rejectedInvites.add(conversationSid + participantSid);
+      setTimeout(function() {
+        rejectedInvites.delete(conversationSid + participantSid);
+      }, constants.DEFAULT_CALL_TIMEOUT * 3);
+    });
+    self.emit(&apos;invite&apos;, invite);
+  });
+
+  userAgent.on(&apos;dialogCreated&apos;, function(dialog) {
+    new StatsReporter(eventGateway, dialog, logLevel);
+  });
+
+  userAgent.on(&apos;keepAliveTimeout&apos;, function() {
+    self.emit(&apos;error&apos;, E.GATEWAY_DISCONNECTED);
+  });
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    _canceledConversations: {
+      value: canceledConversations
+    },
+    _isListening: {
+      set: function(_isListening) {
+        isListening = _isListening;
+      }
+    },
+    _isRegistered: {
+      enumerable: true,
+      get: function() {
+        return this._userAgent.isRegistered;
+      }
+    },
+    _log: {
+      value: log
+    },
+    _logLevel: {
+      value: logLevel
+    },
+    _pendingConversations: {
+      value: pendingConversations
+    },
+    _needsRegistration: {
+      get: function() {
+        return isListening
+          || pendingConversations.size
+          || conversations.size
+          || invites.size
+          || userAgent.inviteClientTransactions.size;
+      }
+    },
+    _options: {
+      value: options
+    },
+    _userAgent: {
+      value: userAgent
+    },
+    accessManager: {
+      enumerable: true,
+      value: accessManager
+    },
+    conversations: {
+      enumerable: true,
+      value: conversations
+    },
+    identity: {
+      enumerable: true,
+      get: function() {
+        return accessManager.identity;
+      }
+    },
+    invites: {
+      enumerable: true,
+      value: invites
+    },
+    isListening: {
+      enumerable: true,
+      get: function() {
+        return isListening;
+      }
+    }
+  });
+
+  accessManager.on(&apos;tokenExpired&apos;, this.emit.bind(this, &apos;tokenExpired&apos;, accessManager));
+  accessManager.on(&apos;tokenUpdated&apos;, this._register.bind(this, true));
+
+  return this;
+}
+
+inherits(Client, EventEmitter);
+
+/**
+ * Causes this {@link Client} to stop listening for {@link Invite}s to
+ *   {@link Conversation}s until {@link Client#listen} is called again.
+ * @returns {Promise&lt;Client&gt;}
+ */
+Client.prototype.unlisten = function unlisten() {
+  this._isListening = false;
+  return this._unregisterIfNotNeeded();
+};
+
+Client.prototype._unregister = function _unregister() {
+  if (!this._isRegistered) {
+    return Promise.resolve(this);
+  }
+  var self = this;
+  return this._userAgent.unregister().then(function() {
+    self._isListening = false;
+    return self;
+  });
+};
+
+/**
+ * Causes this {@link Client} to start listening for {@link Invite}s to
+ *   {@link Conversation}s.
+ * @returns {Promise&lt;Client&gt;}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var alice = new Twilio.Conversations.Client(manager);
+ *
+ * alice.listen().then(function() {
+ *   console.log(&apos;Alice is listening&apos;);
+ * }, function(error) {
+ *   console.error(error);
+ * });
+ */
+Client.prototype.listen = function listen() {
+  var self = this;
+  return this._register().then(function() {
+    self._isListening = true;
+    return self;
+  });
+};
+
+Client.prototype._register = function _register(reregister) {
+  var self = this;
+  if (!reregister &amp;&amp; this._isRegistered) {
+    return Promise.resolve(this);
+  }
+  return this._userAgent.register().then(function onRegistered() {
+    return self;
+  }, function onRegisterFailed(response) {
+    var gatewayMessage = util.getOrNull(response, &apos;headers.X-Twilio-Error.0.raw&apos;);
+    var sipMessage = response.cause;
+
+    if (sipMessage) {
+      self._log.throw(E.LISTEN_FAILED, &apos;Received SIP error: &apos; + sipMessage);
+    } else if (gatewayMessage) {
+      self._log.throw(E.LISTEN_FAILED, &apos;Gateway responded with: &apos; + gatewayMessage);
+    } else {
+      self._log.throw(E.LISTEN_FAILED, response.message || response);
+    }
+  });
+};
+
+/**
+ * Invite remote {@link Client}s to join a {@link Conversation}.
+ *   &lt;br&gt;&lt;br&gt;
+ *   By default, this will attempt to setup an {@link AudioTrack} and
+ *   {@link VideoTrack} between local and remote {@link Client}s. You can
+ *   override this by specifying &lt;code&gt;options&lt;/code&gt;.
+ *   &lt;br&gt;&lt;br&gt;
+ *   You can call &lt;code&gt;.cancel()&lt;/code&gt; on the returned {@link CancelablePromise}
+ *   until the remote {@link Client} has joined.
+ * @param {Array&lt;string&gt;|string} participants - Participant(s) to invite to the {@link Conversation}
+ * @param {Client#CreateConversationOptions}
+ *   [options={localStreamConstraints:{audio:true,video:true}}] - Options to override
+ *   {@link Client#createConversation}&apos;s default behavior
+ * @returns {CancelablePromise&lt;Conversation&gt;}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.createConversation([&apos;bob&apos;, &apos;charlie&apos;]).then(function(conversation) {
+ *   conversation.on(&apos;participantConnected&apos;, function(participant) {
+ *     console.log(participant.identity + &apos; has connected&apos;);
+ *   });
+ * });
+ */
+Client.prototype.createConversation = function createConversation(participants, options) {
+  options = util.withDefaults({ }, options, this._options);
+
+  var localMedia = options.localMedia;
+  var constraints = options.localStreamConstraints;
+  var localStream = options.localStream;
+
+  if (localMedia &amp;&amp; !(localMedia instanceof LocalMedia)) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;Invalid local media&apos;);
+  }
+
+  if (localStream &amp;&amp; typeof localStream !== &apos;object&apos;) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;Invalid local media stream&apos;);
+  }
+
+  if (constraints &amp;&amp;
+      typeof constraints.audio === &apos;undefined&apos; &amp;&amp;
+      typeof constraints.video === &apos;undefined&apos;) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;Invalid local media stream constraints&apos;);
+  }
+
+  if (!participants) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;No Participant identities were provided&apos;);
+  }
+
+  participants = participants.forEach ? participants : [participants];
+
+  util.validateAddresses(this.accessManager._tokenPayload.sub, participants);
+
+  var conversation = new Conversation(this._options);
+  var deferred = util.defer();
+  var ict = null;
+  var isCanceled = false;
+  var self = this;
+  var userAgent = this._userAgent;
+
+  // If this is a multi-invite, save this new conversation by cookie
+  // so we can auto-accept the invites that are sent back in response.
+  if (participants.length &gt; 1) {
+    var cookie = util.makeUUID();
+    options.cookie = cookie;
+
+    this._pendingConversations.set(cookie, {
+      conversation: conversation,
+      onReceiveInvite: setupConversation
+    });
+
+    setTimeout(function() {
+      self._pendingConversations.delete(cookie);
+      self._canceledConversations.delete(cookie);
+      self._unregisterIfNotNeeded();
+    }, constants.DEFAULT_CALL_TIMEOUT * 3);
+  }
+
+  // Kick off the invite flow
+  getLocalMedia().catch(getLocalMediaFailed)
+    .then(setLocalMedia)
+    .then(this._register.bind(this))
+    .then(inviteParticipants)
+    .then(setupConversation, inviteParticipantsFailed);
+
+  // Define the specific steps of the invite flow
+  function getLocalMedia() {
+    return localMedia ? Promise.resolve(localMedia) : LocalMedia.getLocalMedia(options);
+  }
+  function getLocalMediaFailed(error) {
+    if ([&apos;PermissionDeniedError&apos;, &apos;PERMISSION_DENIED&apos;].indexOf(error.name) &gt; -1) {
+      error = E.MEDIA_ACCESS_DENIED;
+    }
+
+    deferred.reject(error);
+
+    throw error;
+  }
+
+  function setLocalMedia(localMedia) {
+    conversation._localMedia = localMedia;
+    options.localMedia = localMedia;
+  }
+
+  function inviteParticipants() {
+    if (isCanceled) { throw new Error(&apos;canceled&apos;); }
+
+    ict = userAgent.invite(participants, options);
+    return ict;
+  }
+  function inviteParticipantsFailed(reason) {
+    // If the main invite times out but we have Participants
+    // this is a successful multi-invite.
+    if (reason.message === &apos;ignored&apos; &amp;&amp; conversation.participants.size) {
+      return;
+    }
+
+    var error;
+    switch (reason.message) {
+      case &apos;canceled&apos;:
+        error = E.CONVERSATION_INVITE_CANCELED;
+        break;
+      case &apos;rejected&apos;:
+        error = E.CONVERSATION_INVITE_REJECTED;
+        break;
+      case &apos;ignored&apos;:
+        error = E.CONVERSATION_INVITE_TIMEOUT;
+        break;
+      case &apos;failed&apos;:
+        /* falls through */
+      default:
+        error = E.CONVERSATION_CREATE_FAILED;
+        break;
+    }
+
+    deferred.reject(error);
+  }
+
+  function setupConversation(dialog) {
+    conversation._addDialog(dialog);
+    conversation.once(&apos;ended&apos;, function() {
+      self.conversations.delete(conversation);
+      self._unregisterIfNotNeeded();
+    });
+
+    self.conversations.add(conversation);
+
+    deferred.resolve(conversation);
+  }
+
+  // Set up an error handler and make the returned promise cancelable
+  var cancelablePromise = new CancelablePromise(deferred.promise);
+  cancelablePromise.catch(function(error) {
+    if (error.message === &apos;canceled&apos;) {
+      self._canceledConversations.add(cookie);
+      self._pendingConversations.delete(cookie);
+
+      if (ict) { ict.cancel(); }
+      else { isCanceled = true; }
+
+      self._unregisterIfNotNeeded();
+    }
+
+    self._log.throw(error);
+  });
+
+  return cancelablePromise;
+};
+
+Client.prototype._unregisterIfNotNeeded = function _unregisterIfNotNeeded() {
+  return this._needsRegistration ? Promise.resolve(this) : this._unregister();
+};
+
+Object.freeze(Client.prototype);
+
+/**
+ * Your {@link Client} has run into an error.
+ * @param {Error} error - The Error
+ * @event Client#error
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.on(&apos;error&apos;, function(error) {
+ *  console.error(error);
+ * });
+ */
+
+/**
+ * Your {@link Client} has received an {@link Invite} to participant in a
+ * {@link Conversation}.
+ * @param {Invite} invite - the {@link Invite}
+ * @event Client#invite
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.on(&apos;invite&apos;, function(invite) {
+ *   console.log(&apos;Received an Invite to join a Conversation from &apos; + invite.from);
+ * });
+ */
+
+/**
+ * Your {@link Client}&apos;s AccessManager&apos;s Access Token has expired. You should
+ * update the Access Token on the AccessManager.
+ * @param {AccessManager} accessManager
+ * @event Client#tokenExpired
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.on(&apos;tokenExpired&apos;, function() {
+ *   var newToken = getAccessToken();
+ *   manager.updateToken(newToken);
+ * });
+ */
+
+/**
+ * You may pass these options to {@link Client}&apos;s constructor to override
+ * its default behavior.
+ * @typedef {object} Client#ClientOptions
+ * @property {string} [logLevel=&apos;warn&apos;] - Set the verbosity of logging to console.
+ *   Valid values: [&apos;off&apos;, &apos;error&apos;, &apos;warn&apos;, &apos;info&apos;, &apos;debug&apos;]
+ */
+
+/**
+ * You may pass these options to {@link Client#createConversation} to
+ * override the default behavior.
+ * @typedef {object} Client#CreateConversationOptions
+ * @property {?LocalMedia} [localMedia=null] - Set to reuse an existing
+ *   {@link LocalMedia} object when creating the {@link Conversation}
+ * @property {?MediaStream} [localStream=null] - Set to reuse an existing
+ *   &lt;code&gt;MediaStream&lt;/code&gt; when creating the {@link Conversation}
+ * @property {?object} [localStreamConstraints={audio:true,video:true}] - Set to
+ *   override the parameters passed to &lt;code&gt;getUserMedia&lt;/code&gt; when neither
+ *   &lt;code&gt;localMedia&lt;/code&gt; nor &lt;code&gt;localStream&lt;/code&gt; are provided
+ */
+
+module.exports = Client;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="Invite.html">Invite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a></li><li><a href="VideoTrack.html">VideoTrack</a></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Fri Nov 20 2015 16:47:21 GMT-0800 (PST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
