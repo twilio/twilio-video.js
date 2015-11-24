@@ -21,8 +21,8 @@ describe('Conversation', function() {
     var accessManager = new AccessManager(token);
     dialog = new MockDialog(util.makeURI('AC123', 'foo'), accessManager);
     dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), accessManager);
-    conversation._addDialog(dialog);
-    conversation._addDialog(dialog2);
+    conversation._onDialog(dialog);
+    conversation._onDialog(dialog2);
     assert(dialog.userAgent.accessManager);
 
     // Make sure our addDialog events are done
@@ -39,7 +39,7 @@ describe('Conversation', function() {
     });
   });
 
-  describe('#_addDialog(dialog)', function() {
+  describe('#_onDialog(dialog)', function() {
     context('when dialog is new', function() {
       it('should add passed Dialog to Conversation._dialogs', function() {
         assert(conversation._dialogs.has(dialog));
@@ -55,13 +55,13 @@ describe('Conversation', function() {
           }
         });
 
-        conversation._addDialog(dialog3);
+        conversation._onDialog(dialog3);
       });
     });
 
     context('when dialog has already been added', function() {
       it('should fail silently and be chainable', function() {
-        assert.equal(conversation._addDialog(dialog), conversation);
+        assert.equal(conversation._onDialog(dialog), conversation);
         assert.equal(conversation._dialogs.size, 2);
       });
     });

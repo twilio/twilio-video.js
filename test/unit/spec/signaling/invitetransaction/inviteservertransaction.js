@@ -37,10 +37,9 @@ describe('InviteServerTransaction', function() {
 
   describe('#reject', function() {
     context('when pending', function() {
-      it('should set state to rejected', function(done) {
-        ist.reject().then(function() {
-          assert(ist.isRejected);
-        }).then(done);
+      it('should set state to rejected', function() {
+        ist.reject();
+        assert(ist.isRejected);
       });
       it('should reject the ist promise', function(done) {
         ist.then(null, function() {
@@ -51,11 +50,10 @@ describe('InviteServerTransaction', function() {
       });
     });
     context('when not pending', function() {
-      it('should reject with an error', function(done) {
+      it('should throw an Error', function() {
         ist._setCanceled();
-        ist.reject().then(null, function() {
-          assert(ist.isCanceled);
-        }).then(done);
+        assert.throws(ist.reject.bind(ist));
+        assert(ist.isCanceled);
       });
     });
   });

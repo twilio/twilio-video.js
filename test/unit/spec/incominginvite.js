@@ -55,7 +55,7 @@ describe('IncomingInvite', function() {
 
     context('when it succeeds', function() {
       it('should emit accepted', function(done) {
-        invite.on('accepted', function() { done(); });
+        invite.once('accepted', function() { done(); });
         invite.accept({ localMedia: localMedia });
         ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
       });
@@ -63,9 +63,13 @@ describe('IncomingInvite', function() {
 
     context('when it fails', function() {
       it('should emit failed', function(done) {
-        invite.on('failed', function() { done(); });
-        invite.accept({ localMedia: localMedia });
+        invite.once('failed', function() { done(); });
+        invite.accept({ localMedia: localMedia }).then(console.log.bind(console, 'what'), console.log.bind(console, 'happend'));
+        try {
         ist.accept.reject();
+        } catch (error) {
+          console.log(error);
+        }
       });
     });
   });

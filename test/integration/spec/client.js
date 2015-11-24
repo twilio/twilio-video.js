@@ -212,14 +212,14 @@ describe('Client (SIPJSUserAgent)', function() {
       it('updates .conversations', function(done) {
         invite.accept().then(function(_conversation) {
           conversation = _conversation;
-          assert(alice.conversations.has(conversation));
+          assert(alice.conversations.has(conversation.sid));
         }).then(done, done);
       });
 
       describe('Conversation#disconnect', function() {
         it('updates .conversations', function(done) {
           conversation.disconnect().then(function() {
-            assert(!alice.conversations.has(conversation));
+            assert(!alice.conversations.has(conversation.sid));
           }).then(done, done);
         });
 
@@ -242,7 +242,7 @@ describe('Client (SIPJSUserAgent)', function() {
           alice.once('invite', function(invite) {
             invite.accept().then(function(_conversation) {
               conversation = _conversation;
-              assert(alice.conversations.has(conversation));
+              assert(alice.conversations.has(conversation.sid));
             }).then(function() {
               conversation.disconnect();
             }).then(done, done);
@@ -250,7 +250,7 @@ describe('Client (SIPJSUserAgent)', function() {
         });
 
         it('updates .conversations', function() {
-          assert(!alice.conversations.has(conversation));
+          assert(!alice.conversations.has(conversation.sid));
         });
       });
     });
@@ -269,15 +269,17 @@ describe('Client (SIPJSUserAgent)', function() {
     it('should update .conversations', function(done) {
       alice.createConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
-        assert(alice.conversations.has(conversation));
+        assert(alice.conversations.has(conversation.sid));
       }).then(done, done);
       ua.once('invite', function(ist) {
         ist.accept();
       });
     });
 
-    it('should be cancelable', function(done) {
-      alice.createConversation(uaName).cancel().then(done, done);
+    it('should be cancelable', function() {
+      var outgoingInvite = alice.createConversation(uaName);
+      outgoingInvite.cancel();
+      assert.equal('canceled', outgoingInvite.status);
     });
 
     it('should auto-reject associated invites after it is canceled', function(done) {
@@ -289,13 +291,25 @@ describe('Client (SIPJSUserAgent)', function() {
       ua2Manager = new AccessManager(ua2Token);
       ua2 = new SIPJSUserAgent(ua2Manager, options);
 
-      var i = alice._canceledConversations.size;
+      var i = alice._canceledOutgoingInvites.size;
       ua2.register().then(function() {
         invite = alice.createConversation([uaName, ua2Name]);
-        invite.cancel().then(function() {
-          assert.equal(alice._canceledConversations.size, i + 1);
-        }).then(done, done);
-      }).catch(done);
+        return Promise.all([
+          new Promise(function(resolve) {
+            ua.once('invite', function() {
+              resolve();
+            });
+          }),
+          new Promise(function(resolve) {
+            ua2.once('invite', function() {
+              resolve();
+            });
+          })
+        ]).then(function() {
+          invite.cancel();
+          assert.equal(alice._canceledOutgoingInvites.size, i + 1);
+        });
+      }).then(done, done);
     });
 
     it('should not reject if primary invitee declines in a multi-invite', function(done) {
@@ -346,9 +360,7 @@ describe('Client (SIPJSUserAgent)', function() {
           .then(function(conversation) {
             conversation2 = conversation;
             done();
-          }, function() {
-            assert.fail('Promise was rejected');
-          }).catch(done);
+          }, done);
       });
     });
 
@@ -358,8 +370,12 @@ describe('Client (SIPJSUserAgent)', function() {
         alice._outgoingInvites.delete(ict._cookie);
       });
 
+      if (!conversation2) {
+        return done();
+      }
+
       conversation2.disconnect().then(function() {
-        assert(!alice.conversations.has(conversation2));
+        assert(!alice.conversations.has(conversation2.sid));
       }).then(done, done);
     });
   });
@@ -383,7 +399,7 @@ describe('Client (SIPJSUserAgent)', function() {
   describe('Conversation#disconnect', function() {
     it('updates .conversations', function(done) {
       conversation.disconnect().then(function() {
-        assert(!alice.conversations.has(conversation));
+        assert(!alice.conversations.has(conversation.sid));
       }).then(done, done);
     });
 

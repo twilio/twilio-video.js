@@ -10,10 +10,9 @@ describe('InviteClientTransaction', function() {
   });
   describe('cancel', function() {
     context('when pending', function() {
-      it('should set state to canceled', function(done) {
-        ict.cancel().then(function() {
-          assert(ict.isCanceled);
-        }).then(done);
+      it('should set state to canceled', function() {
+        ict.cancel();
+        assert(ict.isCanceled);
       });
       it('should reject the ICT promise', function(done) {
         ict.then(null, function() {
@@ -24,11 +23,10 @@ describe('InviteClientTransaction', function() {
       });
     });
     context('when not pending', function() {
-      it('should reject with an error', function(done) {
+      it('should throw an Error', function() {
         ict._setRejected();
-        ict.cancel().then(null, function() {
-          assert(ict.isRejected);
-        }).then(done);
+        assert.throws(ict.cancel.bind(ict));
+        assert(ict.isRejected);
       });
     });
   });

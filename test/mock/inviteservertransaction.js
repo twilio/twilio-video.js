@@ -16,7 +16,7 @@ function MockIST() {
     });
 
     spy.resolve = deferred.resolve.bind(deferred);
-    spy.reject = deferred.resolve.bind(deferred);
+    spy.reject = deferred.reject.bind(deferred);
 
     return spy;
   }
@@ -24,6 +24,15 @@ function MockIST() {
   Object.defineProperties(this, {
     accept: {
       value: createPromise()
+    },
+    participantSid: {
+      value: 'PA456'
+    },
+    conversationSid: {
+      value: 'CV123'
+    },
+    key: {
+      value: 'CV123 PA456'
     },
     from: {
       value: util.makeURI('AC123', 'foo')
