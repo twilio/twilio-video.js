@@ -61,7 +61,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
           bob.on('invite', function(ist) {
             ist.accept().then(function(_dialog) { dialog = _dialog; });
           });
-          return alice.createConversation(bobName);
+          return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
         }).then(done, done);
@@ -118,7 +118,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
         .then(function() {
           return Promise.all([bob.register(), charlie.register(), donald.register()]);
         }).then(function() {
-          return alice.createConversation(bobName);
+          return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
           assert.equal(1, conversation.participants.size);

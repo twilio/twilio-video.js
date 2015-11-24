@@ -256,18 +256,18 @@ describe('Client (SIPJSUserAgent)', function() {
     });
   });
 
-  describe('#createConversation', function() {
+  describe('#inviteToConversation', function() {
 
-    var createConversation = function(name, options) {
-      return alice.createConversation(name, options);
+    var inviteToConversation = function(name, options) {
+      return alice.inviteToConversation(name, options);
     };
 
     it('should validate an identity was passed', function() {
-      assert.throws(createConversation.bind(this), /INVALID_ARGUMENT/);
+      assert.throws(inviteToConversation.bind(this), /INVALID_ARGUMENT/);
     });
 
     it('should update .conversations', function(done) {
-      alice.createConversation(uaName).then(function(_conversation) {
+      alice.inviteToConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
         assert(alice.conversations.has(conversation.sid));
       }).then(done, done);
@@ -277,7 +277,7 @@ describe('Client (SIPJSUserAgent)', function() {
     });
 
     it('should be cancelable', function() {
-      var outgoingInvite = alice.createConversation(uaName);
+      var outgoingInvite = alice.inviteToConversation(uaName);
       outgoingInvite.cancel();
       assert.equal('canceled', outgoingInvite.status);
     });
@@ -293,7 +293,7 @@ describe('Client (SIPJSUserAgent)', function() {
 
       var i = alice._canceledOutgoingInvites.size;
       ua2.register().then(function() {
-        invite = alice.createConversation([uaName, ua2Name]);
+        invite = alice.inviteToConversation([uaName, ua2Name]);
         return Promise.all([
           new Promise(function(resolve) {
             ua.once('invite', function() {
@@ -356,7 +356,7 @@ describe('Client (SIPJSUserAgent)', function() {
       });
 
       Promise.all([ua2.register(), ua3.register()]).then(function() {
-        alice.createConversation([ua2Name, ua3Name])
+        alice.inviteToConversation([ua2Name, ua3Name])
           .then(function(conversation) {
             conversation2 = conversation;
             done();
