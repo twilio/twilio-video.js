@@ -136,15 +136,6 @@ describe('Conversation', function() {
     it('should throw an error if identity is not provided', function() {
       assert.throws(conversation.invite);
     });
-
-    it('should return an array if it receives an array', function() {
-      assert(conversation.invite(['foo']).forEach);
-      assert(conversation.invite(['foo', 'bar']).forEach);
-    });
-
-    it('should not return an array if it receives a string', function() {
-      assert(!conversation.invite('bar').forEach);
-    });
   });
 
   describe('#_invite(dialog, identity, timeout)', function() {
