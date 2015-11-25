@@ -83,8 +83,8 @@ describe('Conversation', function() {
       conversation._removeDialog(dialog2);
     });
 
-    it('should emit ended event when there are no Dialogs left', function(done) {
-      conversation.on('ended', function() {
+    it('should emit disconnected event when there are no Dialogs left', function(done) {
+      conversation.on('disconnected', function() {
         assert.equal(conversation._dialogs.size, 0);
         done();
       });
