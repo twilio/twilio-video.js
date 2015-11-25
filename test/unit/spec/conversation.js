@@ -124,11 +124,8 @@ describe('Conversation', function() {
       sinon.assert.calledOnce(dialog2.end);
     });
 
-    it('should return Promise<Conversation>', function(done) {
-      conversation.disconnect().then(function(c) {
-        assert.equal(c, conversation);
-        done();
-      });
+    it('should return the Conversation', function() {
+      assert.equal(conversation, conversation.disconnect());
     });
   });
 

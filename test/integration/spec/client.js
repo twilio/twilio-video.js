@@ -217,10 +217,9 @@ describe('Client (SIPJSUserAgent)', function() {
       });
 
       describe('Conversation#disconnect', function() {
-        it('updates .conversations', function(done) {
-          conversation.disconnect().then(function() {
-            assert(!alice.conversations.has(conversation.sid));
-          }).then(done, done);
+        it('updates .conversations', function() {
+          conversation.disconnect();
+          assert(!alice.conversations.has(conversation.sid));
         });
 
         it('should not need to be registered', function() {
@@ -364,19 +363,16 @@ describe('Client (SIPJSUserAgent)', function() {
       });
     });
 
-    after(function cleanupPending(done) {
+    after(function cleanupPending() {
       alice._userAgent.inviteClientTransactions.forEach(function(ict) {
         alice._userAgent.inviteClientTransactions.delete(ict);
         alice._outgoingInvites.delete(ict._cookie);
       });
 
-      if (!conversation2) {
-        return done();
-      }
-
-      conversation2.disconnect().then(function() {
+      if (conversation2) {
+        conversation2.disconnect();
         assert(!alice.conversations.has(conversation2.sid));
-      }).then(done, done);
+      }
     });
   });
 
@@ -397,10 +393,9 @@ describe('Client (SIPJSUserAgent)', function() {
   });
 
   describe('Conversation#disconnect', function() {
-    it('updates .conversations', function(done) {
-      conversation.disconnect().then(function() {
-        assert(!alice.conversations.has(conversation.sid));
-      }).then(done, done);
+    it('updates .conversations', function() {
+      conversation.disconnect();
+      assert(!alice.conversations.has(conversation.sid));
     });
 
     it('should not need to be registered', function() {

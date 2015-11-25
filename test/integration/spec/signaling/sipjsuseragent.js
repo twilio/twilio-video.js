@@ -188,9 +188,8 @@ describe('SIPJSUserAgent', function() {
 
         describe('Dialog "ended" event', function() {
           it('updates .dialogs', function(done) {
-            ua1Dialog.end().then(function() {
-              assert(!ua1.dialogs.has(ua1Dialog));
-            }, done);
+            ua1Dialog.end();
+            assert(!ua1.dialogs.has(ua1Dialog));
             ua2Dialog.once('ended', function() {
               try {
                 assert(!ua2.dialogs.has(ua2Dialog));
