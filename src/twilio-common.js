@@ -1,1 +1,1 @@
-module.exports = Twilio;
+module.exports = window.Twilio;
