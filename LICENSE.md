@@ -32,9 +32,8 @@ documented below.
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-This software includes SIP.js under the following license:
+This software includes SIP.js under the following license.
 
-    Name: SIP.js
     Copyright (c) 2014 Junction Networks, Inc. <http://www.onsip.com>
 
     License: The MIT License
@@ -58,7 +57,9 @@ This software includes SIP.js under the following license:
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-    *** SIP.js contains substantial portions of the JsSIP software under the following license: ***
+SIP.js contains substantial portions of the JsSIP software under the following
+license.
+
     Copyright (c) 2012-2013 José Luis Millán - Versatica <http://www.versatica.com>
 
     License: The MIT License
@@ -81,5 +82,3 @@ This software includes SIP.js under the following license:
     LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-    *** end JsSIP license ***
