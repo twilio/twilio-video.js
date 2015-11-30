@@ -14,14 +14,6 @@ describe('CancelablePromise', function() {
       assert(cp1 instanceof CancelablePromise);
       assert(cp2 instanceof CancelablePromise);
     });
-
-    it('should return the original if it already has a cancel function', function() {
-      var promise = new Promise(function() {});
-      var cp1 = new CancelablePromise(promise);
-      var cp2 = new CancelablePromise(cp1);
-
-      assert.equal(cp1, cp2);
-    });
   });
 
   describe('then', function() {
@@ -72,7 +64,8 @@ describe('CancelablePromise', function() {
       cp.then(function() {
         assert.fail('Promise was not canceled');
       },function(reason) {
-        assert(reason.message === 'canceled');
+        console.log(reason);
+        assert(reason.message === 'Canceled');
       }).then(done, done);
 
       setTimeout(function() {

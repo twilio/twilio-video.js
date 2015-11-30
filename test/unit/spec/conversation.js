@@ -21,8 +21,8 @@ describe('Conversation', function() {
     var accessManager = new AccessManager(token);
     dialog = new MockDialog(util.makeURI('AC123', 'foo'), accessManager);
     dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), accessManager);
-    conversation._addDialog(dialog);
-    conversation._addDialog(dialog2);
+    conversation._onDialog(dialog);
+    conversation._onDialog(dialog2);
     assert(dialog.userAgent.accessManager);
 
     // Make sure our addDialog events are done
@@ -39,7 +39,7 @@ describe('Conversation', function() {
     });
   });
 
-  describe('#_addDialog(dialog)', function() {
+  describe('#_onDialog(dialog)', function() {
     context('when dialog is new', function() {
       it('should add passed Dialog to Conversation._dialogs', function() {
         assert(conversation._dialogs.has(dialog));
@@ -55,13 +55,13 @@ describe('Conversation', function() {
           }
         });
 
-        conversation._addDialog(dialog3);
+        conversation._onDialog(dialog3);
       });
     });
 
     context('when dialog has already been added', function() {
       it('should fail silently and be chainable', function() {
-        assert.equal(conversation._addDialog(dialog), conversation);
+        assert.equal(conversation._onDialog(dialog), conversation);
         assert.equal(conversation._dialogs.size, 2);
       });
     });
@@ -83,8 +83,8 @@ describe('Conversation', function() {
       conversation._removeDialog(dialog2);
     });
 
-    it('should emit ended event when there are no Dialogs left', function(done) {
-      conversation.on('ended', function() {
+    it('should emit disconnected event when there are no Dialogs left', function(done) {
+      conversation.on('disconnected', function() {
         assert.equal(conversation._dialogs.size, 0);
         done();
       });
@@ -124,26 +124,14 @@ describe('Conversation', function() {
       sinon.assert.calledOnce(dialog2.end);
     });
 
-    it('should return Promise<Conversation>', function(done) {
-      conversation.disconnect().then(function(c) {
-        assert.equal(c, conversation);
-        done();
-      });
+    it('should return the Conversation', function() {
+      assert.equal(conversation, conversation.disconnect());
     });
   });
 
   describe('#invite(identity)', function() {
     it('should throw an error if identity is not provided', function() {
       assert.throws(conversation.invite);
-    });
-
-    it('should return an array if it receives an array', function() {
-      assert(conversation.invite(['foo']).forEach);
-      assert(conversation.invite(['foo', 'bar']).forEach);
-    });
-
-    it('should not return an array if it receives a string', function() {
-      assert(!conversation.invite('bar').forEach);
     });
   });
 

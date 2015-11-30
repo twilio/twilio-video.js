@@ -212,15 +212,14 @@ describe('Client (SIPJSUserAgent)', function() {
       it('updates .conversations', function(done) {
         invite.accept().then(function(_conversation) {
           conversation = _conversation;
-          assert(alice.conversations.has(conversation));
+          assert(alice.conversations.has(conversation.sid));
         }).then(done, done);
       });
 
       describe('Conversation#disconnect', function() {
-        it('updates .conversations', function(done) {
-          conversation.disconnect().then(function() {
-            assert(!alice.conversations.has(conversation));
-          }).then(done, done);
+        it('updates .conversations', function() {
+          conversation.disconnect();
+          assert(!alice.conversations.has(conversation.sid));
         });
 
         it('should not need to be registered', function() {
@@ -242,7 +241,7 @@ describe('Client (SIPJSUserAgent)', function() {
           alice.once('invite', function(invite) {
             invite.accept().then(function(_conversation) {
               conversation = _conversation;
-              assert(alice.conversations.has(conversation));
+              assert(alice.conversations.has(conversation.sid));
             }).then(function() {
               conversation.disconnect();
             }).then(done, done);
@@ -250,51 +249,36 @@ describe('Client (SIPJSUserAgent)', function() {
         });
 
         it('updates .conversations', function() {
-          assert(!alice.conversations.has(conversation));
+          assert(!alice.conversations.has(conversation.sid));
         });
       });
     });
   });
 
-  describe('#createConversation', function() {
+  describe('#inviteToConversation', function() {
 
-    var createConversation = function(name, options) {
-      return alice.createConversation(name, options);
+    var inviteToConversation = function(name, options) {
+      return alice.inviteToConversation(name, options);
     };
 
     it('should validate an identity was passed', function() {
-      assert.throws(createConversation.bind(this), /INVALID_ARGUMENT/);
-    });
-
-    it('should validate localStream', function() {
-      assert.throws(createConversation.bind(this, uaName, { localStream: 'foo' }), /INVALID_ARGUMENT/);
-    });
-
-    it('should validate localStreamConstraints', function() {
-      assert.throws(createConversation.bind(this, uaName, { localStreamConstraints: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(inviteToConversation.bind(this), /INVALID_ARGUMENT/);
     });
 
     it('should update .conversations', function(done) {
-      alice.createConversation(uaName).then(function(_conversation) {
+      alice.inviteToConversation(uaName).then(function(_conversation) {
         conversation = _conversation;
-        assert(alice.conversations.has(conversation));
+        assert(alice.conversations.has(conversation.sid));
       }).then(done, done);
       ua.once('invite', function(ist) {
         ist.accept();
       });
     });
 
-    it('should be cancelable', function(done) {
-      var canceled = false;
-
-      var invite = alice.createConversation(uaName);
-      invite.then(function() {
-        assert.fail('cancel was not fired');
-      }, function(reason) {
-        assert(reason.message === 'canceled');
-      }).then(done, done);
-
-      invite.cancel();
+    it('should be cancelable', function() {
+      var outgoingInvite = alice.inviteToConversation(uaName);
+      outgoingInvite.cancel();
+      assert.equal('canceled', outgoingInvite.status);
     });
 
     it('should auto-reject associated invites after it is canceled', function(done) {
@@ -306,10 +290,24 @@ describe('Client (SIPJSUserAgent)', function() {
       ua2Manager = new AccessManager(ua2Token);
       ua2 = new SIPJSUserAgent(ua2Manager, options);
 
+      var i = alice._canceledOutgoingInvites.size;
       ua2.register().then(function() {
-        invite = alice.createConversation([uaName, ua2Name]);
-        invite.cancel();
-        assert.equal(alice._canceledConversations.size, 1);
+        invite = alice.inviteToConversation([uaName, ua2Name]);
+        return Promise.all([
+          new Promise(function(resolve) {
+            ua.once('invite', function() {
+              resolve();
+            });
+          }),
+          new Promise(function(resolve) {
+            ua2.once('invite', function() {
+              resolve();
+            });
+          })
+        ]).then(function() {
+          invite.cancel();
+          assert.equal(alice._canceledOutgoingInvites.size, i + 1);
+        });
       }).then(done, done);
     });
 
@@ -357,25 +355,24 @@ describe('Client (SIPJSUserAgent)', function() {
       });
 
       Promise.all([ua2.register(), ua3.register()]).then(function() {
-        alice.createConversation([ua2Name, ua3Name])
+        alice.inviteToConversation([ua2Name, ua3Name])
           .then(function(conversation) {
             conversation2 = conversation;
             done();
-          }, function() {
-            assert.fail('Promise was rejected');
-          }).catch(done);
+          }, done);
       });
     });
 
-    after(function cleanupPending(done) {
+    after(function cleanupPending() {
       alice._userAgent.inviteClientTransactions.forEach(function(ict) {
         alice._userAgent.inviteClientTransactions.delete(ict);
-        alice._pendingConversations.delete(ict._cookie);
+        alice._outgoingInvites.delete(ict._cookie);
       });
 
-      conversation2.disconnect().then(function() {
-        assert(!alice.conversations.has(conversation2));
-      }).then(done, done);
+      if (conversation2) {
+        conversation2.disconnect();
+        assert(!alice.conversations.has(conversation2.sid));
+      }
     });
   });
 
@@ -396,10 +393,9 @@ describe('Client (SIPJSUserAgent)', function() {
   });
 
   describe('Conversation#disconnect', function() {
-    it('updates .conversations', function(done) {
-      conversation.disconnect().then(function() {
-        assert(!alice.conversations.has(conversation));
-      }).then(done, done);
+    it('updates .conversations', function() {
+      conversation.disconnect();
+      assert(!alice.conversations.has(conversation.sid));
     });
 
     it('should not need to be registered', function() {

@@ -1,13 +1,13 @@
 'use strict';
 
 var assert = require('assert');
-var Invite = require('lib/invite');
+var IncomingInvite = require('lib/incominginvite');
 var MockDialog = require('test/mock/dialog');
 var MockIST = require('test/mock/inviteservertransaction');
 var sinon = require('sinon');
 var util = require('lib/util');
 
-describe('Invite', function() {
+describe('IncomingInvite', function() {
   var ist;
   var invite;
   var localMedia;
@@ -15,12 +15,12 @@ describe('Invite', function() {
   beforeEach(function() {
     localMedia = Promise.resolve({ });
     ist = new MockIST();
-    invite = new Invite(ist);
+    invite = new IncomingInvite(ist);
   });
 
   describe('constructor', function() {
-    it('should return an instance of Invite if called as a method', function() {
-      assert(Invite(ist) instanceof Invite);
+    it('should return an instance of IncomingInvite if called as a method', function() {
+      assert(IncomingInvite(ist) instanceof IncomingInvite);
     });
   });
 
@@ -55,7 +55,7 @@ describe('Invite', function() {
 
     context('when it succeeds', function() {
       it('should emit accepted', function(done) {
-        invite.on('accepted', function() { done(); });
+        invite.once('accepted', function() { done(); });
         invite.accept({ localMedia: localMedia });
         ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
       });
@@ -63,9 +63,13 @@ describe('Invite', function() {
 
     context('when it fails', function() {
       it('should emit failed', function(done) {
-        invite.on('failed', function() { done(); });
-        invite.accept({ localMedia: localMedia });
+        invite.once('failed', function() { done(); });
+        invite.accept({ localMedia: localMedia }).then(console.log.bind(console, 'what'), console.log.bind(console, 'happend'));
+        try {
         ist.accept.reject();
+        } catch (error) {
+          console.log(error);
+        }
       });
     });
   });

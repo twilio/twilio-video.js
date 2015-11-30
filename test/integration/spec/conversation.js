@@ -61,7 +61,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
           bob.on('invite', function(ist) {
             ist.accept().then(function(_dialog) { dialog = _dialog; });
           });
-          return alice.createConversation(bobName);
+          return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
         }).then(done, done);
@@ -118,7 +118,7 @@ describe('Conversation (SIPJSUserAgent)', function() {
         .then(function() {
           return Promise.all([bob.register(), charlie.register(), donald.register()]);
         }).then(function() {
-          return alice.createConversation(bobName);
+          return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
           assert.equal(1, conversation.participants.size);
@@ -143,34 +143,45 @@ describe('Conversation (SIPJSUserAgent)', function() {
       assert.throws(conversation.invite.bind(conversation, charlie));
     });
 
-    it('should return a Promise<Participant> for one identity', function(done) {
-      conversation.invite(charlieName)
-        .then(
-          function(participant) { assert.equal(participant.identity, charlieName); },
-          function() { assert.fail(null, null, 'promise was rejected'); })
-        .then(done, done);
+    it('should work for one identity', function(done) {
+      conversation.invite(charlieName);
+      conversation.on('participantConnected', function(participant) {
+        if (participant.identity === charlieName && done) {
+          done();
+          done = null;
+        }
+      });
     });
 
-    it('should return an Array<Promise<Participant>> for one identity in an array', function(done) {
-      conversation.invite([charlieName])[0]
-        .then(
-          function(participant) { assert.equal(participant.identity, charlieName); },
-          function() { assert.fail(null, null, 'promise was rejected'); })
-        .then(done, done);
+    it('should work for one identity in an array', function(done) {
+      conversation.invite([charlieName]);
+      conversation.on('participantConnected', function(participant) {
+        if (participant.identity === charlieName && done) {
+          done();
+          done = null;
+        }
+      });
     });
 
-    // NOTE(mroberts): Disabled until this works in prod.
-    it('should return an Array<Promise<Participant>> for multiple identities in an array', function(done) {
+    it('should work for multiple identities in an array', function(done) {
       this.timeout(10000);
-      Promise.all(conversation.invite([charlieName, donaldName])).then(
-          function(participants) {
-            var names = participants.map(function(participant) {
-              return participant.identity;
-            });
-            assert(names.indexOf(charlieName) !== -1);
-            assert(names.indexOf(donaldName) !== -1);
-          }, function() { assert.fail(null, null, 'promise was rejected'); })
-        .then(done, done);
+      conversation.invite([charlieName, donaldName]);
+      Promise.all([
+        new Promise(function(resolve, reject) {
+          conversation.on('participantConnected', function(participant) {
+            if (participant.identity === charlieName) {
+              resolve();
+            }
+          });
+        }),
+        new Promise(function(resolve, reject) {
+          conversation.on('participantConnected', function(participant) {
+            if (participant.identity === donaldName) {
+              resolve();
+            }
+          });
+        })
+      ]).then(function() { done(); }, done);
     });
   });
 });

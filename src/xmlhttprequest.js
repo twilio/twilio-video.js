@@ -1,1 +1,1 @@
-exports.XMLHttpRequest = XMLHttpRequest;
+exports.XMLHttpRequest = window.XMLHttpRequest;

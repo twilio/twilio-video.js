@@ -6,7 +6,7 @@ if (typeof window === 'undefined') {
 
 require('./spec/client');
 require('./spec/conversation');
-require('./spec/invite');
+require('./spec/incominginvite');
 require('./spec/participant');
 require('./spec/queueingeventemitter');
 require('./spec/statsreporter');

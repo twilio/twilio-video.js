@@ -12,7 +12,7 @@ var wsServer = credentials.wsServer;
 
 var useConversationEvents = process.env.USE_CONVERSATION_EVENTS;
 
-describe('Invite (SIPJSUserAgent)', function() {
+describe('IncomingInvite (SIPJSUserAgent)', function() {
   // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
