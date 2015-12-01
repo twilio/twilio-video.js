@@ -74,11 +74,8 @@ describe('Client (SIPJSUserAgent)', function() {
   });
 
   describe('#unlisten', function() {
-    before(function(done) {
-      alice.unlisten().then(
-        function() { done(); },
-        function() { done(); }
-      );
+    before(function() {
+      alice.unlisten();
     });
 
     it('updates .isListening', function() {
@@ -193,10 +190,8 @@ describe('Client (SIPJSUserAgent)', function() {
     });
 
     describe('#unlisten (with pending Invite)', function() {
-      before(function unlisten(done) {
-        alice.unlisten().then(function() {
-          done();
-        }, done);
+      before(function unlisten() {
+        alice.unlisten();
       });
 
       it('should update .isListening', function() {
@@ -377,10 +372,8 @@ describe('Client (SIPJSUserAgent)', function() {
   });
 
   describe('#unlisten (while in a Conversation)', function() {
-    before(function unlisten(done) {
-      alice.unlisten().then(function() {
-        done();
-      }, done);
+    before(function unlisten() {
+      alice.unlisten();
     });
 
     it('should update .isListening', function() {
