@@ -63,14 +63,6 @@ describe('Client (SIPJSUserAgent)', function() {
     it('should set .identity', function() {
       assert.equal(aliceName, alice.identity);
     });
-
-    it('should emit tokenExpired when active token expires', function(done) {
-      var jwt = getToken({ address: aliceName, duration: 500 });
-      alice.accessManager.updateToken(jwt);
-      alice.once('tokenExpired', function() {
-        done();
-      });
-    });
   });
 
   describe('#unlisten', function() {
