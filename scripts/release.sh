@@ -110,9 +110,9 @@ next_major_gt=$(echo "${next_major} > ${release_major}" | bc)
 next_minor_gt=$(echo "${next_minor} > ${release_minor}" | bc)
 next_patch_gt=$(echo "${next_patch} > ${release_patch}" | bc)
 next_gt=$(echo "${next_major_gt} + ${next_minor_gt} + ${next_patch_gt}" | bc)
-if [[ ${next_gt} == 0 ]]; then
-  die "Next development version must be greater than the release version"
-fi
+# if [[ ${next_gt} == 0 ]]; then
+#   die "Next development version must be greater than the release version"
+# fi
 
 # Update the version in package.json and bower.json.
 for json in package.json bower.json; do
@@ -126,7 +126,6 @@ gulp
 git add -f dist/${name}.js dist/${name}.min.js dist/docs
 git commit -m ${release}
 git tag ${release}
-git push origin master --tags
 
 # Update the version in package.json and bower.json.
 for json in package.json bower.json; do
@@ -137,4 +136,4 @@ done
 git rm -rf dist
 gulp clean
 git commit -m ${next}
-git push origin master
+git push origin master --tags
