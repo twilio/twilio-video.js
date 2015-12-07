@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var inherits = require(&apos;util&apos;).inherits;
+
+var AccessManager = require(&apos;twilio-common&apos;).AccessManager;
+var constants = require(&apos;./util/constants&apos;);
+var E = constants.twilioErrors;
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var IncomingInvite = require(&apos;./incominginvite&apos;);
+var Log = require(&apos;./util/log&apos;);
+var OutgoingInvite = require(&apos;./outgoinginvite&apos;);
+var SIPJSUserAgent = require(&apos;./signaling/sipjsuseragent&apos;);
+var StatsReporter = require(&apos;./statsreporter&apos;);
+var util = require(&apos;./util&apos;);
+
+/**
+ * Constructs a new {@link Client} with an AccessManager. Alternatively, you
+ * can pass an Access Token string and the {@link Client} will construct an
+ * AccessManager for you. AccessManager is provided by twilio-common.js, which
+ * must be included alongside twilio-conversations.js.
+ * @class
+ * @classdesc Construct a {@link Client} to start creating and participating
+ *   in {@link Conversation}s with other {@link Participant}s.
+ * @param {AccessManager|string} managerOrToken - The {@link Client}&apos;s AccessManager or an Access Token string to use when constructing an AccessManager
+ * @param {Client.ConstructorOptions} [options] - Options to override the
+ *   constructor&apos;s default behavior
+ * @property {AccessManager} accessManager - The {@link Client}&apos;s AccessManager
+ * @property {string} identity - The {@link Client}&apos;s identity
+ * @property {Map&lt;Conversation.SID, Conversation&gt;} conversations - The {@link Conversation}s this
+ *   {@link Client} is participating in
+ * @property {bool} isListening - Whether the {@link Client} is listening for
+ *   {@link IncomingInvite}s to {@link Conversation}s
+ * @fires Client#invite
+ * @fires Client#error
+ */
+function Client(accessManager, options) {
+  if (!(this instanceof Client)) {
+    return new Client(accessManager, options);
+  }
+
+  if (typeof accessManager === &apos;string&apos;) {
+    accessManager = new AccessManager(accessManager);
+  }
+
+  var self = this;
+  EventEmitter.call(this);
+
+  options = util.withDefaults(options, {
+    eventGateway: constants.EVENT_GATEWAY,
+    logLevel: constants.DEFAULT_LOG_LEVEL,
+    useConversationEvents: true,
+    userAgent: SIPJSUserAgent
+  });
+
+  var logLevel = options.logLevel;
+
+  if (options.debug === true) {
+    logLevel = &apos;debug&apos;;
+    console.warn(&apos;Warning: ClientOptions.debug is deprecated and will be removed in a future release. Please see ClientOptions.logLevel.&apos;);
+  }
+
+  var log = new Log(&apos;Client&apos;, logLevel);
+
+  var conversations = new Map();
+  var eventGateway = options.eventGateway;
+  var incomingInvites = new Map();
+  var rejectedIncomingInvites = new Map();
+  var isListening = false;
+  var outgoingInvites = new Map();
+  var canceledOutgoingInvites = new Map();
+
+  var UserAgent = options.userAgent;
+  var userAgent = new UserAgent(accessManager, options);
+
+  userAgent.on(&apos;invite&apos;, function onInviteServerTransaction(inviteServerTransaction) {
+    var cookie = inviteServerTransaction.cookie;
+    var outgoingInvite = outgoingInvites.get(cookie) || canceledOutgoingInvites.get(cookie);
+    if (outgoingInvite) {
+      return outgoingInvite._onInviteServerTransaction(inviteServerTransaction);
+    }
+
+    var key = inviteServerTransaction.key;
+    var incomingInvite = incomingInvites.get(key) || rejectedIncomingInvites.get(key);
+    if (incomingInvite) {
+      return incomingInvite._onInviteServerTransaction(inviteServerTransaction);
+    }
+
+    var conversation = conversations.get(inviteServerTransaction.conversationSid);
+    if (conversation) {
+      return conversation._onInviteServerTransaction(inviteServerTransaction);
+    }
+
+    self._onInviteServerTransaction(inviteServerTransaction);
+  });
+
+  userAgent.on(&apos;dialogCreated&apos;, function(dialog) {
+    new StatsReporter(eventGateway, dialog, logLevel);
+  });
+
+  userAgent.on(&apos;keepAliveTimeout&apos;, function() {
+    self.emit(&apos;error&apos;, E.GATEWAY_DISCONNECTED);
+  });
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    _canceledOutgoingInvites: {
+      value: canceledOutgoingInvites
+    },
+    _incomingInvites: {
+      value: incomingInvites
+    },
+    _isListening: {
+      set: function(_isListening) {
+        isListening = _isListening;
+      }
+    },
+    _isRegistered: {
+      enumerable: true,
+      get: function() {
+        return this._userAgent.isRegistered;
+      }
+    },
+    _log: {
+      value: log
+    },
+    _logLevel: {
+      value: logLevel
+    },
+    _needsRegistration: {
+      get: function() {
+        return isListening
+          || outgoingInvites.size
+          || incomingInvites.size
+          || conversations.size;
+      }
+    },
+    _options: {
+      value: options
+    },
+    _outgoingInvites: {
+      value: outgoingInvites
+    },
+    _rejectedIncomingInvites: {
+      value: rejectedIncomingInvites
+    },
+    _userAgent: {
+      value: userAgent
+    },
+    accessManager: {
+      enumerable: true,
+      value: accessManager
+    },
+    conversations: {
+      enumerable: true,
+      value: conversations
+    },
+    identity: {
+      enumerable: true,
+      get: function() {
+        return accessManager.identity;
+      }
+    },
+    isListening: {
+      enumerable: true,
+      get: function() {
+        return isListening;
+      }
+    }
+  });
+
+  accessManager.on(&apos;tokenUpdated&apos;, this._register.bind(this, true));
+
+  return this;
+}
+
+inherits(Client, EventEmitter);
+
+Client.prototype._onInviteServerTransaction = function _onInviteServerTransaction(inviteServerTransaction) {
+  // If not listening, do nothing. Do not even reject, as that would cause
+  // other listening Clients to be unable to accept the
+  // InviteServerTransaction.
+  if (!this.isListening) {
+    return;
+  }
+
+  var incomingInvite = new IncomingInvite(inviteServerTransaction, this._options);
+  var key = inviteServerTransaction.key;
+  this._incomingInvites.set(key, incomingInvite);
+
+  var self = this;
+
+  // If accepted, the Client has joined the Conversation and will pass any
+  // InviteServerTransactions with matching Conversation SID to the
+  // Conversation in order to be accepted or rejected.
+  incomingInvite.once(&apos;accepted&apos;, function incomingInviteAccepted() {
+    self._incomingInvites.delete(key);
+
+    var conversation = incomingInvite._conversation;
+    self.conversations.set(conversation.sid, conversation);
+
+    conversation.once(&apos;disconnected&apos;, function() {
+      self.conversations.delete(conversation.sid);
+      self._unregisterIfNotNeeded();
+    });
+  });
+
+  incomingInvite.once(&apos;canceled&apos;, function incomingInviteCanceled() {
+    self._incomingInvites.delete(key);
+    self._unregisterIfNotNeeded();
+  });
+
+  // If rejected, the Client remembers the IncomingInvite until all the
+  // InviteServerTransactions with matching Conversation SID and Participant
+  // SID would have been received and passes them to the IncomingInvite in
+  // order to be rejected.
+  incomingInvite.once(&apos;rejected&apos;, function incomingInviteRejected() {
+    self._incomingInvites.delete(key);
+    self._rejectedIncomingInvites.set(key, incomingInvite);
+
+    setTimeout(function deleteRejectedIncomingInvite() {
+      self._rejectedIncomingInvites.delete(key);
+    }, 3 * constants.DEFAULT_CALL_TIMEOUT);
+
+    self._unregisterIfNotNeeded();
+  });
+
+  this.emit(&apos;invite&apos;, incomingInvite);
+};
+
+/**
+ * Causes this {@link Client} to stop listening for {@link IncomingInvite}s to
+ *   {@link Conversation}s until {@link Client#listen} is called again.
+ * @returns {this}
+ */
+Client.prototype.unlisten = function unlisten() {
+  this._isListening = false;
+  this._unregisterIfNotNeeded();
+  return this;
+};
+
+Client.prototype._unregister = function _unregister() {
+  if (!this._isRegistered) {
+    return Promise.resolve(this);
+  }
+  var self = this;
+  return this._userAgent.unregister().then(function() {
+    self._isListening = false;
+    return self;
+  });
+};
+
+/**
+ * Causes this {@link Client} to start listening for {@link IncomingInvite}s to
+ *   {@link Conversation}s.
+ * @returns {Promise&lt;this&gt;}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var alice = new Twilio.Conversations.Client(manager);
+ *
+ * alice.listen().then(function() {
+ *   console.log(&apos;Alice is listening&apos;);
+ * }, function(error) {
+ *   console.error(error);
+ * });
+ */
+Client.prototype.listen = function listen() {
+  var self = this;
+  return this._register().then(function() {
+    self._isListening = true;
+    return self;
+  });
+};
+
+Client.prototype._register = function _register(reregister) {
+  var self = this;
+  if (!reregister &amp;&amp; this._isRegistered) {
+    return Promise.resolve(this);
+  }
+  return this._userAgent.register().then(function onRegistered() {
+    return self;
+  }, function onRegisterFailed(response) {
+    var gatewayMessage = util.getOrNull(response, &apos;headers.X-Twilio-Error.0.raw&apos;);
+    var sipMessage = response.cause;
+
+    if (sipMessage) {
+      self._log.throw(E.LISTEN_FAILED, &apos;Received SIP error: &apos; + sipMessage);
+    } else if (gatewayMessage) {
+      self._log.throw(E.LISTEN_FAILED, &apos;Gateway responded with: &apos; + gatewayMessage);
+    } else {
+      self._log.throw(E.LISTEN_FAILED, response.message || response);
+    }
+  });
+};
+
+/**
+ * Invite remote {@link Client}s to join a {@link Conversation}.
+ *   &lt;br&gt;&lt;br&gt;
+ *   By default, this will attempt to setup an {@link AudioTrack} and
+ *   {@link VideoTrack} between local and remote {@link Client}s. You can
+ *   override this by specifying &lt;code&gt;options&lt;/code&gt;.
+ * @param {Array&lt;string&gt;|string} participants - {@link Participant} identities to invite to the {@link Conversation}
+ * @param {Client.InviteToConversationOptions}
+ *   [options={localStreamConstraints:{audio:true,video:true}}] - Options to override
+ *   {@link Client#inviteToConversation}&apos;s default behavior
+ * @returns {OutgoingInvite}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.inviteToConversation([&apos;bob&apos;, &apos;charlie&apos;]).then(function(conversation) {
+ *   conversation.on(&apos;participantConnected&apos;, function(participant) {
+ *     console.log(participant.identity + &apos; has connected&apos;);
+ *   });
+ * });
+ */
+Client.prototype.inviteToConversation = function inviteToConversation(participants, options) {
+  options = util.withDefaults({ }, options, this._options);
+
+  if (!participants) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;No Participant identities were provided&apos;);
+  }
+
+  participants = participants.forEach ? participants : [participants];
+  util.validateAddresses(this.accessManager._tokenPayload.sub, participants);
+
+  // Save a reference to the OutgoingInvite; the Client will pass any
+  // InviteServerTransactions with matching cookie to the OutgoingInvite
+  // in order to be accepted or rejected.
+  var outgoingInvite = new OutgoingInvite(this._userAgent, participants, options);
+  var cookie = outgoingInvite._cookie;
+  this._outgoingInvites.set(cookie, outgoingInvite);
+
+  var self = this;
+
+  // If accepted, the Client has joined the Conversation and will pass any
+  // InviteServerTransactions with matching Conversation SID to the
+  // Conversation in order to be accepted or rejected.
+  outgoingInvite.once(&apos;accepted&apos;, function() {
+    self._outgoingInvites.delete(cookie);
+
+    var conversation = outgoingInvite._conversation;
+    self.conversations.set(conversation.sid, conversation);
+
+    conversation.once(&apos;disconnected&apos;, function() {
+      self.conversations.delete(conversation.sid);
+      self._unregisterIfNotNeeded();
+    });
+  });
+
+  // If canceled, the Client remembers the OutgoingInvite until all the
+  // InviteServerTransactions with matching cookies would have been received
+  // and passes them to the OutgoingInvite in order to be rejected.
+  outgoingInvite.once(&apos;canceled&apos;, function outgoingInviteCanceled() {
+    self._outgoingInvites.delete(cookie);
+    self._canceledOutgoingInvites.set(cookie, outgoingInvite);
+
+    setTimeout(function deleteCanceledOutgoingInvite() {
+      self._canceledOutgoingInvites.delete(cookie);
+    }, constants.DEFAULT_CALL_TIMEOUT * 3);
+
+    self._unregisterIfNotNeeded();
+  });
+
+  outgoingInvite.once(&apos;rejected&apos;, function() {
+    self._outgoingInvites.delete(outgoingInvite._cookie);
+    self._unregisterIfNotNeeded();
+  });
+
+  return outgoingInvite;
+};
+
+Client.prototype._unregisterIfNotNeeded = function _unregisterIfNotNeeded() {
+  return this._needsRegistration ? Promise.resolve(this) : this._unregister();
+};
+
+Object.freeze(Client.prototype);
+
+/**
+ * Your {@link Client} has run into an error.
+ * @param {Error} error - The Error
+ * @event Client#error
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.on(&apos;error&apos;, function(error) {
+ *  console.error(error);
+ * });
+ */
+
+/**
+ * Your {@link Client} has received an {@link IncomingInvite} to participant in a
+ * {@link Conversation}.
+ * @param {IncomingInvite} invite - the {@link IncomingInvite}
+ * @event Client#invite
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ * client.on(&apos;invite&apos;, function(invite) {
+ *   console.log(&apos;Received an IncomingInvite to join a Conversation from &apos; + invite.from);
+ * });
+ */
+
+/**
+ * You may pass these options to {@link Client}&apos;s constructor to override
+ * its default behavior.
+ * @typedef {object} Client.ConstructorOptions
+ * @property {string} [logLevel=&apos;warn&apos;] - Set the verbosity of logging to console.
+ *   Valid values: [&apos;off&apos;, &apos;error&apos;, &apos;warn&apos;, &apos;info&apos;, &apos;debug&apos;]
+ */
+
+/**
+ * You may pass these options to {@link Client#inviteToConversation} to
+ * override the default behavior.
+ * @typedef {object} Client.InviteToConversationOptions
+ * @property {?LocalMedia} [localMedia=null] - Set to reuse an existing
+ *   {@link LocalMedia} object when creating the {@link Conversation}
+ * @property {?MediaStream} [localStream=null] - Set to reuse an existing
+ *   &lt;code&gt;MediaStream&lt;/code&gt; when creating the {@link Conversation}
+ * @property {?object} [localStreamConstraints={audio:true,video:true}] - Set to
+ *   override the parameters passed to &lt;code&gt;getUserMedia&lt;/code&gt; when neither
+ *   &lt;code&gt;localMedia&lt;/code&gt; nor &lt;code&gt;localStream&lt;/code&gt; are provided
+ */
+
+module.exports = Client;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a></li><li><a href="VideoTrack.html">VideoTrack</a></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Mon Dec 07 2015 11:15:24 GMT-0800 (PST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
