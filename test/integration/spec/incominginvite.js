@@ -6,7 +6,7 @@ var assert = require('assert');
 var Client = require('lib/client');
 var SIPJSUserAgent = require('lib/signaling/sipjsuseragent');
 
-var credentials = require('../../../test.json');
+var credentials = require('test/env');
 var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
