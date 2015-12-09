@@ -1,75 +1,80 @@
-twilio-conversations
-====================
+twilio-conversations.js
+=======================
 
-This is the development repository for the Twilio RTC Conversations JavaScript library. You must have the following to test and build this project:
+[![Build Status](https://travis-ci.org/twilio/twilio-conversations.svg?branch=master)]
+(https://travis-ci.org/twilio/twilio-conversations)
 
-  * [Node](https://nodejs.org)
+twilio-conversations.js allows you to add multi-party voice and video
+communications to your web apps. For more information, see the
+[Quickstart and Guides](https://www.twilio.com/docs/api/video).
 
-Try the demo at [simple-signaling.appspot.com](https://simple-signaling.appspot.com).
+Including
+---------
+
+### CDN
+
+Releases of twilio-conversations.js are hosted on a CDN, and you can include
+these directly in you web app using a &lt;script&gt; tag. If you include
+twilio-conversations.js this way, then you must also include the
+[twilio-common.js](https://github.com/twilio/twilio-common.js) dependency.
+
+```html
+<script src="//media.twiliocdn.com/sdk/js/common/v0.1/twilio-common.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/conversations/v0.12/twilio-conversations.min.js"></script>
+```
+
+### NPM & Bower
+
+You can also include twilio-conversations.js with either
+[npm](https://www.npmjs.com) or [bower](http://bower.io/). Including
+twilio-conversations.js this way allows you to integrate flexibly with build
+systems like [Browserify](http://browserify.org) and
+[webpack](https://webpack.github.io).
+
+With npm:
+
+```
+npm install twilio-conversations --save
+```
+
+With bower:
+
+```
+bower install twilio-conversations --save
+```
 
 Building
 --------
 
-Lint, test, and build the library by running
+Fork and clone the repository. Then, install dependencies with
 
 ```
-$ make
+npm install
+npm install gulp -g
 ```
 
-Testing
--------
+Part of the build process involves running integration tests against Twilio. In
+order to run these, you will need a Twilio account and you will need to set
+the following environment variables:
 
-The [source code for simple-signaling.appspot.com](https://code.hq.twilio.com/client/simple-signaling.appspot.com) is included as a git submodule of this repository, allowing you to test builds locally at [localhost:8080](http://localhost:8080) by running
+* `ACCOUNT_SID`
+* `AUTH_TOKEN`
+* `SIGNING_KEY_SID`
+* `SIGNING_KEY_SECRET`
+* `CONFIGURATION_PROFILE_SID`
 
-```
-$ make serve
-```
-
-For more information, refer to the [client/simple-signaling.appspot.com](https://code.hq.twilio.com/client/simple-signaling.appspot.com) repository.
-
-### Tests
-
-Tests use [Mocha](http://mochajs.org) and are defined in `test`. You can run these with
+Alternatively, you can skip the integration tests by setting `SKIP_INTEGRATION`
+to "true". Then, run
 
 ```
-$ make test
+gulp
 ```
 
-#### Unit
+The builds and docs will be placed in the `dist/` directory.
 
-Unit tests are defined in `test/unit` and can be run with
+Contributing
+------------
 
-
-```
-$ make unit
-```
-
-#### Integration
-
-Integration tests are defined in `test/integration` and can be run with
-
-```
-$ make integration
-```
-
-Integration tests require that you create a `test.json` file (see the included example file).
-
-Documentation
--------------
-
-Documentation is generated using [JSDoc](http://usejsdoc.org). You can generate documentation with
-
-```
-$ make doc
-```
-
-Linting
--------
-
-Linting is provided by [JSHint](https://github.com/jshint/jshint). Try to follow the linter's advice. If you find a well-understood pattern that proves to be useful but is rejected by the linter, add it to the list of exceptions.
-
-You can lint using
-
-```
-$ make lint
-```
+Bug fixes welcome! If you're not familiar with the GitHub pull
+request/contribution process, [this is a nice tutorial]
+(https://gun.io/blog/how-to-github-fork-branch-and-pull-request/).
