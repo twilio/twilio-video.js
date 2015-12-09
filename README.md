@@ -1,8 +1,8 @@
 twilio-conversations.js
 =======================
 
-[![Build Status](https://travis-ci.org/twilio/twilio-conversations.svg?branch=master)]
-(https://travis-ci.org/twilio/twilio-conversations)
+[![Build Status](https://travis-ci.org/twilio/twilio-conversations.js.svg?branch=master)]
+(https://travis-ci.org/twilio/twilio-conversations.js)
 
 twilio-conversations.js allows you to add multi-party voice and video
 communications to your web apps. For more information, see the
@@ -14,7 +14,7 @@ Including
 ### CDN
 
 Releases of twilio-conversations.js are hosted on a CDN, and you can include
-these directly in you web app using a &lt;script&gt; tag. If you include
+these directly in your web app using a &lt;script&gt; tag. If you include
 twilio-conversations.js this way, then you must also include the
 [twilio-common.js](https://github.com/twilio/twilio-common.js) dependency.
 
