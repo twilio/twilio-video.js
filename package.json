@@ -49,7 +49,7 @@
   "main": "./lib/index.js",
   "scripts": {
     "test": "gulp test",
-    "postinstall": "./scripts/postinstall.js"
+    "postinstall": "node scripts/postinstall.js"
   },
   "dependencies": {
     "sip.js": "https://github.com/twilio/SIP.js.git#4e74f060191cdc8657737fdc7947af5eff871a4b",
