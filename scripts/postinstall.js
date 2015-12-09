@@ -1,4 +1,4 @@
-#!/usr/local/bin/node
+#!/usr/bin/env node
 var fs = require('fs');
 
 fs.existsSync('node_modules/lib') || fs.symlinkSync('../lib', 'node_modules/lib', 'dir');
