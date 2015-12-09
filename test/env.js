@@ -1,7 +1,7 @@
 'use strict';
 
 // Pre-populate with test.json if it exists.
-var env;
+var env = {};
 try {
   env = require('../test.json');
 } catch (error) {
