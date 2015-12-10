@@ -5,7 +5,7 @@ var env = {};
 try {
   env = require('../test.json');
 } catch (error) {
-  void error;
+  // Do nothing.
 }
 
 // Copy environment variables
