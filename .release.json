@@ -1,0 +1,44 @@
+{
+  "type": "JavaScript",
+  "travis": "pro",
+  "slug": "twilio/twilio-conversations.js",
+  "env": {
+    "GH_REF": "github.com/twilio/twilio-conversations.js.git"
+  },
+  "plans": {
+    "release": {
+      "env": {
+        "GIT_USER_NAME": "twilio-ci",
+        "GIT_USER_EMAIL": "mroberts+twilio-ci@twilio.com"
+      },
+      "commands": [
+        "node ./node_modules/.bin/release --bump ${CURRENT_VERSION} ${RELEASE_VERSION}",
+        "git config user.name \"${GIT_USER_NAME}\"",
+        "git config user.email \"${GIT_USER_EMAIL}\"",
+        "git rm -rf --ignore-unmatch dist",
+        "gulp clean",
+        "gulp",
+        "git add .",
+        "git add -f dist",
+        "git commit -m \"Release ${RELEASE_VERSION}\"",
+        "git tag ${RELEASE_VERSION}"
+      ]
+    },
+    "development": {
+      "commands": [
+        "node ./node_modules/.bin/release --bump ${RELEASE_VERSION} ${DEVELOPMENT_VERSION}",
+        "git rm -rf dist",
+        "gulp clean",
+        "git add .",
+        "git commit -m \"Continue development on ${DEVELOPMENT_VERSION}\""
+      ]
+    },
+    "publish": {
+      "commands": [
+        "git rebase HEAD ${BRANCH}",
+        "git push origin ${BRANCH} --tags",
+        "git checkout ${RELEASE_VERSION}"
+      ]
+    }
+  }
+}
