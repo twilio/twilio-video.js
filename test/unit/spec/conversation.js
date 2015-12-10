@@ -135,45 +135,6 @@ describe('Conversation', function() {
     });
   });
 
-  describe('#_invite(dialog, identity, timeout)', function() {
-    it('should emit participantFailed if the call times out', function(done) {
-      conversation.on('participantFailed', function(identity) {
-        assert.equal(identity, 'foo');
-        done();
-      });
-
-      conversation._invite(dialog, 1, 'foo');
-    });
-
-    it('should emit participantFailed if the refer fails', function(done) {
-      conversation.on('participantFailed', function(identity) {
-        assert.equal(identity, 'foo');
-        done();
-      });
-
-      dialog.refer.rejectNext = true;
-      conversation._invite(dialog, 100, 'foo');
-    });
-
-    it('should resolve if the participant connects', function(done) {
-      conversation._invite(dialog, 1000, 'foo').then(function() {
-        done();
-      });
-      conversation.emit('participantConnected', { identity: 'foo' });
-    });
-
-    it('should not resolve if a different participant connects', function(done) {
-      var timeout = setTimeout(done, 10);
-
-      conversation._invite(dialog, 100, 'foo').then(function() {
-        assert.fail('Resolved when the wrong participant connected');
-        clearTimeout(timeout);
-      }).then(done);
-
-      conversation.emit('participantConnected', { identity: 'bar' });
-    });
-  });
-
   describe('Participant events', function() {
     var participants;
 
