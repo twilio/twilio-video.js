@@ -20,7 +20,7 @@
         "gulp",
         "git add .",
         "git add -f dist",
-        "git commit -m \"Release ${RELEASE_VERSION}\"",
+        "git commit -m \"${RELEASE_VERSION}\"",
         "git tag ${RELEASE_VERSION}"
       ]
     },
@@ -30,7 +30,7 @@
         "git rm -rf dist",
         "gulp clean",
         "git add .",
-        "git commit -m \"Continue development on ${DEVELOPMENT_VERSION}\""
+        "git commit -m \"${DEVELOPMENT_VERSION}\""
       ]
     },
     "publish": {
