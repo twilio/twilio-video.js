@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: media/index.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: media/index.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var inherits = require(&apos;util&apos;).inherits;
+
+var Track = require(&apos;./track&apos;);
+var AudioTrack = require(&apos;./track/audiotrack&apos;);
+var VideoTrack = require(&apos;./track/videotrack&apos;);
+
+/**
+ * Construct a {@link Media} object.
+ * @class
+ * @classdesc A {@link Media} object contains a number of {@link AudioTrack}s
+ *   and {@link VideoTrack}s. You can call {@link Media#attach} with a
+ *   &amp;lt;div&amp;gt; to automatically update your application&apos;s user interface with
+ *   &amp;lt;audio&amp;gt; and &amp;lt;video&amp;gt; elements as {@link Track}s are added and
+ *   removed.
+ * @property {Map&lt;HTMLElement, Map&lt;Track, HTMLElement&gt;&gt;} attachments - A Map
+ *   from &amp;lt;div&amp;gt; elements to a Map from {@link Track}s to their attached
+ *   HTMLElements (managed by {@link Media#attach} and {@link Media#detach})
+ * @property {Map&lt;Track.ID, AudioTrack&gt;} audioTracks - The {@link AudioTrack}s on
+ *   this {@link Media} object
+ * @property {boolean} isMuted - True if every {@link AudioTrack} on this
+ *   {@link Media} object is disabled
+ * @property {boolean} isPaused - True if every {@link VideoTrack} on this
+ *   {@link Media} object is disabled
+ * @property {Set&lt;MediaStream&gt;} mediaStreams - The MediaStreams associated with
+ *   the {@link Track}s on this {@link Media} object
+ * @property {Map&lt;Track.ID, Track&gt;} tracks - The {@link AudioTrack}s and
+ *   {@link VideoTrack}s on this {@link Media} object
+ * @property {Map&lt;Track.ID, VideoTrack&gt;} videoTracks - The {@link VideoTrack}s on
+ *   this {@link Media} object
+ * @fires Media#trackAdded
+ * @fires Media#trackDimensionsChanged
+ * @fires Media#trackDisabled
+ * @fires Media#trackEnabled
+ * @fires Media#trackEnded
+ * @fires Media#trackRemoved
+ * @fires Media#trackStarted
+ */
+function Media() {
+  EventEmitter.call(this);
+
+  var attachments = new Map();
+  var audioTracks = new Map();
+  var mediaStreams = new Set();
+  var tracks = new Map();
+  var videoTracks = new Map();
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    attachments: {
+      enumerable: true,
+      value: attachments
+    },
+    audioTracks: {
+      enumerable: true,
+      value: audioTracks
+    },
+    isMuted: {
+      enumerable: true,
+      get: function() {
+        var isMuted = true;
+        audioTracks.forEach(function(track) {
+          isMuted = isMuted &amp;&amp; !track.isEnabled;
+        });
+        return isMuted;
+      }
+    },
+    isPaused: {
+      enumerable: true,
+      get: function() {
+        var isPaused = true;
+        videoTracks.forEach(function(track) {
+          isPaused = isPaused &amp;&amp; !track.isEnabled;
+        });
+        return isPaused;
+      }
+    },
+    mediaStreams: {
+      enumerable: true,
+      value: mediaStreams
+    },
+    tracks: {
+      enumerable: true,
+      value: tracks
+    },
+    videoTracks: {
+      enumerable: true,
+      value: videoTracks
+    }
+  });
+  return this;
+}
+
+var TRACK_ADDED = Media.TRACK_ADDED = &apos;trackAdded&apos;;
+var TRACK_DIMENSIONS_CHANGED = Media.TRACK_DIMENSIONS_CHANGED = &apos;trackDimensionsChanged&apos;;
+var TRACK_DISABLED = Media.TRACK_DISABLED = &apos;trackDisabled&apos;;
+var TRACK_ENABLED = Media.TRACK_ENABLED = &apos;trackEnabled&apos;;
+var TRACK_ENDED = Media.TRACK_ENDED = &apos;trackEnded&apos;;
+var TRACK_REMOVED = Media.TRACK_REMOVED = &apos;trackRemoved&apos;;
+var TRACK_STARTED = Media.TRACK_STARTED = &apos;trackStarted&apos;;
+
+inherits(Media, EventEmitter);
+
+Media.prototype._addRemoteStream = function _addRemoteStream(mediaStream) {
+  mediaStream.getAudioTracks().forEach(function(mediaStreamTrack) {
+    var audioTrack = new AudioTrack(mediaStream, mediaStreamTrack);
+    this._addTrack(audioTrack);
+  }, this);
+  mediaStream.getVideoTracks().forEach(function(mediaStreamTrack) {
+    var videoTrack = new VideoTrack(mediaStream, mediaStreamTrack);
+    this._addTrack(videoTrack);
+  }, this);
+  return this;
+};
+
+Media.prototype._updateMediaStreams = function _updateMediaStreams() {
+  this.mediaStreams.clear();
+  this.tracks.forEach(function(track) {
+    this.mediaStreams.add(track.mediaStream);
+  }, this);
+  return this.mediaStreams;
+};
+
+Media.prototype._addTrack = function _addTrack(track) {
+  if (this.tracks.has(track.id)) {
+    return this;
+  }
+
+  var self = this;
+  this.mediaStreams.add(track.mediaStream);
+
+  this.tracks.set(track.id, track);
+  this._reemitTrackEvent(track, VideoTrack.DIMENSIONS_CHANGED, TRACK_DIMENSIONS_CHANGED);
+  this._reemitTrackEvent(track, Track.DISABLED, TRACK_DISABLED);
+  this._reemitTrackEvent(track, Track.ENABLED, TRACK_ENABLED);
+  this._reemitTrackEvent(track, Track.ENDED, TRACK_ENDED);
+  this._reemitTrackEvent(track, Track.STARTED, TRACK_STARTED);
+  if (track.kind === &apos;audio&apos;) {
+    this._addAudioTrack(track);
+  } else {
+    this._addVideoTrack(track);
+  }
+  this._updateMediaStreams();
+
+  track.once(Track.ENDED, function ended() {
+    self._removeTrack(track);
+  });
+
+  this.emit(TRACK_ADDED, track);
+
+  return this;
+};
+
+Media.prototype._addAudioTrack = function _addAudioTrack(track) {
+  this.audioTracks.set(track.id, track);
+  return this;
+};
+
+Media.prototype._addVideoTrack = function _addVideoTrack(track) {
+  this.videoTracks.set(track.id, track);
+  return this;
+};
+
+Media.prototype._reemitTrackEvent = function _reemitTrackEvent(track, trackEvent, event) {
+  var self = this;
+  var trackSet = track.kind === &apos;audio&apos; ? this.audioTracks : this.videoTracks;
+  track.on(trackEvent, function onTrackEvent() {
+    // FIXME(mroberts): Lazily remove the event handler, but what happens
+    // if we add the Track twice? We only want to emit the event once.
+    if (!trackSet.has(track.id)) {
+      return track.removeListener(trackEvent, onTrackEvent);
+    }
+    self.emit(event, track);
+  });
+  return this;
+};
+
+/**
+ * Add any new {@link Track}s that did not trigger the onaddtrack event. WebRTC
+ * does not always call this callback, so we have to check ourselves.
+ * @private
+ * @returns {Media}
+ */
+Media.prototype._refreshTracks = function _refreshTracks() {
+  this.mediaStreams.forEach(this._addRemoteStream, this);
+  return this;
+};
+
+Media.prototype._attachTrack = function _attachTrack(el, attachments, track) {
+  var self = this;
+  var trackEl = track.attach();
+  // NOTE(mroberts): We want to mute local audio, otherwise we get feedback.
+  if (this.constructor !== Media &amp;&amp; track instanceof AudioTrack) {
+    trackEl.muted = true;
+  }
+  el.appendChild(trackEl);
+  attachments.set(track, trackEl);
+  track.once(&apos;ended&apos;, function() {
+    self._detachTrack(el, attachments, track);
+  });
+  return this;
+};
+
+Media.prototype._detachTrack = function _detachTrack(el, attachments, track) {
+  var trackEl = attachments.get(track);
+  if (!trackEl) {
+    return this;
+  }
+  track.detach(trackEl);
+  if (trackEl.parentNode) {
+    trackEl.parentNode.removeChild(trackEl);
+  }
+  attachments.delete(track);
+  return this;
+};
+
+Media.prototype._removeTrack = function _removeTrack(track) {
+  if (!this.tracks.has(track.id)) {
+    return this;
+  }
+  this.tracks.delete(track.id);
+  (track.kind === &apos;audio&apos; ? this.audioTracks : this.videoTracks).delete(track.id);
+  this._updateMediaStreams();
+  this.emit(TRACK_REMOVED, track);
+  return this;
+};
+
+/**
+ * Attach the {@link Media} to a newly created &amp;lt;div&amp;gt; element.
+ * @returns {HTMLElement}
+ * @example
+ * var remoteMediaEl = media.attach();
+ * document.getElementById(&apos;div#remote-media-container&apos;).appendChild(remoteMediaEl);
+*//**
+ * Attach the {@link Media} to an existing HTMLElement.
+ * @param {HTMLElement} el - The HTMLElement to attach to
+ * @returns {HTMLElement}
+ * @example
+ * var remoteMediaEl = document.getElementById(&apos;remote-media&apos;);
+ * media.attach(remoteMediaEl);
+*//**
+ * Attach the {@link Media} to an HTMLElement selected by
+ * &lt;code&gt;document.querySelector&lt;/code&gt;.
+ * @param {string} selector - A query selector for the HTMLElement to attach to
+ * @returns {HTMLElement}
+ * @example
+ * var remoteMediaEl = media.attach(&apos;div#remote-media&apos;);
+ */
+Media.prototype.attach = function attach(el) {
+  if (!el) {
+    return createDivAndAttach(this);
+  } else if (typeof el === &apos;string&apos;) {
+    return selectElementAndAttach(this, el);
+  }
+  return attachToElement(this, el);
+};
+
+function attachToElement(media, el) {
+  if (media.attachments.has(el)) {
+    return el;
+  }
+  var attachments = new Map();
+  // Attach existing audio and video tracks to the element,
+  media.tracks.forEach(function(track) {
+    media._attachTrack(el, attachments, track);
+  }, media);
+  // And update the element as tracks are added,
+  media.on(TRACK_ADDED, function trackAdded(track) {
+    // But stop updating the element if we&apos;ve been detached.
+    if (!media.attachments.has(el)) {
+      return media.removeListener(TRACK_ADDED, trackAdded);
+    }
+    media._attachTrack(el, attachments, track);
+  });
+  media.on(TRACK_REMOVED, function trackRemoved(track) {
+    if (!media.attachments.has(el)) {
+      return media.removeListener(TRACK_REMOVED, trackRemoved);
+    }
+    media._detachTrack(el, attachments, track);
+  });
+  media.attachments.set(el, attachments);
+  return el;
+}
+
+function selectElementAndAttach(media, selector) {
+  if (typeof document === &apos;undefined&apos;) {
+    throw new Error(&apos;document is undefined&apos;);
+  }
+  var el = document.querySelector(selector);
+  if (!el) {
+    throw new Error(&apos;document.querySelector returned nothing&apos;);
+  }
+  return media.attach(el);
+}
+
+function createDivAndAttach(media) {
+  if (typeof document === &apos;undefined&apos;) {
+    throw new Error(&apos;document is undefined&apos;);
+  }
+  return media.attach(document.createElement(&apos;div&apos;));
+}
+
+/**
+ * Detach the {@link Media} from any and all previously attached HTMLElements.
+ * @returns {Array&lt;HTMLElement&gt;}
+ * @example
+ * var detachedMediaEls = media.detach();
+*//**
+ * Detach the {@link Media} from a previously attached HTMLElement.
+ * @param {HTMLElement} el - The HTMLElement to detach from
+ * @returns {HTMLElement}
+ * @example
+ * var remoteMediaEl = document.getElementById(&apos;remote-media&apos;);
+ * media.detach(remoteMediaEl);
+*//**
+ * Detach the {@link Media} from a previously attached HTMLElement selected by
+ * &lt;code&gt;document.querySelector&lt;/code&gt;.
+ * @param {string} selector - A query selector for the HTMLElement to detach from
+ * @returns {HTMLElement}
+ * @example
+ * var detachedMediaEl = media.detach(&apos;div#remote-media&apos;);
+ */
+Media.prototype.detach = function detach(el) {
+  if (!el) {
+    return detachFromAllElements(this);
+  } else if (typeof el === &apos;string&apos;) {
+    return selectElementAndDetach(this, el);
+  }
+  return detachFromElement(this, el);
+};
+
+function detachFromElement(media, el) {
+  if (!media.attachments.has(el)) {
+    return el;
+  }
+  var attachments = media.attachments.get(el);
+  media.attachments.delete(el);
+  attachments.forEach(function(trackEl, track) {
+    media._detachTrack(el, attachments, track);
+  });
+  return el;
+}
+
+function selectElementAndDetach(media, selector) {
+  if (typeof document === &apos;undefined&apos;) {
+    throw new Error(&apos;document is undefined&apos;);
+  }
+  var el = document.querySelector(selector);
+  if (!el) {
+    throw new Error(&apos;document.querySelector returned nothing&apos;);
+  }
+  return detachFromElement(media, el);
+}
+
+function detachFromAllElements(media) {
+  var els = [];
+  media.attachments.forEach(function(attachments, el) {
+    els.push(el);
+    detachFromElement(media, el);
+  });
+  return els;
+}
+
+/**
+ * A {@link Track} was added to this {@link Media} object.
+ * @param {Track} track - The {@link Track} that was added
+ * @event Media#trackAdded
+ */
+
+/**
+ * The dimensions of a {@link VideoTrack} on this {@link Media} object changed.
+ * @param {VideoTrack} track - The {@link VideoTrack} whose dimensions changed
+ * @event Media#trackDimensionsChanged
+ */
+
+/**
+ * A {@link Track} on this {@link Media} object was disabled.
+ * @param {Track} track - The {@link Track} that was disabled
+ * @event Media#trackDisabled
+ */
+
+/**
+ * A {@link Track} on this {@link Media} object was enabled.
+ * @param {Track} track - The {@link Track} that was enabled
+ * @event Media#trackEnabled
+ */
+
+/**
+ * A {@link Track} on this {@link Media} object ended.
+ * @param {Track} track - The {@link Track} that ended
+ * @event Media#trackEnded
+ */
+
+/**
+ * A {@link Track} was removed from this {@link Media} object.
+ * @param {Track} track - The {@link Track} that was removed
+ * @event Media#trackRemoved
+ */
+
+/**
+ * A {@link Track} on this {@link Media} object was started.
+ * @param {Track} track - The {@link Track} that was started
+ * @event Media#trackStarted
+ */
+
+module.exports = Media;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li></ul></li><li><a href="VideoTrack.html">VideoTrack</a><ul style="margin-left: 1em"><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Tue Dec 15 2015 19:02:13 GMT+0000 (UTC)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

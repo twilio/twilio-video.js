@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: participant.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: participant.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var inherits = require(&apos;util&apos;).inherits;
+var Media = require(&apos;./media&apos;);
+
+/**
+ * Construct a {@link Participant}.
+ * @class
+ * @classdesc A {@link Participant} represents a remote {@link Client} in a
+ * {@link Conversation}.
+ * @param {Participant.SID} sid - The {@link Participant}&apos;s SID
+ * @param {string} identity - The identity of the {@link Participant}
+ * @param {PeerConnection} peerConnection - The PeerConnection between your {@link Client} and this {@link Participant} within the context of a {@link Conversation}
+ * @param {?Media} [media] - The {@link Media} this {@link Participant} is sharing, if any
+ * @property {string} identity - The identity of the {@link Participant}
+ * @property {Media} media - The {@link Media} this {@link Participant} is sharing, if any
+ * @property {Participant.SID} sid - The {@link Participant}&apos;s SID
+ * @fires Participant#trackAdded
+ * @fires Participant#trackDimensionsChanged
+ * @fires Participant#trackDisabled
+ * @fires Participant#trackEnabled
+ * @fires Participant#trackEnded
+ * @fires Participant#trackRemoved
+ * @fires Participant#trackStarted
+ */
+function Participant(sid, identity, peerConnection, media) {
+  if (!(this instanceof Participant)) {
+    return new Participant(sid, identity, peerConnection, media);
+  }
+
+  EventEmitter.call(this);
+
+  media = media || new Media();
+
+  /* eslint no-use-before-define:0 */
+  media.on(Media.TRACK_ADDED, this.emit.bind(this, TRACK_ADDED));
+  media.on(Media.TRACK_DIMENSIONS_CHANGED, this.emit.bind(this, TRACK_DIMENSIONS_CHANGED));
+  media.on(Media.TRACK_DISABLED, this.emit.bind(this, TRACK_DISABLED));
+  media.on(Media.TRACK_ENABLED, this.emit.bind(this, TRACK_ENABLED));
+  media.on(Media.TRACK_ENDED, this.emit.bind(this, TRACK_ENDED));
+  media.on(Media.TRACK_REMOVED, this.emit.bind(this, TRACK_REMOVED));
+  media.on(Media.TRACK_STARTED, this.emit.bind(this, TRACK_STARTED));
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    identity: {
+      enumerable: true,
+      value: identity
+    },
+    media: {
+      enumerable: true,
+      value: media
+    },
+    sid: {
+      enumerable: true,
+      value: sid
+    }
+  });
+
+  return this;
+}
+
+var TRACK_ADDED = Participant.TRACK_ADDED = Media.TRACK_ADDED;
+var TRACK_DIMENSIONS_CHANGED = Participant.TRACK_DIMENSIONS_CHANGED = Media.TRACK_DIMENSIONS_CHANGED;
+var TRACK_DISABLED = Participant.TRACK_DISABLED = Media.TRACK_DISABLED;
+var TRACK_ENABLED = Participant.TRACK_ENABLED = Media.TRACK_ENABLED;
+var TRACK_ENDED = Participant.TRACK_ENDED = Media.TRACK_ENDED;
+var TRACK_REMOVED = Participant.TRACK_REMOVED = Media.TRACK_REMOVED;
+var TRACK_STARTED = Participant.TRACK_STARTED = Media.TRACK_STARTED;
+
+inherits(Participant, EventEmitter);
+
+/**
+ * Update the {@link Participant} upon receipt of a {@link ConversationEvent}.
+ * @private
+ * @param {ConversationEvent} event
+ * @returns {Participant}
+ */
+Participant.prototype._onConversationEvent = function _onConversationEvent(event) {
+  if (event.participant_sid !== this.sid) {
+    return this;
+  }
+
+  event.tracks.forEach(function(_track) {
+    var trackId = _track.id;
+    var track = this.media.tracks.get(trackId);
+    if (!track) {
+      return;
+    }
+
+    switch (event.event.toLowerCase()) {
+      case &apos;track_disabled&apos;:
+        track._enable(false);
+        break;
+      case &apos;track_enabled&apos;:
+        track._enable(true);
+        break;
+      case &apos;track_removed&apos;:
+        this.media._removeTrack(track);
+    }
+  }, this);
+
+  return this;
+};
+
+Object.freeze(Participant.prototype);
+
+/**
+ * A {@link Participant.SID} is a 34-character string starting with &quot;PA&quot;
+ * that uniquely identifies a {@link Participant}.
+ * @type string
+ * @typedef Participant.SID
+ */
+
+/**
+ * A {@link Track} was added by the {@link Participant}.
+ * @param {Track} track - The {@link Track} that was added
+ * @event Participant#trackAdded
+ */
+
+/**
+ * One of the {@link Participant}&apos;s {@link VideoTrack}&apos;s dimensions changed.
+ * @param {VideoTrack} track - The {@link VideoTrack} whose dimensions changed
+ * @event Participant#trackDimensionsChanged
+ */
+
+/**
+ * A {@link Track} was disabled by the {@link Participant}.
+ * @param {Track} track - The {@link Track} that was disabled
+ * @event Participant#trackDisabled
+ */
+
+/**
+ * A {@link Track} was enabled by the {@link Participant}.
+ * @param {Track} track - The {@link Track} that was enabled
+ * @event Participant#trackEnabled
+ */
+
+/**
+ * One of the {@link Participant}&apos;s {@link Track}s ended.
+ * @param {Track} track - The {@link Track} that ended
+ * @event Participant#trackEnded
+ */
+
+/**
+ * A {@link Track} was removed by the {@link Participant}.
+ * @param {Track} track - The {@link Track} that was removed
+ * @event Participant#trackRemoved
+ */
+
+/**
+ * One of the {@link Participant}&apos;s {@link Track}s started.
+ * @param {Track} track - The {@link Track} that started
+ * @event Participant#trackStarted
+ */
+
+module.exports = Participant;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li></ul></li><li><a href="VideoTrack.html">VideoTrack</a><ul style="margin-left: 1em"><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Tue Dec 15 2015 19:02:13 GMT+0000 (UTC)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
