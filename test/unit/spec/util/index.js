@@ -131,15 +131,15 @@ describe('util', function() {
     });
   });
 
-  describe('makeURI', function() {
+  describe('makeSIPURI', function() {
     it('should contain the accountSid and client name passed in', function() {
-      var uri = util.makeURI('AC1234', 'alice');
+      var uri = util.makeSIPURI('AC1234', 'alice');
       assert(/AC1234/.test(uri));
       assert(/alice/.test(uri));
     });
 
     it('should default client name to the default specified in constants', function() {
-      var uri = util.makeURI('AC1234');
+      var uri = util.makeSIPURI('AC1234');
       var regex = new RegExp(constants.DEFAULT_PEER_NAME);
       assert(regex.test(uri));
     });

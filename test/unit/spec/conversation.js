@@ -19,8 +19,8 @@ describe('Conversation', function() {
     conversation = new Conversation();
     token = jwt;
     var accessManager = new AccessManager(token);
-    dialog = new MockDialog(util.makeURI('AC123', 'foo'), accessManager);
-    dialog2 = new MockDialog(util.makeURI('AC123', 'bar'), accessManager);
+    dialog = new MockDialog(util.makeSIPURI('AC123', 'foo'), accessManager);
+    dialog2 = new MockDialog(util.makeSIPURI('AC123', 'bar'), accessManager);
     conversation._onDialog(dialog);
     conversation._onDialog(dialog2);
     assert(dialog.userAgent.accessManager);
@@ -46,7 +46,7 @@ describe('Conversation', function() {
       });
 
       it('should emit a participantConnected event and store that Participant', function(done) {
-        var dialog3 = new MockDialog(util.makeURI('AC123', 'baz'));
+        var dialog3 = new MockDialog(util.makeSIPURI('AC123', 'baz'));
 
         conversation.on('participantConnected', function(participant) {
           if (participant.identity === 'baz') {

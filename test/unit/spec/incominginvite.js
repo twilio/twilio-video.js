@@ -29,7 +29,7 @@ describe('IncomingInvite', function() {
       invite.accept({ localMedia: localMedia }).then(function(conversation) {
         assert(conversation._dialogs.size);
       }).then(done, done);
-      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
+      ist.accept.resolve(new MockDialog(util.makeSIPURI('AC123', 'foo')));
     });
 
     it('should not add a Dialog to the Conversation more than once', function(done) {
@@ -39,7 +39,7 @@ describe('IncomingInvite', function() {
         }).then(done, done);
       });
 
-      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
+      ist.accept.resolve(new MockDialog(util.makeSIPURI('AC123', 'foo')));
     });
 
     it('should return a Promise for the existing Conversation if the IST is already accepted', function(done) {
@@ -50,14 +50,14 @@ describe('IncomingInvite', function() {
         }).then(done, done);
       });
 
-      ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
+      ist.accept.resolve(new MockDialog(util.makeSIPURI('AC123', 'foo')));
     });
 
     context('when it succeeds', function() {
       it('should emit accepted', function(done) {
         invite.once('accepted', function() { done(); });
         invite.accept({ localMedia: localMedia });
-        ist.accept.resolve(new MockDialog(util.makeURI('AC123', 'foo')));
+        ist.accept.resolve(new MockDialog(util.makeSIPURI('AC123', 'foo')));
       });
     });
 

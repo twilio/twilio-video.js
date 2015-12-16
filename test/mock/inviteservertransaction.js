@@ -35,7 +35,7 @@ function MockIST() {
       value: 'CV123 PA456'
     },
     from: {
-      value: util.makeURI('AC123', 'foo')
+      value: util.makeSIPURI('AC123', 'foo')
     },
     reject: {
       value: createPromise()
