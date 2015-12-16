@@ -48,39 +48,6 @@ describe('util', function() {
     });
   });
 
-  describe('toURLFormEncoded', function() {
-    it('should turn a JSON object into a query string with matching params', function() {
-      var params = { foo: 'bar', baz: 'qux' };
-      assert.equal(util.toURLFormEncoded(params), 'foo=bar&baz=qux');
-    });
-
-    it('should return an empty string if params are undefined', function() {
-      var params = util.toURLFormEncoded();
-      assert.equal(typeof params, 'string');
-      assert.equal(params.length, 0);
-    });
-  });
-
-  describe('fromURLFormEncoded', function() {
-    it('should turn a query string into a JSON object with matching params', function() {
-      var params = util.fromURLFormEncoded('foo=bar&baz=qux');
-      assert.equal(params.foo, 'bar');
-      assert.equal(params.baz, 'qux');
-    });
-
-    it('should set params with empty right-side values to null', function() {
-      var params = util.fromURLFormEncoded('foo=bar&baz=');
-      assert.equal(params.foo, 'bar');
-      assert.equal(params.baz, null);
-    });
-
-    it('should return an empty object if params are undefined', function() {
-      var params = util.fromURLFormEncoded();
-      assert.equal(typeof params, 'object');
-      assert.equal(Object.keys(params).length, 0);
-    });
-  });
-
   describe('makeRegisterHeaders', function() {
     var sdkVersion;
     var navigator;
