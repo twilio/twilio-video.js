@@ -8,46 +8,6 @@ var util = require('lib/util');
 
 
 describe('util', function() {
-  describe('encodeBase64', function() {
-    context('when btoa is defined', function() {
-      var btoa;
-
-      before(function() {
-        btoa = global.btoa;
-        global.btoa = sinon.spy();
-      });
-
-      it('should use atob', function() {
-        util.encodeBase64('foo');
-        sinon.assert.calledWith(global.btoa, 'foo');
-      });
-
-      after(function() {
-        global.btoa = btoa;
-      });
-    });
-  });
-
-
-  describe('encodeBase64', function() {
-    it('should correctly encode a string to Base64', function() {
-      assert.equal(util.encodeBase64('bar'), 'YmFy');
-    });
-  });
-
-  describe('deepClone', function() {
-    it('should clone all levels of an object', function() {
-      var foo = { a: 'a', b: { c: 'c' } };
-      var bar = util.deepClone(foo);
-
-      assert.notEqual(foo, bar);
-      assert.notEqual(foo.b, bar.b);
-
-      assert.equal(foo.a, bar.a);
-      assert.equal(foo.b.c, bar.b.c);
-    });
-  });
-
   describe('makeRegisterHeaders', function() {
     var sdkVersion;
     var navigator;
@@ -92,23 +52,11 @@ describe('util', function() {
     });
   });
 
-  describe('makeTarget', function() {
-    it('should contain the accountSid passed in', function() {
-      assert(/AC1234/.test(util.makeTarget('AC1234')));
-    });
-  });
-
   describe('makeSIPURI', function() {
     it('should contain the accountSid and client name passed in', function() {
       var uri = util.makeSIPURI('AC1234', 'alice');
       assert(/AC1234/.test(uri));
       assert(/alice/.test(uri));
-    });
-
-    it('should default client name to the default specified in constants', function() {
-      var uri = util.makeSIPURI('AC1234');
-      var regex = new RegExp(constants.DEFAULT_PEER_NAME);
-      assert(regex.test(uri));
     });
   });
 
@@ -121,52 +69,6 @@ describe('util', function() {
       assert.notEqual(uuid1, uuid2);
       assert.notEqual(uuid2, uuid3);
       assert.notEqual(uuid1, uuid3);
-    });
-  });
-
-  describe('race', function() {
-    it('should resolve when the first passed promise is accepted', function(done) {
-      var spy = sinon.spy();
-
-      var p1 = new Promise(function(resolve, reject) {
-        setTimeout(resolve.bind(null, 1), 10);
-      });
-
-      var p2 = new Promise(function(resolve, reject) {
-        setTimeout(resolve.bind(null, 2), 20);
-      });
-
-      util.race([p1, p2]).then(function(id) {
-        assert(id === 1);
-        spy();
-      });
-
-      setTimeout(function() {
-        assert(spy.calledOnce);
-        done();
-      }, 30);
-    });
-
-    it('should resolve when the first passed promise is rejected', function(done) {
-      var spy = sinon.spy();
-
-      var p1 = new Promise(function(resolve, reject) {
-        setTimeout(reject.bind(null, 1), 10);
-      });
-
-      var p2 = new Promise(function(resolve, reject) {
-        setTimeout(reject.bind(null, 2), 20);
-      });
-
-      util.race([p1, p2]).catch(function(id) {
-        assert(id === 1);
-        spy();
-      });
-
-      setTimeout(function() {
-        assert(spy.calledOnce);
-        done();
-      }, 30);
     });
   });
 
