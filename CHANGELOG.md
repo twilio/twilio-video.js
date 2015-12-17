@@ -4,8 +4,12 @@
 Bug Fixes
 ---------
 
-- Fixed a bug where the identity used to `listen` was not properly escaped
-- Fixed a bug where the "participantFailed" event was not being raised
+- The Client identity string is now always properly URL encoded prior to
+  registration with the Conversations service
+- The "participantFailed" event is reliably raised in relevant failure scenarios
+- Failed calls to the browser's `getUserMedia` method are now propogated
+  reliably during the creation of an `OutgoingInvite` or when
+  `IncomingInvite#accept` is called.
 
 0.13.0
 ======
