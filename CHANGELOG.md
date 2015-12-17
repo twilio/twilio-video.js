@@ -1,3 +1,8 @@
+0.13.2
+======
+
+Added twilio-conversations.js to NPM and Bower.
+
 0.13.1
 ======
 
