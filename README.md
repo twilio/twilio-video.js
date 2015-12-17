@@ -1,8 +1,7 @@
 twilio-conversations.js
 =======================
 
-[![NPM](https://img.shields.io/npm/v/twilio-conversations.svg)](https://www.npmjs.com/package/twilio-conversations) [![Build Status](https://travis-ci.org/twilio/twilio-conversations.js.svg?branch=master)]
-(https://travis-ci.org/twilio/twilio-conversations.js)
+[![NPM](https://img.shields.io/npm/v/twilio-conversations.svg)](https://www.npmjs.com/package/twilio-conversations) [![Build Status](https://travis-ci.org/twilio/twilio-conversations.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-conversations.js)
 
 twilio-conversations.js allows you to add multi-party voice and video
 communications to your web apps. For more information, see the
