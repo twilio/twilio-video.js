@@ -1,6 +1,6 @@
 {
   "type": "JavaScript",
-  "travis": "pro",
+  "travis": true,
   "slug": "twilio/twilio-conversations.js",
   "env": {
     "GH_REF": "github.com/twilio/twilio-conversations.js.git"
@@ -21,7 +21,10 @@
         "git add .",
         "git add -f dist",
         "git commit -m \"${RELEASE_VERSION}\"",
-        "git tag ${RELEASE_VERSION}"
+        "git tag ${RELEASE_VERSION}",
+        "git remote set-url origin \"https://${GH_TOKEN}@${GH_REF}\"",
+        "git rebase HEAD ${BRANCH}",
+        "git push origin ${BRANCH} --tags"
       ]
     },
     "development": {
@@ -30,14 +33,15 @@
         "git rm -rf dist",
         "gulp clean",
         "git add .",
-        "git commit -m \"${DEVELOPMENT_VERSION}\""
+        "git commit -m \"${DEVELOPMENT_VERSION}\"",
+        "git push origin ${BRANCH}"
       ]
     },
     "publish": {
       "commands": [
-        "git rebase HEAD ${BRANCH}",
-        "git push origin ${BRANCH} --tags",
-        "git checkout ${RELEASE_VERSION}"
+        "git checkout ${RELEASE_VERSION}",
+        "echo \"//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}\" >~/.npmrc",
+        "npm publish"
       ]
     }
   }
