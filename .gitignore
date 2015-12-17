@@ -10,12 +10,3 @@ node_modules
 out
 src/twilio-conversations-bundle.js
 test.json
-test/bower_components
-www/basic_auth.json
-www/doc
-www/httplib2
-www/six.py
-www/sdk
-www/twilio
-www/twilio_credentials.json
-www/venv
