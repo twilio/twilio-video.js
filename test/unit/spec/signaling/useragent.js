@@ -492,19 +492,8 @@ describe('UserAgent', function() {
       });
 
       it('should remove the InviteServerTransaction from userAgent.inviteServerTransactions', function() {
-        try {
-          ua._onAcceptFailure(ist, new Error('foo'));
-        } catch(e) { }
-
+        ua._onAcceptFailure(ist)
         assert(!ua.inviteServerTransactions.has(ist));
-      });
-
-      it('should throw the Error', function() {
-        var tryOnAcceptFailure = function() {
-          ua._onAcceptFailure(ist, new Error('foo'));
-        };
-
-        assert.throws(tryOnAcceptFailure, /foo/);
       });
     });
   });
