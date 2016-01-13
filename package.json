@@ -35,7 +35,6 @@
     "jsdoc": "https://github.com/jsdoc3/jsdoc.git#e2fd9e75de9617aadfc3120331f020b2d66cff86",
     "jshint": "^2.6.3",
     "jshint-stylish": "^1.0.0",
-    "jsonwebtoken": "^5.0.0",
     "mkdirp": "^0.5.1",
     "mocha": "^2.2.5",
     "promptly": "^0.2.0",
@@ -44,7 +43,7 @@
     "sinon": "^1.15.3",
     "stream-from-promise": "^0.1.0",
     "through2": "^2.0.0",
-    "twilio": "^2.3.0",
+    "twilio": "^2.8.0",
     "vinyl-source-stream": "^1.1.0"
   },
   "engines": {

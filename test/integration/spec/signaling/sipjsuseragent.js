@@ -18,7 +18,7 @@ describe('SIPJSUserAgent', function() {
   var ua1 = null;
 
   var options = {};
-  options['debug'] = false;
+  options['logLevel'] = 'off';
   options['wsServer'] = wsServer;
   var inviteOptions = {};
 
@@ -102,7 +102,7 @@ describe('SIPJSUserAgent', function() {
   });
 
   var ua2Name = randomName();
-  var ua2 = new SIPJSUserAgent(new AccessManager(getToken({ address: ua2Name })), { 'wsServer': wsServer, 'debug': false });
+  var ua2 = new SIPJSUserAgent(new AccessManager(getToken({ address: ua2Name })), { 'wsServer': wsServer, 'logLevel': 'off' });
 
   describe('ua2.invite(ua1Name)', function() {
     var ua2Ict = null;

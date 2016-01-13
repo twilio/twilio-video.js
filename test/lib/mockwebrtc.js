@@ -129,9 +129,11 @@ RTCPeerConnection.prototype.getConfiguration = function getConfiguration() {
 };
 
 RTCPeerConnection.prototype.getLocalStreams = function getLocalStreams() {
+  return [];
 };
 
 RTCPeerConnection.prototype.getRemoteStreams = function getRemoteStreams() {
+  return [];
 };
 
 RTCPeerConnection.prototype.getStreamById = function getStreamById() {

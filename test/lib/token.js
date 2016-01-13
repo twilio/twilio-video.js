@@ -1,67 +1,30 @@
 'use strict';
 
-var jwt = require('jsonwebtoken');
+var twilio = require('twilio');
 
 /**
  * Credentials:
  *   accountSid
+ *   configurationProfileSid
  *   signingKeySid
  *   signingKeySecret
  * Options:
  *   address - Name of client
  *   duration - Time in milliseconds the token should be good for
- *   grants - An array of strings representing access grants
  */
 function getAccessToken(credentials, options) {
-  options = options || { };
-
-  var now = new Date();
-
-  var accountSid = credentials.accountSid;
-  var signingKeySid = credentials.signingKeySid;
-  var signingKeySecret = credentials.signingKeySecret;
-
-  var address = options.address || null;
-  var duration = options.duration || null;
-  var emptyGrants = options.emptyGrants;
-  var acts = options.acts || ['invite', 'listen'];
-
-  var anHourBeforeNow = new Date(now.getTime());
-  anHourBeforeNow.setHours(anHourBeforeNow.getHours() - 1);
-
-  var anHourFromNow = new Date(now.getTime());
-  anHourFromNow.setHours(anHourFromNow.getHours() + 1);
-
-  var expires = duration ? now.getTime() + duration : 0;
-
-  var payload = {
-    sub: accountSid,
-    iss: signingKeySid,
-    grants: [
-      { res: 'https://api.twilio.com/2010-04-01/Accounts/' + accountSid + '/Tokens.json',
-        act: [ 'POST' ] }
-    ],
-    exp: (expires ? expires : anHourFromNow) / 1000,
-    nbf: anHourBeforeNow / 1000
-  };
-
-  if (address) {
-    payload.grants.push({
-      res: 'sip:' + address + '@' + accountSid + '.endpoint.twilio.com',
-      act: acts
-    });
-  }
-
-  if(emptyGrants) {
-    payload.grants = undefined;
-  }
-
-  return jwt.sign(payload, signingKeySecret, {
-    headers: {
-      cty: 'twilio-sat;v=1'
-    },
-    noTimestamp: true
-  });
+  options = options || {};
+  var accessTokenGenerator = new twilio.AccessToken(
+    credentials.accountSid,
+    credentials.signingKeySid,
+    credentials.signingKeySecret,
+    options.duration ? { ttl: options.duration } : {});
+  accessTokenGenerator.identity = options.address;
+  accessTokenGenerator.addGrant(
+    new twilio.AccessToken.ConversationsGrant({
+      configurationProfileSid: credentials.configurationProfileSid
+    }));
+  return accessTokenGenerator.toJwt();
 }
 
 module.exports.getToken = getAccessToken;

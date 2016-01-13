@@ -12,8 +12,6 @@ var credentials = require('test/env');
 var getToken = require('test/lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-var useConversationEvents = process.env.USE_CONVERSATION_EVENTS;
-
 describe('Client (SIPJSUserAgent)', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
@@ -23,8 +21,7 @@ describe('Client (SIPJSUserAgent)', function() {
   var options = {
     debug: false,
     wsServer: wsServer,
-    logLevel: 'off',
-    useConversationEvents: useConversationEvents
+    logLevel: 'off'
   };
 
   var createClient = function(token, options) {
