@@ -210,7 +210,13 @@ function integrationTest(files, filter) {
     return gulp.src(files, { read: false })
       .pipe(filter || util.noop())
       .pipe(then(function(files) {
-        if (files.length) {
+        // NOTE(mroberts): Skip integration tests on Travis if we are not
+        // using secure environment variables (i.e., this is a third-party
+        // pull request.
+        if (process.env.TRAVIS_SECURE_ENV_VARS == 'false') {
+          resolve(files);
+          return;
+        } else if (files.length) {
           var child = safeSpawn('node',
             [mocha, integrationTestIndex],
             { stdio: 'inherit' });
