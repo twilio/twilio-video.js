@@ -11,7 +11,6 @@ try {
 // Copy environment variables
 [
   ['ACCOUNT_SID',               'accountSid'],
-  ['AUTH_TOKEN',                'authToken'],
   ['SIGNING_KEY_SID',           'signingKeySid'],
   ['SIGNING_KEY_SECRET',        'signingKeySecret'],
   ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
@@ -27,7 +26,6 @@ try {
 // Ensure required variables are present
 [
   'accountSid',
-  'authToken',
   'signingKeySid',
   'signingKeySecret',
   'configurationProfileSid'

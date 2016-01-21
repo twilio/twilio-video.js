@@ -57,7 +57,6 @@ order to run these, you will need a Twilio account and you will need to set
 the following environment variables:
 
 * `ACCOUNT_SID`
-* `AUTH_TOKEN`
 * `SIGNING_KEY_SID`
 * `SIGNING_KEY_SECRET`
 * `CONFIGURATION_PROFILE_SID`
