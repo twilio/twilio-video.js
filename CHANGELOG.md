@@ -1,3 +1,25 @@
+0.13.3
+======
+
+New Features
+------------
+
+- The LocalMedia `removeCamera` and `removeMicrophone` methods now accept an
+  optional `stop` parameter, similar to `removeStream` and `removeTrack`.
+
+Bug Fixes
+---------
+
+- Silenced an "Uncaught (in promise)" error in the browser console when Clients
+  either rejected an IncomingInvite or canceled an OutgoingInvite (JSDK-420)
+- Fixed a bug where calling `reject` on an IncomingInvite to a multi-party
+  Conversation would not notify each Participant that the Client had rejected
+  (JSDK-436)
+- Fixed a bug where calling `removeStream` or `removeTrack` on a LocalMedia
+  object would not stop the Track (JSDK-443)
+- Fixed a bug where the `isEnded` property of a Track was always false, even
+  after calling `stop` (JSDK-444)
+
 0.13.2
 ======
 
