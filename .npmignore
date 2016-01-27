@@ -4,3 +4,4 @@
 .unit-tested
 dist/docs
 src/twilio-conversations-bundle.js
+test/
