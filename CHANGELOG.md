@@ -1,3 +1,16 @@
+0.13.4
+======
+
+Bug Fixes
+---------
+
+- Fixed a regression in `removeTrack` and related methods which caused the
+  "trackRemoved" event not to be propagated to remote Participants (JSDK-512)
+- Fixed a bug where `getUserMedia` would be called multiple times when accepting
+  an IncomingInvite without a LocalMedia object; in Firefox, this could result
+  in failing to join a Conversation; now, `getUserMedia` will be called at
+  most once (JSDK-439)
+
 0.13.3
 ======
 
