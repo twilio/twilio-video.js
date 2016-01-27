@@ -1,6 +1,6 @@
 'use strict';
 
-var util = require('lib/util');
+var util = require('../../lib/util');
 
 function InviteClientTransaction(ua, address, options) {
   var deferred = util.defer();

@@ -1,9 +1,9 @@
 'use strict';
 
 var assert = require('assert');
-var MockDialog = require('test/mock/dialog');
-var Participant = require('lib/participant');
-var util = require('lib/util');
+var MockDialog = require('../../mock/dialog');
+var Participant = require('../../../lib/participant');
+var util = require('../../../lib/util');
 
 describe('Participant', function() {
   var dialog;

@@ -3,8 +3,8 @@
 var assert = require('assert');
 var sinon = require('sinon');
 
-var Request = require('lib/util/request');
-var XHR = require('test/mock/xmlhttprequest');
+var Request = require('../../../../lib/util/request');
+var XHR = require('../../../mock/xmlhttprequest');
 
 describe('Request', function() {
   var xhr;

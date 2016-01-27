@@ -3,7 +3,7 @@
 var assert = require('assert');
 var sinon = require('sinon');
 
-var Log = require('lib/util/log');
+var Log = require('../../../../lib/util/log');
 
 describe('Log', function() {
   var log = Log.prototype.log;

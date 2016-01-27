@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var multipart = require('lib/util/multipart');
+var multipart = require('../../../../lib/util/multipart');
 
 var getSDP = multipart.getSDP;
 var parse = multipart.parse;
