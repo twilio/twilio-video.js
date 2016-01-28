@@ -10,6 +10,7 @@ Bug Fixes
   an IncomingInvite without a LocalMedia object; in Firefox, this could result
   in failing to join a Conversation; now, `getUserMedia` will be called at
   most once (JSDK-439)
+- Removed a postinstall script that caused failures with NPM 3.
 
 0.13.3
 ======
