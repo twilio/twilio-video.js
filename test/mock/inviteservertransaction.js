@@ -3,7 +3,7 @@
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var sinon = require('sinon');
-var util = require('lib/util');
+var util = require('../../lib/util');
 
 function MockIST() {
   EventEmitter.call(this);

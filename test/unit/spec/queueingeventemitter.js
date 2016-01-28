@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var QueueingEventEmitter = require('lib/queueingeventemitter');
+var QueueingEventEmitter = require('../../../lib/queueingeventemitter');
 
 describe('QueueingEventEmitter', function() {
   var ee;

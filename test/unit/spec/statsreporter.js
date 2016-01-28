@@ -2,16 +2,16 @@
 
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
-var getToken = require('test/lib/token').getToken.bind(null, {
+var getToken = require('../../lib/token').getToken.bind(null, {
   accountSid: 'AP123',
   signingKeySid: 'FOO123',
   signingKeySecret: 'BAR123'
 });
 
-var MockDialog = require('test/mock/dialog');
-var request = require('lib/util/request');
-var StatsReporter = require('lib/statsreporter');
-var XHR = require('test/mock/xmlhttprequest');
+var MockDialog = require('../../mock/dialog');
+var request = require('../../../lib/util/request');
+var StatsReporter = require('../../../lib/statsreporter');
+var XHR = require('../../mock/xmlhttprequest');
 XHR.respondWith('POST', 'https://foo.bar/v1/Calls', {
   responseText: '',
   status: 200,

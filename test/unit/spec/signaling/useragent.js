@@ -3,13 +3,13 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var InviteClientTransaction = require('test/mock/inviteclienttransaction');
+var InviteClientTransaction = require('../../../mock/inviteclienttransaction');
 var sinon = require('sinon');
-var util = require('lib/util');
+var util = require('../../../../lib/util');
 
-var UserAgent = require('lib/signaling/useragent');
+var UserAgent = require('../../../../lib/signaling/useragent');
 
-var getToken = require('test/lib/token').getToken.bind(null, {
+var getToken = require('../../../lib/token').getToken.bind(null, {
   accountSid: 'AC123',
   signingKeySid: 'SK456',
   signingKeySecret: '7890'

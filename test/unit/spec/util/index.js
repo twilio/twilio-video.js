@@ -1,10 +1,10 @@
 'use strict';
 
 var assert = require('assert');
-var constants = require('lib/util/constants');
+var constants = require('../../../../lib/util/constants');
 var EventEmitter = require('events').EventEmitter;
 var sinon = require('sinon');
-var util = require('lib/util');
+var util = require('../../../../lib/util');
 
 
 describe('util', function() {

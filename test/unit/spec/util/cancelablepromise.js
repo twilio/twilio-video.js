@@ -1,8 +1,8 @@
 'use strict';
 
-var CancelablePromise = require('lib/util/cancelablepromise');
+var CancelablePromise = require('../../../../lib/util/cancelablepromise');
 var assert = require('assert');
-var util = require('lib/util');
+var util = require('../../../../lib/util');
 
 describe('CancelablePromise', function() {
   describe('constructor', function() {

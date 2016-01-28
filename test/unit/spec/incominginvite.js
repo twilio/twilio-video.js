@@ -1,11 +1,11 @@
 'use strict';
 
 var assert = require('assert');
-var IncomingInvite = require('lib/incominginvite');
-var MockDialog = require('test/mock/dialog');
-var MockIST = require('test/mock/inviteservertransaction');
+var IncomingInvite = require('../../../lib/incominginvite');
+var MockDialog = require('../../mock/dialog');
+var MockIST = require('../../mock/inviteservertransaction');
 var sinon = require('sinon');
-var util = require('lib/util');
+var util = require('../../../lib/util');
 
 describe('IncomingInvite', function() {
   var ist;

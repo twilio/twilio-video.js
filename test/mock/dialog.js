@@ -2,11 +2,11 @@
 
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
-var Media = require('lib/media');
-var QueueingEventEmitter = require('lib/queueingeventemitter');
+var Media = require('../../lib/media');
+var QueueingEventEmitter = require('../../lib/queueingeventemitter');
 var sinon = require('sinon');
-var UserAgent = require('lib/signaling/useragent');
-var util = require('lib/util');
+var UserAgent = require('../../lib/signaling/useragent');
+var util = require('../../lib/util');
 
 var Dialog = module.exports = function Dialog(name, accessManager) {
   QueueingEventEmitter.call(this);
