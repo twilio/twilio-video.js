@@ -11,6 +11,10 @@ Bug Fixes
   in failing to join a Conversation; now, `getUserMedia` will be called at
   most once (JSDK-439)
 - Removed a postinstall script that caused failures with NPM 3.
+- Fixed a bug where a LocalTrack removed with `removeTrack` could not be added
+  back with `addTrack` (JSDK-548)
+- Fixed a bug where calling `stop` on a LocalTrack caused it to be removed
+  (JSDK-549)
 
 0.13.3
 ======
