@@ -7,6 +7,8 @@ var eslint = require('eslint/lib/cli');
 var fs = require('fs');
 var gulp = require('gulp');
 var insert = require('gulp-insert');
+var istanbul = require('gulp-istanbul');
+var mocha2 = require('gulp-mocha');
 var mkdirp = require('mkdirp');
 var newer = require('gulp-newer');
 var rename = require('gulp-rename');
@@ -136,6 +138,27 @@ function lint(files, filter) {
       }));
   });
 }
+
+// Coverage
+// --------
+
+gulp.task('istanbul-setup', function() {
+  return gulp.src([libJsGlob])
+    .pipe(istanbul())
+    .pipe(istanbul.hookRequire());
+});
+
+gulp.task('coverage', ['istanbul-setup'], function() {
+  return gulp.src(unitTestGlob, { read: false })
+    .pipe(mocha2({ reporter: 'spec' }))
+    .pipe(istanbul.writeReports({
+      dir: './coverage',
+      reporters: ['cobertura', 'lcov', 'text'],
+      reportOpts: { dir: './coverage' }
+    }));
+    // TODO Enforce a coverage of at least 90% (or X%) percents
+    //.pipe(istanbul.enforceThresholds({ thresholds: { global: 90 } }));
+});
 
 // Test
 // ----
