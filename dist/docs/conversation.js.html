@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: conversation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: conversation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var constants = require(&apos;./util/constants&apos;);
+var ConversationInfo = require(&apos;./signaling/conversation-info&apos;);
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var inherits = require(&apos;util&apos;).inherits;
+var Media = require(&apos;./media&apos;);
+var Participant = require(&apos;./participant&apos;);
+var util = require(&apos;./util&apos;);
+
+var Log = require(&apos;./util/log&apos;);
+var E = constants.twilioErrors;
+
+/**
+ * Construct a {@link Conversation}.
+ * @class
+ * @classdesc A {@link Conversation} represents communication between your
+ *   {@link Client} and one or more {@link Participant}s sharing
+ *   {@link AudioTrack}s and {@link VideoTrack}s.
+ *   &lt;br&gt;&lt;br&gt;
+ *   You can join a {@link Conversation} by first creating an
+ *   {@link OutgoingInvite} with {@link Client#inviteToConversation} or by
+ *   accepting an {@link IncomingInvite} with {@link IncomingInvite#accept}.
+ * @param {Object} [options] - Options to override the constructor&apos;s default
+ *   behavior.
+ * @property {LocalMedia} localMedia - Your {@link Client}&apos;s {@link LocalMedia} in the {@link Conversation}
+ * @property {Map&lt;Participant.SID, Participant&gt;} participants - The {@link Participant}s
+ *   participating in this {@link Conversation}
+ * @property {Conversation.SID} sid - The {@link Conversation}&apos;s SID
+ * @fires Conversation#disconnected
+ * @fires Conversation#participantConnected
+ * @fires Conversation#participantDisconnected
+ * @fires Conversation#participantFailed
+ * @fires Conversation#trackAdded
+ * @fires Conversation#trackDimensionsChanged
+ * @fires Conversation#trackDisabled
+ * @fires Conversation#trackEnabled
+ * @fires Conversation#trackEnded
+ * @fires Conversation#trackRemoved
+ * @fires Conversation#trackStarted
+ */
+function Conversation(options) {
+  if (!(this instanceof Conversation)) {
+    return new Conversation(options);
+  }
+  EventEmitter.call(this);
+
+  options = util.withDefaults({ }, options, {
+    logLevel: constants.DEFAULT_LOG_LEVEL
+  });
+
+  var localMedia = options.localMedia;
+  var participantSid = null;
+  var shouldStopLocalMediaOnDisconnect = options.shouldStopLocalMediaOnDisconnect;
+  var sid;
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    _dialogs: {
+      value: new Set()
+    },
+    _localMedia: {
+      set: function(_localMedia) {
+        localMedia = _localMedia;
+      }
+    },
+    _log: {
+      value: new Log(&apos;Conversation&apos;, options.logLevel)
+    },
+    _options: {
+      value: options
+    },
+    _participantSid: {
+      get: function() {
+        return participantSid;
+      },
+      set: function(_participantSid) {
+        participantSid = _participantSid;
+      }
+    },
+    _shouldStopLocalMediaOnDisconnect: {
+      get: function() {
+        return shouldStopLocalMediaOnDisconnect;
+      },
+      set: function(_shouldStopLocalMediaOnDisconnect) {
+        shouldStopLocalMediaOnDisconnect = _shouldStopLocalMediaOnDisconnect;
+      }
+    },
+    _sid: {
+      set: function(_sid) {
+        sid = _sid;
+      }
+    },
+    _trackIdToParticipants: {
+      value: new Map()
+    },
+    localMedia: {
+      enumerable: true,
+      get: function() {
+        return localMedia;
+      }
+    },
+    participants: {
+      enumerable: true,
+      value: new Map()
+    },
+    sid: {
+      enumerable: true,
+      get: function() {
+        return sid;
+      }
+    }
+  });
+
+  return this;
+}
+
+var TRACK_ADDED = Conversation.TRACK_ADDED = Participant.TRACK_ADDED;
+var TRACK_DIMENSIONS_CHANGED = Conversation.TRACK_DIMENSIONS_CHANGED = Participant.TRACK_DIMENSIONS_CHANGED;
+var TRACK_DISABLED = Conversation.TRACK_DISABLED = Participant.TRACK_DISABLED;
+var TRACK_ENABLED = Conversation.TRACK_ENABLED = Participant.TRACK_ENABLED;
+var TRACK_ENDED = Conversation.TRACK_ENDED = Participant.TRACK_ENDED;
+var TRACK_REMOVED = Conversation.TRACK_REMOVED = Participant.TRACK_REMOVED;
+var TRACK_STARTED = Conversation.TRACK_STARTED = Participant.TRACK_STARTED;
+
+inherits(Conversation, EventEmitter);
+
+/**
+ * Add a {@link Dialog} to the {@link Conversation}.
+ * @private
+ * @param {Dialog} dialog - The {@link Dialog}
+ * @returns {this}
+ */
+Conversation.prototype._onDialog = function _onDialog(dialog) {
+  if (this._dialogs.has(dialog)) {
+    return this;
+  }
+
+  this._sid = this.sid || dialog.conversationSid;
+  this._localMedia = this.localMedia || dialog.localMedia;
+  this._participantSid = this._participantSid || dialog.participantSid;
+  this._dialogs.add(dialog);
+
+  dialog.once(&apos;ended&apos;, this._removeDialog.bind(this));
+
+  dialog.on(&apos;notification&apos;, this._onNotification.bind(this, dialog));
+  dialog.dequeue(&apos;notification&apos;);
+  handleDialogTrackEvents(dialog, this._trackIdToParticipants);
+
+  // NOTE(mroberts): Simulate Conversation Events if disabled. Once we are
+  // confident in the Conversation Events implementation we will completely
+  // remove this path.
+  if (!this._options.useConversationEvents) {
+    var participantSid = util.makeUUID();
+    var notification = ConversationInfo
+      .simulateParticipantConnectedEvent(dialog, participantSid);
+    this._onNotification(dialog, notification);
+    var participant = this.participants.get(participantSid);
+    handleDialogTrackEventsMesh(dialog, participant);
+  }
+
+  return this;
+};
+
+Conversation.prototype._onInviteServerTransaction = function _onInviteServerTransaction(inviteServerTransaction) {
+  this._options.localMedia = this.localMedia;
+  return inviteServerTransaction.accept(this._options).then(this._onDialog.bind(this));
+};
+
+/**
+ * Handle {@link Dialog} {@link Track} events using a Map from {@link Track} IDs
+ * to {@link Participant}s. This technique relies on Conversation Events to
+ * construct the Map. It is topology-independent.
+ * @private
+ * @param {Dialog} dialog - The {@link Dialog}
+ * @param {Map&lt;string, Set&gt;} trackIdToParticipants - The Map from
+ *   {@link Track} IDs to {@link Participant}s
+ */
+function handleDialogTrackEvents(dialog, trackIdToParticipants) {
+  // Add the Track to any Participant associated with the Track ID.
+  function addTrack(track) {
+    var participants = trackIdToParticipants.get(track.id) || new Set();
+    participants.forEach(function(participant) {
+      participant.media._addTrack(track);
+    });
+  }
+
+  // Remove the Track from any Participant associated with the Track ID, and
+  // remove the Track from the Map.
+  function removeTrack(track) {
+    var participants = trackIdToParticipants.get(track.id) || new Set();
+    participants.forEach(function(participant) {
+      participant.media._removeTrack(track);
+    });
+    trackIdToParticipants.delete(track.id);
+  }
+
+  var dialogMedia = dialog.remoteMedia;
+  dialogMedia.tracks.forEach(addTrack);
+  dialogMedia.on(Media.TRACK_ADDED, addTrack);
+  dialogMedia.on(Media.TRACK_REMOVED, removeTrack);
+  dialog.once(&apos;ended&apos;, function() {
+    dialogMedia.removeListener(Media.TRACK_ADDED, addTrack);
+    dialogMedia.removeListener(Media.TRACK_REMOVED, removeTrack);
+  });
+}
+
+/**
+ * Handle {@link Dialog} {@link Track} events using a one-to-one association
+ * with a {@link Participant}. This technique only works in mesh topologies.
+ * @private
+ * @param {Dialog} dialog - The {@link Dialog}
+ * @param {Participant} participant - The {@link Participant}
+ */
+function handleDialogTrackEventsMesh(dialog, participant) {
+  var dialogMedia = dialog.remoteMedia;
+  var participantMedia = participant.media;
+  dialogMedia.tracks.forEach(participantMedia._addTrack, participantMedia);
+  dialogMedia.on(Media.TRACK_ADDED, participantMedia._addTrack.bind(participantMedia));
+  dialogMedia.on(Media.TRACK_REMOVED, participantMedia._removeTrack.bind(participantMedia));
+}
+
+/**
+ * Connect a {@link Participant} to the {@link Conversation}.
+ * @private
+ * @param {Participant} participant - The {@link Participant}
+ * @returns {this}
+ */
+Conversation.prototype._connectParticipant = function _connectParticipant(participant) {
+  if (this.participants.has(participant.sid)) {
+    return this;
+  }
+
+  this.participants.set(participant.sid, participant);
+
+  var self = this;
+  participant.on(Participant.TRACK_ADDED, function trackAdded(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_ADDED, trackAdded);
+    }
+    self.emit(TRACK_ADDED, participant, track);
+  });
+  participant.on(Participant.TRACK_DIMENSIONS_CHANGED, function trackDimensionsChanged(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_DIMENSIONS_CHANGED, trackDimensionsChanged);
+    }
+    self.emit(TRACK_DIMENSIONS_CHANGED, participant, track);
+  });
+  participant.on(Participant.TRACK_DISABLED, function trackDisabled(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_DISABLED, trackDisabled);
+    }
+    self.emit(TRACK_DISABLED, participant, track);
+  });
+  participant.on(Participant.TRACK_ENABLED, function trackEnabled(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_ENABLED, trackEnabled);
+    }
+    self.emit(TRACK_ENABLED, participant, track);
+  });
+  participant.on(Participant.TRACK_ENDED, function trackEnded(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_ENDED, trackEnded);
+    }
+    self.emit(TRACK_ENDED, participant, track);
+  });
+  participant.on(Participant.TRACK_REMOVED, function trackRemoved(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_REMOVED, trackRemoved);
+    }
+    self.emit(TRACK_REMOVED, participant, track);
+  });
+  participant.on(Participant.TRACK_STARTED, function trackStarted(track) {
+    if (!self.participants.has(participant.sid)) {
+      return participant.removeListener(Participant.TRACK_STARTED, trackStarted);
+    }
+    self.emit(TRACK_STARTED, participant, track);
+  });
+
+  // Emit these events on the next tick so the customer has
+  // a chance to listen for them.
+  setTimeout(function() {
+    self.emit(&apos;participantConnected&apos;, participant);
+
+    // Re-emit the &quot;trackAdded&quot; event for each of the Participant&apos;s Tracks.
+    participant.media.tracks.forEach(participant.emit.bind(participant, Participant.TRACK_ADDED));
+  });
+
+  return this;
+};
+
+Conversation.prototype._removeDialog = function _removeDialog(dialog) {
+  this._dialogs.delete(dialog);
+
+  // NOTE(mroberts): Simulate Conversation Events if disabled. Once we are
+  // confident in the Conversation Events implementation we will completely
+  // remove this path.
+  if (!this._options.useConversationEvents) {
+    var notification = ConversationInfo
+      .simulateParticipantDisconnectedEvents(this.participants, dialog);
+    this._onNotification(dialog, notification);
+  }
+
+  if (!this._dialogs.size) {
+    if (this._shouldStopLocalMediaOnDisconnect) {
+      this.localMedia.stop();
+    }
+
+    this.emit(&apos;disconnected&apos;, this);
+
+    // NOTE(mroberts): Regardless of topology, zero dialogs implies we are
+    // disconnected from the Conversation; so disconnect any remaining
+    // Participants (hopefully they have already been disconnected).
+    this.participants.forEach(this._disconnectParticipant, this);
+  }
+
+  return this;
+};
+
+/**
+ * Associate a {@link Track} ID to a {@link Participant}.
+ * @private
+ * @param {Participant} participant - The {@link Participant}
+ * @param {{id: string}} track - An object containing the {@link Track} ID
+ * @returns {this}
+ */
+Conversation.prototype._associateParticipantToTrackId = function _associateParticipantToTrackId(participant, track) {
+  util.map.addToMapOfSets(this._trackIdToParticipants, track.id, participant);
+  return this;
+};
+
+/**
+ * Associate {@link Track} IDs to a {@link Participant}.
+ * @private
+ * @param {Participant} participant - The {@link Participant}
+ * @param {Array&lt;{id: string}&gt;} tracks - Objects containing the {@link Track} IDs
+ * @returns {this}
+ */
+Conversation.prototype._associateParticipantToTrackIds = function _associateParticipantToTrackIds(participant, tracks) {
+  tracks.forEach(this._associateParticipantToTrackId.bind(this, participant));
+  return this;
+};
+
+/**
+ * Disassociate a {@link Participant} from a {@link Track} ID.
+ * @private
+ * @param {Participant} participant - The {@link Participant}
+ * @param {{id: string}} track - An object containing the {@link Track} ID
+ * @returns {this}
+ */
+Conversation.prototype._disassociateParticipantFromTrackId = function _disassociateParticipantFromTrackId(participant, _track) {
+  var id = _track.id;
+  util.map.deleteFromMapOfSets(this._trackIdToParticipants, id, participant);
+  var track = participant.media.tracks.get(id);
+  if (track) {
+    participant.media._removeTrack(track);
+  }
+  return this;
+};
+
+/**
+ * Associate {@link Track} IDs to a {@link Participant}.
+ * @private
+ * @param {Participant} participant - The {@link Participant}
+ * @param {Array&lt;{id: string}&gt;} tracks - Objects containing the {@link Track} IDs
+ * @returns {this}
+ */
+Conversation.prototype._disassociateParticipantFromTrackIds = function _disassociateParticipantFromTrackIds(participant, tracks) {
+  tracks.forEach(this._disassociateParticipantFromTrackId.bind(this, participant));
+  return this;
+};
+
+/**
+ * Disconnect a {@link Participant} from the {@link Conversation}.
+ * @private
+ * @param {Participant} - The {@link Participant}
+ * @returns {this}
+ */
+Conversation.prototype._disconnectParticipant = function _disconnectParticipant(participant) {
+  participant.media.tracks.forEach(function(track) {
+    this._disassociateParticipantFromTrackId(participant, track.id);
+    participant.media._removeTrack(track);
+  }, this);
+  this.participants.delete(participant.sid);
+  this.emit(&apos;participantDisconnected&apos;, participant);
+  return this;
+};
+
+/**
+ * Update the {@link Conversation} upon receipt of a {@link Notification}.
+ * @private
+ * @param {Dialog} dialog - the {@link Dialog} that received the
+ *   {@link PartialNotification}
+ * @param {PartialNotification} notification
+ * @returns {this}
+ */
+Conversation.prototype._onNotification = function _onNotification(dialog, notification) {
+  var conversationState = notification.conversation_state;
+  if (conversationState) {
+    if (this.sid !== conversationState.sid) {
+      return this;
+    }
+    return this._onFullNotification(dialog, notification);
+  }
+  return this._onPartialNotification(dialog, notification);
+};
+
+Conversation.prototype._onFullNotification = function _onFullNotification(dialog, notification) {
+  notification.conversation_state.participants.forEach(this._onParticipantConnected, this);
+  return this;
+};
+
+Conversation.prototype._onPartialNotification = function _onPartialNotification(dialog, notification) {
+  notification.event_list.forEach(function(event) {
+    var eventType = event.event.toLowerCase();
+    switch (eventType) {
+      case &apos;participant_connected&apos;:
+        this._onParticipantConnected(event);
+        return;
+      case &apos;participant_disconnected&apos;:
+        this._onParticipantDisconnected(event);
+        return;
+      case &apos;participant_failed&apos;:
+        this._onParticipantFailed(event);
+        return;
+    }
+    var participant = this.participants.get(event.participant_sid);
+    if (participant) {
+      switch (eventType) {
+        case &apos;track_added&apos;:
+          this._associateParticipantToTrackIds(participant, event.tracks);
+          return;
+        case &apos;track_removed&apos;:
+          this._disassociateParticipantFromTrackIds(participant, event.tracks);
+          return;
+      }
+      participant._onConversationEvent(event);
+    }
+  }, this);
+  return this;
+};
+
+/**
+ * Handle a &quot;participant_connected&quot; Conversation Event.
+ * @private
+ * @param {Notification} event
+ * @returns {this}
+ */
+Conversation.prototype._onParticipantConnected = function _onParticipantConnected(event) {
+  if (this._participantSid === event.participant_sid) {
+    return this;
+  }
+
+  var participant = this.participants.get(event.participant_sid);
+  var connectParticipant = false;
+
+  if (!participant) {
+    participant = new Participant(event.participant_sid, util.getUser(event.address));
+    connectParticipant = true;
+  }
+
+  this._associateParticipantToTrackIds(participant, event.tracks);
+
+  if (connectParticipant) {
+    this._connectParticipant(participant);
+  }
+
+  return this;
+};
+
+Conversation.prototype._onParticipantFailed = function _onParticipantFailed(event) {
+  if (this._participantSid === event.participant_sid) {
+    return this;
+  }
+
+  var participant = this.participants.get(event.participant_sid) ||
+    new Participant(event.participant_sid, util.getUser(event.address));
+
+  this.emit(&apos;participantFailed&apos;, participant);
+
+  return this;
+};
+
+/**
+ * Handle a &quot;participant_disconnected&quot; Conversation Event.
+ * @private
+ * @param {Notification} event
+ * @returns {this}
+ */
+Conversation.prototype._onParticipantDisconnected = function _onParticipantDisconnected(event) {
+  if (this._participantSid === event.participant_sid) {
+    return this;
+  }
+
+  var participant = this.participants.get(event.participant_sid);
+
+  if (participant) {
+    this._disconnectParticipant(participant);
+  }
+
+  return this;
+};
+
+Conversation.prototype.getStats = function getStats() {
+  var promises = [];
+  this._dialogs.forEach(function(dialog) {
+    promises.push(dialog.getStats());
+  });
+
+  return Promise.all(promises);
+};
+
+/**
+ * Disconnect from the {@link Conversation}.
+ * @returns {this}
+ */
+Conversation.prototype.disconnect = function disconnect() {
+  this._dialogs.forEach(function(dialog) {
+    dialog.end();
+  });
+  return this;
+};
+
+/**
+ * Add a {@link Participant} to the {@link Conversation}.
+ * @param {string} identity - The identity of the {@link Participant} to add
+ * @returns {this}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ *  client.inviteToConversation(&apos;alice&apos;).then(function(conversation) {
+ *    conversation.invite(&apos;bob&apos;);
+ *
+ *    conversation.on(&apos;participantConnected&apos;, function(participant) {
+ *      if (participant.identity === &apos;bob&apos;) {
+ *        console.log(&apos;Bob has connected&apos;);
+ *      }
+ *    });
+ *  });
+ * @throws {Error} INVALID_ARGUMENT
+ *//**
+ * Add {@link Participant}s to the {@link Conversation}.
+ * @param {Array&lt;string&gt;} identities - The identities of the {@link Participant}s to add
+ * @returns {this}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ *  client.inviteToConversation(&apos;alice&apos;).then(function(conversation) {
+ *    conversation.invite([&apos;bob&apos;, &apos;charlie&apos;]);
+ *
+ *    conversation.on(&apos;participantConnected&apos;, function() {
+ *      if (participant.identity === &apos;bob&apos;) {
+ *        console.log(&apos;Bob has connected&apos;);
+ *      } else if (participant.identity === &apos;charlie&apos;) {
+ *        console.log(&apos;Charlie has connected&apos;);
+ *      }
+ *    });
+ *  });
+ * @throws {Error} INVALID_ARGUMENT
+ */
+Conversation.prototype.invite = function invite(identity) {
+  if (!identity) {
+    this._log.throw(E.INVALID_ARGUMENT, &apos;No Participant identities were provided&apos;);
+  }
+
+  // there maybe several dialogs within the conversation
+  // we just pick the first dialog to send the REFER to conversation service
+  var dialog;
+  this._dialogs.forEach(function(_dialog) {
+    dialog = dialog || _dialog;
+  });
+
+  var identities = identity.forEach ? identity : [identity];
+
+  var accessManager = dialog.userAgent.accessManager;
+  util.validateAddresses(accessManager._tokenPayload.sub, identities);
+
+  identities.forEach(dialog.refer, dialog);
+
+  return this;
+};
+
+Object.freeze(Conversation.prototype);
+
+/**
+ * A {@link Conversation.SID} is a 34-character string starting with &quot;CV&quot;
+ * that uniquely identifies a {@link Conversation}.
+ * @type string
+ * @typedef Conversation.SID
+ */
+
+/**
+ * Your {@link Client} was disconnected from the {@link Conversation} and all
+ * other {@link Participant}s.
+ * @param {Conversation} conversation - The {@link Conversation} your
+ *   {@link Client} was disconnected from
+ * @event Conversation#disconnected
+ * @example
+ * myConversation.on(&apos;disconnected&apos;, function() {
+ *   myConversation.localMedia.detach();
+ * });
+ */
+
+/**
+ * A {@link Participant} joined the {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} who joined
+ * @event Conversation#participantConnected
+ * @example
+ * myConversation.on(&apos;participantConnected&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; joined the Conversation&apos;);
+ *
+ *   // Get the participant&apos;s Media,
+ *   var participantMedia = participant.media;
+ *
+ *   // And attach it to your application&apos;s view.
+ *   var participantView = document.getElementById(&apos;participant-view&apos;);
+ *   participantMedia.attach(participantView);
+ *   participantVideos.appendChild(participantView);
+ * });
+ */
+
+/**
+ * A {@link Participant} left the {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} who left
+ * @event Conversation#participantDisconnected
+ * @example
+ * myConversation.on(&apos;participantDisconnected&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; left the Conversation&apos;);
+ * });
+ */
+
+/**
+ * A {@link Participant} failed to join {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} that failed to join
+ * @event Conversation#participantFailed
+ * @example
+ * myConversation.on(&apos;participantFailed&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; failed to join the Conversation&apos;);
+ * });
+ */
+
+/**
+ * A {@link Track} was added by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was added
+ * @param {Participant} participant - The {@link Participant} who added the
+ *   {@link Track}
+ * @event Conversation#trackAdded
+ */
+
+/**
+ * One of the {@link Participant}&apos;s {@link VideoTrack}&apos;s dimensions changed.
+ * @param {VideoTrack} track - The {@link VideoTrack} whose dimensions changed
+ * @param {Participant} participant - The {@link Participant} whose {@link VideoTrack}&apos;s
+ *   dimensions changed
+ * @event Conversation#trackDimensionsChanged
+ */
+
+/**
+ * A {@link Track} was disabled by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was disabled
+ * @param {Participant} participant - The {@link Participant} who disabled the
+ *   {@link Track}
+ * @event Conversation#trackDisabled
+ */
+
+/**
+ * A {@link Track} was enabled by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was enabled
+ * @param {Participant} participant - The {@link Participant} who enabled the
+ *   {@link Track}
+ * @event Conversation#trackEnabled
+ */
+
+/**
+ * One of a {@link Participant}&apos;s {@link Track}s in the {@link Conversation} ended.
+ * @param {Track} track - The {@link Track} that ended
+ * @param {Participant} participant - The {@link Participant} whose {@link Track} ended
+ * @event Conversation#trackEnded
+ */
+
+/**
+ * A {@link Track} was removed by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was removed
+ * @param {Participant} participant - The {@link Participant} who removed the
+ *   {@link Track}
+ * @event Conversation#trackRemoved
+ */
+
+/**
+ * One of a {@link Participant}&apos;s {@link Track}s in the {@link Conversation} started.
+ * @param {Track} track - The {@link Track} that started
+ * @param {Participant} participant - The {@link Participant} whose {@link Track} started
+ * @event Conversation#trackStarted
+ */
+
+module.exports = Conversation;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li></ul></li><li><a href="VideoTrack.html">VideoTrack</a><ul style="margin-left: 1em"><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Thu Feb 04 2016 00:28:01 GMT+0000 (UTC)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
