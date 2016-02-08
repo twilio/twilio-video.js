@@ -14,7 +14,7 @@ describe('Media', function() {
     var returnVal;
 
     before(function() {
-    media = createMedia();
+      media = createMedia();
 
       mediaStream = {
         getAudioTracks: function() { return [{ }, { }, { }]; },
@@ -48,6 +48,7 @@ describe('Media', function() {
       videoTrackMock = new MediaStreamTrack('bar', 'video');
 
       media._reemitTrackEvent = sinon.spy();
+      media._removeTrack = sinon.spy();
     });
 
     it('should emit Media#trackAdded event', function(done) {
@@ -87,6 +88,12 @@ describe('Media', function() {
     it('should return the Media instance', function() {
       assert.equal(returnVal1, media);
       assert.equal(returnVal2, media);
+    });
+
+    // JSDK-549
+    it('should not call _removeTrack when the Track emits Track#ended', function() {
+      audioTrackMock.emit('ended');
+      assert.equal(media._removeTrack.callCount, 0);
     });
   });
   
