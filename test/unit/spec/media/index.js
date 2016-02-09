@@ -609,6 +609,10 @@ describe('Media', function() {
       document.body.appendChild(container);
     });
 
+    after(function() {
+      container.parentNode.removeChild(container);
+    });
+
     context('when passed an invalid selector', function() {
       it('should throw an exception', function() {
         assert.throws(function() {
