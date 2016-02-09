@@ -4,6 +4,12 @@ if (typeof window === 'undefined') {
   require('../lib/mockwebrtc')();
 }
 
+if (typeof document === 'undefined') {
+  var MockBrowser = require('mock-browser').mocks.MockBrowser;
+  var browser = new MockBrowser();
+  global.document = browser.getDocument();
+}
+
 require('./spec/client');
 require('./spec/conversation');
 require('./spec/incominginvite');
@@ -36,3 +42,4 @@ require('./spec/util/request');
 require('./spec/util/twilioerror');
 
 require('./spec/webrtc/getstatistics');
+
