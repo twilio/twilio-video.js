@@ -544,7 +544,8 @@ describe('Media', function() {
         assert.equal(media._createContainer.callCount, 0);
       });
 
-      it('should call _selectContainer', function() {
+      it('should call _selectContainer with the specified selector', function() {
+        assert(media._selectContainer.calledWith('.selector'));
         assert.equal(media._selectContainer.callCount, 1);
       });
 
