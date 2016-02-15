@@ -5,8 +5,8 @@
 /* eslint strict:0 */
 (function(root) {
   /* eslint "no-unused-vars": [2, {"vars": "all", "varsIgnorePattern": "a"}] */
-  var appId = '175240362';
-  var appSecret = 'Gvd126EUWQheaWQX9mwmeWIbzvs=';
+  var appId = '';
+  var appSecret = '';
 
   /* global callstats io jsSHA */
   /* eslint no-undef: 2 */
