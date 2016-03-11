@@ -439,6 +439,20 @@ gulp.task(distDocs, function() {
         '</ul>'
       ].join(''));
 
+      // Add Google Analytics
+      var body = $('body');
+      var bodyHtml = body.html();
+      body.html(bodyHtml + [
+        "<script>",
+          "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){",
+          "(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),",
+          "m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)",
+          "})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');",
+          "ga('create', 'UA-2900316-33', 'auto');",
+          "ga('send', 'pageview');",
+        "</script>"
+      ].join(''));
+
       file.contents = new Buffer($.html());
       return file;
     }))
