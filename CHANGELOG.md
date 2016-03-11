@@ -1,3 +1,34 @@
+0.13.5
+======
+
+New Features
+------------
+
+- Added the ability to set `iceTransportPolicy` in the Client constructor, in
+  the `inviteToConversation` method, and in IncomingInvite's `accept` method;
+  in supported browsers, this property allows you to restrict ICE candidates to
+  public- or relay-only (JSDK-424)
+- Added the ability to set `iceServers` in the Client constructor, in the
+  `inviteToConversation` method, and in IncomingInvite's `accept` method;
+  setting this property overrides any `iceServers` returned by the Network
+  Traversal Service, as configured in your Client's Configuration Profile
+  (JSDK-589)
+- Explicitly disabling both audio and video in `localStreamConstraints` now
+  bypasses `getUserMedia` and instead returns a LocalMedia object without
+  AudioTracks or VideoTracks; use this to create "one-way" Conversations
+  (JSDK-604)
+
+Bug Fixes
+---------
+
+- Fixed a bug where, if two Clients were listening with the same identity and
+  another Client called that identity, both Clients appeared to connect to the
+  Conversation even though only one should have (JSDK-588)
+- Silenced an "Uncaught (in promise)" error in the browser console when an
+  OutgoingInvite fails (JSDK-608)
+- Fixed a bug where calling `invite` on a disconnected Conversation raised an
+  an exception (JSDK-605)
+
 0.13.4
 ======
 
