@@ -57,7 +57,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "sip.js": "https://github.com/twilio/SIP.js.git#1fd47748c0f6a3e0f1f651385a6eff66c69ee092",
+    "sip.js": "https://github.com/twilio/SIP.js.git#d8c49b52257b9c67959b600eb0682774d3d09d25",
     "twilio-common": "^0.1.4",
     "ws": "^0.6.3",
     "xmlhttprequest": "^1.8.0"
