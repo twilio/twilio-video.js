@@ -438,19 +438,9 @@ describe('UserAgent', function() {
 
     describe('#_onInviteFailure(ict, error)', function() {
       it('should remove the InviteClientTransaction from userAgent.inviteClientTransactions', function() {
-        try {
-          ua._onInviteFailure(ict, new Error('foo'));
-        } catch(e) { }
+        ua._onInviteFailure(ict, new Error('foo'));
 
         assert(!ua.inviteClientTransactions.has(ict));
-      });
-
-      it('should throw the Error', function() {
-        function tryOnInviteFailure() {
-          ua._onInviteFailure(ict, new Error('foo'));
-        };
-
-        assert.throws(tryOnInviteFailure, /foo/);
       });
     });
   });
