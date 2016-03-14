@@ -2,8 +2,8 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var SIPJSDialog = require('../../../../lib/signaling/sipjsdialog');
-var SIPJSMediaHandler = require('../../../../lib/signaling/sipjsmediahandler');
+var SIPJSDialog = require('../../../../../lib/signaling/v1/sipjsdialog');
+var SIPJSMediaHandler = require('../../../../../lib/signaling/v1/sipjsmediahandler');
 
 describe('SIPJSDialog', function() {
   describe('"notification" events', function() {

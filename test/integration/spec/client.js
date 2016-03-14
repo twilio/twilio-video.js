@@ -5,7 +5,7 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 
 var Client = require('../../../lib/client');
-var SIPJSUserAgent = require('../../../lib/signaling/sipjsuseragent');
+var SIPJSUserAgent = require('../../../lib/signaling/v1/sipjsuseragent');
 var util = require('../../../lib/util');
 
 var credentials = require('../../env');
