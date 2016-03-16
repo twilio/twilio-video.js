@@ -7,7 +7,8 @@ New Features
 - Added the ability to set `iceTransportPolicy` in the Client constructor, in
   the `inviteToConversation` method, and in IncomingInvite's `accept` method;
   in supported browsers, this property allows you to restrict ICE candidates to
-  public- or relay-only (JSDK-424)
+  relay-only (JSDK-424); note that this property only works in Chrome at the
+  time of release
 - Added the ability to set `iceServers` in the Client constructor, in the
   `inviteToConversation` method, and in IncomingInvite's `accept` method;
   setting this property overrides any `iceServers` returned by the Network
