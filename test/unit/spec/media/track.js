@@ -6,8 +6,6 @@ var Track = require('../../../../lib/media/track');
 var sinon = require('sinon');
 
 describe('Track', function() {
-  this.timeout(10);
-
   var _initialize;
   var mediaStream;
   var track;
