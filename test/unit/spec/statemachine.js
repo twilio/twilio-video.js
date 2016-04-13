@@ -20,7 +20,7 @@ describe('StateMachine', function() {
       it('releases the lock and rejects with the error', function(done) {
         var sm = new StateMachine('foo', { foo: [] });
         sm.bracket('lock', function(key) {
-          assert(sm.hasLock(key));
+          sm.takeLockSync(key);  // reenter
           throw new Error(':-)');
         }).then(function() {
           throw new Error('Unexpected resolution');
@@ -35,7 +35,7 @@ describe('StateMachine', function() {
       it('releases the lock and resolves', function(done) {
         var sm = new StateMachine('foo', { foo: [] });
         sm.bracket('lock', function(key) {
-          assert(sm.hasLock(key));
+          sm.takeLockSync(key);  // reenter
         }).then(function() {
           assert.equal(false, sm.isLocked);
         }).then(done, done);
@@ -83,8 +83,8 @@ describe('StateMachine', function() {
       });
     });
 
-    context('when the transition is valid,', function() {
-      context('the StateMachine is locked,', function() {
+    context('when the transition is valid', function() {
+      context('the StateMachine is locked', function() {
         context('and a new lock is not requested', function() {
           it('sets .state and releases the current lock', function(done) {
             var sm = new StateMachine('foo', { foo: ['bar'] });
@@ -161,7 +161,7 @@ describe('StateMachine', function() {
         });
       });
 
-      context('the StateMachine is unlocked,', function() {
+      context('the StateMachine is unlocked', function() {
         context('and a new lock is not requested', function() {
           it('sets .state', function(done) {
             var sm = new StateMachine('foo', { foo: ['bar'] });
@@ -228,46 +228,114 @@ describe('StateMachine', function() {
 
   describe('#takeLock', function() {
     context('when locked', function() {
-      it('returns a Promise that resolves to a key once the current lock is released', function(done) {
-        var sm = new StateMachine('foo', { foo: [] });
-        var key1 = sm.takeLockSync('lock1');
-        var key2 = null;
-        sm.takeLock().then(function(key) {
-          key2 = key;
-          assert(sm.hasLock(key2));
-          assert(sm.isLocked);
-        }).then(done, done);
-        sm.releaseLock(key1);
-        assert.equal(null, key2);
+      context('and called with a string', function() {
+        it('returns a Promise that resolves to a key once the current lock is released', function(done) {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key1 = sm.takeLockSync('lock1');
+          var key2 = null;
+          sm.takeLock().then(function(key) {
+            key2 = key;
+            assert(sm.hasLock(key2));
+            assert(sm.isLocked);
+          }).then(done, done);
+          sm.releaseLock(key1);
+          assert.equal(null, key2);
+        });
+      });
+
+      context('and called with the key for the lock', function() {
+        it('reenters the lock and returns a Promise that resolves to the same key', function(done) {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = sm.takeLockSync('lock');
+          sm.takeLock(key).then(function(_key) {
+            assert.equal(key, _key);
+          }).then(done, done);
+        });
+      });
+
+      context('and called with the key for a different lock', function() {
+        it('returns a Promise that rejects with an Error', function(done) {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = takeAndReleaseLockSync(sm, 'lock1');
+          sm.takeLockSync('lock2');
+          sm.takeLock(key).then(function(key) {
+            throw new Error('Unexpected resolution');
+          }, function(error) {
+            assert(error instanceof Error);
+          }).then(done, done);
+        });
       });
     });
 
     context('when unlocked', function() {
-      it('returns a Promise that resolves to a key', function(done) {
-        var sm = new StateMachine('foo', { foo: [] });
-        sm.takeLock().then(function(key) {
-          assert(sm.hasLock(key));
-          assert(sm.isLocked);
-        }).then(done, done);
+      context('and called with a string', function() {
+        it('returns a Promise that resolves to a key', function(done) {
+          var sm = new StateMachine('foo', { foo: [] });
+          sm.takeLock().then(function(key) {
+            assert(sm.hasLock(key));
+            assert(sm.isLocked);
+          }).then(done, done);
+        });
+      });
+
+      context('and called with a key', function() {
+        it('returns a Promise that rejects with an Error', function(done) {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = takeAndReleaseLockSync(sm, 'lock');
+          sm.takeLock(key).then(function(key) {
+            throw new Error('Unexpected resolution');
+          }, function(error) {
+            assert(error instanceof Error);
+          }).then(done, done);
+        });
       });
     });
   });
 
   describe('#takeLockSync', function() {
     context('when locked', function() {
-      it('throws an Error', function() {
-        var sm = new StateMachine('foo', { foo: [] });
-        sm.takeLockSync('lock1');
-        assert.throws(sm.takeLockSync.bind(sm, 'lock2'));
+      context('and called with a string', function() {
+        it('throws an Error', function() {
+          var sm = new StateMachine('foo', { foo: [] });
+          sm.takeLockSync('lock1');
+          assert.throws(sm.takeLockSync.bind(sm, 'lock2'));
+        });
+      });
+
+      context('and called with the key for the lock', function() {
+        it('reenters the lock', function() {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = sm.takeLockSync('lock');
+          assert.equal(key, sm.takeLockSync(key));
+        });
+      });
+
+      context('and called with the key for a different lock', function() {
+        it('throws an Error', function() {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = takeAndReleaseLockSync(sm, 'lock1');
+          sm.takeLockSync('lock2');
+          assert.throws(sm.takeLockSync.bind(sm, key));
+        });
       });
     });
 
     context('when unlocked', function() {
-      it('returns a key', function() {
-        var sm = new StateMachine('foo', { foo: [] });
-        var key = sm.takeLockSync('lock');
-        assert(sm.hasLock(key));
-        assert(sm.isLocked);
+      context('and called with a string', function() {
+        it('returns a key', function() {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = sm.takeLockSync('lock');
+          assert(sm.hasLock(key));
+          assert(sm.isLocked);
+        });
+      });
+
+      context('and called with a key', function() {
+        it('throws an Error', function() {
+          var sm = new StateMachine('foo', { foo: [] });
+          var key = takeAndReleaseLockSync(sm, 'lock');
+          assert.throws(sm.takeLockSync.bind(sm, key));
+        });
       });
     });
   });
