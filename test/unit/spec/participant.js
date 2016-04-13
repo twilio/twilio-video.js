@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var MockDialog = require('../../mock/dialog');
+var MockDialog = require('../../mock/signaling/v1/dialog');
 var Participant = require('../../../lib/participant');
 var util = require('../../../lib/util');
 

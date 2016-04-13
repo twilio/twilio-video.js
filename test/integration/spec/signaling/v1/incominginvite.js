@@ -3,11 +3,11 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 
-var Client = require('../../../lib/client');
-var SIPJSUserAgent = require('../../../lib/signaling/sipjsuseragent');
+var Client = require('../../../../../lib/client');
+var SIPJSUserAgent = require('../../../../../lib/signaling/v1/sipjsuseragent');
 
-var credentials = require('../../env');
-var getToken = require('../../lib/token').getToken.bind(null, credentials);
+var credentials = require('../../../../env');
+var getToken = require('../../../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
 describe('IncomingInvite (SIPJSUserAgent)', function() {

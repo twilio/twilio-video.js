@@ -8,7 +8,7 @@ var getToken = require('../../lib/token').getToken.bind(null, {
   signingKeySecret: 'BAR123'
 });
 
-var MockDialog = require('../../mock/dialog');
+var MockDialog = require('../../mock/signaling/v1/dialog');
 var request = require('../../../lib/util/request');
 var StatsReporter = require('../../../lib/statsreporter');
 var XHR = require('../../mock/xmlhttprequest');

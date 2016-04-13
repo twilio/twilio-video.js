@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var SIPJSMediaHandler = require('../../../../lib/signaling/sipjsmediahandler');
+var SIPJSMediaHandler = require('../../../../../lib/signaling/v1/sipjsmediahandler');
 
 // NOTE(mroberts): sinon makes this a pain in the ass--we can't just use the
 // mockwebrtc.js that the integration tests use.

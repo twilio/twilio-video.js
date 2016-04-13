@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var InviteTransaction = require('../../../../../lib/signaling/invitetransaction/index');
+var InviteTransaction = require('../../../../../lib/signaling/v1/invitetransaction');
 
 describe('InviteTransaction', function() {
   var invite;
