@@ -10,7 +10,7 @@ var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Conversation (SIPJSUserAgent)', function() {
+describe('Conversation (Signaling/v1)', function() {
   // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });

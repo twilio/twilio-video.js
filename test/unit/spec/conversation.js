@@ -16,7 +16,9 @@ describe('Conversation', function() {
   var dialog2;
 
   beforeEach(function() {
-    conversation = new Conversation();
+    var localMedia = { stop: function() {} };
+    var signaling = { disconnect: function() {} };
+    conversation = new Conversation('CV123', 'PA456', localMedia, signaling);
   });
 
   describe('new Conversation(options)', function() {
@@ -67,7 +69,7 @@ describe('Conversation', function() {
     });
 
     it('should not re-emit Participant events if the Participant is no longer in the conversation', function() {
-      conversation.participants.delete(participants['foo'].sid);
+      conversation._participants.delete(participants['foo'].sid);
 
       var spy = new sinon.spy();
       conversation.on('trackAdded', spy);
