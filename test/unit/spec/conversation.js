@@ -3,8 +3,10 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Conversation = require('../../../lib/conversation');
+var ConversationImpl = require('../../../lib/signaling/conversationimpl');
 var MockDialog = require('../../mock/signaling/v1/dialog');
 var Participant = require('../../../lib/participant');
+var ParticipantImpl = require('../../../lib/signaling/participantimpl');
 var sinon = require('sinon');
 var util = require('../../../lib/util');
 
@@ -15,15 +17,18 @@ describe('Conversation', function() {
   var dialog;
   var dialog2;
 
+  var localMedia = {};
+  var signaling = {};
+  var conversationImpl = new ConversationImpl('CV123', 'PA456', localMedia,
+    signaling);
+
   beforeEach(function() {
-    var localMedia = { stop: function() {} };
-    var signaling = { disconnect: function() {} };
-    conversation = new Conversation('CV123', 'PA456', localMedia, signaling);
+    conversation = new Conversation(conversationImpl);
   });
 
-  describe('new Conversation(options)', function() {
+  describe('new Conversation(impl)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Conversation() instanceof Conversation);
+      assert(Conversation(conversationImpl) instanceof Conversation);
     });
   });
 
@@ -43,9 +48,11 @@ describe('Conversation', function() {
     var participants;
 
     beforeEach(function() {
-      [ new Participant('PA123', 'foo'),
-        new Participant('PA456', 'bar')
-      ].forEach(conversation._connectParticipant, conversation);
+      [
+        new ParticipantImpl('PA000', 'foo', 'connected', signaling),
+        new ParticipantImpl('PA111', 'bar', 'connected', signaling)
+      ].forEach(conversationImpl.emit.bind(conversationImpl,
+        'participantConnected'));
       participants = { };
       conversation.participants.forEach(function(participant) {
         participants[participant.identity] = participant;
@@ -69,7 +76,7 @@ describe('Conversation', function() {
     });
 
     it('should not re-emit Participant events if the Participant is no longer in the conversation', function() {
-      conversation._participants.delete(participants['foo'].sid);
+      participants['foo'].emit('disconnected');
 
       var spy = new sinon.spy();
       conversation.on('trackAdded', spy);

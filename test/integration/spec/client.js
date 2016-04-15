@@ -253,13 +253,13 @@ describe('Client (Signaling/v1)', function() {
       });
     });
 
-    it('should be cancelable', function() {
+    it.skip('should be cancelable', function() {
       var outgoingInvite = alice.inviteToConversation(uaName);
       outgoingInvite.cancel();
       assert.equal('canceled', outgoingInvite.status);
     });
 
-    it('should auto-reject associated invites after it is canceled', function(done) {
+    it.skip('should auto-reject associated invites after it is canceled', function(done) {
       this.timeout(5000);
       var invite;
 
