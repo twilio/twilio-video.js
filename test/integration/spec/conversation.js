@@ -117,7 +117,11 @@ describe('Conversation (Signaling/v1)', function() {
           return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
-          assert.equal(1, conversation.participants.size);
+          return new Promise(function(resolve) {
+            conversation.once('participantConnected', function() {
+              resolve();
+            });
+          });
         }).then(done, done);
     });
 
