@@ -12,7 +12,7 @@ describe('Participant', function() {
   this.timeout(200);
 
   beforeEach(function() {
-    impl = new ParticipantImpl(util.makeUUID(), 'foo', 'connected', {});
+    impl = new ParticipantImpl(util.makeUUID(), 'foo', 'connected');
     participant = new Participant(impl);
   });
 

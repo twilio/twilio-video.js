@@ -18,9 +18,7 @@ describe('Conversation', function() {
   var dialog2;
 
   var localMedia = {};
-  var signaling = {};
-  var conversationImpl = new ConversationImpl('CV123', 'PA456', localMedia,
-    signaling);
+  var conversationImpl = new ConversationImpl('CV123', 'PA456', localMedia);
 
   beforeEach(function() {
     conversation = new Conversation(conversationImpl);
@@ -49,8 +47,8 @@ describe('Conversation', function() {
 
     beforeEach(function() {
       [
-        new ParticipantImpl('PA000', 'foo', 'connected', signaling),
-        new ParticipantImpl('PA111', 'bar', 'connected', signaling)
+        new ParticipantImpl('PA000', 'foo', 'connected'),
+        new ParticipantImpl('PA111', 'bar', 'connected')
       ].forEach(conversationImpl.emit.bind(conversationImpl,
         'participantConnected'));
       participants = { };
