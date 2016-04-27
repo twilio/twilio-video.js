@@ -12,9 +12,9 @@ if (typeof document === 'undefined') {
 
 require('./spec/client');
 require('./spec/conversation');
-require('./spec/signaling/v1/incominginvite');
 require('./spec/participant');
 require('./spec/queueingeventemitter');
+require('./spec/statemachine');
 require('./spec/statsreporter');
 
 require('./spec/media/index');

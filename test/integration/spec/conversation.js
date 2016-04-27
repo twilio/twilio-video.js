@@ -10,7 +10,7 @@ var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Conversation (SIPJSUserAgent)', function() {
+describe('Conversation (Signaling/v1)', function() {
   // Alice is an Client.
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
@@ -117,7 +117,11 @@ describe('Conversation (SIPJSUserAgent)', function() {
           return alice.inviteToConversation(bobName);
         }).then(function(_conversation) {
           conversation = _conversation;
-          assert.equal(1, conversation.participants.size);
+          return new Promise(function(resolve) {
+            conversation.once('participantConnected', function() {
+              resolve();
+            });
+          });
         }).then(done, done);
     });
 

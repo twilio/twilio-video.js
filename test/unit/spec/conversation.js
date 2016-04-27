@@ -3,8 +3,10 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Conversation = require('../../../lib/conversation');
+var ConversationSignaling = require('../../../lib/signaling/conversation');
 var MockDialog = require('../../mock/signaling/v1/dialog');
 var Participant = require('../../../lib/participant');
+var ParticipantSignaling = require('../../../lib/signaling/participant');
 var sinon = require('sinon');
 var util = require('../../../lib/util');
 
@@ -15,13 +17,16 @@ describe('Conversation', function() {
   var dialog;
   var dialog2;
 
+  var localMedia = {};
+  var signaling = new ConversationSignaling('CV123', 'PA456', localMedia);
+
   beforeEach(function() {
-    conversation = new Conversation();
+    conversation = new Conversation(signaling);
   });
 
-  describe('new Conversation(options)', function() {
+  describe('new Conversation(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Conversation() instanceof Conversation);
+      assert(Conversation(signaling) instanceof Conversation);
     });
   });
 
@@ -41,9 +46,11 @@ describe('Conversation', function() {
     var participants;
 
     beforeEach(function() {
-      [ new Participant('PA123', 'foo'),
-        new Participant('PA456', 'bar')
-      ].forEach(conversation._connectParticipant, conversation);
+      [
+        new ParticipantSignaling('PA000', 'foo', 'connected'),
+        new ParticipantSignaling('PA111', 'bar', 'connected')
+      ].forEach(signaling.emit.bind(signaling,
+        'participantConnected'));
       participants = { };
       conversation.participants.forEach(function(participant) {
         participants[participant.identity] = participant;
@@ -67,7 +74,7 @@ describe('Conversation', function() {
     });
 
     it('should not re-emit Participant events if the Participant is no longer in the conversation', function() {
-      conversation.participants.delete(participants['foo'].sid);
+      participants['foo'].emit('disconnected');
 
       var spy = new sinon.spy();
       conversation.on('trackAdded', spy);

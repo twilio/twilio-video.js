@@ -12,7 +12,7 @@ var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Client (SIPJSUserAgent)', function() {
+describe('Client (Signaling/v1)', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
   var aliceManager = new AccessManager(aliceToken);
@@ -54,7 +54,7 @@ describe('Client (SIPJSUserAgent)', function() {
     });
 
     it('should register', function() {
-      assert(alice._isRegistered);
+      assert(alice._signaling._userAgent.isRegistered);
     });
 
     it('should set .identity', function() {
@@ -71,12 +71,10 @@ describe('Client (SIPJSUserAgent)', function() {
       assert(!alice.isListening);
     });
 
-    it('should not need to be registered', function() {
-      assert(!alice._needsRegistration);
-    });
-
-    it('should unregister', function() {
-      assert(!alice.isRegistered);
+    it('should unregister', function(done) {
+      alice._signaling._userAgent.once('unregistered', function() {
+        done();
+      });
     });
 
     it('does not update .identity', function() {
@@ -186,10 +184,6 @@ describe('Client (SIPJSUserAgent)', function() {
       it('should update .isListening', function() {
         assert(!alice.isListening);
       });
-
-      it('should still need to be registered', function() {
-        assert(alice._needsRegistration);
-      });
     });
 
     describe('Invite#accept', function() {
@@ -206,12 +200,8 @@ describe('Client (SIPJSUserAgent)', function() {
           assert(!alice.conversations.has(conversation.sid));
         });
 
-        it('should not need to be registered', function() {
-          assert(!alice._needsRegistration);
-        });
-
         it('should unregister', function(done) {
-          alice._userAgent.once('unregistered', function() {
+          alice._signaling._userAgent.once('unregistered', function() {
             done();
           });
         });
@@ -245,8 +235,12 @@ describe('Client (SIPJSUserAgent)', function() {
       return alice.inviteToConversation(name, options);
     };
 
-    it('should validate an identity was passed', function() {
-      assert.throws(inviteToConversation.bind(this), /INVALID_ARGUMENT/);
+    it('should validate an identity was passed', function(done) {
+      inviteToConversation().then(function() {
+        done(new Error('Unexpected resolution'));
+      }, function() {
+        done();
+      });
     });
 
     it('should update .conversations', function(done) {
@@ -274,7 +268,7 @@ describe('Client (SIPJSUserAgent)', function() {
       ua2Manager = new AccessManager(ua2Token);
       ua2 = new SIPJSUserAgent(ua2Manager, options);
 
-      var i = alice._canceledOutgoingInvites.size;
+      var i = alice._signaling._canceledOutgoingInvites.size;
       ua2.register().then(function() {
         invite = alice.inviteToConversation([uaName, ua2Name]);
         return Promise.all([
@@ -290,7 +284,7 @@ describe('Client (SIPJSUserAgent)', function() {
           })
         ]).then(function() {
           invite.cancel();
-          assert.equal(alice._canceledOutgoingInvites.size, i + 1);
+          assert.equal(alice._signaling._canceledOutgoingInvites.size, i + 1);
         });
       }).then(done, done);
     });
@@ -311,7 +305,7 @@ describe('Client (SIPJSUserAgent)', function() {
       var ua2Invite, ua3Invite;
 
       function rejectThenAccept(invite1, invite2) {
-        alice._userAgent.inviteClientTransactions.forEach(function(ict) {
+        alice._signaling._userAgent.inviteClientTransactions.forEach(function(ict) {
           ict.session.once('rejected', function() {
             invite2.accept();
           });
@@ -348,9 +342,9 @@ describe('Client (SIPJSUserAgent)', function() {
     });
 
     after(function cleanupPending() {
-      alice._userAgent.inviteClientTransactions.forEach(function(ict) {
-        alice._userAgent.inviteClientTransactions.delete(ict);
-        alice._outgoingInvites.delete(ict._cookie);
+      alice._signaling._userAgent.inviteClientTransactions.forEach(function(ict) {
+        alice._signaling._userAgent.inviteClientTransactions.delete(ict);
+        alice._signaling._outgoingInvites.delete(ict._cookie);
       });
 
       if (conversation2) {
@@ -368,10 +362,6 @@ describe('Client (SIPJSUserAgent)', function() {
     it('should update .isListening', function() {
       assert(!alice.isListening);
     });
-
-    it('should still need to be registered', function() {
-      assert(alice._needsRegistration);
-    });
   });
 
   describe('Conversation#disconnect', function() {
@@ -380,12 +370,8 @@ describe('Client (SIPJSUserAgent)', function() {
       assert(!alice.conversations.has(conversation.sid));
     });
 
-    it('should not need to be registered', function() {
-      assert(!alice._needsRegistration);
-    });
-
     it('should unregister', function(done) {
-      alice._userAgent.once('unregistered', function() {
+      alice._signaling._userAgent.once('unregistered', function() {
         done();
       });
     });

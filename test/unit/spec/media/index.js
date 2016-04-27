@@ -6,8 +6,6 @@ var Media = require('../../../../lib/media/index');
 var sinon = require('sinon');
 
 describe('Media', function() {
-  this.timeout(10);
-
   var media;
   describe('_addRemoteStream', function() {
     var mediaStream;
