@@ -3,10 +3,10 @@
 var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Conversation = require('../../../lib/conversation');
-var ConversationImpl = require('../../../lib/signaling/conversationimpl');
+var ConversationSignaling = require('../../../lib/signaling/conversation');
 var MockDialog = require('../../mock/signaling/v1/dialog');
 var Participant = require('../../../lib/participant');
-var ParticipantImpl = require('../../../lib/signaling/participantimpl');
+var ParticipantSignaling = require('../../../lib/signaling/participant');
 var sinon = require('sinon');
 var util = require('../../../lib/util');
 
@@ -18,15 +18,15 @@ describe('Conversation', function() {
   var dialog2;
 
   var localMedia = {};
-  var conversationImpl = new ConversationImpl('CV123', 'PA456', localMedia);
+  var signaling = new ConversationSignaling('CV123', 'PA456', localMedia);
 
   beforeEach(function() {
-    conversation = new Conversation(conversationImpl);
+    conversation = new Conversation(signaling);
   });
 
-  describe('new Conversation(impl)', function() {
+  describe('new Conversation(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Conversation(conversationImpl) instanceof Conversation);
+      assert(Conversation(signaling) instanceof Conversation);
     });
   });
 
@@ -47,9 +47,9 @@ describe('Conversation', function() {
 
     beforeEach(function() {
       [
-        new ParticipantImpl('PA000', 'foo', 'connected'),
-        new ParticipantImpl('PA111', 'bar', 'connected')
-      ].forEach(conversationImpl.emit.bind(conversationImpl,
+        new ParticipantSignaling('PA000', 'foo', 'connected'),
+        new ParticipantSignaling('PA111', 'bar', 'connected')
+      ].forEach(signaling.emit.bind(signaling,
         'participantConnected'));
       participants = { };
       conversation.participants.forEach(function(participant) {

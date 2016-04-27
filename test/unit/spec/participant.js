@@ -2,23 +2,23 @@
 
 var assert = require('assert');
 var Participant = require('../../../lib/participant');
-var ParticipantImpl = require('../../../lib/signaling/participantimpl');
+var ParticipantSignaling = require('../../../lib/signaling/participant');
 var util = require('../../../lib/util');
 
 describe('Participant', function() {
-  var impl;
+  var signaling;
   var participant;
 
   this.timeout(200);
 
   beforeEach(function() {
-    impl = new ParticipantImpl(util.makeUUID(), 'foo', 'connected');
-    participant = new Participant(impl);
+    signaling = new ParticipantSignaling(util.makeUUID(), 'foo', 'connected');
+    participant = new Participant(signaling);
   });
 
-  describe('new Participant(impl)', function() {
+  describe('new Participant(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Participant(impl) instanceof Participant);
+      assert(Participant(signaling) instanceof Participant);
     });
   });
 
