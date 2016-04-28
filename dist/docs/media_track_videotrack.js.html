@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: media/track/videotrack.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: media/track/videotrack.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var inherits = require(&apos;util&apos;).inherits;
+var Track = require(&apos;./&apos;);
+
+/**
+ * Construct a {@link VideoTrack} from MediaStream and MediaStreamTrack.
+ * @class
+ * @classdesc A {@link VideoTrack} is a {@link Track} representing video.
+ * @extends Track
+ * @param {MediaStream} mediaStream
+ * @param {MediaStreamTrack} mediaStreamTrack
+ * @property {Set&lt;HTMLElement&gt;} attachments - The &amp;lt;video&amp;gt; elements this
+ *   {@link VideoTrack} is currently attached to (managed by
+ *   {@link VideoTrack#attach})
+ * @property {VideoTrack#Dimensions} dimensions - The {@link VideoTrack}&apos;s {@link VideoTrack#Dimensions}
+ * @fires VideoTrack#dimensionsChanged
+ */
+function VideoTrack(mediaStream, mediaStreamTrack) {
+  if (!(this instanceof VideoTrack)) {
+    return new VideoTrack(mediaStream, mediaStreamTrack);
+  }
+  Track.call(this, mediaStream, mediaStreamTrack);
+  Object.defineProperties(this, {
+    dimensions: {
+      enumerable: true,
+      value: {
+        width: null,
+        height: null
+      }
+    }
+  });
+  mediaStream.onaddtrack = function onaddtrack() {
+    this.attachments.forEach(function(video) {
+      Track.detachAudioOrVideoTrack(this, video);
+      Track.attachVideo(video, mediaStream);
+    }, this);
+  }.bind(this);
+  emitDimensionsChangedEvents(this);
+  return this;
+}
+
+var DIMENSIONS_CHANGED = VideoTrack.DIMENSIONS_CHANGED = &apos;dimensionsChanged&apos;;
+
+function emitDimensionsChangedEvents(track) {
+  if (typeof document === &apos;undefined&apos;) {
+    throw new Error(&apos;document is undefined&apos;);
+  }
+  var elem = document.createElement(track.kind);
+  elem.muted = true;
+  elem.onloadedmetadata = function onloadedmetadata() {
+    if (dimensionsChanged(track, elem)) {
+      track.dimensions.width = elem.videoWidth;
+      track.dimensions.height = elem.videoHeight;
+    }
+  };
+  elem.onresize = function onresize() {
+    if (dimensionsChanged(track, elem)) {
+      track.dimensions.width = elem.videoWidth;
+      track.dimensions.height = elem.videoHeight;
+      if (track.isStarted) {
+        track.emit(DIMENSIONS_CHANGED, track);
+      }
+    }
+  };
+  track.once(Track.ENDED, function() {
+    track.detach(elem);
+    elem.onloadedmetadata = null;
+  });
+  return track.attach(elem);
+}
+
+function dimensionsChanged(track, elem) {
+  return track.dimensions.width !== elem.videoWidth
+    || track.dimensions.height !== elem.videoHeight;
+}
+
+inherits(VideoTrack, Track);
+
+VideoTrack.prototype._start = function _start(dummyEl) {
+  this.dimensions.width = dummyEl.videoWidth;
+  this.dimensions.height = dummyEl.videoHeight;
+
+  return Track.prototype._start.call(this, dummyEl);
+};
+
+/**
+ * Attach the {@link VideoTrack} to a newly created &amp;lt;video&amp;gt; element.
+ * @method
+ * @returns {HTMLElement}
+ * @example
+ * var videoEl = videoTrack.attach();
+ * document.getElementById(&apos;div#video-track-container&apos;).appendChild(videoEl);
+*//**
+ * Attach the {@link VideoTrack} to an existing &amp;lt;video&amp;gt; element.
+ * @method
+ * @param {HTMLElement} video - The &amp;lt;video&amp;gt; element to attach to
+ * @returns {HTMLElement}
+ * @example
+ * var videoEl = document.getElementById(&apos;video-track&apos;);
+ * videoTrack.attach(videoEl);
+*//**
+ * Attach the {@link VideoTrack} to a &amp;lt;video&amp;gt; element selected by
+ * &lt;code&gt;document.querySelector&lt;/code&gt;.
+ * @method
+ * @param {string} selector - A query selector for the &amp;lt;video&amp;gt; element to attach to
+ * @returns {HTMLElement}
+ * @example
+ * var videoEl = videoTrack.attach(&apos;video#video-track&apos;);
+ */
+VideoTrack.prototype.attach = function attach(el) {
+  el = Track.prototype.attach.call(this, el);
+  el.muted = true;
+  return el;
+};
+
+/**
+ * Detach the {@link VideoTrack} from any and all previously attached &amp;lt;video&amp;gt; elements.
+ * @method
+ * @returns {Array&lt;HTMLElement&gt;}
+ * @example
+ * var detachedVideoEls = videoTrack.detach();
+*//**
+ * Detach the {@link VideoTrack} from a previously attached &amp;lt;video&amp;gt; element.
+ * @method
+ * @param {HTMLElement} video - The &amp;lt;video&amp;gt; element to detach from
+ * @returns {HTMLElement}
+ * @example
+ * var videoEl = document.getElementById(&apos;video-track&apos;);
+ * videoTrack.detach(videoEl);
+*//**
+ * Detach the {@link VideoTrack} from a previously attached &amp;lt;video&amp;gt; element selected by
+ * &lt;code&gt;document.querySelector&lt;/code&gt;.
+ * @method
+ * @param {string} selector - A query selector for the &amp;lt;video&amp;gt; element to detach from
+ * @returns {HTMLElement}
+ * @example
+ * var detachedVideoEl = media.detach(&apos;div#video-track&apos;);
+ */
+VideoTrack.prototype.detach = Track.prototype.detach;
+
+/**
+ * A {@link VideoTrack}&apos;s width and height.
+ * @typedef VideoTrack#Dimensions
+ * @type {Object}
+ * @property {?number} width - The {@link VideoTrack}&apos;s width or null if the
+ *   {@link VideoTrack} has not yet started
+ * @property {?number} height - The {@link VideoTrack}&apos;s height or null if the
+ *   {@link VideoTrack} has not yet started
+ */
+
+/**
+ * The {@link VideoTrack}&apos;s dimensions changed.
+ * @param {VideoTrack} track - The {@link VideoTrack} whose dimensions changed
+ * @event VideoTrack#dimensionsChanged
+ */
+
+module.exports = VideoTrack;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li></ul></li><li><a href="VideoTrack.html">VideoTrack</a><ul style="margin-left: 1em"><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Thu Apr 28 2016 00:48:01 GMT+0000 (UTC)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create', 'UA-2900316-33', 'auto');ga('send', 'pageview');</script></body>
+</html>
