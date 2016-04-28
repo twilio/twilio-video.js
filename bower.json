@@ -1,6 +1,6 @@
 {
   "name": "twilio-conversations",
-  "version": "0.13.6-rc1",
+  "version": "0.13.6-dev",
   "description": "Twilio Conversations JavaScript library",
   "license": "BSD",
   "authors": [
