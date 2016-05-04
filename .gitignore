@@ -7,6 +7,7 @@ coverage
 dist
 doc
 node_modules
+npm-debug.log
 out
 src/twilio-conversations-bundle.js
 test.json
