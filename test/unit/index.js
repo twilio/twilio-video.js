@@ -34,6 +34,8 @@ require('./spec/signaling/v1/sipjsinviteservertransaction');
 require('./spec/signaling/v1/inviteclienttransaction');
 require('./spec/signaling/v1/inviteservertransaction');
 
+require('./spec/signaling/v2/peerconnectionmanager');
+
 require('./spec/util/cancelablepromise');
 require('./spec/util/index');
 require('./spec/util/log');
