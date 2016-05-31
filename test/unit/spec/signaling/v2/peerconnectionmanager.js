@@ -134,12 +134,12 @@ describe('PeerConnectionManager', function() {
   describe('#setConfiguration', function() {
     it('sets RTCConfiguration for any newly-constructed PeerConnections', function() {
       var config1 = {
-        iceServers: ['foo'],
+        iceServers: [ { url: 'foo' } ],
         iceTransportPolicy: 'bar'
       };
 
       var config2 = {
-        iceServers: ['baz']
+        iceServers: [ { urls: 'baz' } ]
       };
 
       var pc;
@@ -154,13 +154,21 @@ describe('PeerConnectionManager', function() {
       return pcm.setConfiguration(config1).then(function() {
         return pcm.update(new ConversationEventBuilder().createOffer(1));
       }).then(function() {
-        assert.deepEqual(config1, pc.getConfiguration());
+        assert.deepEqual({
+          iceServers: [ { urls: [ 'foo' ] } ],
+          iceTransportPolicy: 'bar',
+          iceTransports: 'bar'
+        }, pc.getConfiguration());
         // Then, check that the second PeerConnection uses the given configuration.
         return pcm.setConfiguration(config2);
       }).then(function() {
         return pcm.update(new ConversationEventBuilder().createOffer(2));
       }).then(function() {
-        assert.deepEqual(Object.assign(config1, config2), pc.getConfiguration());
+        assert.deepEqual({
+          iceServers: [ { urls: 'baz' } ],
+          iceTransportPolicy: 'bar',
+          iceTransports: 'bar'
+        }, pc.getConfiguration());
       });
     });
 
