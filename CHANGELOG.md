@@ -1,3 +1,21 @@
+0.13.6
+======
+
+New Features
+------------
+
+- Added the ability to access the version of the SDK from
+  `Twilio.Conversations.version` (or `Conversations.version` in Node)
+- Improved Track playback support for Chrome on Android (JSDK-582)
+- twilio-common.js is now bundled in distribution builds of the SDK. You no
+  longer need to include it in a separate &lt;script&gt; tag (JSDK-626).
+
+Bug Fixes
+---------
+
+- Silenced deprecation warnings in Firefox regarding `getUserMedia` and ICE
+  server `urls` (JSDK-642)
+
 0.13.5
 ======
 
