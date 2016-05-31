@@ -116,69 +116,6 @@ describe('util', function() {
     });
   });
 
-  describe('getStunServers', function() {
-    it('should extract the stun servers from an ice servers object', function() {
-      var iceServers = [
-        { url: 'stun://www.foo.com' },
-        { url: 'turn://www.bar.com' },
-        { url: 'stuns://www.baz.com' },
-        { url: 'turns://www.qux.com' }
-      ];
-
-      var stunServers = util.getStunServers(iceServers);
-      assert.equal(stunServers[0], 'stun://www.foo.com');
-      assert.equal(stunServers[1], 'stuns://www.baz.com');
-    });
-
-    it('should return an empty array if no stun servers are supplied', function() {
-      var stunServers = util.getStunServers();
-      assert.equal(stunServers.length, 0);
-    });
-
-    it('should exclude a server if the url isnt present', function() {
-      var iceServers = [
-        { url: 'stun://www.bar.com' },
-        { xurl: 'stuns://www.qux.com' }
-      ];
-
-      var stunServers = util.getStunServers(iceServers);
-      assert.equal(stunServers.length, 1);
-    });
-
-    it('should ignore incorrect URLs', function() {
-      var iceServers = [
-        { url: 'stun://www.bar.com' },
-        { url: 'foo://www.qux.com' }
-      ];
-
-      var stunServers = util.getStunServers(iceServers);
-      assert.equal(stunServers.length, 1);
-    });
-  });
-
-  describe('getTurnServers', function() {
-    it('should extract the turn servers from an ice servers object', function() {
-      var iceServers = [
-        { url: 'stun://www.foo.com' },
-        { url: 'turn://www.bar.com' },
-        { url: 'stuns://www.baz.com' },
-        {
-          url: 'turns://www.qux.com',
-          username: 'foo',
-          credential: 'bar'
-        }
-      ];
-
-      var turnServers = util.getTurnServers(iceServers);
-      assert.equal(turnServers[0].urls[0], 'turn://www.bar.com');
-      assert.equal(turnServers[0].username, undefined);
-      assert.equal(turnServers[0].password, undefined);
-      assert.equal(turnServers[1].urls[0], 'turns://www.qux.com');
-      assert.equal(turnServers[1].username, 'foo');
-      assert.equal(turnServers[1].password, 'bar');
-    });
-  });
-
   describe('promiseFromEvents', function() {
     var emitter;
     var promise;
