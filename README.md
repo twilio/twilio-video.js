@@ -13,12 +13,9 @@ Including
 ### CDN
 
 Releases of twilio-conversations.js are hosted on a CDN, and you can include
-these directly in your web app using a &lt;script&gt; tag. If you include
-twilio-conversations.js this way, then you must also include the
-[twilio-common.js](https://github.com/twilio/twilio-common.js) dependency.
+these directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/common/v0.1/twilio-common.min.js"></script>
 <script src="//media.twiliocdn.com/sdk/js/conversations/v0.13/twilio-conversations.min.js"></script>
 ```
 

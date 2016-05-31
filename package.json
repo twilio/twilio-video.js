@@ -63,7 +63,6 @@
     "xmlhttprequest": "^1.8.0"
   },
   "browser": {
-    "twilio-common": "./src/twilio-common.js",
     "xmlhttprequest": "./src/xmlhttprequest.js"
   }
 }
