@@ -72,50 +72,6 @@ describe('util', function() {
     });
   });
 
-  describe('withDefaults', function() {
-    it('should add all sources to the destination if they don\'t already exist', function() {
-      var dest = { };
-      var a = { foo: 'bar', baz: 'qux' };
-      var b = { foo: 'qux' };
-      var c = { abc: 123 };
-
-      util.withDefaults(dest, a, b, c);
-
-      assert(dest.foo === 'bar');
-      assert(dest.baz === 'qux');
-      assert(dest.abc === 123);
-    });
-
-    it('should create a new object if destination is undefined', function() {
-      var a = { foo: 'bar' };
-
-      var dest = util.withDefaults(null, a);
-      assert(dest.foo === 'bar');
-    });
-  });
-
-  describe('extend', function() {
-    it('should add all sources to the destination', function() {
-      var dest = { };
-      var a = { foo: 'bar', baz: 'qux' };
-      var b = { foo: 'qux' };
-      var c = { abc: 123 };
-
-      util.extend(dest, a, b, c);
-
-      assert(dest.foo === 'qux');
-      assert(dest.baz === 'qux');
-      assert(dest.abc === 123);
-    });
-
-    it('should create a new object if destination is undefined', function() {
-      var a = { foo: 'bar' };
-
-      var dest = util.extend(null, a);
-      assert(dest.foo === 'bar');
-    });
-  });
-
   describe('promiseFromEvents', function() {
     var emitter;
     var promise;
