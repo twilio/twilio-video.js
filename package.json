@@ -2,7 +2,7 @@
   "name": "twilio-conversations",
   "title": "Twilio Conversations",
   "description": "Twilio Conversations JavaScript library",
-  "version": "0.13.6-dev",
+  "version": "0.13.6-rc3",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
