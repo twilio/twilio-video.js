@@ -108,15 +108,6 @@ describe('Media', function() {
       videoTrack = new MediaStreamTrack('bar', 'video');
     });
 
-    context('when the track is not in the Media\'s tracks', function() {
-      it('should call removeListener on the track', function() {
-        audioTrack.removeListener = sinon.spy();
-        media._reemitTrackEvent(audioTrack, 'foo', 'bar');
-        audioTrack.emit('foo');
-        assert.equal(audioTrack.removeListener.callCount, 1);
-      });
-    });
-
     context('when the track is in the Media\'s tracks', function() {
       it('should emit the specified event when the specified audio track emits the specified track event', function(done) {
         media._addTrack(audioTrack);
