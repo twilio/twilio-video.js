@@ -1,5 +1,7 @@
 'use strict';
 
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
 var util = require('../../lib/util');
 
 var WebSocket = require('ws');
@@ -82,6 +84,7 @@ RTCDataChannel.prototype.close = function close() {
 var DUMMY_SDP = 'v=0\r\no=- 4676571761825475727 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE audio\r\na=msid-semantic: WMS EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\nm=audio 1 RTP/SAVPF 111 103 104 0 8 106 105 13 126\r\nc=IN IP4 0.0.0.0\r\na=rtcp:1 IN IP4 0.0.0.0\r\na=ice-ufrag:YDUcqfaDo8TP7sAf\r\na=ice-pwd:6pBfcQxQqfHcUN90IcETG9ag\r\na=ice-options:google-ice\r\na=fingerprint:sha-256 C9:98:D1:85:C6:79:AF:26:76:80:28:B5:19:B3:65:DA:D6:E8:BC:29:6A:48:59:8C:13:06:6C:3B:D3:EE:86:01\r\na=setup:actpass\r\na=mid:audio\r\na=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\na=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:111 opus/48000/2\r\na=fmtp:111 minptime=10\r\na=rtpmap:103 ISAC/16000\r\na=rtpmap:104 ISAC/32000\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:106 CN/32000\r\na=rtpmap:105 CN/16000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:126 telephone-event/8000\r\na=maxptime:60\r\na=ssrc:489352021 cname:aDhWDndkoIsLM2YP\r\na=ssrc:489352021 msid:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq fabea357-f6cf-4967-aa7c-800bedf06927\r\na=ssrc:489352021 mslabel:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\na=ssrc:489352021 label:fabea357-f6cf-4967-aa7c-800bedf06927\r\n';
 
 function RTCPeerConnection(configuration, constraints) {
+  EventEmitter.call(this);
   this.iceConnectionState = 'completed';
   this.iceGatheringState = 'complete';
   this.localDescription = null;
@@ -89,6 +92,10 @@ function RTCPeerConnection(configuration, constraints) {
   this.remoteDescription = null;
   this.signalingState = 'stable';
 };
+
+inherits(RTCPeerConnection, EventEmitter);
+
+RTCPeerConnection.prototype.addEventListener = RTCPeerConnection.prototype.addListener;
 
 RTCPeerConnection.prototype.createOffer = function createOffer(successCallback, failureCallback, constraints) {
   var offer = DUMMY_SDP;
@@ -100,6 +107,8 @@ RTCPeerConnection.prototype.createAnswer = function createAnswer(successCallback
   successCallback(answer);
 };
 
+RTCPeerConnection.prototype.removeEventListener = RTCPeerConnection.prototype.removeListener;
+
 RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description, successCallback, errorCallback) {
   this.localDescription = new RTCSessionDescription(description);
   var self = this;
@@ -107,6 +116,7 @@ RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(d
     successCallback();
     if (self.onicecandidate) {
       self.onicecandidate.call(self, { candidate: null });
+      self.emit('icecandidate', { candidate: null });
     }
   });
 };

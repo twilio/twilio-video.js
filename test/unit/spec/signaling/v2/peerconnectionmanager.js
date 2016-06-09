@@ -1,6 +1,8 @@
 'use strict';
 
 var assert = require('assert');
+var EventEmitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
 var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
 var sinon = require('sinon');
 
@@ -433,6 +435,7 @@ ConversationEventBuilder.prototype.offer = function offer(id, sdp) {
 };
 
 function RTCPeerConnection(configuration) {
+  EventEmitter.call(this);
   this._configuration = configuration;
   this._localStreams = [];
   this.iceGatheringState = 'complete';
@@ -440,6 +443,10 @@ function RTCPeerConnection(configuration) {
   this.remoteDescription = null;
   this.signalingState = 'stable';
 }
+
+inherits(RTCPeerConnection, EventEmitter);
+
+RTCPeerConnection.prototype.addEventListener = RTCPeerConnection.prototype.addListener;
 
 RTCPeerConnection.prototype.addStream = function addStream(mediaStream) {
   this._localStreams.push(mediaStream);
@@ -486,6 +493,8 @@ RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription
   this.signalingState = this.signalingState === 'have-local-offer' ? 'stable' : 'have-remote-offer';
   onSuccess();
 };
+
+RTCPeerConnection.prototype.removeEventListener = RTCPeerConnection.prototype.removeListener;
 
 RTCPeerConnection.prototype.removeStream = function removeStream(mediaStream) {
   this._localStreams.splice(this._localStreams.indexOf(mediaStream), 1);
