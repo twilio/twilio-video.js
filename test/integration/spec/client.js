@@ -5,14 +5,15 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 
 var Client = require('../../../lib/client');
-var SIPJSUserAgent = require('../../../lib/signaling/v1/sipjsuseragent');
+var LocalMedia = require('../../../lib/media/localmedia');
+var SignalingV2 = require('../../../lib/signaling/v2');
 var util = require('../../../lib/util');
 
 var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Client (Signaling/v1)', function() {
+describe('Client', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
   var aliceManager = new AccessManager(aliceToken);
@@ -20,14 +21,19 @@ describe('Client (Signaling/v1)', function() {
 
   var options = {
     debug: false,
-    wsServer: wsServer,
     logLevel: 'off'
   };
+
+  if (wsServer) {
+    options.wsServer = wsServer;
+  }
 
   var createClient = function(token, options) {
     var accessManager = new AccessManager(token);
     return new Client(accessManager, options);
   };
+
+  var localMedia = new LocalMedia();
 
   describe('constructor', function() {
     it('should return an instance of Client', function() {
@@ -53,10 +59,6 @@ describe('Client (Signaling/v1)', function() {
       assert(alice.isListening);
     });
 
-    it('should register', function() {
-      assert(alice._signaling._userAgent.isRegistered);
-    });
-
     it('should set .identity', function() {
       assert.equal(aliceName, alice.identity);
     });
@@ -71,76 +73,20 @@ describe('Client (Signaling/v1)', function() {
       assert(!alice.isListening);
     });
 
-    it('should unregister', function(done) {
-      alice._signaling._userAgent.once('unregistered', function() {
-        done();
-      });
-    });
-
     it('does not update .identity', function() {
       assert.equal(aliceName, alice.identity);
     });
   });
 
-  describe('#unlisten (but still registered)', function() {
-    var uaName = null;
-    var uaToken = null;
-    var uaManager = null;
-    var ua = null;
+  var s1Name = null;
+  var s1Token = null;
+  var s1Manager = null;
+  var s1 = null;
 
-    it('should not emit "invite" events', function setupUA(done) {
-      this.timeout(6000);
-      uaName = randomName();
-      uaToken = getToken({ address: uaName });
-      uaManager = new AccessManager(uaToken);
-      ua = new SIPJSUserAgent(uaManager, options);
-      ua.invite(aliceName).then(function() {
-        alice.removeListener('invite', receivedInvite);
-        done(new Error('InviteClientTransaction succeeded'));
-      }, function(error) {
-        alice.removeListener('invite', receivedInvite);
-        done();
-      });
-      function receivedInvite() {
-        done(new Error('Emitted "invite" event'));
-      }
-      alice.once('invite', receivedInvite);
-    });
-  });
-
-  // FIXME(mroberts): We have a regression with the new
-  // AccessToken; refer to the comment in Client#listen for
-  // more information.
-  /*describe('#listen (with new Token)', function() {
-    var aliceName = null;
-    var aliceToken = null;
-
-    before(function(done) {
-      aliceName = randomName();
-      aliceToken = getToken(aliceName);
-      alice.listen(aliceToken).then(function() {
-        done();
-      }, done);
-    });
-
-    it('updates .isListening', function() {
-      assert(alice.isListening);
-    });
-
-    it('updates .identity', function() {
-      assert.equal(aliceName, alice.identity);
-    });
-  });*/
-
-  var uaName = null;
-  var uaToken = null;
-  var uaManager = null;
-  var ua = null;
-
-  var ua2Name = null;
-  var ua2Token = null;
-  var ua2Manager = null;
-  var ua2 = null;
+  var s2Name = null;
+  var s2Token = null;
+  var s2Manager = null;
+  var s2 = null;
 
   var conversation = null;
   var conversation2 = null;
@@ -157,12 +103,12 @@ describe('Client (Signaling/v1)', function() {
 
     it('emits "invite"', function(done) {
       this.timeout(10000);
-      uaName = randomName();
-      uaToken = getToken({ address: uaName });
-      uaManager = new AccessManager(uaToken);
-      ua = new SIPJSUserAgent(uaManager, options);
-      ua.register().then(function() {
-        ict = ua.invite(alice.identity);
+      s1Name = randomName();
+      s1Token = getToken({ address: s1Name });
+      s1Manager = new AccessManager(s1Token);
+      s1 = new SignalingV2(s1Manager, options);
+      s1.listen().then(function() {
+        ict = s1.connect(alice.identity, null, localMedia);
       }, function(error) {
         done(error);
       });
@@ -188,7 +134,7 @@ describe('Client (Signaling/v1)', function() {
 
     describe('Invite#accept', function() {
       it('updates .conversations', function(done) {
-        invite.accept().then(function(_conversation) {
+        invite.accept(localMedia).then(function(_conversation) {
           conversation = _conversation;
           assert(alice.conversations.has(conversation.sid));
         }).then(done, done);
@@ -199,21 +145,15 @@ describe('Client (Signaling/v1)', function() {
           conversation.disconnect();
           assert(!alice.conversations.has(conversation.sid));
         });
-
-        it('should unregister', function(done) {
-          alice._signaling._userAgent.once('unregistered', function() {
-            done();
-          });
-        });
       });
 
       describe('Remote party hangs up', function() {
         before(function(done) {
           alice.listen().then(function() {
-            return ua.invite(aliceName).then(null, done);
+            return s1.connect(aliceName, null, localMedia).then(null, done);
           }).catch(done);
           alice.once('invite', function(invite) {
-            invite.accept().then(function(_conversation) {
+            invite.accept(localMedia).then(function(_conversation) {
               conversation = _conversation;
               assert(alice.conversations.has(conversation.sid));
             }).then(function() {
@@ -235,118 +175,23 @@ describe('Client (Signaling/v1)', function() {
       return alice.inviteToConversation(name, options);
     };
 
-    it('should validate an identity was passed', function(done) {
-      inviteToConversation().then(function() {
-        done(new Error('Unexpected resolution'));
-      }, function() {
-        done();
-      });
-    });
-
     it('should update .conversations', function(done) {
-      alice.inviteToConversation(uaName).then(function(_conversation) {
+      alice.inviteToConversation(s1Name).then(function(_conversation) {
         conversation = _conversation;
         assert(alice.conversations.has(conversation.sid));
       }).then(done, done);
-      ua.once('invite', function(ist) {
-        ist.accept();
+      s1.once('invite', function(ist) {
+        ist.accept(localMedia);
       });
     });
 
     it('should be cancelable', function() {
-      var outgoingInvite = alice.inviteToConversation(uaName);
+      var outgoingInvite = alice.inviteToConversation(s1Name);
       outgoingInvite.cancel();
       assert.equal('canceled', outgoingInvite.status);
     });
 
-    it('should auto-reject associated invites after it is canceled', function(done) {
-      this.timeout(5000);
-      var invite;
-
-      ua2Name = randomName();
-      ua2Token = getToken({ address: ua2Name });
-      ua2Manager = new AccessManager(ua2Token);
-      ua2 = new SIPJSUserAgent(ua2Manager, options);
-
-      var i = alice._signaling._canceledOutgoingInvites.size;
-      ua2.register().then(function() {
-        invite = alice.inviteToConversation([uaName, ua2Name]);
-        return Promise.all([
-          new Promise(function(resolve) {
-            ua.once('invite', function() {
-              resolve();
-            });
-          }),
-          new Promise(function(resolve) {
-            ua2.once('invite', function() {
-              resolve();
-            });
-          })
-        ]).then(function() {
-          invite.cancel();
-          assert.equal(alice._signaling._canceledOutgoingInvites.size, i + 1);
-        });
-      }).then(done, done);
-    });
-
-    it('should not reject if primary invitee declines in a multi-invite', function(done) {
-      this.timeout(5000);
-
-      ua2Name = randomName();
-      ua2Token = getToken({ address: ua2Name });
-      ua2Manager = new AccessManager(ua2Token);
-      ua2 = new SIPJSUserAgent(ua2Manager, options);
-
-      var ua3Name = randomName();
-      var ua3Token = getToken({ address: ua3Name });
-      var ua3Manager = new AccessManager(ua3Token);
-      var ua3 = new SIPJSUserAgent(ua3Manager, options);
-
-      var ua2Invite, ua3Invite;
-
-      function rejectThenAccept(invite1, invite2) {
-        alice._signaling._userAgent.inviteClientTransactions.forEach(function(ict) {
-          ict.session.once('rejected', function() {
-            invite2.accept();
-          });
-        });
-
-        invite1.reject();
-      }
-
-      ua2.on('invite', function(invite) {
-        ua2Invite = invite;
-        if (ua2Invite && ua3Invite) {
-          rejectThenAccept(ua2Invite, ua3Invite);
-        }
-      });
-
-      ua3.on('invite', function(invite) {
-        if (util.getUser(invite.from) !== aliceName) {
-          return;
-        }
-
-        ua3Invite = invite;
-        if (ua2Invite && ua3Invite) {
-          rejectThenAccept(ua2Invite, ua3Invite);
-        }
-      });
-
-      Promise.all([ua2.register(), ua3.register()]).then(function() {
-        alice.inviteToConversation([ua2Name, ua3Name])
-          .then(function(conversation) {
-            conversation2 = conversation;
-            done();
-          }, done);
-      });
-    });
-
     after(function cleanupPending() {
-      alice._signaling._userAgent.inviteClientTransactions.forEach(function(ict) {
-        alice._signaling._userAgent.inviteClientTransactions.delete(ict);
-        alice._signaling._outgoingInvites.delete(ict._cookie);
-      });
-
       if (conversation2) {
         conversation2.disconnect();
         assert(!alice.conversations.has(conversation2.sid));
@@ -368,12 +213,6 @@ describe('Client (Signaling/v1)', function() {
     it('updates .conversations', function() {
       conversation.disconnect();
       assert(!alice.conversations.has(conversation.sid));
-    });
-
-    it('should unregister', function(done) {
-      alice._signaling._userAgent.once('unregistered', function() {
-        done();
-      });
     });
   });
 });

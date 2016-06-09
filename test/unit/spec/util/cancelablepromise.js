@@ -64,7 +64,6 @@ describe('CancelablePromise', function() {
       cp.then(function() {
         assert.fail('Promise was not canceled');
       },function(reason) {
-        console.log(reason);
         assert(reason.message === 'Canceled');
       }).then(done, done);
 

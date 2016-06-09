@@ -4,7 +4,6 @@ var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Conversation = require('../../../lib/conversation');
 var ConversationSignaling = require('../../../lib/signaling/conversation');
-var MockDialog = require('../../mock/signaling/v1/dialog');
 var Participant = require('../../../lib/participant');
 var ParticipantSignaling = require('../../../lib/signaling/participant');
 var sinon = require('sinon');
@@ -14,8 +13,6 @@ var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1zYXQ7dj0xIn0
 
 describe('Conversation', function() {
   var conversation;
-  var dialog;
-  var dialog2;
 
   var localMedia = {};
   var signaling = new ConversationSignaling('CV123', 'PA456', localMedia);
