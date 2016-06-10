@@ -1,8 +1,8 @@
 {
-  "name": "twilio-conversations",
-  "title": "Twilio Conversations",
-  "description": "Twilio Conversations JavaScript library",
-  "version": "0.13.8-dev",
+  "name": "twilio-video",
+  "title": "Twilio Video",
+  "description": "Twilio Video JavaScript library",
+  "version": "1.0.0-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -13,11 +13,12 @@
     "webrtc",
     "library",
     "javascript",
-    "conversations"
+    "video",
+    "rooms"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/twilio/twilio-conversations.git"
+    "url": "https://github.com/twilio/twilio-video.git"
   },
   "devDependencies": {
     "browserify": "^9.0.3",

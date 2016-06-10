@@ -57,7 +57,7 @@ var distDocs = dist + '/docs';
 
 var publicClasses = [
   'lib/client.js',
-  'lib/conversation.js',
+  'lib/room.js',
   'lib/incominginvite.js',
   'lib/media/index.js',
   'lib/media/localmedia.js',
@@ -78,7 +78,7 @@ var publicConstructors = [
 
 var privateConstructors = [
   'AudioTrack',
-  'Conversation',
+  'Room',
   'IncomingInvite',
   'LocalAudioTrack',
   'LocalTrack',
@@ -257,7 +257,7 @@ function integrationTest(files, filter) {
   });
 }
 
-// src/twilio-conversations-bundle.js
+// src/twilio-video-bundle.js
 // ----------------------------------
 
 gulp.task(srcBundleJs, function(done) {
@@ -294,7 +294,7 @@ gulp.task(srcBundleJs, function(done) {
   );
 });
 
-// dist/twilio-conversations.js
+// dist/twilio-video.js
 // ----------------------------
 
 gulp.task(distJs, [srcBundleJs], function() {
@@ -319,7 +319,7 @@ gulp.task(distJs, [srcBundleJs], function() {
     .pipe(gulp.dest(dist));
 });
 
-// dist/twilio-conversations.min.js
+// dist/twilio-video.min.js
 // --------------------------------
 
 gulp.task(distMinJs, [distJs], function() {
@@ -384,7 +384,7 @@ gulp.task(distDocs, function() {
       if (publicConstructors.indexOf(className) > -1) {
         div = $('.container-overview');
         var name = $('h4.name', div);
-        name.html(name.html().replace(/new /, 'new <span style="color: #999">Twilio.Conversations.</span>'));
+        name.html(name.html().replace(/new /, 'new <span style="color: #999">Twilio.Video.</span>'));
       }
 
       // Remove private constructors.
@@ -405,20 +405,20 @@ gulp.task(distDocs, function() {
         '</h2>',
         '<h3>Classes</h3>',
         '<ul>',
-          '<li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a>',
+          '<li><a href="Client.html"><span style="color: #999">Twilio.Video.</span>Client</a>',
             '<ul style="margin-left: 1em">',
               '<li><a href="IncomingInvite.html">IncomingInvite</a></li>',
               '<li><a href="OutgoingInvite.html">OutgoingInvite</a></li>',
             '</ul>',
           '</li>',
-          '<li><a href="Conversation.html">Conversation</a>',
+          '<li><a href="Video.html">Video</a>',
             '<ul style="margin-left: 1em">',
               '<li><a href="Participant.html">Participant</a></li>',
             '</ul>',
           '</li>',
           '<li><a href="Media.html">Media</a>',
             '<ul style="margin-left: 1em">',
-              '<li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li>',
+              '<li><a href="LocalMedia.html"><span style="color: #999">Twilio.Video.</span>LocalMedia</a></li>',
               '<li><a href="LocalTrack.html">LocalTrack</a>',
               '<li><a href="Track.html">Track</a>',
                 '<ul style="margin-left: 1em">',

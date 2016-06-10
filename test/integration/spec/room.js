@@ -11,7 +11,7 @@ var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
 
-describe('Conversation', function() {
+describe('Room', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
   var aliceManager = new AccessManager(aliceToken);
@@ -32,7 +32,7 @@ describe('Conversation', function() {
   var donaldManager = new AccessManager(donaldToken);
   var donald = null;
 
-  var conversation = null;
+  var room = null;
 
   var options = {};
   if (wsServer) {
@@ -53,18 +53,18 @@ describe('Conversation', function() {
           bob.on('invite', function(invite) {
             invite.accept(localMedia);
           });
-          return alice.inviteToConversation(bobName);
-        }).then(function(_conversation) {
-          conversation = _conversation;
+          return alice.inviteToRoom(bobName);
+        }).then(function(_room) {
+          room = _room;
         }).then(done, done);
     });
 
     it('should set the .sid property', function() {
-      assert(conversation.sid);
+      assert(room.sid);
     });
 
     it('should set the .localMedia property', function() {
-      assert(conversation.localMedia);
+      assert(room.localMedia);
     });
   });
 
@@ -91,11 +91,11 @@ describe('Conversation', function() {
         .then(function() {
           return Promise.all([bob.listen(), charlie.listen(), donald.listen()]);
         }).then(function() {
-          return alice.inviteToConversation(bobName);
-        }).then(function(_conversation) {
-          conversation = _conversation;
+          return alice.inviteToRoom(bobName);
+        }).then(function(_room) {
+          room = _room;
           return new Promise(function(resolve) {
-            conversation.once('participantConnected', function() {
+            room.once('participantConnected', function() {
               resolve();
             });
           });
@@ -103,8 +103,8 @@ describe('Conversation', function() {
     });
 
     it('should work for one identity', function(done) {
-      conversation.invite(charlieName);
-      conversation.on('participantConnected', function(participant) {
+      room.invite(charlieName);
+      room.on('participantConnected', function(participant) {
         if (participant.identity === charlieName && done) {
           done();
           done = null;
@@ -113,8 +113,8 @@ describe('Conversation', function() {
     });
 
     it('should work for one identity in an array', function(done) {
-      conversation.invite([charlieName]);
-      conversation.on('participantConnected', function(participant) {
+      room.invite([charlieName]);
+      room.on('participantConnected', function(participant) {
         if (participant.identity === charlieName && done) {
           done();
           done = null;
@@ -124,17 +124,17 @@ describe('Conversation', function() {
 
     it('should work for multiple identities in an array', function(done) {
       this.timeout(10000);
-      conversation.invite([charlieName, donaldName]);
+      room.invite([charlieName, donaldName]);
       Promise.all([
         new Promise(function(resolve, reject) {
-          conversation.on('participantConnected', function(participant) {
+          room.on('participantConnected', function(participant) {
             if (participant.identity === charlieName) {
               resolve();
             }
           });
         }),
         new Promise(function(resolve, reject) {
-          conversation.on('participantConnected', function(participant) {
+          room.on('participantConnected', function(participant) {
             if (participant.identity === donaldName) {
               resolve();
             }

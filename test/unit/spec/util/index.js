@@ -81,24 +81,24 @@ describe('util', function() {
     });
   });
 
-  describe('parseConversationSIDFromContactHeader', function() {
-    var conversationSid = 'CV123';
+  describe('parseRoomSIDFromContactHeader', function() {
+    var roomSid = 'CV123';
 
     it('should parse contact headers with display names', function() {
       var contactHeader = '"fud" <sip:CV123@172.18.8.202:443;transport=wss>';
-      assert.equal(conversationSid,
-        util.parseConversationSIDFromContactHeader(contactHeader));
+      assert.equal(roomSid,
+        util.parseRoomSIDFromContactHeader(contactHeader));
     });
 
     it('should parse contact headers without display names', function() {
       var contactHeader = '<sip:CV123@172.18.8.202:443;transport=wss>';
-      assert.equal(conversationSid,
-        util.parseConversationSIDFromContactHeader(contactHeader));
+      assert.equal(roomSid,
+        util.parseRoomSIDFromContactHeader(contactHeader));
     });
 
     it('should return null if the input is not a valid contact header', function() {
       var contactHeader = 'foo-bar';
-      assert.equal(util.parseConversationSIDFromContactHeader(contactHeader), null);
+      assert.equal(util.parseRoomSIDFromContactHeader(contactHeader), null);
     });
   });
 });

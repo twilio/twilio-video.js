@@ -2,5 +2,5 @@ if (typeof window === 'undefined') {
   require('../lib/mockwebrtc')();
 }
 
-require('./spec/conversation');
+require('./spec/room');
 require('./spec/client');

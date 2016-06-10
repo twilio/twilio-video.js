@@ -88,8 +88,8 @@ describe('Client', function() {
   var s2Manager = null;
   var s2 = null;
 
-  var conversation = null;
-  var conversation2 = null;
+  var room = null;
+  var room2 = null;
 
   describe('Receive incoming call', function() {
     before(function(done) {
@@ -118,8 +118,8 @@ describe('Client', function() {
       });
     });
 
-    it('invite.conversationSid', function() {
-      assert(invite.conversationSid);
+    it('invite.roomSid', function() {
+      assert(invite.roomSid);
     });
 
     describe('#unlisten (with pending Invite)', function() {
@@ -133,17 +133,17 @@ describe('Client', function() {
     });
 
     describe('Invite#accept', function() {
-      it('updates .conversations', function(done) {
-        invite.accept(localMedia).then(function(_conversation) {
-          conversation = _conversation;
-          assert(alice.conversations.has(conversation.sid));
+      it('updates .rooms', function(done) {
+        invite.accept(localMedia).then(function(_room) {
+          room = _room;
+          assert(alice.rooms.has(room.sid));
         }).then(done, done);
       });
 
-      describe('Conversation#disconnect', function() {
-        it('updates .conversations', function() {
-          conversation.disconnect();
-          assert(!alice.conversations.has(conversation.sid));
+      describe('Room#disconnect', function() {
+        it('updates .rooms', function() {
+          room.disconnect();
+          assert(!alice.rooms.has(room.sid));
         });
       });
 
@@ -153,32 +153,32 @@ describe('Client', function() {
             return s1.connect(aliceName, null, localMedia).then(null, done);
           }).catch(done);
           alice.once('invite', function(invite) {
-            invite.accept(localMedia).then(function(_conversation) {
-              conversation = _conversation;
-              assert(alice.conversations.has(conversation.sid));
+            invite.accept(localMedia).then(function(_room) {
+              room = _room;
+              assert(alice.rooms.has(room.sid));
             }).then(function() {
-              conversation.disconnect();
+              room.disconnect();
             }).then(done, done);
           });
         });
 
-        it('updates .conversations', function() {
-          assert(!alice.conversations.has(conversation.sid));
+        it('updates .rooms', function() {
+          assert(!alice.rooms.has(room.sid));
         });
       });
     });
   });
 
-  describe('#inviteToConversation', function() {
+  describe('#inviteToRoom', function() {
 
-    var inviteToConversation = function(name, options) {
-      return alice.inviteToConversation(name, options);
+    var inviteToRoom = function(name, options) {
+      return alice.inviteToRoom(name, options);
     };
 
-    it('should update .conversations', function(done) {
-      alice.inviteToConversation(s1Name).then(function(_conversation) {
-        conversation = _conversation;
-        assert(alice.conversations.has(conversation.sid));
+    it('should update .rooms', function(done) {
+      alice.inviteToRoom(s1Name).then(function(_room) {
+        room = _room;
+        assert(alice.rooms.has(room.sid));
       }).then(done, done);
       s1.once('invite', function(ist) {
         ist.accept(localMedia);
@@ -186,20 +186,20 @@ describe('Client', function() {
     });
 
     it('should be cancelable', function() {
-      var outgoingInvite = alice.inviteToConversation(s1Name);
+      var outgoingInvite = alice.inviteToRoom(s1Name);
       outgoingInvite.cancel();
       assert.equal('canceled', outgoingInvite.status);
     });
 
     after(function cleanupPending() {
-      if (conversation2) {
-        conversation2.disconnect();
-        assert(!alice.conversations.has(conversation2.sid));
+      if (room2) {
+        room2.disconnect();
+        assert(!alice.rooms.has(room2.sid));
       }
     });
   });
 
-  describe('#unlisten (while in a Conversation)', function() {
+  describe('#unlisten (while in a Room)', function() {
     before(function unlisten() {
       alice.unlisten();
     });
@@ -209,10 +209,10 @@ describe('Client', function() {
     });
   });
 
-  describe('Conversation#disconnect', function() {
-    it('updates .conversations', function() {
-      conversation.disconnect();
-      assert(!alice.conversations.has(conversation.sid));
+  describe('Room#disconnect', function() {
+    it('updates .rooms', function() {
+      room.disconnect();
+      assert(!alice.rooms.has(room.sid));
     });
   });
 });
