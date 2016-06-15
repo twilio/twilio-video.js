@@ -4,9 +4,9 @@
 Bug Fixes
 ---------
 
-- Fixed a strict mode error that effected Safari
 - Fixed a bug that duplicated Track events when the same LocalTrack was removed
   and readded (JSDK-574)
+- Fixed a strict mode error that effected Safari (JSDK-692)
 
 0.13.6
 ======
