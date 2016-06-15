@@ -1,3 +1,13 @@
+0.13.7
+======
+
+Bug Fixes
+---------
+
+- Fixed a strict mode error that effected Safari
+- Fixed a bug that duplicated Track events when the same LocalTrack was removed
+  and readded (JSDK-574)
+
 0.13.6
 ======
 
