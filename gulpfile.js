@@ -241,7 +241,7 @@ function integrationTest(files, filter) {
           return;
         } else if (files.length) {
           var child = safeSpawn('node',
-            [mocha, integrationTestIndex],
+            [mocha, integrationTestIndex, '--timeout', '5000'],
             { stdio: 'inherit' });
           child.on('close', function(code) {
             if (code) {
