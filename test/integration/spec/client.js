@@ -108,7 +108,7 @@ describe('Client', function() {
       s1Manager = new AccessManager(s1Token);
       s1 = new SignalingV2(s1Manager, options);
       s1.listen().then(function() {
-        ict = s1.connect(alice.identity, null, localMedia);
+        ict = s1.connect(alice.identity, null, localMedia).then(go => go());
       }, function(error) {
         done(error);
       });
@@ -150,7 +150,7 @@ describe('Client', function() {
       describe('Remote party hangs up', function() {
         before(function(done) {
           alice.listen().then(function() {
-            return s1.connect(aliceName, null, localMedia).then(null, done);
+            return s1.connect(aliceName, null, localMedia).then(go => go()).then(null, done);
           }).catch(done);
           alice.once('invite', function(invite) {
             invite.accept(localMedia).then(function(_room) {
@@ -187,10 +187,9 @@ describe('Client', function() {
       });
     });
 
-    it('should be cancelable', function() {
-      var outgoingInvite = alice.connect({ with: s1Name });
-      outgoingInvite.cancel();
-      assert.equal('canceled', outgoingInvite.status);
+    it('should be cancelable', function(done) {
+      var cancelablePromise = alice.connect({ with: s1Name });
+      cancelablePromise.cancel().then(() => done(new Error('Unexpected resolution')), () => done());
     });
 
     after(function cleanupPending() {

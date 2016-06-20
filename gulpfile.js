@@ -67,7 +67,6 @@ var publicClasses = [
   'lib/media/track/localtrack.js',
   'lib/media/track/localvideotrack.js',
   'lib/media/track/videotrack.js',
-  'lib/outgoinginvite.js',
   'lib/participant.js'
 ];
 
@@ -84,7 +83,6 @@ var privateConstructors = [
   'LocalTrack',
   'LocalVideoTrack',
   'Media',
-  'OutgoingInvite',
   'Participant',
   'Track',
   'VideoTrack'
@@ -408,7 +406,6 @@ gulp.task(distDocs, function() {
           '<li><a href="Client.html"><span style="color: #999">Twilio.Video.</span>Client</a>',
             '<ul style="margin-left: 1em">',
               '<li><a href="IncomingInvite.html">IncomingInvite</a></li>',
-              '<li><a href="OutgoingInvite.html">OutgoingInvite</a></li>',
             '</ul>',
           '</li>',
           '<li><a href="Video.html">Video</a>',
