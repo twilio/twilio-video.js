@@ -169,14 +169,16 @@ describe('Client', function() {
     });
   });
 
-  describe('#inviteToRoom', function() {
+  describe('#connect', function() {
 
-    var inviteToRoom = function(name, options) {
-      return alice.inviteToRoom(name, options);
+    var connect = function(name, options) {
+      return alice.connect(Object.assign({
+        with: name
+      }, options));
     };
 
     it('should update .rooms', function(done) {
-      alice.inviteToRoom(s1Name).then(function(_room) {
+      alice.connect({ with: s1Name }).then(function(_room) {
         room = _room;
         assert(alice.rooms.has(room.sid));
       }).then(done, done);
@@ -186,7 +188,7 @@ describe('Client', function() {
     });
 
     it('should be cancelable', function() {
-      var outgoingInvite = alice.inviteToRoom(s1Name);
+      var outgoingInvite = alice.connect({ with: s1Name });
       outgoingInvite.cancel();
       assert.equal('canceled', outgoingInvite.status);
     });

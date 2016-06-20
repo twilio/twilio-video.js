@@ -53,7 +53,7 @@ describe('Room', function() {
           bob.on('invite', function(invite) {
             invite.accept(localMedia);
           });
-          return alice.inviteToRoom(bobName);
+          return alice.connect({ with: bobName });
         }).then(function(_room) {
           room = _room;
         }).then(done, done);
@@ -91,7 +91,7 @@ describe('Room', function() {
         .then(function() {
           return Promise.all([bob.listen(), charlie.listen(), donald.listen()]);
         }).then(function() {
-          return alice.inviteToRoom(bobName);
+          return alice.connect({ with: bobName });
         }).then(function(_room) {
           room = _room;
           return new Promise(function(resolve) {
