@@ -73,7 +73,7 @@ rules:
   object-curly-spacing: [2, always]
   one-var: [2, never]
   operator-assignment: [2, always]
-  quote-props: [2, as-needed]
+  quote-props: [2, consistent]
   quotes: [2, single]
   semi: [2, always]
   keyword-spacing: 2
