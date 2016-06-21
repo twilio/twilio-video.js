@@ -103,44 +103,46 @@ describe('Room', function() {
     });
 
     it('should work for one identity', function(done) {
-      room.invite(charlieName);
-      room.on('participantConnected', function(participant) {
-        if (participant.identity === charlieName && done) {
-          done();
-          done = null;
-        }
-      });
+      room.invite(charlieName)
+        .then(participant => assert.equal(charlieName, participant.identity))
+        .then(done, done);
+    });
+
+    it('should return a Promise that resolves after the "participantConnected" event', function(done) {
+      var events = [];
+      Promise.all([
+        room.invite(charlieName).then(() => events.unshift(1)),
+        new Promise(resolve => room.on('participantConnected', resolve)).then(() => events.unshift(2))
+      ]).then(() => {
+        assert.deepEqual([1, 2], events);
+      }).then(done, done);
+    });
+
+    it('should return a Promise that resolves to a Participant matching that of the "participantConnected" event', function(done) {
+      var outgoingInvite = room.invite(charlieName);
+      Promise.all([
+        outgoingInvite,
+        new Promise((resolve, reject) => {
+          room.on('participantConnected', participant => {
+            try {
+              assert.equal(charlieName, participant.identity);
+            } catch (error) {
+              reject(error);
+            }
+            resolve(participant);
+          })
+        })
+      ]).then(participants => {
+        assert.equal(participants[0], participants[1]);
+      }).then(done, done);
     });
 
     it('should work for one identity in an array', function(done) {
-      room.invite([charlieName]);
-      room.on('participantConnected', function(participant) {
-        if (participant.identity === charlieName && done) {
-          done();
-          done = null;
-        }
-      });
+      Promise.all(room.invite([charlieName])).then(() => done(), done);
     });
 
     it('should work for multiple identities in an array', function(done) {
-      this.timeout(10000);
-      room.invite([charlieName, donaldName]);
-      Promise.all([
-        new Promise(function(resolve, reject) {
-          room.on('participantConnected', function(participant) {
-            if (participant.identity === charlieName) {
-              resolve();
-            }
-          });
-        }),
-        new Promise(function(resolve, reject) {
-          room.on('participantConnected', function(participant) {
-            if (participant.identity === donaldName) {
-              resolve();
-            }
-          });
-        })
-      ]).then(function() { done(); }, done);
+      Promise.all(room.invite([charlieName, donaldName])).then(() => done(), done);
     });
   });
 });
