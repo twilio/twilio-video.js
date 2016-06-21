@@ -103,9 +103,12 @@ describe('Room', function() {
     });
 
     it('should work for one identity', function(done) {
-      room.invite(charlieName)
+      var outgoingInvite = room.invite(charlieName);
+      outgoingInvite
         .then(participant => assert.equal(charlieName, participant.identity))
+        .then(() => assert(!room.outgoingInvites.has(charlieName)))
         .then(done, done);
+      assert.equal(outgoingInvite, room.outgoingInvites.get(charlieName));
     });
 
     it('should return a Promise that resolves after the "participantConnected" event', function(done) {
