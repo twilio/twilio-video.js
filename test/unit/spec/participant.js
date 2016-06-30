@@ -12,7 +12,7 @@ describe('Participant', function() {
   this.timeout(200);
 
   beforeEach(function() {
-    signaling = new ParticipantSignaling(util.makeUUID(), 'foo', 'connected');
+    signaling = new ParticipantSignaling(util.makeUUID(), 'foo');
     participant = new Participant(signaling);
   });
 
