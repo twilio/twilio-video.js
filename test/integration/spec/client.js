@@ -58,10 +58,6 @@ describe('Client', function() {
     it('should set .isListening', function() {
       assert(alice.isListening);
     });
-
-    it('should set .identity', function() {
-      assert.equal(aliceName, alice.identity);
-    });
   });
 
   describe('#unlisten', function() {
@@ -71,10 +67,6 @@ describe('Client', function() {
 
     it('updates .isListening', function() {
       assert(!alice.isListening);
-    });
-
-    it('does not update .identity', function() {
-      assert.equal(aliceName, alice.identity);
     });
   });
 
@@ -108,7 +100,7 @@ describe('Client', function() {
       s1Manager = new AccessManager(s1Token);
       s1 = new SignalingV2(s1Manager, options);
       s1.listen().then(function() {
-        ict = s1.connect(alice.identity, null, localMedia).then(go => go());
+        ict = s1.connect(aliceName, null, localMedia).then(go => go());
       }, function(error) {
         done(error);
       });

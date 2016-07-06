@@ -63,8 +63,8 @@ describe('Room', function() {
       assert(room.sid);
     });
 
-    it('should set the .localMedia property', function() {
-      assert(room.localMedia);
+    it('should set the .localParticipant property', function() {
+      assert(room.localParticipant);
     });
   });
 
