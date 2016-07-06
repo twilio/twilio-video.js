@@ -34,8 +34,8 @@ describe('Room', function() {
   });
 
   describe('#invite(identity)', function() {
-    it('should throw an error if identity is not provided', function() {
-      assert.throws(room.invite);
+    it('should return a rejected Promise if identity is not provided', function(done) {
+      room.invite().then(() => done(new Error('Promise was resolved')), () => done());
     });
   });
 
