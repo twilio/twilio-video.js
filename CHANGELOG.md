@@ -1,3 +1,11 @@
+0.13.8
+======
+
+Bug Fixes
+---------
+
+- Fixed Track playback on Chrome 48 for Android (JSDK-661)
+
 0.13.7
 ======
 
