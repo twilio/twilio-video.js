@@ -8,27 +8,6 @@ var util = require('../../../../lib/util');
 
 
 describe('util', function() {
-  describe('makeRegisterHeaders', function() {
-    var sdkVersion;
-    var navigator;
-
-    before(function saveInitialState() {
-      sdkVersion = process.env.SDK_VERSION;
-      navigator = global.navigator;
-    });
-
-    after(function restoreInitialState() {
-      process.env.SDK_VERSION = sdkVersion;
-      global.navigator = navigator;
-    });
-
-    it('should use the jwt of the token passed in', function() {
-      var regHeaders = util.makeRegisterHeaders('foobar');
-      var tokenHeader = regHeaders[0];
-      assert(/foobar$/.test(tokenHeader));
-    });
-  });
-
   describe('makeSIPURI', function() {
     it('should contain the accountSid and client name passed in', function() {
       var uri = util.makeSIPURI('AC1234', 'alice');

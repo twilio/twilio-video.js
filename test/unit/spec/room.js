@@ -33,19 +33,13 @@ describe('Room', function() {
     });
   });
 
-  describe('#invite(identity)', function() {
-    it('should return a rejected Promise if identity is not provided', function(done) {
-      room.invite().then(() => done(new Error('Promise was resolved')), () => done());
-    });
-  });
-
   describe('Participant events', function() {
     var participants;
 
     beforeEach(function() {
       [
-        new ParticipantSignaling('PA000', 'foo', 'connected'),
-        new ParticipantSignaling('PA111', 'bar', 'connected')
+        new ParticipantSignaling('PA000', 'foo'),
+        new ParticipantSignaling('PA111', 'bar')
       ].forEach(signaling.emit.bind(signaling,
         'participantConnected'));
       participants = { };
