@@ -33,7 +33,7 @@ describe('Room', function() {
       roomName = randomName();
       alice = new Client(aliceManager, options);
 
-      return alice.connect({ labelOrSid: roomName }).then(_room => {
+      return alice.connect(roomName).then(_room => {
         room = _room;
         done();
       }, done);
