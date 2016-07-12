@@ -1,6 +1,5 @@
 'use strict';
 
-var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 
 var Client = require('../../../lib/client');
@@ -13,7 +12,6 @@ var wsServer = credentials.wsServer;
 describe('Room', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
-  var aliceManager = new AccessManager(aliceToken);
   var alice = null;
 
   var roomName = null;
@@ -31,7 +29,7 @@ describe('Room', function() {
     before(function setupClient(done) {
       this.timeout(10000);
       roomName = randomName();
-      alice = new Client(aliceManager, options);
+      alice = new Client(aliceToken, options);
 
       return alice.connect(roomName).then(_room => {
         room = _room;
