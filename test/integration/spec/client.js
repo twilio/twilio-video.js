@@ -16,7 +16,6 @@ var wsServer = credentials.wsServer;
 describe('Client', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
-  var aliceManager = new AccessManager(aliceToken);
   var alice = null;
 
   var options = {
@@ -37,12 +36,16 @@ describe('Client', function() {
 
   describe('constructor', function() {
     it('should return an instance of Client', function() {
-      alice = new Client(aliceManager, options);
+      alice = new Client(aliceToken, options);
       assert(alice instanceof Client);
     });
 
+    it('should validate token is a string', function() {
+      assert.throws(createClient.bind(this, { foo: 'bar' }), /INVALID_ARGUMENT/);
+    });
+
     it('should validate logLevel', function() {
-      assert.throws(createClient.bind(this, aliceManager, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
     });
   });
 
