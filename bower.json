@@ -1,18 +1,19 @@
 {
-  "name": "twilio-conversations",
-  "version": "0.13.8-dev",
-  "description": "Twilio Conversations JavaScript library",
+  "name": "twilio-video",
+  "version": "1.0.0-dev",
+  "description": "Twilio Video JavaScript library",
   "license": "BSD",
   "authors": [
     "Mark Andrus Roberts <mroberts@twilio.com>"
   ],
-  "main": "dist/twilio-conversations.min.js",
+  "main": "dist/twilio-video.min.js",
   "keywords": [
     "twilio",
     "webrtc",
     "library",
     "javascript",
-    "conversations"
+    "video",
+    "rooms"
   ],
   "moduleType": [
     "amd",
