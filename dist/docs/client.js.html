@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: client.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: client.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var inherits = require(&apos;util&apos;).inherits;
+
+var AccessManager = require(&apos;twilio-common&apos;).AccessManager;
+var createCancelableRoomPromise = require(&apos;./cancelableroompromise&apos;);
+var constants = require(&apos;./util/constants&apos;);
+var Room = require(&apos;./room&apos;);
+var ECS = require(&apos;twilio-common/lib/ecs&apos;);
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var LocalMedia = require(&apos;./media/localmedia&apos;);
+var Log = require(&apos;./util/log&apos;);
+var SignalingV2 = require(&apos;./signaling/v2&apos;);
+var TimeoutPromise = require(&apos;./util/timeoutpromise&apos;);
+var util = require(&apos;./util&apos;);
+var version = require(&apos;../package&apos;).version;
+
+/**
+ * Constructs a new {@link Client} with an AccessManager. Alternatively, you
+ * can pass an Access Token string and the {@link Client} will construct an
+ * AccessManager for you.
+ * @class
+ * @classdesc Construct a {@link Client} to start creating and connecting
+ *   to {@link Room}s with other {@link Participant}s.
+ * @param {AccessManager|string} managerOrToken - The {@link Client}&apos;s AccessManager or an Access Token string to use when constructing an AccessManager
+ * @param {Client.ConstructorOptions} [options] - Options to override the
+ *   constructor&apos;s default behavior
+ * @property {AccessManager} accessManager - The {@link Client}&apos;s AccessManager
+ * @property {Map&lt;Room.SID, Room&gt;} rooms - The {@link Room}s this
+ *   {@link Client} is participating in
+ * @fires Client#error
+ */
+function Client(accessManager, options) {
+  if (!(this instanceof Client)) {
+    return new Client(accessManager, options);
+  }
+
+  if (typeof accessManager === &apos;string&apos;) {
+    accessManager = new AccessManager(accessManager);
+  }
+
+  EventEmitter.call(this);
+
+  options = Object.assign({
+    logLevel: constants.DEFAULT_LOG_LEVEL,
+    signaling: &apos;v2&apos;
+  }, options);
+
+  var Signaling;
+  switch (options.signaling) {
+    case &apos;v2&apos;:
+      Signaling = SignalingV2;
+      break;
+    default:
+      if (typeof options.signaling === &apos;function&apos;) {
+        Signaling = options.signaling;
+      }
+      throw new Error(
+        &apos;Unknown Signaling version &quot;&apos; + options.signaling + &apos;&quot;&apos;);
+  }
+
+  var rooms = new Map();
+  var logLevel = options.logLevel;
+  var log = new Log(&apos;Client&apos;, logLevel);
+  var signaling = new Signaling(accessManager, options);
+
+  var self = this;
+  function getConfiguration() {
+    return ECS.getConfiguration(accessManager.token, {
+      body: {
+        &apos;service&apos;: &apos;rtc&apos;,
+        &apos;sdk_version&apos;: version
+      }
+    }).then(function(res) {
+      var ttl = util.getOrNull(res, &apos;rtc.network_traversal_service.ttl&apos;);
+      ttl = ttl || constants.ICE_SERVERS_DEFAULT_TTL;
+
+      setTimeout(function renewIceServers() {
+        self._ecsPromise = getConfiguration();
+      }, (ttl - constants.ECS_TIMEOUT) * 1000);
+
+      return res;
+    }, function(reason) {
+      log.warn(&apos;Failed to fetch Endpoint Configuration: &apos; + reason);
+      return null;
+    });
+  }
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    _rooms: {
+      value: rooms
+    },
+    _ecsPromise: {
+      value: getConfiguration(),
+      writable: true
+    },
+    _log: {
+      value: log
+    },
+    _options: {
+      value: options
+    },
+    _signaling: {
+      value: signaling
+    },
+    accessManager: {
+      enumerable: true,
+      value: accessManager
+    },
+    rooms: {
+      enumerable: true,
+      get: function() {
+        return new Map(rooms);
+      }
+    }
+  });
+}
+
+inherits(Client, EventEmitter);
+
+/**
+ * Connect to a {@link Room} by name or {@link Room.SID}.
+ *   &lt;br&gt;&lt;br&gt;
+ *   By default, this will automatically acquire {@link LocalMedia} containing a
+ *   {@link LocalAudioTrack} and {@link LocalVideoTrack} before connecting to the
+ *   {@link Room}. The {@link LocalMedia} will be stopped when you disconnect
+ *   from the {@link Room}.
+ *   &lt;br&gt;&lt;br&gt;
+ *   You can override the default behavior by specifying
+ *   &lt;code&gt;options&lt;/code&gt;. For example, rather than acquiring {@link LocalMedia}
+ *   automatically, you can pass your own instance which you can stop yourself.
+ *   See {@link Client.ConnectOptions} for more information.
+ * @param {?string|Room.SID} [nameOrSid=null] - the name or SID of a {@link Room}
+ *   to connect to; if omitted, connect to a new, random {@link Room}
+ * @param {Client.ConnectOptions}
+ *   [options={localStreamConstraints:{audio:true,video:true}}] - Options to override
+ *   the default behavior
+ * @returns {CancelablePromise&lt;Room&gt;}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Rooms.Client(manager);
+ *
+ * client.connect(&apos;my-cool-room&apos;).then(function(room) {
+ *   room.on(&apos;participantConnected&apos;, function(participant) {
+ *     console.log(participant.identity + &apos; has connected&apos;);
+ *   });
+ * });
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Rooms.Client(manager);
+ *
+ * var localMedia = new Twilio.Rooms.LocalMedia();
+ *
+ * // Connect with audio-only
+ * localMedia.addMicrophone().then(function() {
+ *   return client.connect(&apos;my-cool-room&apos;, { localMedia: localMedia });
+ * }).then(function(room) {
+ *   // Our LocalParticipant reuses the LocalMedia we passed in.
+ *   room.localParticipant.media === localMedia; // true
+ *
+ *   room.on(&apos;participantConnected&apos;, function(participant) {
+ *     console.log(participant.identity + &apos; has connected&apos;);
+ *   });
+ *
+ *   // Make sure to stop localMedia
+ *   room.once(&apos;disconnected&apos;, function() {
+ *     localMedia.stop();
+ *   });
+ * });
+*//**
+ * Connect to a new, random {@link Room}.
+ * @param {Client.ConnectOptions}
+ *   [options={localStreamConstraints:{audio:true,video:true}}] - Options to override
+ *   the default behavior
+ * @returns {CancelablePromise&lt;Room&gt;}
+ */
+Client.prototype.connect = function connect(nameOrSid, options) {
+  if (typeof nameOrSid === &apos;object&apos; &amp;&amp; nameOrSid !== null) {
+    return this.connect(null, nameOrSid);
+  }
+  options = Object.assign({
+    create: true,
+    with: []
+  }, this._options, options);
+  options.with = options.with instanceof Array
+    ? options.with
+    : [options.with];
+  return createCancelableRoomPromise(
+    getLocalMedia.bind(null, this, options),
+    createRoomSignaling.bind(null, this, options.with, nameOrSid, options),
+    createRoom.bind(null, this, options));
+};
+
+/**
+ * Your {@link Client} has run into an error.
+ * @param {Error} error - The Error
+ * @event Client#error
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Rooms.Client(manager);
+ *
+ * client.on(&apos;error&apos;, function(error) {
+ *  console.error(error);
+ * });
+ */
+
+/**
+ * You may pass these options to {@link Client}&apos;s constructor to override
+ * its default behavior.
+ * @typedef {object} Client.ConstructorOptions
+ * @property {Array&lt;RTCIceServer&gt;} iceServers - Override the STUN and TURN
+ *   servers used by the {@link Client} when connecting to {@link Room}s
+ * @property {RTCIceTransportPolicy} [iceTransportPolicy=&quot;all&quot;] - Override the ICE
+ *   transport policy to be one of &quot;relay&quot; or &quot;all&quot;
+ * @property {string} [logLevel=&apos;warn&apos;] - Set the verbosity of logging to console.
+ *   Valid values: [&apos;off&apos;, &apos;error&apos;, &apos;warn&apos;, &apos;info&apos;, &apos;debug&apos;]
+ */
+
+/**
+ * You may pass these options to {@link Client#connect} to
+ * override the default behavior.
+ * @typedef {object} Client.ConnectOptions
+ * @property {?boolean} [create=true] - Set to false in order to only connect
+ *   to a {@link Room} if it already exists (use in conjunction with
+ *   &lt;code&gt;nameOrSid&lt;/code&gt;)
+ * @property {Array&lt;RTCIceServer&gt;} iceServers - Override the STUN and TURN
+ *   servers used by the {@link Client} when connecting to {@link Room}s
+ * @property {RTCIceTransportPolicy} [iceTransportPolicy=&quot;all&quot;] - Override the ICE
+ *   transport policy to be one of &quot;relay&quot; or &quot;all&quot;
+ * @property {?string} [nameOrSid=null] - Set to connect to a {@link Room} by
+ *   its name or {@link Room.SID}
+ * @property {?LocalMedia} [localMedia=null] - Set to reuse an existing
+ *   {@link LocalMedia} object when creating the {@link Room}
+ * @property {?MediaStream} [localStream=null] - Set to reuse an existing
+ *   &lt;code&gt;MediaStream&lt;/code&gt; when creating the {@link Room}
+ * @property {?object} [localStreamConstraints={audio:true,video:true}] - Set to
+ *   override the parameters passed to &lt;code&gt;getUserMedia&lt;/code&gt; when neither
+ *   &lt;code&gt;localMedia&lt;/code&gt; nor &lt;code&gt;localStream&lt;/code&gt; are provided
+ */
+
+function createRoom(client, options, roomSignaling) {
+  var room = new Room(roomSignaling, options);
+  client._rooms.set(room.sid, room);
+
+  roomSignaling.on(&apos;stateChanged&apos;, function stateChanged() {
+    client._rooms.delete(room.sid);
+    roomSignaling.removeListener(&apos;stateChanged&apos;, stateChanged);
+  });
+
+  return room;
+}
+
+function createRoomSignaling(client, identities, nameOrSid, options, localMedia) {
+  return getIceServers(client, options).then(function(iceServers) {
+    options.iceServers = iceServers;
+    return client._signaling.connect(identities, nameOrSid, localMedia, options);
+  });
+}
+
+function getLocalMedia(client, options, handleLocalMedia) {
+  options.shouldStopLocalMedia = !options.localMedia &amp;&amp; !options.localStream;
+  return LocalMedia.getLocalMedia(options).then(function getLocalMediaSucceeded(localMedia) {
+    var promise = handleLocalMedia(localMedia);
+    promise.catch(function handleLocalMediaFailed() {
+      if (options.shouldStopLocalMedia) {
+        localMedia.stop();
+      }
+    });
+    return promise;
+  });
+}
+
+function getIceServers(client, options) {
+  var log = client._log;
+
+  if (options.iceServers) {
+    return Promise.resolve(options.iceServers);
+  }
+
+  return new TimeoutPromise(client._ecsPromise, constants.ICE_SERVERS_TIMEOUT_MS).then(function(config) {
+    var nts = util.getOrNull(config, &apos;rtc.network_traversal_service&apos;);
+
+    if (nts.warning) {
+      log.warn(nts.warning);
+    }
+
+    if (!nts) {
+      throw new Error(&apos;network_traversal_service not available&apos;);
+    }
+
+    if (!nts.ice_servers) {
+      throw new Error(&apos;ice_servers not available&apos;);
+    }
+
+    return nts.ice_servers;
+  }).catch(function(reason) {
+    log.warn(&apos;Failed to fetch ice servers from ECS: &apos; + reason.message);
+    return constants.DEFAULT_ICE_SERVERS;
+  });
+}
+
+module.exports = Client;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AudioTrack.html">AudioTrack</a></li><li><a href="Client.html">Client</a></li><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li><li><a href="LocalMedia.html">LocalMedia</a></li><li><a href="LocalParticipant.html">LocalParticipant</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li><li><a href="Media.html">Media</a></li><li><a href="Participant.html">Participant</a></li><li><a href="Room.html">Room</a></li><li><a href="Track.html">Track</a></li><li><a href="VideoTrack.html">VideoTrack</a></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Wed Jul 13 2016 20:06:23 GMT-0700 (PDT)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create', 'UA-2900316-33', 'auto');ga('send', 'pageview');</script></body>
+</html>
