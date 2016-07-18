@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: conversation.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: conversation.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>&apos;use strict&apos;;
+
+var constants = require(&apos;./util/constants&apos;);
+var EventEmitter = require(&apos;events&apos;).EventEmitter;
+var inherits = require(&apos;util&apos;).inherits;
+var Log = require(&apos;./util/log&apos;);
+var Participant = require(&apos;./participant&apos;);
+
+/**
+ * Construct a {@link Conversation}.
+ * @class
+ * @classdesc A {@link Conversation} represents communication between your
+ *   {@link Client} and one or more {@link Participant}s sharing
+ *   {@link AudioTrack}s and {@link VideoTrack}s.
+ *   &lt;br&gt;&lt;br&gt;
+ *   You can join a {@link Conversation} by first creating an
+ *   {@link OutgoingInvite} with {@link Client#inviteToConversation} or by
+ *   accepting an {@link IncomingInvite} with {@link IncomingInvite#accept}.
+ * @param {ConversationSignaling} signaling
+ * @param {?object} [options={}]
+ * @property {LocalMedia} localMedia - Your {@link Client}&apos;s {@link LocalMedia} in the {@link Conversation}
+ * @property {Map&lt;Participant.SID, Participant&gt;} participants - The {@link Participant}s
+ *   participating in this {@link Conversation}
+ * @property {Conversation.SID} sid - The {@link Conversation}&apos;s SID
+ * @fires Conversation#disconnected
+ * @fires Conversation#participantConnected
+ * @fires Conversation#participantDisconnected
+ * @fires Conversation#participantFailed
+ * @fires Conversation#trackAdded
+ * @fires Conversation#trackDimensionsChanged
+ * @fires Conversation#trackDisabled
+ * @fires Conversation#trackEnabled
+ * @fires Conversation#trackEnded
+ * @fires Conversation#trackRemoved
+ * @fires Conversation#trackStarted
+ */
+function Conversation(signaling, options) {
+  if (!(this instanceof Conversation)) {
+    return new Conversation(signaling, options);
+  }
+  EventEmitter.call(this);
+
+  options = Object.assign({
+    logLevel: constants.DEFAULT_LOG_LEVEL
+  }, options);
+
+  var log = new Log(&apos;Conversation&apos;, options.logLevel);
+  var participants = new Map();
+
+  /* istanbul ignore next */
+  Object.defineProperties(this, {
+    _log: {
+      value: log
+    },
+    _options: {
+      value: options
+    },
+    _participants: {
+      value: participants
+    },
+    _signaling: {
+      value: signaling
+    },
+    localMedia: {
+      enumerable: true,
+      value: signaling.localMedia
+    },
+    participants: {
+      enumerable: true,
+      get: function() {
+        return new Map(participants);
+      }
+    },
+    sid: {
+      enumerable: true,
+      value: signaling.sid
+    }
+  });
+
+  handleSignalingEvents(this, signaling);
+}
+
+inherits(Conversation, EventEmitter);
+
+/**
+ * Disconnect from the {@link Conversation}.
+ * @returns {this}
+ */
+Conversation.prototype.disconnect = function disconnect() {
+  this._signaling.disconnect();
+  return this;
+};
+
+/**
+ * Add a {@link Participant} to the {@link Conversation}.
+ * @param {string} identity - The identity of the {@link Participant} to add
+ * @returns {this}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ *  client.inviteToConversation(&apos;alice&apos;).then(function(conversation) {
+ *    conversation.invite(&apos;bob&apos;);
+ *
+ *    conversation.on(&apos;participantConnected&apos;, function(participant) {
+ *      if (participant.identity === &apos;bob&apos;) {
+ *        console.log(&apos;Bob has connected&apos;);
+ *      }
+ *    });
+ *  });
+ * @throws {Error} INVALID_ARGUMENT
+ *//**
+ * Add {@link Participant}s to the {@link Conversation}.
+ * @param {Array&lt;string&gt;} identities - The identities of the {@link Participant}s to add
+ * @returns {this}
+ * @example
+ * var initialToken = getAccessToken();
+ * var manager = new Twilio.AccessManager(initialToken);
+ * var client = new Twilio.Conversations.Client(manager);
+ *
+ *  client.inviteToConversation(&apos;alice&apos;).then(function(conversation) {
+ *    conversation.invite([&apos;bob&apos;, &apos;charlie&apos;]);
+ *
+ *    conversation.on(&apos;participantConnected&apos;, function() {
+ *      if (participant.identity === &apos;bob&apos;) {
+ *        console.log(&apos;Bob has connected&apos;);
+ *      } else if (participant.identity === &apos;charlie&apos;) {
+ *        console.log(&apos;Charlie has connected&apos;);
+ *      }
+ *    });
+ *  });
+ * @throws {Error} INVALID_ARGUMENT
+ */
+Conversation.prototype.invite = function invite(identityOrIdentities) {
+  var identities = identityOrIdentities instanceof Array ?
+    identityOrIdentities : [identityOrIdentities];
+  identities.forEach(function(identity) {
+    this._signaling.invite(identity);
+  }, this);
+  return this;
+};
+
+/**
+ * A {@link Conversation.SID} is a 34-character string starting with &quot;CV&quot;
+ * that uniquely identifies a {@link Conversation}.
+ * @type string
+ * @typedef Conversation.SID
+ */
+
+/**
+ * Your {@link Client} was disconnected from the {@link Conversation} and all
+ * other {@link Participant}s.
+ * @param {Conversation} conversation - The {@link Conversation} your
+ *   {@link Client} was disconnected from
+ * @event Conversation#disconnected
+ * @example
+ * myConversation.on(&apos;disconnected&apos;, function() {
+ *   myConversation.localMedia.detach();
+ * });
+ */
+
+/**
+ * A {@link Participant} joined the {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} who joined
+ * @event Conversation#participantConnected
+ * @example
+ * myConversation.on(&apos;participantConnected&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; joined the Conversation&apos;);
+ *
+ *   // Get the participant&apos;s Media,
+ *   var participantMedia = participant.media;
+ *
+ *   // And attach it to your application&apos;s view.
+ *   var participantView = document.getElementById(&apos;participant-view&apos;);
+ *   participantMedia.attach(participantView);
+ *   participantVideos.appendChild(participantView);
+ * });
+ */
+
+/**
+ * A {@link Participant} left the {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} who left
+ * @event Conversation#participantDisconnected
+ * @example
+ * myConversation.on(&apos;participantDisconnected&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; left the Conversation&apos;);
+ * });
+ */
+
+/**
+ * A {@link Participant} failed to join {@link Conversation}.
+ * @param {Participant} participant - The {@link Participant} that failed to join
+ * @event Conversation#participantFailed
+ * @example
+ * myConversation.on(&apos;participantFailed&apos;, function(participant) {
+ *   console.log(participant.identity + &apos; failed to join the Conversation&apos;);
+ * });
+ */
+
+/**
+ * A {@link Track} was added by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was added
+ * @param {Participant} participant - The {@link Participant} who added the
+ *   {@link Track}
+ * @event Conversation#trackAdded
+ */
+
+/**
+ * One of the {@link Participant}&apos;s {@link VideoTrack}&apos;s dimensions changed.
+ * @param {VideoTrack} track - The {@link VideoTrack} whose dimensions changed
+ * @param {Participant} participant - The {@link Participant} whose {@link VideoTrack}&apos;s
+ *   dimensions changed
+ * @event Conversation#trackDimensionsChanged
+ */
+
+/**
+ * A {@link Track} was disabled by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was disabled
+ * @param {Participant} participant - The {@link Participant} who disabled the
+ *   {@link Track}
+ * @event Conversation#trackDisabled
+ */
+
+/**
+ * A {@link Track} was enabled by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was enabled
+ * @param {Participant} participant - The {@link Participant} who enabled the
+ *   {@link Track}
+ * @event Conversation#trackEnabled
+ */
+
+/**
+ * One of a {@link Participant}&apos;s {@link Track}s in the {@link Conversation} ended.
+ * @param {Track} track - The {@link Track} that ended
+ * @param {Participant} participant - The {@link Participant} whose {@link Track} ended
+ * @event Conversation#trackEnded
+ */
+
+/**
+ * A {@link Track} was removed by a {@link Participant} in the {@link Conversation}.
+ * @param {Track} track - The {@link Track} that was removed
+ * @param {Participant} participant - The {@link Participant} who removed the
+ *   {@link Track}
+ * @event Conversation#trackRemoved
+ */
+
+/**
+ * One of a {@link Participant}&apos;s {@link Track}s in the {@link Conversation} started.
+ * @param {Track} track - The {@link Track} that started
+ * @param {Participant} participant - The {@link Participant} whose {@link Track} started
+ * @event Conversation#trackStarted
+ */
+
+function handleSignalingEvents(conversation, signaling) {
+  // Reemit Participant events from the ConversationSignaling.
+  signaling.on(&apos;participantConnected&apos;,
+    function participantConnected(participantSignaling) {
+    var participant = new Participant(participantSignaling);
+    conversation._participants.set(participant.sid, participant);
+    conversation.emit(&apos;participantConnected&apos;, participant);
+
+    // Reemit Track events from the Participant.
+    var eventListeners = [
+      &apos;trackAdded&apos;,
+      &apos;trackDimensionsChanged&apos;,
+      &apos;trackDisabled&apos;,
+      &apos;trackEnabled&apos;,
+      &apos;trackEnded&apos;,
+      &apos;trackRemoved&apos;,
+      &apos;trackStarted&apos;
+    ].map(function(event) {
+      function reemit() {
+        var args = [].slice.call(arguments);
+        args.unshift(event);
+        args.push(participant);
+        conversation.emit.apply(conversation, args);
+      }
+      participant.on(event, reemit);
+      return [event, reemit];
+    });
+
+    // Reemit state transition events from the Participant.
+    participant.once(&apos;disconnected&apos;, function participantDisconnected() {
+      conversation._participants.delete(participant.sid);
+      eventListeners.forEach(function(args) {
+        participant.removeListener(args[0], args[1]);
+      });
+      conversation.emit(&apos;participantDisconnected&apos;, participant);
+    });
+  });
+
+  signaling.on(&apos;participantFailed&apos;, function participantFailed(participantSignaling) {
+    var participant = new Participant(participantSignaling);
+    conversation.emit(&apos;participantFailed&apos;, participant);
+  });
+
+  // Reemit state transition events from the ConversationSignaling.
+  signaling.on(&apos;stateChanged&apos;, function stateChanged(state) {
+    conversation.emit(state, conversation);
+    if (state === &apos;disconnected&apos; &amp;&amp;
+      conversation._options.shouldStopLocalMedia) {
+      conversation.localMedia.stop();
+    }
+  });
+}
+
+module.exports = Conversation;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav><h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Client.html"><span style="color: #999">Twilio.Conversations.</span>Client</a><ul style="margin-left: 1em"><li><a href="IncomingInvite.html">IncomingInvite</a></li><li><a href="OutgoingInvite.html">OutgoingInvite</a></li></ul></li><li><a href="Conversation.html">Conversation</a><ul style="margin-left: 1em"><li><a href="Participant.html">Participant</a></li></ul></li><li><a href="Media.html">Media</a><ul style="margin-left: 1em"><li><a href="LocalMedia.html"><span style="color: #999">Twilio.Conversations.</span>LocalMedia</a></li><li><a href="LocalTrack.html">LocalTrack</a></li><li><a href="Track.html">Track</a><ul style="margin-left: 1em"><li><a href="AudioTrack.html">AudioTrack</a><ul style="margin-left: 1em"><li><a href="LocalAudioTrack.html">LocalAudioTrack</a></li></ul></li><li><a href="VideoTrack.html">VideoTrack</a><ul style="margin-left: 1em"><li><a href="LocalVideoTrack.html">LocalVideoTrack</a></li></ul></li></ul></li></ul></li></ul></nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0-dev</a> on Mon Jul 18 2016 22:47:05 GMT+0000 (UTC)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+<script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');ga('create', 'UA-2900316-33', 'auto');ga('send', 'pageview');</script></body>
+</html>
