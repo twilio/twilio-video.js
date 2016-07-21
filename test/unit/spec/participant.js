@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var Media = require('../../../lib/media');
 var Participant = require('../../../lib/participant');
 var ParticipantSignaling = require('../../../lib/signaling/participant');
 var util = require('../../../lib/util');
@@ -13,12 +14,12 @@ describe('Participant', function() {
 
   beforeEach(function() {
     signaling = new ParticipantSignaling(util.makeUUID(), 'foo');
-    participant = new Participant(signaling);
+    participant = new Participant(signaling, new Media());
   });
 
   describe('new Participant(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Participant(signaling) instanceof Participant);
+      assert(Participant(signaling, new Media()) instanceof Participant);
     });
   });
 
