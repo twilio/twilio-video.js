@@ -7,31 +7,6 @@ var sinon = require('sinon');
 
 describe('Media', function() {
   var media;
-  describe('_addRemoteStream', function() {
-    var mediaStream;
-    var returnVal;
-
-    before(function() {
-      media = createMedia();
-
-      mediaStream = {
-        getAudioTracks: function() { return [{ }, { }, { }]; },
-        getVideoTracks: function() { return [{ }, { }]; }
-      };
-
-      media._addTrack = sinon.spy();
-
-      returnVal = media._addRemoteStream(mediaStream);
-    });
-
-    it('should call _addTrack for each track of the remote MediaStreams', function() {
-      assert.equal(media._addTrack.callCount, 5);
-    });
-
-    it('should return the Media instance', function() {
-      assert.equal(returnVal, media);
-    });
-  });
 
   describe('_addTrack', function() {
     var audioTrackMock;
@@ -124,56 +99,6 @@ describe('Media', function() {
         media.once('qux', function() { done(); });
         videoTrack.emit('baz');
       });
-    });
-  });
-
-  describe('_refreshTracks', function() {
-    var mediaStream;
-
-    before(function() {
-      media = createMedia();
-
-      var audioTracks = [
-        new MediaStreamTrack('1', 'audio'),
-        new MediaStreamTrack('2', 'audio')
-      ];
-
-      var videoTracks = [
-        new MediaStreamTrack('3', 'video')
-      ];
-
-      mediaStream = {
-        getAudioTracks: function() {
-          return audioTracks;
-        },
-        getVideoTracks: function() {
-          return videoTracks;
-        },
-        getTracks: function() {
-          return videoTracks.concat(audioTracks);
-        }
-      };
-
-      media._addRemoteStream(mediaStream);
-
-      media._removeTrack = sinon.spy();
-      media._addRemoteStream = sinon.spy();
-
-      media.tracks.delete('1');
-      media.tracks.delete('2');
-      media.tracks.set('4', new MediaStreamTrack('4', 'video'));
-      media.tracks.set('5', new MediaStreamTrack('5', 'audio'));
-      media.tracks.set('6', new MediaStreamTrack('6', 'audio'));
-
-      media._refreshTracks();
-    });
-
-    it('should call ._removeTrack for every Track whose MediaStream is not in .mediaStreams', function() {
-      assert.equal(media._removeTrack.callCount, 3);
-    });
-
-    it('should call ._addRemoteStream for every MediaStream in .mediaStreams', function() {
-      assert.equal(media._addRemoteStream.callCount, 1);
     });
   });
 
@@ -319,7 +244,7 @@ describe('Media', function() {
 
     context('when the track is in .tracks', function() {
       before(function() {
-        media._addRemoteStream(mediaStream);
+        addStream(media, mediaStream);
       });
 
       it('should remove AudioTrack from .audioTracks', function() {
@@ -378,7 +303,7 @@ describe('Media', function() {
       audioTracks = [ new MediaStreamTrack('1', 'audio') ];
       videoTracks = [ new MediaStreamTrack('2', 'video') ];
 
-      media._addRemoteStream(mediaStream);
+      addStream(media, mediaStream);
     });
 
     context('when a track with an existing MediaStream is added', function() {
@@ -648,7 +573,7 @@ describe('Media', function() {
         }
       };
 
-      media._addRemoteStream(mediaStream);
+      addStream(media, mediaStream);
 
       media._attachTrack = sinon.spy();
       media._detachTrack = sinon.spy();
@@ -921,4 +846,10 @@ function MediaStreamTrack(id, kind) {
   });
 
   return track;
+}
+
+function addStream(media, mediaStream) {
+  mediaStream.getTracks().forEach(mediaStreamTrack => {
+    media._addRemoteTrack(mediaStreamTrack, mediaStream);
+  });
 }
