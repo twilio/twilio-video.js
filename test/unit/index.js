@@ -18,6 +18,7 @@ require('./spec/statemachine');
 
 require('./spec/media/index');
 require('./spec/media/track');
+require('./spec/media/track/localtrack');
 
 require('./spec/signaling/conversation-info');
 

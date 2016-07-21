@@ -2,7 +2,9 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var Track = require('../../../../lib/media/track');
+var inherits = require('util').inherits;
+var Track = require('../../../../../lib/media/track');
+var TrackSignaling = require('../../../../../lib/signaling/track');
 var sinon = require('sinon');
 
 describe('Track', function() {
@@ -15,8 +17,8 @@ describe('Track', function() {
     Track.prototype._initialize = sinon.spy();
   });
 
-  afterEach(function() {
-    Track.prototype._initialize = sinon.spy();
+  after(function() {
+    Track.prototype._initialize = _initialize;
   });
 
   describe('constructor', function() {
@@ -59,28 +61,8 @@ describe('Track', function() {
       assert.equal(typeof dummyElement.oncanplay, 'function');
     });
 
-    it('should set mediaStreamTrack.onended to a function', function() {
-      assert.equal(typeof track.mediaStreamTrack.onended, 'function');
-    });
-
     it('should set el.muted to true', function() {
       assert.equal(dummyElement.muted, true);
-    });
-
-    context('when the underlying MediaStreamTrack emits ended event', function() {
-      it('should emit Track#ended event', function(done) {
-        _initialize.call(track);
-        track.on('ended', function() { done(); });
-        track.mediaStreamTrack.onended();
-      });
-
-      it('should call ._detachElement with the dummy element', function() {
-        assert(track._detachElement.calledWith(dummyElement));
-      });
-
-      it('should set the element\'s oncanplay callback to null', function() {
-        assert.equal(dummyElement.oncanplay, null);
-      });
     });
 
     context('when the dummy element emits oncanplay event', function() {
@@ -242,104 +224,6 @@ describe('Track', function() {
 
       it('should return the result of _attach', function() {
         assert(returnVal, element);
-      });
-    });
-  });
-
-  describe('_enable', function() {
-    before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
-      track._isEnabled = false;
-    });
-
-    context('when called with true once', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(true);
-      });
-
-      it('should set .isEnabled to true', function() {
-        assert.equal(track.isEnabled, true);
-      });
-
-      it('should emit Track#enabled', function() {
-        assert(track.emit.calledWith('enabled', track));
-      });
-    });
-
-    context('when called with true again', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(true);
-      });
-
-      it('should keep .isEnabled at true', function() {
-        assert.equal(track.isEnabled, true);
-      });
-
-      it('should not emit', function() {
-        assert.equal(track.emit.callCount, 0);
-      });
-    });
-
-    context('when called with false once', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(false);
-      });
-
-      it('should set .isEnabled to false', function() {
-        assert.equal(track.isEnabled, false);
-      });
-
-      it('should emit Track#disabled', function() {
-        assert(track.emit.calledWith('disabled', track));
-      });
-    });
-
-    context('when called with false again', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(false);
-      });
-
-      it('should keep .isEnabled at false', function() {
-        assert.equal(track.isEnabled, false);
-      });
-
-      it('should not emit', function() {
-        assert.equal(track.emit.callCount, 0);
-      });
-    });
-
-    context('when called with null once', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(null);
-      });
-
-      it('should set .isEnabled to true', function() {
-        assert.equal(track.isEnabled, true);
-      });
-
-      it('should emit Track#disabled', function() {
-        assert(track.emit.calledWith('enabled', track));
-      });
-    });
-
-    context('when called with null again', function() {
-      before(function() {
-        track.emit = sinon.spy();
-        track._enable(null);
-      });
-
-      it('should keep .isEnabled at true', function() {
-        assert.equal(track.isEnabled, true);
-      });
-
-      it('should not emit', function() {
-        assert.equal(track.emit.callCount, 0);
       });
     });
   });
@@ -736,7 +620,8 @@ describe('Track', function() {
 function createTrack(mediaStream, id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
   mediaStream._tracks[kind].set(id, mediaStreamTrack);
-  return new Track(mediaStream, mediaStreamTrack);
+  var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
+  return new Track(mediaStream, mediaStreamTrack, signaling);
 }
 
 function MediaStream() {
@@ -760,13 +645,16 @@ function MediaStream() {
 };
 
 function MediaStreamTrack(id, kind) {
-  var track = new EventEmitter();
+  EventEmitter.call(this);
 
-  Object.defineProperties(track, {
+  Object.defineProperties(this, {
     id: { value: id },
     kind: { value: kind }
   });
-
-  return track;
 }
 
+inherits(MediaStreamTrack, EventEmitter);
+
+MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
+
+MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
