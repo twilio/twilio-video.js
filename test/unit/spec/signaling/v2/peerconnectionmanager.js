@@ -60,7 +60,7 @@ describe('PeerConnectionManager', function() {
     });
   });
 
-  describe('#getConversationInfo', function() {
+  describe('#getState', function() {
     it('returns the subset of PeerConnections that changed', function() {
       var pcs = [];
       var pcm = new PeerConnectionManager({
@@ -74,33 +74,33 @@ describe('PeerConnectionManager', function() {
         }
       });
 
-      return pcm.update(new ConversationEventBuilder()
+      return pcm.update(new RoomStateBuilder()
         .createOffer(1)
         .offer(2))
       .then(function() {
         // Until we call setConfiguration, we should not have constructed any
         // PeerConnections; hence we expect zero PeerConnection Messages.
-        assert.equal(null, pcm.getConversationInfo());
+        assert.equal(null, pcm.getState());
         return pcm.setConfiguration({});
       }).then(function() {
         // Once we've called setConfiguration, we should have constructed the
         // two PeerConnections, and we expect two PeerConnection Messages.
-        assert.deepEqual(new ConversationEventBuilder()
+        assert.deepEqual(new RoomStateBuilder()
             .offer(1)
             .answer(2)
             .peer_connections,
-          pcm.getConversationInfo().peer_connections);
+          pcm.getState().peer_connections);
         // Now, simulate receiving an answer.
-        return pcm.update(new ConversationEventBuilder()
+        return pcm.update(new RoomStateBuilder()
             .answer(1)
             .offer(3));
       }).then(function() {
         // We expect one new PeerConnection Message now (since both of the first
         // two PeerConnections are stable).
-        assert.deepEqual(new ConversationEventBuilder()
+        assert.deepEqual(new RoomStateBuilder()
             .answer(3)
             .peer_connections,
-          pcm.getConversationInfo().peer_connections);
+          pcm.getState().peer_connections);
       });
     });
   });
@@ -154,7 +154,7 @@ describe('PeerConnectionManager', function() {
 
       // Check that the first PeerConnection uses the given configuration.
       return pcm.setConfiguration(config1).then(function() {
-        return pcm.update(new ConversationEventBuilder().createOffer(1));
+        return pcm.update(new RoomStateBuilder().createOffer(1));
       }).then(function() {
         assert.deepEqual({
           iceServers: [ { urls: [ 'foo' ] } ],
@@ -164,7 +164,7 @@ describe('PeerConnectionManager', function() {
         // Then, check that the second PeerConnection uses the given configuration.
         return pcm.setConfiguration(config2);
       }).then(function() {
-        return pcm.update(new ConversationEventBuilder().createOffer(2));
+        return pcm.update(new RoomStateBuilder().createOffer(2));
       }).then(function() {
         assert.deepEqual({
           iceServers: [ { urls: 'baz' } ],
@@ -208,7 +208,7 @@ describe('PeerConnectionManager', function() {
           }
         });
 
-        return pcm.update(new ConversationEventBuilder()).then(function() {
+        return pcm.update(new RoomStateBuilder()).then(function() {
           return pcm.setConfiguration({});
         }).then(function() {
           assert.equal(0, pcs.length);
@@ -233,7 +233,7 @@ describe('PeerConnectionManager', function() {
           });
 
           return pcm.setConfiguration({}).then(function() {
-            return pcm.update(new ConversationEventBuilder().createOffer());
+            return pcm.update(new RoomStateBuilder().createOffer());
           }).then(function() {
             assert(pc);
             assert(pc.createOffer.called);
@@ -254,7 +254,7 @@ describe('PeerConnectionManager', function() {
             }
           });
 
-          return pcm.update(new ConversationEventBuilder().createOffer()).then(function() {
+          return pcm.update(new RoomStateBuilder().createOffer()).then(function() {
             assert(!pc);
             return pcm.setConfiguration({});
           }).then(function() {
@@ -285,7 +285,7 @@ describe('PeerConnectionManager', function() {
           });
 
           return pcm.setConfiguration({}).then(function() {
-            return pcm.update(new ConversationEventBuilder().offer());
+            return pcm.update(new RoomStateBuilder().offer());
           }).then(function() {
             assert(pc);
             assert(pc.setRemoteDescription.calledWith({ type: 'offer', sdp: 'dummy-offer' }));
@@ -311,7 +311,7 @@ describe('PeerConnectionManager', function() {
             }
           });
 
-          return pcm.update(new ConversationEventBuilder().offer()).then(function() {
+          return pcm.update(new RoomStateBuilder().offer()).then(function() {
             assert(!pc);
             return pcm.setConfiguration({});
           }).then(function() {
@@ -340,9 +340,9 @@ describe('PeerConnectionManager', function() {
         });
 
         return pcm.setConfiguration({}).then(function() {
-          return pcm.update(new ConversationEventBuilder().createOffer());
+          return pcm.update(new RoomStateBuilder().createOffer());
         }).then(function() {
-          return pcm.update(new ConversationEventBuilder().answer());
+          return pcm.update(new RoomStateBuilder().answer());
         }).then(function() {
           assert(pc.setRemoteDescription.calledWith({ type: 'answer', sdp: 'dummy-answer' }));
         });
@@ -367,14 +367,14 @@ describe('PeerConnectionManager', function() {
 
         // NOTE(mroberts): Test PeerConnections setup in "both" directions.
         return pcm.setConfiguration({}).then(function() {
-          return pcm.update(new ConversationEventBuilder()
+          return pcm.update(new RoomStateBuilder()
             .createOffer(1)
             .offer(2))
         }).then(function() {
-          return pcm.update(new ConversationEventBuilder().answer(1));
+          return pcm.update(new RoomStateBuilder().answer(1));
         }).then(function() {
           assert.equal(2, pcs.length);
-          return pcm.update(new ConversationEventBuilder().close(1).close(2));
+          return pcm.update(new RoomStateBuilder().close(1).close(2));
         }).then(function() {
           assert(pcs[0].close.called);
           assert(pcs[1].close.called);
@@ -384,11 +384,11 @@ describe('PeerConnectionManager', function() {
   });
 });
 
-function ConversationEventBuilder() {
+function RoomStateBuilder() {
   this.peer_connections = [];
 }
 
-ConversationEventBuilder.prototype.answer = function answer(id, sdp) {
+RoomStateBuilder.prototype.answer = function answer(id, sdp) {
   id = id == null ? 1 : id;
   this.peer_connections.push({
     id: id,
@@ -400,7 +400,7 @@ ConversationEventBuilder.prototype.answer = function answer(id, sdp) {
   return this;
 };
 
-ConversationEventBuilder.prototype.close = function close(id) {
+RoomStateBuilder.prototype.close = function close(id) {
   id = id == null ? 1 : id;
   this.peer_connections.push({
     id: id,
@@ -411,7 +411,7 @@ ConversationEventBuilder.prototype.close = function close(id) {
   return this;
 };
 
-ConversationEventBuilder.prototype.createOffer = function createOffer(id) {
+RoomStateBuilder.prototype.createOffer = function createOffer(id) {
   id = id == null ? 1 : id;
   this.peer_connections.push({
     id: id,
@@ -422,7 +422,7 @@ ConversationEventBuilder.prototype.createOffer = function createOffer(id) {
   return this;
 };
 
-ConversationEventBuilder.prototype.offer = function offer(id, sdp) {
+RoomStateBuilder.prototype.offer = function offer(id, sdp) {
   id = id == null ? 1 : id;
   this.peer_connections.push({
     id: id,

@@ -68,6 +68,7 @@ describe('Client', function() {
 
   describe('Room#disconnect', function() {
     it('updates .rooms', function() {
+      assert(room);
       room.disconnect();
       assert(!alice.rooms.has(room.sid));
     });
