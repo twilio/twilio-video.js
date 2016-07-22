@@ -4,8 +4,9 @@ var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Room = require('../../../lib/room');
 var RoomSignaling = require('../../../lib/signaling/room');
+var LocalMedia = require('../../../lib/media/localmedia');
 var Participant = require('../../../lib/participant');
-var ParticipantSignaling = require('../../../lib/signaling/participant');
+var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 var sinon = require('sinon');
 var util = require('../../../lib/util');
 
@@ -14,16 +15,17 @@ var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1zYXQ7dj0xIn0
 describe('Room', function() {
   var room;
 
-  var localMedia = {};
-  var signaling = new RoomSignaling('CV123', 'PA456', localMedia);
+  var localMedia = new LocalMedia();
+  var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
+  var signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);
 
   beforeEach(function() {
-    room = new Room(signaling);
+    room = new Room(localMedia, signaling);
   });
 
   describe('new Room(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Room(signaling) instanceof Room);
+      assert(Room(localMedia, signaling) instanceof Room);
     });
   });
 
@@ -38,10 +40,9 @@ describe('Room', function() {
 
     beforeEach(function() {
       [
-        new ParticipantSignaling('PA000', 'foo'),
-        new ParticipantSignaling('PA111', 'bar')
-      ].forEach(signaling.emit.bind(signaling,
-        'participantConnected'));
+        new RemoteParticipantSignaling('PA000', 'foo'),
+        new RemoteParticipantSignaling('PA111', 'bar')
+      ].forEach(signaling.connectParticipant.bind(signaling));
       participants = { };
       room.participants.forEach(function(participant) {
         participants[participant.identity] = participant;
