@@ -1,37 +1,16 @@
 'use strict';
 
+var AudioTrack = require('../../../../lib/media/track/audiotrack');
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
+var inherits = require('util').inherits;
 var Media = require('../../../../lib/media/index');
 var sinon = require('sinon');
+var TrackSignaling = require('../../../../lib/signaling/track');
+var VideoTrack = require('../../../../lib/media/track/videotrack');
 
 describe('Media', function() {
   var media;
-  describe('_addRemoteStream', function() {
-    var mediaStream;
-    var returnVal;
-
-    before(function() {
-      media = createMedia();
-
-      mediaStream = {
-        getAudioTracks: function() { return [{ }, { }, { }]; },
-        getVideoTracks: function() { return [{ }, { }]; }
-      };
-
-      media._addTrack = sinon.spy();
-
-      returnVal = media._addRemoteStream(mediaStream);
-    });
-
-    it('should call _addTrack for each track of the remote MediaStreams', function() {
-      assert.equal(media._addTrack.callCount, 5);
-    });
-
-    it('should return the Media instance', function() {
-      assert.equal(returnVal, media);
-    });
-  });
 
   describe('_addTrack', function() {
     var audioTrackMock;
@@ -40,10 +19,10 @@ describe('Media', function() {
     var returnVal2;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
 
-      audioTrackMock = new MediaStreamTrack('foo', 'audio');
-      videoTrackMock = new MediaStreamTrack('bar', 'video');
+      audioTrackMock = createTrack(new MediaStreamTrack('foo', 'audio'), {});
+      videoTrackMock = createTrack(new MediaStreamTrack('bar', 'video'), {});
 
       media._reemitTrackEvent = sinon.spy();
       media._removeTrack = sinon.spy();
@@ -100,12 +79,12 @@ describe('Media', function() {
     var videoTrack;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
     });
 
     beforeEach(function() {
-      audioTrack = new MediaStreamTrack('foo', 'audio');
-      videoTrack = new MediaStreamTrack('bar', 'video');
+      audioTrack = createTrack(new MediaStreamTrack('foo', 'audio'), {});
+      videoTrack = createTrack(new MediaStreamTrack('bar', 'video'), {});
     });
 
     context('when the track is in the Media\'s tracks', function() {
@@ -127,62 +106,12 @@ describe('Media', function() {
     });
   });
 
-  describe('_refreshTracks', function() {
-    var mediaStream;
-
-    before(function() {
-      media = createMedia();
-
-      var audioTracks = [
-        new MediaStreamTrack('1', 'audio'),
-        new MediaStreamTrack('2', 'audio')
-      ];
-
-      var videoTracks = [
-        new MediaStreamTrack('3', 'video')
-      ];
-
-      mediaStream = {
-        getAudioTracks: function() {
-          return audioTracks;
-        },
-        getVideoTracks: function() {
-          return videoTracks;
-        },
-        getTracks: function() {
-          return videoTracks.concat(audioTracks);
-        }
-      };
-
-      media._addRemoteStream(mediaStream);
-
-      media._removeTrack = sinon.spy();
-      media._addRemoteStream = sinon.spy();
-
-      media.tracks.delete('1');
-      media.tracks.delete('2');
-      media.tracks.set('4', new MediaStreamTrack('4', 'video'));
-      media.tracks.set('5', new MediaStreamTrack('5', 'audio'));
-      media.tracks.set('6', new MediaStreamTrack('6', 'audio'));
-
-      media._refreshTracks();
-    });
-
-    it('should call ._removeTrack for every Track whose MediaStream is not in .mediaStreams', function() {
-      assert.equal(media._removeTrack.callCount, 3);
-    });
-
-    it('should call ._addRemoteStream for every MediaStream in .mediaStreams', function() {
-      assert.equal(media._addRemoteStream.callCount, 1);
-    });
-  });
-
   describe('_createTrackElement', function() {
     var returnVal;
     var track;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
 
       track = new MediaStreamTrack('aud', 'audio');
       track.attach = sinon.spy(function() { return 'foo'; });
@@ -206,7 +135,7 @@ describe('Media', function() {
     var trackEl;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
 
       track = new MediaStreamTrack('aud', 'audio');
       el = document.createElement('div');
@@ -248,7 +177,7 @@ describe('Media', function() {
     var trackEl;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
       attachments = new Map();
 
       el = document.createElement('div');
@@ -291,7 +220,7 @@ describe('Media', function() {
     var videoTracks;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
       media.emit = sinon.spy();
 
       audioTracks = [ new MediaStreamTrack('1', 'audio') ];
@@ -319,7 +248,7 @@ describe('Media', function() {
 
     context('when the track is in .tracks', function() {
       before(function() {
-        media._addRemoteStream(mediaStream);
+        addStream(media, mediaStream);
       });
 
       it('should remove AudioTrack from .audioTracks', function() {
@@ -360,7 +289,7 @@ describe('Media', function() {
     var newVideoTracks;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
 
       mediaStream = function() { };
       Object.defineProperties(mediaStream, {
@@ -378,7 +307,7 @@ describe('Media', function() {
       audioTracks = [ new MediaStreamTrack('1', 'audio') ];
       videoTracks = [ new MediaStreamTrack('2', 'video') ];
 
-      media._addRemoteStream(mediaStream);
+      addStream(media, mediaStream);
     });
 
     context('when a track with an existing MediaStream is added', function() {
@@ -450,7 +379,7 @@ describe('Media', function() {
 
     context('when undefined is passed', function() {
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._createContainer = sinon.spy(function() {
@@ -482,7 +411,7 @@ describe('Media', function() {
 
     context('when null is passed', function() {
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._createContainer = sinon.spy(function() {
@@ -515,7 +444,7 @@ describe('Media', function() {
 
     context('when a string is passed', function() {
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._createContainer = sinon.spy();
@@ -549,7 +478,7 @@ describe('Media', function() {
 
     context('when an element is passed', function() {
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._createContainer = sinon.spy();
@@ -580,7 +509,7 @@ describe('Media', function() {
 
   describe('_createContainer', function() {
     before(function() {
-      media = createMedia();
+      media = new Media();
     });
 
     it('should return a div element', function() {
@@ -591,7 +520,7 @@ describe('Media', function() {
   describe('_selectContainer', function() {
     var container;
     before(function() {
-      media = createMedia();
+      media = new Media();
 
       container = document.createElement('div');
       container.className = 'foo';
@@ -624,7 +553,7 @@ describe('Media', function() {
     var returnVal;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
       audioTrack = new MediaStreamTrack('aud', 'audio');
 
       var audioTracks = [
@@ -648,7 +577,7 @@ describe('Media', function() {
         }
       };
 
-      media._addRemoteStream(mediaStream);
+      addStream(media, mediaStream);
 
       media._attachTrack = sinon.spy();
       media._detachTrack = sinon.spy();
@@ -723,7 +652,7 @@ describe('Media', function() {
       var attachedContainers;
 
       before(function() {
-        media = createMedia();
+        media = new Media();
         attachedContainers = [
           document.createElement('div'),
           document.createElement('div')
@@ -754,7 +683,7 @@ describe('Media', function() {
       var attachedContainers;
 
       before(function() {
-        media = createMedia();
+        media = new Media();
         attachedContainers = [
           document.createElement('div'),
           document.createElement('div')
@@ -785,7 +714,7 @@ describe('Media', function() {
       var container;
 
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._getAllAttachedContainers = sinon.spy();
@@ -813,7 +742,7 @@ describe('Media', function() {
       var container;
 
       before(function() {
-        media = createMedia();
+        media = new Media();
         container = document.createElement('div');
 
         media._getAllAttachedContainers = sinon.spy();
@@ -838,7 +767,7 @@ describe('Media', function() {
 
   describe('_detachContainers', function() {
     it('should run _detachContainer for each container passed', function() {
-      media = createMedia();
+      media = new Media();
       media._detachContainer = sinon.spy();
       media._detachContainers(['foo', 'bar']);
       assert.equal(media._detachContainer.callCount, 2);
@@ -847,7 +776,7 @@ describe('Media', function() {
 
   describe('_getAllAttachedContainers', function() {
     it('should return an array with all containers in .attachments', function() {
-      media = createMedia();
+      media = new Media();
       media.attachments.set('foo', 'bar');
       media.attachments.set('baz', 'qux');
 
@@ -859,7 +788,7 @@ describe('Media', function() {
     var returnVal;
 
     before(function() {
-      media = createMedia();
+      media = new Media();
       var attachment = new Map();
       attachment.set('foo', 'bar');
       attachment.set('baz', 'qux');
@@ -905,20 +834,29 @@ function TrackFactory(stream, track) {
   return track;
 }
 
-function createMedia() {
-  return new Media({
-    AudioTrackFactory: TrackFactory,
-    VideoTrackFactory: TrackFactory,
-  });
-}
-
 function MediaStreamTrack(id, kind) {
-  var track = new EventEmitter();
+  EventEmitter.call(this);
 
-  Object.defineProperties(track, {
+  Object.defineProperties(this, {
     id: { value: id },
     kind: { value: kind }
   });
+}
 
-  return track;
+inherits(MediaStreamTrack, EventEmitter);
+
+MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
+
+MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
+
+function createTrack(mediaStreamTrack, mediaStream) {
+  var Track = mediaStreamTrack.kind === 'audio' ? AudioTrack : VideoTrack;
+  var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
+  return new Track(mediaStream, mediaStreamTrack, signaling);
+}
+
+function addStream(media, mediaStream) {
+  mediaStream.getTracks().forEach(mediaStreamTrack => {
+    media._addTrack(createTrack(mediaStreamTrack, mediaStream));
+  });
 }
