@@ -1,3 +1,14 @@
+0.13.9
+======
+
+Bug Fixes
+---------
+
+- Reverted a change that altered the expected behavior of IncomingInvite: The
+  caller will now auto-cancel the invite after 50 seconds, at which point the
+  callee's IncomingInvite will emit the "canceled" event
+- Fixed a bug where IncomingInvite was never emitting the "failed" event
+
 0.13.8
 ======
 
