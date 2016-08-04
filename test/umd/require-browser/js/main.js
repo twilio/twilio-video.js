@@ -1,0 +1,3 @@
+require.config({
+  base: '.'
+});

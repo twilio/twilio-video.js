@@ -3,6 +3,7 @@
 .integration-tested
 .linted
 .unit-tested
+.umd-tested
 coverage
 dist
 doc

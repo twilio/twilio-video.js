@@ -1,0 +1,97 @@
+'use strict';
+
+var version = require('../../package.json').version;
+var phantom = require('phantom');
+var requirejs = require('requirejs');
+
+describe('UMD', function() {
+  this.timeout(5000);
+
+  describe('RequireJS (node)', function() {
+    before(function() {
+      requirejs.config({
+        nodeRequire: require
+      });
+    });
+
+    it('should receive a video object with a Client property (unminified)', function(done) {
+      requirejs(['../../../dist/twilio-video'], function(video) {
+        try {
+          if (video.version === version) {
+            return done();
+          } else {
+            return done(new Error('Version mismatch'));
+          }
+        } catch(e) {
+          return done(e);
+        }
+      });
+    });
+
+    it('should receive a video object with a Client property (minified)', function(done) {
+      requirejs(['../../../dist/twilio-video.min'], function(video) {
+        try {
+          if (video.version === version) {
+            return done();
+          } else {
+            return done(new Error('Version mismatch'));
+          }
+        } catch(e) {
+          return done(e);
+        }
+      });
+    });
+  });
+
+  describe('RequireJS (browser)', function() {
+    var page;
+    var instance;
+
+    beforeEach(function() {
+      return phantom.create([]).then(function(_instance) {
+        instance = _instance;
+        return instance.createPage();
+      }).then(function(_page) {
+        page = _page;
+      });
+    });
+
+    it('should receive a video object with a Client property (unminified)', function(done) {
+      page.on('onCallback', function(res) {
+        if (res.status === 'success') {
+          if (res.version === version) {
+            return done();
+          } else {
+            return done(new Error('Version mismatch'));
+          }
+        } else {
+          return done(new Error(res.reason));
+        }
+      });
+
+      page.open(__dirname + '/require-browser/index.html');
+    });
+
+    it('should receive a video object with a Client property (minified)', function(done) {
+      page.on('onCallback', function(res) {
+        if (res.status === 'success') {
+          if (res.version === version) {
+            return done();
+          } else {
+            return done(new Error('Version mismatch'));
+          }
+        } else {
+          return done(new Error(res.reason));
+        }
+      });
+
+      page.open(__dirname + '/require-browser/min.html');
+    });
+
+    afterEach(function() {
+      page.close();
+      instance.exit();
+    });
+  });
+});
+

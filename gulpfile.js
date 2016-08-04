@@ -39,6 +39,9 @@ var unitTested = '.unit-tested';
 var unitTestGlob = 'test/unit/**/*.js';
 var unitTestIndex = 'test/unit/index.js';
 
+var umdTested = '.umd-tested';
+var umdTestIndex = 'test/umd/index.js';
+
 var lib = 'lib';
 var libJsGlob = 'lib/**/*.js';
 
@@ -52,6 +55,7 @@ var js = name + '.js';
 var minJs = name + '.min.js';
 var distJs = dist + '/' + js;
 var distMinJs = dist + '/' + minJs;
+var distJsGlob = dist + '/*.js';
 
 var distDocs = dist + '/docs';
 
@@ -88,7 +92,7 @@ var privateConstructors = [
   'VideoTrack'
 ];
 
-gulp.task('default', [distMinJs, distDocs]);
+gulp.task('default', [umdTested, distDocs]);
 
 gulp.task('clean', function() {
   return Promise.all([
@@ -203,6 +207,44 @@ function unitTest(files, filter) {
           return;
         }
         resolve(files);
+      }));
+  });
+}
+
+// UMD Test
+// ----------------
+
+gulp.task(umdTested, [distMinJs], function() {
+  if (process.env.SKIP_TEST || process.env.SKIP_UMD) {
+    return;
+  }
+
+  return umdTest([distJsGlob, umdTestIndex], newer(umdTested)).then(function(changed) {
+    if (changed.length) {
+      fs.writeFile(umdTested, '');
+    }
+  });
+});
+
+gulp.task('umd-test', function() {
+  return umdTest([distJsGlob, umdTestIndex]);
+});
+
+function umdTest(files, filter) {
+  return new Promise(function(resolve, reject) {
+    return gulp.src(files, { read: false })
+      .pipe(filter || util.noop())
+      .pipe(then(function(files) {
+        var child = safeSpawn('node',
+          [mocha, umdTestIndex],
+          { stdio: 'inherit' });
+        child.on('close', function(code) {
+          if (code) {
+            reject(new util.PluginError('umd-test', new Error('Mocha error')));
+            return;
+          }
+          resolve(files);
+        });
       }));
   });
 }
