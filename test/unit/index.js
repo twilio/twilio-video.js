@@ -23,6 +23,7 @@ require('./spec/media/track/localtrack');
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
+require('./spec/signaling/v2/track');
 
 require('./spec/util/index');
 require('./spec/util/log');
