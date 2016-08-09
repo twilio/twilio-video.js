@@ -4,6 +4,10 @@ var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var util = require('../../lib/util');
 
+function Event(type) {
+  this.type = type;
+}
+
 var WebSocket = require('ws');
 
 function MediaStream() {
@@ -207,6 +211,7 @@ function mockWebRTC(_global) {
   _global = _global || global;
   var _window = _global.window = _global;
   _window.addEventListener = function addEventListener(){};
+  _global.Event = Event;
   _global.WebSocket = WebSocket;
   _global.navigator = navigator;
   _global.RTCDataChannel = RTCDataChannel;
