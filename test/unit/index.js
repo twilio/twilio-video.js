@@ -20,6 +20,8 @@ require('./spec/media/index');
 require('./spec/media/track');
 require('./spec/media/track/localtrack');
 
+require('./spec/signaling/v2/icebox');
+require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
 
 require('./spec/util/index');

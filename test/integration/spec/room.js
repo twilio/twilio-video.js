@@ -31,7 +31,7 @@ describe('Room', function() {
       roomName = randomName();
       alice = new Client(aliceToken, options);
 
-      return alice.connect(roomName).then(_room => {
+      return alice.connect({ to: roomName }).then(_room => {
         room = _room;
         done();
       }, done);

@@ -5,497 +5,682 @@ var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
 var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
 var sinon = require('sinon');
+var util = require('../../../../../lib/util');
 
-describe('PeerConnectionManager', function() {
-  describe('constructor', function() {
-    it('returns an instance of PeerConnectionManager', function() {
-      assert(new PeerConnectionManager() instanceof PeerConnectionManager);
-    });
-  });
-
-  describe('#addStream', function() {
-    it('calls addStream on each PeerConnection', function() {
-      var pcs = [];
-      var pcm = new PeerConnectionManager({
-        initialOffers: 3,
-        RTCPeerConnection: function(config) {
-          var pc = new RTCPeerConnection(config);
-          sinon.spy(pc, 'addStream');
-          pcs.push(pc);
-          return pc;
-        }
-      });
-
-      return pcm.setConfiguration({}).then(function() {
-        assert.equal(3, pcs.length);
-        var mediaStream = 'dummy-mediastream';
-        pcm.addStream(mediaStream);
-        assert(pcs.every(function(pc) {
-          return pc.addStream.calledWith(mediaStream);
-        }));
+describe('PeerConnectionManager', () => {
+  describe('#addMediaStream', () => {
+    it('returns the PeerConnectionManager', () => {
+      var test = makeTest();
+      var mediaStream = makeMediaStream();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        assert.equal(
+          test.peerConnectionManager,
+          test.peerConnectionManager.addMediaStream(mediaStream));
       });
     });
-  });
 
-  describe('#close', function() {
-    it('calls close on each PeerConnection', function() {
-      var pcs = [];
-      var pcm = new PeerConnectionManager({
-        initialOffers: 3,
-        RTCPeerConnection: function(config) {
-          var pc = new RTCPeerConnection(config);
-          sinon.spy(pc, 'close');
-          pcs.push(pc);
-          return pc;
-        }
-      });
-
-      return pcm.setConfiguration({}).then(function() {
-        assert.equal(3, pcs.length);
-        pcm.close();
-        assert(pcs.every(function(pc) {
-          return pc.close.called;
-        }));
+    it('calls addMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      var mediaStream = makeMediaStream();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionManager.addMediaStream(mediaStream);
+        assert.equal(
+          mediaStream,
+          test.peerConnectionV2s[0].addMediaStream.args[0][0]);
+        assert.equal(
+          mediaStream,
+          test.peerConnectionV2s[1].addMediaStream.args[0][0]);
       });
     });
   });
 
-  describe('#getConversationInfo', function() {
-    it('returns the subset of PeerConnections that changed', function() {
-      var pcs = [];
-      var pcm = new PeerConnectionManager({
-        RTCPeerConnection: function(config) {
-          var pc = new RTCPeerConnection(config);
-          pcs.push(pc);
-          return pc;
-        },
-        RTCSessionDescription: function(description) {
-          return description;
-        }
+  describe('#close', () => {
+    it('returns the PeerConnectionManager', () => {
+      var test = makeTest();
+      var mediaStream = makeMediaStream();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        assert.equal(
+          test.peerConnectionManager,
+          test.peerConnectionManager.close());
       });
+    });
 
-      return pcm.update(new ConversationEventBuilder()
-        .createOffer(1)
-        .offer(2))
-      .then(function() {
-        // Until we call setConfiguration, we should not have constructed any
-        // PeerConnections; hence we expect zero PeerConnection Messages.
-        assert.equal(null, pcm.getConversationInfo());
-        return pcm.setConfiguration({});
-      }).then(function() {
-        // Once we've called setConfiguration, we should have constructed the
-        // two PeerConnections, and we expect two PeerConnection Messages.
-        assert.deepEqual(new ConversationEventBuilder()
-            .offer(1)
-            .answer(2)
-            .peer_connections,
-          pcm.getConversationInfo().peer_connections);
-        // Now, simulate receiving an answer.
-        return pcm.update(new ConversationEventBuilder()
-            .answer(1)
-            .offer(3));
-      }).then(function() {
-        // We expect one new PeerConnection Message now (since both of the first
-        // two PeerConnections are stable).
-        assert.deepEqual(new ConversationEventBuilder()
-            .answer(3)
-            .peer_connections,
-          pcm.getConversationInfo().peer_connections);
+    it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      var mediaStream = makeMediaStream();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionManager.close();
+        assert(test.peerConnectionV2s[0].close.calledOnce);
+        assert(test.peerConnectionV2s[1].close.calledOnce);
       });
     });
   });
 
-  describe('#removeStream', function() {
-    it('calls removeStream on each PeerConnection', function() {
-      var pcs = [];
-      var pcm = new PeerConnectionManager({
-        initialOffers: 3,
-        RTCPeerConnection: function(config) {
-          var pc = new RTCPeerConnection(config);
-          sinon.spy(pc, 'removeStream');
-          pcs.push(pc);
-          return pc;
-        }
-      });
-
-      return pcm.setConfiguration({}).then(function() {
-        assert.equal(3, pcs.length);
-        var mediaStream = 'dummy-mediastream';
-        pcm.addStream(mediaStream);
-        pcm.removeStream(mediaStream);
-        assert(pcs.every(function(pc) {
-          return pc.removeStream.calledWith(mediaStream);
-        }));
-      });
-    });
-  });
-
-  describe('#renegotiate', function() {
-  });
-
-  describe('#setConfiguration', function() {
-    it('sets RTCConfiguration for any newly-constructed PeerConnections', function() {
-      var config1 = {
-        iceServers: [ { url: 'foo' } ],
-        iceTransportPolicy: 'bar'
-      };
-
-      var config2 = {
-        iceServers: [ { urls: 'baz' } ]
-      };
-
-      var pc;
-      var pcm = new PeerConnectionManager({
-        initialOffers: 0,
-        RTCPeerConnection: function(config) {
-          return pc = new RTCPeerConnection(config);
-        }
-      });
-
-      // Check that the first PeerConnection uses the given configuration.
-      return pcm.setConfiguration(config1).then(function() {
-        return pcm.update(new ConversationEventBuilder().createOffer(1));
-      }).then(function() {
-        assert.deepEqual({
-          iceServers: [ { urls: [ 'foo' ] } ],
-          iceTransportPolicy: 'bar',
-          iceTransports: 'bar'
-        }, pc.getConfiguration());
-        // Then, check that the second PeerConnection uses the given configuration.
-        return pcm.setConfiguration(config2);
-      }).then(function() {
-        return pcm.update(new ConversationEventBuilder().createOffer(2));
-      }).then(function() {
-        assert.deepEqual({
-          iceServers: [ { urls: 'baz' } ],
-          iceTransportPolicy: 'bar',
-          iceTransports: 'bar'
-        }, pc.getConfiguration());
-      });
-    });
-
-    context('when called the first time, before #update', function() {
-      it('constructs PeerConnections and creates offers, as specified by initialOffers', function() {
-        var pcs = [];
-        var pcm = new PeerConnectionManager({
-          initialOffers: 5,
-          RTCPeerConnection: function(config) {
-            var pc = new RTCPeerConnection(config);
-            sinon.spy(pc, 'createOffer');
-            sinon.spy(pc, 'setLocalDescription');
-            pcs.push(pc);
-            return pc;
-          }
+  describe('#createAndOffer', () => {
+    context('returns a Promise that resolves', () => {
+      it('to the PeerConnectionManager', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.createAndOffer().then(peerConnectionManager => {
+          assert.equal(test.peerConnectionManager, peerConnectionManager);
         });
+      });
 
-        return pcm.setConfiguration({}).then(function() {
-          assert.equal(5, pcs.length);
-          assert(pcs.every(function(pc) {
-            return pc.createOffer.called && pc.setLocalDescription.called;
-          }));
+      it('after the PeerConnectionV2 has created an offer', () => {
+        var peerConnectionV2 = new EventEmitter();
+        var deferred = util.defer();
+        peerConnectionV2.offer = () => deferred.promise;
+        var test = makeTest({
+          RTCPeerConnection: function() { return peerConnectionV2; }
+        });
+        var createAndOfferResolved = false;
+        var promise = test.peerConnectionManager.createAndOffer().then(() => {
+          createAndOfferResolved = true;
+        });
+        return new Promise(resolve => {
+          assert(!createAndOfferResolved);
+          deferred.resolve();
+          resolve(promise);
         });
       });
     });
 
-    context('when called the first time, after #update', function() {
-      it('does not construct PeerConnections or create offers, ignoring initialOffers', function() {
-        var pcs = [];
-        var pcm = new PeerConnectionManager({
-          RTCPeerConnection: function(config) {
-            var pc = new RTCPeerConnection(config);
-            pcs.push(pc);
-            return pc;
-          }
-        });
+    it('constructs a new PeerConnectionV2 using the most recent configuration passed to #setConfiguration', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        test.peerConnectionManager.setConfiguration({ baz: 'qux' });
+      }).then(() => {
+        assert.deepEqual(
+          { baz: 'qux' },
+          test.peerConnectionV2s[0].configuration);
+      });
+    });
 
-        return pcm.update(new ConversationEventBuilder()).then(function() {
-          return pcm.setConfiguration({});
-        }).then(function() {
-          assert.equal(0, pcs.length);
+    it('calls addMediaStream with any previously-added MediaStreams on the new PeerConnectionV2', () => {
+      var test = makeTest();
+      var mediaStream = makeMediaStream();
+      test.peerConnectionManager.addMediaStream(mediaStream);
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        assert.equal(
+          mediaStream,
+          test.peerConnectionV2s[0].addMediaStream.args[0][0]);
+      });
+    });
+  });
+
+  describe('#getRemoteMediaStreams', () => {
+    it('returns the concatenated results of calling getRemoteMediaStreams on any PeerConnectionV2s create with #createAndOffer or #update', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        var mediaStream1 = makeMediaStream();
+        var mediaStream2 = makeMediaStream();
+        test.peerConnectionV2s[0].getRemoteMediaStreams = () => [mediaStream1];
+        test.peerConnectionV2s[1].getRemoteMediaStreams = () => [mediaStream2];
+        assert.deepEqual(
+          [mediaStream1, mediaStream2],
+          test.peerConnectionManager.getRemoteMediaStreams());
+      });
+    });
+  });
+
+  describe('#getStates', () => {
+    it('returns the non-null results of calling getState on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionV2s[0].getState = () => null;
+        assert.deepEqual(
+          [
+            { id: '123', fizz: 'buzz' }
+          ],
+          test.peerConnectionManager.getStates());
+      });
+    });
+  });
+
+  describe('#removeMediaStream', () => {
+    context('when the MediaStream to remove was previously added via addMediaStream', () => {
+      it('returns true', () => {
+        var test = makeTest();
+        var mediaStream = makeMediaStream();
+        test.peerConnectionManager.addMediaStream(mediaStream);
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          assert(test.peerConnectionManager.removeMediaStream(mediaStream));
+        });
+      });
+
+      it('calls removeMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        var test = makeTest();
+        var mediaStream = makeMediaStream();
+        test.peerConnectionManager.addMediaStream(mediaStream);
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          test.peerConnectionManager.removeMediaStream(mediaStream);
+          assert.equal(
+            mediaStream,
+            test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
+          assert.equal(
+            mediaStream,
+            test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
+        });
+      });
+    });
+
+    context('when the MediaStream to remove was not previously added via addMediaStream', () => {
+      it('returns false', () => {
+        var test = makeTest();
+        var mediaStream = makeMediaStream();
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          assert(!test.peerConnectionManager.removeMediaStream(mediaStream));
+        });
+      });
+
+      it('calls removeMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        var test = makeTest();
+        var mediaStream = makeMediaStream();
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          test.peerConnectionManager.removeMediaStream(mediaStream);
+          assert.equal(
+            mediaStream,
+            test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
+          assert.equal(
+            mediaStream,
+            test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
         });
       });
     });
   });
 
-  describe('#update', function() {
-    context('when called with PeerConnection Messages that include a "create-offer"', function() {
-      context('after #setConfiguration', function() {
-        it('immediately constructs a PeerConnection before calling createOffer and setLocalDescription', function() {
-          var pc;
-          var pcm = new PeerConnectionManager({
-            initialOffers: 0,
-            RTCPeerConnection: function(config) {
-              pc = new RTCPeerConnection(config);
-              sinon.spy(pc, 'createOffer');
-              sinon.spy(pc, 'setLocalDescription');
-              return pc;
-            }
-          });
-
-          return pcm.setConfiguration({}).then(function() {
-            return pcm.update(new ConversationEventBuilder().createOffer());
-          }).then(function() {
-            assert(pc);
-            assert(pc.createOffer.called);
-            assert(pc.setLocalDescription.calledWith({ type: 'offer', sdp: 'dummy-offer' }));
-          });
-        });
+  describe('#setConfiguration', () => {
+    it('returns the PeerConnectionManager', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        assert.equal(
+          test.peerConnectionManager,
+          test.peerConnectionManager.setConfiguration({ foo: 'bar' }));
       });
+    });
 
-      context('before #setConfiguration', function() {
-        it('waits to construct a PeerConnection before calling createOffer and setLocalDescription', function() {
-          var pc;
-          var pcm = new PeerConnectionManager({
-            RTCPeerConnection: function(config) {
-              pc = new RTCPeerConnection(config);
-              sinon.spy(pc, 'createOffer');
-              sinon.spy(pc, 'setLocalDescription');
-              return pc;
-            }
-          });
+    it('calls setConfiguration on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionManager.setConfiguration({ foo: 'bar' });
+        assert.deepEqual(
+          { foo: 'bar' },
+          test.peerConnectionV2s[0].setConfiguration.args[0][0]);
+        assert.deepEqual(
+          { foo: 'bar' },
+          test.peerConnectionV2s[1].setConfiguration.args[0][0]);
+      });
+    });
+  });
 
-          return pcm.update(new ConversationEventBuilder().createOffer()).then(function() {
-            assert(!pc);
-            return pcm.setConfiguration({});
-          }).then(function() {
-            assert(pc);
-            assert(pc.createOffer.called);
-            assert(pc.setLocalDescription.calledWith({ type: 'offer', sdp: 'dummy-offer' }));
-          });
+  describe('#setMediaStreams', () => {
+    it('returns the PeerConnectionManager', () => {
+      var test = makeTest();
+      var mediaStream1 = makeMediaStream();
+      var mediaStream2 = makeMediaStream();
+      var mediaStream3 = makeMediaStream();
+      test.peerConnectionManager.addMediaStream(mediaStream1);
+      test.peerConnectionManager.addMediaStream(mediaStream2);
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        assert.equal(
+          test.peerConnectionManager,
+          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]));
+      });
+    });
+
+    it('calls removeMediaStream with any previously-added MediaStreams on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      var mediaStream1 = makeMediaStream();
+      var mediaStream2 = makeMediaStream();
+      var mediaStream3 = makeMediaStream();
+      test.peerConnectionManager.addMediaStream(mediaStream1);
+      test.peerConnectionManager.addMediaStream(mediaStream2);
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+        assert.equal(
+          mediaStream1,
+          test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
+        assert.equal(
+          mediaStream2,
+          test.peerConnectionV2s[0].removeMediaStream.args[1][0]);
+        assert.equal(
+          mediaStream1,
+          test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
+        assert.equal(
+          mediaStream2,
+          test.peerConnectionV2s[1].removeMediaStream.args[1][0]);
+      });
+    });
+
+    it('calls addMediaStream with the new MediaStreams on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+      var test = makeTest();
+      var mediaStream1 = makeMediaStream();
+      var mediaStream2 = makeMediaStream();
+      var mediaStream3 = makeMediaStream();
+      test.peerConnectionManager.addMediaStream(mediaStream1);
+      test.peerConnectionManager.addMediaStream(mediaStream2);
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+        assert.equal(
+          mediaStream1,
+          test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
+        assert.equal(
+          mediaStream2,
+          test.peerConnectionV2s[0].removeMediaStream.args[1][0]);
+        assert.equal(
+          mediaStream1,
+          test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
+        assert.equal(
+          mediaStream2,
+          test.peerConnectionV2s[1].removeMediaStream.args[1][0]);
+      });
+    });
+
+    context('when the MediaStreamTracks changed', () => {
+      it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        var test = makeTest();
+
+        var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
+        var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
+        var audioTrack3 = makeMediaStreamTrack({ kind: 'audio' });
+
+        var mediaStream1 = makeMediaStream({
+          audio: [audioTrack1]
+        });
+
+        var mediaStream2 = makeMediaStream({
+          audio: [audioTrack1, audioTrack2]
+        });
+
+        var mediaStream3 = makeMediaStream({
+          audio: [audioTrack2, audioTrack3]
+        });
+
+        test.peerConnectionManager.addMediaStream(mediaStream1);
+        test.peerConnectionManager.addMediaStream(mediaStream2);
+
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+          test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+
+          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+
+          assert(test.peerConnectionV2s[0].offer.calledOnce);
+          assert(test.peerConnectionV2s[1].offer.calledOnce);
         });
       });
     });
 
-    context('when called with PeerConnection Messages that include an "offer"', function() {
-      context('after #setConfiguration', function() {
-        it('immediately constructs a PeerConnection before calling setRemoteDescription, createAnswer, and setLocalDescription', function() {
-          var pc;
-          var pcm = new PeerConnectionManager({
-            initialOffers: 0,
-            RTCPeerConnection: function(config) {
-              pc = new RTCPeerConnection(config);
-              sinon.spy(pc, 'setRemoteDescription');
-              sinon.spy(pc, 'createAnswer');
-              sinon.spy(pc, 'setLocalDescription');
-              return pc;
+    context('when the MediaStreamTracks did not change', () => {
+      it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        var test = makeTest();
+
+        var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
+        var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
+
+        var mediaStream1 = makeMediaStream({
+          audio: [audioTrack1]
+        });
+
+        var mediaStream2 = makeMediaStream({
+          audio: [audioTrack1, audioTrack2]
+        });
+
+        var mediaStream3 = makeMediaStream({
+          audio: [audioTrack1]
+        });
+
+        test.peerConnectionManager.addMediaStream(mediaStream1);
+        test.peerConnectionManager.addMediaStream(mediaStream2);
+
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+          test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+
+          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+
+          assert(!test.peerConnectionV2s[0].offer.calledOnce);
+          assert(!test.peerConnectionV2s[1].offer.calledOnce);
+        });
+      });
+    });
+  });
+
+  describe('#update', () => {
+    context('when called with an array of PeerConnection states containing a new PeerConnection ID', () => {
+      it('returns a Promise for the PeerConnectionManager', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.update([
+          { id: '123', fizz: 'buzz' }
+        ]).then(peerConnectionManager => {
+          assert.equal(test.peerConnectionManager, peerConnectionManager);
+        });
+      });
+
+      it('constructs a new PeerConnectionV2 with the new PeerConnection ID using the most recent configuration passed to #setConfiguration', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.update([
+          { id: '123', fizz: 'buzz' }
+        ]).then(() => {
+          assert.equal('123', test.peerConnectionV2s[0].id);
+          assert.deepEqual(
+            { iceServers: [] },
+            test.peerConnectionV2s[0].configuration);
+        });
+      });
+
+      it('calls addMediaStream with any previously-added MediaStreams on the new PeerConnectionV2', () => {
+        var test = makeTest();
+        var mediaStream = makeMediaStream();
+        test.peerConnectionManager.addMediaStream(mediaStream);
+        return test.peerConnectionManager.update([
+          { id: '123', fizz: 'buzz' }
+        ]).then(() => {
+          assert.equal(
+            mediaStream,
+            test.peerConnectionV2s[0].addMediaStream.args[0][0]);
+        });
+      });
+
+      it('passes the PeerConnection states to the new PeerConnectionV2\'s #update method', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.update([
+          { id: '123', fizz: 'buzz' }
+        ]).then(() => {
+          assert.deepEqual(
+            { id: '123', fizz: 'buzz' },
+            test.peerConnectionV2s[0].update.args[0][0]);
+        });
+      });
+    });
+
+    context('when called with an array of PeerConnection states containing known PeerConnection IDs', () => {
+      it('returns a Promise for the PeerConnectionManager', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          var peerConnectionState = {
+            id: test.peerConnectionV2s[0].id,
+            fizz: 'buzz'
+          };
+          return test.peerConnectionManager.update([peerConnectionState]);
+        }).then(peerConnectionManager => {
+          assert.equal(test.peerConnectionManager, peerConnectionManager);
+        });
+      });
+
+      it('passes the PeerConnection states to the corresponding PeerConnectionV2\'s #update method', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          var peerConnectionState = {
+            id: test.peerConnectionV2s[0].id,
+            fizz: 'buzz'
+          };
+          return test.peerConnectionManager.update([peerConnectionState]);
+        }).then(() => {
+          assert.deepEqual(
+            {
+              id: test.peerConnectionV2s[0].id,
+              fizz: 'buzz'
             },
-            RTCSessionDescription: function(description) {
-              return description;
-            }
-          });
-
-          return pcm.setConfiguration({}).then(function() {
-            return pcm.update(new ConversationEventBuilder().offer());
-          }).then(function() {
-            assert(pc);
-            assert(pc.setRemoteDescription.calledWith({ type: 'offer', sdp: 'dummy-offer' }));
-            assert(pc.createAnswer.called);
-            assert(pc.setLocalDescription.calledWith({ type: 'answer', sdp: 'dummy-answer' }));
-          });
-        });
-      });
-
-      context('before #setConfiguration', function() {
-        it('waits to construct a PeerConnection before calling setRemoteDescription, createAnswer, and setLocalDescription', function() {
-          var pc;
-          var pcm = new PeerConnectionManager({
-            RTCPeerConnection: function(config) {
-              pc = new RTCPeerConnection(config);
-              sinon.spy(pc, 'setRemoteDescription');
-              sinon.spy(pc, 'createAnswer');
-              sinon.spy(pc, 'setLocalDescription');
-              return pc;
-            },
-            RTCSessionDescription: function(description) {
-              return description;
-            }
-          });
-
-          return pcm.update(new ConversationEventBuilder().offer()).then(function() {
-            assert(!pc);
-            return pcm.setConfiguration({});
-          }).then(function() {
-            assert(pc);
-            assert(pc.setRemoteDescription.calledWith({ type: 'offer', sdp: 'dummy-offer' }));
-            assert(pc.createAnswer.called);
-            assert(pc.setLocalDescription.calledWith({ type: 'answer', sdp: 'dummy-answer' }));
-          });
+            test.peerConnectionV2s[0].update.args[0][0]);
         });
       });
     });
+  });
 
-    context('when called with PeerConnection Messages that include an "answer"', function() {
-      it('calls setRemoteDescription on the PeerConnection', function() {
-        var pc;
-        var pcm = new PeerConnectionManager({
-          initialOffers: 0,
-          RTCPeerConnection: function(config) {
-            pc = new RTCPeerConnection(config);
-            sinon.spy(pc, 'setRemoteDescription');
-            return pc;
-          },
-          RTCSessionDescription: function(description) {
-            return description;
-          }
-        });
-
-        return pcm.setConfiguration({}).then(function() {
-          return pcm.update(new ConversationEventBuilder().createOffer());
-        }).then(function() {
-          return pcm.update(new ConversationEventBuilder().answer());
-        }).then(function() {
-          assert(pc.setRemoteDescription.calledWith({ type: 'answer', sdp: 'dummy-answer' }));
-        });
+  describe('"candidates" event', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        var promise1 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
+        test.peerConnectionV2s[0].emit('candidates', { foo: 'bar' });
+        return promise1;
+      }).then(result1 => {
+        var promise2 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
+        test.peerConnectionV2s[1].emit('candidates', { baz: 'qux' });
+        return Promise.all([result1, promise2]);
+      }).then(results => {
+        assert.deepEqual(
+          { foo: 'bar' },
+          results[0]);
+        assert.deepEqual(
+          { baz: 'qux' },
+          results[1]);
       });
     });
+  });
 
-    context('when called with PeerConnection Messages that include a "close"', function() {
-      it('closes the PeerConnection', function() {
-        var pcs = [];
-        var pcm = new PeerConnectionManager({
-          initialOffers: 0,
-          RTCPeerConnection: function(config) {
-            var pc = new RTCPeerConnection(config);
-            sinon.spy(pc, 'close');
-            pcs.push(pc);
-            return pc;
-          },
-          RTCSessionDescription: function(description) {
-            return description;
-          }
-        });
+  describe('"description" event', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        var promise1 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
+        test.peerConnectionV2s[0].emit('description', { foo: 'bar' });
+        return promise1;
+      }).then(result1 => {
+        var promise2 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
+        test.peerConnectionV2s[1].emit('description', { baz: 'qux' });
+        return Promise.all([result1, promise2]);
+      }).then(results => {
+        assert.deepEqual(
+          { foo: 'bar' },
+          results[0]);
+        assert.deepEqual(
+          { baz: 'qux' },
+          results[1]);
+      });
+    });
+  });
 
-        // NOTE(mroberts): Test PeerConnections setup in "both" directions.
-        return pcm.setConfiguration({}).then(function() {
-          return pcm.update(new ConversationEventBuilder()
-            .createOffer(1)
-            .offer(2))
-        }).then(function() {
-          return pcm.update(new ConversationEventBuilder().answer(1));
-        }).then(function() {
-          assert.equal(2, pcs.length);
-          return pcm.update(new ConversationEventBuilder().close(1).close(2));
-        }).then(function() {
-          assert(pcs[0].close.called);
-          assert(pcs[1].close.called);
-        });
+  describe('"trackAdded" event', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+      var test = makeTest();
+      return test.peerConnectionManager.createAndOffer().then(() => {
+        return test.peerConnectionManager.update([
+          { id: '123' }
+        ]);
+      }).then(() => {
+        var promise1 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
+        test.peerConnectionV2s[0].emit('trackAdded', { foo: 'bar' });
+        return promise1;
+      }).then(result1 => {
+        var promise2 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
+        test.peerConnectionV2s[1].emit('trackAdded', { baz: 'qux' });
+        return Promise.all([result1, promise2]);
+      }).then(results => {
+        assert.deepEqual(
+          { foo: 'bar' },
+          results[0]);
+        assert.deepEqual(
+          { baz: 'qux' },
+          results[1]);
       });
     });
   });
 });
 
-function ConversationEventBuilder() {
-  this.peer_connections = [];
+function makeTest(options) {
+  options = options || {};
+  options.iceServers = options.iceServers || [];
+  options.peerConnectionV2s = options.peerConnectionV2s || [];
+  options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
+  options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options);
+  options.peerConnectionManager.setConfiguration({ iceServers: [] });
+  return options;
 }
 
-ConversationEventBuilder.prototype.answer = function answer(id, sdp) {
-  id = id == null ? 1 : id;
-  this.peer_connections.push({
-    id: id,
-    description: {
-      type: 'answer',
-      sdp: sdp || 'dummy-answer'
-    }
-  });
-  return this;
-};
+function makePeerConnectionV2Constructor(testOptions) {
+  return function PeerConnectionV2(id, options) {
+    var peerConnectionV2 = new EventEmitter();
 
-ConversationEventBuilder.prototype.close = function close(id) {
-  id = id == null ? 1 : id;
-  this.peer_connections.push({
-    id: id,
-    description: {
-      type: 'close'
-    }
-  });
-  return this;
-};
+    peerConnectionV2.configuration = {
+      iceServers: testOptions.iceServers
+    };
 
-ConversationEventBuilder.prototype.createOffer = function createOffer(id) {
-  id = id == null ? 1 : id;
-  this.peer_connections.push({
-    id: id,
-    description: {
-      type: 'create-offer'
-    }
-  });
-  return this;
-};
+    peerConnectionV2.id = id;
 
-ConversationEventBuilder.prototype.offer = function offer(id, sdp) {
-  id = id == null ? 1 : id;
-  this.peer_connections.push({
-    id: id,
-    description: {
-      type: 'offer',
-      sdp: sdp || 'dummy-offer'
-    }
-  });
-  return this;
-};
+    peerConnectionV2.addMediaStream = sinon.spy();
 
-function RTCPeerConnection(configuration) {
+    peerConnectionV2.close = sinon.spy();
+
+    peerConnectionV2.offer = sinon.spy(() => Promise.resolve());
+
+    peerConnectionV2.removeMediaStream = sinon.spy(() => {});
+
+    peerConnectionV2.getState = () => ({
+      id: id,
+      fizz: 'buzz'
+    });
+
+    peerConnectionV2.setConfiguration = sinon.spy(configuration => {
+      peerConnectionV2.configuration = configuration;
+    });
+
+    peerConnectionV2.update = sinon.spy(() => Promise.resolve());
+
+    testOptions.peerConnectionV2s.push(peerConnectionV2);
+
+    return peerConnectionV2;
+  };
+}
+
+function makeId() {
+  return Number.parseInt(Math.random() * 100);
+}
+
+function makeMediaStream(options) {
+  options = options || {};
+  options.id = options.id || makeId();
+  options.audio = options.audio || 0;
+  options.video = options.video || 0;
+
+  if (typeof options.audio === 'number') {
+    var audio = [];
+    for (var i = 0; i < options.audio; i++) {
+      var audioTrack = makeMediaStreamTrack({ kind: 'audio' });
+      audio.push(audioTrack);
+    }
+    options.audio = audio;
+  }
+
+  if (typeof options.video === 'number') {
+    var video = [];
+    for (var i = 0; i < options.video; i++) {
+      var videoTrack = makeMediaStreamTrack({ kind: 'video' });
+      video.push(videoTrack);
+    }
+    options.video = video;
+  }
+
+  options.audio = options.audio.map(track => track instanceof MediaStreamTrack
+    ? track : new MediaStreamTrack(track));
+
+  options.video = options.video.map(track => track instanceof MediaStreamTrack
+    ? track : new MediaStreamTrack(track));
+
+  var mediaStream = new EventEmitter();
+
+  mediaStream.addEventListener = mediaStream.addListener;
+
+  mediaStream.removeEventListener = mediaStream.removeListener;
+
+  mediaStream.getAudioTracks = () => options.audio;
+
+  mediaStream.getVideoTracks = () => options.video;
+
+  mediaStream.getTracks = () => options.audio.concat(options.video);
+
+  return mediaStream;
+}
+
+function MediaStreamTrack(options) {
+  options = options || {};
+  this.id = options.id || makeId();
+  this.kind = options.kind;
   EventEmitter.call(this);
-  this._configuration = configuration;
-  this._localStreams = [];
-  this.iceGatheringState = 'complete';
-  this.localDescription = null;
-  this.remoteDescription = null;
-  this.signalingState = 'stable';
 }
 
-inherits(RTCPeerConnection, EventEmitter);
+inherits(MediaStreamTrack, EventEmitter);
 
-RTCPeerConnection.prototype.addEventListener = RTCPeerConnection.prototype.addListener;
+MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
 
-RTCPeerConnection.prototype.addStream = function addStream(mediaStream) {
-  this._localStreams.push(mediaStream);
-};
+MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
 
-RTCPeerConnection.prototype.close = function close() {
-  this.signalingState = 'closed';
-};
-
-RTCPeerConnection.prototype.createAnswer = function createAnswer(onSuccess) {
-  onSuccess({
-    type: 'answer',
-    sdp: 'dummy-answer'
-  });
-};
-
-RTCPeerConnection.prototype.createOffer = function createOffer(onSuccess) {
-  onSuccess({
-    type: 'offer',
-    sdp: 'dummy-offer'
-  });
-};
-
-RTCPeerConnection.prototype.getConfiguration = function getConfiguration() {
-  return this._configuration;
-};
-
-RTCPeerConnection.prototype.getLocalStreams = function getLocalStreams() {
-  return this._localStreams;
-};
-
-RTCPeerConnection.prototype.getRemoteStreams = function getRemoteStreams() {
-  return [];
-};
-
-RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description, onSuccess) {
-  this.localDescription = description;
-  this.signalingState = this.signalingState === 'have-remote-offer' ? 'stable' : 'have-local-offer';
-  onSuccess();
-};
-
-RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription(description, onSuccess) {
-  this.remoteDescription = description;
-  this.signalingState = this.signalingState === 'have-local-offer' ? 'stable' : 'have-remote-offer';
-  onSuccess();
-};
-
-RTCPeerConnection.prototype.removeEventListener = RTCPeerConnection.prototype.removeListener;
-
-RTCPeerConnection.prototype.removeStream = function removeStream(mediaStream) {
-  this._localStreams.splice(this._localStreams.indexOf(mediaStream), 1);
-};
+function makeMediaStreamTrack(options) {
+  return new MediaStreamTrack(options);
+}
