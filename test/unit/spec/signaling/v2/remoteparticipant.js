@@ -965,7 +965,7 @@ function makeIdentity(length) {
 function makeSid() {
   var sid = 'PA';
   for (var i = 0; i < 32; i++) {
-    sid += 'abcdef0123456789'.split()[Math.floor(Math.random() * 17)];
+    sid += 'abcdef0123456789'.split('')[Math.floor(Math.random() * 16)];
   }
   return sid;
 }
