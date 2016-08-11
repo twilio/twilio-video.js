@@ -22,6 +22,7 @@ require('./spec/media/track/localtrack');
 
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/remoteparticipant');
+require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
 require('./spec/signaling/v2/track');
