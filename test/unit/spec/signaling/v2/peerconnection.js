@@ -1378,9 +1378,11 @@ function makePeerConnection(options) {
     if (peerConnection.signalingState === 'stable' &&
         description.type === 'offer') {
       peerConnection.signalingState = 'have-local-offer';
+      peerConnection.emit('signalingstatechange');
     } else if (peerConnection.signalingState === 'have-remote-offer' &&
                (description.type === 'answer' || description.type === 'rollback')) {
       peerConnection.signalingState = 'stable';
+      peerConnection.emit('signalingstatechange');
     }
     peerConnection.localDescription = description;
     resolve();
@@ -1390,9 +1392,11 @@ function makePeerConnection(options) {
     if (peerConnection.signalingState === 'stable' &&
         description.type === 'offer') {
       peerConnection.signalingState = 'have-remote-offer';
+      peerConnection.emit('signalingstatechanged');
     } else if (peerConnection.signalingState === 'have-local-offer' &&
                (description.type === 'answer' || description.type === 'rollback')) {
       peerConnection.signalingState = 'stable';
+      peerConnection.emit('signalingstatechange');
     }
     peerConnection.remoteDescription = description;
     resolve();
@@ -1418,6 +1422,7 @@ function makePeerConnection(options) {
 
   peerConnection.close = () => {
     peerConnection.signalingState = 'closed';
+    peerConnection.emit('signalingstatechange');
   };
 
   peerConnection.addStream = stream => localStreams.push(stream);
