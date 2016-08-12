@@ -1171,7 +1171,8 @@ function makeTest(options) {
   options.cancelableRoomSignalingPromise = options.cancelableRoomSignalingPromise || {};
   options.createCancelableRoomSignalingPromise = sinon.spy(() => options.cancelableRoomSignalingPromise);
 
-  options.signaling = new SignalingV2(options.accountSid, options.identity, options);
+  options.wsServer = options.wsServer || 'wss://127.0.0.1';
+  options.signaling = new SignalingV2(options.wsServer, options.accountSid, options.identity, options);
 
   options.transitions = [];
   options.signaling.on('stateChanged', state => {
