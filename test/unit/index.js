@@ -12,6 +12,7 @@ if (typeof document === 'undefined') {
 
 require('./spec/client');
 require('./spec/room');
+require('./spec/localparticipant');
 require('./spec/participant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
