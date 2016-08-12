@@ -100,6 +100,21 @@ describe('RoomV2', () => {
     });
 
     context('PeerConnectionManager', () => {
+      it('dequeues any enqueued "candidates" events', () => {
+        var test = makeTest();
+        assert(test.peerConnectionManager.dequeue.calledWith('candidates'));
+      });
+
+      it('dequeues any enqueued "description" events', () => {
+        var test = makeTest();
+        assert(test.peerConnectionManager.dequeue.calledWith('description'));
+      });
+
+      it('dequeues any enqueued "trackAdded" events', () => {
+        var test = makeTest();
+        assert(test.peerConnectionManager.dequeue.calledWith('trackAdded'));
+      });
+
       context('before the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
         it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
           var id = makeId();
@@ -1196,6 +1211,7 @@ function makeSession(options) {
 
 function makePeerConnectionManager(options) {
   var peerConnectionManager = new EventEmitter();
+  peerConnectionManager.dequeue = sinon.spy(() => {});
   peerConnectionManager.setMediaStreams = sinon.spy(() => {});
   peerConnectionManager.getRemoteMediaStreams = sinon.spy(() => []);
   peerConnectionManager.update = sinon.spy(() => {});
