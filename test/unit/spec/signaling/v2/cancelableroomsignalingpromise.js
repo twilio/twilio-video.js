@@ -179,7 +179,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       return test.createAndOfferDeferred.promise.then(() => {
         var infoHandler = test.ua.invite.args[0][1].infoHandler;
         var request = { reply: () => {} };
-        infoHandler(request);
+        infoHandler.call(test.session, request);
         assert.equal(info, request);
       });
     });
@@ -192,7 +192,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       return test.createAndOfferDeferred.promise.then(() => {
         var infoHandler = test.ua.invite.args[0][1].infoHandler;
         var request = { reply: sinon.spy(() => {}) };
-        infoHandler(request);
+        infoHandler.call(test.session, request);
         assert.equal(
           200,
           request.reply.args[0][0]);
