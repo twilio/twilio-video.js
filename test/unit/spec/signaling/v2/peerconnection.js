@@ -224,9 +224,18 @@ describe('PeerConnectionV2', () => {
         var test = makeTest();
         var configuration;
         test.peerConnection.setConfiguration = _configuration => configuration = _configuration;
-        test.peerConnectionV2.setConfiguration({ fizz: 'buzz' });
+        test.peerConnectionV2.setConfiguration({
+          iceServers: ['foo'],
+          iceTransportPolicy: 'bar'
+        });
         assert.deepEqual(
-          { fizz: 'buzz' },
+          {
+            bundlePolicy: 'max-bundle',
+            iceServers: ['foo'],
+            iceTransportPolicy: 'bar',
+            iceTransports: 'bar',
+            rtcpMuxPolicy: 'require'
+          },
           configuration);
       });
     });
