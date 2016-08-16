@@ -254,6 +254,20 @@ describe('RoomV2', () => {
           JSON.parse(test.session.terminate.args[0][0].body));
       });
 
+      it('calls .terminate on the underlying SIP.js Session with Content-Type "application/room-signaling+json"', () => {
+        var test = makeTest();
+        test.room.disconnect();
+        for (var header of test.session.terminate.args[0][0].extraHeaders) {
+          if (header.startsWith('Content-Type: ')) {
+            assert.equal(
+              'application/room-signaling+json',
+              header.split(': ')[1]);
+            return;
+          }
+        }
+        throw new Error('Content-Type header missing');
+      });
+
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {
         var test = makeTest({
           participants: [

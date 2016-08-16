@@ -234,6 +234,28 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
       });
 
+      it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
+        var test = makeTest();
+        test.createAndOfferDeferred.resolve();
+        return test.createAndOfferDeferred.promise.then(() => {
+          test.cancelableRoomSignalingPromise.cancel();
+          test.session.emit('accepted');
+          return test.cancelableRoomSignalingPromise.then(() => {
+            throw new Error('Unexpected resolution');
+          }, error => {
+            for (var header of test.session.terminate.args[0][0].extraHeaders) {
+              if (header.startsWith('Content-Type: ')) {
+                assert.equal(
+                  'application/room-signaling+json',
+                  header.split(': ')[1]);
+                return;
+              }
+            }
+            throw new Error('Content-Type header missing');
+          });
+        });
+      });
+
       it('calls .close on the PeerConnectionManager', () => {
         var test = makeTest();
         test.createAndOfferDeferred.resolve();
@@ -276,6 +298,27 @@ describe('createCancelableRoomSignalingPromise', () => {
                 assert.deepEqual(
                   { type: 'disconnect', version: 1 },
                   JSON.parse(test.session.terminate.args[0][0].body));
+              });
+            });
+          });
+
+          it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            return test.createAndOfferDeferred.promise.then(() => {
+              test.session.emit('accepted', { body: '{}' });
+              return test.cancelableRoomSignalingPromise.then(() => {
+                throw new Error('Unexpected resolution');
+              }, error => {
+                for (var header of test.session.terminate.args[0][0].extraHeaders) {
+                  if (header.startsWith('Content-Type: ')) {
+                    assert.equal(
+                      'application/room-signaling+json',
+                      header.split(': ')[1]);
+                    return;
+                  }
+                }
+                throw new Error('Content-Type header missing');
               });
             });
           });
@@ -481,6 +524,27 @@ describe('createCancelableRoomSignalingPromise', () => {
               assert.deepEqual(
                 { type: 'disconnect', version: 1 },
                 JSON.parse(test.session.terminate.args[0][0].body));
+            });
+          });
+        });
+
+        it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
+          var test = makeTest();
+          test.createAndOfferDeferred.resolve();
+          return test.createAndOfferDeferred.promise.then(() => {
+            test.session.emit('accepted', { body: 'oh, hai' });
+            return test.cancelableRoomSignalingPromise.then(() => {
+              throw new Error('Unexpected resolution');
+            }, error => {
+              for (var header of test.session.terminate.args[0][0].extraHeaders) {
+                if (header.startsWith('Content-Type: ')) {
+                  assert.equal(
+                    'application/room-signaling+json',
+                    header.split(': ')[1]);
+                  return;
+                }
+              }
+              throw new Error('Content-Type header missing');
             });
           });
         });
