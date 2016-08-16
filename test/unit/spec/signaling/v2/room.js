@@ -414,6 +414,93 @@ describe('RoomV2', () => {
           track.mediaStream,
           Array.from(test.peerConnectionManager.setMediaStreams.args[0][0].values())[0]);
       });
+
+      it('calls .update on the LocalParticipantSignaling', () => {
+        var track = makeTrack();
+        var test = makeTest({
+          tracks: [track]
+        });
+        test.localParticipant.emit('trackAdded', track);
+        assert(test.localParticipant.update.calledOnce);
+      });
+
+      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+        var track = makeTrack();
+        var test = makeTest({
+          tracks: [track]
+        });
+        test.localParticipant.emit('trackAdded', track);
+        assert.equal(
+          'INFO',
+          test.session.sendRequest.args[0][0]);
+      });
+
+      context('the INFO message', () => {
+        it('has Content-Type "application/room-signaling+json"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackAdded', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Content-Type:')) {
+              return assert.equal(
+                header,
+                'Content-Type: application/room-signaling+json')
+            }
+          }
+          throw new Error('Content-Type header missing');
+        });
+
+        it('has Event type "room-signaling"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackAdded', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Event:')) {
+              return assert.equal(
+                header,
+                'Event: room-signaling')
+            }
+          }
+          throw new Error('Event header missing');
+        });
+
+        it('has Info-Package "room-signaling"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackAdded', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Info-Package:')) {
+              return assert.equal(
+                header,
+                'Info-Package: room-signaling')
+            }
+          }
+          throw new Error('Info-Package header missing');
+        });
+
+        it('has a body containing the LocalParticipantSignaling\'s state', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackAdded', track);
+          assert.deepEqual(
+            {
+              participant: {
+                revision: 1
+              },
+              type: 'update',
+              version: 1
+            },
+            JSON.parse(test.session.sendRequest.args[0][1].body));
+        });
+      });
     });
 
     context('"trackRemoved" event', () => {
@@ -426,6 +513,93 @@ describe('RoomV2', () => {
         assert.equal(
           track.mediaStream,
           Array.from(test.peerConnectionManager.setMediaStreams.args[0][0].values())[0]);
+      });
+
+      it('calls .update on the LocalParticipantSignaling', () => {
+        var track = makeTrack();
+        var test = makeTest({
+          tracks: [track]
+        });
+        test.localParticipant.emit('trackRemoved', track);
+        assert(test.localParticipant.update.calledOnce);
+      });
+
+      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+        var track = makeTrack();
+        var test = makeTest({
+          tracks: [track]
+        });
+        test.localParticipant.emit('trackRemoved', track);
+        assert.equal(
+          'INFO',
+          test.session.sendRequest.args[0][0]);
+      });
+
+      context('the INFO message', () => {
+        it('has Content-Type "application/room-signaling+json"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackRemoved', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Content-Type:')) {
+              return assert.equal(
+                header,
+                'Content-Type: application/room-signaling+json')
+            }
+          }
+          throw new Error('Content-Type header missing');
+        });
+
+        it('has Event type "room-signaling"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackRemoved', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Event:')) {
+              return assert.equal(
+                header,
+                'Event: room-signaling')
+            }
+          }
+          throw new Error('Event header missing');
+        });
+
+        it('has Info-Package "room-signaling"', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackRemoved', track);
+          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
+            if (header.startsWith('Info-Package:')) {
+              return assert.equal(
+                header,
+                'Info-Package: room-signaling')
+            }
+          }
+          throw new Error('Info-Package header missing');
+        });
+
+        it('has a body containing the LocalParticipantSignaling\'s state', () => {
+          var track = makeTrack();
+          var test = makeTest({
+            tracks: [track]
+          });
+          test.localParticipant.emit('trackRemoved', track);
+          assert.deepEqual(
+            {
+              participant: {
+                revision: 1
+              },
+              type: 'update',
+              version: 1
+            },
+            JSON.parse(test.session.sendRequest.args[0][1].body));
+        });
       });
     });
 
@@ -613,7 +787,7 @@ describe('RoomV2', () => {
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'disabled');
-          assert(!test.session.sendRequest.calledOnce);
+          assert(!test.session.sendRequest.calledTwice);
         });
       });
 
@@ -625,7 +799,7 @@ describe('RoomV2', () => {
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'enabled');
-          assert(!test.session.sendRequest.calledOnce);
+          assert(!test.session.sendRequest.calledTwice);
         });
       });
 
@@ -637,7 +811,7 @@ describe('RoomV2', () => {
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'ended');
-          assert(!test.session.sendRequest.calledOnce);
+          assert(!test.session.sendRequest.calledTwice);
         });
       });
     });
