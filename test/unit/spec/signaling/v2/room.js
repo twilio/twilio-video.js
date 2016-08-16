@@ -246,10 +246,12 @@ describe('RoomV2', () => {
           newState);
       });
 
-      it('calls .terminate on the underlying SIP.js Session', () => {
+      it('calls .terminate on the underlying SIP.js Session with a disconnect RSP message', () => {
         var test = makeTest();
         test.room.disconnect();
-        assert(test.session.terminate.calledOnce);
+        assert.deepEqual(
+          { type: 'disconnect', version: 1 },
+          JSON.parse(test.session.terminate.args[0][0].body));
       });
 
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {

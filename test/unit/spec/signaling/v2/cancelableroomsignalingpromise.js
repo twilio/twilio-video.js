@@ -218,7 +218,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
       });
 
-      it('calls .terminate on the SIP.js Session', () => {
+      it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
         var test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
@@ -227,7 +227,9 @@ describe('createCancelableRoomSignalingPromise', () => {
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
-            assert(test.session.terminate.calledOnce);
+            assert.deepEqual(
+              { type: 'disconnect', version: 1 },
+              JSON.parse(test.session.terminate.args[0][0].body));
           });
         });
       });
@@ -263,7 +265,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             });
           });
 
-          it('calls .terminate on the SIP.js Session', () => {
+          it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
             var test = makeTest();
             test.createAndOfferDeferred.resolve();
             return test.createAndOfferDeferred.promise.then(() => {
@@ -271,7 +273,9 @@ describe('createCancelableRoomSignalingPromise', () => {
               return test.cancelableRoomSignalingPromise.then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
-                assert(test.session.terminate.calledOnce);
+                assert.deepEqual(
+                  { type: 'disconnect', version: 1 },
+                  JSON.parse(test.session.terminate.args[0][0].body));
               });
             });
           });
@@ -466,7 +470,7 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
         });
 
-        it('calls .terminate on the SIP.js Session', () => {
+        it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
           var test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
@@ -474,7 +478,9 @@ describe('createCancelableRoomSignalingPromise', () => {
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
             }, error => {
-              assert(test.session.terminate.calledOnce);
+              assert.deepEqual(
+                { type: 'disconnect', version: 1 },
+                JSON.parse(test.session.terminate.args[0][0].body));
             });
           });
         });
