@@ -295,7 +295,7 @@ describe('PeerConnectionV2', () => {
             it('calls addIceCandidate with any previously-received matching ICE candidates on the underlying RTCPeerConnection', () => {
               var test = makeTest({ offers: 1 });
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              var answerDescription = test.state().setDescription(makeAnswer({ usernameFragment: 'bar' }), 1);
+              var answerDescription = test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1);
               var candidates = test.state().setIce(makeIce('bar', 1));
               return test.peerConnectionV2.update(candidates).then(() => {
                 return test.peerConnectionV2.offer();
@@ -731,7 +731,7 @@ describe('PeerConnectionV2', () => {
             it('calls addIceCandidate with any previously-received matching ICE candidates on the underlying RTCPeerConnection', () => {
               var test = makeTest({ answers: 1 });
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              var offerDescription = test.state().setDescription(makeOffer({ usernameFragment: 'foo' }), 1);
+              var offerDescription = test.state().setDescription(makeOffer({ ufrag: 'foo' }), 1);
               var candidates = test.state().setIce(makeIce('foo', 1));
               return test.peerConnectionV2.update(candidates).then(() => {
                 return test.peerConnectionV2.update(offerDescription);
@@ -925,7 +925,7 @@ describe('PeerConnectionV2', () => {
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'bar' }), 1));
+                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('bar', 1)));
@@ -948,7 +948,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ offers: 1 });
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'bar' }, 1)));
+                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }, 1)));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('bar', 1)));
@@ -967,7 +967,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ offers: 1 });
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'bar' }), 2));
+                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 2));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('bar', 2)));
@@ -988,7 +988,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ answers: 1 });
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'foo' }), 2)
+                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('foo', 1)));
@@ -1010,7 +1010,7 @@ describe('PeerConnectionV2', () => {
             it('does nothing', () => {
               var test = makeTest({ answers: 1 });
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'foo' }), 2)
+                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('foo', 1)));
@@ -1028,7 +1028,7 @@ describe('PeerConnectionV2', () => {
             it('does nothing', () => {
               var test = makeTest({ answers: 1 });
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'foo' }), 2)
+                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('foo', 2)));
@@ -1052,7 +1052,7 @@ describe('PeerConnectionV2', () => {
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'fizz' }), 1));
+                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 1)));
@@ -1067,7 +1067,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ offers: 1 });
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'fizz' }), 1));
+                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 1)));
@@ -1086,7 +1086,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ offers: 1 });
               return test.peerConnectionV2.offer().then(() => {
                 return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ usernameFragment: 'fizz' }), 1));
+                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
               }).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 2)));
@@ -1107,7 +1107,7 @@ describe('PeerConnectionV2', () => {
               var test = makeTest({ answers: 1 });
               test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'fizz' }), 1)
+                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 1)));
@@ -1121,7 +1121,7 @@ describe('PeerConnectionV2', () => {
             it('does nothing', () => {
               var test = makeTest({ answers: 1 });
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'fizz' }), 1)
+                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 1)));
@@ -1139,7 +1139,7 @@ describe('PeerConnectionV2', () => {
             it('does nothing', () => {
               var test = makeTest({ answers: 1 });
               return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ usernameFragment: 'fizz' }), 1)
+                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
               ).then(() => {
                 return test.peerConnectionV2.update(
                   test.state().setIce(makeIce('buzz', 2)));
@@ -1160,7 +1160,7 @@ describe('PeerConnectionV2', () => {
   describe('"candidates" event', () => {
     context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with an initial candidate for the current username fragment', () => {
       it('emits the event with a single-element list of ICE candidates', () => {
-        var test = makeTest({ offers: [makeOffer({ usernameFragment: 'foo' })] });
+        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
         return test.peerConnectionV2.offer().then(() => {
           var promise = new Promise(resolve => {
             test.peerConnectionV2.once('candidates', resolve);
@@ -1180,7 +1180,7 @@ describe('PeerConnectionV2', () => {
 
     context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with subsequent candidates for the current username fragment', () => {
       it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        var test = makeTest({ offers: [makeOffer({ usernameFragment: 'foo' })] });
+        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
         return test.peerConnectionV2.offer().then(() => {
           test.peerConnection.emit('icecandidate', {
             type: 'icecandidate',
@@ -1204,7 +1204,7 @@ describe('PeerConnectionV2', () => {
 
     context('when the underlying RTCPeerConnection\'s "icecandidate" fires without a candidate (ICE gathering completed)', () => {
       it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        var test = makeTest({ offers: [makeOffer({ usernameFragment: 'foo' })] });
+        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
         return test.peerConnectionV2.offer().then(() => {
           test.peerConnection.emit('icecandidate', {
             type: 'icecandidate',
@@ -1224,6 +1224,7 @@ describe('PeerConnectionV2', () => {
           return promise;
         }).then(iceState => {
           var endOfCandidatesIceState = test.state().setIce(makeIce('foo', 2));
+          endOfCandidatesIceState.ice.complete = true;
           endOfCandidatesIceState.ice.revision = 3;
           assert.deepEqual(
             endOfCandidatesIceState,
@@ -1490,7 +1491,7 @@ PeerConnectionStateBuilder.prototype.setIce = function setIce(ice) {
   this.ice = {
     candidates: ice.candidates.slice(),
     revision: ice.revision,
-    usernameFragment: ice.usernameFragment
+    ufrag: ice.ufrag
   };
   return this;
 };
@@ -1508,8 +1509,8 @@ function makeDescription(type, options) {
       type === 'answer' ||
       type === 'pranswer') {
     description.sdp = 'o=- ' + (Number.parseInt(Math.random() * 1000)) + '\r\n';
-    if (options.usernameFragment) {
-      description.sdp += 'a=ice-ufrag:' + options.usernameFragment + '\r\n';
+    if (options.ufrag) {
+      description.sdp += 'a=ice-ufrag:' + options.ufrag + '\r\n';
     }
   }
   return new Description(description);
@@ -1531,12 +1532,12 @@ function makeAnswer(options) {
   return makeDescription('answer', options);
 }
 
-function makeIce(usernameFragment, count) {
+function makeIce(ufrag, count) {
   count = count || 0;
   var ice = {
     candidates: [],
     revision: count,
-    usernameFragment: usernameFragment
+    ufrag: ufrag
   };
   for (var i = 0; i < count; i++) {
     ice.candidates.push({ candidate: 'candidate' + (i + 1) });
