@@ -351,6 +351,6 @@ IceStateBuilder.prototype.setCandidates = function setCandidates(usernameFragmen
     this.candidates.push({ candidate: 'candidate' + (i + 1) });
   }
   this.revision = revision;
-  this.usernameFragment = usernameFragment;
+  this.ufrag = usernameFragment;
   return this;
 };

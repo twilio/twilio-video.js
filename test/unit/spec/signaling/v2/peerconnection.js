@@ -1224,6 +1224,7 @@ describe('PeerConnectionV2', () => {
           return promise;
         }).then(iceState => {
           var endOfCandidatesIceState = test.state().setIce(makeIce('foo', 2));
+          endOfCandidatesIceState.ice.complete = true;
           endOfCandidatesIceState.ice.revision = 3;
           assert.deepEqual(
             endOfCandidatesIceState,
@@ -1490,7 +1491,7 @@ PeerConnectionStateBuilder.prototype.setIce = function setIce(ice) {
   this.ice = {
     candidates: ice.candidates.slice(),
     revision: ice.revision,
-    usernameFragment: ice.usernameFragment
+    ufrag: ice.ufrag
   };
   return this;
 };
@@ -1536,7 +1537,7 @@ function makeIce(usernameFragment, count) {
   var ice = {
     candidates: [],
     revision: count,
-    usernameFragment: usernameFragment
+    ufrag: usernameFragment
   };
   for (var i = 0; i < count; i++) {
     ice.candidates.push({ candidate: 'candidate' + (i + 1) });
