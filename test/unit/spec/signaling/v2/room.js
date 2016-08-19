@@ -646,11 +646,11 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('when the Transport emits an "update" event containing Room state', () => {
+  describe('when the Transport emits an "message" event containing Room state', () => {
     context('when the .name changes', () => {
       it('the .name remains the same', () => {
         var test = makeTest();
-        test.transport.emit('update', {
+        test.transport.emit('message', {
           name: makeName(),
           participants: [],
           peer_connections: []
@@ -664,7 +664,7 @@ describe('RoomV2', () => {
     context('when the .sid changes', () => {
       it('the .sid remains the same', () => {
         var test = makeTest();
-        test.transport.emit('update', {
+        test.transport.emit('message', {
           participants: [],
           peer_connections: [],
           sid: makeSid()
@@ -681,7 +681,7 @@ describe('RoomV2', () => {
           it('constructs a new ParticipantV2 with the Participant state', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid }
               ],
@@ -695,7 +695,7 @@ describe('RoomV2', () => {
           it('adds the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid }
               ],
@@ -711,7 +711,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             var participantConnected;
             test.room.once('participantConnected', participant => participantConnected = participant);
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid }
               ],
@@ -725,7 +725,7 @@ describe('RoomV2', () => {
           it('calls .update with the Participant state on the newly-constructed ParticipantV2', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid, fizz: 'buzz' }
               ],
@@ -741,7 +741,7 @@ describe('RoomV2', () => {
           it('constructs a new ParticipantV2 with the Participant state', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
@@ -755,7 +755,7 @@ describe('RoomV2', () => {
           it('does not add the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
@@ -769,7 +769,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             var participantConnected;
             test.room.once('participantConnected', () => participantConnected = true);
-            test.transport.emit('update', {
+            test.transport.emit('message', {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
@@ -788,7 +788,7 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
@@ -809,7 +809,7 @@ describe('RoomV2', () => {
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
@@ -828,7 +828,7 @@ describe('RoomV2', () => {
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
@@ -846,7 +846,7 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [],
             peer_connections: []
           });
@@ -860,7 +860,7 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [],
             peer_connections: []
           });
@@ -878,7 +878,7 @@ describe('RoomV2', () => {
           });
           var participantDisconnected = false;
           test.room.once('participantDisconnected', () => participantDisconnected = true);
-          test.transport.emit('update', {
+          test.transport.emit('message', {
             participants: [],
             peer_connections: []
           });
@@ -890,7 +890,7 @@ describe('RoomV2', () => {
     context('.peer_connections', () => {
       it('calls .update with the .peer_connections on the PeerConnectionManager', () => {
         var test = makeTest();
-        test.transport.emit('update', {
+        test.transport.emit('message', {
           participants: [],
           peer_connections: { fizz: 'buzz' }
         });

@@ -702,7 +702,7 @@ describe('Transport', () => {
           test.connect();
           eventEmitted = false;
           test.transport.once('connected', () => eventEmitted = true);
-          test.transport.once('update', () => eventEmitted = true);
+          test.transport.once('message', () => eventEmitted = true);
           test.transitions = [];
         });
 
@@ -769,13 +769,13 @@ describe('Transport', () => {
             foo: 'bar'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = null;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', message => connectedEvent = message);
-            test.transport.once('update', () => updateEvent = true);
+            test.transport.once('message', () => messageEvent = true);
             test.accepted(message);
           });
 
@@ -783,8 +783,8 @@ describe('Transport', () => {
             assert.deepEqual(message, connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('transitions .state to "connected"', () => {
@@ -796,13 +796,13 @@ describe('Transport', () => {
 
         context('"disconnected"', () => {
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', () => updateEvent = true);
+            test.transport.once('message', () => messageEvent = true);
             test.accepted({ type: 'disconnected' });
           });
 
@@ -810,8 +810,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('transitions .state to "disconnected"', () => {
@@ -823,13 +823,13 @@ describe('Transport', () => {
 
         context('"error"', () => {
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', () => updateEvent = true);
+            test.transport.once('message', () => messageEvent = true);
             test.accepted({ type: 'error' });
           });
 
@@ -837,8 +837,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('transitions .state to "disconnected"', () => {
@@ -853,13 +853,13 @@ describe('Transport', () => {
             type: 'synced'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = null;
+            messageEvent = null;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', message => updateEvent = message);
+            test.transport.once('message', message => messageEvent = message);
             test.accepted(message);
           });
 
@@ -867,8 +867,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -881,8 +881,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'connected' });
               });
 
-              it('emits an "update" event with the RSP message with type "synced"', () => {
-                assert.deepEqual(message, updateEvent);
+              it('emits an "message" event with the RSP message with type "synced"', () => {
+                assert.deepEqual(message, messageEvent);
               });
             });
 
@@ -891,8 +891,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert(!updateEvent);
+              it('does not emit an "message" event', () => {
+                assert(!messageEvent);
               });
             });
           });
@@ -903,13 +903,13 @@ describe('Transport', () => {
             type: 'update'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = null;
+            messageEvent = null;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', message => updateEvent = message);
+            test.transport.once('message', message => messageEvent = message);
             test.accepted(message);
           });
 
@@ -917,8 +917,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -931,8 +931,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'connected' });
               });
 
-              it('emits an "update" event with the RSP message with type "update"', () => {
-                assert.deepEqual(message, updateEvent);
+              it('emits an "message" event with the RSP message with type "update"', () => {
+                assert.deepEqual(message, messageEvent);
               });
             });
 
@@ -941,8 +941,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert(!updateEvent);
+              it('does not emit an "message" event', () => {
+                assert(!messageEvent);
               });
             });
           });
@@ -951,15 +951,15 @@ describe('Transport', () => {
 
       context('"disconnected", and the request contains an RSP message with type', () => {
         var connectedEvent;
-        var updateEvent;
+        var messageEvent;
 
         beforeEach(() => {
           test.receiveRequest({ type: 'disconnected' });
           test.transitions = [];
           connectedEvent = false;
-          updateEvent = false;
+          messageEvent = false;
           test.transport.once('connected', () => connectedEvent = true);
-          test.transport.once('update', () => updateEvent = true);
+          test.transport.once('message', () => messageEvent = true);
         });
 
         context('"connected"', () => {
@@ -971,8 +971,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -989,8 +989,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -1007,8 +1007,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -1025,8 +1025,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -1043,8 +1043,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('does not transition .state', () => {
@@ -1062,7 +1062,7 @@ describe('Transport', () => {
           test.transitions = [];
           eventEmitted = false;
           test.transport.once('connected', () => eventEmitter = true);
-          test.transport.once('update', () => eventEmitter = true);
+          test.transport.once('message', () => eventEmitter = true);
         });
 
         context('"connected"', () => {
@@ -1129,7 +1129,7 @@ describe('Transport', () => {
         test.transitions = [];
         eventEmitted = false;
         test.transport.once('connected', () => eventEmitted = true);
-        test.transport.once('update', () => eventEmitted = true);
+        test.transport.once('message', () => eventEmitted = true);
         test.failed();
       }
 
@@ -1195,11 +1195,11 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('update', message => emittedEvent = message);
+            test.transport.once('message', message => emittedEvent = message);
             test.receiveRequest(message);
           });
 
-          it('emits an "update" event with the RSP message', () => {
+          it('emits an "message" event with the RSP message', () => {
             assert.deepEqual(message, emittedEvent);
           });
         });
@@ -1246,11 +1246,11 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('update', message => emittedEvent = message);
+            test.transport.once('message', message => emittedEvent = message);
             test.receiveRequest(message);
           });
 
-          it('emits an "update" event with the RSP message', () => {
+          it('emits an "message" event with the RSP message', () => {
             assert.deepEqual(message, emittedEvent);
           });
         });
@@ -1263,11 +1263,11 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('update', message => emittedEvent = message);
+            test.transport.once('message', message => emittedEvent = message);
             test.receiveRequest(message);
           });
 
-          it('emits an "update" event with the RSP message', () => {
+          it('emits an "message" event with the RSP message', () => {
             assert.deepEqual(message, emittedEvent);
           });
         });
@@ -1279,13 +1279,13 @@ describe('Transport', () => {
             type: 'connected'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = null;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', message => connectedEvent = message);
-            test.transport.once('update', () => updateEvent = true);
+            test.transport.once('message', () => messageEvent = true);
             test.receiveRequest(message);
           });
 
@@ -1293,8 +1293,8 @@ describe('Transport', () => {
             assert.deepEqual(message, connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert(!updateEvent);
+          it('does not emit an "message" event', () => {
+            assert(!messageEvent);
           });
 
           it('transitions .state to "connected"', () => {
@@ -1333,19 +1333,19 @@ describe('Transport', () => {
             type: 'synced'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', message => updateEvent = message);
+            test.transport.once('message', message => messageEvent = message);
             test.receiveRequest(message);
           });
 
           it('does nothing', () => {
             assert(!connectedEvent);
-            assert(!updateEvent);
+            assert(!messageEvent);
             assert.deepEqual([], test.transitions);
           });
 
@@ -1355,8 +1355,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'connected' });
               });
 
-              it('emits an "update" event with the RSP message with type "synced"', () => {
-                assert.deepEqual(message, updateEvent);
+              it('emits an "message" event with the RSP message with type "synced"', () => {
+                assert.deepEqual(message, messageEvent);
               });
             });
 
@@ -1365,8 +1365,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert(!updateEvent);
+              it('does not emit an "message" event', () => {
+                assert(!messageEvent);
               });
             });
           });
@@ -1377,19 +1377,19 @@ describe('Transport', () => {
             type: 'update'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', message => updateEvent = message);
+            test.transport.once('message', message => messageEvent = message);
             test.receiveRequest(message);
           });
 
           it('does nothing', () => {
             assert(!connectedEvent);
-            assert(!updateEvent);
+            assert(!messageEvent);
             assert.deepEqual([], test.transitions);
           });
 
@@ -1399,8 +1399,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'connected' });
               });
 
-              it('emits an "update" event with the RSP message with type "update"', () => {
-                assert.deepEqual(message, updateEvent);
+              it('emits an "message" event with the RSP message with type "update"', () => {
+                assert.deepEqual(message, messageEvent);
               });
             });
 
@@ -1409,8 +1409,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert(!updateEvent);
+              it('does not emit an "message" event', () => {
+                assert(!messageEvent);
               });
             });
           });
@@ -1425,7 +1425,7 @@ describe('Transport', () => {
           test.transitions = [];
           eventEmitted = false;
           test.transport.once('connected', () => eventEmitted = true);
-          test.transport.once('update', () => eventEmitted = true);
+          test.transport.once('message', () => eventEmitted = true);
         });
 
         context('"connected"', () => {
@@ -1496,13 +1496,13 @@ describe('Transport', () => {
             type: 'connected'
           };
           var connectedEvent;
-          var updateEvents;
+          var messageEvents;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvents = [];
+            messageEvents = [];
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.on('update', message => updateEvents.push(message));
+            test.transport.on('message', message => messageEvents.push(message));
             test.receiveRequest(message);
           });
 
@@ -1510,8 +1510,8 @@ describe('Transport', () => {
             assert(!connectedEvent);
           });
 
-          it('does not emit an "update" event', () => {
-            assert.equal(0, updateEvents.length);
+          it('does not emit an "message" event', () => {
+            assert.equal(0, messageEvents.length);
           });
 
           context('when the Transport\'s .state transitions to', () => {
@@ -1520,8 +1520,8 @@ describe('Transport', () => {
                 test.sync();
               });
 
-              it('emits an "update" event with the RSP message with type "connected"', () => {
-                assert.deepEqual(message, updateEvents[1]);
+              it('emits an "message" event with the RSP message with type "connected"', () => {
+                assert.deepEqual(message, messageEvents[1]);
               });
             });
 
@@ -1530,8 +1530,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert.equal(0, updateEvents.length);
+              it('does not emit an "message" event', () => {
+                assert.equal(0, messageEvents.length);
               });
             });
           });
@@ -1566,18 +1566,18 @@ describe('Transport', () => {
             type: 'synced'
           };
           var connectedEvent;
-          var updateEvent;
+          var messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvent = false;
+            messageEvent = false;
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('update', message => updateEvent = message);
+            test.transport.once('message', message => messageEvent = message);
             test.receiveRequest(message);
           });
 
-          it('emits an "update" event with the RSP message with type "synced"', () => {
-            assert.deepEqual(message, updateEvent);
+          it('emits an "message" event with the RSP message with type "synced"', () => {
+            assert.deepEqual(message, messageEvent);
           });
 
           it('transitions .state to "connected"', () => {
@@ -1592,19 +1592,19 @@ describe('Transport', () => {
             type: 'update'
           };
           var connectedEvent;
-          var updateEvents;
+          var messageEvents;
 
           beforeEach(() => {
             connectedEvent = false;
-            updateEvents = [];
+            messageEvents = [];
             test.transport.once('connected', () => connectedEvent = true);
-            test.transport.on('update', message => updateEvents.push(message));
+            test.transport.on('message', message => messageEvents.push(message));
             test.receiveRequest(message);
           });
 
           it('does nothing', () => {
             assert(!connectedEvent);
-            assert.equal(0, updateEvents.length);
+            assert.equal(0, messageEvents.length);
             assert.deepEqual([], test.transitions);
           });
 
@@ -1614,8 +1614,8 @@ describe('Transport', () => {
                 test.sync();
               });
 
-              it('emits an "update" event with the RSP message with type "update"', () => {
-                assert.deepEqual(message, updateEvents[1]);
+              it('emits an "message" event with the RSP message with type "update"', () => {
+                assert.deepEqual(message, messageEvents[1]);
               });
             });
 
@@ -1624,8 +1624,8 @@ describe('Transport', () => {
                 test.receiveRequest({ type: 'disconnected' });
               });
 
-              it('does not emit an "update" event', () => {
-                assert.equal(0, updateEvents.length);
+              it('does not emit an "message" event', () => {
+                assert.equal(0, messageEvents.length);
               });
             });
           });
