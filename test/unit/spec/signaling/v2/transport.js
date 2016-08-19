@@ -1632,6 +1632,65 @@ describe('Transport', () => {
         });
       });
     });
+
+    context('a "bye" event, and the Transport\'s .state is', () => {
+      context('"connected"', () => {
+        beforeEach(() => {
+          test.connect();
+          test.transitions = [];
+          test.session.emit('bye');
+        });
+
+        it('transitions .state to "disconnected"', () => {
+          assert.deepEqual([
+            'disconnected'
+          ], test.transitions);
+        });
+      });
+
+      context('"connecting"', () => {
+        beforeEach(() => {
+          test.session.emit('bye');
+        });
+
+        it('transitions .state to "disconnected"', () => {
+          assert.deepEqual([
+            'disconnected'
+          ], test.transitions);
+        });
+      });
+
+      context('"disconnected"', () => {
+        beforeEach(() => {
+          test.transport.disconnect();
+          test.transitions = [];
+          test.session.emit('bye');
+        });
+
+        it('does not transition .state', () => {
+          assert.deepEqual([], test.transitions);
+        });
+
+        it('does not call .terminate on the underlying SIP.js Session', () => {
+          assert(!test.session.terminate.calledTwice);
+        });
+      });
+
+      context('"syncing"', () => {
+        beforeEach(() => {
+          test.connect();
+          test.transport.sync();
+          test.transitions = [];
+          test.session.emit('bye');
+        });
+
+        it('transitions .state to "disconnected"', () => {
+          assert.deepEqual([
+            'disconnected'
+          ], test.transitions);
+        });
+      });
+    });
   });
 });
 
