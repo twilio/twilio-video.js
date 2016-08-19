@@ -29,6 +29,7 @@ require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
 require('./spec/signaling/v2/track');
+require('./spec/signaling/v2/transport');
 
 require('./spec/util/index');
 require('./spec/util/log');

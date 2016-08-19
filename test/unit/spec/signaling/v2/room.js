@@ -246,26 +246,10 @@ describe('RoomV2', () => {
           newState);
       });
 
-      it('calls .terminate on the underlying SIP.js Session with a disconnect RSP message', () => {
+      it('calls .disconnect on the Transport', () => {
         var test = makeTest();
         test.room.disconnect();
-        assert.deepEqual(
-          { type: 'disconnect', version: 1 },
-          JSON.parse(test.session.terminate.args[0][0].body));
-      });
-
-      it('calls .terminate on the underlying SIP.js Session with Content-Type "application/room-signaling+json"', () => {
-        var test = makeTest();
-        test.room.disconnect();
-        for (var header of test.session.terminate.args[0][0].extraHeaders) {
-          if (header.startsWith('Content-Type: ')) {
-            assert.equal(
-              'application/room-signaling+json',
-              header.split(': ')[1]);
-            return;
-          }
-        }
-        throw new Error('Content-Type header missing');
+        assert(test.transport.disconnect.calledOnce);
       });
 
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {
@@ -337,11 +321,11 @@ describe('RoomV2', () => {
         assert(!stateChanged);
       });
 
-      it('does not call .terminate on the underlying SIP.js session', () => {
+      it('does not call .disconnect on the Transport', () => {
         var test = makeTest();
         test.room.disconnect();
         test.room.disconnect();
-        assert(!test.session.terminate.calledTwice);
+        assert(!test.transport.disconnect.calledTwice);
       });
 
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {
@@ -440,82 +424,19 @@ describe('RoomV2', () => {
         assert(test.localParticipant.update.calledOnce);
       });
 
-      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+      it('calls .publish on the Transport with the LocalparticipantSignaling state', () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
-        assert.equal(
-          'INFO',
-          test.session.sendRequest.args[0][0]);
-      });
-
-      context('the INFO message', () => {
-        it('has Content-Type "application/room-signaling+json"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackAdded', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Content-Type:')) {
-              return assert.equal(
-                header,
-                'Content-Type: application/room-signaling+json')
+        assert.deepEqual(
+          {
+            participant: {
+              revision: 1
             }
-          }
-          throw new Error('Content-Type header missing');
-        });
-
-        it('has Event type "room-signaling"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackAdded', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Event:')) {
-              return assert.equal(
-                header,
-                'Event: room-signaling')
-            }
-          }
-          throw new Error('Event header missing');
-        });
-
-        it('has Info-Package "room-signaling"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackAdded', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Info-Package:')) {
-              return assert.equal(
-                header,
-                'Info-Package: room-signaling')
-            }
-          }
-          throw new Error('Info-Package header missing');
-        });
-
-        it('has a body containing the LocalParticipantSignaling\'s state', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackAdded', track);
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 1
-              },
-              type: 'update',
-              version: 1
-            },
-            JSON.parse(test.session.sendRequest.args[0][1].body));
-        });
+          },
+          test.transport.publish.args[0][0]);
       });
     });
 
@@ -540,294 +461,103 @@ describe('RoomV2', () => {
         assert(test.localParticipant.update.calledOnce);
       });
 
-      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+      it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
-        assert.equal(
-          'INFO',
-          test.session.sendRequest.args[0][0]);
-      });
-
-      context('the INFO message', () => {
-        it('has Content-Type "application/room-signaling+json"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackRemoved', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Content-Type:')) {
-              return assert.equal(
-                header,
-                'Content-Type: application/room-signaling+json')
+        assert.deepEqual(
+          {
+            participant: {
+              revision: 1
             }
-          }
-          throw new Error('Content-Type header missing');
-        });
-
-        it('has Event type "room-signaling"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackRemoved', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Event:')) {
-              return assert.equal(
-                header,
-                'Event: room-signaling')
-            }
-          }
-          throw new Error('Event header missing');
-        });
-
-        it('has Info-Package "room-signaling"', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackRemoved', track);
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Info-Package:')) {
-              return assert.equal(
-                header,
-                'Info-Package: room-signaling')
-            }
-          }
-          throw new Error('Info-Package header missing');
-        });
-
-        it('has a body containing the LocalParticipantSignaling\'s state', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackRemoved', track);
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 1
-              },
-              type: 'update',
-              version: 1
-            },
-            JSON.parse(test.session.sendRequest.args[0][1].body));
-        });
+          },
+          test.transport.publish.args[0][0]);
       });
     });
 
     context('when an added TrackV2 emits a "stateChanged" event in a new state', () => {
       context('"disabled"', () => {
-        it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+        it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           track.emit('stateChanged', 'disabled');
-          assert.equal(
-            'INFO',
-            test.session.sendRequest.args[0][0]);
-        });
-
-        context('the INFO message', () => {
-          it('has Content-Type "application/room-signaling+json"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'disabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Content-Type:')) {
-                return assert.equal(
-                  header,
-                  'Content-Type: application/room-signaling+json')
+          assert.deepEqual(
+            {
+              participant: {
+                revision: 1
               }
-            }
-            throw new Error('Content-Type header missing');
-          });
-
-          it('has Event type "room-signaling"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'disabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Event:')) {
-                return assert.equal(
-                  header,
-                  'Event: room-signaling')
-              }
-            }
-            throw new Error('Event header missing');
-          });
-
-          it('has Info-Package "room-signaling"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'disabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Info-Package:')) {
-                return assert.equal(
-                  header,
-                  'Info-Package: room-signaling')
-              }
-            }
-            throw new Error('Info-Package header missing');
-          });
-
-          // TODO(mroberts): Not sure about this.
-          it('has a body containing the LocalParticipantSignaling\'s state', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'disabled');
-            assert.deepEqual(
-              {
-                participant: {
-                  revision: 1
-                },
-                type: 'update',
-                version: 1
-              },
-              JSON.parse(test.session.sendRequest.args[0][1].body));
-          });
+            },
+            test.transport.publish.args[0][0]);
         });
       });
 
       context('"enabled"', () => {
-        it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+        it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           track.emit('stateChanged', 'enabled');
-          assert.equal(
-            'INFO',
-            test.session.sendRequest.args[0][0]);
-        });
-
-        context('the INFO message', () => {
-          it('has Content-Type "application/room-signaling+json"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'enabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Content-Type:')) {
-                return assert.equal(
-                  header,
-                  'Content-Type: application/room-signaling+json')
+          assert.deepEqual(
+            {
+              participant: {
+                revision: 1
               }
-            }
-            throw new Error('Content-Type header missing');
-          });
-
-          it('has Event type "room-signaling"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'enabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Event:')) {
-                return assert.equal(
-                  header,
-                  'Event: room-signaling')
-              }
-            }
-            throw new Error('Event header missing');
-          });
-
-          it('has Info-Package "room-signaling"', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'enabled');
-            for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-              if (header.startsWith('Info-Package:')) {
-                return assert.equal(
-                  header,
-                  'Info-Package: room-signaling')
-              }
-            }
-            throw new Error('Info-Package header missing');
-          });
-
-          // TODO(mroberts): Not sure about this.
-          it('has a body containing the LocalParticipantSignaling\'s state', () => {
-            var track = makeTrack();
-            var test = makeTest({
-              tracks: [track]
-            });
-            track.emit('stateChanged', 'enabled');
-            assert.deepEqual(
-              {
-                participant: {
-                  revision: 1
-                },
-                type: 'update',
-                version: 1
-              },
-              JSON.parse(test.session.sendRequest.args[0][1].body));
-          });
+            },
+            test.transport.publish.args[0][0]);
         });
       });
 
       context('"ended"', () => {
-        it('does not call .sendRequest on the underlying SIP.js Session', () => {
+        it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           track.emit('stateChanged', 'ended');
-          assert(!test.session.sendRequest.calledOnce);
+          assert(!test.transport.publish.calledOnce);
         });
       });
     });
 
     context('when a removed TrackV2 emits a "stateChanged" event in a new state', () => {
       context('"disabled"', () => {
-        it('does not call .sendRequest on the underlying SIP.js Session', () => {
+        it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'disabled');
-          assert(!test.session.sendRequest.calledTwice);
+          assert(!test.transport.publish.calledTwice);
         });
       });
 
       context('"enabled"', () => {
-        it('does not call .sendRequest on the underlying SIP.js Session', () => {
+        it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'enabled');
-          assert(!test.session.sendRequest.calledTwice);
+          assert(!test.transport.publish.calledTwice);
         });
       });
 
       context('"ended"', () => {
-        it('does not call .sendRequest on the underlying SIP.js Session', () => {
+        it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'ended');
-          assert(!test.session.sendRequest.calledTwice);
+          assert(!test.transport.publish.calledTwice);
         });
       });
     });
@@ -835,138 +565,36 @@ describe('RoomV2', () => {
 
   describe('PeerConnectionManager', () => {
     context('when the PeerConnectionManager emits a "description" event', () => {
-      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+      it('calls .publish on the Transport with the PeerConnectionManager\'s new description', () => {
         var test = makeTest();
         test.peerConnectionManager.emit('description', { fizz: 'buzz' });
-        assert.equal(
-          'INFO',
-          test.session.sendRequest.args[0][0]);
-      });
-
-      context('the INFO message', () => {
-        it('has Content-Type "application/room-signaling+json"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('description', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Content-Type:')) {
-              return assert.equal(
-                header,
-                'Content-Type: application/room-signaling+json')
-            }
-          }
-          throw new Error('Content-Type header missing');
-        });
-
-        it('has Event type "room-signaling"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('description', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Event:')) {
-              return assert.equal(
-                header,
-                'Event: room-signaling')
-            }
-          }
-          throw new Error('Event header missing');
-        });
-
-        it('has Info-Package "room-signaling"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('description', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Info-Package:')) {
-              return assert.equal(
-                header,
-                'Info-Package: room-signaling')
-            }
-          }
-          throw new Error('Info-Package header missing');
-        });
-
-        it('has a body containing the PeerConnectionManager\'s new description', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('description', { fizz: 'buzz' });
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 0
-              },
-              peer_connections: [
-                { fizz: 'buzz' }
-              ],
-              type: 'update',
-              version: 1
+        assert.deepEqual(
+          {
+            participant: {
+              revision: 0
             },
-            JSON.parse(test.session.sendRequest.args[0][1].body))
-        });
+            peer_connections: [
+              { fizz: 'buzz' }
+            ]
+          },
+          test.transport.publish.args[0][0]);
       });
     });
 
     context('when the PeerConnectionManager emits a "candidates" event', () => {
-      it('calls .sendRequest with an INFO message on the underlying SIP.js Session', () => {
+      it('calls .publish on the Transport with the PeerConnectionManager\'s new candidates', () => {
         var test = makeTest();
         test.peerConnectionManager.emit('candidates', { fizz: 'buzz' });
-        assert.equal(
-          'INFO',
-          test.session.sendRequest.args[0][0]);
-      });
-
-      context('the INFO message', () => {
-        it('has Content-Type "application/room-signaling+json"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('candidates', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Content-Type:')) {
-              return assert.equal(
-                header,
-                'Content-Type: application/room-signaling+json')
-            }
-          }
-          throw new Error('Content-Type header missing');
-        });
-
-        it('has Event type "room-signaling"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('candidates', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Event:')) {
-              return assert.equal(
-                header,
-                'Event: room-signaling')
-            }
-          }
-          throw new Error('Event header missing');
-        });
-
-        it('has Info-Package "room-signaling"', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('candidates', { fizz: 'buzz' });
-          for (var header of test.session.sendRequest.args[0][1].extraHeaders) {
-            if (header.startsWith('Info-Package:')) {
-              return assert.equal(
-                header,
-                'Info-Package: room-signaling')
-            }
-          }
-          throw new Error('Info-Package header missing');
-        });
-
-        it('has a body containing the PeerConnectionManager\'s new candidates', () => {
-          var test = makeTest();
-          test.peerConnectionManager.emit('candidates', { fizz: 'buzz' });
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 0
-              },
-              peer_connections: [
-                { fizz: 'buzz' }
-              ],
-              type: 'update',
-              version: 1
+        assert.deepEqual(
+          {
+            participant: {
+              revision: 0
             },
-            JSON.parse(test.session.sendRequest.args[0][1].body))
-        });
+            peer_connections: [
+              { fizz: 'buzz' }
+            ]
+          },
+          test.transport.publish.args[0][0]);
       });
     });
 
@@ -1018,16 +646,14 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('when the underlying SIP.js Session emits an "info" event containing Room state', () => {
+  describe('when the Transport emits an "message" event containing Room state', () => {
     context('when the .name changes', () => {
       it('the .name remains the same', () => {
         var test = makeTest();
-        test.session.emit('info', {
-          body: JSON.stringify({
-            name: makeName(),
-            participants: [],
-            peer_connections: []
-          })
+        test.transport.emit('message', {
+          name: makeName(),
+          participants: [],
+          peer_connections: []
         });
         assert.equal(
           test.name,
@@ -1038,12 +664,10 @@ describe('RoomV2', () => {
     context('when the .sid changes', () => {
       it('the .sid remains the same', () => {
         var test = makeTest();
-        test.session.emit('info', {
-          body: JSON.stringify({
-            participants: [],
-            peer_connections: [],
-            sid: makeSid()
-          })
+        test.transport.emit('message', {
+          participants: [],
+          peer_connections: [],
+          sid: makeSid()
         });
         assert.equal(
           test.sid,
@@ -1057,13 +681,11 @@ describe('RoomV2', () => {
           it('constructs a new ParticipantV2 with the Participant state', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid }
+              ],
+              peer_connections: []
             });
             assert.equal(
               sid,
@@ -1073,13 +695,11 @@ describe('RoomV2', () => {
           it('adds the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid }
+              ],
+              peer_connections: []
             });
             assert.equal(
               test.participantV2s[0],
@@ -1091,13 +711,11 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             var participantConnected;
             test.room.once('participantConnected', participant => participantConnected = participant);
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid }
+              ],
+              peer_connections: []
             });
             assert.equal(
               test.participantV2s[0],
@@ -1107,13 +725,11 @@ describe('RoomV2', () => {
           it('calls .update with the Participant state on the newly-constructed ParticipantV2', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid, fizz: 'buzz' }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid, fizz: 'buzz' }
+              ],
+              peer_connections: []
             });
             assert.deepEqual(
               { sid: sid, fizz: 'buzz' },
@@ -1125,13 +741,11 @@ describe('RoomV2', () => {
           it('constructs a new ParticipantV2 with the Participant state', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid, state: 'disconnected' }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid, state: 'disconnected' }
+              ],
+              peer_connections: []
             });
             assert.equal(
               sid,
@@ -1141,13 +755,11 @@ describe('RoomV2', () => {
           it('does not add the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
             var test = makeTest();
             var sid = makeParticipantSid();
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid, state: 'disconnected' }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid, state: 'disconnected' }
+              ],
+              peer_connections: []
             });
             assert(!test.room.participants.has(sid));
           });
@@ -1157,13 +769,11 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             var participantConnected;
             test.room.once('participantConnected', () => participantConnected = true);
-            test.session.emit('info', {
-              body: JSON.stringify({
-                participants: [
-                  { sid: sid, state: 'disconnected' }
-                ],
-                peer_connections: []
-              })
+            test.transport.emit('message', {
+              participants: [
+                { sid: sid, state: 'disconnected' }
+              ],
+              peer_connections: []
             });
             assert(!participantConnected);
           });
@@ -1178,13 +788,11 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [
-                { sid: sid, fizz: 'buzz' }
-              ],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [
+              { sid: sid, fizz: 'buzz' }
+            ],
+            peer_connections: []
           });
           assert.deepEqual(
             { sid: sid, fizz: 'buzz' },
@@ -1201,13 +809,11 @@ describe('RoomV2', () => {
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [
-                { sid: sid, fizz: 'buzz' }
-              ],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [
+              { sid: sid, fizz: 'buzz' }
+            ],
+            peer_connections: []
           });
           assert.equal(
             1,
@@ -1222,13 +828,11 @@ describe('RoomV2', () => {
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [
-                { sid: sid, fizz: 'buzz' }
-              ],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [
+              { sid: sid, fizz: 'buzz' }
+            ],
+            peer_connections: []
           });
           assert(!test.participantV2s[0].update.calledTwice);
         });
@@ -1242,11 +846,9 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [],
+            peer_connections: []
           });
           assert(!test.participantV2s[0].disconnect.calledOnce);
         });
@@ -1258,11 +860,9 @@ describe('RoomV2', () => {
               { sid: sid }
             ]
           });
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [],
+            peer_connections: []
           });
           assert.equal(
             test.participantV2s[0],
@@ -1278,11 +878,9 @@ describe('RoomV2', () => {
           });
           var participantDisconnected = false;
           test.room.once('participantDisconnected', () => participantDisconnected = true);
-          test.session.emit('info', {
-            body: JSON.stringify({
-              participants: [],
-              peer_connections: []
-            })
+          test.transport.emit('message', {
+            participants: [],
+            peer_connections: []
           });
           assert(!participantDisconnected);
         });
@@ -1292,11 +890,9 @@ describe('RoomV2', () => {
     context('.peer_connections', () => {
       it('calls .update with the .peer_connections on the PeerConnectionManager', () => {
         var test = makeTest();
-        test.session.emit('info', {
-          body: JSON.stringify({
-            participants: [],
-            peer_connections: { fizz: 'buzz' }
-          })
+        test.transport.emit('message', {
+          participants: [],
+          peer_connections: { fizz: 'buzz' }
         });
         assert.deepEqual(
           { fizz: 'buzz' },
@@ -1350,7 +946,7 @@ function makeTest(options) {
   options.tracks = options.tracks || [];
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
-  options.session = options.session || makeSession(options);
+  options.transport = options.transport || makeTransport(options);
 
   options.room = options.room || makeRoomV2(options);
 
@@ -1384,19 +980,15 @@ function makeRemoteParticipantV2Constructor(testOptions) {
 }
 
 function makeRoomV2(options) {
-  return new RoomV2(options.localParticipant, options, options.session, options);
+  return new RoomV2(options.localParticipant, options, options.transport, options.peerConnectionManager, options);
 }
 
-function makeSession(options) {
-  var session = new EventEmitter();
-  session.terminate = sinon.spy(() => {});
-  session.mediaHandler = {
-    peerConnectionManager: options.peerConnectionManager
-  };
-  session.sendRequest = sinon.spy((messageType, messageOptions) => {
-    messageOptions.receiveResponse({ status_code: 200 });
-  });
-  return session;
+function makeTransport(options) {
+  var transport = new EventEmitter();
+  transport.disconnect = sinon.spy(() => {});
+  transport.publish = sinon.spy(() => {});
+  transport.sync = sinon.spy(() => {});
+  return transport;
 };
 
 function makePeerConnectionManager(options) {

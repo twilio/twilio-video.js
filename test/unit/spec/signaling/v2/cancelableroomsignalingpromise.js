@@ -77,137 +77,23 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
   });
 
-  it('calls .invite on the SIP.js UserAgent', () => {
+  it('constructs a Transport', () => {
     var test = makeTest();
     test.createAndOfferDeferred.resolve();
     return test.createAndOfferDeferred.promise.then(() => {
-      assert(test.ua.invite.calledOnce);
+      assert(test.transport);
     });
+
   });
 
-  context('when it calls .invite on the SIP.js UserAgent', () => {
-    it('sets the target to "sip:orchestrator@${ACCOUNT_SID}.endpoint.twilio.com"', () => {
-      var test = makeTest();
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        assert.equal(
-          'sip:orchestrator@' + test.accountSid + '.endpoint.twilio.com',
-          test.ua.invite.args[0][0]);
-      });
-    });
-
-    it('sets the X-Twilio-AccessToken header to the Access Token', () => {
-      var test = makeTest();
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        for (var header of test.ua.invite.args[0][1].extraHeaders) {
-          if (header.startsWith('X-Twilio-AccessToken: ')) {
-            assert.equal(
-              'X-Twilio-AccessToken: ' + test.token,
-              header);
-            return;
-          }
-        }
-        throw new Error('X-Twilio-AccessToken header missing');
-      });
-    });
-
-    it('sets the Session-Expires header to 120', () => {
-      var test = makeTest();
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        for (var header of test.ua.invite.args[0][1].extraHeaders) {
-          if (header.startsWith('Session-Expires: ')) {
-            assert.equal(
-              'Session-Expires: 120',
-              header);
-            return;
-          }
-        }
-        throw new Error('Session-Expires header missing');
-      });
-    });
-
-    it('sets a mediaHandlerFactory that returns a SIPJSMediaHandler', () => {
-      var test = makeTest();
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        var mediaHandlerFactory = test.ua.invite.args[0][1].mediaHandlerFactory;
-        assert(mediaHandlerFactory());
-      });
-    });
-
-    context('the SIPJSMediaHandler', () => {
-      it('receives the PeerConnectionManager', () => {
-        var test = makeTest();
-        test.createAndOfferDeferred.resolve();
-        return test.createAndOfferDeferred.promise.then(() => {
-          var mediaHandlerFactory = test.ua.invite.args[0][1].mediaHandlerFactory;
-          assert.equal(
-            test.peerConnectionManager,
-            mediaHandlerFactory().peerConnectionManager);
-        });
-      });
-
-      it('receives a createConnectMessage function', () => {
-        var name = makeName();
-        var test = makeTest({
-          create: true,
-          to: name
-        });
-        test.createAndOfferDeferred.resolve();
-        return test.createAndOfferDeferred.promise.then(() => {
-          var mediaHandlerFactory = test.ua.invite.args[0][1].mediaHandlerFactory;
-          assert.deepEqual(
-            {
-              create: true,
-              name: name,
-              participant: test.localParticipant.getState(),
-              type: 'connect',
-              version: 1
-            },
-            mediaHandlerFactory().createConnectMessage());
-        });
-      });
-    });
-
-    it('sets an infoHandler to emit "info" events in response to INFO messages', () => {
-      var test = makeTest();
-      var info;
-      test.session.once('info', request => info = request);
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        var infoHandler = test.ua.invite.args[0][1].infoHandler;
-        var request = { reply: () => {} };
-        infoHandler.call(test.session, request);
-        assert.equal(info, request);
-      });
-    });
-
-    it('sets an infoHandler to reply 200 OK in response to INFO messages', () => {
-      var test = makeTest();
-      var info;
-      test.session.once('info', request => info = request);
-      test.createAndOfferDeferred.resolve();
-      return test.createAndOfferDeferred.promise.then(() => {
-        var infoHandler = test.ua.invite.args[0][1].infoHandler;
-        var request = { reply: sinon.spy(() => {}) };
-        infoHandler.call(test.session, request);
-        assert.equal(
-          200,
-          request.reply.args[0][0]);
-      });
-    });
-  });
-
-  context('when the SIP.js Session emits an "accepted" event', () => {
+  context('when the Transport emits a "connected" event with an initial Room state', () => {
     context('and the CancelablePromise was canceled', () => {
       it('the CancelablePromise rejects with a cancelation error', () => {
         var test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
-          test.session.emit('accepted');
+          test.transport.emit('connected');
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
@@ -218,40 +104,16 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
       });
 
-      it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
+      it('calls .disconnect on the Transport', () => {
         var test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
-          test.session.emit('accepted');
+          test.transport.emit('connected');
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
-            assert.deepEqual(
-              { type: 'disconnect', version: 1 },
-              JSON.parse(test.session.terminate.args[0][0].body));
-          });
-        });
-      });
-
-      it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
-        var test = makeTest();
-        test.createAndOfferDeferred.resolve();
-        return test.createAndOfferDeferred.promise.then(() => {
-          test.cancelableRoomSignalingPromise.cancel();
-          test.session.emit('accepted');
-          return test.cancelableRoomSignalingPromise.then(() => {
-            throw new Error('Unexpected resolution');
-          }, error => {
-            for (var header of test.session.terminate.args[0][0].extraHeaders) {
-              if (header.startsWith('Content-Type: ')) {
-                assert.equal(
-                  'application/room-signaling+json',
-                  header.split(': ')[1]);
-                return;
-              }
-            }
-            throw new Error('Content-Type header missing');
+            assert(test.transport.disconnect.calledOnce);
           });
         });
       });
@@ -261,7 +123,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
-          test.session.emit('accepted');
+          test.transport.emit('connected');
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
@@ -272,239 +134,12 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
 
     context('and the CancelablePromise was not canceled', () => {
-      context('and the accepted response body is valid JSON', () => {
-        context('but the .participant property is missing', () => {
-          it('the CancelablePromise rejects with an error', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              test.session.emit('accepted', { body: '{}' });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                // Do nothing.
-              });
-            });
-          });
-
-          it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              test.session.emit('accepted', { body: '{}' });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert.deepEqual(
-                  { type: 'disconnect', version: 1 },
-                  JSON.parse(test.session.terminate.args[0][0].body));
-              });
-            });
-          });
-
-          it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              test.session.emit('accepted', { body: '{}' });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                for (var header of test.session.terminate.args[0][0].extraHeaders) {
-                  if (header.startsWith('Content-Type: ')) {
-                    assert.equal(
-                      'application/room-signaling+json',
-                      header.split(': ')[1]);
-                    return;
-                  }
-                }
-                throw new Error('Content-Type header missing');
-              });
-            });
-          });
-
-          it('calls .close on the PeerConnectionManager', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              test.session.emit('accepted', { body: '{}' });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert(test.peerConnectionManager.close.calledOnce);
-              });
-            });
-          });
-        });
-
-        context('and the .participant property is present', () => {
-          it('calls .connect with the .participant\'s .sid and .identity on the LocalParticipantSignaling', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
-              test.session.emit('accepted', {
-                body: JSON.stringify({
-                  participant: {
-                    sid: sid,
-                    identity: identity
-                  }
-                })
-              });
-              assert.equal(
-                sid,
-                test.localParticipant.connect.args[0][0]);
-              assert.equal(
-                identity,
-                test.localParticipant.connect.args[0][1]);
-            });
-          });
-
-          it('constructs a new RoomV2', () => {
-            var test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            return test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
-              test.session.emit('accepted', {
-                body: JSON.stringify({
-                  participant: {
-                    sid: sid,
-                    identity: identity
-                  }
-                })
-              });
-              assert(test.RoomV2.calledOnce);
-            });
-          });
-
-          context('when the CancelablePromise has not been canceled', () => {
-            it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
-              var test = makeTest();
-              test.createAndOfferDeferred.resolve();
-              test.createAndOfferDeferred.promise.then(() => {
-                var identity = makeIdentity();
-                var sid = makeParticipantSid();
-                test.session.emit('accepted', {
-                  body: JSON.stringify({
-                    participant: {
-                      sid: sid,
-                      identity: identity
-                    }
-                  })
-                });
-              });
-              return test.cancelableRoomSignalingPromise.then(room => {
-                assert.equal(test.room, room);
-              });
-            });
-          });
-
-          context('when the CancelablePromise has been canceled', () => {
-            it('the CancelablePromise rejects with a cancelation error', () => {
-              var test = makeTest();
-              test.createAndOfferDeferred.resolve();
-              test.createAndOfferDeferred.promise.then(() => {
-                var identity = makeIdentity();
-                var sid = makeParticipantSid();
-                test.session.emit('accepted', {
-                  body: JSON.stringify({
-                    participant: {
-                      sid: sid,
-                      identity: identity
-                    }
-                  })
-                });
-                test.cancelableRoomSignalingPromise.cancel();
-              });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert.equal(
-                  'Canceled',
-                  error.message);
-              });
-            });
-
-            it('calls .disconnect on the newly-constructed RoomV2', () => {
-              var test = makeTest();
-              test.createAndOfferDeferred.resolve();
-              test.createAndOfferDeferred.promise.then(() => {
-                var identity = makeIdentity();
-                var sid = makeParticipantSid();
-                test.session.emit('accepted', {
-                  body: JSON.stringify({
-                    participant: {
-                      sid: sid,
-                      identity: identity
-                    }
-                  })
-                });
-                test.cancelableRoomSignalingPromise.cancel();
-              });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert(test.room.disconnect.calledOnce);
-              });
-            });
-
-            it('does not call .terminate on the SIP.js Session', () => {
-              var test = makeTest();
-              test.createAndOfferDeferred.resolve();
-              test.createAndOfferDeferred.promise.then(() => {
-                var identity = makeIdentity();
-                var sid = makeParticipantSid();
-                test.session.emit('accepted', {
-                  body: JSON.stringify({
-                    participant: {
-                      sid: sid,
-                      identity: identity
-                    }
-                  })
-                });
-                test.cancelableRoomSignalingPromise.cancel();
-              });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert(!test.session.terminate.calledOnce);
-              });
-            });
-
-            it('calls .close on the PeerConnectionManager', () => {
-              var test = makeTest();
-              test.createAndOfferDeferred.resolve();
-              test.createAndOfferDeferred.promise.then(() => {
-                var identity = makeIdentity();
-                var sid = makeParticipantSid();
-                test.session.emit('accepted', {
-                  body: JSON.stringify({
-                    participant: {
-                      sid: sid,
-                      identity: identity
-                    }
-                  })
-                });
-                test.cancelableRoomSignalingPromise.cancel();
-              });
-              return test.cancelableRoomSignalingPromise.then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
-                assert(test.peerConnectionManager.close.calledOnce);
-              });
-            });
-          });
-        });
-      });
-
-      context('and the accepted response body is not valid JSON', () => {
+      context('but the .participant property is missing', () => {
         it('the CancelablePromise rejects with an error', () => {
           var test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
-            test.session.emit('accepted', { body: 'oh, hai' });
+            test.transport.emit('connected', {});
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
             }, error => {
@@ -513,38 +148,15 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
         });
 
-        it('calls .terminate on the SIP.js Session with a disconnect RSP message', () => {
+        it('calls .disconnect on the Transport', () => {
           var test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
-            test.session.emit('accepted', { body: 'oh, hai' });
+            test.transport.emit('connected', {});
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
             }, error => {
-              assert.deepEqual(
-                { type: 'disconnect', version: 1 },
-                JSON.parse(test.session.terminate.args[0][0].body));
-            });
-          });
-        });
-
-        it('calls .terminate on the SIP.js Session with Content-Type "application/room-signaling+json"', () => {
-          var test = makeTest();
-          test.createAndOfferDeferred.resolve();
-          return test.createAndOfferDeferred.promise.then(() => {
-            test.session.emit('accepted', { body: 'oh, hai' });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, error => {
-              for (var header of test.session.terminate.args[0][0].extraHeaders) {
-                if (header.startsWith('Content-Type: ')) {
-                  assert.equal(
-                    'application/room-signaling+json',
-                    header.split(': ')[1]);
-                  return;
-                }
-              }
-              throw new Error('Content-Type header missing');
+              assert(test.transport.disconnect.calledOnce);
             });
           });
         });
@@ -553,7 +165,154 @@ describe('createCancelableRoomSignalingPromise', () => {
           var test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
-            test.session.emit('accepted', { body: 'oh, hai' });
+            test.transport.emit('connected', {});
+            return test.cancelableRoomSignalingPromise.then(() => {
+              throw new Error('Unexpected resolution');
+            }, error => {
+              assert(test.peerConnectionManager.close.calledOnce);
+            });
+          });
+        });
+      });
+
+      context('and the .participant property is present', () => {
+        it('calls .connect with the .participant\'s .sid and .identity on the local ParticipantSignaling', () => {
+          var test = makeTest();
+          test.createAndOfferDeferred.resolve();
+          return test.createAndOfferDeferred.promise.then(() => {
+            var identity = makeIdentity();
+            var sid = makeParticipantSid();
+            test.transport.emit('connected', {
+              participant: {
+                sid: sid,
+                identity: identity
+              }
+            });
+            assert.equal(
+              sid,
+              test.localParticipant.connect.args[0][0]);
+            assert.equal(
+              identity,
+              test.localParticipant.connect.args[0][1]);
+          });
+        });
+
+        it('constructs a new RoomV2', () => {
+          var test = makeTest();
+          test.createAndOfferDeferred.resolve();
+          return test.createAndOfferDeferred.promise.then(() => {
+            var identity = makeIdentity();
+            var sid = makeParticipantSid();
+            test.transport.emit('connected', {
+              participant: {
+                sid: sid,
+                identity: identity
+              }
+            });
+            assert(test.RoomV2.calledOnce);
+          });
+        });
+
+        context('when the CancelablePromise has not been canceled', () => {
+          it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            test.createAndOfferDeferred.promise.then(() => {
+              var identity = makeIdentity();
+              var sid = makeParticipantSid();
+              test.transport.emit('connected', {
+                participant: {
+                  sid: sid,
+                  identity: identity
+                }
+              });
+            });
+            return test.cancelableRoomSignalingPromise.then(room => {
+              assert.equal(test.room, room);
+            });
+          });
+        });
+
+        context('when the CancelablePromise has been canceled', () => {
+          it('the CancelablePromise rejects with a cancelation error', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            test.createAndOfferDeferred.promise.then(() => {
+              var identity = makeIdentity();
+              var sid = makeParticipantSid();
+              test.transport.emit('connected', {
+                participant: {
+                  sid: sid,
+                  identity: identity
+                }
+              });
+              test.cancelableRoomSignalingPromise.cancel();
+            });
+            return test.cancelableRoomSignalingPromise.then(() => {
+              throw new Error('Unexpected resolution');
+            }, error => {
+              assert.equal(
+                'Canceled',
+                error.message);
+            });
+          });
+
+          it('calls .disconnect on the newly-constructed RoomV2', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            test.createAndOfferDeferred.promise.then(() => {
+              var identity = makeIdentity();
+              var sid = makeParticipantSid();
+              test.transport.emit('connected', {
+                participant: {
+                  sid: sid,
+                  identity: identity
+                }
+              });
+              test.cancelableRoomSignalingPromise.cancel();
+            });
+            return test.cancelableRoomSignalingPromise.then(() => {
+              throw new Error('Unexpected resolution');
+            }, error => {
+              assert(test.room.disconnect.calledOnce);
+            });
+          });
+
+          it('does not call .disconnect on the Transport', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            test.createAndOfferDeferred.promise.then(() => {
+              var identity = makeIdentity();
+              var sid = makeParticipantSid();
+              test.transport.emit('connected', {
+                participant: {
+                  sid: sid,
+                  identity: identity
+                }
+              });
+              test.cancelableRoomSignalingPromise.cancel();
+            });
+            return test.cancelableRoomSignalingPromise.then(() => {
+              throw new Error('Unexpected resolution');
+            }, error => {
+              assert(!test.transport.disconnect.calledTwice);
+            });
+          });
+
+          it('calls .close on the PeerConnectionManager', () => {
+            var test = makeTest();
+            test.createAndOfferDeferred.resolve();
+            test.createAndOfferDeferred.promise.then(() => {
+              var identity = makeIdentity();
+              var sid = makeParticipantSid();
+              test.transport.emit('connected', {
+                participant: {
+                  sid: sid,
+                  identity: identity
+                }
+              });
+              test.cancelableRoomSignalingPromise.cancel();
+            });
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
             }, error => {
@@ -565,12 +324,12 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
   });
 
-  context('when the SIP.js Session emits a "failed" event', () => {
+  context('when the Transport emits a "stateChanged" event in state "failed"', () => {
     it('the CancelablePromise rejects with an error', () => {
       var test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
-        test.session.emit('failed');
+        test.transport.emit('stateChanged', 'disconnected');
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
         }, error => {
@@ -579,15 +338,15 @@ describe('createCancelableRoomSignalingPromise', () => {
       });
     });
 
-    it('does not call .terminate on the SIP.js Session', () => {
+    it('does not call .disconnect on the Transport', () => {
       var test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
-        test.session.emit('failed');
+        test.transport.emit('stateChanged', 'disconnected');
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
         }, error => {
-          assert(!test.session.terminate.calledOnce);
+          assert(!test.transport.disconnect.calledOnce);
         });
       });
     });
@@ -596,7 +355,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       var test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
-        test.session.emit('failed');
+        test.transport.emit('stateChanged', 'disconnected');
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
         }, error => {
@@ -638,22 +397,13 @@ function makeToken(options) {
 }
 
 function makeUA(options) {
-  return {
-    invite: sinon.spy(() => options.session)
-  };
-}
-
-function makeSession(options) {
-  var session = new EventEmitter();
-  session.terminate = sinon.spy();
-  return session;
+  return {};
 }
 
 function makeTest(options) {
   options = options || {};
   options.accountSid = options.accountSid || makeAccountSid();
   options.token = options.token || makeToken(options);
-  options.session = options.session || makeSession(options);
   options.ua = options.ua || makeUA(options);
   options.tracks = options.tracks || [];
   options.localParticipant = options.localParticipant || makeLocalParticipantSignaling(options);
@@ -663,6 +413,7 @@ function makeTest(options) {
     disconnect: sinon.spy(() => {})
   };
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
+  options.Transport = options.Transport || makeTransportConstructor(options);
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.accountSid,
     options.token,
@@ -703,4 +454,19 @@ function makeLocalParticipantSignaling(options) {
     localParticipant.identity = identity;
   });
   return localParticipant;
+}
+
+function makeTransportConstructor(testOptions) {
+  return function Transport(name, accountSid, accessToken, localParticipant, peerConnectionManager, ua) {
+    var transport = new EventEmitter();
+    this.name = name;
+    this.accountSid = accountSid;
+    this.accessToken = accessToken;
+    this.localParticipant = localParticipant;
+    this.peerConnectionManager = peerConnectionManager;
+    this.ua = ua;
+    testOptions.transport = transport;
+    transport.disconnect = sinon.spy(() => {});
+    return transport;
+  };
 }
