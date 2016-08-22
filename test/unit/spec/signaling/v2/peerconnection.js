@@ -1453,7 +1453,7 @@ function makePeerConnection(options) {
 }
 
 function makeId() {
-  return Number.parseInt(Math.random() * 100);
+  return Math.floor(Math.random() * 100 + 0.5);
 }
 
 function identity(a) {

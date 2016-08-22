@@ -701,7 +701,7 @@ function makeMedia(options) {
 }
 
 function makeEnabled() {
-  return !Math.floor(Math.random());
+  return (Math.random() < 0.5);
 }
 
 function makeId() {

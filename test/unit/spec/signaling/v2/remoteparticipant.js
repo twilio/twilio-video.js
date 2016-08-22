@@ -955,7 +955,7 @@ describe('RemoteParticipantV2', () => {
 });
 
 function makeId() {
-  return Math.floor(Math.random() * 1000);
+  return Math.floor(Math.random() * 1000 + 0.5);
 }
 
 function makeIdentity(length) {

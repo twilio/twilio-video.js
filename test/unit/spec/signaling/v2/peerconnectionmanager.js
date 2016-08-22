@@ -493,6 +493,27 @@ describe('PeerConnectionManager', () => {
         });
       });
     });
+
+    context('when it is called more than once for the same id', () => {
+      it('should result in the PeerConnection having only one listener for \'stateChanged\'', () => {
+        var test = makeTest();
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          var peerConnectionState = {
+            id: test.peerConnectionV2s[0].id,
+            fizz: 'buzz'
+          };
+          return test.peerConnectionManager.update([peerConnectionState]);
+        }).then(() => {
+          var peerConnectionState = {
+            id: test.peerConnectionV2s[0].id,
+            fizz: 'jazz'
+          };
+          return test.peerConnectionManager.update([peerConnectionState]);
+        }).then(() => {
+          assert.equal(test.peerConnectionV2s[0].listenerCount('stateChanged'), 1);
+        });
+      });
+    });
   });
 
   describe('"candidates" event', () => {
@@ -620,7 +641,7 @@ function makePeerConnectionV2Constructor(testOptions) {
 }
 
 function makeId() {
-  return Number.parseInt(Math.random() * 100);
+  return Math.floor(Math.random() * 100 + 0.5);
 }
 
 function makeMediaStream(options) {
