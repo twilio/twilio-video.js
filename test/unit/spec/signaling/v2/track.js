@@ -933,7 +933,7 @@ describe('TrackV2', () => {
 });
 
 function makeEnabled() {
-  return !Number.parseInt(Math.random());
+  return (Math.random() < 0.5);
 }
 
 function makeId() {
