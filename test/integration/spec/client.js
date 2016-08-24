@@ -16,7 +16,13 @@ var wsServer = credentials.wsServer;
 describe('Client', function() {
   var aliceName = randomName();
   var aliceToken = getToken({ address: aliceName });
+  var bobName = randomName();
+  var bobToken = getToken({ address: bobName });
+  var charlieName = randomName();
+  var charlieToken = getToken({ address: charlieName });
   var alice = null;
+  var bob = null;
+  var charlie = null;
 
   var options = {
     debug: false,
@@ -50,6 +56,8 @@ describe('Client', function() {
   });
 
   var room = null;
+  var bobRoom = null;
+  var charlieRoom = null;
 
   describe('#connect', function() {
 
@@ -64,6 +72,22 @@ describe('Client', function() {
       var cancelablePromise = alice.connect();
       cancelablePromise.cancel().then(() => done(new Error('Unexpected resolution')), () => done());
     });
+
+    context('when called without options', () => {
+      it('should connect bob and charlie to different rooms', (done) => {
+        bob = new Client(bobToken, options);
+        charlie = new Client(charlieToken, options);
+
+        bob.connect().then((_bobRoom) => {
+          bobRoom = _bobRoom;
+          return charlie.connect();
+        }).then((_charlieRoom) => {
+          var msg = 'both rooms have the same sid';
+          charlieRoom = _charlieRoom;
+          assert.notEqual(charlieRoom.sid, bobRoom.sid, msg);
+        }).then(done, done);
+      });
+    });
   });
 
   describe('Room#disconnect', function() {
@@ -72,6 +96,15 @@ describe('Client', function() {
       room.disconnect();
       assert(!alice.rooms.has(room.sid));
     });
+  });
+
+  after(() => {
+    if (bobRoom) {
+      bobRoom.disconnect();
+    }
+    if (charlieRoom) {
+      charlieRoom.disconnect();
+    }
   });
 });
 
