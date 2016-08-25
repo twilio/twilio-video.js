@@ -6,6 +6,23 @@ var LocalParticipant = require('../../../lib/localparticipant');
 var sinon = require('sinon');
 
 describe('LocalParticipant', () => {
+  describe('constructor', () => {
+    context('when a room is joined', () => {
+      it('should have the updated "identity" and "sid"', () => {
+        // In makeTest(), test.signaling.sid and test.signaling.identity are
+        // set to null, to mimic the ParticipantSignaling constructor
+        var test = makeTest({ state: 'connecting' });
+        // Spoofing a room joining event by populating the
+        // "identity" and "sid" members of the signaling instance
+        test.signaling.identity = 'newIdentity';
+        test.signaling.sid = 'newSid';
+        // Now, localParticipant should have the updated "identity" and "sid"
+        assert.equal(test.signaling.sid, test.participant.sid);
+        assert.equal(test.signaling.identity, test.participant.identity);
+      });
+    });
+  });
+
   describe('Media', () => {
     context('"trackAdded" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
@@ -184,6 +201,8 @@ function makeSignaling(options) {
   var signaling = new EventEmitter();
   options = options || {};
   options.state = options.state || 'connecting';
+  signaling.identity = options.identity || null;
+  signaling.sid = options.sid || null;
   signaling.state = options.state;
   signaling.addTrack = sinon.spy(() => {});
   signaling.removeTrack = sinon.spy(() => {});
