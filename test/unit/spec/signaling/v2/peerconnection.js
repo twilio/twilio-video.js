@@ -233,7 +233,6 @@ describe('PeerConnectionV2', () => {
             bundlePolicy: 'max-bundle',
             iceServers: ['foo'],
             iceTransportPolicy: 'bar',
-            iceTransports: 'bar',
             rtcpMuxPolicy: 'require'
           },
           configuration);
@@ -1235,7 +1234,7 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('"trackAdded" event', () => {
-    context('when "track" events are supported by the underlying RTCPeerConnection (Firefox)', () => {
+    context('when "track" events are supported by the underlying RTCPeerConnection', () => {
       it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
         var peerConnection = makePeerConnection();
         function RTCPeerConnection() {
@@ -1258,65 +1257,6 @@ describe('PeerConnectionV2', () => {
           type: 'track',
           track: mediaStreamTrack,
           streams: [mediaStream]
-        });
-
-        return promise.then(pair => {
-          assert.equal(mediaStreamTrack, pair[0]);
-          assert.equal(mediaStream, pair[1]);
-        });
-      });
-    });
-
-    context('when "track" events are not supported by the underlying RTCPeerConnection (Chrome)', () => {
-      it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "addstream" event handler', () => {
-        var test = makeTest();
-        var promise = new Promise(resolve => {
-          test.peerConnectionV2.once('trackAdded', (mediaStreamTrack, mediaStream) => {
-            resolve([mediaStreamTrack, mediaStream]);
-          })
-        });
-
-        var mediaStreamTrack = { id: '456' };
-        var mediaStream = new EventEmitter();
-        mediaStream.id = '123';
-        mediaStream.addEventListener = mediaStream.addListener;
-        mediaStream.removeEventListener = mediaStream.removeListener;
-        mediaStream.getTracks = () => [mediaStreamTrack];
-
-        test.peerConnection.emit('addstream', {
-          type: 'addstream',
-          stream: mediaStream
-        });
-
-        return promise.then(pair => {
-          assert.equal(mediaStreamTrack, pair[0]);
-          assert.equal(mediaStream, pair[1]);
-        });
-      });
-
-      it('emits the "trackAdded" event directly from the underlying MediaStream\'s "addtrack" event handler', () => {
-        var test = makeTest();
-        var promise = new Promise(resolve => {
-          test.peerConnectionV2.once('trackAdded', (mediaStreamTrack, mediaStream) => {
-            resolve([mediaStreamTrack, mediaStream]);
-          })
-        });
-
-        var mediaStreamTrack = { id: '456' };
-        var mediaStream = new EventEmitter();
-        mediaStream.id = '123';
-        mediaStream.addEventListener = mediaStream.addListener;
-        mediaStream.removeEventListener = mediaStream.removeListener;
-        mediaStream.getTracks = () => [];
-
-        test.peerConnection.emit('addstream', {
-          type: 'addstream',
-          stream: mediaStream
-        });
-
-        mediaStream.emit('addtrack', {
-          type: 'addtrack',
-          track: mediaStreamTrack
         });
 
         return promise.then(pair => {
