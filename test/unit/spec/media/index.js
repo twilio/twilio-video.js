@@ -40,11 +40,11 @@ describe('Media', function() {
     });
 
     it('should call _reemitTrackEvent for every event we want reemited', function() {
-      assert.equal(media._reemitTrackEvent.callCount, 10);
+      // NOTE(mmalavalli): 2 tracks x 4 track events = 8 expected _reemitTrackEvent calls
+      assert.equal(media._reemitTrackEvent.callCount, 8);
       assert(media._reemitTrackEvent.calledWith, 'disabled');
       assert(media._reemitTrackEvent.calledWith, 'enabled');
       assert(media._reemitTrackEvent.calledWith, 'started');
-      assert(media._reemitTrackEvent.calledWith, 'ended');
       assert(media._reemitTrackEvent.calledWith, 'dimensionsChanged');
     });
 
@@ -65,12 +65,6 @@ describe('Media', function() {
     it('should return the Media instance', function() {
       assert.equal(returnVal1, media);
       assert.equal(returnVal2, media);
-    });
-
-    // JSDK-549
-    it('should not call _removeTrack when the Track emits Track#ended', function() {
-      audioTrackMock.emit('ended');
-      assert.equal(media._removeTrack.callCount, 0);
     });
   });
   
@@ -160,12 +154,6 @@ describe('Media', function() {
 
     it('should add the track element to the passed attachments Map', function() {
       assert.equal(attachments.get(track), trackEl);
-    });
-
-    it('should call ._detachTrack when track emits Track#ended', function() {
-      assert.equal(media._detachTrack.callCount, 0);
-      track.emit('ended');
-      assert.equal(media._detachTrack.callCount, 1);
     });
   });
 

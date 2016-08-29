@@ -95,15 +95,6 @@ describe('Participant', function() {
         assert.equal(track, trackEnabled);
       });
 
-      it('re-emits "trackEnded" events', () => {
-        var track = {};
-        var trackEnded;
-        var test = makeTest();
-        test.participant.once('trackEnded', track => trackEnded = track);
-        test.participant.media.emit('trackEnded', track);
-        assert.equal(track, trackEnded);
-      });
-
       it('re-emits "trackRemoved" events', () => {
         var track = {};
         var trackRemoved;
@@ -164,16 +155,6 @@ describe('Participant', function() {
         assert(!trackEnabled);
       });
 
-      it('does not re-emit "trackEnded" events', () => {
-        var track = {};
-        var trackEnded;
-        var test = makeTest();
-        test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackEnded', track => trackEnded = track);
-        test.participant.media.emit('trackEnded', track);
-        assert(!trackEnded);
-      });
-
       it('does not re-emit "trackRemoved" events', () => {
         var track = {};
         var trackRemoved;
@@ -230,15 +211,6 @@ describe('Participant', function() {
         test.participant.once('trackEnabled', track => trackEnabled = track);
         test.participant.media.emit('trackEnabled', track);
         assert(!trackEnabled);
-      });
-
-      it('does not re-emit "trackEnded" events', () => {
-        var track = {};
-        var trackEnded;
-        var test = makeTest({ state: 'disconnected' });
-        test.participant.once('trackEnded', track => trackEnded = track);
-        test.participant.media.emit('trackEnded', track);
-        assert(!trackEnded);
       });
 
       it('does not re-emit "trackRemoved" events', () => {

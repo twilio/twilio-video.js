@@ -511,17 +511,6 @@ describe('RoomV2', () => {
             test.transport.publish.args[0][0]);
         });
       });
-
-      context('"ended"', () => {
-        it('does not call .publish on the Transport', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          track.emit('stateChanged', 'ended');
-          assert(!test.transport.publish.calledOnce);
-        });
-      });
     });
 
     context('when a removed TrackV2 emits a "stateChanged" event in a new state', () => {
@@ -545,18 +534,6 @@ describe('RoomV2', () => {
           });
           test.localParticipant.emit('trackRemoved', track);
           track.emit('stateChanged', 'enabled');
-          assert(!test.transport.publish.calledTwice);
-        });
-      });
-
-      context('"ended"', () => {
-        it('does not call .publish on the Transport', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
-          });
-          test.localParticipant.emit('trackRemoved', track);
-          track.emit('stateChanged', 'ended');
           assert(!test.transport.publish.calledTwice);
         });
       });
