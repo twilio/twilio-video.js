@@ -3,6 +3,7 @@
 var assert = require('assert');
 var inherits = require('util').inherits;
 var EventEmitter = require('events').EventEmitter;
+var Track = require('../../../../../lib/media/track');
 var LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 var LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
 var sinon = require('sinon');
@@ -13,51 +14,56 @@ var sinon = require('sinon');
 ].forEach(pair => {
   var description = pair[0];
   var LocalTrack = pair[1];
+  var kind = {
+    LocalAudioTrack: 'audio',
+    LocalVideoTrack: 'video'
+  };
 
   describe(description, function() {
+    var _end;
     var _initialize;
     var mediaStream;
     var track;
 
     before(function() {
+      _end = Track.prototype._end;
       _initialize = LocalTrack.prototype._initialize;
+      Track.prototype._end = sinon.spy();
       LocalTrack.prototype._initialize = sinon.spy();
     });
 
     after(function() {
+      Track.prototype._end = _end;
       LocalTrack.prototype._initialize = _initialize;
     });
 
-    describe('_initialize', function() {
-      var dummyElement;
+    describe('#stop', function() {
+      var dummyElement = {
+        oncanplay: null,
+        videoWidth: 320,
+        videoHeight: 240
+      };
 
       before(function() {
         mediaStream = new MediaStream();
-        track = createTrack(LocalTrack, mediaStream, '1', 'audio');
-        track._attach = sinon.spy();
-        track._detachElement = sinon.spy();
-
-        dummyElement = { oncanplay: 'bar' };
-        track._createElement = sinon.spy(function() {
-          return dummyElement;
-        });
-
+        track = createTrack(LocalTrack, mediaStream, '1', kind[description]);
+        track._createElement = sinon.spy(() => dummyElement);
         _initialize.call(track);
       });
 
-      context('when the underlying MediaStreamTrack emits ended event', function() {
-        it('should emit Track#ended event', function(done) {
-          track.on('ended', function() { done(); });
-          track.mediaStreamTrack.emit('ended');
+      it('should not change the value of isEnabled', (done) => {
+        var startedTimeout = setTimeout(
+          done.bind(null, new Error('track#started didn\'t fire')),
+          1000
+        );
+        track.on('started', () => {
+          var isEnabled = track.isEnabled;
+          clearTimeout(startedTimeout);
+          track.stop();
+          assert.equal(isEnabled, track.isEnabled);
+          done();
         });
-
-        it('should call ._detachElement with the dummy element', function() {
-          assert(track._detachElement.calledWith(dummyElement));
-        });
-
-        it('should set the element\'s oncanplay callback to null', function() {
-          assert.equal(dummyElement.oncanplay, null);
-        });
+        track.emit('started', track);
       });
     });
   });
@@ -103,3 +109,8 @@ inherits(MediaStreamTrack, EventEmitter);
 MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
 
 MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
+
+MediaStreamTrack.prototype.stop = function stop() {
+  // Simulating the browser-native MediaStreamTrack's 'ended' event
+  this.emit('ended', {type: 'ended'});
+};
