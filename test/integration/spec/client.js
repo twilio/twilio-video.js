@@ -38,8 +38,6 @@ describe('Client', function() {
     return new Client(accessManager, options);
   };
 
-  var localMedia = new LocalMedia();
-
   describe('constructor', function() {
     it('should return an instance of Client', function() {
       alice = new Client(aliceToken, options);
