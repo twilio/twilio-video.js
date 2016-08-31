@@ -1,6 +1,5 @@
 'use strict';
 
-var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 
@@ -34,8 +33,7 @@ describe('Client', function() {
   }
 
   var createClient = function(token, options) {
-    var accessManager = new AccessManager(token);
-    return new Client(accessManager, options);
+    return new Client(token, options);
   };
 
   describe('constructor', function() {

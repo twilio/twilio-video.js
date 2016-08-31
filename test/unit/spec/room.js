@@ -1,6 +1,5 @@
 'use strict';
 
-var AccessManager = require('twilio-common').AccessManager;
 var assert = require('assert');
 var Room = require('../../../lib/room');
 var RoomSignaling = require('../../../lib/signaling/room');
