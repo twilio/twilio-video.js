@@ -14,7 +14,8 @@ try {
   ['SIGNING_KEY_SID',           'signingKeySid'],
   ['SIGNING_KEY_SECRET',        'signingKeySecret'],
   ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
-  ['WS_SERVER',                 'wsServer']
+  ['WS_SERVER',                 'wsServer'],
+  ['LOG_LEVEL',                 'logLevel']
 ].forEach(function forEachKeyPair(keyPair) {
   var processEnvKey = keyPair[0];
   var envKey = keyPair[1];
