@@ -42,6 +42,10 @@ var unitTestIndex = 'test/unit/index.js';
 var umdTested = '.umd-tested';
 var umdTestIndex = 'test/umd/index.js';
 
+var webrtcTestIndex = 'test/webrtc.js';
+var testDist = 'test/dist';
+var webrtcTestIndexDist = testDist + '/webrtc.js';
+
 var lib = 'lib';
 var libJsGlob = 'lib/**/*.js';
 
@@ -210,6 +214,21 @@ function unitTest(files, filter) {
       }));
   });
 }
+
+// WebRTC Test
+// -----------
+
+gulp.task('webrtc-test', function(done) {
+  return gulp.src([libJsGlob, unitTestGlob], { read: false })
+    .pipe(newer(webrtcTestIndexDist))
+    .pipe(then(function() {
+      var b = browserify();
+      b.add(webrtcTestIndex);
+      return b.bundle();
+    }))
+    .pipe(source(webrtcTestIndexDist))
+    .pipe(gulp.dest('.'))
+});
 
 // UMD Test
 // ----------------
