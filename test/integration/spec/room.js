@@ -115,8 +115,57 @@ describe('Room', function() {
           bobRoom = room;
           return new Promise((resolve, reject) => {
             setTimeout(resolve);
-            bobRoom.on('participantConnected', reject);
+            bobRoom.on('participantConnected', () => reject(
+              new Error('"participantConnected" was triggered for alice')
+            ));
           });
+        });
+      });
+
+      context('and later disconnects from the Room,', () => {
+        it('should not trigger "participantDisconnected" for alice on bob\'s Room object', () => {
+          return alice.client.connect({
+            to: roomName
+          })
+          .then((room) => {
+            aliceRoom = room;
+            return bob.client.connect({
+              to: roomName
+            });
+          })
+          .then((room) => {
+            bobRoom = room;
+            return new Promise((resolve, reject) => {
+              setTimeout(resolve);
+              bobRoom.on('participantDisconnected', () => reject(
+                new Error('"participantDisconnected" was triggered for alice')
+              ));
+              bobRoom.disconnect();
+            });
+          });
+        });
+      });
+
+      it('should retain alice in bob\'s Room participants Map in "connected" state', () => {
+        return alice.client.connect({
+          to: roomName
+        })
+        .then((room) => {
+          aliceRoom = room;
+          return bob.client.connect({
+            to: roomName
+          });
+        })
+        .then((room) => {
+          bobRoom = room;
+          bobRoom.disconnect();
+        })
+        .then(() => {
+          var aliceSid = aliceRoom.localParticipant.sid;
+          assert(bobRoom.participants.has(aliceSid));
+          var aliceParticipant = bobRoom.participants.get(aliceSid);
+          assert.equal(alice.name, aliceParticipant.identity);
+          assert.equal('connected', aliceParticipant.state);
         });
       });
     });
