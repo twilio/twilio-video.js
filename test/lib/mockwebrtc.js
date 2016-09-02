@@ -222,7 +222,15 @@ function mockWebRTC(_global) {
   _global.location = {
     protocol: 'https',
     host: 'bar'
-  }
+  };
+  _global.document = {
+    createElement: function createElement() {
+      return {
+        oncanplay: null,
+        src: ''
+      };
+    }
+  };
   return _global;
 }
 

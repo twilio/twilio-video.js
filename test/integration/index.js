@@ -4,3 +4,4 @@ if (typeof window === 'undefined') {
 
 require('./spec/room');
 require('./spec/client');
+require('./spec/participant');
