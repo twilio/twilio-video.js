@@ -575,48 +575,122 @@ describe('RoomV2', () => {
       });
     });
 
-    context('when the PeerConnectionManager emits a "trackAdded" event', () => {
-      context('before the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-        it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
-          var test = makeTest({
-            participants: [
-              { sid: makeSid() }
-            ]
+    context('when the PeerConnectionManager emits a "trackAdded" event for a MediaStreamTrack with an ID that has', () => {
+      context('never been used before', () => {
+        context('before the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
+            var test = makeTest({
+              participants: [
+                { sid: makeSid() }
+              ]
+            });
+            var id = makeId();
+            var mediaStreamTrack = { id: id };
+            var mediaStream = {};
+            test.peerConnectionManager.emit('trackAdded', mediaStreamTrack, mediaStream);
+            return test.participantV2s[0].getMediaStreamTrack(id).then(pair => {
+              assert.equal(
+                mediaStreamTrack,
+                pair[0]);
+              assert.equal(
+                mediaStream,
+                pair[1]);
+            });
           });
-          var id = makeId();
-          var mediaStreamTrack = { id: id };
-          var mediaStream = {};
-          test.peerConnectionManager.emit('trackAdded', mediaStreamTrack, mediaStream);
-          return test.participantV2s[0].getMediaStreamTrack(id).then(pair => {
-            assert.equal(
-              mediaStreamTrack,
-              pair[0]);
-            assert.equal(
-              mediaStream,
-              pair[1]);
+        });
+
+        context('after the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
+            var test = makeTest({
+              participants: [
+                { sid: makeSid() }
+              ]
+            });
+            var id = makeId();
+            var mediaStreamTrack = { id: id };
+            var mediaStream = {};
+            var promise = test.participantV2s[0].getMediaStreamTrack(id);
+            test.peerConnectionManager.emit('trackAdded', mediaStreamTrack, mediaStream);
+            return promise.then(pair => {
+              assert.equal(
+                mediaStreamTrack,
+                pair[0]);
+              assert.equal(
+                mediaStream,
+                pair[1]);
+            });
           });
         });
       });
 
-      context('after the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-        it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
-          var test = makeTest({
-            participants: [
-              { sid: makeSid() }
-            ]
+      context('been used before', () => {
+        context('before the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
+            var test = makeTest({
+              participants: [
+                { sid: makeSid() }
+              ]
+            });
+
+            var id = makeId();
+
+            var mediaStreamTrack1 = { id: id };
+            var mediaStream1 = {};
+
+            var mediaStreamTrack2 = { id: id };
+            var mediaStream2 = {};
+
+            // First usage
+            test.peerConnectionManager.emit('trackAdded', mediaStreamTrack1, mediaStream1);
+            return test.participantV2s[0].getMediaStreamTrack(id).then(() => {
+
+              // Second usage
+              test.peerConnectionManager.emit('trackAdded', mediaStreamTrack2, mediaStream2);
+              return test.participantV2s[0].getMediaStreamTrack(id);
+            }).then(pair => {
+              assert.equal(
+                mediaStreamTrack2,
+                pair[0]);
+              assert.equal(
+                mediaStream2,
+                pair[1]);
+            });
           });
-          var id = makeId();
-          var mediaStreamTrack = { id: id };
-          var mediaStream = {};
-          var promise = test.participantV2s[0].getMediaStreamTrack(id);
-          test.peerConnectionManager.emit('trackAdded', mediaStreamTrack, mediaStream);
-          return promise.then(pair => {
-            assert.equal(
-              mediaStreamTrack,
-              pair[0]);
-            assert.equal(
-              mediaStream,
-              pair[1]);
+        });
+
+        context('after the getMediaStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
+            var test = makeTest({
+              participants: [
+                { sid: makeSid() }
+              ]
+            });
+
+            var id = makeId();
+
+            var mediaStreamTrack1 = { id: id };
+            var mediaStream1 = {};
+
+            var mediaStreamTrack2 = { id: id };
+            var mediaStream2 = {};
+
+            // First usage
+            var promise = test.participantV2s[0].getMediaStreamTrack(id);
+            test.peerConnectionManager.emit('trackAdded', mediaStreamTrack1, mediaStream1);
+            return promise.then(pair => {
+
+              // Second usage
+              promise = test.participantV2s[0].getMediaStreamTrack(id);
+              test.peerConnectionManager.emit('trackAdded', mediaStreamTrack2, mediaStream2);
+              return promise;
+            }).then(pair => {
+              assert.equal(
+                mediaStreamTrack2,
+                pair[0]);
+              assert.equal(
+                mediaStream2,
+                pair[1]);
+            });
           });
         });
       });
