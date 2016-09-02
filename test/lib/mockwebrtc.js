@@ -2,6 +2,7 @@
 
 var EventEmitter = require('events').EventEmitter;
 var inherits = require('util').inherits;
+var MockBrowser = require('mock-browser').mocks.MockBrowser;
 var util = require('../../lib/util');
 
 function Event(type) {
@@ -223,14 +224,7 @@ function mockWebRTC(_global) {
     protocol: 'https',
     host: 'bar'
   };
-  _global.document = {
-    createElement: function createElement() {
-      return {
-        oncanplay: null,
-        src: ''
-      };
-    }
-  };
+  _global.document = new MockBrowser().getDocument();
   return _global;
 }
 
