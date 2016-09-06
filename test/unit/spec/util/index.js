@@ -61,16 +61,16 @@ describe('util', function() {
   });
 
   describe('parseRoomSIDFromContactHeader', function() {
-    var roomSid = 'CV123';
+    var roomSid = 'RM123';
 
     it('should parse contact headers with display names', function() {
-      var contactHeader = '"fud" <sip:CV123@172.18.8.202:443;transport=wss>';
+      var contactHeader = '"fud" <sip:RM123@172.18.8.202:443;transport=wss>';
       assert.equal(roomSid,
         util.parseRoomSIDFromContactHeader(contactHeader));
     });
 
     it('should parse contact headers without display names', function() {
-      var contactHeader = '<sip:CV123@172.18.8.202:443;transport=wss>';
+      var contactHeader = '<sip:RM123@172.18.8.202:443;transport=wss>';
       assert.equal(roomSid,
         util.parseRoomSIDFromContactHeader(contactHeader));
     });
