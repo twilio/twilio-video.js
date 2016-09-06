@@ -1,10 +1,10 @@
-twilio-conversations.js
-=======================
+twilio-video.js
+===============
 
-[![NPM](https://img.shields.io/npm/v/twilio-conversations.svg)](https://www.npmjs.com/package/twilio-conversations) [![Build Status](https://travis-ci.org/twilio/twilio-conversations.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-conversations.js)
+[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![Build Status](https://travis-ci.org/twilio/twilio-video.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-video.js)
 
-twilio-conversations.js allows you to add multi-party voice and video
-communications to your web apps. For more information, see the
+twilio-video.js allows you to add multi-party voice and video communications to
+your web apps. For more information, see the
 [Quickstart and Guides](https://www.twilio.com/docs/api/video).
 
 Including
@@ -12,31 +12,30 @@ Including
 
 ### CDN
 
-Releases of twilio-conversations.js are hosted on a CDN, and you can include
-these directly in your web app using a &lt;script&gt; tag.
+Releases of twilio-video.js are hosted on a CDN, and you can include these
+directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/conversations/v0.13/twilio-conversations.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/v1/twilio-video.min.js"></script>
 ```
 
 ### NPM & Bower
 
-You can also include twilio-conversations.js with either
-[npm](https://www.npmjs.com) or [bower](http://bower.io/). Including
-twilio-conversations.js this way allows you to integrate flexibly with build
-systems like [Browserify](http://browserify.org) and
-[webpack](https://webpack.github.io).
+You can also include twilio-video.js with either [npm](https://www.npmjs.com) or
+[bower](http://bower.io/). Including twilio-video.js this way allows you to
+integrate flexibly with build systems like [Browserify](http://browserify.org)
+and [webpack](https://webpack.github.io).
 
 With npm:
 
 ```
-npm install twilio-conversations --save
+npm install twilio-video --save
 ```
 
 With bower:
 
 ```
-bower install twilio-conversations --save
+bower install twilio-video --save
 ```
 
 Building
