@@ -416,9 +416,16 @@ gulp.task(distDocs, function() {
     .pipe(thenP(function() {
       return del(distDocs).then(function() {
         return new Promise(function(resolve, reject) {
-          var child = safeSpawn('node',
-            [jsdoc, '-d', distDocs, '-c', 'jsdoc.conf'].concat(publicClasses),
-            { stdio: 'inherit' });
+          var jsdocWithOpts = [
+            jsdoc,
+            '-d', distDocs,
+            '-c', 'jsdoc.conf',
+            '-t', './node_modules/ink-docstrap/template',
+            '-R', 'README.md'
+          ].concat(publicClasses);
+          var child = safeSpawn('node', jsdocWithOpts, {
+            stdio: 'inherit'
+          });
           child.on('close', function(code) {
             if (code) {
               reject(new util.PluginError('docs', new Error('JSDoc error')));
