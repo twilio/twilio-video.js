@@ -1,9 +1,11 @@
 'use strict';
 
+var sinon = require('sinon');
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 
 var Client = require('../../../lib/client');
+var Log = require('../../../lib/util/log');
 var LocalMedia = require('../../../lib/media/localmedia');
 var SignalingV2 = require('../../../lib/signaling/v2');
 var util = require('../../../lib/util');
@@ -82,6 +84,44 @@ describe('Client', function() {
           charlieRoom = _charlieRoom;
           assert.notEqual(charlieRoom.sid, bobRoom.sid, msg);
         }).then(done, done);
+      });
+    });
+  });
+
+  describe('#setLogLevel', () => {
+    var clientOptions = Object.assign({}, options, {
+      logLevel: {
+        default: 'warn',
+        signaling: 'debug',
+        webrtc: 'debug',
+        media: 'off'
+      }
+    });
+    var clientToken = getToken({ address: 'client'});
+    var client = new Client(clientToken, clientOptions);
+
+    it('should set Log levels to the new values', () => {
+      client.setLogLevel({ default: 'error' });
+      assert.equal(client._log.logLevel, Log.getLevelByName('error'));
+    });
+
+    it('should set Log levels of any child Logs to the new values', () => {
+      var childLog = client._log.createLog('media', 'testMedia');
+      var oldChildLogLevel = childLog.logLevel;
+      client.setLogLevel({ signaling: 'error', media: 'info'});
+      assert.equal(oldChildLogLevel, Log.getLevelByName('off'));
+      assert.equal(childLog.logLevel, Log.getLevelByName('info'));
+    });
+
+    context('when a string is passed as the new Log level', () => {
+      it('should set Log levels of all module names to this level', () => {
+        client.setLogLevel('error');
+        assert.deepEqual(client._log._logLevels, {
+          default: 'error',
+          media: 'error',
+          webrtc: 'error',
+          signaling: 'error'
+        });
       });
     });
   });
