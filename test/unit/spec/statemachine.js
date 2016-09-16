@@ -87,7 +87,7 @@ describe('StateMachine', function() {
       context('the StateMachine is locked', function() {
         context('and a new lock is not requested', function() {
           it('sets .state and releases the current lock', function(done) {
-            var sm = new StateMachine('foo', { foo: ['bar'] });
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             var key = sm.takeLockSync('lock');
             var i = 0;
             var deferred = util.defer();
@@ -124,7 +124,7 @@ describe('StateMachine', function() {
 
         context('and a new lock is requested', function() {
           it('sets .state, releases the current lock, and takes a new lock', function(done) {
-            var sm = new StateMachine('foo', { foo: ['bar'] });
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             var key1 = sm.takeLockSync('lock1');
             var i = 0;
             var deferred = util.defer();
@@ -164,7 +164,7 @@ describe('StateMachine', function() {
       context('the StateMachine is unlocked', function() {
         context('and a new lock is not requested', function() {
           it('sets .state', function(done) {
-            var sm = new StateMachine('foo', { foo: ['bar'] });
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             sm.once('stateChanged', function() {
               try {
                 assert.equal('bar', sm.state);
@@ -181,7 +181,7 @@ describe('StateMachine', function() {
 
         context('and a new lock is requested', function() {
           it('sets .state and takes a new lock', function(done) {
-            var sm = new StateMachine('foo', { foo: ['bar'] });
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             sm.once('stateChanged', function() {
               try {
                 assert.equal('bar', sm.state);
@@ -362,14 +362,14 @@ describe('StateMachine', function() {
       });
 
       it('sets .state to the new state if the key is provided and the transition is valid', function() {
-        var sm = new StateMachine('foo', { foo: ['bar'] });
+        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
         var key = sm.takeLockSync('lock');
         sm.transition('bar', key);
         assert.equal('bar', sm.state);
       });
 
       it('emits the "stateChanged" event if the key is provided and the transition is valid', function(done) {
-        var sm = new StateMachine('foo', { foo: ['bar'] });
+        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
         var key = sm.takeLockSync('lock');
         sm.once('stateChanged', function() {
           try {
@@ -397,13 +397,13 @@ describe('StateMachine', function() {
       });
 
       it('sets .state to the new state if the transition is valid', function() {
-        var sm = new StateMachine('foo', { foo: ['bar'] });
+        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
         sm.transition('bar');
         assert.equal('bar', sm.state);
       });
 
       it('emits the "stateChanged" event if the transition is valid', function(done) {
-        var sm = new StateMachine('foo', { foo: ['bar'] });
+        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
         sm.once('stateChanged', function() {
           try {
             assert.equal('bar', sm.state);
@@ -418,15 +418,45 @@ describe('StateMachine', function() {
     });
   });
 
-  describe('#valid', function() {
-    it('returns false if the transition is invalid', function() {
-      var sm = new StateMachine('foo', { foo: [] });
-      assert.equal(false, sm.valid('bar'));
+  describe('#when', function() {
+    describe('when the state matches the current state', () => {
+      it('returns a Promise that resolves to the StateMachine', () => {
+        var sm = new StateMachine('foo', { foo: [] });
+        return sm.when('foo').then(_sm => assert.equal(sm, _sm));
+      });
     });
 
-    it('returns true if the transition is valid', function() {
-      var sm = new StateMachine('foo', { foo: ['bar'] });
-      assert(sm.valid('bar'));
+    describe('when the state does not match the current state, and', () => {
+      describe('the state is not reachable from the current state', () => {
+        it('returns a Promise that rejects with an Error', () => {
+          var sm = new StateMachine('foo', { foo: [], bar: [] });
+          return sm.when('bar').then(
+            () => { throw new Error('Unexpected resolution'); },
+            error => assert(error instanceof Error));
+        });
+      });
+
+      describe('the state is reachable from the current state, and it transitions to', () => {
+        describe('the state', () => {
+          it('returns a Promise that resolves to the StateMachine', () => {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            var promise = sm.when('bar').then(_sm => assert.equal(sm, _sm));
+            sm.transition('bar');
+            return promise;
+          });
+        });
+
+        describe('a new state from which the state is no longer reachable', () => {
+          it('returns a Promise that rejects with an Error', () => {
+            var sm = new StateMachine('foo', { foo: ['bar', 'baz'], bar: [], baz: [] });
+            var promise = sm.when('baz').then(
+              () => { throw new Error('Unexpected resolution'); },
+              error => assert(error instanceof Error));
+            sm.transition('bar');
+            return promise;
+          });
+        });
+      });
     });
   });
 });
