@@ -42,7 +42,7 @@ var unitTestIndex = 'test/unit/index.js';
 var umdTested = '.umd-tested';
 var umdTestIndex = 'test/umd/index.js';
 
-var webrtcTestIndex = 'test/webrtc.js';
+var webrtcTestIndex = './test/webrtc.js';
 var testDist = 'test/dist';
 var webrtcTestIndexDist = testDist + '/webrtc.js';
 

@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var RTCIceCandidate = require('../../../../lib/webrtc/rtcicecandidate');
 var RTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 var RTCPeerConnection = require('../../../../lib/webrtc/rtcpeerconnection');
 var util = require('../../../lib/util');
@@ -22,6 +23,10 @@ var isFirefox = typeof mozRTCPeerConnection !== 'undefined';
 
 describe('RTCPeerConnection', () => {
   describe('constructor', testConstructor);
+
+  describe('#addIceCandidate, called from signaling state', () => {
+    signalingStates.forEach(testAddIceCandidate);
+  });
 
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
@@ -119,6 +124,72 @@ function testConstructor() {
     it('should set .' + property + ' to ' + JSON.stringify(expected[property]), () => {
       assert.equal(test.peerConnection[property], expected[property]);
     });
+  });
+}
+
+function testAddIceCandidate(signalingState) {
+  // NOTE(mroberts): "stable" and "have-local-offer" only trigger failure here
+  // because we test one round of negotiation. If we tested multiple rounds,
+  // such that remoteDescription was non-null, we would accept a success here.
+  var shouldFail = {
+    closed: true,
+    stable: true,
+    'have-local-offer': true
+  }[signalingState] || false;
+
+  var needsTransition = {
+    'have-local-offer': true,
+    'have-remote-offer': true
+  }[signalingState] || false;
+
+  context(JSON.stringify(signalingState), () => {
+    var error;
+    var result;
+    var test;
+
+    beforeEach(() => {
+      error = null;
+      result = null;
+
+      return makeTest({
+        signalingState: signalingState
+      }).then(_test => {
+        test = _test;
+
+        var candidate = test.createRemoteCandidate();
+        var promise = test.peerConnection.addIceCandidate(candidate);
+
+        // NOTE(mroberts): Because of the way the ChromeRTCPeerConnection
+        // simulates signalingStates "have-local-offer" and "have-remote-offer",
+        // addIceCandidate will block until we transition to stable.
+        if (signalingState === 'have-local-offer') {
+          test.createRemoteDescription('answer').then(answer => {
+            return test.peerConnection.setRemoteDescription(answer);
+          });
+        } else if (signalingState === 'have-remote-offer') {
+          test.peerConnection.createAnswer().then(answer => {
+            return test.peerConnection.setLocalDescription(answer);
+          });
+        }
+
+        // TODO(mroberts): Do something
+        if (shouldFail) {
+          return promise.catch(_error => error = _error);
+        } else {
+          return promise.then(_result => result = _result);
+        }
+      });
+    });
+
+    if (shouldFail) {
+      it('should return a Promise that rejects with an error', () => {
+        assert(error instanceof Error);
+      });
+    } else {
+      it('should return a Promise that resolves to undefiend', () => {
+        assert.equal(result, undefined);
+      });
+    }
   });
 }
 
@@ -637,6 +708,13 @@ c=IN IP4 127.0.0.1\r
         break;
     }
     return Promise.resolve(description);
+  };
+
+  test.createRemoteCandidate = function createRemoteCandidate() {
+    return new RTCIceCandidate({
+      candidate: 'candidate:750991856 2 udp 25108222 237.30.30.30 51472 typ relay raddr 47.61.61.61 rport 54763 generation 0',
+      sdpMLineIndex: 0
+    });
   };
 
   var events = [
