@@ -32,6 +32,8 @@ describe('RTCPeerConnection', () => {
     signalingStates.forEach(testClose);
   });
 
+  describe('#addStream', testAddStream);
+
   describe('#createAnswer, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState), () => {
@@ -252,6 +254,44 @@ function testClose(signalingState) {
         });
       });
     }
+  });
+}
+
+function testAddStream() {
+  var test;
+  var stream;
+
+  function makeStream() {
+    var getUserMedia = navigator.webkitGetUserMedia;
+    getUserMedia = getUserMedia || navigator.mozGetUserMedia;
+    getUserMedia = getUserMedia.bind(navigator, { audio: true, video: true });
+    return new Promise((resolve, reject) => getUserMedia(resolve, reject));
+  }
+
+  before(() => {
+    return makeStream().then(_stream => stream = _stream);
+  });
+
+  beforeEach(() => {
+    return makeTest().then(_test => test = _test);
+  });
+
+  it('should add a stream to the RTCPeerConnection', () => {
+    test.peerConnection.addStream(stream);
+    assert.equal(test.peerConnection.getLocalStreams()[0], stream);
+  });
+
+  context('when adding a stream that is already added', () => {
+    it('should not throw an exception', () => {
+      test.peerConnection.addStream(stream);
+      assert.doesNotThrow(() => test.peerConnection.addStream(stream));
+    });
+
+    it('should not add the stream', () => {
+      test.peerConnection.addStream(stream);
+      test.peerConnection.addStream(stream);
+      assert.equal(test.peerConnection.getLocalStreams().length, 1);
+    });
   });
 }
 
