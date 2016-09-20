@@ -432,6 +432,7 @@ function makePeerConnectionManagerConstructor(testOptions) {
     peerConnectionManager.setMediaStreams = sinon.spy(() => {});
     peerConnectionManager.getRemoteMediaStreams = sinon.spy(() => []);
     peerConnectionManager.update = sinon.spy(() => {});
+    peerConnectionManager.dequeue = sinon.spy(() => {});
     peerConnectionManager.createAndOffer = sinon.spy(() => {
       return testOptions.createAndOfferDeferred.promise;
     });
