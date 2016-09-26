@@ -65,6 +65,10 @@ describe('RTCPeerConnection', () => {
       });
     });
   });
+
+  describe('DTLS role negotiation', () => {
+    testDtlsRoleNegotiation();
+  });
 });
 
 function assertEqualDescriptions(actual, expected) {
@@ -257,16 +261,69 @@ function testClose(signalingState) {
   });
 }
 
+function testDtlsRoleNegotiation() {
+  describe('RTCPeerConnection 1 offers with "a=setup:actpass", and', () => {
+    let pc1;
+    let pc2;
+
+    beforeEach(() => {
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
+      return makeStream().then(stream => {
+        pc1.addStream(stream);
+        pc2.addStream(stream);
+        return pc1.createOffer();
+      }).then(offer => {
+        assert(offer.sdp.match(/a=setup:actpass/));
+        return Promise.all([
+          pc1.setLocalDescription(offer),
+          pc2.setRemoteDescription(offer)
+        ]);
+      });
+    });
+
+    describe('RTCPeerConnection 2 answers with "a=setup:active"; then', () => {
+      beforeEach(() => {
+        return pc2.createAnswer().then(answer => {
+          assert(answer.sdp.match(/a=setup:active/));
+          return Promise.all([
+            pc1.setRemoteDescription(answer),
+            pc2.setLocalDescription(answer)
+          ]);
+        });
+      });
+
+      describe('RTCPeerConnection 2 offers with "a=setup:actpass", and', () => {
+        beforeEach(() => {
+          return pc2.createOffer().then(offer => {
+            assert(offer.sdp.match(/a=setup:actpass/));
+            return Promise.all([
+              pc1.setRemoteDescription(offer),
+              pc2.setLocalDescription(offer)
+            ]);
+          });
+        });
+
+        it('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+          return pc1.createAnswer().then(answer => {
+            assert(answer.sdp.match(/a=setup:passive/));
+          });
+        });
+      });
+    });
+  });
+}
+
+function makeStream() {
+  var getUserMedia = navigator.webkitGetUserMedia;
+  getUserMedia = getUserMedia || navigator.mozGetUserMedia;
+  getUserMedia = getUserMedia.bind(navigator, { audio: true, fake: true, video: true });
+  return new Promise((resolve, reject) => getUserMedia(resolve, reject));
+}
+
 function testAddStream() {
   var test;
   var stream;
-
-  function makeStream() {
-    var getUserMedia = navigator.webkitGetUserMedia;
-    getUserMedia = getUserMedia || navigator.mozGetUserMedia;
-    getUserMedia = getUserMedia.bind(navigator, { audio: true, video: true });
-    return new Promise((resolve, reject) => getUserMedia(resolve, reject));
-  }
 
   before(() => {
     return makeStream().then(_stream => stream = _stream);
