@@ -28,6 +28,10 @@ describe('RTCPeerConnection', () => {
     signalingStates.forEach(testAddIceCandidate);
   });
 
+  describe('#getRemoteStreams, called from signaling state', () => {
+    signalingStates.forEach(testGetRemoteStreams);
+  });
+
   describe('#close, called from signaling state', () => {
     signalingStates.forEach(testClose);
   });
@@ -195,13 +199,41 @@ function testAddIceCandidate(signalingState) {
   });
 }
 
+function testGetRemoteStreams(signalingState) {
+  context(JSON.stringify(signalingState), () => {
+    var test;
+
+    beforeEach(() => {
+      return makeTest({ signalingState: signalingState })
+        .then(_test => test = _test);
+    });
+
+    if (signalingState === 'closed') {
+      it('should return an empty array', () => {
+        assert.deepEqual(test.peerConnection.getRemoteStreams(), []);
+      });
+    }
+    else {
+      it('should return the result of calling getRemoteStreams() on the underlying RTCPeerConnection', () => {
+        assert.deepEqual(test.peerConnection.getRemoteStreams(), test.peerConnection._peerConnection.getRemoteStreams());
+      });
+    }
+  });
+}
+
 function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var result;
     var test;
+    var signalingStateChangeInThisTick;
 
     beforeEach(() => {
+      function onSigalingStateChanged() {
+        signalingStateChangeInThisTick = true;
+      }
+
       result = null;
+      signalingStateChangeInThisTick = false;
 
       return makeTest({
         signalingState: signalingState
@@ -213,7 +245,10 @@ function testClose(signalingState) {
           return;
         }
 
-        return test.close().then(results => result = results[0]);
+        test.peerConnection.addEventListener('signalingstatechange', onSigalingStateChanged);
+        var closePromise = test.close();
+        test.peerConnection.removeEventListener('signalingstatechange', onSigalingStateChanged);
+        return closePromise.then(results => result = results[0]);
       });
     });
 
@@ -252,6 +287,10 @@ function testClose(signalingState) {
         it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
           return test.waitFor(event);
         });
+      });
+
+      it('should raise signalingstatechange event on next tick', () => {
+        assert(!signalingStateChangeInThisTick);
       });
     }
   });
