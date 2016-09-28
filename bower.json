@@ -4,7 +4,8 @@
   "description": "Twilio Video JavaScript library",
   "license": "BSD",
   "authors": [
-    "Mark Andrus Roberts <mroberts@twilio.com>"
+    "Mark Andrus Roberts <mroberts@twilio.com>",
+    "Ryan Rowland <rrowland@twilio.com>"
   ],
   "main": "dist/twilio-video.min.js",
   "keywords": [
