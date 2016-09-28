@@ -4,7 +4,7 @@
 twilio-conversations.js has been renamed twilio-video.js. We have also made
 significant changes to the public API, namely
 
-- OutgoingInvites and IncomingInvites have been completely removed, and
+- OutgoingInvites and IncomingInvites have been completely removed,
 - Conversations have been replaced with Rooms, and
 - A new subclass of Participant, LocalParticipant, has been added.
 
