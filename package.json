@@ -6,7 +6,8 @@
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
-    "Ryan Rowland <rrowland@twilio.com>"
+    "Ryan Rowland <rrowland@twilio.com>",
+    "Manjesh Malavalli <mmalavalli@twilio.com>"
   ],
   "keywords": [
     "twilio",
