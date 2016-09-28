@@ -1,5 +1,6 @@
 *.pyc
 *.sw*
+.DS_Store
 .integration-tested
 .linted
 .unit-tested
