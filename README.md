@@ -3,12 +3,31 @@ twilio-video.js
 
 [![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![Build Status](https://travis-ci.org/twilio/twilio-video.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-video.js)
 
-twilio-video.js allows you to add multi-party voice and video communications to
-your web apps. For more information, see the
-[Quickstart and Guides](https://www.twilio.com/docs/api/video).
+twilio-video.js allows you to add real-time voice and video to your web apps.
 
-Including
----------
+Note that this is a _Developer Preview_ release. You may encounter bugs and
+instability, and the APIs available in this release may change in subsequent
+releases.
+
+**We want your feedback!** Email Rob Brazier, Product Manager for Programmable
+Video at [rbrazier@twilio.com](mailto:rbrazier@twilio.com) with suggested
+improvements, feature requests and general feedback. If you need technical
+support, contact [help@twilio.com](mailto:help@twilio.com).
+
+Installation
+------------
+
+### NPM
+
+```
+npm install twilio-video --save
+```
+
+### Bower
+
+```
+bower install twilio-video --save
+```
 
 ### CDN
 
@@ -19,24 +38,45 @@ directly in your web app using a &lt;script&gt; tag.
 <script src="//media.twiliocdn.com/sdk/js/video/v1/twilio-video.min.js"></script>
 ```
 
-### NPM & Bower
+Usage
+-----
 
-You can also include twilio-video.js with either [npm](https://www.npmjs.com) or
-[bower](http://bower.io/). Including twilio-video.js this way allows you to
-integrate flexibly with build systems like [Browserify](http://browserify.org)
-and [webpack](https://webpack.github.io).
+The following is a simple example showing a Client connecting to a Room. For
+more information, refer to the
+[API Docs](media.twiliocdn.com/sdk/js/video/v1/docs).
 
-With npm:
+```js
+const Video = require('twilio-video');
+const client = new Video.Client('$TOKEN');
 
+client.connect({ to: 'room-name' }).then(room => {
+  console.log('Connected to Room "%s"', room.name);
+
+  room.participants.forEach(participant => {
+    console.log('Participant "%s" is connected', participant.identity);
+    participant.media.attach(document.body);
+  });
+
+  room.on('participantConnected', participant => {
+    console.log('Participant "%s" connected', participant.identity);
+    participant.media.attach(document.body);
+  });
+
+  room.on('participantDisconnected', participant => {
+    console.log('Participant "%s" disconnected', participant.identity);
+  });
+});
 ```
-npm install twilio-video --save
-```
 
-With bower:
+Changelog
+---------
 
-```
-bower install twilio-video --save
-```
+See [CHANGELOG.md](CHANGELOG.md).
+
+License
+-------
+
+See [LICENSE.md](LICENSE.md).
 
 Building
 --------
