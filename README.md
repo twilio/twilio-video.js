@@ -5,9 +5,8 @@ twilio-video.js
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-Note that this is a _Developer Preview_ release. You may encounter bugs and
-instability, and the APIs available in this release may change in subsequent
-releases.
+Note that this is a beta release. You may encounter bugs and instability, and
+the APIs available in this release may change in subsequent releases.
 
 **We want your feedback!** Email Rob Brazier, Product Manager for Programmable
 Video at [rbrazier@twilio.com](mailto:rbrazier@twilio.com) with suggested

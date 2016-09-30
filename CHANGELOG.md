@@ -1,5 +1,5 @@
-1.0.0-preview1
-==============
+1.0.0-beta1
+===========
 
 twilio-conversations.js has been renamed twilio-video.js. We have also made
 significant changes to the public API, namely
