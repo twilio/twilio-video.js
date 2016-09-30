@@ -1,3 +1,14 @@
+0.13.10
+=======
+
+Bug Fixes
+---------
+
+- Fixed a bug where "trackAdded" events would not be raised for a Participant
+  invited with `inviteToConversation` in Firefox (JSDK-932).
+- Fixed a bug where `isStarted` was always false and "trackStarted" events were
+  never raised in Firefox (JSDK-950).
+
 0.13.9
 ======
 
