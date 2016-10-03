@@ -28,6 +28,28 @@ Bug Fixes
 - A number of stability improvements have been made in the transition away from
   invites towards a Room-based model.
 
+0.13.10
+=======
+
+Bug Fixes
+---------
+
+- Fixed a bug where "trackAdded" events would not be raised for a Participant
+  invited with `inviteToConversation` in Firefox (JSDK-932).
+- Fixed a bug where `isStarted` was always false and "trackStarted" events were
+  never raised in Firefox (JSDK-950).
+
+0.13.9
+======
+
+Bug Fixes
+---------
+
+- Reverted a change that altered the expected behavior of IncomingInvite: The
+  caller will now auto-cancel the invite after 50 seconds, at which point the
+  callee's IncomingInvite will emit the "canceled" event
+- Fixed a bug where IncomingInvite was never emitting the "failed" event
+
 0.13.8
 ======
 
