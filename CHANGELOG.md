@@ -1,12 +1,11 @@
 1.0.0-beta1
 ===========
 
-twilio-conversations.js has been renamed twilio-video.js. We have also made
-significant changes to the public API, namely
+In this release, the new twilio-video.js replaces the earlier twilio-conversations.js SDK. twilio-video.js offers the following improvements over twilio-conversations.js:
 
-- OutgoingInvites and IncomingInvites have been completely removed,
-- Conversations have been replaced with Rooms, and
-- A new subclass of Participant, LocalParticipant, has been added.
+- Conversations have been replaced with Rooms, which provide a simpler call model
+- OutgoingInvites and IncomingInvites are no longer required to join a Video session, and have been removed from the API
+- A new subclass of Participant, LocalParticipant, has been added
 
 All other classes including Client, Participant, Media, and Tracks remain
 relatively unchanged. If you are loading twilio-video.js in the browser using
@@ -15,7 +14,7 @@ a &lt;script&gt; tag, the exported global has been renamed to `Twilio.Video`.
 New Features
 ------------
 
-- `inviteToConversation` has been replaced with `connect`.
+- Use `connect` to connect to a Room. This method replaces twilio-conversations.js `inviteToConversation` method.
 - You can `connect` to a Room as its sole Participant.
 - You can specify the name of the Room you want to `connect` to by setting the
   `to` parameter.
