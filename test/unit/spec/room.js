@@ -13,18 +13,18 @@ var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1zYXQ7dj0xIn0
 
 describe('Room', function() {
   var room;
-
+  var options = { log: makeDummyLog() };
   var localMedia = new LocalMedia();
   var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
   var signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);
 
   beforeEach(function() {
-    room = new Room(localMedia, signaling);
+    room = new Room(localMedia, signaling, options);
   });
 
   describe('new Room(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Room(localMedia, signaling) instanceof Room);
+      assert(Room(localMedia, signaling, options) instanceof Room);
     });
   });
 
@@ -77,3 +77,15 @@ describe('Room', function() {
     });
   });
 });
+
+function makeDummyLog() {
+  var dummyLog = {
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {}
+  };
+
+  dummyLog.createLog = () => dummyLog;
+  return dummyLog;
+}
