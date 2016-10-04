@@ -10,6 +10,12 @@ if (typeof document === 'undefined') {
   global.document = browser.getDocument();
 }
 
+if (typeof Array.prototype.includes !== 'function') {
+  Array.prototype.includes = function includes(x) {
+    return this.indexOf(x) > -1;
+  };
+}
+
 require('./spec/client');
 require('./spec/room');
 require('./spec/localparticipant');
