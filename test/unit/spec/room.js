@@ -7,13 +7,11 @@ var LocalMedia = require('../../../lib/media/localmedia');
 var Participant = require('../../../lib/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 var sinon = require('sinon');
-var util = require('../../../lib/util');
-
-var token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1zYXQ7dj0xIn0.eyJleHAiOjE0NDM1NzU5NzQuODQ1MjQyLCJpc3MiOiJTSzllZGY5YWNiM2JkMjFmNTRjZTM0ODllMThjMDk2YmY5IiwibmJmIjoxNDQzNTc0MDU0Ljg0NTI0MiwiZ3JhbnRzIjpbeyJyZXMiOiJodHRwczovL2FwaS50d2lsaW8uY29tLzIwMTAtMDQtMDEvQWNjb3VudHMvQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5My9Ub2tlbnMuanNvbiIsImFjdCI6WyJQT1NUIl19LHsicmVzIjoic2lwOnlvQEFDOTZjY2M5MDQ3NTNiMzM2NGYyNDIxMWU4ZDk3NDZhOTMuZW5kcG9pbnQudHdpbGlvLmNvbSIsImFjdCI6WyJpbnZpdGUiLCJsaXN0ZW4iXX1dLCJzdWIiOiJBQzk2Y2NjOTA0NzUzYjMzNjRmMjQyMTFlOGQ5NzQ2YTkzIiwianRpIjoiU0s5ZWRmOWFjYjNiZDIxZjU0Y2UzNDg5ZTE4YzA5NmJmOWlxaEhmcG1yUUVLeGpBU0F3In0.d4eHbuTDQA499Zm1-SWjGWQ6zqQNnNv1iDI22Db7Umw';
+var log = require('../../lib/fakelog');
 
 describe('Room', function() {
   var room;
-  var options = { log: makeDummyLog() };
+  var options = { log: log };
   var localMedia = new LocalMedia();
   var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
   var signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);

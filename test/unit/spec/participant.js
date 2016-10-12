@@ -5,6 +5,7 @@ var EventEmitter = require('events').EventEmitter;
 var Participant = require('../../../lib/participant');
 var sinon = require('sinon');
 var util = require('../../../lib/util');
+var log = require('../../lib/fakelog');
 
 describe('Participant', function() {
   describe('constructor', () => {
@@ -644,6 +645,7 @@ function makeTest(options) {
     options.tracks.push(this);
   });
 
+  options.log = log;
   options.signaling = options.signaling || makeSignaling(options);
   options.participant = options.participant || new Participant(options.signaling, options.media, options);
   options.media = options.media || options.participant.media;
@@ -660,7 +662,7 @@ function makeSignaling(options) {
   return signaling;
 }
 
-function makeMedia(options) {
+function makeMedia() {
   var media = new EventEmitter();
   media.tracks = new Map();
   media._addTrack = sinon.spy(track => {
@@ -670,10 +672,6 @@ function makeMedia(options) {
     media.tracks.delete(track.id);
   });
   return media;
-}
-
-function makeEnabled() {
-  return (Math.random() < 0.5);
 }
 
 function makeId() {
