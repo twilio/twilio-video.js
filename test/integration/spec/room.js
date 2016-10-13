@@ -15,7 +15,7 @@ describe('Room', function() {
     options.wsServer = wsServer;
   }
   if (logLevel) {
-    options['logLevel'] = logLevel;
+    options.logLevel = logLevel;
   }
 
   describe('constructor', function() {

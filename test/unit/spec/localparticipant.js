@@ -193,6 +193,7 @@ function makeTest(options) {
   options = options || {};
   options.signaling = options.signaling || makeSignaling(options);
   options.media = options.media || makeMedia(options);
+  options.log = log;
   options.participant = options.participant ||
     new LocalParticipant(options.signaling, options.media, { log: log });
   return options;

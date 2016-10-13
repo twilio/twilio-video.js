@@ -13,6 +13,7 @@ var util = require('../../../lib/util');
 var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
 var wsServer = credentials.wsServer;
+var logLevel = credentials.logLevel;
 
 describe('Client', function() {
   var aliceName = randomName();
@@ -26,12 +27,14 @@ describe('Client', function() {
   var charlie = null;
 
   var options = {
-    debug: false,
-    logLevel: 'off'
+    debug: false
   };
 
   if (wsServer) {
     options.wsServer = wsServer;
+  }
+  if (logLevel) {
+    options.logLevel = logLevel;
   }
 
   var createClient = function(token, options) {

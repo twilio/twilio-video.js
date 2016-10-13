@@ -647,7 +647,7 @@ function makeTest(options) {
 
   options.log = log;
   options.signaling = options.signaling || makeSignaling(options);
-  options.participant = options.participant || new Participant(options.signaling, options.media, options);
+  options.participant = options.participant || new Participant(options.signaling, options);
   options.media = options.media || options.participant.media;
 
   return options;
