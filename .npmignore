@@ -5,3 +5,4 @@
 dist/docs
 src/twilio-conversations-bundle.js
 test/
+test.json
