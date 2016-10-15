@@ -1,9 +1,9 @@
 {
   "type": "JavaScript",
   "travis": true,
-  "slug": "twilio/twilio-conversations.js",
+  "slug": "twilio/twilio-video.js",
   "env": {
-    "GH_REF": "github.com/twilio/twilio-conversations.js.git"
+    "GH_REF": "github.com/twilio/twilio-video.js.git"
   },
   "plans": {
     "release": {
