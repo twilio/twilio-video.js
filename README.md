@@ -70,12 +70,12 @@ client.connect({ to: 'room-name' }).then(room => {
 Changelog
 ---------
 
-See [CHANGELOG.md](CHANGELOG.md).
+See [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
 License
 -------
 
-See [LICENSE.md](LICENSE.md).
+See [LICENSE.md](https://github.com/twilio/twilio-video.js/blob/master/LICENSE.md).
 
 Building
 --------
