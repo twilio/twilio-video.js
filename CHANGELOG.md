@@ -1,3 +1,10 @@
+1.0.0-beta2
+===========
+
+This release was created to remove a file that was accidentally uploaded to the
+NPM registry. The file included credentials (API Keys) to a test Twilio account
+and were revoked when discovered.
+
 1.0.0-beta1
 ===========
 
