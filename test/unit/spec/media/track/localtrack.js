@@ -7,6 +7,7 @@ var Track = require('../../../../../lib/media/track');
 var LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 var LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
 var sinon = require('sinon');
+var log = require('../../../../lib/fakelog');
 
 [
   ['LocalAudioTrack', LocalAudioTrack],
@@ -72,7 +73,7 @@ var sinon = require('sinon');
 function createTrack(LocalTrack, mediaStream, id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
   mediaStream._tracks[kind].set(id, mediaStreamTrack);
-  return new LocalTrack(mediaStream, mediaStreamTrack);
+  return new LocalTrack(mediaStream, mediaStreamTrack, { log: log });
 }
 
 function MediaStream() {

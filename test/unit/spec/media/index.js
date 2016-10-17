@@ -842,7 +842,7 @@ MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.remo
 function createTrack(mediaStreamTrack, mediaStream) {
   var Track = mediaStreamTrack.kind === 'audio' ? AudioTrack : VideoTrack;
   var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
-  return new Track(mediaStream, mediaStreamTrack, signaling);
+  return new Track(mediaStream, mediaStreamTrack, signaling, { log: log });
 }
 
 function addStream(media, mediaStream) {

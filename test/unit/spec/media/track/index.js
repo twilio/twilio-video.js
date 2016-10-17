@@ -6,6 +6,7 @@ var inherits = require('util').inherits;
 var Track = require('../../../../../lib/media/track');
 var TrackSignaling = require('../../../../../lib/signaling/track');
 var sinon = require('sinon');
+var log = require('../../../../lib/fakelog');
 
 describe('Track', function() {
   var _initialize;
@@ -621,7 +622,7 @@ function createTrack(mediaStream, id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
   mediaStream._tracks[kind].set(id, mediaStreamTrack);
   var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
-  return new Track(mediaStream, mediaStreamTrack, signaling);
+  return new Track(mediaStream, mediaStreamTrack, signaling, { log: log });
 }
 
 function MediaStream() {
