@@ -1,3 +1,11 @@
+1.0.0-beta3
+===========
+
+New Features
+------------
+
+- Improved logging for Client, Room, Participant and Media.
+
 1.0.0-beta2
 ===========
 
