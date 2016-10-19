@@ -4,6 +4,7 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var LocalParticipant = require('../../../lib/localparticipant');
 var sinon = require('sinon');
+var log = require('../../lib/fakelog');
 
 describe('LocalParticipant', () => {
   describe('constructor', () => {
@@ -192,8 +193,9 @@ function makeTest(options) {
   options = options || {};
   options.signaling = options.signaling || makeSignaling(options);
   options.media = options.media || makeMedia(options);
+  options.log = log;
   options.participant = options.participant ||
-    new LocalParticipant(options.signaling, options.media);
+    new LocalParticipant(options.signaling, options.media, { log: log });
   return options;
 }
 

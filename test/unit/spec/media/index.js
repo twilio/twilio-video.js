@@ -8,9 +8,11 @@ var Media = require('../../../../lib/media/index');
 var sinon = require('sinon');
 var TrackSignaling = require('../../../../lib/signaling/track');
 var VideoTrack = require('../../../../lib/media/track/videotrack');
+var log = require('../../../lib/fakelog');
 
 describe('Media', function() {
   var media;
+  var options = { log: log };
 
   describe('_addTrack', function() {
     var audioTrackMock;
@@ -19,7 +21,7 @@ describe('Media', function() {
     var returnVal2;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
 
       audioTrackMock = createTrack(new MediaStreamTrack('foo', 'audio'), {});
       videoTrackMock = createTrack(new MediaStreamTrack('bar', 'video'), {});
@@ -73,7 +75,7 @@ describe('Media', function() {
     var videoTrack;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
     });
 
     beforeEach(function() {
@@ -105,7 +107,7 @@ describe('Media', function() {
     var track;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
 
       track = new MediaStreamTrack('aud', 'audio');
       track.attach = sinon.spy(function() { return 'foo'; });
@@ -129,7 +131,7 @@ describe('Media', function() {
     var trackEl;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
 
       track = new MediaStreamTrack('aud', 'audio');
       el = document.createElement('div');
@@ -165,7 +167,7 @@ describe('Media', function() {
     var trackEl;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
       attachments = new Map();
 
       el = document.createElement('div');
@@ -208,7 +210,7 @@ describe('Media', function() {
     var videoTracks;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
       media.emit = sinon.spy();
 
       audioTracks = [ new MediaStreamTrack('1', 'audio') ];
@@ -277,7 +279,7 @@ describe('Media', function() {
     var newVideoTracks;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
 
       mediaStream = function() { };
       Object.defineProperties(mediaStream, {
@@ -367,7 +369,7 @@ describe('Media', function() {
 
     context('when undefined is passed', function() {
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._createContainer = sinon.spy(function() {
@@ -399,7 +401,7 @@ describe('Media', function() {
 
     context('when null is passed', function() {
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._createContainer = sinon.spy(function() {
@@ -432,7 +434,7 @@ describe('Media', function() {
 
     context('when a string is passed', function() {
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._createContainer = sinon.spy();
@@ -466,7 +468,7 @@ describe('Media', function() {
 
     context('when an element is passed', function() {
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._createContainer = sinon.spy();
@@ -497,7 +499,7 @@ describe('Media', function() {
 
   describe('_createContainer', function() {
     before(function() {
-      media = new Media();
+      media = new Media(options);
     });
 
     it('should return a div element', function() {
@@ -508,7 +510,7 @@ describe('Media', function() {
   describe('_selectContainer', function() {
     var container;
     before(function() {
-      media = new Media();
+      media = new Media(options);
 
       container = document.createElement('div');
       container.className = 'foo';
@@ -541,7 +543,7 @@ describe('Media', function() {
     var returnVal;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
       audioTrack = new MediaStreamTrack('aud', 'audio');
 
       var audioTracks = [
@@ -640,7 +642,7 @@ describe('Media', function() {
       var attachedContainers;
 
       before(function() {
-        media = new Media();
+        media = new Media(options);
         attachedContainers = [
           document.createElement('div'),
           document.createElement('div')
@@ -671,7 +673,7 @@ describe('Media', function() {
       var attachedContainers;
 
       before(function() {
-        media = new Media();
+        media = new Media(options);
         attachedContainers = [
           document.createElement('div'),
           document.createElement('div')
@@ -702,7 +704,7 @@ describe('Media', function() {
       var container;
 
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._getAllAttachedContainers = sinon.spy();
@@ -730,7 +732,7 @@ describe('Media', function() {
       var container;
 
       before(function() {
-        media = new Media();
+        media = new Media(options);
         container = document.createElement('div');
 
         media._getAllAttachedContainers = sinon.spy();
@@ -755,7 +757,7 @@ describe('Media', function() {
 
   describe('_detachContainers', function() {
     it('should run _detachContainer for each container passed', function() {
-      media = new Media();
+      media = new Media(options);
       media._detachContainer = sinon.spy();
       media._detachContainers(['foo', 'bar']);
       assert.equal(media._detachContainer.callCount, 2);
@@ -764,7 +766,7 @@ describe('Media', function() {
 
   describe('_getAllAttachedContainers', function() {
     it('should return an array with all containers in .attachments', function() {
-      media = new Media();
+      media = new Media(options);
       media.attachments.set('foo', 'bar');
       media.attachments.set('baz', 'qux');
 
@@ -776,7 +778,7 @@ describe('Media', function() {
     var returnVal;
 
     before(function() {
-      media = new Media();
+      media = new Media(options);
       var attachment = new Map();
       attachment.set('foo', 'bar');
       attachment.set('baz', 'qux');
@@ -840,7 +842,7 @@ MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.remo
 function createTrack(mediaStreamTrack, mediaStream) {
   var Track = mediaStreamTrack.kind === 'audio' ? AudioTrack : VideoTrack;
   var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
-  return new Track(mediaStream, mediaStreamTrack, signaling);
+  return new Track(mediaStream, mediaStreamTrack, signaling, { log: log });
 }
 
 function addStream(media, mediaStream) {

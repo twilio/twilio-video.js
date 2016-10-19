@@ -128,7 +128,7 @@ var getRemoteMediaStreams =
   PeerConnectionManager.prototype.getRemoteMediaStreams;
 
 function createFakeLocalMedia(name) {
-  var fakeLocalMedia = new LocalMedia();
+  var fakeLocalMedia = new LocalMedia({ logLevel: logLevel });
   var fakeLocalMediaStream = new FakeMediaStream();
   var fakeLocalVideoTrack = new FakeMediaStreamTrack('video');
   var fakeLocalAudioTrack = new FakeMediaStreamTrack('audio');
