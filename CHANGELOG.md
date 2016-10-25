@@ -11,6 +11,9 @@ Bug Fixes
 
 - Worked around a Promise-subclassing issue in CancelablePromise that caused
   twilio-video.js to fail when used with Zone.js (and Angular).
+- Fixed a bug where, if a VideoTrack belonged to a MediaStream
+  containing multiple VideoTracks, the attach method might render
+  a different VideoTrack than intended.
 
 1.0.0-beta2
 ===========
