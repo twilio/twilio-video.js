@@ -14,7 +14,7 @@ var WebSocket = require('ws');
 function MediaStream() {
   this.ended = false;
   this.id = util.makeUUID();
-};
+}
 
 MediaStream.prototype.addTrack = function addTrack(track) {
 };
@@ -47,14 +47,14 @@ MediaStream.prototype.stop = function stop() {
 
 var navigator = {
   userAgent: 'foo'
-}
+};
 
 function getUserMedia(constraints, successCallback, errorCallback) {
   var mediaStream = new MediaStream();
   setTimeout(function() {
     return successCallback(mediaStream);
   });
-};
+}
 
 navigator.webkitGetUserMedia = getUserMedia;
 
@@ -96,7 +96,7 @@ function RTCPeerConnection(configuration, constraints) {
   this.peerIdentity = null;
   this.remoteDescription = null;
   this.signalingState = 'stable';
-};
+}
 
 inherits(RTCPeerConnection, EventEmitter);
 
@@ -182,7 +182,7 @@ RTCPeerConnection.prototype.getIdentityAssertion = function getIdentityAssertion
 function RTCSessionDescription(sdp) {
   this.type = 'offer';
   this.sdp = sdp || DUMMY_SDP;
-};
+}
 
 RTCSessionDescription.prototype.toJSON = function toJSON() {
   return {
@@ -192,17 +192,17 @@ RTCSessionDescription.prototype.toJSON = function toJSON() {
 };
 
 function attachMediaStream() {
-};
+}
 
 function URL() {
-};
+}
 
 function createObjectURL(blob) {
   return new URL();
-};
+}
 
 function revokeObjectURL(blob) {
-};
+}
 
 URL.createObjectURL = createObjectURL;
 
@@ -215,6 +215,8 @@ function mockWebRTC(_global) {
   _global.Event = Event;
   _global.WebSocket = WebSocket;
   _global.navigator = navigator;
+  _global.webkitMediaStream = MediaStream;
+  _global.MediaStream = MediaStream;
   _global.RTCDataChannel = RTCDataChannel;
   _global.RTCPeerConnection = RTCPeerConnection;
   _global.RTCSessionDescription = RTCSessionDescription;
@@ -231,6 +233,7 @@ function mockWebRTC(_global) {
 module.exports = mockWebRTC;
 module.exports.WebSocket = WebSocket;
 module.exports.MediaStream = MediaStream;
+module.exports.webkitMediaStream = MediaStream;
 module.exports.getUserMedia = getUserMedia;
 module.exports.navigator = navigator;
 module.exports.RTCDataChannel = RTCDataChannel;
