@@ -561,19 +561,33 @@ describe('Track', function() {
     });
 
     context('when navigator.mozGetUserMedia is a function', function() {
+      var addTrack = sinon.spy(function() {});
+      var webkitMediaStream;
+
       before(function() {
         global.window = { URL: { createObjectURL: sinon.spy(function() {
           return 'foobar';
         }) } };
+        global.MediaStream = sinon.spy(function() {
+          return {
+            addTrack: addTrack
+          }
+        });
         global.navigator = {
           mozGetUserMedia: function() { }
         };
+        webkitMediaStream = global.webkitMediaStream;
+        delete global.webkitMediaStream;
 
         mediaStream = new MediaStream();
         track = createTrack(mediaStream, '1', 'audio');
         el = document.createElement('audio');
 
         track._attach(el);
+      });
+
+      after(function() {
+        global.webkitMediaStream = webkitMediaStream;
       });
 
       it('should add the element to .attachments', function() {
@@ -584,8 +598,17 @@ describe('Track', function() {
         assert.equal(global.window.URL.createObjectURL.callCount, 0);
       });
 
-      it('should set el.mozSrcObject to the mediaStream', function() {
-        assert.equal(el.mozSrcObject, track.mediaStream);
+      it('should call the MediaStream constructor', function() {
+        assert.equal(global.MediaStream.callCount, 1);
+      });
+
+      it('should call MediaStream#addTrack with the MediaStreamTrack', function() {
+        assert(addTrack.calledWith(track.mediaStreamTrack));
+      });
+
+      it('should set el.mozSrcObject to the new MediaStream created for the Track', function() {
+        assert.notEqual(el.mozSrcObject, track.mediaStream);
+        assert.deepEqual(el.mozSrcObject, { addTrack: addTrack });
       });
     });
 
