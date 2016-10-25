@@ -6,6 +6,12 @@ New Features
 
 - Improved logging for Client, Room, Participant and Media.
 
+Bug Fixes
+---------
+
+- Worked around a Promise-subclassing issue in CancelablePromise that caused
+  twilio-video.js to fail when used with Zone.js (and Angular).
+
 1.0.0-beta2
 ===========
 
