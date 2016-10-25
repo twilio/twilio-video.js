@@ -42,7 +42,7 @@ Usage
 
 The following is a simple example showing a Client connecting to a Room. For
 more information, refer to the
-[API Docs](media.twiliocdn.com/sdk/js/video/v1/docs).
+[API Docs](//media.twiliocdn.com/sdk/js/video/v1/docs).
 
 ```js
 const Video = require('twilio-video');
