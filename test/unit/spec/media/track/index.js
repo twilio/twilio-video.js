@@ -515,10 +515,17 @@ describe('Track', function() {
     });
 
     context('when navigator.webkitGetUserMedia is a function', function() {
+      var addTrack = sinon.spy(function() {});
+
       before(function() {
         global.window = { URL: { createObjectURL: sinon.spy(function() {
           return 'foobar';
         }) } };
+        global.webkitMediaStream = sinon.spy(function() {
+          return {
+            addTrack: addTrack
+          }
+        });
         global.navigator = {
           webkitGetUserMedia: function() { }
         };
@@ -534,8 +541,18 @@ describe('Track', function() {
         assert(track.attachments.has(el));
       });
 
-      it('should call window.URL.createObjectURL with the mediaStream', function() {
-        assert(global.window.URL.createObjectURL.calledWith(track.mediaStream));
+      it('should call the webkitMediaStream constructor', function() {
+        assert.equal(webkitMediaStream.callCount, 1);
+      });
+
+      it('should call webkitMediaStream#addTrack with the MediaStreamTrack', function() {
+        assert(addTrack.calledWith(track.mediaStreamTrack));
+      });
+
+      it('should call createObjectURL with an instance of webkitMediaStream', function() {
+        var mediaStream = global.window.URL.createObjectURL.getCall(0).args[0];
+        assert.notEqual(mediaStream, track.mediaStream);
+        assert.deepEqual(mediaStream, { addTrack: addTrack });
       });
 
       it('should set el.src to createObjectURL\'s returned value', function() {
@@ -640,7 +657,7 @@ function MediaStream() {
       value: function() { return tracks.video; }
     },
     getTracks: {
-      value: function() { return tracks.video.concat(tracks.audio); }
+      get: function() { return new Map([tracks.video, tracks.audio]); }
     },
   });
 };
