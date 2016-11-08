@@ -477,14 +477,14 @@ describe('RoomV2', () => {
       });
     });
 
-    context('when an added TrackV2 emits a "stateChanged" event in a new state', () => {
-      context('"disabled"', () => {
+    context('when an added TrackV2 emits an "updated" event in a new state', () => {
+      context('with .isEnabled set to false', () => {
         it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
-          track.emit('stateChanged', 'disabled');
+          track.disable();
           assert.deepEqual(
             {
               participant: {
@@ -495,13 +495,13 @@ describe('RoomV2', () => {
         });
       });
 
-      context('"enabled"', () => {
+      context('with .isEnabled set to true', () => {
         it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
-          track.emit('stateChanged', 'enabled');
+          track.enable();
           assert.deepEqual(
             {
               participant: {
@@ -513,27 +513,27 @@ describe('RoomV2', () => {
       });
     });
 
-    context('when a removed TrackV2 emits a "stateChanged" event in a new state', () => {
-      context('"disabled"', () => {
+    context('when a removed TrackV2 emits an "updated" event in a new state', () => {
+      context('with .isEnabled set to false"', () => {
         it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
-          track.emit('stateChanged', 'disabled');
+          track.disable();
           assert(!test.transport.publish.calledTwice);
         });
       });
 
-      context('"enabled"', () => {
+      context('with .isEnabled set to true', () => {
         it('does not call .publish on the Transport', () => {
           var track = makeTrack();
           var test = makeTest({
             tracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
-          track.emit('stateChanged', 'enabled');
+          track.enable();
           assert(!test.transport.publish.calledTwice);
         });
       });
@@ -1105,5 +1105,13 @@ function makeTrack(options) {
   options = options || {};
   track.id = options.id || makeId();
   track.mediaStream = {};
+  track.disable = () => {
+    track.isEnabled = false;
+    track.emit('updated');
+  };
+  track.enable = () => {
+    track.isEnabled = true;
+    track.emit('updated');
+  };
   return track;
 }

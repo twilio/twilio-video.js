@@ -661,7 +661,7 @@ describe('Track', function() {
 function createTrack(mediaStream, id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
   mediaStream._tracks[kind].set(id, mediaStreamTrack);
-  var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled ? 'enabled' : 'disabled');
+  var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled);
   return new Track(mediaStream, mediaStreamTrack, signaling, { log: log });
 }
 
