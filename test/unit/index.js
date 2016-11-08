@@ -30,6 +30,7 @@ require('./spec/media/track/localtrack');
 require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
+require('./spec/signaling/v2/recording');
 require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
