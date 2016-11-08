@@ -5,6 +5,8 @@ New Features
 ------------
 
 - Improved logging for Client, Room, Participant and Media.
+- Added a Room-level `isRecording` property which indicates whether or not the
+  Room is being recorded
 
 Bug Fixes
 ---------
