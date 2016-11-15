@@ -5,6 +5,10 @@ New Features
 ------------
 
 - Improved logging for Client, Room, Participant and Media.
+- Added a Room-level `isRecording` property which indicates whether or not the
+  Room is being recorded
+- Added Room-level "recordingStarted" and "recordingStopped" events which
+  indicate when recording was started or stopped on the Room
 
 Bug Fixes
 ---------

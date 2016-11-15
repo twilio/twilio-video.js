@@ -19,22 +19,22 @@ describe('TrackV2', () => {
     });
 
     context('when trackState.enabled is true', () => {
-      it('sets .state to "disabled"', () => {
-        assert.equal('enabled', (new TrackV2({
+      it('sets .isEnabled to true', () => {
+        assert((new TrackV2({
           enabled: true,
           id: makeId(),
           kind: makeKind()
-        })).state);
+        })).isEnabled);
       });
     });
 
     context('when trackState.enabled is false', () => {
-      it('sets .state to "disabled"', () => {
-        assert.equal('disabled', (new TrackV2({
+      it('sets .isEnabled to false', () => {
+        assert(!(new TrackV2({
           enabled: false,
           id: makeId(),
           kind: makeKind()
-        })).state);
+        })).isEnabled);
       });
     });
 
@@ -69,7 +69,7 @@ describe('TrackV2', () => {
       })).id);
     });
 
-    context('when the Track\'s .state is "enabled"', () => {
+    context('when the Track is enabled', () => {
       it('returns an object with .enabled set to true', () => {
         assert.equal(true, TrackV2.getState(new TrackV2({
           id: makeId(),
@@ -79,7 +79,7 @@ describe('TrackV2', () => {
       });
     });
 
-    context('when the Track\'s .state is "disabled"', () => {
+    context('when the Track is disabled', () => {
       it('returns an object with .enabled set to false', () => {
         assert.equal(false, TrackV2.getState(new TrackV2({
           id: makeId(),
@@ -111,8 +111,8 @@ describe('TrackV2', () => {
   });
 
   describe('#update', () => {
-    context('called with a trackState setting .enabled to false when the TrackV2\'s .state is', () => {
-      context('"enabled"', () => {
+    context('called with a trackState setting .enabled to false when the TrackV2 is', () => {
+      context('enabled', () => {
         it('returns the TrackV2', () => {
           var trackState = {
             id: makeId(),
@@ -124,7 +124,7 @@ describe('TrackV2', () => {
           assert.equal(track, track.update(trackState));
         });
 
-        it('sets .state to "disabled"', () => {
+        it('sets .isEnabled to false', () => {
           var trackState = {
             id: makeId(),
             enabled: true,
@@ -133,10 +133,10 @@ describe('TrackV2', () => {
           var track = new TrackV2(trackState);
           trackState.enabled = false;
           track.update(trackState);
-          assert.equal('disabled', track.state);
+          assert(!track.isEnabled);
         });
 
-        it('emits a "stateChanged" event with the new state "disabled"', () => {
+        it('emits an "updated" event with .isEnabled set to false', () => {
           var trackState = {
             id: makeId(),
             enabled: true,
@@ -144,14 +144,14 @@ describe('TrackV2', () => {
           };
           var track = new TrackV2(trackState);
           trackState.enabled = false;
-          var newState;
-          track.once('stateChanged', _newState => newState = _newState);
+          var isEnabled;
+          track.once('updated', () => isEnabled = track.isEnabled);
           track.update(trackState);
-          assert.equal('disabled', newState);
+          assert.equal(false, isEnabled);
         });
       });
 
-      context('"disabled"', () => {
+      context('disabled', () => {
         it('returns the TrackV2', () => {
           var trackState = {
             id: makeId(),
@@ -163,7 +163,7 @@ describe('TrackV2', () => {
           assert.equal(track, track.update(trackState));
         });
 
-        it('.state remains "disabled"', () => {
+        it('.isEnabled remains false', () => {
           var trackState = {
             id: makeId(),
             enabled: false,
@@ -172,10 +172,10 @@ describe('TrackV2', () => {
           var track = new TrackV2(trackState);
           trackState.enabled = false;
           track.update(trackState);
-          assert.equal('disabled', track.state);
+          assert(!track.isEnabled);
         });
 
-        it('"stateChanged" does not emit', () => {
+        it('"updated" does not emit', () => {
           var trackState = {
             id: makeId(),
             enabled: false,
@@ -183,16 +183,16 @@ describe('TrackV2', () => {
           };
           var track = new TrackV2(trackState);
           trackState.enabled = false;
-          var stateChanged = false;
-          track.once('stateChanged', () => stateChanged = true);
+          var updated = false;
+          track.once('updated', () => updated = true);
           track.update(trackState);
-          assert(!stateChanged);
+          assert(!updated);
         });
       });
     });
 
-    context('called with a trackState setting .enabled to true when the TrackV2\'s .state is', () => {
-      context('"enabled"', () => {
+    context('called with a trackState setting .enabled to true when the TrackV2 is', () => {
+      context('enabled', () => {
         it('returns the TrackV2', () => {
           var trackState = {
             id: makeId(),
@@ -204,7 +204,7 @@ describe('TrackV2', () => {
           assert.equal(track, track.update(trackState));
         });
 
-        it('.state remains "enabled"', () => {
+        it('.isEnabled remains true', () => {
           var trackState = {
             id: makeId(),
             enabled: true,
@@ -213,10 +213,10 @@ describe('TrackV2', () => {
           var track = new TrackV2(trackState);
           trackState.enabled = true;
           track.update(trackState);
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('"stateChanged" does not emit', () => {
+        it('"updated" does not emit', () => {
           var trackState = {
             id: makeId(),
             enabled: true,
@@ -224,14 +224,14 @@ describe('TrackV2', () => {
           };
           var track = new TrackV2(trackState);
           trackState.enabled = true;
-          var stateChanged = false;
-          track.once('stateChanged', () => stateChanged = true);
+          var updated = false;
+          track.once('updated', () => updated = true);
           track.update(trackState);
-          assert(!stateChanged);
+          assert(!updated);
         });
       });
 
-      context('"disabled"', () => {
+      context('disabled', () => {
         it('returns the TrackV2', () => {
           var trackState = {
             id: makeId(),
@@ -243,7 +243,7 @@ describe('TrackV2', () => {
           assert.equal(track, track.update(trackState));
         });
 
-        it('sets .state to "enabled"', () => {
+        it('sets .isEnabled to true', () => {
           var trackState = {
             id: makeId(),
             enabled: false,
@@ -252,10 +252,10 @@ describe('TrackV2', () => {
           var track = new TrackV2(trackState);
           trackState.enabled = true;
           track.update(trackState);
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('emits a "stateChanged" event with the new state "enabled"', () => {
+        it('emits an "updated" event with .isEnabled set to true', () => {
           var trackState = {
             id: makeId(),
             enabled: false,
@@ -263,10 +263,10 @@ describe('TrackV2', () => {
           };
           var track = new TrackV2(trackState);
           trackState.enabled = true;
-          var newState;
-          track.once('stateChanged', _newState => newState = _newState);
+          var isEnabled;
+          track.once('updated', () => isEnabled = track.isEnabled);
           track.update(trackState);
-          assert.equal('enabled', newState);
+          assert(isEnabled);
         });
       });
     });
@@ -276,7 +276,7 @@ describe('TrackV2', () => {
   // --------------
 
   describe('#disable', () => {
-    context('called when the TrackV2\'s .state is "enabled"', () => {
+    context('called when the TrackV2 is enabled', () => {
       it('returns the TrackV2', () => {
         var track = new TrackV2({
           id: makeId(),
@@ -286,30 +286,30 @@ describe('TrackV2', () => {
         assert.equal(track, track.disable());
       });
 
-      it('sets .state to "disabled"', () => {
+      it('sets .isEnabled to false', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: true,
           kind: makeKind()
         });
         track.disable();
-        assert.equal('disabled', track.state);
+        assert(!track.isEnabled);
       });
 
-      it('emits a "stateChanged" event with the new state "disabled"', () => {
+      it('emits an "updated" event with .isEnabled set to false', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: true,
           kind: makeKind()
         });
-        var newState;
-        track.once('stateChanged', _newState => newState = _newState);
+        var isEnabled;
+        track.once('updated', () => isEnabled = track.isEnabled);
         track.disable();
-        assert.equal('disabled', newState);
+        assert.equal(false, isEnabled);
       });
     });
 
-    context('called when the TrackV2\'s .state is "disabled"', () => {
+    context('called when the TrackV2 is disabled', () => {
       it('returns the TrackV2', () => {
         var track = new TrackV2({
           id: makeId(),
@@ -319,33 +319,33 @@ describe('TrackV2', () => {
         assert.equal(track, track.disable());
       });
 
-      it('.state remains "disabled"', () => {
+      it('.isEnabled remains false', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: false,
           kind: makeKind()
         });
         track.disable();
-        assert.equal('disabled', track.state);
+        assert(!track.isEnabled);
       });
 
-      it('"stateChanged" does not emit', () => {
+      it('"updated" does not emit', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: false,
           kind: makeKind()
         });
-        var stateChanged = false;
-        track.once('stateChanged', () => stateChanged = true);
+        var updated = false;
+        track.once('updated', () => updated = true);
         track.disable();
-        assert(!stateChanged);
+        assert(!updated);
       });
     });
   });
 
   describe('#enable', () => {
-    context('called with false when the TrackV2\'s .state is', () => {
-      context('"enabled"', () => {
+    context('called with false when the TrackV2 is', () => {
+      context('enabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -355,30 +355,30 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable(false));
         });
 
-        it('sets .state to "disabled"', () => {
+        it('sets .isEnabled to false', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
           track.enable(false);
-          assert.equal('disabled', track.state);
+          assert(!track.isEnabled);
         });
 
-        it('emits a "stateChanged" event with the new state "disabled"', () => {
+        it('emits an "updated" event with .isEnabled set to false', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
-          var newState;
-          track.once('stateChanged', _newState => newState = _newState);
+          var isEnabled;
+          track.once('updated', () => isEnabled = track.isEnabled);
           track.enable(false);
-          assert.equal('disabled', newState);
+          assert.equal(false, isEnabled);
         });
       });
 
-      context('"disabled"', () => {
+      context('disabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -388,32 +388,32 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable(false));
         });
 
-        it('.state remains "disabled"', () => {
+        it('.isEnabled remains false', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
           track.enable(false);
-          assert.equal('disabled', track.state);
+          assert(!track.isEnabled);
         });
 
-        it('"stateChanged" does not emit', () => {
+        it('"updated" does not emit', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
-          var stateChanged = false;
-          track.once('stateChanged', () => stateChanged = true);
+          var updated = false;
+          track.once('updated', () => updated = true);
           track.enable(false);
-          assert(!stateChanged);
+          assert(!updated);
         });
       });
     });
 
-    context('called with true when the TrackV2\'s .state is', () => {
-      context('"enabled"', () => {
+    context('called with true when the TrackV2 is', () => {
+      context('enabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -423,30 +423,30 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable(true));
         });
 
-        it('.state remains "enabled"', () => {
+        it('.isEnabled remains true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
           track.enable(true);
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('"stateChanged" does not emit', () => {
+        it('"updated" does not emit', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
-          var stateChanged = false;
-          track.once('stateChanged', () => stateChanged = true);
+          var updated = false;
+          track.once('updated', () => updated = true);
           track.enable(true);
-          assert(!stateChanged);
+          assert(!updated);
         });
       });
 
-      context('"disabled"', () => {
+      context('disabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -456,32 +456,32 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable(true));
         });
 
-        it('sets .state to "enabled"', () => {
+        it('sets .isEnabled to true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
           track.enable(true);
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('emits a "stateChanged" event with the new state "enabled"', () => {
+        it('emits an "updated" event with .isEnabled set to true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
-          var newState;
-          track.once('stateChanged', _newState => newState = _newState);
+          var isEnabled;
+          track.once('updated', () => isEnabled = track.isEnabled);
           track.enable(true);
-          assert.equal('enabled', newState);
+          assert(isEnabled);
         });
       });
     });
 
-    context('called without an argument when the TrackV2\'s .state is', () => {
-      context('"enabled"', () => {
+    context('called without an argument when the TrackV2 is', () => {
+      context('enabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -491,30 +491,30 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable());
         });
 
-        it('.state remains "enabled"', () => {
+        it('.isEnabled remains true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
           track.enable();
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('"stateChanged" does not emit', () => {
+        it('"updated" does not emit', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: true,
             kind: makeKind()
           });
-          var stateChanged = false;
-          track.once('stateChanged', () => stateChanged = true);
+          var updated = false;
+          track.once('updated', () => updated = true);
           track.enable();
-          assert(!stateChanged);
+          assert(!updated);
         });
       });
 
-      context('"disabled"', () => {
+      context('disabled', () => {
         it('returns the TrackV2', () => {
           var track = new TrackV2({
             id: makeId(),
@@ -524,26 +524,26 @@ describe('TrackV2', () => {
           assert.equal(track, track.enable());
         });
 
-        it('sets .state to "enabled"', () => {
+        it('sets .isEnabled to true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
           track.enable();
-          assert.equal('enabled', track.state);
+          assert(track.isEnabled);
         });
 
-        it('emits a "stateChanged" event with the new state "enabled"', () => {
+        it('emits an "updated" event with .isEnabled set to true', () => {
           var track = new TrackV2({
             id: makeId(),
             enabled: false,
             kind: makeKind()
           });
-          var newState;
-          track.once('stateChanged', _newState => newState = _newState);
+          var isEnabled;
+          track.once('updated', () => isEnabled = track.isEnabled);
           track.enable();
-          assert.equal('enabled', newState);
+          assert(isEnabled);
         });
       });
     });
