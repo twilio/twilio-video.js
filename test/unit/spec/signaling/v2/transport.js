@@ -1061,8 +1061,8 @@ describe('Transport', () => {
           test.transport.sync();
           test.transitions = [];
           eventEmitted = false;
-          test.transport.once('connected', () => eventEmitter = true);
-          test.transport.once('message', () => eventEmitter = true);
+          test.transport.once('connected', () => eventEmitted = true);
+          test.transport.once('message', () => eventEmitted = true);
         });
 
         context('"connected"', () => {
