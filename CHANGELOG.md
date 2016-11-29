@@ -9,6 +9,8 @@ New Features
   Room is being recorded
 - Added Room-level "recordingStarted" and "recordingStopped" events which
   indicate when recording was started or stopped on the Room
+- Added the ability to pass MediaTrackConstraints to LocalMedia's `addCamera`
+  and `addMicrophone` methods
 
 Bug Fixes
 ---------
