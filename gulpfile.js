@@ -77,8 +77,11 @@ var publicClasses = [
   'lib/localparticipant.js',
   'lib/participant.js',
   'lib/stats/statsreport.js',
+  'lib/stats/trackstats.js',
+  'lib/stats/localtrackstats.js',
   'lib/stats/localaudiotrackstats.js',
   'lib/stats/localvideotrackstats.js',
+  'lib/stats/remotetrackstats.js',
   'lib/stats/remoteaudiotrackstats.js',
   'lib/stats/remotevideotrackstats.js'
 ];
@@ -100,8 +103,11 @@ var privateConstructors = [
   'Track',
   'VideoTrack',
   'StatsReport',
+  'TrackStats',
+  'LocalTrackStats',
   'LocalAudioTrackStats',
   'LocalVideoTrackStats',
+  'RemoteTrackStats',
   'RemoteAudioTrackStats',
   'RemoteVideoTrackStats'
 ];
