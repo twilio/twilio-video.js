@@ -4,22 +4,26 @@
 New Features
 ------------
 
-- Improved logging for Client, Room, Participant and Media.
+- Improved logging for Client, Room, Participant, Media, and Track.
 - Added a Room-level `isRecording` property which indicates whether or not the
-  Room is being recorded
+  Room is being recorded (if recording is not currently enabled for your
+  account, this property will always be false)
 - Added Room-level "recordingStarted" and "recordingStopped" events which
-  indicate when recording was started or stopped on the Room
+  indicate when recording is started or stopped on the Room (if recording is not
+  currently enabled for your account, these events will never fire)
 - Added the ability to pass MediaTrackConstraints to LocalMedia's `addCamera`
   and `addMicrophone` methods
+- Added a Room-level `getStats` method for returning Track-level media
+  statistics
 
 Bug Fixes
 ---------
 
 - Worked around a Promise-subclassing issue in CancelablePromise that caused
-  twilio-video.js to fail when used with Zone.js (and Angular).
-- Fixed a bug where, if a VideoTrack belonged to a MediaStream
-  containing multiple VideoTracks, the attach method might render
-  a different VideoTrack than intended.
+  twilio-video.js to fail when used with Zone.js (and Angular)
+- Fixed a bug where, if a VideoTrack belonged to a MediaStream containing
+  multiple VideoTracks, the attach method might render a different VideoTrack
+  than intended
 
 1.0.0-beta2
 ===========
