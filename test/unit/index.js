@@ -42,5 +42,12 @@ require('./spec/util/index');
 require('./spec/util/log');
 require('./spec/util/twilioerror');
 
-require('./spec/webrtc/getstatistics');
+require('./spec/webrtc/getstats');
 
+require('./spec/stats/trackstats');
+require('./spec/stats/localtrackstats');
+require('./spec/stats/localaudiotrackstats');
+require('./spec/stats/localvideotrackstats');
+require('./spec/stats/remotetrackstats');
+require('./spec/stats/remoteaudiotrackstats');
+require('./spec/stats/remotevideotrackstats');
