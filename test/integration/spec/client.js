@@ -48,11 +48,15 @@ describe('Client', function() {
     });
 
     it('should validate token is a string', function() {
-      assert.throws(createClient.bind(this, { foo: 'bar' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, { foo: 'bar' }), error => {
+        return error instanceof TypeError && error.message === 'initialToken must be a string';
+      });
     });
 
     it('should validate logLevel', function() {
-      assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), /INVALID_ARGUMENT/);
+      assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), error => {
+        return error instanceof TypeError && /level must be one of/.test(error.message);
+      });
     });
   });
 
