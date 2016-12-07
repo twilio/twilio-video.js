@@ -55,7 +55,7 @@ describe('Client', function() {
 
     it('should validate logLevel', function() {
       assert.throws(createClient.bind(this, aliceToken, { logLevel: 'foo' }), error => {
-        return error instanceof TypeError && /level must be one of/.test(error.message);
+        return error instanceof RangeError && /level must be one of/.test(error.message);
       });
     });
   });
