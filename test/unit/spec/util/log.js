@@ -44,11 +44,15 @@ describe('Log', function() {
     });
 
     it('should throw an error if module name is not a string', () => {
-      assert.throws(Log.bind(null, {}, component('foo')), /INVALID_ARGUMENT/);
+      assert.throws(Log.bind(null, {}, component('foo')), error => {
+        return error instanceof TypeError && error.message === 'moduleName must be a string';
+      });
     });
 
     it('should throw an error if component is not specified', () => {
-      assert.throws(Log.bind(null, 'foo'), /INVALID_ARGUMENT/);
+      assert.throws(Log.bind(null, 'foo'), error => {
+        return error instanceof TypeError && error.message === 'component must be specified';
+      });
     });
 
     it('should set the name to component.toString()', () => {
@@ -84,7 +88,9 @@ describe('Log', function() {
     });
 
     it('should throw an error if the input string is not valid', function() {
-      assert.throws(Log.getLevelByName.bind(null, 'foo'), /INVALID_ARGUMENT/);
+      assert.throws(Log.getLevelByName.bind(null, 'foo'), error => {
+        return error instanceof RangeError && /level must be one of/.test(error.message);
+      });
     });
 
     it('should return the corresponding constant if the input is a valid log level', function() {
@@ -133,7 +139,9 @@ describe('Log', function() {
   describe('#log(logLevel, message)', function() {
     it('should throw an error if the logLevel passed is invalid', function() {
       var log = Log('foo', component('bar'));
-      assert.throws(log.log.bind(log, 999));
+      assert.throws(log.log.bind(log, 999), error => {
+        return error instanceof RangeError && /logLevel must be one of/.test(error.message);
+      });
     });
 
     it('should call the log function if the logLevel is within the Logs verbosity', function() {
