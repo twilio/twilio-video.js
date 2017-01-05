@@ -1,0 +1,17 @@
+{
+  "name": "twilio-video-react",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "0.8.4"
+  },
+  "dependencies": {
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1",
+    "twilio-video": "file:../../../"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom"
+  }
+}

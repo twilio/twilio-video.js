@@ -1,0 +1,16 @@
+{
+  "name": "React",
+  "path": "./test/framework/twilio-video-react",
+  "host": "localhost",
+  "port": 4000,
+  "start": {
+    "env": {
+      "PORT": 4000
+    }
+  },
+  "test": {
+    "env": {
+      "CI": true
+    }
+  }
+}
