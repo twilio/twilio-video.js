@@ -6,6 +6,7 @@ var RoomSignaling = require('../../../lib/signaling/room');
 var LocalMedia = require('../../../lib/media/localmedia');
 var Participant = require('../../../lib/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
+var TwilioError = require('../../../lib/util/twilioerror');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
 
@@ -14,9 +15,10 @@ describe('Room', function() {
   var options = { log: log };
   var localMedia = new LocalMedia();
   var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
-  var signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);
+  var signaling;
 
   beforeEach(function() {
+    signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);
     room = new Room(localMedia, signaling, options);
   });
 
@@ -29,6 +31,14 @@ describe('Room', function() {
   describe('#disconnect()', function() {
     it('should return the Room', function() {
       assert.equal(room, room.disconnect());
+    });
+
+    it('should trigger "disconnect" event on the Room with the Room as the argument', () => {
+      var spy = sinon.spy();
+      room.on('disconnected', spy);
+      room.disconnect();
+      assert.equal(spy.callCount, 1);
+      assert.equal(spy.args[0][0], room);
     });
   });
 
@@ -72,6 +82,21 @@ describe('Room', function() {
       participants['foo'].emit('trackAdded');
       participants['foo'].emit('trackRemoved');
       assert.equal(spy.callCount, 0);
+    });
+  });
+
+  describe('RoomSignaling state changed to "disconnected"', () => {
+    context('when triggered due to unexpected connection loss', () => {
+      it('should trigger the same event on the Room with itself and a TwilioError(code: 53000) as the arguments', () => {
+        var spy = sinon.spy();
+        room.on('disconnected', spy);
+        signaling._didDisconnectUnexpectedly = true;
+        signaling.preempt('disconnected');
+        assert.equal(spy.callCount, 1);
+        assert.equal(spy.args[0][0], room);
+        assert(spy.args[0][1] instanceof TwilioError);
+        assert.equal(spy.args[0][1].code, 53000);
+      });
     });
   });
 });

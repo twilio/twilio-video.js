@@ -4,6 +4,7 @@ var assert = require('assert');
 var CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 var createCancelableRoomSignalingPromise = require('../../../../../lib/signaling/v2/cancelableroomsignalingpromise');
 var EventEmitter = require('events').EventEmitter;
+var TwilioError = require('../../../../../lib/util/twilioerror');
 var sinon = require('sinon');
 var util = require('../../../../../lib/util');
 
@@ -325,7 +326,7 @@ describe('createCancelableRoomSignalingPromise', () => {
   });
 
   context('when the Transport emits a "stateChanged" event in state "failed"', () => {
-    it('the CancelablePromise rejects with an error', () => {
+    it('the CancelablePromise rejects with a TwilioError (code: 53000)', () => {
       var test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
@@ -333,7 +334,8 @@ describe('createCancelableRoomSignalingPromise', () => {
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
         }, error => {
-          // Do nothing.
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 53000);
         });
       });
     });

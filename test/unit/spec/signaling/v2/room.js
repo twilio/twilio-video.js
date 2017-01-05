@@ -11,6 +11,11 @@ describe('RoomV2', () => {
   // ------
 
   describe('constructor', () => {
+    it('sets ._didDisconnectedUnexpectedly to false', () => {
+      var test = makeTest();
+      assert.equal(test.room._didDisconnectUnexpectedly, false);
+    });
+
     it('sets .localParticipant', () => {
       var test = makeTest();
       assert.equal(
@@ -234,6 +239,19 @@ describe('RoomV2', () => {
         assert.equal(
           'disconnected',
           test.room.state);
+      });
+
+      it('does not set the ._didDisconnectUnexpectedly if no argument passed', () => {
+        var test = makeTest();
+        var didDisconnectUnexpectedly = test.room._didDisconnectUnexpectedly;
+        test.room.disconnect();
+        assert.equal(test.room._didDisconnectUnexpectedly, didDisconnectUnexpectedly);
+      });
+
+      it('sets the ._didDisconnectUnexpectedly to true if passed true as argument', () => {
+        var test = makeTest();
+        test.room.disconnect(true);
+        assert.equal(test.room._didDisconnectUnexpectedly, true);
       });
 
       it('emits the "stateChanged" event with the new state "disconnected"', () => {
