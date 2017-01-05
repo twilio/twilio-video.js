@@ -1,0 +1,14 @@
+{
+  "name": "Angular",
+  "path": "./test/framework/twilio-video-angular",
+  "host": "localhost",
+  "port": 3000,
+  "start": {
+    "env": {
+      "PORT": 3000
+    }
+  },
+  "test": {
+    "args": ["run", "test-once"]
+  }
+}
