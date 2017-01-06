@@ -7,42 +7,6 @@ var requirejs = require('requirejs');
 describe('UMD', function() {
   this.timeout(5000);
 
-  describe('RequireJS (node)', function() {
-    before(function() {
-      requirejs.config({
-        nodeRequire: require
-      });
-    });
-
-    it('should receive a video object with a Client property (unminified)', function(done) {
-      requirejs(['../../../dist/twilio-video'], function(video) {
-        try {
-          if (video.version === version) {
-            return done();
-          } else {
-            return done(new Error('Version mismatch'));
-          }
-        } catch(e) {
-          return done(e);
-        }
-      });
-    });
-
-    it('should receive a video object with a Client property (minified)', function(done) {
-      requirejs(['../../../dist/twilio-video.min'], function(video) {
-        try {
-          if (video.version === version) {
-            return done();
-          } else {
-            return done(new Error('Version mismatch'));
-          }
-        } catch(e) {
-          return done(e);
-        }
-      });
-    });
-  });
-
   describe('RequireJS (browser)', function() {
     var page;
     var instance;
