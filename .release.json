@@ -16,8 +16,8 @@
         "git config user.name \"${GIT_USER_NAME}\"",
         "git config user.email \"${GIT_USER_EMAIL}\"",
         "git rm -rf --ignore-unmatch dist",
-        "gulp clean",
-        "gulp",
+        "npm run clean",
+        "npm run build",
         "git add .",
         "git add -f dist",
         "git commit -m \"${RELEASE_VERSION}\"",
@@ -31,7 +31,7 @@
       "commands": [
         "node ./node_modules/.bin/release --bump ${RELEASE_VERSION} ${DEVELOPMENT_VERSION}",
         "git rm -rf dist",
-        "gulp clean",
+        "npm run clean",
         "git add .",
         "git commit -m \"${DEVELOPMENT_VERSION}\"",
         "git push origin ${BRANCH}"

@@ -1,10 +1,11 @@
-/*! ${name}.js ${version}
+/*! $name.js $version
 
-#include "LICENSE.md"
+$license
  */
 /* eslint strict:0 */
 (function(root) {
-  var Video = require('./twilio-video-bundle');
+  var bundle = $bundle;
+  var Video = bundle($entry);
   /* globals define */
   if (typeof define === 'function' && define.amd) {
     define([], function() { return Video; });

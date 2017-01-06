@@ -1,15 +1,7 @@
-*.pyc
-*.sw*
 .DS_Store
-.integration-tested
-.linted
-.unit-tested
-.umd-tested
+*.sw*
 coverage
 dist
-doc
 node_modules
 npm-debug.log
-out
-src/twilio-*-bundle.js
 test.json
