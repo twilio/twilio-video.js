@@ -208,7 +208,6 @@ describe('PeerConnectionV2', () => {
             test.peerConnectionV2.offer().then(reject, function(error) {
               assert(error instanceof TwilioError);
               assert.equal(error.code, 53400);
-              assert.equal(error.message, `Testing ${scenario} error`);
               resolve();
             });
           });
@@ -319,7 +318,6 @@ describe('PeerConnectionV2', () => {
                   }).then(reject, error => {
                     assert(error instanceof TwilioError);
                     assert.equal(error.code, 53402);
-                    assert.equal(error.message, 'Testing setRemoteDescription error');
                     resolve();
                   });
                 });
@@ -564,7 +562,6 @@ describe('PeerConnectionV2', () => {
                     test.peerConnectionV2.update(createOfferDescription).then(reject, error => {
                       assert(error instanceof TwilioError);
                       assert.equal(error.code, 53400);
-                      assert.equal(error.message, `Testing ${scenario} error`);
                       resolve();
                     });
                   });
@@ -768,7 +765,6 @@ describe('PeerConnectionV2', () => {
                     }).then(reject, error => {
                       assert(error instanceof TwilioError);
                       assert.equal(error.code, expectedErrorCode);
-                      assert.equal(error.message, `Testing ${scenario} error`);
                       resolve();
                     });
                   });
@@ -846,7 +842,6 @@ describe('PeerConnectionV2', () => {
                     return test.peerConnectionV2.update(offerDescription).then(reject, error => {
                       assert(error instanceof TwilioError);
                       assert.equal(error.code, expectedErrorCode);
-                      assert.equal(error.message, `Testing ${scenario} error`);
                       resolve();
                     });
                   });
@@ -975,7 +970,6 @@ describe('PeerConnectionV2', () => {
                     }).then(reject, error => {
                       assert(error instanceof TwilioError);
                       assert.equal(error.code, expectedErrorCode);
-                      assert.equal(error.message, `Testing ${scenario} error`);
                       resolve();
                     });
                   });

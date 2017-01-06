@@ -326,7 +326,7 @@ describe('createCancelableRoomSignalingPromise', () => {
   });
 
   context('when the Transport emits a "stateChanged" event in state "failed"', () => {
-    it('the CancelablePromise rejects with a TwilioError (code: 53000)', () => {
+    it('the CancelablePromise rejects with a TwilioError (code: 53001)', () => {
       var test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
@@ -335,7 +335,7 @@ describe('createCancelableRoomSignalingPromise', () => {
           throw new Error('Unexpected resolution');
         }, error => {
           assert(error instanceof TwilioError);
-          assert.equal(error.code, 53000);
+          assert.equal(error.code, 53001);
         });
       });
     });
