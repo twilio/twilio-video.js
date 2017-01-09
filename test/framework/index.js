@@ -7,6 +7,8 @@ const spawn = require('child_process').spawn;
 const waitForServer = require('./waitforserver');
 const webdriver = require('./webdriver');
 
+const TIMEOUT = 60000;
+
 /**
  * Run a Framework Test. Selenium will be used to navigate to the Test
  * Application and ensure twilio-video.js can be used.
@@ -23,7 +25,7 @@ function runFrameworkTest(options) {
   const start = options.start;
 
   describe(name, function() {
-    this.timeout(60000);
+    this.timeout(TIMEOUT);
 
     let server;
     let driver;
@@ -39,7 +41,7 @@ function runFrameworkTest(options) {
 
       driver = webdriver.buildWebDriverForChrome();
 
-      return waitForServer(host, port);
+      return waitForServer(host, port, TIMEOUT);
     });
 
     after(() => {
