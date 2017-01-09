@@ -7,7 +7,7 @@ const spawn = require('child_process').spawn;
 const waitForServer = require('./waitforserver');
 const webdriver = require('./webdriver');
 
-const TIMEOUT = 60000;
+const TIMEOUT = 120000;
 
 /**
  * Run a Framework Test. Selenium will be used to navigate to the Test
