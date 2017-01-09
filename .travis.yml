@@ -7,7 +7,10 @@ env:
     - CHROME_BIN=chromium-browser
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
-before_script: sh -e /etc/init.d/xvfb start
+    - PATH=$HOME/.meteor:$PATH
+before_script:
+  - curl https://install.meteor.com | /bin/sh
+  - sh -e /etc/init.d/xvfb start
 script: npm run build:travis
 notifications:
   slack:
