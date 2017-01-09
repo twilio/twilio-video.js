@@ -87,23 +87,12 @@ Fork and clone the repository. Then, install dependencies with
 
 ```
 npm install
-npm install gulp -g
 ```
 
-Part of the build process involves running integration tests against Twilio. In
-order to run these, you will need a Twilio account and you will need to set
-the following environment variables:
-
-* `ACCOUNT_SID`
-* `SIGNING_KEY_SID`
-* `SIGNING_KEY_SECRET`
-* `CONFIGURATION_PROFILE_SID`
-
-Alternatively, you can skip the integration tests by setting `SKIP_INTEGRATION`
-to "true". Then, run
+Then run the `build` script:
 
 ```
-gulp
+npm run build
 ```
 
 The builds and docs will be placed in the `dist/` directory.
