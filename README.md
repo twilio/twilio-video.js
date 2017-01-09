@@ -24,8 +24,11 @@ npm install twilio-video --save
 
 ### Bower
 
+Until we release twilio-video.js 1.0.0 proper, you must specify a specific
+pre-release. For example,
+
 ```
-bower install twilio-video --save
+bower install twilio-video#1.0.0-beta3 --save
 ```
 
 ### CDN
