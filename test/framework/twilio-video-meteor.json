@@ -1,0 +1,16 @@
+{
+  "name": "Meteor",
+  "path": "./test/framework/twilio-video-meteor",
+  "host": "localhost",
+  "port": 5000,
+  "start": {
+    "args": ["start", "--", "--port", "5000"],
+    "env": {
+      "MONGO_URL": "none"
+    }
+  },
+  "test": {
+    "command": "echo",
+    "args": ["No", "tests", "yet"]
+  }
+}
