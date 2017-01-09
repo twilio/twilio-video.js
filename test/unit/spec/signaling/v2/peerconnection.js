@@ -3,6 +3,7 @@
 var assert = require('assert');
 var EventEmitter = require('events');
 var PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
+var TwilioError = require('../../../../../lib/util/twilioerror');
 var sinon = require('sinon');
 
 describe('PeerConnectionV2', () => {
@@ -198,6 +199,21 @@ describe('PeerConnectionV2', () => {
           description);
       });
     });
+
+    ['createOffer', 'setLocalDescription'].forEach(scenario => {
+      context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
+        it('should throw a TwilioError with code 53400', () => {
+          var test = makeTest({ offers: 1, errorScenario: scenario });
+          return new Promise((resolve, reject) => {
+            test.peerConnectionV2.offer().then(reject, function(error) {
+              assert(error instanceof TwilioError);
+              assert.equal(error.code, 53400);
+              resolve();
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('#removeMediaStream', () => {
@@ -288,6 +304,23 @@ describe('PeerConnectionV2', () => {
                 assert.deepEqual(
                   Object.assign({ revision: 1 }, answer),
                   test.peerConnection.remoteDescription);
+              });
+            });
+
+            context('when setRemoteDescription on the underlying RTCPeerConnection fails', () => {
+              it('should throw a TwilioError with code 53402', () => {
+                var test = makeTest({ offers: 1, errorScenario: 'setRemoteDescription' });
+                var answer = makeAnswer();
+                var answerDescription = test.state().setDescription(answer, 1);
+                return new Promise((resolve, reject) => {
+                  test.peerConnectionV2.offer().then(() => {
+                    return test.peerConnectionV2.update(answerDescription);
+                  }).then(reject, error => {
+                    assert(error instanceof TwilioError);
+                    assert.equal(error.code, 53402);
+                    resolve();
+                  });
+                });
               });
             });
 
@@ -520,6 +553,22 @@ describe('PeerConnectionV2', () => {
               });
             });
 
+            ['createOffer', 'setLocalDescription'].forEach(scenario => {
+              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
+                it('should throw a TwilioError with code 53400', () => {
+                  var test = makeTest({ offers: 1, errorScenario: scenario });
+                  var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
+                  return new Promise((resolve, reject) => {
+                    test.peerConnectionV2.update(createOfferDescription).then(reject, error => {
+                      assert(error instanceof TwilioError);
+                      assert.equal(error.code, 53400);
+                      resolve();
+                    });
+                  });
+                });
+              });
+            });
+
             it('sets the local description to an offer description and increments the revision', () => {
               var test = makeTest({ offers: 1 });
               var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
@@ -703,6 +752,25 @@ describe('PeerConnectionV2', () => {
                 });
               });
             });
+
+            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
+              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
+                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
+                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                  var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
+                  var offerDescription = test.state().setDescription(makeOffer(), 2);
+                  return new Promise((resolve, reject) => {
+                    return test.peerConnectionV2.offer().then(() => {
+                      return test.peerConnectionV2.update(offerDescription);
+                    }).then(reject, error => {
+                      assert(error instanceof TwilioError);
+                      assert.equal(error.code, expectedErrorCode);
+                      resolve();
+                    });
+                  });
+                });
+              });
+            });
           });
 
           context('in signaling state "stable"', () => {
@@ -761,6 +829,23 @@ describe('PeerConnectionV2', () => {
                 assert.deepEqual(
                   test.state().setDescription(test.answers[0], 1),
                   description);
+              });
+            });
+
+            ['createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
+              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
+                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
+                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                  var test = makeTest({ answers: 1, errorScenario: scenario });
+                  var offerDescription = test.state().setDescription(makeOffer(), 1);
+                  return new Promise((resolve, reject) => {
+                    return test.peerConnectionV2.update(offerDescription).then(reject, error => {
+                      assert(error instanceof TwilioError);
+                      assert.equal(error.code, expectedErrorCode);
+                      resolve();
+                    });
+                  });
+                });
               });
             });
           });
@@ -869,6 +954,25 @@ describe('PeerConnectionV2', () => {
                   assert.deepEqual(
                     test.state().setDescription(test.offers[1], 2),
                     descriptions[1]);
+                });
+              });
+            });
+
+            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
+              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
+                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
+                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                  var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
+                  var offerDescription = test.state().setDescription(makeOffer(), 1);
+                  return new Promise((resolve, reject) => {
+                    return test.peerConnectionV2.offer().then(() => {
+                      return test.peerConnectionV2.update(offerDescription);
+                    }).then(reject, error => {
+                      assert(error instanceof TwilioError);
+                      assert.equal(error.code, expectedErrorCode);
+                      resolve();
+                    });
+                  });
                 });
               });
             });
@@ -1324,7 +1428,11 @@ function makePeerConnection(options) {
     peerConnection.emit(event.type, event);
   };
 
-  peerConnection.setLocalDescription = (description, resolve) => {
+  peerConnection.setLocalDescription = (description, resolve, reject) => {
+    if (options.errorScenario === 'setLocalDescription') {
+      reject(new Error('Testing setLocalDescription error'));
+      return;
+    }
     if (peerConnection.signalingState === 'stable' &&
         description.type === 'offer') {
       peerConnection.signalingState = 'have-local-offer';
@@ -1338,7 +1446,11 @@ function makePeerConnection(options) {
     resolve();
   };
 
-  peerConnection.setRemoteDescription = (description, resolve) => {
+  peerConnection.setRemoteDescription = (description, resolve, reject) => {
+    if (options.errorScenario === 'setRemoteDescription') {
+      reject(new Error('Testing setRemoteDescription error'));
+      return;
+    }
     if (peerConnection.signalingState === 'stable' &&
         description.type === 'offer') {
       peerConnection.signalingState = 'have-remote-offer';
@@ -1353,6 +1465,11 @@ function makePeerConnection(options) {
   };
 
   peerConnection.createOffer = (resolve, reject) => {
+    if (options.errorScenario === 'createOffer') {
+      reject(new Error('Testing createOffer error'));
+      return;
+    }
+
     var offer = options.offers[offerIndex++];
     if (offer) {
       resolve(offer);
@@ -1362,6 +1479,11 @@ function makePeerConnection(options) {
   };
 
   peerConnection.createAnswer = (resolve, reject) => {
+    if (options.errorScenario === 'createAnswer') {
+      reject(new Error('Testing createAnswer error'));
+      return;
+    }
+
     var answer = options.answers[answerIndex++];
     if (answer) {
       resolve(answer);
