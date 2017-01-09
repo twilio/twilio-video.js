@@ -2,8 +2,6 @@ dist: trusty
 language: node_js
 node_js:
   - 6
-  - 5
-  - 4
 env:
   global:
     - CHROME_BIN=chromium-browser
