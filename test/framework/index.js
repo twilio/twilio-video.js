@@ -23,7 +23,7 @@ function runFrameworkTest(options) {
   const start = options.start;
 
   describe(name, function() {
-    this.timeout(30000);
+    this.timeout(60000);
 
     let server;
     let driver;
