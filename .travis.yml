@@ -1,12 +1,15 @@
+dist: trusty
 language: node_js
 node_js:
   - 6
   - 5
   - 4
-before_script:
-  - export CHROME_BIN=chromium-browser
-  - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
+env:
+  global:
+    - CHROME_BIN=chromium-browser
+    - DBUS_SESSION_BUS_ADDRESS=/dev/null
+    - DISPLAY=:99.0
+before_script: sh -e /etc/init.d/xvfb start
 script: npm run build:travis
 notifications:
   slack:
