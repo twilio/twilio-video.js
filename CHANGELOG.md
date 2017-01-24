@@ -1,3 +1,23 @@
+1.0.0-beta4
+===========
+
+New Features
+------------
+
+- We've begun formalizing our error codes. They are divided up into Signaling
+  (530xx), Room (531xx), Participant (532xx), Track (533xx), Media (534xx), and
+  Configuration (535xx) subranges. Instances of TwilioError will now carry a
+  numeric `code` belonging to one of these ranges.
+
+Bug Fixes
+---------
+
+- The way that twilio-video.js's dependencies, including some of
+  twilio-video.js's transitive dependencies, were declared caused problems with
+  bundlers like Webpack. This resulted in issues trying to use twilio-video.js
+  in certain configurations with Angular, Meteor, and React apps. This release
+  updates those dependencies.
+
 1.0.0-beta3
 ===========
 
