@@ -78,8 +78,8 @@
     "cover": "istanbul cover _mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "sip.js": "https://github.com/twilio/SIP.js.git#420ed46ba6751b32e99950fb6fb84683afb820cc",
-    "twilio-common": "https://github.com/twilio/twilio-common.js.git#526773e3817fb01202df7db24fea5f5af754e500",
+    "sip.js": "twilio/SIP.js.git#420ed46ba6751b32e99950fb6fb84683afb820cc",
+    "twilio-common": "twilio/twilio-common.js#0.1.6-rc2",
     "ws": "^1.0.1"
   },
   "browser": {
