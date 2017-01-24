@@ -80,11 +80,11 @@
   },
   "dependencies": {
     "sip.js": "twilio/SIP.js.git#420ed46ba6751b32e99950fb6fb84683afb820cc",
-    "twilio-common": "twilio/twilio-common.js#0.1.6-rc2",
     "ws": "^1.0.1",
     "xmlhttprequest": "^1.8.0"
   },
   "browser": {
-    "ws": "./src/ws.js"
+    "ws": "./src/ws.js",
+    "xmlhttprequest": "./src/xmlhttprequest.js"
   }
 }
