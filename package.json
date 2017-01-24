@@ -33,6 +33,7 @@
     "mock-browser": "^0.91.34",
     "npm-run-all": "^4.0.0",
     "phantom": "^2.1.14",
+    "release-tool": "^0.2.2",
     "requirejs": "^2.2.0",
     "rimraf": "^2.5.4",
     "selenium-webdriver": "^3.0.1",
