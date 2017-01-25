@@ -17,6 +17,7 @@ if (typeof Array.prototype.includes !== 'function') {
 }
 
 require('./spec/client');
+require('./spec/ecs');
 require('./spec/room');
 require('./spec/localparticipant');
 require('./spec/participant');

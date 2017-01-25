@@ -3,9 +3,6 @@
   <head></head>
 
   <body>
-    <!-- Our UMD wrapper breaks when Promise is not defined, as twilio-common
-      attempts to load a polyfill which has conflicting UMD code. -->
-    <script src="js/promise.min.js"></script>
     <script data-main="js/main" src="js/require.js"/></script>
     <script>
       require(['../../../../dist/twilio-video.min'], function(video) {
