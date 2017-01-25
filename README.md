@@ -28,7 +28,7 @@ Until we release twilio-video.js 1.0.0 proper, you must specify a specific
 pre-release. For example,
 
 ```
-bower install twilio-video#1.0.0-beta3 --save
+bower install twilio-video#1.0.0-beta4 --save
 ```
 
 ### CDN
