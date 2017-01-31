@@ -13,9 +13,8 @@ describe('RemoteTrackStats', () => {
       packetsReceived: 2
     };
 
-    it('should set direction, bytesReceived and packetsReceived properties', () => {
+    it('should set bytesReceived and packetsReceived properties', () => {
       var trackStats = new RemoteTrackStats(stats.trackId, stats);
-      assert.equal(trackStats.direction, 'receiving');
       assert.equal(trackStats.bytesReceived, stats.bytesReceived);
       assert.equal(trackStats.packetsReceived, stats.packetsReceived);
     });

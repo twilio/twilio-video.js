@@ -14,9 +14,8 @@ describe('LocalTrackStats', () => {
       roundTripTime: 2
     };
 
-    it('should set direction, bytesSent, packetsSent and roundTripTime properties', () => {
+    it('should set bytesSent, packetsSent and roundTripTime properties', () => {
       var trackStats = new LocalTrackStats(stats.trackId, stats);
-      assert.equal(trackStats.direction, 'sending');
       assert.equal(trackStats.bytesSent, stats.bytesSent);
       assert.equal(trackStats.packetsSent, stats.packetsSent);
       assert.equal(trackStats.roundTripTime, stats.roundTripTime);
