@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const AccessTokenInvalidError = require('../../../lib/util/twilio-video-errors').AccessTokenInvalidError;
 const Client = require('../../../lib/client');
 const sinon = require('sinon');
 const initialToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmLTE0NzUxOTAzNDgiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJhc2QiLCJydGMiOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTM2Y3NWUwZjE0ZTdjOGIyMDkzOGZjNTA5MmU4MmYyM2EifX0sImlhdCI6MTQ3NTE5MDM0OCwiZXhwIjoxNDc1MTkzOTQ4LCJpc3MiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmIiwic3ViIjoiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyJ9.N0UuZSblqb7MknNuiRkiEVVEdmztm5AdYIhQp7zU2PI';
@@ -11,7 +12,8 @@ describe('Client', () => {
   describe('constructor', () => {
     it('should throw if the initialToken is invalid', () => {
       assert.throws(() => new Client('foo'), error => {
-        return error.code === 20101;
+        return error instanceof AccessTokenInvalidError
+          && error.code === 20101;
       });
     });
 
@@ -72,7 +74,8 @@ describe('Client', () => {
     it('should throw if the newToken is invalid', () => {
       const client = new Client(initialToken);
       assert.throws(() => client.updateToken('foo'), error => {
-        return error.code === 20101;
+        return error instanceof AccessTokenInvalidError
+          && error.code === 20101;
       });
     });
 

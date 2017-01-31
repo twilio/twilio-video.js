@@ -3,7 +3,9 @@
 var assert = require('assert');
 var EventEmitter = require('events');
 var PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
-var TwilioError = require('../../../../../lib/util/twilioerror');
+var TwilioErrors = require('../../../../../lib/util/twilio-video-errors');
+var MediaClientLocalDescFailedError = TwilioErrors.MediaClientLocalDescFailedError;
+var MediaClientRemoteDescFailedError = TwilioErrors.MediaClientRemoteDescFailedError;
 var sinon = require('sinon');
 
 describe('PeerConnectionV2', () => {
@@ -202,11 +204,11 @@ describe('PeerConnectionV2', () => {
 
     ['createOffer', 'setLocalDescription'].forEach(scenario => {
       context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-        it('should throw a TwilioError with code 53400', () => {
+        it('should throw a MediaClientLocalDescFailedError', () => {
           var test = makeTest({ offers: 1, errorScenario: scenario });
           return new Promise((resolve, reject) => {
             test.peerConnectionV2.offer().then(reject, function(error) {
-              assert(error instanceof TwilioError);
+              assert(error instanceof MediaClientLocalDescFailedError);
               assert.equal(error.code, 53400);
               resolve();
             });
@@ -308,7 +310,7 @@ describe('PeerConnectionV2', () => {
             });
 
             context('when setRemoteDescription on the underlying RTCPeerConnection fails', () => {
-              it('should throw a TwilioError with code 53402', () => {
+              it('should throw a MediaClientRemoteDescFaileError', () => {
                 var test = makeTest({ offers: 1, errorScenario: 'setRemoteDescription' });
                 var answer = makeAnswer();
                 var answerDescription = test.state().setDescription(answer, 1);
@@ -316,7 +318,7 @@ describe('PeerConnectionV2', () => {
                   test.peerConnectionV2.offer().then(() => {
                     return test.peerConnectionV2.update(answerDescription);
                   }).then(reject, error => {
-                    assert(error instanceof TwilioError);
+                    assert(error instanceof MediaClientRemoteDescFailedError);
                     assert.equal(error.code, 53402);
                     resolve();
                   });
@@ -555,12 +557,12 @@ describe('PeerConnectionV2', () => {
 
             ['createOffer', 'setLocalDescription'].forEach(scenario => {
               context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                it('should throw a TwilioError with code 53400', () => {
+                it('should throw a MediaClientLocalDescFailedError', () => {
                   var test = makeTest({ offers: 1, errorScenario: scenario });
                   var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
                   return new Promise((resolve, reject) => {
                     test.peerConnectionV2.update(createOfferDescription).then(reject, error => {
-                      assert(error instanceof TwilioError);
+                      assert(error instanceof MediaClientLocalDescFailedError);
                       assert.equal(error.code, 53400);
                       resolve();
                     });
@@ -755,15 +757,24 @@ describe('PeerConnectionV2', () => {
 
             ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
               context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
-                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                var expectedError = scenario === 'setRemoteDescription'
+                  ? 'MediaClientRemoteDescFailedError'
+                  : 'MediaClientLocalDescFailedError';
+                var expectedErrorClass = scenario === 'setRemoteDescription'
+                  ? MediaClientRemoteDescFailedError
+                  : MediaClientLocalDescFailedError;
+                var expectedErrorCode = scenario === 'setRemoteDescription'
+                  ? 53402
+                  : 53400;
+
+                it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 2);
                   return new Promise((resolve, reject) => {
                     return test.peerConnectionV2.offer().then(() => {
                       return test.peerConnectionV2.update(offerDescription);
                     }).then(reject, error => {
-                      assert(error instanceof TwilioError);
+                      assert(error instanceof expectedErrorClass);
                       assert.equal(error.code, expectedErrorCode);
                       resolve();
                     });
@@ -834,13 +845,22 @@ describe('PeerConnectionV2', () => {
 
             ['createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
               context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
-                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                var expectedError = scenario === 'setRemoteDescription'
+                  ? 'MediaClientRemoteDescFailedError'
+                  : 'MediaClientLocalDescFailedError';
+                var expectedErrorClass = scenario === 'setRemoteDescription'
+                  ? MediaClientRemoteDescFailedError
+                  : MediaClientLocalDescFailedError;
+                var expectedErrorCode = scenario === 'setRemoteDescription'
+                  ? 53402
+                  : 53400;
+
+                it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 1);
                   return new Promise((resolve, reject) => {
                     return test.peerConnectionV2.update(offerDescription).then(reject, error => {
-                      assert(error instanceof TwilioError);
+                      assert(error instanceof expectedErrorClass);
                       assert.equal(error.code, expectedErrorCode);
                       resolve();
                     });
@@ -960,15 +980,24 @@ describe('PeerConnectionV2', () => {
 
             ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
               context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedErrorCode = scenario === 'setRemoteDescription' ? 53402 : 53400;
-                it(`should throw a TwilioError with code ${expectedErrorCode}`, () => {
+                var expectedError = scenario === 'setRemoteDescription'
+                  ? 'MediaClientRemoteDescFailedError'
+                  : 'MediaClientLocalDescFailedError';
+                var expectedErrorClass = scenario === 'setRemoteDescription'
+                  ? MediaClientRemoteDescFailedError
+                  : MediaClientLocalDescFailedError;
+                var expectedErrorCode = scenario === 'setRemoteDescription'
+                  ? 53402
+                  : 53400;
+
+                it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 1);
                   return new Promise((resolve, reject) => {
                     return test.peerConnectionV2.offer().then(() => {
                       return test.peerConnectionV2.update(offerDescription);
                     }).then(reject, error => {
-                      assert(error instanceof TwilioError);
+                      assert(error instanceof expectedErrorClass);
                       assert.equal(error.code, expectedErrorCode);
                       resolve();
                     });

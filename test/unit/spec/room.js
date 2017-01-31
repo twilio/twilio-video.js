@@ -6,7 +6,7 @@ var RoomSignaling = require('../../../lib/signaling/room');
 var LocalMedia = require('../../../lib/media/localmedia');
 var Participant = require('../../../lib/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
-var TwilioError = require('../../../lib/util/twilioerror');
+var SignalingConnectionDisconnectedError = require('../../../lib/util/twilio-video-errors').SignalingConnectionDisconnectedError;
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
 
@@ -87,14 +87,14 @@ describe('Room', function() {
 
   describe('RoomSignaling state changed to "disconnected"', () => {
     context('when triggered due to unexpected connection loss', () => {
-      it('should trigger the same event on the Room with itself and a TwilioError(code: 53001) as the arguments', () => {
+      it('should trigger the same event on the Room with itself and a SignalingConnectionDisconnectedError as the arguments', () => {
         var spy = sinon.spy();
         room.on('disconnected', spy);
         signaling.didDisconnectUnexpectedly = true;
         signaling.preempt('disconnected');
         assert.equal(spy.callCount, 1);
         assert.equal(spy.args[0][0], room);
-        assert(spy.args[0][1] instanceof TwilioError);
+        assert(spy.args[0][1] instanceof SignalingConnectionDisconnectedError);
         assert.equal(spy.args[0][1].code, 53001);
       });
     });
