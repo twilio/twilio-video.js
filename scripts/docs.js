@@ -29,7 +29,8 @@ const publicClasses = [
   'lib/stats/localvideotrackstats.js',
   'lib/stats/remotetrackstats.js',
   'lib/stats/remoteaudiotrackstats.js',
-  'lib/stats/remotevideotrackstats.js'
+  'lib/stats/remotevideotrackstats.js',
+  'lib/util/twilio-video-errors.js'
 ];
 
 const publicConstructors = [
@@ -57,6 +58,11 @@ const privateConstructors = [
   'RemoteAudioTrackStats',
   'RemoteVideoTrackStats'
 ];
+
+const TwilioErrors = require('../lib/util/twilio-video-errors');
+Object.keys(TwilioErrors).forEach(function(error) {
+  privateConstructors.push(error);
+});
 
 spawnSync('node', [
   require.resolve('jsdoc/jsdoc'),
