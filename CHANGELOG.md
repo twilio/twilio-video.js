@@ -6,7 +6,9 @@ Bug Fixes
 
 - Fixed a bug where the twilio-video.js, when used in Firefox, would not raise a
   "trackAdded" event on a remote Participant if they added, removed, and added
-  back the same Track.
+  back the same Track
+- Fixed a bug where round-trip times reported by `getStats` were accidentally
+  multiplied by 1000
 
 1.0.0-beta4
 ===========

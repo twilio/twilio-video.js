@@ -116,7 +116,7 @@ describe('getStats', function() {
             assert(report.trackId);
             assert(report.timestamp);
             assert.equal(report.codecName, options.chromeFakeStats.googCodecName);
-            assert.equal(report.roundTripTime, options.chromeFakeStats.googRtt * 1000);
+            assert.equal(report.roundTripTime, options.chromeFakeStats.googRtt);
             assert.equal(report.jitter, options.chromeFakeStats.googJitterReceived);
             assert.equal(report.frameWidthInput, options.chromeFakeStats.googFrameWidthInput);
             assert.equal(report.frameHeightInput, options.chromeFakeStats.googFrameHeightInput);
@@ -198,7 +198,7 @@ describe('getStats', function() {
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);
             assert.equal(report.packetsLost, fakeInbound.packetsLost);
             assert.equal(report.jitter, fakeInbound.jitter);
-            assert.equal(report.roundTripTime, fakeInbound.mozRtt * 1000);
+            assert.equal(report.roundTripTime, fakeInbound.mozRtt);
           });
       });
   });
