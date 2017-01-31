@@ -1,3 +1,13 @@
+1.0.0-beta5
+===========
+
+Bug Fixes
+---------
+
+- Fixed a bug where the twilio-video.js, when used in Firefox, would not raise a
+  "trackAdded" event on a remote Participant if they added, removed, and added
+  back the same Track.
+
 1.0.0-beta4
 ===========
 
