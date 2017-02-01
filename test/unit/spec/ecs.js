@@ -7,6 +7,7 @@ var sinon = require('sinon');
 var twilio = require('twilio');
 var TwilioError = require('../../../lib/util/twilioerror');
 var AccessTokenInvalidError = require('../../../lib/util/twilio-video-errors').AccessTokenInvalidError;
+var ConfigurationAcquireFailedError = require('../../../lib/util/twilio-video-errors').ConfigurationAcquireFailedError;
 
 var fakeToken = 'a.b.c';
 
@@ -61,6 +62,13 @@ describe('ECS', function() {
         });
       });
 
+      it('should throw a ConfigurationAcquireFailedError if the fetched payload is not valid JSON', function() {
+        request.post = function() {
+          return Promise.resolve('{"foo": 123, "bar" "xyz"}');
+        };
+        testGetConfigurationError(ConfigurationAcquireFailedError, 53500, 'Unable to acquire configuration');
+      });
+
       context('when request() rejects the returned promise with an error code and message', function() {
         it('should throw the appropriate TwilioError if present', function() {
           request.post = function() {
@@ -86,12 +94,12 @@ describe('ECS', function() {
         });
       });
 
-      context('when request() rejects the returned promise with bad JSON response', function() {
-        it('should throw a generic TwilioError with error code 0', function() {
+      context('when request() rejects the returned promise invalid JSON', function() {
+        it('should throw a ConfigurationAcquireFailedError', function() {
           request.post = function() {
             return Promise.reject('{"code": 123, "message" "xyz"}');
           };
-          return testGetConfigurationError(TwilioError, 0);
+          return testGetConfigurationError(ConfigurationAcquireFailedError, 53500, 'Unable to acquire configuration');
         });
       });
     });
