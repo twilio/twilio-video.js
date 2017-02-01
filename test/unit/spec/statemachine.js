@@ -165,16 +165,17 @@ describe('StateMachine', function() {
         context('and a new lock is not requested', function() {
           it('sets .state', function(done) {
             var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function() {
+            sm.once('stateChanged', function(bar, baz) {
               try {
                 assert.equal('bar', sm.state);
+                assert.equal('baz', baz);
               } catch (error) {
                 done(error);
                 return;
               }
               done();
             });
-            sm.preempt('bar');
+            sm.preempt('bar', null, ['baz']);
             assert.equal('bar', sm.state);
           });
         });
@@ -182,16 +183,17 @@ describe('StateMachine', function() {
         context('and a new lock is requested', function() {
           it('sets .state and takes a new lock', function(done) {
             var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function() {
+            sm.once('stateChanged', function(bar, baz) {
               try {
                 assert.equal('bar', sm.state);
+                assert.equal('baz', baz);
               } catch (error) {
                 done(error);
                 return;
               }
               done();
             });
-            var key = sm.preempt('bar', 'lock');
+            var key = sm.preempt('bar', 'lock', ['baz']);
             assert.equal('bar', sm.state);
             assert(sm.hasLock(key));
           });
@@ -368,19 +370,42 @@ describe('StateMachine', function() {
         assert.equal('bar', sm.state);
       });
 
-      it('emits the "stateChanged" event if the key is provided and the transition is valid', function(done) {
-        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-        var key = sm.takeLockSync('lock');
-        sm.once('stateChanged', function() {
-          try {
-            assert.equal('bar', sm.state);
-          } catch (error) {
-            done(error);
-            return;
-          }
-          done();
+      describe('when the key is provided and the transition is valid', function() {
+        describe('and no payload is provided', function() {
+          it('emits the "stateChanged" event', function(done) {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            var key = sm.takeLockSync('lock');
+            sm.once('stateChanged', function() {
+              try {
+                assert.equal('bar', sm.state);
+              } catch (error) {
+                done(error);
+                return;
+              }
+              done();
+            });
+            sm.transition('bar', key);
+          });
         });
-        sm.transition('bar', key);
+
+        describe('and a payload is provided', function() {
+          it('emits the "stateChanged" event with the extra payload', function(done) {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            var key = sm.takeLockSync('lock');
+            sm.once('stateChanged', function(bar, baz, qux) {
+              try {
+                assert.equal('bar', bar);
+                assert.equal('baz', baz);
+                assert.equal('qux', qux);
+              } catch (error) {
+                done(error);
+                return;
+              }
+              done();
+            });
+            sm.transition('bar', key, ['baz', 'qux']);
+          });
+        });
       });
     });
 
@@ -396,24 +421,52 @@ describe('StateMachine', function() {
         assert.throws(sm.transition.bind(sm, 'bar'));
       });
 
-      it('sets .state to the new state if the transition is valid', function() {
-        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-        sm.transition('bar');
-        assert.equal('bar', sm.state);
-      });
-
-      it('emits the "stateChanged" event if the transition is valid', function(done) {
-        var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-        sm.once('stateChanged', function() {
-          try {
+      describe('when the transition is valid', function() {
+        describe('and no payload is provided', function() {
+          it('sets .state to the new state', function() {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            sm.transition('bar');
             assert.equal('bar', sm.state);
-          } catch (error) {
-            done(error);
-            return;
-          }
-          done();
+          });
+
+          it('emits the "stateChanged" event', function(done) {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            sm.once('stateChanged', function() {
+              try {
+                assert.equal('bar', sm.state);
+              } catch (error) {
+                done(error);
+                return;
+              }
+              done();
+            });
+            sm.transition('bar');
+          });
         });
-        sm.transition('bar');
+
+        describe('and a payload is provided', function() {
+          it('sets .state to the new state', function() {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            sm.transition('bar', null, ['baz', 'qux']);
+            assert.equal('bar', sm.state);
+          });
+
+          it('emits the "stateChanged" event with the extra payload', function(done) {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            sm.once('stateChanged', function(bar, baz, qux) {
+              try {
+                assert.equal('bar', bar);
+                assert.equal('baz', baz);
+                assert.equal('qux', qux);
+              } catch (error) {
+                done(error);
+                return;
+              }
+              done();
+            });
+            sm.transition('bar', null, ['baz', 'qux']);
+          });
+        });
       });
     });
   });
