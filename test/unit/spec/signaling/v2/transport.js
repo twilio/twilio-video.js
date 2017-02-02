@@ -4,6 +4,11 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var sinon = require('sinon');
 var Transport = require('../../../../../lib/signaling/v2/transport');
+var TwilioError = require('../../../../../lib/util/twilioerror');
+var TwilioErrors = require('../../../../../lib/util/twilio-video-errors');
+var SignalingIncomingMessageInvalidError = TwilioErrors.SignalingIncomingMessageInvalidError;
+var SignalingConnectionTimeoutError = TwilioErrors.SignalingConnectionTimeoutError;
+var SignalingConnectionError = TwilioErrors.SignalingConnectionError;
 
 describe('Transport', () => {
   describe('constructor', () => {
@@ -848,6 +853,69 @@ describe('Transport', () => {
           });
         });
 
+        context('"error" with code and message in the response body', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error', code: 12345, message: 'foo bar' }, 'accepted');
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 12345);
+            assert.equal(error.message, 'foo bar');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with code and message in the response header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'accepted', { 'X-Twilio-Error': '67890 bar baz' });
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 67890);
+            assert.equal(error.message, 'bar baz');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with no code or message in either the body or the header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'accepted', { 'X-Twilio-Foo': '12345 foo bar' });
+          });
+
+          it('calls #disconnect() with an unknown TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 0);
+            assert.equal(error.message, 'Unknown error');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
         context('"synced"', () => {
           var message = {
             type: 'synced'
@@ -1123,6 +1191,15 @@ describe('Transport', () => {
     });
 
     context('a "failed" event, and the Transport\'s .state is', () => {
+      var evtPayloads = [
+        [ ],
+        [ { body: '{ "code": 12345 "message": "foo bar" }' } ],
+        [ { body: '{ "code": 12345, "message": "foo bar" }' } ],
+        [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
+        [ null, 'Request Timeout' ],
+        [ null, 'Connection Error' ]
+      ];
+      var evtPayloadsIdx = 0;
       var eventEmitted;
 
       function setupTest() {
@@ -1130,7 +1207,7 @@ describe('Transport', () => {
         eventEmitted = false;
         test.transport.once('connected', () => eventEmitted = true);
         test.transport.once('message', () => eventEmitted = true);
-        test.failed();
+        test.session.emit.apply(test.session, ['failed'].concat(evtPayloads[evtPayloadsIdx]));
       }
 
       context('"connected"', () => {
@@ -1146,12 +1223,64 @@ describe('Transport', () => {
       });
 
       context('"connecting"', () => {
-        beforeEach(setupTest);
+        var disconnect;
+        beforeEach(() => {
+          disconnect = test.transport.disconnect;
+          if (evtPayloadsIdx > 0) {
+            test.transport.disconnect = sinon.spy();
+          }
+          setupTest();
+        });
 
         it('transitions .state to "disconnected"', () => {
           assert.deepEqual([
             'disconnected'
           ], test.transitions);
+        });
+
+        it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingIncomingMessageInvalidError();
+          assert(error instanceof SignalingIncomingMessageInvalidError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error body', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 12345);
+          assert.equal(error.message, 'foo bar');
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error header', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 67890);
+          assert.equal(error.message, 'bar baz');
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionTimeoutError();
+          assert(error instanceof SignalingConnectionTimeoutError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionError();
+          assert(error instanceof SignalingConnectionError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        afterEach(() => {
+          if(evtPayloadsIdx > 0) {
+            test.transport.disconnect = disconnect;
+          }
+          evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
         });
       });
 
@@ -1235,6 +1364,69 @@ describe('Transport', () => {
             assert.deepEqual([
               'disconnected'
             ], test.transitions);
+          });
+        });
+
+        context('"error" with code and message in the response body', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error', code: 12345, message: 'foo bar' }, 'info');
+          });
+
+          it('calls #disconnect() with a 12345, TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 12345);
+            assert.equal(error.message, 'foo bar');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with code and message in the response header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Error': '67890 bar baz' });
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 67890);
+            assert.equal(error.message, 'bar baz');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with no code or message in either the body or the header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Foo': '12345 foo bar' });
+          });
+
+          it('calls #disconnect() with a unknown TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 0);
+            assert.equal(error.message, 'Unknown error');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
           });
         });
 
@@ -1325,6 +1517,69 @@ describe('Transport', () => {
             assert.deepEqual([
               'disconnected'
             ], test.transitions);
+          });
+        });
+
+        context('"error" with code and message in the response body', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error', code: 12345, message: 'foo bar' }, 'info');
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 12345);
+            assert.equal(error.message, 'foo bar');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with code and message in the response header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Error': '67890 bar baz' });
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 67890);
+            assert.equal(error.message, 'bar baz');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with no code or message in either the body or the header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Foo': '12345 foo bar' });
+          });
+
+          it('calls #disconnect() with a unknown TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 0);
+            assert.equal(error.message, 'Unknown error');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
           });
         });
 
@@ -1561,6 +1816,69 @@ describe('Transport', () => {
           });
         });
 
+        context('"error" with code and message in the response body', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error', code: 12345, message: 'foo bar' }, 'info');
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 12345);
+            assert.equal(error.message, 'foo bar');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with code and message in the response header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Error': '67890 bar baz' });
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 67890);
+            assert.equal(error.message, 'bar baz');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
+        context('"error" with no code or message in either the body or the header', () => {
+          var disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'error' }, 'info', { 'X-Twilio-Foo': '12345 foo bar' });
+          });
+
+          it('calls #disconnect() with a unknown TwilioError', () => {
+            var error = test.transport.disconnect.args[0][0];
+            assert(error instanceof TwilioError);
+            assert.equal(error.code, 0);
+            assert.equal(error.message, 'Unknown error');
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
         context('"synced"', () => {
           var message = {
             type: 'synced'
@@ -1634,29 +1952,142 @@ describe('Transport', () => {
     });
 
     context('a "bye" event, and the Transport\'s .state is', () => {
+      var evtPayloads = [
+        [ ],
+        [ { body: '{ "code": 12345 "message": "foo bar" }' } ],
+        [ { body: '{ "code": 12345, "message": "foo bar" }' } ],
+        [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
+        [ null, 'Request Timeout' ],
+        [ null, 'Connection Error' ]
+      ];
+      var evtPayloadsIdx = 0;
+
       context('"connected"', () => {
+        var disconnect;
+
         beforeEach(() => {
+          disconnect = test.transport.disconnect;
+          if (evtPayloadsIdx > 0) {
+            test.transport.disconnect = sinon.spy();
+          }
+
           test.connect();
           test.transitions = [];
-          test.session.emit('bye');
+          test.session.emit.apply(test.session, ['bye'].concat(evtPayloads[evtPayloadsIdx]));
         });
 
         it('transitions .state to "disconnected"', () => {
           assert.deepEqual([
             'disconnected'
           ], test.transitions);
+        });
+
+        it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingIncomingMessageInvalidError();
+          assert(error instanceof SignalingIncomingMessageInvalidError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error body', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 12345);
+          assert.equal(error.message, 'foo bar');
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error header', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 67890);
+          assert.equal(error.message, 'bar baz');
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionTimeoutError();
+          assert(error instanceof SignalingConnectionTimeoutError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionError();
+          assert(error instanceof SignalingConnectionError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        afterEach(() => {
+          if (evtPayloadsIdx > 0) {
+            test.transport.disconnect = disconnect;
+          }
+          evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
         });
       });
 
       context('"connecting"', () => {
+        var disconnect;
+
         beforeEach(() => {
-          test.session.emit('bye');
+          disconnect = test.transport.disconnect;
+          if (evtPayloadsIdx > 0) {
+            test.transport.disconnect = sinon.spy();
+          }
+          test.session.emit.apply(test.session, ['bye'].concat(evtPayloads[evtPayloadsIdx]));
         });
 
         it('transitions .state to "disconnected"', () => {
           assert.deepEqual([
             'disconnected'
           ], test.transitions);
+        });
+
+        it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingIncomingMessageInvalidError();
+          assert(error instanceof SignalingIncomingMessageInvalidError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error body', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 12345);
+          assert.equal(error.message, 'foo bar');
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error header', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 67890);
+          assert.equal(error.message, 'bar baz');
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionTimeoutError();
+          assert(error instanceof SignalingConnectionTimeoutError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionError();
+          assert(error instanceof SignalingConnectionError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        afterEach(() => {
+          if(evtPayloadsIdx > 0) {
+            test.transport.disconnect = disconnect;
+          }
+          evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
         });
       });
 
@@ -1677,17 +2108,68 @@ describe('Transport', () => {
       });
 
       context('"syncing"', () => {
+        var disconnect;
+
         beforeEach(() => {
+          disconnect = test.transport.disconnect;
+          if (evtPayloadsIdx > 0) {
+            test.transport.disconnect = sinon.spy();
+          }
           test.connect();
           test.transport.sync();
           test.transitions = [];
-          test.session.emit('bye');
+          test.session.emit.apply(test.session, ['bye'].concat(evtPayloads[evtPayloadsIdx]));
         });
 
         it('transitions .state to "disconnected"', () => {
           assert.deepEqual([
             'disconnected'
           ], test.transitions);
+        });
+
+        it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingIncomingMessageInvalidError();
+          assert(error instanceof SignalingIncomingMessageInvalidError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error body', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 12345);
+          assert.equal(error.message, 'foo bar');
+        });
+
+        it('should call #disconnect() with TwilioError when event payload has an error header', () => {
+          var error = test.transport.disconnect.args[0][0];
+          assert(error instanceof TwilioError);
+          assert.equal(error.code, 67890);
+          assert.equal(error.message, 'bar baz');
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionTimeoutError();
+          assert(error instanceof SignalingConnectionTimeoutError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
+          var error = test.transport.disconnect.args[0][0];
+          var expectedError = new SignalingConnectionError();
+          assert(error instanceof SignalingConnectionError);
+          assert.equal(error.code, expectedError.code);
+          assert.equal(error.message, expectedError.message);
+        });
+
+        afterEach(() => {
+          if(evtPayloadsIdx > 0) {
+            test.transport.disconnect = disconnect;
+          }
+          evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
         });
       });
     });
@@ -1722,8 +2204,13 @@ function makeTest(options) {
   options.transport.on('stateChanged', state => {
     options.transitions.push(state);
   });
-  options.receiveRequest = (message, type) => {
+  options.receiveRequest = (message, type, headers) => {
+    headers = Object.keys(headers || {}).reduce((headers_, name) => {
+      headers_[name] = [ { raw: headers[name] } ];
+      return headers_;
+    }, {});
     options.session.emit(type || 'info', {
+      headers: headers,
       body: JSON.stringify(message)
     });
   };
