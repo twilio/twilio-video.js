@@ -90,8 +90,7 @@ describe('Room', function() {
       it('should trigger the same event on the Room with itself and a SignalingConnectionDisconnectedError as the arguments', () => {
         var spy = sinon.spy();
         room.on('disconnected', spy);
-        signaling.didDisconnectUnexpectedly = true;
-        signaling.preempt('disconnected');
+        signaling.preempt('disconnected', null, [new SignalingConnectionDisconnectedError()]);
         assert.equal(spy.callCount, 1);
         assert.equal(spy.args[0][0], room);
         assert(spy.args[0][1] instanceof SignalingConnectionDisconnectedError);
