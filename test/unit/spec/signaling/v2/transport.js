@@ -1193,8 +1193,8 @@ describe('Transport', () => {
     context('a "failed" event, and the Transport\'s .state is', () => {
       var evtPayloads = [
         [ ],
-        [ { body: '{ "code": 12345 "message": "foo bar" }' } ],
-        [ { body: '{ "code": 12345, "message": "foo bar" }' } ],
+        [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
+        [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
         [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
         [ null, 'Request Timeout' ],
         [ null, 'Connection Error' ]
@@ -1954,8 +1954,8 @@ describe('Transport', () => {
     context('a "bye" event, and the Transport\'s .state is', () => {
       var evtPayloads = [
         [ ],
-        [ { body: '{ "code": 12345 "message": "foo bar" }' } ],
-        [ { body: '{ "code": 12345, "message": "foo bar" }' } ],
+        [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
+        [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
         [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
         [ null, 'Request Timeout' ],
         [ null, 'Connection Error' ]
