@@ -1376,7 +1376,7 @@ describe('Transport', () => {
             test.receiveRequest({ type: 'error', code: 12345, message: 'foo bar' }, 'info');
           });
 
-          it('calls #disconnect() with a 12345, TwilioError', () => {
+          it('calls #disconnect() with a TwilioError', () => {
             var error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 12345);
