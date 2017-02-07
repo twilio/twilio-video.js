@@ -16,26 +16,6 @@ describe('Client', () => {
           && error.code === 20101;
       });
     });
-
-    it('calls ECS.getConfiguration with the initialToken (and ecsOptions)', () => {
-      const ecsResponse = {
-        video: {
-          network_traversal_service: {
-            ttl: 0
-          }
-        }
-      };
-
-      const getConfiguration = sinon.spy(() => Promise.resolve(ecsResponse));
-
-      const client = new Client(initialToken, {
-        ECS: {
-          getConfiguration: getConfiguration
-        }
-      });
-
-      assert.equal(getConfiguration.args[0][0], initialToken);
-    });
   });
 
   describe('#connect', () => {
