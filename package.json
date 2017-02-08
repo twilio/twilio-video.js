@@ -51,7 +51,7 @@
   "scripts": {
     "lint": "eslint ./lib",
     "test:unit": "mocha ./test/unit/index.js",
-    "test:integration": "mocha ./test/integration/index.js",
+    "test:integration": "mocha ./test/integration/index.js --timeout 5000",
     "test:integration:travis": "node ./scripts/integration.js",
     "test:umd": "mocha ./test/umd/index.js",
     "test:framework:angular:install": "cd ./test/framework/twilio-video-angular && rimraf ./node_modules && npm install",

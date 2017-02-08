@@ -24,6 +24,9 @@ require('./spec/participant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 
+require('./spec/iceserversource/constant');
+require('./spec/iceserversource/nts');
+
 require('./spec/media/index');
 require('./spec/media/track');
 require('./spec/media/track/localtrack');
