@@ -73,6 +73,10 @@ describe('RTCPeerConnection', () => {
   describe('DTLS role negotiation', () => {
     testDtlsRoleNegotiation();
   });
+
+  describe('Glare', () => {
+    testGlare();
+  });
 });
 
 function assertEqualDescriptions(actual, expected) {
@@ -346,6 +350,52 @@ function testDtlsRoleNegotiation() {
         it('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
+          });
+        });
+      });
+    });
+  });
+}
+
+function testGlare() {
+  describe('RTCPeerConnections 1 and 2 call createOffer, and RTCPeerConnection 1 calls setLocalDescription; then', () => {
+    let pc1;
+    let pc2;
+    let offer;
+
+    beforeEach(() => {
+      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc2 = new RTCPeerConnection({ iceServers: [] });
+      return makeStream().then(stream => {
+        pc1.addStream(stream);
+        pc2.addStream(stream);
+        return Promise.all([
+          pc1.createOffer(),
+          pc2.createOffer()
+        ]);
+      }).then(offers => {
+        offer = offers[1];
+        return pc1.setLocalDescription(offers[0]);
+      });
+    });
+
+    describe('RTCPeerConnection 1 rolls back and calls setRemoteDescription; then', () => {
+      beforeEach(() => {
+        return pc1.setLocalDescription(new RTCSessionDescription({ type: 'rollback' })).then(() => {
+          return pc1.setRemoteDescription(offer);
+        });
+      });
+
+      describe('RTCPeerConnection 1 calls createAnswer and setLocalDescription; then', () => {
+        beforeEach(() => {
+          return pc1.createAnswer().then(answer => {
+            return pc1.setLocalDescription(answer);
+          });
+        });
+
+        it('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+          return pc1.createOffer().then(offer => {
+            return pc1.setLocalDescription(offer);
           });
         });
       });
