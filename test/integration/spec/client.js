@@ -51,13 +51,6 @@ describe('Client', function() {
 
   describe('#connect', function() {
 
-    it('should update .rooms', function(done) {
-      alice.connect({ token: aliceToken }).then(function(_room) {
-        room = _room;
-        assert(alice.rooms.has(room.sid));
-      }).then(done, done);
-    });
-
     it('should be cancelable', function(done) {
       var cancelablePromise = alice.connect({ token: aliceToken });
       cancelablePromise.cancel().then(() => done(new Error('Unexpected resolution')), () => done());
@@ -93,11 +86,11 @@ describe('Client', function() {
 
     it('should set Log levels to the new values', () => {
       client.setLogLevel({ default: 'error' });
-      assert.equal(client._log.logLevel, Log.getLevelByName('error'));
+      assert.equal(client._options.log.logLevel, Log.getLevelByName('error'));
     });
 
     it('should set Log levels of any child Logs to the new values', () => {
-      var childLog = client._log.createLog('media', 'testMedia');
+      var childLog = client._options.log.createLog('media', 'testMedia');
       var oldChildLogLevel = childLog.logLevel;
       client.setLogLevel({ signaling: 'error', media: 'info'});
       assert.equal(oldChildLogLevel, Log.getLevelByName('off'));
@@ -107,7 +100,7 @@ describe('Client', function() {
     context('when a string is passed as the new Log level', () => {
       it('should set Log levels of all module names to this level', () => {
         client.setLogLevel('error');
-        assert.deepEqual(client._log._logLevels, {
+        assert.deepEqual(client._options.log._logLevels, {
           default: 'error',
           media: 'error',
           webrtc: 'error',
@@ -117,15 +110,10 @@ describe('Client', function() {
     });
   });
 
-  describe('Room#disconnect', function() {
-    it('updates .rooms', function() {
-      assert(room);
-      room.disconnect();
-      assert(!alice.rooms.has(room.sid));
-    });
-  });
-
   after(() => {
+    if (room) {
+      room.disconnect();
+    }
     if (bobRoom) {
       bobRoom.disconnect();
     }
