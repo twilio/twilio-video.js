@@ -1,0 +1,7 @@
+{
+  "name": "twilio-video-no-framework",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  }
+}

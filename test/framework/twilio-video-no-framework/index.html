@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- NOTE(mroberts): I'm not setting a charset for this test. Some of our
+         customers use twilio-video.min.js without setting a charset, resulting
+         in some very strange issues. We can workaround some of these by
+         ensuring our minifier (currently UglifyJS2) only uses ASCII characters.
+         This test then ensures we maintain that behavior. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>twilio-video-no-framework</title>
+    <script src="twilio-video.min.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      <p>Connecting to a new Room&hellip;</p>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
