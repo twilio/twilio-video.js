@@ -34,11 +34,18 @@ describe('Client', () => {
       });
     });
 
-    it('should throw if the initialToken is invalid', () => {
+    it('should throw if the token is invalid', () => {
       const client = new Client();
-      assert.throws(() => client.connect({ token: 'foo' }), error => {
-        return error instanceof AccessTokenInvalidError
-          && error.code === 20101;
+      return new Promise((resolve, reject) => {
+        client.connect({ token: 'foo' }).then(reject, error => {
+          try {
+            assert(error instanceof AccessTokenInvalidError);
+            assert.equal(error.code, 20101);
+            resolve();
+          } catch(e) {
+            reject(e);
+          }
+        });
       });
     });
   });

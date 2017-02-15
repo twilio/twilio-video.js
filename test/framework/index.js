@@ -24,6 +24,14 @@ function runFrameworkTest(options) {
   const path = options.path;
   const start = options.start;
 
+  // NOTE: Since there are no tests for Meteor yet,
+  // we won't start the server in order for the next
+  // framework test to continue. Otherwise, the server
+  // starts up and blocks indefinitely.
+  if (name === 'Meteor') {
+    return;
+  }
+
   describe(name, function() {
     this.timeout(TIMEOUT);
 
