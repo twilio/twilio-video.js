@@ -36,13 +36,13 @@ export class AppComponent implements OnInit {
 
     let client: Client;
     try {
-      client = new Client(token);
+      client = new Client();
     } catch (error) {
       this.error = error;
       return;
     }
 
-    client.connect().then(room => {
+    client.connect({ token: token }).then(room => {
       this.room = room;
       room.once('disconnected', () => {});
       room.disconnect();

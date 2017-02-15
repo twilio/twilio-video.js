@@ -8,7 +8,7 @@ export default class App extends Component {
     var client;
 
     try {
-      client = new Client(this.props.token);
+      client = new Client();
     } catch (error) {
       this.state = { error: error };
       return;
@@ -16,7 +16,7 @@ export default class App extends Component {
 
     this.state = {};
 
-    client.connect().then(room => {
+    client.connect({ token: this.props.token }).then(room => {
       this.setState({ room });
       room.once('disconnected', () => this.forceUpdate());
       room.disconnect();

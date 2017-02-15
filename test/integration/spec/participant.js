@@ -39,13 +39,15 @@ describe('Participant', () => {
       it('should populate alice\'s Participant in bob\'s Room with her Media', () => {
         return alice.client.connect({
           to: roomName,
-          localMedia: createFakeLocalMedia(alice.name)
+          localMedia: createFakeLocalMedia(alice.name),
+          token: getToken({ address: alice.name })
         })
         .then((room) => {
           aliceRoom = room;
           PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
           return bob.client.connect({
-            to: roomName
+            to: roomName,
+            token: getToken({ address: bob.name })
           });
         })
         .then((room) => {
@@ -68,13 +70,15 @@ describe('Participant', () => {
         it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', () => {
           return alice.client.connect({
             to: roomName,
-            localMedia: createFakeLocalMedia(alice.name)
+            localMedia: createFakeLocalMedia(alice.name),
+            token: getToken({ address: alice.name })
           })
           .then((room) => {
             aliceRoom = room;
             PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
             return bob.client.connect({
-              to: roomName
+              to: roomName,
+              token: getToken({ address: bob.name })
             });
           })
           .then((room) => {
@@ -113,12 +117,9 @@ describe('Participant', () => {
 });
 
 function createClient(options) {
-  var name = randomName();
-  var token = getToken({ address: name });
-  var client = new Client(token, options);
-
+  var client = new Client(options);
   return {
-    name: name,
+    name: randomName(),
     client: client
   };
 }

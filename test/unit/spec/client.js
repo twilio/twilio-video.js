@@ -9,36 +9,21 @@ const newToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj
 
 
 describe('Client', () => {
-  describe('constructor', () => {
-    it('should throw if the initialToken is invalid', () => {
-      assert.throws(() => new Client('foo'), error => {
-        return error instanceof AccessTokenInvalidError
-          && error.code === 20101;
-      });
-    });
-  });
-
   describe('#connect', () => {
     describe('called without LocalMedia', () => {
       it('acquires LocalMedia', () => {
         const getLocalMedia = sinon.spy();
-        const client = new Client(initialToken, {
-          getLocalMedia: getLocalMedia
-        });
-        client.connect();
+        const client = new Client({ getLocalMedia: getLocalMedia });
+        client.connect({ token: initialToken });
         assert(getLocalMedia.calledOnce);
       });
 
       describe('and then immediately canceled by calling .cancel()', () => {
         it('calls .stop() on the LocalMedia', () => {
-          const localMedia = {
-            stop: sinon.spy()
-          };
+          const localMedia = { stop: sinon.spy() };
           const getLocalMedia = () => Promise.resolve(localMedia);
-          const client = new Client(initialToken, {
-            getLocalMedia: getLocalMedia
-          });
-          const promise = client.connect();
+          const client = new Client({ getLocalMedia: getLocalMedia });
+          const promise = client.connect({ token: initialToken });
           promise.cancel();
           return promise.then(() => {
             throw new Error('Unexpected resolution');
@@ -48,11 +33,19 @@ describe('Client', () => {
         });
       });
     });
+
+    it('should throw if the initialToken is invalid', () => {
+      const client = new Client();
+      assert.throws(() => client.connect({ token: 'foo' }), error => {
+        return error instanceof AccessTokenInvalidError
+          && error.code === 20101;
+      });
+    });
   });
 
   describe('#updateToken', () => {
     it('should throw if the newToken is invalid', () => {
-      const client = new Client(initialToken);
+      const client = new Client();
       assert.throws(() => client.updateToken('foo'), error => {
         return error instanceof AccessTokenInvalidError
           && error.code === 20101;
@@ -70,7 +63,7 @@ describe('Client', () => {
 
       const getConfiguration = sinon.spy(() => Promise.resolve(ecsResponse));
 
-      const client = new Client(initialToken, {
+      const client = new Client({
         ECS: {
           getConfiguration: getConfiguration
         }

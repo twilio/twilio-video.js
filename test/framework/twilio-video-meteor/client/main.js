@@ -48,13 +48,13 @@ Template.body.helpers({
 let client;
 
 try {
-  client = new Client(token, { logLevel: 'debug' });
+  client = new Client({ logLevel: 'debug' });
 } catch (_error) {
   error.set(_error);
 }
 
 if (client) {
-  client.connect().then(_room => {
+  client.connect({ token: token }).then(_room => {
     room.set(_room);
     _room.once('disconnected', disconnected.set(true));
     _room.disconnect();
