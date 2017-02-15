@@ -378,14 +378,6 @@ function makeParticipantSid() {
   return sid;
 }
 
-function makeAccountSid() {
-  var sid = 'AC';
-  for (var i = 0; i < 32; i++) {
-    sid += 'abcdef0123456789'.split('')[Math.floor(Math.random() * 16)];
-  }
-  return sid;
-}
-
 function makeName() {
   return Math.random().toString(36).slice(2);
 }
@@ -395,9 +387,7 @@ function makeIdentity() {
 }
 
 function makeToken(options) {
-  return new Buffer(JSON.stringify({
-    accountSid: options.accountSid
-  })).toString('base64');
+  return 'fake-token';
 }
 
 function makeUA(options) {
@@ -406,7 +396,6 @@ function makeUA(options) {
 
 function makeTest(options) {
   options = options || {};
-  options.accountSid = options.accountSid || makeAccountSid();
   options.token = options.token || makeToken(options);
   options.ua = options.ua || makeUA(options);
   options.tracks = options.tracks || [];
@@ -419,7 +408,6 @@ function makeTest(options) {
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
-    options.accountSid,
     options.token,
     options.ua,
     options.localParticipant,
@@ -462,10 +450,9 @@ function makeLocalParticipantSignaling(options) {
 }
 
 function makeTransportConstructor(testOptions) {
-  return function Transport(name, accountSid, accessToken, localParticipant, peerConnectionManager, ua) {
+  return function Transport(name, accessToken, localParticipant, peerConnectionManager, ua) {
     var transport = new EventEmitter();
     this.name = name;
-    this.accountSid = accountSid;
     this.accessToken = accessToken;
     this.localParticipant = localParticipant;
     this.peerConnectionManager = peerConnectionManager;

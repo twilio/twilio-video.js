@@ -1129,23 +1129,8 @@ describe('SignalingV2', () => {
   });
 });
 
-function makeIdentity() {
-  return Math.random().toString(36).slice(2);
-}
-
-function makeAccountSid() {
-  var sid = 'AC';
-  for (var i = 0; i < 32; i++) {
-    sid += 'abcdef0123456789'.split('')[Math.floor(Math.random() * 16)];
-  }
-  return sid;
-}
-
 function makeTest(options) {
   options = options || {};
-
-  options.accountSid = options.accountSid || makeAccountSid();
-  options.identity = options.identity || makeIdentity();
 
   options.uaConnectSucceeds = 'uaConnectSucceeds' in options
     ? options.uaConnectSucceeds : true;
@@ -1172,7 +1157,7 @@ function makeTest(options) {
   options.createCancelableRoomSignalingPromise = sinon.spy(() => options.cancelableRoomSignalingPromise);
 
   options.wsServer = options.wsServer || 'wss://127.0.0.1';
-  options.signaling = new SignalingV2(options.wsServer, options.accountSid, options.identity, options);
+  options.signaling = new SignalingV2(options.wsServer, options);
 
   options.transitions = [];
   options.signaling.on('stateChanged', state => {
