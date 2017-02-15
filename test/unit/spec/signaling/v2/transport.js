@@ -27,9 +27,9 @@ describe('Transport', () => {
     });
 
     context('when it calls .invite on the underlying SIP.js UA', () => {
-      it('sets the target to "sip:orchestrator@${account_sid}.endpoint.twilio.com"', () => {
+      it('sets the target to "sip:orchestrator@endpoint.twilio.com"', () => {
         assert.equal(
-          'sip:orchestrator@' + test.accountSid + '.endpoint.twilio.com',
+          'sip:orchestrator@endpoint.twilio.com',
           test.ua.invite.args[0][0]);
       });
 
@@ -2179,7 +2179,6 @@ describe('Transport', () => {
 function makeTest(options) {
   options = options || {};
   options.name = 'name' in options ? options.name : makeName();
-  options.accountSid = options.accountSid || makeAccountSid();
   options.accessToken = options.accessToken || makeAccessToken();
   options.localParticipantState = options.localParticipantState || {
     revision: 1,
@@ -2194,7 +2193,6 @@ function makeTest(options) {
   options.SIPJSMediaHandler = options.SIPJSMediaHandler || makeSIPJSMediaHandlerConstructor(options);
   options.transport = options.transport || new Transport(
     options.name,
-    options.accountSid,
     options.accessToken,
     options.localParticipant,
     options.peerConnectionManager,
@@ -2223,14 +2221,6 @@ function makeTest(options) {
 
 function makeName() {
   return Math.random().toString(36).slice(2);
-}
-
-function makeAccountSid() {
-  var sid = 'AC';
-  for (var i = 0; i < 32; i++) {
-    sid += 'abcdef0123456789'.split('')[Math.floor(Math.random() * 16)];
-  }
-  return sid;
 }
 
 function makeAccessToken() {

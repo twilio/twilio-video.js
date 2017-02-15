@@ -51,14 +51,6 @@ describe('Client', () => {
   });
 
   describe('#updateToken', () => {
-    it('should throw if the newToken is invalid', () => {
-      const client = new Client();
-      assert.throws(() => client.updateToken('foo'), error => {
-        return error instanceof AccessTokenInvalidError
-          && error.code === 20101;
-      });
-    });
-
     it('subsequent calls to ECS.getConfiguration use the newToken', done => {
       const ecsResponse = {
         video: {

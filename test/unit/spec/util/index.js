@@ -8,14 +8,6 @@ var util = require('../../../../lib/util');
 
 
 describe('util', function() {
-  describe('makeSIPURI', function() {
-    it('should contain the accountSid and client name passed in', function() {
-      var uri = util.makeSIPURI('AC1234', 'alice');
-      assert(/AC1234/.test(uri));
-      assert(/alice/.test(uri));
-    });
-  });
-
   describe('makeUUID', function() {
     it('should generate a unique UUID', function() {
       var uuid1 = util.makeUUID();
@@ -57,27 +49,6 @@ describe('util', function() {
       promise = util.promiseFromEvents(spy, emitter, 'foo');
       promise.then(done);
       emitter.emit('foo');
-    });
-  });
-
-  describe('parseRoomSIDFromContactHeader', function() {
-    var roomSid = 'RM123';
-
-    it('should parse contact headers with display names', function() {
-      var contactHeader = '"fud" <sip:RM123@172.18.8.202:443;transport=wss>';
-      assert.equal(roomSid,
-        util.parseRoomSIDFromContactHeader(contactHeader));
-    });
-
-    it('should parse contact headers without display names', function() {
-      var contactHeader = '<sip:RM123@172.18.8.202:443;transport=wss>';
-      assert.equal(roomSid,
-        util.parseRoomSIDFromContactHeader(contactHeader));
-    });
-
-    it('should return null if the input is not a valid contact header', function() {
-      var contactHeader = 'foo-bar';
-      assert.equal(util.parseRoomSIDFromContactHeader(contactHeader), null);
     });
   });
 });
