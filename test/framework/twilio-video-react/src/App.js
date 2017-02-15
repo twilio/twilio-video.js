@@ -16,13 +16,17 @@ export default class App extends Component {
 
     this.state = {};
 
-    client.connect({ token: this.props.token }).then(room => {
-      this.setState({ room });
-      room.once('disconnected', () => this.forceUpdate());
-      room.disconnect();
-    }, error => {
+    try {
+      client.connect({ token: this.props.token }).then(room => {
+        this.setState({ room });
+        room.once('disconnected', () => this.forceUpdate());
+        room.disconnect();
+      }, error => {
+        this.setState({ error });
+      });
+    } catch(error) {
       this.setState({ error });
-    });
+    }
   }
 
   componentWillUnmount() {
