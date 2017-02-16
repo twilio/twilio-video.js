@@ -1,0 +1,6 @@
+{
+  "name": "No Framework",
+  "path": "./test/framework/twilio-video-no-framework",
+  "host": "localhost",
+  "port": 5000
+}
