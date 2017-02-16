@@ -25,7 +25,7 @@ describe('Room', function() {
 
     before(() => {
       return alice.client.connect({
-        to: roomName,
+        name: roomName,
         token: getToken({ address: alice.name })
       })
       .then((room) => {
@@ -67,7 +67,7 @@ describe('Room', function() {
     context('when alice connects to the Room first,', () => {
       it('should have an empty participants Map', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           token: getToken({ address: alice.name })
         })
         .then((room) => {
@@ -84,7 +84,7 @@ describe('Room', function() {
       // TODO(@mmalavalli): Investigate this issue.
       it.skip('should trigger "participantConnected" on alice\'s Room', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           token: getToken({ address: alice.name })
         })
         .then((room) => {
@@ -94,7 +94,7 @@ describe('Room', function() {
               aliceRoom.on('participantConnected', resolve);
             }),
             bob.client.connect({
-              to: roomName,
+              name: roomName,
               token: getToken({ address: bob.name })
             })
           ]);
@@ -107,13 +107,13 @@ describe('Room', function() {
 
       it('should not trigger "participantConnected" on bob\'s Room', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           token: getToken({ address: alice.name })
         })
         .then((room) => {
           aliceRoom = room;
           return bob.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: bob.name })
           });
         })
@@ -131,13 +131,13 @@ describe('Room', function() {
       context('and later disconnects from the Room,', () => {
         it('should not trigger "participantDisconnected" for alice on bob\'s Room object', () => {
           return alice.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: alice.name })
           })
           .then((room) => {
             aliceRoom = room;
             return bob.client.connect({
-              to: roomName,
+              name: roomName,
               token: getToken({ address: bob.name })
             });
           })
@@ -156,13 +156,13 @@ describe('Room', function() {
 
       it('should retain alice in bob\'s Room participants Map in "connected" state', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           token: getToken({ address: alice.name })
         })
         .then((room) => {
           aliceRoom = room;
           return bob.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: bob.name })
           });
         })
@@ -183,20 +183,20 @@ describe('Room', function() {
     context('when charlie connects to the Room after alice and bob,', () => {
       it('should populate charlie\'s participant Map with alice and bob, both in "connected" state', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           token: getToken({ address: alice.name })
         })
         .then((room) => {
           aliceRoom = room;
           return bob.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: bob.name })
           });
         })
         .then((room) => {
           bobRoom = room;
           return charlie.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: charlie.name })
           });
         })

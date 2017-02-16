@@ -38,7 +38,7 @@ describe('Participant', () => {
     context('when alice (with audio and video tracks) and bob connect to the Room,', () => {
       it('should populate alice\'s Participant in bob\'s Room with her Media', () => {
         return alice.client.connect({
-          to: roomName,
+          name: roomName,
           localMedia: createFakeLocalMedia(alice.name),
           token: getToken({ address: alice.name })
         })
@@ -46,7 +46,7 @@ describe('Participant', () => {
           aliceRoom = room;
           PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
           return bob.client.connect({
-            to: roomName,
+            name: roomName,
             token: getToken({ address: bob.name })
           });
         })
@@ -69,7 +69,7 @@ describe('Participant', () => {
       context('when bob later disconnects from the Room,', () => {
         it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', () => {
           return alice.client.connect({
-            to: roomName,
+            name: roomName,
             localMedia: createFakeLocalMedia(alice.name),
             token: getToken({ address: alice.name })
           })
@@ -77,7 +77,7 @@ describe('Participant', () => {
             aliceRoom = room;
             PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
             return bob.client.connect({
-              to: roomName,
+              name: roomName,
               token: getToken({ address: bob.name })
             });
           })
