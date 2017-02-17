@@ -1,22 +1,13 @@
 import React, { Component } from 'react';
-import { Client } from 'twilio-video';
+import { connect } from 'twilio-video';
 
 export default class App extends Component {
   constructor(props) {
     super(props);
 
-    var client;
-
-    try {
-      client = new Client();
-    } catch (error) {
-      this.state = { error: error };
-      return;
-    }
-
     this.state = {};
 
-    client.connect({ token: this.props.token }).then(room => {
+    connect({ token: this.props.token }).then(room => {
       this.setState({ room });
       room.once('disconnected', () => this.forceUpdate());
       room.disconnect();

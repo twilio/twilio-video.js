@@ -1,4 +1,4 @@
-import { Client, Room } from 'twilio-video';
+import { connect, Room } from 'twilio-video';
 import { Component, OnInit } from '@angular/core';
 
 /**
@@ -34,15 +34,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    let client: Client;
-    try {
-      client = new Client();
-    } catch (error) {
-      this.error = error;
-      return;
-    }
-
-    client.connect({ token: token }).then(room => {
+    connect({ token: token }).then(room => {
       this.room = room;
       room.once('disconnected', () => {});
       room.disconnect();

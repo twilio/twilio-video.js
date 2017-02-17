@@ -16,7 +16,7 @@ if (typeof Array.prototype.includes !== 'function') {
   };
 }
 
-require('./spec/client');
+require('./spec/connect');
 require('./spec/ecs');
 require('./spec/room');
 require('./spec/localparticipant');

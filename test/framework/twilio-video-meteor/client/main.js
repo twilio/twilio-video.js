@@ -1,4 +1,4 @@
-import { Client } from 'twilio-video';
+import { connect } from 'twilio-video';
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 
@@ -45,20 +45,10 @@ Template.body.helpers({
   }
 });
 
-let client;
-
-try {
-  client = new Client({ logLevel: 'debug' });
-} catch (_error) {
+connect({ token: token }).then(_room => {
+  room.set(_room);
+  _room.once('disconnected', disconnected.set(true));
+  _room.disconnect();
+}, _error => {
   error.set(_error);
-}
-
-if (client) {
-  client.connect({ token: token }).then(_room => {
-    room.set(_room);
-    _room.once('disconnected', disconnected.set(true));
-    _room.disconnect();
-  }, _error => {
-    error.set(_error);
-  });
-}
+});

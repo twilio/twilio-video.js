@@ -10,7 +10,7 @@ const vfs = require('vinyl-fs');
 const docs = process.argv[2];
 
 const publicClasses = [
-  'lib/client.js',
+  'lib/connect.js',
   'lib/room.js',
   'lib/media/index.js',
   'lib/media/localmedia.js',

@@ -1,13 +1,11 @@
 'use strict';
 
 var assert = require('assert');
-
-var Client = require('../../../lib/client');
-
+var connect = require('../../../lib/connect');
 var credentials = require('../../env');
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
-var wsServer = credentials.wsServer;
 var logLevel = credentials.logLevel;
+var wsServer = credentials.wsServer;
 
 describe('Room', function() {
   var options = {};
@@ -19,16 +17,15 @@ describe('Room', function() {
   }
 
   describe('constructor', function() {
-    var alice = createClient(options);
+    var alice = randomName();
     var roomName = randomName();
     var aliceRoom;
 
     before(() => {
-      return alice.client.connect({
+      return connect(Object.assign({
         name: roomName,
-        token: getToken({ address: alice.name })
-      })
-      .then((room) => {
+        token: getToken({ address: alice })
+      }, options)).then(room => {
         aliceRoom = room;
       });
     });
@@ -59,18 +56,17 @@ describe('Room', function() {
 
     beforeEach(() => {
       roomName = randomName();
-      alice = createClient(options);
-      bob = createClient(options);
-      charlie = createClient(options);
+      alice = randomName();
+      bob = randomName();
+      charlie = randomName();
     });
 
     context('when alice connects to the Room first,', () => {
       it('should have an empty participants Map', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
           assert.equal(0, aliceRoom.participants.size);
         });
@@ -83,41 +79,37 @@ describe('Room', function() {
       // skipping this test for now. This will be investigated later.
       // TODO(@mmalavalli): Investigate this issue.
       it.skip('should trigger "participantConnected" on alice\'s Room', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
           return Promise.all([
-            new Promise((resolve) => {
+            new Promise(resolve => {
               aliceRoom.on('participantConnected', resolve);
             }),
-            bob.client.connect({
+            connect(Object.assign({
               name: roomName,
-              token: getToken({ address: bob.name })
-            })
+              token: getToken({ address: bob })
+            }, options))
           ]);
-        })
-        .then((resolved) => {
+        }).then(resolved => {
           var connectedParticipant = resolved[0];
-          assert.equal(bob.name, connectedParticipant.identity);
+          assert.equal(bob, connectedParticipant.identity);
         });
       });
 
       it('should not trigger "participantConnected" on bob\'s Room', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
-          return bob.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: bob.name })
-          });
-        })
-        .then((room) => {
+            token: getToken({ address: bob })
+          }, options));
+        }).then((room) => {
           bobRoom = room;
           return new Promise((resolve, reject) => {
             setTimeout(resolve);
@@ -130,18 +122,16 @@ describe('Room', function() {
 
       context('and later disconnects from the Room,', () => {
         it('should not trigger "participantDisconnected" for alice on bob\'s Room object', () => {
-          return alice.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: alice.name })
-          })
-          .then((room) => {
+            token: getToken({ address: alice })
+          }, options)).then(room => {
             aliceRoom = room;
-            return bob.client.connect({
+            return connect(Object.assign({
               name: roomName,
-              token: getToken({ address: bob.name })
-            });
-          })
-          .then((room) => {
+              token: getToken({ address: bob })
+            }, options));
+          }).then(room => {
             bobRoom = room;
             return new Promise((resolve, reject) => {
               setTimeout(resolve);
@@ -155,26 +145,23 @@ describe('Room', function() {
       });
 
       it('should retain alice in bob\'s Room participants Map in "connected" state', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
-          return bob.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: bob.name })
-          });
-        })
-        .then((room) => {
+            token: getToken({ address: bob })
+          }, options));
+        }).then(room => {
           bobRoom = room;
           bobRoom.disconnect();
-        })
-        .then(() => {
+        }).then(() => {
           var aliceSid = aliceRoom.localParticipant.sid;
           assert(bobRoom.participants.has(aliceSid));
           var aliceParticipant = bobRoom.participants.get(aliceSid);
-          assert.equal(alice.name, aliceParticipant.identity);
+          assert.equal(alice, aliceParticipant.identity);
           assert.equal('connected', aliceParticipant.state);
         });
       });
@@ -182,25 +169,22 @@ describe('Room', function() {
 
     context('when charlie connects to the Room after alice and bob,', () => {
       it('should populate charlie\'s participant Map with alice and bob, both in "connected" state', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
-          return bob.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: bob.name })
-          });
-        })
-        .then((room) => {
+            token: getToken({ address: bob })
+          }, options));
+        }).then(room => {
           bobRoom = room;
-          return charlie.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: charlie.name })
-          });
-        })
-        .then((room) => {
+            token: getToken({ address: charlie })
+          }, options));
+        }).then(room => {
           charlieRoom = room;
           assert.equal(charlieRoom.participants.size, 2);
 
@@ -211,12 +195,12 @@ describe('Room', function() {
 
           assert(charlieRoom.participants.has(aliceSid));
           aliceParticipant = charlieRoom.participants.get(aliceSid);
-          assert.equal(alice.name, aliceParticipant.identity);
+          assert.equal(alice, aliceParticipant.identity);
           assert.equal('connected', aliceParticipant.state);
 
           assert(charlieRoom.participants.has(bobSid));
           bobParticipant = charlieRoom.participants.get(bobSid);
-          assert.equal(bob.name, bobParticipant.identity);
+          assert.equal(bob, bobParticipant.identity);
           assert.equal('connected', bobParticipant.state);
         });
       });
@@ -245,13 +229,4 @@ describe('Room', function() {
 
 function randomName() {
   return Math.random().toString(36).slice(2);
-}
-
-function createClient(options) {
-  var name = randomName();
-  var client = new Client(options);
-  return {
-    name: name,
-    client: client
-  };
 }

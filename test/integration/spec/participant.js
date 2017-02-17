@@ -1,16 +1,16 @@
 'use strict';
 
 var assert = require('assert');
+var connect = require('../../../lib/connect');
 var credentials = require('../../env');
-var randomName = require('../../lib/util').randomName;
 var getToken = require('../../lib/token').getToken.bind(null, credentials);
-var wsServer = credentials.wsServer;
 var logLevel = credentials.logLevel;
+var randomName = require('../../lib/util').randomName;
+var wsServer = credentials.wsServer;
 
-var Client = require('../../../lib/client');
-var LocalMedia = require('../../../lib/media/localmedia');
 var FakeMediaStream = require('../../lib/fakemediastream').FakeMediaStream;
 var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
+var LocalMedia = require('../../../lib/media/localmedia');
 var PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
 
 describe('Participant', () => {
@@ -31,26 +31,24 @@ describe('Participant', () => {
 
     beforeEach(() => {
       roomName = randomName();
-      alice = createClient(options);
-      bob = createClient(options);
+      alice = randomName();
+      bob = randomName();
     });
 
     context('when alice (with audio and video tracks) and bob connect to the Room,', () => {
       it('should populate alice\'s Participant in bob\'s Room with her Media', () => {
-        return alice.client.connect({
+        return connect(Object.assign({
           name: roomName,
-          localMedia: createFakeLocalMedia(alice.name),
-          token: getToken({ address: alice.name })
-        })
-        .then((room) => {
+          localMedia: createFakeLocalMedia(alice),
+          token: getToken({ address: alice })
+        }, options)).then(room => {
           aliceRoom = room;
-          PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
-          return bob.client.connect({
+          PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice)];
+          return connect(Object.assign({
             name: roomName,
-            token: getToken({ address: bob.name })
-          });
-        })
-        .then((room) => {
+            token: getToken({ address: bob })
+          }, options));
+        }).then(room => {
           bobRoom = room;
           var aliceParticipantSid = aliceRoom.localParticipant.sid;
           assert(bobRoom.participants.has(aliceParticipantSid));
@@ -58,7 +56,7 @@ describe('Participant', () => {
           var aliceMedia = bobRoom.participants.get(aliceParticipantSid).media;
           assert.equal(aliceMedia.tracks.size, 2);
 
-          fakeStreams.get(alice.name).getTracks().forEach((track) => {
+          fakeStreams.get(alice).getTracks().forEach((track) => {
             var aliceTrack = aliceMedia.tracks.get(track.id);
             assert.equal(aliceTrack.id, track.id);
             assert.equal(aliceTrack.kind, track.kind);
@@ -68,28 +66,25 @@ describe('Participant', () => {
 
       context('when bob later disconnects from the Room,', () => {
         it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', () => {
-          return alice.client.connect({
+          return connect(Object.assign({
             name: roomName,
-            localMedia: createFakeLocalMedia(alice.name),
-            token: getToken({ address: alice.name })
-          })
-          .then((room) => {
+            localMedia: createFakeLocalMedia(alice),
+            token: getToken({ address: alice })
+          }, options)).then(room => {
             aliceRoom = room;
-            PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice.name)];
-            return bob.client.connect({
+            PeerConnectionManager.prototype.getRemoteMediaStreams = () => [fakeStreams.get(alice)];
+            return connect(Object.assign({
               name: roomName,
-              token: getToken({ address: bob.name })
-            });
-          })
-          .then((room) => {
+              token: getToken({ address: bob })
+            }, options));
+          }).then(room => {
             bobRoom = room;
             return new Promise((resolve, reject) => {
               var aliceParticipantSid = aliceRoom.localParticipant.sid;
               var aliceParticipant = bobRoom.participants.get(aliceParticipantSid);
 
-              aliceParticipant.on('trackRemoved', reject.bind(new Error(
-                '"trackRemoved" triggered on alice\'s Participant'
-              )));
+              aliceParticipant.on('trackRemoved',
+                () => reject(new Error('"trackRemoved" triggered on alice\'s Participant')));
               bobRoom.disconnect();
               setTimeout(resolve);
             });
@@ -103,7 +98,7 @@ describe('Participant', () => {
         aliceRoom.disconnect();
         aliceRoom = null;
       }
-      fakeStreams.delete(alice.name);
+      fakeStreams.delete(alice);
       alice = null;
 
       if (bobRoom) {
@@ -115,14 +110,6 @@ describe('Participant', () => {
     });
   });
 });
-
-function createClient(options) {
-  var client = new Client(options);
-  return {
-    name: randomName(),
-    client: client
-  };
-}
 
 var fakeStreams = new Map();
 var getRemoteMediaStreams =

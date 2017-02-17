@@ -20,7 +20,7 @@ describe('UMD', function() {
       });
     });
 
-    it('should receive a video object with a Client property (unminified)', function(done) {
+    it('should receive a video object with a "connect" property (unminified)', function(done) {
       page.on('onCallback', function(res) {
         if (res.status === 'success') {
           if (res.version === version) {
@@ -36,7 +36,7 @@ describe('UMD', function() {
       page.open(__dirname + '/require-browser/index.html');
     });
 
-    it('should receive a video object with a Client property (minified)', function(done) {
+    it('should receive a video object with a "connect" property (minified)', function(done) {
       page.on('onCallback', function(res) {
         if (res.status === 'success') {
           if (res.version === version) {

@@ -49,9 +49,8 @@ more information, refer to the
 
 ```js
 const Video = require('twilio-video');
-const client = new Video.Client('$TOKEN');
 
-client.connect({ to: 'room-name' }).then(room => {
+Video.connect({ name: 'room-name', token: '$TOKEN' }).then(room => {
   console.log('Connected to Room "%s"', room.name);
 
   room.participants.forEach(participant => {

@@ -7,7 +7,7 @@
     <script>
       require(['../../../../dist/twilio-video.min'], function(video) {
         try {
-          if (video.Client) {
+          if (video.connect) {
             window.callPhantom({
               status: 'success',
               version: video.version
