@@ -1403,11 +1403,12 @@ describe('PeerConnectionV2', () => {
 
 function makeTest(options) {
   options = options || {};
-  options.peerConnection = options.peerConnection || makePeerConnection(options);
   options.id = options.id || makeId();
+  options.peerConnection = options.peerConnection || makePeerConnection(options);
   options.peerConnectionV2 = makePeerConnectionV2(options);
+  const id = options.id;
   options.state = function state() {
-    return new PeerConnectionStateBuilder(options.id);
+    return new PeerConnectionStateBuilder(id);
   };
   return options;
 }
@@ -1553,13 +1554,13 @@ function identity(a) {
 
 function makePeerConnectionV2(options) {
   options = options || {};
-  var id = options.id || makeId();
+  options.id = options.id || makeId();
   var peerConnection = options.peerConnection || makePeerConnection(options);
   function RTCPeerConnection() {
     return peerConnection;
   }
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
-  return new PeerConnectionV2(id, {
+  return new PeerConnectionV2(options.id, {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
