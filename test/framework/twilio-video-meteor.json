@@ -3,6 +3,7 @@
   "path": "./test/framework/twilio-video-meteor",
   "host": "localhost",
   "port": 5000,
+  "timeout": 240000,
   "start": {
     "args": ["start", "--", "--port", "5000"],
     "env": {
