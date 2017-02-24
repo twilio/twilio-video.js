@@ -19,7 +19,7 @@ function getQueryParameters(location) {
 
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
 
-new Twilio.Video.Client().connect({ token: token }).then(room => {
+new Twilio.Video.connect({ token: token }).then(room => {
   root.innerHTML = `<p>Connected to Room ${room.sid}.</p>`;
   room.disconnect();
   root.innerHTML = `<p>Disconnected from Room ${room.sid}.</p>`;

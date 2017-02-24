@@ -6,6 +6,7 @@
  * @property {string} path - the path to the Framework Test
  * @property {string} [host="localhost"] - the HTTP server host that serves the Test Application
  * @property {number} [port=3000] - the HTTP server port that serves the Test Application
+ * @property {number} [timeout=120000] - the duration in milliseconds a Framework Test is allowed to run before "timing out"
  * @property {FrameworkTestCommandOptions} [start] - options for starting the Test Application (defaults to "npm start")
  * @property {FrameworkTestCommandOptions} [test] - options for testing the Test Application (defaults to "npm test")
  */
@@ -27,6 +28,7 @@ function getOptions(options) {
   options = Object.assign({}, {
     host: 'localhost',
     port: 3000,
+    timeout: 120000,
     start: {},
     test: {}
   }, options);
