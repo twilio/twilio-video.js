@@ -477,6 +477,12 @@ describe('StateMachine', function() {
         var sm = new StateMachine('foo', { foo: [] });
         return sm.when('foo').then(_sm => assert.equal(sm, _sm));
       });
+
+      it('should delete the Promise from the ._whenDeferreds Set', () => {
+        var sm = new StateMachine('foo', { foo: [] });
+        var whenDeferredsSize = sm._whenDeferreds.size;
+        return sm.when('foo').then(_sm => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+      });
     });
 
     describe('when the state does not match the current state, and', () => {
@@ -486,6 +492,14 @@ describe('StateMachine', function() {
           return sm.when('bar').then(
             () => { throw new Error('Unexpected resolution'); },
             error => assert(error instanceof Error));
+        });
+
+        it('should delete the Promise from the ._whenDeferreds Set', () => {
+          var sm = new StateMachine('foo', { foo: [], bar: [] });
+          var whenDeferredsSize = sm._whenDeferreds.size;
+          return sm.when('bar').then(
+            () => { throw new Error('Unexpected resolution'); },
+            error => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
         });
       });
 
@@ -497,6 +511,14 @@ describe('StateMachine', function() {
             sm.transition('bar');
             return promise;
           });
+
+          it('should delete the Promise from the ._whenDeferreds Set', () => {
+            var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
+            var whenDeferredsSize = sm._whenDeferreds.size;
+            var promise = sm.when('bar').then(_sm => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+            sm.transition('bar');
+            return promise;
+          });
         });
 
         describe('a new state from which the state is no longer reachable', () => {
@@ -505,6 +527,16 @@ describe('StateMachine', function() {
             var promise = sm.when('baz').then(
               () => { throw new Error('Unexpected resolution'); },
               error => assert(error instanceof Error));
+            sm.transition('bar');
+            return promise;
+          });
+
+          it('should delete the Promise from the ._whenDeferreds Set', () => {
+            var sm = new StateMachine('foo', { foo: ['bar', 'baz'], bar: [], baz: [] });
+            var whenDeferredsSize = sm._whenDeferreds.size;
+            var promise = sm.when('baz').then(
+              () => { throw new Error('Unexpected resolution'); },
+              error => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
             sm.transition('bar');
             return promise;
           });
