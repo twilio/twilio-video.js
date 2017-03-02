@@ -3,7 +3,6 @@
 var assert = require('assert');
 var Room = require('../../../lib/room');
 var RoomSignaling = require('../../../lib/signaling/room');
-var LocalMedia = require('../../../lib/media/localmedia');
 var Participant = require('../../../lib/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 var SignalingConnectionDisconnectedError = require('../../../lib/util/twilio-video-errors').SignalingConnectionDisconnectedError;
@@ -13,18 +12,17 @@ var log = require('../../lib/fakelog');
 describe('Room', function() {
   var room;
   var options = { log: log };
-  var localMedia = new LocalMedia();
   var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
   var signaling;
 
   beforeEach(function() {
-    signaling = new RoomSignaling(localParticipant, 'RM123', localMedia);
-    room = new Room(localMedia, signaling, options);
+    signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
+    room = new Room(localParticipant, signaling, options);
   });
 
   describe('new Room(signaling)', function() {
     it('should return an instance when called as a function', function() {
-      assert(Room(localMedia, signaling, options) instanceof Room);
+      assert(Room(localParticipant, signaling, options) instanceof Room);
     });
   });
 
@@ -99,15 +97,3 @@ describe('Room', function() {
     });
   });
 });
-
-function makeDummyLog() {
-  var dummyLog = {
-    debug: () => {},
-    info: () => {},
-    warn: () => {},
-    error: () => {}
-  };
-
-  dummyLog.createLog = () => dummyLog;
-  return dummyLog;
-}

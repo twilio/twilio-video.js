@@ -2,6 +2,8 @@
 
 var assert = require('assert');
 var EventEmitter = require('events');
+var FakeMediaStream = require('../../../../lib/fakemediastream').FakeMediaStream;
+var FakeMediaStreamTrack = require('../../../../lib/fakemediastream').FakeMediaStreamTrack;
 var PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 var TwilioErrors = require('../../../../../lib/util/twilio-video-errors');
 var MediaClientLocalDescFailedError = TwilioErrors.MediaClientLocalDescFailedError;
@@ -92,10 +94,19 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#getRemoteMediaStreams', () => {
-    it('returns the result of calling getRemoteMediaStreams on the underlying RTCPeerConnection', () => {
+  describe('#getRemoteMediaStreamTracks', () => {
+    it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
       var test = makeTest();
-      assert.equal(test.peerConnection.getRemoteStreams(), test.peerConnectionV2.getRemoteMediaStreams());
+      var remoteStream = new FakeMediaStream();
+      var remoteTracks = [
+        new FakeMediaStreamTrack('audio'),
+        new FakeMediaStreamTrack('video')
+      ];
+
+      remoteStream.addTrack(remoteTracks[0]);
+      remoteStream.addTrack(remoteTracks[1]);
+      test.peerConnection.getRemoteStreams = () => [ remoteStream ];
+      assert.deepEqual(test.peerConnectionV2.getRemoteMediaStreamTracks(), remoteTracks);
     });
   });
 
@@ -1378,8 +1389,8 @@ describe('PeerConnectionV2', () => {
           RTCPeerConnection: RTCPeerConnection
         });
         var promise = new Promise(resolve => {
-          test.peerConnectionV2.once('trackAdded', (mediaStreamTrack, mediaStream) => {
-            resolve([mediaStreamTrack, mediaStream]);
+          test.peerConnectionV2.once('trackAdded', mediaStreamTrack => {
+            resolve(mediaStreamTrack);
           })
         });
 
@@ -1392,9 +1403,8 @@ describe('PeerConnectionV2', () => {
           streams: [mediaStream]
         });
 
-        return promise.then(pair => {
-          assert.equal(mediaStreamTrack, pair[0]);
-          assert.equal(mediaStream, pair[1]);
+        return promise.then(track => {
+          assert.equal(mediaStreamTrack, track);
         });
       });
     });

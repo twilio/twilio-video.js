@@ -86,21 +86,14 @@ describe('RemoteParticipantV2', () => {
         // NOTE(mroberts): Really we should provide mediaStreamTrack1 and
         // mediaStreamTrack2, etc., but it is a pain to setup.
         var mediaStreamTrack = {};
-        var mediaStream = {};
-        test.getMediaStreamTrackDeferred.resolve([mediaStreamTrack, mediaStream]);
+        test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
         return test.getMediaStreamTrackDeferred.promise.then(() => {
           assert.equal(
             mediaStreamTrack,
             test.trackV2s[0].setMediaStreamTrack.args[0][0]);
           assert.equal(
-            mediaStream,
-            test.trackV2s[0].setMediaStreamTrack.args[0][1]);
-          assert.equal(
             mediaStreamTrack,
             test.trackV2s[1].setMediaStreamTrack.args[0][0]);
-          assert.equal(
-            mediaStream,
-            test.trackV2s[1].setMediaStreamTrack.args[0][1]);
         });
       });
     });
@@ -168,15 +161,11 @@ describe('RemoteParticipantV2', () => {
           var participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
           var mediaStreamTrack = {};
-          var mediaStream = {};
-          test.getMediaStreamTrackDeferred.resolve([mediaStreamTrack, mediaStream]);
+          test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
           return test.getMediaStreamTrackDeferred.promise.then(() => {
             assert.equal(
               mediaStreamTrack,
               test.trackV2s[0].setMediaStreamTrack.args[0][0]);
-            assert.equal(
-              mediaStream,
-              test.trackV2s[0].setMediaStreamTrack.args[0][1]);
           });
         });
 
@@ -746,15 +735,11 @@ describe('RemoteParticipantV2', () => {
       var track = new TrackV2({ id: id });
       test.participant.addTrack(track);
       var mediaStreamTrack = {};
-      var mediaStream = {};
-      test.getMediaStreamTrackDeferred.resolve([mediaStreamTrack, mediaStream]);
+      test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
       return test.getMediaStreamTrackDeferred.promise.then(() => {
         assert.equal(
           mediaStreamTrack,
           track.setMediaStreamTrack.args[0][0]);
-        assert.equal(
-          mediaStream,
-          track.setMediaStreamTrack.args[0][1]);
       });
     });
   });

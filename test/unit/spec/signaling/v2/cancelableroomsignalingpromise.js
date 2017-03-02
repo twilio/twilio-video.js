@@ -26,25 +26,21 @@ describe('createCancelableRoomSignalingPromise', () => {
     assert(test.peerConnectionManager.setConfiguration.calledOnce);
   });
 
-  it('calls .addMediaStream with the LocalParticipantSignaling\'s Tracks\' MediaStreams on the newly-constructed PeerConnectionManager', () => {
-    var mediaStreamTrack1 = {
-      mediaStream: {}
+  it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
+    var track1 = {
+      mediaStreamTrack: {}
     };
-    var mediaStreamTrack2 = {
-      mediaStream: {}
+    var track2 = {
+      mediaStreamTrack: {}
     };
     var test = makeTest({
       tracks: [
-        mediaStreamTrack1,
-        mediaStreamTrack2
+        track1,
+        track2
       ]
     });
-    assert.equal(
-      mediaStreamTrack1.mediaStream,
-      test.peerConnectionManager.addMediaStream.args[0][0]);
-    assert.equal(
-      mediaStreamTrack2.mediaStream,
-      test.peerConnectionManager.addMediaStream.args[1][0]);
+    assert.deepEqual([track1.mediaStreamTrack, track2.mediaStreamTrack],
+      test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
   });
 
   it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
@@ -418,11 +414,10 @@ function makeTest(options) {
 function makePeerConnectionManagerConstructor(testOptions) {
   return function PeerConnectionManager(options) {
     var peerConnectionManager = new EventEmitter();
-    peerConnectionManager.addMediaStream = sinon.spy(() => {});
     peerConnectionManager.close = sinon.spy(() => {});
     peerConnectionManager.setConfiguration = sinon.spy(() => {});
-    peerConnectionManager.setMediaStreams = sinon.spy(() => {});
-    peerConnectionManager.getRemoteMediaStreams = sinon.spy(() => []);
+    peerConnectionManager.setMediaStreamTracks = sinon.spy(() => {});
+    peerConnectionManager.getRemoteMediaStreamTracks = sinon.spy(() => []);
     peerConnectionManager.update = sinon.spy(() => {});
     peerConnectionManager.dequeue = sinon.spy(() => {});
     peerConnectionManager.createAndOffer = sinon.spy(() => {

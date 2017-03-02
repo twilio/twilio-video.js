@@ -551,36 +551,32 @@ describe('TrackV2', () => {
 
   describe('#getMediaStreamTrack', () => {
     context('called after setMediaStreamTrack', () => {
-      it('returns a Promise that resolves to the pair of MediaStreamTrack and MediaStream passed to setMediaStreamTrack', () => {
+      it('returns a Promise that resolves to the MediaStreamTrack passed to setMediaStreamTrack', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind()
         });
         var mediaStreamTrack = {};
-        var mediaStream = {};
-        track.setMediaStreamTrack(mediaStreamTrack, mediaStream);
-        return track.getMediaStreamTrack().then(pair => {
-          assert.equal(mediaStreamTrack, pair[0]);
-          assert.equal(mediaStream, pair[1]);
+        track.setMediaStreamTrack(mediaStreamTrack);
+        return track.getMediaStreamTrack().then(track => {
+          assert.equal(mediaStreamTrack, track);
         });
       });
     });
 
     context('called before setMediaStreamTrack', () => {
-      it('returns a Promise that resolves to the pair of MediaStreamTrack and MediaStream eventually passed to setMediaStreamTrack', () => {
+      it('returns a Promise that resolves to the MediaStreamTrack eventually passed to setMediaStreamTrack', () => {
         var track = new TrackV2({
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind()
         });
         var mediaStreamTrack = {};
-        var mediaStream = {};
-        var promise = track.getMediaStreamTrack().then(pair => {
-          assert.equal(mediaStreamTrack, pair[0]);
-          assert.equal(mediaStream, pair[1]);
+        var promise = track.getMediaStreamTrack().then(track => {
+          assert.equal(mediaStreamTrack, track);
         });
-        track.setMediaStreamTrack(mediaStreamTrack, mediaStream);
+        track.setMediaStreamTrack(mediaStreamTrack);
         return promise;
       });
     });
@@ -594,8 +590,7 @@ describe('TrackV2', () => {
         kind: makeKind()
       });
       var mediaStreamTrack = {};
-      var mediaStream = {};
-      assert.equal(track, track.setMediaStreamTrack(mediaStreamTrack, mediaStream));
+      assert.equal(track, track.setMediaStreamTrack(mediaStreamTrack));
     });
   });
 });

@@ -3,6 +3,12 @@
 var version = require('../../package.json').version;
 var phantom = require('phantom');
 var requirejs = require('requirejs');
+var publicVars = [
+  'createLocalTracks',
+  'connect',
+  'LocalAudioTrack',
+  'LocalVideoTrack'
+];
 
 describe('UMD', function() {
   this.timeout(5000);
@@ -20,7 +26,7 @@ describe('UMD', function() {
       });
     });
 
-    it('should receive a video object with a "connect" property (unminified)', function(done) {
+    it(`should receive a video object with ${publicVars.join(', ')} properties (unminified)`, function(done) {
       page.on('onCallback', function(res) {
         if (res.status === 'success') {
           if (res.version === version) {
@@ -36,7 +42,7 @@ describe('UMD', function() {
       page.open(__dirname + '/require-browser/index.html');
     });
 
-    it('should receive a video object with a "connect" property (minified)', function(done) {
+    it(`should receive a video object with ${publicVars.join(', ')} properties (minified)`, function(done) {
       page.on('onCallback', function(res) {
         if (res.status === 'success') {
           if (res.version === version) {

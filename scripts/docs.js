@@ -11,9 +11,8 @@ const docs = process.argv[2];
 
 const publicClasses = [
   'lib/connect.js',
+  'lib/createlocaltracks.js',
   'lib/room.js',
-  'lib/media/index.js',
-  'lib/media/localmedia.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
   'lib/media/track/localaudiotrack.js',
@@ -34,18 +33,15 @@ const publicClasses = [
 ];
 
 const publicConstructors = [
-  'Client',
-  'LocalMedia'
+  'LocalAudioTrack',
+  'LocalVideoTrack'
 ];
 
 const privateConstructors = [
   'AudioTrack',
   'Room',
-  'LocalAudioTrack',
   'LocalParticipant',
   'LocalTrack',
-  'LocalVideoTrack',
-  'Media',
   'Participant',
   'Track',
   'VideoTrack',

@@ -23,7 +23,6 @@ var log = require('../../../../lib/fakelog');
   describe(description, function() {
     var _end;
     var _initialize;
-    var mediaStream;
     var track;
 
     before(function() {
@@ -46,8 +45,7 @@ var log = require('../../../../lib/fakelog');
       };
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(LocalTrack, mediaStream, '1', kind[description]);
+        track = createTrack(LocalTrack, '1', kind[description]);
         track._createElement = sinon.spy(() => dummyElement);
         _initialize.call(track);
       });
@@ -70,31 +68,10 @@ var log = require('../../../../lib/fakelog');
   });
 });
 
-function createTrack(LocalTrack, mediaStream, id, kind) {
+function createTrack(LocalTrack, id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
-  mediaStream._tracks[kind].set(id, mediaStreamTrack);
-  return new LocalTrack(mediaStream, mediaStreamTrack, { log: log });
+  return new LocalTrack(mediaStreamTrack, { log: log });
 }
-
-function MediaStream() {
-  var tracks = {
-    audio: new Map(),
-    video: new Map()
-  };
-
-  Object.defineProperties(this, {
-    _tracks: { get: function() { return tracks; } },
-    getAudioTracks: {
-      value: function() { return tracks.audio; }
-    },
-    getVideoTracks: {
-      value: function() { return tracks.video; }
-    },
-    getTracks: {
-      value: function() { return tracks.video.concat(tracks.audio); }
-    },
-  });
-};
 
 function MediaStreamTrack(id, kind) {
   EventEmitter.call(this);

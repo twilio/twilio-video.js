@@ -17,6 +17,7 @@ if (typeof Array.prototype.includes !== 'function') {
 }
 
 require('./spec/connect');
+require('./spec/createlocaltracks');
 require('./spec/ecs');
 require('./spec/room');
 require('./spec/localparticipant');
@@ -27,7 +28,6 @@ require('./spec/statemachine');
 require('./spec/iceserversource/constant');
 require('./spec/iceserversource/nts');
 
-require('./spec/media/index');
 require('./spec/media/track');
 require('./spec/media/track/localtrack');
 

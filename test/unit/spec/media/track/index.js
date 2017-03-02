@@ -10,7 +10,6 @@ var log = require('../../../../lib/fakelog');
 
 describe('Track', function() {
   var _initialize;
-  var mediaStream;
   var track;
 
   before(function() {
@@ -24,8 +23,7 @@ describe('Track', function() {
 
   describe('constructor', function() {
     before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
     });
 
     it('should call ._initialize', function() {
@@ -37,8 +35,7 @@ describe('Track', function() {
     var dummyElement;
 
     before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
       track._attach = sinon.spy();
       track._detachElement = sinon.spy();
 
@@ -96,8 +93,7 @@ describe('Track', function() {
 
     context('when undefined is passed', function() {
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy(function() {
@@ -130,8 +126,7 @@ describe('Track', function() {
 
     context('when null is passed', function() {
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy(function() {
@@ -164,8 +159,7 @@ describe('Track', function() {
 
     context('when a string is passed', function() {
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
@@ -199,8 +193,7 @@ describe('Track', function() {
 
     context('when an element is passed', function() {
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
@@ -232,8 +225,7 @@ describe('Track', function() {
   describe('_selectElement', function() {
     var element;
     before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
 
       element = document.createElement('audio');
       element.className = 'foo';
@@ -261,8 +253,7 @@ describe('Track', function() {
 
   describe('_createElement', function() {
     before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'video');
+      track = createTrack('1', 'video');
     });
 
     it('should return an element with the tagName of .kind', function() {
@@ -275,8 +266,7 @@ describe('Track', function() {
       var attachedElements;
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
@@ -307,8 +297,7 @@ describe('Track', function() {
       var attachedElements;
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
@@ -339,8 +328,7 @@ describe('Track', function() {
       var element;
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
@@ -368,8 +356,7 @@ describe('Track', function() {
       var element;
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
@@ -394,8 +381,7 @@ describe('Track', function() {
 
   describe('_getAllAttachedElements', function() {
     it('should return an array with all elements in .attachments', function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
       track.attachments.add('foo');
       track.attachments.add('bar');
 
@@ -405,8 +391,7 @@ describe('Track', function() {
 
   describe('_detachElements', function() {
     it('should run _detachElement for each element passed', function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
       track._detachElement = sinon.spy();
       track._detachElements(['foo', 'bar']);
       assert.equal(track._detachElement.callCount, 2);
@@ -418,8 +403,7 @@ describe('Track', function() {
     var el1, el2;
 
     before(function() {
-      mediaStream = new MediaStream();
-      track = createTrack(mediaStream, '1', 'audio');
+      track = createTrack('1', 'audio');
       el1 = document.createElement('audio');
       el1.removeAttribute = sinon.spy();
       track.attachments.add(el1);
@@ -481,8 +465,7 @@ describe('Track', function() {
         global.window = undefined;
         global.navigator = { };
 
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
       });
 
@@ -500,8 +483,7 @@ describe('Track', function() {
         global.window = { };
         global.navigator = undefined;
 
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
       });
 
@@ -530,8 +512,7 @@ describe('Track', function() {
           webkitGetUserMedia: function() { }
         };
 
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
 
         track._attach(el);
@@ -579,8 +560,7 @@ describe('Track', function() {
         webkitMediaStream = global.webkitMediaStream;
         delete global.webkitMediaStream;
 
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
 
         track._attach(el);
@@ -619,8 +599,7 @@ describe('Track', function() {
         }) } };
         global.navigator = { };
 
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
 
         track._attach(el);
@@ -643,8 +622,7 @@ describe('Track', function() {
       var returnVal;
 
       before(function() {
-        mediaStream = new MediaStream();
-        track = createTrack(mediaStream, '1', 'audio');
+        track = createTrack('1', 'audio');
         el = document.createElement('audio');
         track.attachments.add(el);
 
@@ -658,32 +636,11 @@ describe('Track', function() {
   });
 });
 
-function createTrack(mediaStream, id, kind) {
+function createTrack(id, kind) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
-  mediaStream._tracks[kind].set(id, mediaStreamTrack);
   var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled);
-  return new Track(mediaStream, mediaStreamTrack, signaling, { log: log });
+  return new Track(mediaStreamTrack, signaling, { log: log });
 }
-
-function MediaStream() {
-  var tracks = {
-    audio: new Map(),
-    video: new Map()
-  };
-
-  Object.defineProperties(this, {
-    _tracks: { get: function() { return tracks; } },
-    getAudioTracks: {
-      value: function() { return tracks.audio; }
-    },
-    getVideoTracks: {
-      value: function() { return tracks.video; }
-    },
-    getTracks: {
-      get: function() { return new Map([tracks.video, tracks.audio]); }
-    },
-  });
-};
 
 function MediaStreamTrack(id, kind) {
   EventEmitter.call(this);

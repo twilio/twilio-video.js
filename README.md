@@ -53,20 +53,41 @@ const Video = require('twilio-video');
 Video.connect({ name: 'room-name', token: '$TOKEN' }).then(room => {
   console.log('Connected to Room "%s"', room.name);
 
-  room.participants.forEach(participant => {
-    console.log('Participant "%s" is connected', participant.identity);
-    participant.media.attach(document.body);
-  });
+  room.participants.forEach(participantConnected);
+  room.on('participantConnected', participantConnected);
 
-  room.on('participantConnected', participant => {
-    console.log('Participant "%s" connected', participant.identity);
-    participant.media.attach(document.body);
-  });
-
-  room.on('participantDisconnected', participant => {
-    console.log('Participant "%s" disconnected', participant.identity);
-  });
+  room.on('participantDisconnected', participantDisconnected);
+  room.once('disconnected', error => room.participants.forEach(participantDisconnected));
 });
+
+function participantConnected(participant) {
+  console.log('Participant "%s" connected', participant.identity);
+
+  const div = document.createElement('div');
+  div.id = participant.sid;
+  div.innerText = participant.identity;
+
+  participant.on('trackAdded', track => trackAdded(div, track));
+  participant.tracks.forEach(track => trackAdded(div, track));
+  participant.on('trackRemoved', trackRemoved);
+
+  document.body.appendChild(div);
+}
+
+function participantDisconnected(participant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+
+  participant.tracks.forEach(trackRemoved);
+  document.getElementById(participant.sid).remove();
+}
+
+function trackAdded(div, track) {
+  div.appendChild(track.attach());
+}
+
+function trackRemoved(track) {
+  track.remove();
+}
 ```
 
 Changelog

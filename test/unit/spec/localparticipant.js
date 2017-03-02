@@ -24,13 +24,13 @@ describe('LocalParticipant', () => {
     });
   });
 
-  describe('Media', () => {
+  describe('LocalTrack events', () => {
     context('"trackAdded" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connecting' });
           var track = { _signaling: {} };
-          test.media.emit('trackAdded', track);
+          test.participant.emit('trackAdded', track);
           assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
         });
       });
@@ -39,7 +39,7 @@ describe('LocalParticipant', () => {
         it('calls .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
           var track = { _signaling: {} };
-          test.media.emit('trackAdded', track);
+          test.participant.emit('trackAdded', track);
           assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
         });
       });
@@ -48,7 +48,7 @@ describe('LocalParticipant', () => {
         it('does not call .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'disconnected' });
           var track = { _signaling: {} };
-          test.media.emit('trackAdded', track);
+          test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
@@ -58,7 +58,7 @@ describe('LocalParticipant', () => {
           var test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
           var track = { _signaling: {} };
-          test.media.emit('trackAdded', track);
+          test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
@@ -69,7 +69,7 @@ describe('LocalParticipant', () => {
         it('calls .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connecting' });
           var track = { _signaling: {} };
-          test.media.emit('trackRemoved', track);
+          test.participant.emit('trackRemoved', track);
           assert.equal(track._signaling, test.signaling.removeTrack.args[0][0]);
         });
       });
@@ -78,7 +78,7 @@ describe('LocalParticipant', () => {
         it('calls .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
           var track = { _signaling: {} };
-          test.media.emit('trackRemoved', track);
+          test.participant.emit('trackRemoved', track);
           assert.equal(track._signaling, test.signaling.removeTrack.args[0][0]);
         });
       });
@@ -87,7 +87,7 @@ describe('LocalParticipant', () => {
         it('does not call .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'disconnected' });
           var track = { _signaling: {} };
-          test.media.emit('trackRemoved', track);
+          test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
       });
@@ -97,7 +97,7 @@ describe('LocalParticipant', () => {
           var test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
           var track = { _signaling: {} };
-          test.media.emit('trackRemoved', track);
+          test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
       });
@@ -106,7 +106,8 @@ describe('LocalParticipant', () => {
     context('.tracks', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
-          var track = { _signaling: {} };
+          var track = new EventEmitter();
+          track._signaling = {};
           var test = makeTest({
             state: 'connecting',
             tracks: [track]
@@ -117,7 +118,8 @@ describe('LocalParticipant', () => {
 
       context('when the LocalParticipant .state is "connected"', () => {
         it('calls .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
-          var track = { _signaling: {} };
+          var track = new EventEmitter();
+          track._signaling = {};
           var test = makeTest({
             state: 'connected',
             tracks: [track]
@@ -128,7 +130,8 @@ describe('LocalParticipant', () => {
 
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not call .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
-          var track = { _signaling: {} };
+          var track = new EventEmitter();
+          track._signaling = {};
           var test = makeTest({
             state: 'disconnected',
             tracks: [track]
@@ -192,10 +195,10 @@ describe('LocalParticipant', () => {
 function makeTest(options) {
   options = options || {};
   options.signaling = options.signaling || makeSignaling(options);
-  options.media = options.media || makeMedia(options);
+  options.tracks = options.tracks || [];
   options.log = log;
   options.participant = options.participant ||
-    new LocalParticipant(options.signaling, options.media, { log: log });
+    new LocalParticipant(options.signaling, options.tracks, { log: log });
   return options;
 }
 
@@ -209,12 +212,4 @@ function makeSignaling(options) {
   signaling.addTrack = sinon.spy(() => {});
   signaling.removeTrack = sinon.spy(() => {});
   return signaling;
-}
-
-function makeMedia(options) {
-  var media = new EventEmitter();
-  options = options || {};
-  options.tracks = options.tracks || [];
-  media.tracks = options.tracks;
-  return media;
 }

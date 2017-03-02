@@ -95,7 +95,21 @@ FakeMediaStreamTrack.prototype.stop =
     });
   };
 
+function fakeGetUserMedia(constraints) {
+  var fakeMediaStream = new FakeMediaStream();
+
+  if (constraints.audio) {
+    fakeMediaStream.addTrack(new FakeMediaStreamTrack('audio'));
+  }
+  if (constraints.video) {
+    fakeMediaStream.addTrack(new FakeMediaStreamTrack('video'));
+  }
+
+  return Promise.resolve(fakeMediaStream);
+}
+
 module.exports = {
   FakeMediaStream: FakeMediaStream,
-  FakeMediaStreamTrack: FakeMediaStreamTrack
+  FakeMediaStreamTrack: FakeMediaStreamTrack,
+  fakeGetUserMedia: fakeGetUserMedia
 };

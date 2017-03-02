@@ -2,46 +2,13 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
+var FakeMediaStream = require('../../../../lib/fakemediastream').FakeMediaStream;
 var inherits = require('util').inherits;
 var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
 var sinon = require('sinon');
 var util = require('../../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
-  describe('#addMediaStream', () => {
-    it('returns the PeerConnectionManager', () => {
-      var test = makeTest();
-      var mediaStream = makeMediaStream();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        assert.equal(
-          test.peerConnectionManager,
-          test.peerConnectionManager.addMediaStream(mediaStream));
-      });
-    });
-
-    it('calls addMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-      var test = makeTest();
-      var mediaStream = makeMediaStream();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionManager.addMediaStream(mediaStream);
-        assert.equal(
-          mediaStream,
-          test.peerConnectionV2s[0].addMediaStream.args[0][0]);
-        assert.equal(
-          mediaStream,
-          test.peerConnectionV2s[1].addMediaStream.args[0][0]);
-      });
-    });
-  });
-
   describe('#close', () => {
     it('returns the PeerConnectionManager', () => {
       var test = makeTest();
@@ -111,33 +78,36 @@ describe('PeerConnectionManager', () => {
       });
     });
 
-    it('calls addMediaStream with any previously-added MediaStreams on the new PeerConnectionV2', () => {
+    it('calls addMediaStream with the ._localMediaStream containing the previously-added MediaStreamTracks on the new PeerConnectionV2', () => {
       var test = makeTest();
       var mediaStream = makeMediaStream();
-      test.peerConnectionManager.addMediaStream(mediaStream);
+      test.peerConnectionManager.setMediaStreamTracks(mediaStream.getTracks());
       return test.peerConnectionManager.createAndOffer().then(() => {
         assert.equal(
-          mediaStream,
+          test.peerConnectionManager._localMediaStream,
           test.peerConnectionV2s[0].addMediaStream.args[0][0]);
+        assert.deepEqual(
+          test.peerConnectionManager._localMediaStream.getTracks(),
+          mediaStream.getTracks()
+        );
       });
     });
   });
 
-  describe('#getRemoteMediaStreams', () => {
-    it('returns the concatenated results of calling getRemoteMediaStreams on any PeerConnectionV2s create with #createAndOffer or #update', () => {
+  describe('#getRemoteMediaStreamTracks', () => {
+    it('returns the concatenated results of calling getRemoteMediaStreamTracks on any PeerConnectionV2s create with #createAndOffer or #update', () => {
       var test = makeTest();
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
         ]);
       }).then(() => {
-        var mediaStream1 = makeMediaStream();
-        var mediaStream2 = makeMediaStream();
-        test.peerConnectionV2s[0].getRemoteMediaStreams = () => [mediaStream1];
-        test.peerConnectionV2s[1].getRemoteMediaStreams = () => [mediaStream2];
-        assert.deepEqual(
-          [mediaStream1, mediaStream2],
-          test.peerConnectionManager.getRemoteMediaStreams());
+        var mediaStream1 = makeMediaStream({ audio: 1 });
+        var mediaStream2 = makeMediaStream({ audio: 1, video: 1 });
+        test.peerConnectionV2s[0].getRemoteMediaStreamTracks = () => mediaStream1.getTracks();
+        test.peerConnectionV2s[1].getRemoteMediaStreamTracks = () => mediaStream2.getTracks();
+        assert.deepEqual(getTracks([mediaStream1, mediaStream2]),
+          test.peerConnectionManager.getRemoteMediaStreamTracks());
       });
     });
   });
@@ -156,74 +126,6 @@ describe('PeerConnectionManager', () => {
             { id: '123', fizz: 'buzz' }
           ],
           test.peerConnectionManager.getStates());
-      });
-    });
-  });
-
-  describe('#removeMediaStream', () => {
-    context('when the MediaStream to remove was previously added via addMediaStream', () => {
-      it('returns true', () => {
-        var test = makeTest();
-        var mediaStream = makeMediaStream();
-        test.peerConnectionManager.addMediaStream(mediaStream);
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          assert(test.peerConnectionManager.removeMediaStream(mediaStream));
-        });
-      });
-
-      it('calls removeMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-        var test = makeTest();
-        var mediaStream = makeMediaStream();
-        test.peerConnectionManager.addMediaStream(mediaStream);
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          test.peerConnectionManager.removeMediaStream(mediaStream);
-          assert.equal(
-            mediaStream,
-            test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
-          assert.equal(
-            mediaStream,
-            test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
-        });
-      });
-    });
-
-    context('when the MediaStream to remove was not previously added via addMediaStream', () => {
-      it('returns false', () => {
-        var test = makeTest();
-        var mediaStream = makeMediaStream();
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          assert(!test.peerConnectionManager.removeMediaStream(mediaStream));
-        });
-      });
-
-      it('calls removeMediaStream on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-        var test = makeTest();
-        var mediaStream = makeMediaStream();
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          test.peerConnectionManager.removeMediaStream(mediaStream);
-          assert.equal(
-            mediaStream,
-            test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
-          assert.equal(
-            mediaStream,
-            test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
-        });
       });
     });
   });
@@ -260,14 +162,14 @@ describe('PeerConnectionManager', () => {
     });
   });
 
-  describe('#setMediaStreams', () => {
+  describe('#setMediaStreamTracks', () => {
     it('returns the PeerConnectionManager', () => {
       var test = makeTest();
       var mediaStream1 = makeMediaStream();
       var mediaStream2 = makeMediaStream();
       var mediaStream3 = makeMediaStream();
-      test.peerConnectionManager.addMediaStream(mediaStream1);
-      test.peerConnectionManager.addMediaStream(mediaStream2);
+      test.peerConnectionManager.setMediaStreamTracks(
+        getTracks([mediaStream1, mediaStream2]));
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
@@ -275,63 +177,73 @@ describe('PeerConnectionManager', () => {
       }).then(() => {
         assert.equal(
           test.peerConnectionManager,
-          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]));
+          test.peerConnectionManager.setMediaStreamTracks(
+            getTracks([mediaStream2, mediaStream3])));
       });
     });
 
-    it('calls removeMediaStream with any previously-added MediaStreams on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+    context('when called with the same MediaStreamTracks as the last time', () => {
+      it('should not call addMediaStream on the underlying PeerConnectionV2s', () => {
+        var test = makeTest();
+        var mediaStream1 = makeMediaStream({ audio: 1 });
+        var mediaStream2 = makeMediaStream({ video: 1 });
+        test.peerConnectionManager.setMediaStreamTracks(
+          getTracks([mediaStream1, mediaStream2]));
+        return test.peerConnectionManager.createAndOffer().then(() => {
+          return test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+        }).then(() => {
+          test.peerConnectionManager.setMediaStreamTracks(
+            getTracks([mediaStream2, mediaStream1]));
+          assert.equal(test.peerConnectionV2s[0].addMediaStream.callCount, 1);
+        });
+      });
+    });
+
+    it('calls addMediaStream with the ._localMediaStream containing the remaining MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
       var test = makeTest();
-      var mediaStream1 = makeMediaStream();
-      var mediaStream2 = makeMediaStream();
-      var mediaStream3 = makeMediaStream();
-      test.peerConnectionManager.addMediaStream(mediaStream1);
-      test.peerConnectionManager.addMediaStream(mediaStream2);
+      var mediaStream1 = makeMediaStream({ audio: 1 });
+      var mediaStream2 = makeMediaStream({ video: 1 });
+      var mediaStream3 = makeMediaStream({ video: 1 });
+      test.peerConnectionManager.setMediaStreamTracks(
+        getTracks([mediaStream1, mediaStream2]));
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
         ]);
       }).then(() => {
-        test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
-        assert.equal(
-          mediaStream1,
-          test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
-        assert.equal(
-          mediaStream2,
-          test.peerConnectionV2s[0].removeMediaStream.args[1][0]);
-        assert.equal(
-          mediaStream1,
-          test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
-        assert.equal(
-          mediaStream2,
-          test.peerConnectionV2s[1].removeMediaStream.args[1][0]);
+        test.peerConnectionManager.setMediaStreamTracks(
+          getTracks([mediaStream2, mediaStream3]));
+
+        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+          test.peerConnectionV2s[0].addMediaStream.args[1][0].getTracks());
+
+        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+          test.peerConnectionV2s[1].addMediaStream.args[1][0].getTracks());
       });
     });
 
-    it('calls addMediaStream with the new MediaStreams on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+    it('calls addMediaStream with the ._localMediaStream containing the new MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
       var test = makeTest();
-      var mediaStream1 = makeMediaStream();
-      var mediaStream2 = makeMediaStream();
-      var mediaStream3 = makeMediaStream();
-      test.peerConnectionManager.addMediaStream(mediaStream1);
-      test.peerConnectionManager.addMediaStream(mediaStream2);
+      var mediaStream1 = makeMediaStream({ video: 1 });
+      var mediaStream2 = makeMediaStream({ audio: 1 });
+      var mediaStream3 = makeMediaStream({ audio: 1 });
+      test.peerConnectionManager.setMediaStreamTracks(
+        getTracks([mediaStream1, mediaStream2]));
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
         ]);
       }).then(() => {
-        test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
-        assert.equal(
-          mediaStream1,
-          test.peerConnectionV2s[0].removeMediaStream.args[0][0]);
-        assert.equal(
-          mediaStream2,
-          test.peerConnectionV2s[0].removeMediaStream.args[1][0]);
-        assert.equal(
-          mediaStream1,
-          test.peerConnectionV2s[1].removeMediaStream.args[0][0]);
-        assert.equal(
-          mediaStream2,
-          test.peerConnectionV2s[1].removeMediaStream.args[1][0]);
+        test.peerConnectionManager.setMediaStreamTracks(
+          getTracks([mediaStream2, mediaStream3]));
+
+        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+          test.peerConnectionV2s[0].addMediaStream.args[1][0].getTracks());
+
+        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+          test.peerConnectionV2s[1].addMediaStream.args[1][0].getTracks());
       });
     });
 
@@ -355,8 +267,8 @@ describe('PeerConnectionManager', () => {
           audio: [audioTrack2, audioTrack3]
         });
 
-        test.peerConnectionManager.addMediaStream(mediaStream1);
-        test.peerConnectionManager.addMediaStream(mediaStream2);
+        test.peerConnectionManager.setMediaStreamTracks(
+          getTracks([mediaStream1, mediaStream2]));
 
         return test.peerConnectionManager.createAndOffer().then(() => {
           return test.peerConnectionManager.update([
@@ -366,7 +278,8 @@ describe('PeerConnectionManager', () => {
           test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
           test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
 
-          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+          test.peerConnectionManager.setMediaStreamTracks(
+            getTracks([mediaStream2, mediaStream3]));
 
           assert(test.peerConnectionV2s[0].offer.calledOnce);
           assert(test.peerConnectionV2s[1].offer.calledOnce);
@@ -393,8 +306,8 @@ describe('PeerConnectionManager', () => {
           audio: [audioTrack1]
         });
 
-        test.peerConnectionManager.addMediaStream(mediaStream1);
-        test.peerConnectionManager.addMediaStream(mediaStream2);
+        test.peerConnectionManager.setMediaStreamTracks(
+          getTracks([mediaStream1, mediaStream2]));
 
         return test.peerConnectionManager.createAndOffer().then(() => {
           return test.peerConnectionManager.update([
@@ -404,7 +317,8 @@ describe('PeerConnectionManager', () => {
           test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
           test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
 
-          test.peerConnectionManager.setMediaStreams([mediaStream2, mediaStream3]);
+          test.peerConnectionManager.setMediaStreamTracks(
+            getTracks([mediaStream2, mediaStream3]));
 
           assert(!test.peerConnectionV2s[0].offer.calledOnce);
           assert(!test.peerConnectionV2s[1].offer.calledOnce);
@@ -436,16 +350,15 @@ describe('PeerConnectionManager', () => {
         });
       });
 
-      it('calls addMediaStream with any previously-added MediaStreams on the new PeerConnectionV2', () => {
+      it('calls addMediaStream with the ._localMediaStream containing any previously-added MediaStreamTracks on the new PeerConnectionV2', () => {
         var test = makeTest();
         var mediaStream = makeMediaStream();
-        test.peerConnectionManager.addMediaStream(mediaStream);
+        test.peerConnectionManager.setMediaStreamTracks(mediaStream.getTracks());
         return test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }
         ]).then(() => {
-          assert.equal(
-            mediaStream,
-            test.peerConnectionV2s[0].addMediaStream.args[0][0]);
+          assert.deepEqual(mediaStream.getTracks(),
+            test.peerConnectionV2s[0].addMediaStream.args[0][0].getTracks());
         });
       });
 
@@ -598,6 +511,7 @@ describe('PeerConnectionManager', () => {
 function makeTest(options) {
   options = options || {};
   options.iceServers = options.iceServers || [];
+  options.MediaStream = options.MediaStream || FakeMediaStream;
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
   options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options);
@@ -621,12 +535,12 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     peerConnectionV2.offer = sinon.spy(() => Promise.resolve());
 
-    peerConnectionV2.removeMediaStream = sinon.spy(() => {});
-
     peerConnectionV2.getState = () => ({
       id: id,
       fizz: 'buzz'
     });
+
+    peerConnectionV2.removeMediaStream = sinon.spy();
 
     peerConnectionV2.setConfiguration = sinon.spy(configuration => {
       peerConnectionV2.configuration = configuration;
@@ -638,6 +552,12 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     return peerConnectionV2;
   };
+}
+
+function getTracks(mediaStreams) {
+  return mediaStreams.reduce(function(mediaStreamTracks, mediaStream) {
+    return mediaStreamTracks.concat(mediaStream.getTracks());
+  }, []);
 }
 
 function makeId() {
