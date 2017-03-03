@@ -1,12 +1,60 @@
 1.0.0-beta5
 ===========
 
+We are very close to releasing the 1.0.0 APIs. This release includes a number of
+simplifications to the twilio-video APIs, namely
+
+* The Client class has been removed. Instead of constructing a Client using an
+  Access Token and then calling `connect` on it, you can simply call `connect`
+  and pass it an Access Token directly. For example,
+
+  ```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect('your-token');
+  ```
+
+  Or, if using browser globals,
+
+  ```js
+  const room = await Twilio.Video.connect('your-token');
+  ```
+
+* The Media and LocalMedia classes have been removed. Although the Media and
+  LocalMedia classes provided some convenience methods for automatically
+  attaching and detaching Tracks from the DOM as they were added and removed,
+  these APIs got in the way whenever you wanted to do something more interesting
+  with the Tracks. Therefore, the `audioTracks` and `videoTracks` collections as
+  well as the `addTrack` and `removeTrack` methods have been moved up to the
+  Participant and LocalParticipant levels. You should update your code to use
+  the Track-level `attach` and `detach` APIs exclusively. For example,
+
+  ```js
+  function handleParticipant(participant) {
+    participant.tracks.forEach(addTrack);
+    participant.on('trackAdded', addTrack);
+  }
+
+  function addTrack(track) {
+    const element = track.attach();
+    document.body.appendChild(element);
+  }
+  ```
+
+* The `getLocalMedia` method has also been replaced with a new method,
+  `createLocalTracks`. This method behaves like `getLocalMedia` did, except it
+  returns an Array of LocalTracks.
+
+Refer to the API docs for more information.
+
 New Features
 ------------
 
 - Tracks now indicate whether or not they have stopped with the `isStopped`
   property. They also emit a new event, "stopped". Participant and Room re-emit
   this event as "trackStopped".
+- LocalAudioTracks and LocalVideoTracks can now be constructed directly from
+  MediaStreamTracks.
 
 
 Bug Fixes
@@ -17,6 +65,11 @@ Bug Fixes
   back the same Track
 - Fixed a bug where round-trip times reported by `getStats` were accidentally
   multiplied by 1000
+- Fixed a bug where certain identities with non-ASCII characters could not be
+  used (for example, multiple ":" characters were causing failures)
+- Fixed a bug where minified builds of twilio-video.js could not be used on web
+  pages that did not specify a charset
+- Fixed an EventEmitter leak in StateMachine that was warning in the console
 
 1.0.0-beta4
 ===========
