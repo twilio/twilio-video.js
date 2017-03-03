@@ -44,7 +44,7 @@ describe('Participant', () => {
           }, options));
         }).then(room => {
           aliceRoom = room;
-          PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeTracks.get(alice);
+          PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeMediaStreamTracks.get(alice);
           return connect(getToken({ address: bob }), Object.assign({
             name: roomName
           }, options));
@@ -56,7 +56,7 @@ describe('Participant', () => {
           var aliceTracks = bobRoom.participants.get(aliceParticipantSid).tracks;
           assert.equal(aliceTracks.size, 2);
 
-          fakeTracks.get(alice).forEach(track => {
+          fakeMediaStreamTracks.get(alice).forEach(track => {
             var aliceTrack = aliceTracks.get(track.id);
             assert.equal(aliceTrack.id, track.id);
             assert.equal(aliceTrack.kind, track.kind);
@@ -73,7 +73,7 @@ describe('Participant', () => {
             }, options));
           }).then(room => {
             aliceRoom = room;
-            PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeTracks.get(alice);
+            PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeMediaStreamTracks.get(alice);
             return connect(getToken({ address: bob }), Object.assign({
               name: roomName
             }, options));
@@ -98,7 +98,7 @@ describe('Participant', () => {
         aliceRoom.disconnect();
         aliceRoom = null;
       }
-      fakeTracks.delete(alice);
+      fakeMediaStreamTracks.delete(alice);
       alice = null;
 
       if (bobRoom) {
@@ -106,18 +106,18 @@ describe('Participant', () => {
         bobRoom = null;
       }
       bob = null;
-      PeerConnectionManager.prototype.getRemoteMediaStreams = getRemoteMediaStreamTracks;
+      PeerConnectionManager.prototype.getRemoteMediaStreamTracks = getRemoteMediaStreamTracks;
     });
   });
 });
 
-var fakeTracks = new Map();
+var fakeMediaStreamTracks = new Map();
 var getRemoteMediaStreamTracks =
   PeerConnectionManager.prototype.getRemoteMediaStreamTracks;
 
 function createFakeLocalTracks(name, options) {
   return createLocalTracks(options).then(tracks => {
-    fakeTracks.set(name, tracks);
+    fakeMediaStreamTracks.set(name, tracks.map(track => track.mediaStreamTrack));
     return tracks;
   });
 }

@@ -1,6 +1,14 @@
 1.0.0-beta5
 ===========
 
+New Features
+------------
+
+- Tracks now indicate whether or not they have stopped with the `isStopped`
+  property. They also emit a new event, "stopped". Participant and Room re-emit
+  this event as "trackStopped".
+
+
 Bug Fixes
 ---------
 

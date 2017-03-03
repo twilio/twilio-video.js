@@ -122,6 +122,15 @@ describe('Participant', function() {
         track.emit('started', track);
         assert.equal(track, trackStarted);
       });
+
+      it('re-emits "stopped" events', () => {
+        var track = new EventEmitter();
+        var trackStopped;
+        var test = makeTest({ tracks: [ track ] });
+        test.participant.once('trackStopped', track => trackStopped = track);
+        track.emit('stopped', track);
+        assert.equal(track, trackStopped);
+      });
     });
 
     context('when the Participant .state transitions to "disconnected"', () => {
@@ -164,6 +173,16 @@ describe('Participant', function() {
         track.emit('started', track);
         assert(!trackStarted);
       });
+
+      it('does not re-emit "stopped" events', () => {
+        var track = new EventEmitter();
+        var trackStopped;
+        var test = makeTest({ tracks: [ track ] });
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackStopped', track => trackStopped = track);
+        track.emit('stopped', track);
+        assert(!trackStopped);
+      });
     });
 
     context('when the Participant .state begins in "disconnected"', () => {
@@ -201,6 +220,15 @@ describe('Participant', function() {
         test.participant.once('trackStarted', track => trackStarted = track);
         track.emit('started', track);
         assert(!trackStarted);
+      });
+
+      it('does not re-emit "stopped" events', () => {
+        var track = new EventEmitter();
+        var trackStopped;
+        var test = makeTest({ tracks: [ track ], state: 'disconnected' });
+        test.participant.once('trackStopped', track => trackStopped = track);
+        track.emit('stopped', track);
+        assert(!trackStopped);
       });
     });
   });
