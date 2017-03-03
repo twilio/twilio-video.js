@@ -50,7 +50,7 @@ more information, refer to the
 ```js
 const Video = require('twilio-video');
 
-Video.connect({ name: 'room-name', token: '$TOKEN' }).then(room => {
+Video.connect('$TOKEN', { name: 'room-name' }).then(room => {
   console.log('Connected to Room "%s"', room.name);
 
   room.participants.forEach(participantConnected);

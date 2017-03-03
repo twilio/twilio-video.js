@@ -22,9 +22,8 @@ describe('Room', function() {
     var aliceRoom;
 
     before(() => {
-      return connect(Object.assign({
-        name: roomName,
-        token: getToken({ address: alice })
+      return connect(getToken({ address: alice }), Object.assign({
+        name: roomName
       }, options)).then(room => {
         aliceRoom = room;
       });
@@ -63,9 +62,8 @@ describe('Room', function() {
 
     context('when alice connects to the Room first,', () => {
       it('should have an empty participants Map', () => {
-        return connect(Object.assign({
-          name: roomName,
-          token: getToken({ address: alice })
+        return connect(getToken({ address: alice }), Object.assign({
+          name: roomName
         }, options)).then(room => {
           aliceRoom = room;
           assert.equal(0, aliceRoom.participants.size);
@@ -79,18 +77,16 @@ describe('Room', function() {
       // skipping this test for now. This will be investigated later.
       // TODO(@mmalavalli): Investigate this issue.
       it.skip('should trigger "participantConnected" on alice\'s Room', () => {
-        return connect(Object.assign({
-          name: roomName,
-          token: getToken({ address: alice })
+        return connect(getToken({ address: alice }), Object.assign({
+          name: roomName
         }, options)).then(room => {
           aliceRoom = room;
           return Promise.all([
             new Promise(resolve => {
               aliceRoom.on('participantConnected', resolve);
             }),
-            connect(Object.assign({
-              name: roomName,
-              token: getToken({ address: bob })
+            connect(getToken({ address: bob }), Object.assign({
+              name: roomName
             }, options))
           ]);
         }).then(resolved => {
@@ -100,14 +96,12 @@ describe('Room', function() {
       });
 
       it('should not trigger "participantConnected" on bob\'s Room', () => {
-        return connect(Object.assign({
-          name: roomName,
-          token: getToken({ address: alice })
+        return connect(getToken({ address: alice }), Object.assign({
+          name: roomName
         }, options)).then(room => {
           aliceRoom = room;
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: bob })
+          return connect(getToken({ address: bob }), Object.assign({
+            name: roomName
           }, options));
         }).then((room) => {
           bobRoom = room;
@@ -122,14 +116,12 @@ describe('Room', function() {
 
       context('and later disconnects from the Room,', () => {
         it('should not trigger "participantDisconnected" for alice on bob\'s Room object', () => {
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: alice })
+          return connect(getToken({ address: alice }), Object.assign({
+            name: roomName
           }, options)).then(room => {
             aliceRoom = room;
-            return connect(Object.assign({
-              name: roomName,
-              token: getToken({ address: bob })
+            return connect(getToken({ address: bob }), Object.assign({
+              name: roomName
             }, options));
           }).then(room => {
             bobRoom = room;
@@ -145,14 +137,12 @@ describe('Room', function() {
       });
 
       it('should retain alice in bob\'s Room participants Map in "connected" state', () => {
-        return connect(Object.assign({
-          name: roomName,
-          token: getToken({ address: alice })
+        return connect(getToken({ address: alice }), Object.assign({
+          name: roomName
         }, options)).then(room => {
           aliceRoom = room;
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: bob })
+          return connect(getToken({ address: bob }), Object.assign({
+            name: roomName
           }, options));
         }).then(room => {
           bobRoom = room;
@@ -169,20 +159,17 @@ describe('Room', function() {
 
     context('when charlie connects to the Room after alice and bob,', () => {
       it('should populate charlie\'s participant Map with alice and bob, both in "connected" state', () => {
-        return connect(Object.assign({
-          name: roomName,
-          token: getToken({ address: alice })
+        return connect(getToken({ address: alice }), Object.assign({
+          name: roomName
         }, options)).then(room => {
           aliceRoom = room;
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: bob })
+          return connect(getToken({ address: bob }), Object.assign({
+            name: roomName
           }, options));
         }).then(room => {
           bobRoom = room;
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: charlie })
+          return connect(getToken({ address: charlie }), Object.assign({
+            name: roomName
           }, options));
         }).then(room => {
           charlieRoom = room;

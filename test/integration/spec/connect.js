@@ -29,29 +29,24 @@ describe('connect', function() {
   }
 
   it('should reject if logLevel is invalid', function() {
-    return new Promise((resolve, reject) => {
-      connect({ token: aliceToken, logLevel: 'foo' }).then(reject, error => {
-        try {
-          assert(error instanceof RangeError);
-          assert(/level must be one of/.test(error.message));
-          resolve();
-        } catch (e) {
-          reject(e);
-        }
-      });
+    return connect(aliceToken, { logLevel: 'foo' }).then(() => {
+      throw new Error('Unexpectedly resolved!');
+    }, error => {
+      assert(error instanceof RangeError);
+      assert(/level must be one of/.test(error.message));
     });
   });
 
   it('should be cancelable', function(done) {
-    var cancelablePromise = connect(Object.assign({ token: aliceToken }, options));
+    var cancelablePromise = connect(aliceToken, options);
     cancelablePromise.cancel().then(() => done(new Error('Unexpected resolution')), () => done());
   });
 
   context('when called without a Room name', () => {
     it('should connect bob and charlie to different Rooms', () => {
-      connect(Object.assign({ token: bobToken }, options)).then((_bobRoom) => {
+      return connect(bobToken, options).then((_bobRoom) => {
         bobRoom = _bobRoom;
-        return connect({ token: charlieToken });
+        return connect(charlieToken);
       }).then((_charlieRoom) => {
         charlieRoom = _charlieRoom;
         assert.notEqual(charlieRoom.sid, bobRoom.sid);
@@ -61,9 +56,9 @@ describe('connect', function() {
 
   context('when called with the same Room name', () => {
     it('should connect bob and charlie to the same Room', () => {
-      connect(Object.assign({ token: bobToken, name: 'foo' }, options)).then((_bobRoom) => {
+      return connect(bobToken, Object.assign({ name: 'foo' }, options)).then((_bobRoom) => {
         bobRoom = _bobRoom;
-        return connect(Object.assign({ token: charlieToken, name: 'foo' }, options));
+        return connect(charlieToken, Object.assign({ name: 'foo' }, options));
       }).then((_charlieRoom) => {
         charlieRoom = _charlieRoom;
         assert.equal(charlieRoom.sid, bobRoom.sid);

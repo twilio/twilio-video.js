@@ -13,7 +13,7 @@ describe('connect', () => {
   describe('called without ConnectOptions#tracks', () => {
     it ('acquires LocalTracks', () => {
       const createLocalTracks = sinon.spy();
-      connect({ token: token, createLocalTracks: createLocalTracks });
+      connect(token, { createLocalTracks: createLocalTracks });
       assert(createLocalTracks.calledOnce);
     });
 
@@ -26,9 +26,8 @@ describe('connect', () => {
           const createLocalTracks = () => {
             return Promise.resolve(localTracks);
           }
-          const promise = connect({
-            createLocalTracks: createLocalTracks,
-            token: token
+          const promise = connect(token, {
+            createLocalTracks: createLocalTracks
           });
 
           promise.cancel();
@@ -44,7 +43,7 @@ describe('connect', () => {
 
   it('should reject if the token is invalid', () => {
     return new Promise((resolve, reject) => {
-      connect({ token: 'foo' }).then(reject, error => {
+      connect('foo').then(reject, error => {
         try {
           assert(error instanceof AccessTokenInvalidError);
           assert.equal(error.code, 20101);

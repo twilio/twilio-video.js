@@ -34,7 +34,7 @@ export class AppComponent implements OnInit {
       return;
     }
 
-    connect({ token: token }).then(room => {
+    connect(token).then(room => {
       this.room = room;
       room.once('disconnected', () => {});
       room.disconnect();

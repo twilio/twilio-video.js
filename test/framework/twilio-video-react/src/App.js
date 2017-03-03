@@ -7,7 +7,7 @@ export default class App extends Component {
 
     this.state = {};
 
-    connect({ token: this.props.token }).then(room => {
+    connect(this.props.token).then(room => {
       this.setState({ room });
       room.once('disconnected', () => this.forceUpdate());
       room.disconnect();

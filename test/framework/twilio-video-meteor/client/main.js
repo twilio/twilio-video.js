@@ -45,7 +45,7 @@ Template.body.helpers({
   }
 });
 
-connect({ token: token }).then(_room => {
+connect(token).then(_room => {
   room.set(_room);
   _room.once('disconnected', disconnected.set(true));
   _room.disconnect();

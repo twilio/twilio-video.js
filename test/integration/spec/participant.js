@@ -38,17 +38,15 @@ describe('Participant', () => {
     context('when alice (with audio and video tracks) and bob connect to the Room,', () => {
       it('should populate alice\'s Participant in bob\'s Room with her Tracks', () => {
         return createFakeLocalTracks(alice, options).then(tracks => {
-          return connect(Object.assign({
+          return connect(getToken({ address: alice }), Object.assign({
             name: roomName,
-            token: getToken({ address: alice }),
             tracks: tracks
           }, options));
         }).then(room => {
           aliceRoom = room;
           PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeTracks.get(alice);
-          return connect(Object.assign({
-            name: roomName,
-            token: getToken({ address: bob })
+          return connect(getToken({ address: bob }), Object.assign({
+            name: roomName
           }, options));
         }).then(room => {
           bobRoom = room;
@@ -69,17 +67,15 @@ describe('Participant', () => {
       context('when bob later disconnects from the Room,', () => {
         it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', () => {
           return createFakeLocalTracks(alice, options).then(tracks => {
-            return connect(Object.assign({
+            return connect(getToken({ address: alice }), Object.assign({
               name: roomName,
-              token: getToken({ address: alice }),
               tracks: tracks
             }, options));
           }).then(room => {
             aliceRoom = room;
             PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeTracks.get(alice);
-            return connect(Object.assign({
-              name: roomName,
-              token: getToken({ address: bob })
+            return connect(getToken({ address: bob }), Object.assign({
+              name: roomName
             }, options));
           }).then(room => {
             bobRoom = room;
