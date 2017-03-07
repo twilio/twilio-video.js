@@ -399,10 +399,10 @@ describe('Track', function() {
   });
 
   describe('_getAllAttachedElements', function() {
-    it('should return an array with all elements in .attachments', function() {
+    it('should return an array with all elements in ._attachments', function() {
       track = createTrack('1', 'audio');
-      track.attachments.add('foo');
-      track.attachments.add('bar');
+      track._attachments.add('foo');
+      track._attachments.add('bar');
 
       assert.equal(track._getAllAttachedElements().toString(), ['foo', 'bar'].toString());
     });
@@ -425,7 +425,7 @@ describe('Track', function() {
       track = createTrack('1', 'audio');
       el1 = document.createElement('audio');
       el1.removeAttribute = sinon.spy();
-      track.attachments.add(el1);
+      track._attachments.add(el1);
 
       returnVal = track._detachElement(el1);
     });
@@ -439,8 +439,8 @@ describe('Track', function() {
         assert.equal(returnVal, el1);
       });
 
-      it('should remove the element from .attachments', function() {
-        assert(!track.attachments.has(el1));
+      it('should remove the element from ._attachments', function() {
+        assert(!track._attachments.has(el1));
       });
     });
 
@@ -461,204 +461,102 @@ describe('Track', function() {
     });
   });
 
-  describe('_attach', function() {
+  describe('_attach', () => {
     var el;
-    var oldNavigator;
-    var oldWindow;
+    var ret;
+    var track;
+    var mediaStream;
+    var MediaStream;
 
-    before(function() {
-      oldWindow = global.window;
-      oldNavigator = global.navigator;
-
-      global.window = undefined;
-      global.navigator = undefined;
+    beforeEach(() => {
+      MediaStream = sinon.spy(function () { mediaStream = this; });
+      MediaStream.prototype.addTrack = sinon.spy();
+      MediaStream.prototype.getAudioTracks = sinon.spy(() => [track.mediaStreamTrack]);
+      MediaStream.prototype.removeTrack = sinon.spy();
+      el = document.createElement('audio');
+      track = createTrack(1, 'audio', {MediaStream: MediaStream});
     });
 
-    after(function() {
-      global.window = oldWindow;
-      global.navigator = oldNavigator;
-    });
-
-    context('when window does not exist', function() {
-      before(function() {
-        global.window = undefined;
-        global.navigator = { };
-
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
+    context('when the .srcObject of the HTMLMediaElement is not a MediaStream', () => {
+      beforeEach(() => {
+        MediaStream.prototype.getAudioTracks = sinon.spy(() => []);
+        ret = track._attach(el);
       });
 
-      it('should throw an exception', function() {
-        assert.throws(function() { track._attach(el); });
+      it('should call the MediaStream constructor', () => {
+        assert(MediaStream.calledOnce);
       });
 
-      it('should not add the element to .attachments', function() {
-        assert(!track.attachments.has(el));
-      });
-    });
-
-    context('when navigator does not exist', function() {
-      before(function() {
-        global.window = { };
-        global.navigator = undefined;
-
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
+      it('should not call .removeTrack() on the MediaStream', () => {
+        assert(!MediaStream.prototype.removeTrack.calledOnce);
       });
 
-      it('should throw an exception', function() {
-        assert.throws(function() { track._attach(el); });
+      it('should call .addTrack() with the Track\'s MediaStreamTrack on the MediaStream', () => {
+        assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
       });
 
-      it('should not add the element to .attachments', function() {
-        assert(!track.attachments.has(el));
+      it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
+        assert.equal(el.srcObject, mediaStream);
+      });
+
+      it('should set the .autoplay of the HTMLMediaElement to true', () => {
+        assert(el.autoplay);
+      });
+
+      it('should add the HTMLMediaElement to the ._attachments Set', () => {
+        assert(track._attachments.has(el));
+      });
+
+      it('should return the HTMLMediaElement', () => {
+        assert.equal(ret, el);
       });
     });
 
-    context('when navigator.webkitGetUserMedia is a function', function() {
-      var addTrack = sinon.spy(function() {});
-
-      before(function() {
-        global.window = { URL: { createObjectURL: sinon.spy(function() {
-          return 'foobar';
-        }) } };
-        global.webkitMediaStream = sinon.spy(function() {
-          return {
-            addTrack: addTrack
-          }
-        });
-        global.navigator = {
-          webkitGetUserMedia: function() { }
-        };
-
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
-
-        track._attach(el);
+    context('when the .srcObject of the HTMLMediaElement is a MediaStream', () => {
+      beforeEach(() => {
+        el.srcObject = new MediaStream();
+        ret = track._attach(el);
       });
 
-      it('should add the element to .attachments', function() {
-        assert(track.attachments.has(el));
+      it('should not call the MediaStream constructor', () => {
+        assert.equal(MediaStream.callCount, 1);
       });
 
-      it('should call the webkitMediaStream constructor', function() {
-        assert.equal(webkitMediaStream.callCount, 1);
+      it('should call .getAudioTracks() on the MediaStream', () => {
+        assert(MediaStream.prototype.getAudioTracks.calledOnce);
       });
 
-      it('should call webkitMediaStream#addTrack with the MediaStreamTrack', function() {
-        assert(addTrack.calledWith(track.mediaStreamTrack));
+      it('should call .removeTrack() with the current audio MediaStreamTrack on the MediaStream', () => {
+        assert(MediaStream.prototype.removeTrack.calledWith(track.mediaStreamTrack));
       });
 
-      it('should call createObjectURL with an instance of webkitMediaStream', function() {
-        var mediaStream = global.window.URL.createObjectURL.getCall(0).args[0];
-        assert.notEqual(mediaStream, track.mediaStream);
-        assert.deepEqual(mediaStream, { addTrack: addTrack });
+      it('should call .addTrack() with the Track\'s MediaStreamTrack on the MediaStream', () => {
+        assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
       });
 
-      it('should set el.src to createObjectURL\'s returned value', function() {
-        assert.equal(el.src, 'foobar');
-      });
-    });
-
-    context('when navigator.mozGetUserMedia is a function', function() {
-      var addTrack = sinon.spy(function() {});
-      var webkitMediaStream;
-
-      before(function() {
-        global.window = { URL: { createObjectURL: sinon.spy(function() {
-          return 'foobar';
-        }) } };
-        global.MediaStream = sinon.spy(function() {
-          return {
-            addTrack: addTrack
-          }
-        });
-        global.navigator = {
-          mozGetUserMedia: function() { }
-        };
-        webkitMediaStream = global.webkitMediaStream;
-        delete global.webkitMediaStream;
-
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
-
-        track._attach(el);
+      it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
+        assert.equal(el.srcObject, mediaStream);
       });
 
-      after(function() {
-        global.webkitMediaStream = webkitMediaStream;
+      it('should set the .autoplay of the HTMLMediaElement to true', () => {
+        assert(el.autoplay);
       });
 
-      it('should add the element to .attachments', function() {
-        assert(track.attachments.has(el));
+      it('should add the HTMLMediaElement to the ._attachments Set', () => {
+        assert(track._attachments.has(el));
       });
 
-      it('should not call window.URL.createObjectURL', function() {
-        assert.equal(global.window.URL.createObjectURL.callCount, 0);
-      });
-
-      it('should call the MediaStream constructor', function() {
-        assert.equal(global.MediaStream.callCount, 1);
-      });
-
-      it('should call MediaStream#addTrack with the MediaStreamTrack', function() {
-        assert(addTrack.calledWith(track.mediaStreamTrack));
-      });
-
-      it('should set el.mozSrcObject to the new MediaStream created for the Track', function() {
-        assert.notEqual(el.mozSrcObject, track.mediaStream);
-        assert.deepEqual(el.mozSrcObject, { addTrack: addTrack });
-      });
-    });
-
-    context('when neither navigator functions exists', function() {
-      before(function() {
-        global.window = { URL: { createObjectURL: sinon.spy(function() {
-          return 'foobar';
-        }) } };
-        global.navigator = { };
-
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
-
-        track._attach(el);
-      });
-
-      it('should add the element to .attachments', function() {
-        assert(track.attachments.has(el));
-      });
-
-      it('should not call window.URL.createObjectURL', function() {
-        assert.equal(global.window.URL.createObjectURL.callCount, 0);
-      });
-
-      it('should not set el.mozSrcObject to the mediaStream', function() {
-        assert.equal(el.mozSrcObject, undefined);
-      });
-    });
-
-    context('when the element is already attached', function() {
-      var returnVal;
-
-      before(function() {
-        track = createTrack('1', 'audio');
-        el = document.createElement('audio');
-        track.attachments.add(el);
-
-        returnVal = track._attach(el);
-      });
-
-      it('should return the element', function() {
-        assert.equal(returnVal, el);
+      it('should return the HTMLMediaElement', () => {
+        assert.equal(ret, el);
       });
     });
   });
-});
+ });
 
-function createTrack(id, kind) {
+function createTrack(id, kind, options) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
   var signaling = new TrackSignaling(mediaStreamTrack.id, mediaStreamTrack.kind, mediaStreamTrack.enabled);
-  return new Track(mediaStreamTrack, signaling, { log: log });
+  return new Track(mediaStreamTrack, signaling, Object.assign({ log: log }, options));
 }
 
 function MediaStreamTrack(id, kind) {
