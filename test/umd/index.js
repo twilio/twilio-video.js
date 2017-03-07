@@ -4,8 +4,10 @@ var version = require('../../package.json').version;
 var phantom = require('phantom');
 var requirejs = require('requirejs');
 var publicVars = [
-  'createLocalTracks',
   'connect',
+  'createLocalAudioTrack',
+  'createLocalTracks',
+  'createLocalVideoTrack',
   'LocalAudioTrack',
   'LocalVideoTrack'
 ];

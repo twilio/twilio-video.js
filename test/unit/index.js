@@ -17,6 +17,7 @@ if (typeof Array.prototype.includes !== 'function') {
 }
 
 require('./spec/connect');
+require('./spec/createlocaltrack');
 require('./spec/createlocaltracks');
 require('./spec/ecs');
 require('./spec/room');

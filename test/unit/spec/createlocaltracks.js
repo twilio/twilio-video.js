@@ -1,3 +1,5 @@
+'use strict';
+
 var assert = require('assert');
 var createLocalTracks = require('../../../lib/createlocaltracks');
 var fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
