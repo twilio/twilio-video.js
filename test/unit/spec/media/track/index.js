@@ -46,6 +46,7 @@ describe('Track', function() {
       track = createTrack('1', 'audio');
       track._attach = sinon.spy();
       track._detachElement = sinon.spy();
+      track._attachments.delete = sinon.spy();
 
       dummyElement = { oncanplay: 'bar' };
       track._createElement = sinon.spy(function() {
@@ -61,6 +62,10 @@ describe('Track', function() {
 
     it('should call ._attach with the created element', function() {
       assert(track._attach.calledWith(dummyElement));
+    });
+
+    it ('should call .delete with the created element on the ._attachments Set', () => {
+      assert(track._attachments.delete.calledWith(dummyElement));
     });
 
     it('should set el.oncanplay to a function', function() {
