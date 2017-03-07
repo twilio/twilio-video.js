@@ -21,7 +21,9 @@ var signalingStates = [
 
 var isFirefox = typeof mozRTCPeerConnection !== 'undefined';
 
-describe('RTCPeerConnection', () => {
+describe('RTCPeerConnection', function() {
+  this.timeout(30000);
+
   describe('constructor', testConstructor);
 
   describe('#addIceCandidate, called from signaling state', () => {
@@ -404,6 +406,9 @@ function testGlare() {
 }
 
 function makeStream() {
+  if (navigator.mediaDevices) {
+    return navigator.mediaDevices.getUserMedia({ audio: true, fake: true, video: true });
+  }
   var getUserMedia = navigator.webkitGetUserMedia;
   getUserMedia = getUserMedia || navigator.mozGetUserMedia;
   getUserMedia = getUserMedia.bind(navigator, { audio: true, fake: true, video: true });
