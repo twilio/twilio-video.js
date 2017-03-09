@@ -79,6 +79,57 @@ describe('RTCPeerConnection', function() {
   describe('Glare', () => {
     testGlare();
   });
+
+  describe('"track" event', () => {
+    context('when a new MediaStreamTrack is added', () => {
+      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', () => {
+        var audioTrack;
+        var videoTrack;
+        var theMediaStream = new MediaStream();
+        var pc1 = new RTCPeerConnection();
+        var pc2 = new RTCPeerConnection();
+
+        return makeStream({ audio: true, fake: true }).then(mediaStream => {
+          audioTrack = mediaStream.getAudioTracks()[0];
+          theMediaStream.addTrack(audioTrack);
+          pc1.addStream(theMediaStream);
+          return pc1.createOffer();
+        }).then(offer => {
+          return Promise.all([
+            pc1.setLocalDescription(offer),
+            pc2.setRemoteDescription(offer).then(() => pc2.createAnswer()),
+            waitForEvent(pc2, 'track').then(e => assert.equal(e.track.id, audioTrack.id))
+          ]);
+        }).then(results => {
+          var answer = results[1];
+          return Promise.all([
+            pc1.setRemoteDescription(answer),
+            pc2.setLocalDescription(answer)
+          ]);
+        }).then(() => {
+          return makeStream({ video: true, fake: true });
+        }).then(mediaStream => {
+          videoTrack = mediaStream.getVideoTracks()[0];
+          pc1.removeStream(theMediaStream);
+          theMediaStream.addTrack(videoTrack);
+          pc1.addStream(theMediaStream);
+          return pc1.createOffer();
+        }).then(offer => {
+          return Promise.all([
+            pc1.setLocalDescription(offer),
+            pc2.setRemoteDescription(offer).then(() => pc2.createAnswer()),
+            waitForEvent(pc2, 'track').then(e => assert.equal(e.track.id, videoTrack.id))
+          ]);
+        }).then(results => {
+          var answer = results[1];
+          return Promise.all([
+            pc1.setRemoteDescription(answer),
+            pc2.setLocalDescription(answer)
+          ]);
+        });
+      });
+    });
+  });
 });
 
 function assertEqualDescriptions(actual, expected) {
@@ -405,13 +456,25 @@ function testGlare() {
   });
 }
 
-function makeStream() {
+function waitForEvent(eventTarget, event) {
+  return new Promise(resolve => {
+    eventTarget.addEventListener(event, function onevent(e) {
+      eventTarget.removeEventListener(event, onevent);
+      resolve(e);
+    });
+  });
+}
+
+function makeStream(constraints) {
+  constraints = constraints || { audio: true, fake: true, video: true };
+
   if (navigator.mediaDevices) {
-    return navigator.mediaDevices.getUserMedia({ audio: true, fake: true, video: true });
+    return navigator.mediaDevices.getUserMedia(constraints);
   }
+
   var getUserMedia = navigator.webkitGetUserMedia;
   getUserMedia = getUserMedia || navigator.mozGetUserMedia;
-  getUserMedia = getUserMedia.bind(navigator, { audio: true, fake: true, video: true });
+  getUserMedia = getUserMedia.bind(navigator, constraints);
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
