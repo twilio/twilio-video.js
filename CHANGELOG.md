@@ -4,7 +4,7 @@
 We are very close to releasing the 1.0.0 APIs. This release includes a number of
 simplifications to the twilio-video APIs, namely
 
-* The Client class has been removed. Instead of constructing a Client using an
+- The Client class has been removed. Instead of constructing a Client using an
   Access Token and then calling `connect` on it, you can simply call `connect`
   and pass it an Access Token directly. For example,
 
@@ -20,7 +20,7 @@ simplifications to the twilio-video APIs, namely
   const room = await Twilio.Video.connect('your-token');
   ```
 
-* The Media and LocalMedia classes have been removed. Although the Media and
+- The Media and LocalMedia classes have been removed. Although the Media and
   LocalMedia classes provided some convenience methods for automatically
   attaching and detaching Tracks from the DOM as they were added and removed,
   these APIs got in the way whenever you wanted to do something more interesting
@@ -41,9 +41,13 @@ simplifications to the twilio-video APIs, namely
   }
   ```
 
-* The `getLocalMedia` method has also been replaced with a new method,
+- The `getLocalMedia` method has also been replaced with a new method,
   `createLocalTracks`. This method behaves like `getLocalMedia` did, except it
   returns an Array of LocalTracks.
+
+- The `addMicrophone` and `addCamera` methods from LocalMedia have been replaced
+  with two new top-level methods, `createLocalAudioTrack` and
+  `createLocalVideoTrack`.
 
 Refer to the API docs for more information.
 
@@ -55,6 +59,8 @@ New Features
   this event as "trackStopped".
 - LocalAudioTracks and LocalVideoTracks can now be constructed directly from
   MediaStreamTracks.
+- Updated the Track-level `attach` APIs to allow attaching both an AudioTrack
+  and a VideoTrack to the same HTMLMediaElement.
 
 
 Bug Fixes
