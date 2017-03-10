@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var MediaStream = require('../../../../lib/webrtc/mediastream');
 var RTCIceCandidate = require('../../../../lib/webrtc/rtcicecandidate');
 var RTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 var RTCPeerConnection = require('../../../../lib/webrtc/rtcpeerconnection');
@@ -86,8 +87,8 @@ describe('RTCPeerConnection', function() {
         var audioTrack;
         var videoTrack;
         var theMediaStream = new MediaStream();
-        var pc1 = new RTCPeerConnection();
-        var pc2 = new RTCPeerConnection();
+        var pc1 = new RTCPeerConnection({ iceServers: [] });
+        var pc2 = new RTCPeerConnection({ iceServers: [] });
 
         return makeStream({ audio: true, fake: true }).then(mediaStream => {
           audioTrack = mediaStream.getAudioTracks()[0];
