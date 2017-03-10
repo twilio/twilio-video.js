@@ -103,6 +103,48 @@ describe('LocalParticipant', () => {
       });
     });
 
+    context('"trackStopped" event', () => {
+      context('when the LocalParticipant .state begins in "connecting"', () => {
+        context('and a LocalTrack emits "stopped"', () => {
+          it('emits "trackStopped"', () => {
+            var track = new EventEmitter();
+            var trackStopped;
+            var test = makeTest({ tracks: [ track ] });
+            test.participant.once('trackStopped', track => trackStopped = track);
+            track.emit('stopped', track);
+            assert.equal(track, trackStopped);
+          });
+        });
+      });
+
+      context('when the LocalParticipant .state transitions to "disconnected"', () => {
+        context('and a LocalTrack emits "stopped"', () => {
+          it('does not emit "trackStopped"', () => {
+            var track = new EventEmitter();
+            var trackStopped;
+            var test = makeTest({ tracks: [ track ] });
+            test.signaling.emit('stateChanged', 'disconnected');
+            test.participant.once('trackStopped', track => trackStopped = track);
+            track.emit('stopped', track);
+            assert(!trackStopped);
+          });
+        });
+      });
+
+      context('when the LocalParticipant .state begins in "disconnected"', () => {
+        context('and a LocalTrack emits "stopped"', () => {
+          it('does not emit "trackStopped"', () => {
+            var track = new EventEmitter();
+            var trackStopped;
+            var test = makeTest({ tracks: [ track ], state: 'disconnected' });
+            test.participant.once('trackStopped', track => trackStopped = track);
+            track.emit('stopped', track);
+            assert(!trackStopped);
+          });
+        });
+      });
+    });
+
     context('.tracks', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{

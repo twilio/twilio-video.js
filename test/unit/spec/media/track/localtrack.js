@@ -21,20 +21,42 @@ var log = require('../../../../lib/fakelog');
   };
 
   describe(description, function() {
-    var _end;
-    var _initialize;
     var track;
 
-    before(function() {
-      _end = Track.prototype._end;
-      _initialize = LocalTrack.prototype._initialize;
-      Track.prototype._end = sinon.spy();
-      LocalTrack.prototype._initialize = sinon.spy();
+    describe('.isStopped', () => {
+      it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
+        track = createTrack(LocalTrack, '1', kind[description]);
+        track.mediaStreamTrack.readyState = 'ended';
+        assert(track.isStopped);
+        track.mediaStreamTrack.readyState = 'live';
+        assert(!track.isStopped);
+      });
     });
 
-    after(function() {
-      Track.prototype._end = _end;
-      LocalTrack.prototype._initialize = _initialize;
+    describe('"trackStopped" event', () => {
+      context('when the MediaStreamTrack emits onended event', () => {
+        it('should emit Track#stopped, passing the instance of Track', () => {
+          track = createTrack(LocalTrack, '1', kind[description]);
+
+          const stoppedEvent = new Promise((resolve, reject) => {
+            track.on('stopped', function(_track) {
+              try {
+                assert.equal(track, _track);
+              } catch (error) {
+                reject(error);
+                return;
+              }
+              resolve();
+            });
+          });
+
+          assert(track.mediaStreamTrack.readyState !== 'ended');
+
+          track.mediaStreamTrack.emit('ended');
+
+          return stoppedEvent;
+        });
+      });
     });
 
     describe('#stop', function() {
@@ -47,7 +69,6 @@ var log = require('../../../../lib/fakelog');
       before(function() {
         track = createTrack(LocalTrack, '1', kind[description]);
         track._createElement = sinon.spy(() => dummyElement);
-        _initialize.call(track);
       });
 
       it('should not change the value of isEnabled', (done) => {

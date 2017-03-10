@@ -29,14 +29,6 @@ describe('Track', function() {
     it('should call ._initialize', function() {
       assert.equal(track._initialize.callCount, 1);
     });
-
-    it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', function() {
-      track = createTrack('1', 'audio');
-      track.mediaStreamTrack.readyState = 'ended';
-      assert(track.isStopped);
-      track.mediaStreamTrack.readyState = 'live';
-      assert(!track.isStopped);
-    });
   });
 
   describe('_initialize', function() {
@@ -74,17 +66,6 @@ describe('Track', function() {
 
     it('should set el.muted to true', function() {
       assert.equal(dummyElement.muted, true);
-    });
-
-    context('when the MediaStreamTrack emits onended event', function() {
-      it('should emit Track#stopped, passing the instance of Track', function(done) {
-        _initialize.call(track);
-        track.once('stopped', function(_track) {
-          done(track !== _track && new Error('Did not return the instance of Track'));
-        });
-
-        track.mediaStreamTrack.emit('ended');
-      });
     });
 
     context('when the dummy element emits oncanplay event', function() {

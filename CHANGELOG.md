@@ -54,8 +54,8 @@ Refer to the API docs for more information.
 New Features
 ------------
 
-- Tracks now indicate whether or not they have stopped with the `isStopped`
-  property. They also emit a new event, "stopped". Participant and Room re-emit
+- LocalTracks now indicate whether or not they have stopped with the `isStopped`
+  property. They also emit a new event, "stopped". LocalParticipant re-emits
   this event as "trackStopped".
 - LocalAudioTracks and LocalVideoTracks can now be constructed directly from
   MediaStreamTracks.
