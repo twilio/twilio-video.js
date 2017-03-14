@@ -2249,6 +2249,7 @@ function makeUA(options) {
   var ua = {};
   ua.invite = sinon.spy(() => options.session);
   ua.once = sinon.spy(() => {});
+  ua.stop = sinon.spy(() => {});
   return ua;
 }
 
