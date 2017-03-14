@@ -406,6 +406,7 @@ function makeTest(options) {
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
     options.ua,
+    options.signaling || { close: sinon.spy() },
     options.localParticipant,
     options);
   return options;
