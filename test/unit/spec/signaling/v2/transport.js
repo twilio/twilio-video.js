@@ -182,6 +182,10 @@ describe('Transport', () => {
         assert(test.session.terminate.calledOnce);
       });
 
+      it('calls .stop on the underlying SIP.js UA', () => {
+        assert(test.ua.stop.calledOnce);
+      });
+
       context('when calling .terminate', () => {
         it('sets the body to a disconnect RSP request', () => {
           assert.deepEqual({
@@ -216,6 +220,10 @@ describe('Transport', () => {
 
       it('calls .terminate on the underlying SIP.js Session', () => {
         assert(test.session.terminate.calledOnce);
+      });
+
+      it('calls .stop on the underlying SIP.js UA', () => {
+        assert(test.ua.stop.calledOnce);
       });
 
       context('when calling .terminate', () => {
@@ -254,6 +262,10 @@ describe('Transport', () => {
       it('does not call .terminate on the underlying SIP.js Session', () => {
         assert(!test.session.terminate.calledTwice);
       });
+
+      it('does not call .stop on the underlying SIP.js UA', () => {
+        assert(!test.ua.stop.calledTwice);
+      });
     });
 
     context('"syncing"', () => {
@@ -278,6 +290,10 @@ describe('Transport', () => {
 
       it('calls .terminate on the underlying SIP.js Session', () => {
         assert(test.session.terminate.calledOnce);
+      });
+
+      it('calls .stop on the underlying SIP.js UA', () => {
+        assert(test.ua.stop.calledOnce);
       });
 
       context('when calling .terminate', () => {
@@ -2249,6 +2265,7 @@ function makeUA(options) {
   var ua = {};
   ua.invite = sinon.spy(() => options.session);
   ua.once = sinon.spy(() => {});
+  ua.stop = sinon.spy(() => {});
   return ua;
 }
 
