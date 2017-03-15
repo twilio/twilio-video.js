@@ -50,13 +50,13 @@ describe('LocalParticipant', () => {
         });
       });
 
-      context('when called with a LocalAudioTrack or LocalVideoTrack', () => {
+      context('when called with a LocalTrack', () => {
         it('should not throw', () => {
           assert.doesNotThrow(() => test.participant[method](new test.LocalAudioTrack()));
           assert.doesNotThrow(() => test.participant[method](new test.LocalVideoTrack()));
         });
 
-        it(`should call ._${method} with the given LocalAudioTrack or LocalVideoTrack`, () => {
+        it(`should call ._${method} with the given LocalTrack`, () => {
           var localAudioTrack = new test.LocalAudioTrack();
           test.participant[method](localAudioTrack);
           assert(test.participant[`_${method}`].calledWith(localAudioTrack));
@@ -68,15 +68,27 @@ describe('LocalParticipant', () => {
       });
 
       if (method === 'removeTrack') {
-        context('when called with stop=true', () => {
-          it('should call .stop on the given LocalAudioTrack or LocalVideoTrack', () => {
-            var localAudioTrack = new test.LocalAudioTrack();
-            test.participant[method](localAudioTrack);
-            assert(localAudioTrack.stop.calledOnce);
+        [
+          [ 'when called without the "stop" argument' ],
+          [ 'when called with stop=true', true ],
+          [ 'when called with stop=false', false ]
+        ].forEach(scenario => {
+          var stop = scenario[1];
+          var shouldCallStop = typeof stop === 'undefined' || stop
+            ? true : false;
 
-            var localVideoTrack = new test.LocalVideoTrack();
-            test.participant[method](localVideoTrack);
-            assert(localVideoTrack.stop.calledOnce);
+          context(scenario[0], () => {
+            it(`should ${shouldCallStop ? '' : 'not'} call .stop on the given LocalTrack`, () => {
+              [
+                test.LocalAudioTrack,
+                test.LocalVideoTrack
+              ].forEach(LocalTrack => {
+                var localTrack = new LocalTrack();
+                test.participant[method](localTrack, stop);
+                assert(shouldCallStop ? localTrack.stop.calledOnce
+                  : !localTrack.stop.calledOnce);
+              });
+            });
           });
         });
       }
