@@ -24,6 +24,77 @@ describe('LocalParticipant', () => {
     });
   });
 
+  [
+    'addTrack',
+    'removeTrack'
+  ].forEach(method => {
+    describe(`#${method}`, () => {
+      var test;
+
+      beforeEach(() => {
+        test = makeTest();
+        test.participant[`_${method}`] = sinon.spy();
+      });
+
+      context('when called with an invalid argument', () => {
+        it('should throw', () => {
+          assert.throws(() => test.participant[method]('invalid track argument'));
+        });
+
+        it(`should not call ._${method}`, () => {
+          try {
+            test.participant[method]('invalid track argument');
+          } catch (e) {
+            assert(!test.participant[`_${method}`].calledOnce);
+          }
+        });
+      });
+
+      context('when called with a LocalTrack', () => {
+        it('should not throw', () => {
+          assert.doesNotThrow(() => test.participant[method](new test.LocalAudioTrack()));
+          assert.doesNotThrow(() => test.participant[method](new test.LocalVideoTrack()));
+        });
+
+        it(`should call ._${method} with the given LocalTrack`, () => {
+          var localAudioTrack = new test.LocalAudioTrack();
+          test.participant[method](localAudioTrack);
+          assert(test.participant[`_${method}`].calledWith(localAudioTrack));
+
+          var localVideoTrack = new test.LocalVideoTrack();
+          test.participant[method](localVideoTrack);
+          assert(test.participant[`_${method}`].calledWith(localVideoTrack));
+        });
+      });
+
+      if (method === 'removeTrack') {
+        [
+          [ 'when called without the "stop" argument' ],
+          [ 'when called with stop=true', true ],
+          [ 'when called with stop=false', false ]
+        ].forEach(scenario => {
+          var stop = scenario[1];
+          var shouldCallStop = typeof stop === 'undefined' || stop
+            ? true : false;
+
+          context(scenario[0], () => {
+            it(`should ${shouldCallStop ? '' : 'not'} call .stop on the given LocalTrack`, () => {
+              [
+                test.LocalAudioTrack,
+                test.LocalVideoTrack
+              ].forEach(LocalTrack => {
+                var localTrack = new LocalTrack();
+                test.participant[method](localTrack, stop);
+                assert(shouldCallStop ? localTrack.stop.calledOnce
+                  : !localTrack.stop.calledOnce);
+              });
+            });
+          });
+        });
+      }
+    });
+  });
+
   describe('LocalTrack events', () => {
     context('"trackAdded" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
@@ -234,13 +305,24 @@ describe('LocalParticipant', () => {
   });
 });
 
-function makeTest(options) {
+function makeLocalTrackConstructors(options) {
   options = options || {};
+  options.LocalAudioTrack = sinon.spy(function() {
+    this.stop = sinon.spy();
+  });
+  options.LocalVideoTrack = sinon.spy(function() {
+    this.stop = sinon.spy();
+  });
+  return options;
+}
+
+function makeTest(options) {
+  options = makeLocalTrackConstructors(options || {});
   options.signaling = options.signaling || makeSignaling(options);
   options.tracks = options.tracks || [];
   options.log = log;
   options.participant = options.participant ||
-    new LocalParticipant(options.signaling, options.tracks, { log: log });
+    new LocalParticipant(options.signaling, options.tracks, options);
   return options;
 }
 
