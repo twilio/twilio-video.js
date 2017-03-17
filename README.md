@@ -22,6 +22,12 @@ Installation
 npm install twilio-video --save
 ```
 
+Using this method, you can `require` twilio-video.js like so:
+
+```js
+const Video = require('twilio-video');
+```
+
 ### Bower
 
 Until we release twilio-video.js 1.0.0 proper, you must specify a specific
@@ -38,6 +44,12 @@ directly in your web app using a &lt;script&gt; tag.
 
 ```html
 <script src="//media.twiliocdn.com/sdk/js/video/v1/twilio-video.min.js"></script>
+```
+
+Using this method, twilio-video.js will set a browser global:
+
+```js
+const Video = Twilio.Video;
 ```
 
 Usage
