@@ -86,7 +86,7 @@ function trackAdded(div, track) {
 }
 
 function trackRemoved(track) {
-  track.remove();
+  track.detach().forEach(element => element.remove());
 }
 ```
 
