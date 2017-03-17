@@ -410,15 +410,16 @@ describe('Track', function() {
     before(function() {
       track = createTrack('1', 'audio');
       el1 = document.createElement('audio');
-      el1.removeAttribute = sinon.spy();
+      el1.srcObject = new MediaStream();
+      el1.srcObject.addTrack(track.mediaStreamTrack);
       track._attachments.add(el1);
 
       returnVal = track._detachElement(el1);
     });
 
     context('when the element is attached', function() {
-      it('should call el.removeAttribute with src', function() {
-        assert(el1.removeAttribute.calledWith('src'));
+      it('should remove the Track\'s MediaStreamTrack from the element\'s .srcObject MediaStream', function() {
+        assert.deepEqual(el1.srcObject.getTracks(), []);
       });
 
       it('should return the passed element', function() {
@@ -433,12 +434,7 @@ describe('Track', function() {
     context('when the element is not attached', function() {
       before(function() {
         el2 = document.createElement('audio');
-        el2.removeAttribute = sinon.spy();
         returnVal = track._detachElement(el2);
-      });
-
-      it('should not call el.removeAttribute', function() {
-        assert.equal(el2.removeAttribute.callCount, 0);
       });
 
       it('should return the passed element', function() {

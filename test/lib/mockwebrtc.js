@@ -14,9 +14,11 @@ var WebSocket = require('ws');
 function MediaStream() {
   this.ended = false;
   this.id = util.makeUUID();
+  this._tracks = new Set();
 }
 
 MediaStream.prototype.addTrack = function addTrack(track) {
+  this._tracks.add(track);
 };
 
 MediaStream.prototype.clone = function clone() {
@@ -24,11 +26,11 @@ MediaStream.prototype.clone = function clone() {
 };
 
 MediaStream.prototype.getTracks = function getTracks() {
-  return [];
+  return Array.from(this._tracks);
 };
 
 MediaStream.prototype.getAudioTracks = function getAudioTracks() {
-  return [];
+  return Array.from(this._tracks).filter(track => track.kind === 'audio');
 };
 
 MediaStream.prototype.getTrackById = function getTrackById(trackid) {
@@ -36,10 +38,11 @@ MediaStream.prototype.getTrackById = function getTrackById(trackid) {
 };
 
 MediaStream.prototype.getVideoTracks = function getVideoTracks() {
-  return [];
+  return Array.from(this._tracks).filter(track => track.kind === 'video');
 };
 
 MediaStream.prototype.removeTrack = function removeTrack(track) {
+  this._tracks.delete(track);
 };
 
 MediaStream.prototype.stop = function stop() {
