@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var constants = require('../../../../../lib/util/constants');
 var EventEmitter = require('events').EventEmitter;
 var sinon = require('sinon');
 var Transport = require('../../../../../lib/signaling/v2/transport');
@@ -455,6 +456,45 @@ describe('Transport', () => {
         it('sets the Info-Package to "room-signaling"', () => {
           assert(test.session.sendRequest.args[0][1].extraHeaders.includes(
             'Info-Package: room-signaling'));
+        });
+      });
+
+      context('when fails with a 5xx error', () => {
+        var test;
+        var sendRequestCallTimes = [];
+
+        beforeEach(() => {
+          return new Promise(resolve => {
+            test = makeTest({
+              sendRequest(type, request) {
+                sendRequestCallTimes.push(Date.now());
+                request.receiveResponse({ status_code: 500 });
+                if (sendRequestCallTimes.length === constants.PUBLISH_MAX_ATTEMPTS) {
+                  resolve();
+                }
+              }
+            });
+            sendRequestCallTimes = [];
+            test.connect();
+            test.transport.publish({ foo: 'bar' });
+          });
+        });
+
+        it('should execute the exponential backoff', () => {
+          var allowance = constants.PUBLISH_BACKOFF_MS >> 1;
+          var backoff = constants.PUBLISH_BACKOFF_MS;
+          var jitter = constants.PUBLISH_BACKOFF_JITTER;
+          var delay;
+          var high;
+          var low;
+
+          assert.equal(sendRequestCallTimes.length, constants.PUBLISH_MAX_ATTEMPTS);
+          for (var i = 1; i < sendRequestCallTimes.length; i++) {
+            delay = sendRequestCallTimes[i] - sendRequestCallTimes[i - 1];
+            high = backoff * (1 << (i - 1)) + jitter + allowance;
+            low = backoff * (1 << (i - 1)) - jitter;
+            assert(delay <= high && delay >= low);
+          }
         });
       });
     });
@@ -2254,10 +2294,11 @@ function makePeerConnectionManager(options) {
 }
 
 function makeSession(options) {
+  options.sendRequest = options.sendRequest || (() => {});
   var session = new EventEmitter();
   session.terminate = sinon.spy(() => {});
   session.sendReinvite = sinon.spy(() => {});
-  session.sendRequest = sinon.spy(() => {});
+  session.sendRequest = sinon.spy(options.sendRequest);
   return session;
 }
 
