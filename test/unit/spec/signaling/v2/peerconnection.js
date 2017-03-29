@@ -19,10 +19,10 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#addMediaStream', () => {
-    it('returns the PeerConnectionV2', () => {
+    it('returns undefined', () => {
       var test = makeTest();
       var mediaStream = {};
-      assert.equal(test.peerConnectionV2, test.peerConnectionV2.addMediaStream(mediaStream));
+      assert.equal(undefined, test.peerConnectionV2.addMediaStream(mediaStream));
     });
 
     it('calls addStream on the underlying RTCPeerConnection', () => {
@@ -36,10 +36,10 @@ describe('PeerConnectionV2', () => {
 
   describe('#close', () => {
     context('in signaling state "closed"', () => {
-      it('returns the PeerConnectionV2', () => {
+      it('returns undefined', () => {
         var test = makeTest();
         test.peerConnectionV2.close();
-        assert.equal(test.peerConnectionV2, test.peerConnectionV2.close());
+        assert.equal(undefined, test.peerConnectionV2.close());
       });
 
       it('does not call close on the underlying RTCPeerConnection', () => {
@@ -62,9 +62,9 @@ describe('PeerConnectionV2', () => {
     });
 
     context('in signaling state "stable"', () => {
-      it('returns the PeerConnectionV2', () => {
+      it('returns undefined', () => {
         var test = makeTest();
-        assert.equal(test.peerConnectionV2, test.peerConnectionV2.close());
+        assert.equal(undefined, test.peerConnectionV2.close());
       });
 
       it('calls close on the underlying RTCPeerConnection', () => {
@@ -173,10 +173,10 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#offer', () => {
-    it('returns a Promise for the PeerConnectionV2', () => {
+    it('returns a Promise for undefined', () => {
       var test = makeTest({ offers: 1 });
       return test.peerConnectionV2.offer().then(peerConnectionV2 => {
-        assert.equal(test.peerConnectionV2, peerConnectionV2);
+        assert.equal(undefined, peerConnectionV2);
       });
     });
 
@@ -217,12 +217,11 @@ describe('PeerConnectionV2', () => {
       context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
         it('should throw a MediaClientLocalDescFailedError', () => {
           var test = makeTest({ offers: 1, errorScenario: scenario });
-          return new Promise((resolve, reject) => {
-            test.peerConnectionV2.offer().then(reject, function(error) {
-              assert(error instanceof MediaClientLocalDescFailedError);
-              assert.equal(error.code, 53400);
-              resolve();
-            });
+          return test.peerConnectionV2.offer().then(() => {
+            throw new Error('Unexpected resolution');
+          }, error => {
+            assert(error instanceof MediaClientLocalDescFailedError);
+            assert.equal(error.code, 53400);
           });
         });
       });
@@ -230,11 +229,11 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#removeMediaStream', () => {
-    it('returns the PeerConnectionV2', () => {
+    it('returns undefined', () => {
       var test = makeTest();
       var mediaStream = {};
       test.peerConnectionV2.addMediaStream(mediaStream);
-      assert.equal(test.peerConnectionV2, test.peerConnectionV2.removeMediaStream(mediaStream));
+      assert.equal(undefined, test.peerConnectionV2.removeMediaStream(mediaStream));
     });
 
     it('calls removeStream on the underlying RTCPeerConnection', () => {
@@ -325,14 +324,13 @@ describe('PeerConnectionV2', () => {
                 var test = makeTest({ offers: 1, errorScenario: 'setRemoteDescription' });
                 var answer = makeAnswer();
                 var answerDescription = test.state().setDescription(answer, 1);
-                return new Promise((resolve, reject) => {
-                  test.peerConnectionV2.offer().then(() => {
-                    return test.peerConnectionV2.update(answerDescription);
-                  }).then(reject, error => {
-                    assert(error instanceof MediaClientRemoteDescFailedError);
-                    assert.equal(error.code, 53402);
-                    resolve();
-                  });
+                return test.peerConnectionV2.offer().then(() => {
+                  return test.peerConnectionV2.update(answerDescription);
+                }).then(() => {
+                  throw new Error('Unexpected resolution');
+                }, error => {
+                  assert(error instanceof MediaClientRemoteDescFailedError);
+                  assert.equal(error.code, 53402);
                 });
               });
             });
@@ -571,12 +569,11 @@ describe('PeerConnectionV2', () => {
                 it('should throw a MediaClientLocalDescFailedError', () => {
                   var test = makeTest({ offers: 1, errorScenario: scenario });
                   var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-                  return new Promise((resolve, reject) => {
-                    test.peerConnectionV2.update(createOfferDescription).then(reject, error => {
-                      assert(error instanceof MediaClientLocalDescFailedError);
-                      assert.equal(error.code, 53400);
-                      resolve();
-                    });
+                  return test.peerConnectionV2.update(createOfferDescription).then(() => {
+                    throw new Error('Unexpected resolution');
+                  }, error => {
+                    assert(error instanceof MediaClientLocalDescFailedError);
+                    assert.equal(error.code, 53400);
                   });
                 });
               });
@@ -781,14 +778,13 @@ describe('PeerConnectionV2', () => {
                 it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 2);
-                  return new Promise((resolve, reject) => {
-                    return test.peerConnectionV2.offer().then(() => {
-                      return test.peerConnectionV2.update(offerDescription);
-                    }).then(reject, error => {
-                      assert(error instanceof expectedErrorClass);
-                      assert.equal(error.code, expectedErrorCode);
-                      resolve();
-                    });
+                  return test.peerConnectionV2.offer().then(() => {
+                    return test.peerConnectionV2.update(offerDescription);
+                  }).then(() => {
+                    throw new Error('Unexpected resolution');
+                  }, error => {
+                    assert(error instanceof expectedErrorClass);
+                    assert.equal(error.code, expectedErrorCode);
                   });
                 });
               });
@@ -869,12 +865,11 @@ describe('PeerConnectionV2', () => {
                 it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 1);
-                  return new Promise((resolve, reject) => {
-                    return test.peerConnectionV2.update(offerDescription).then(reject, error => {
-                      assert(error instanceof expectedErrorClass);
-                      assert.equal(error.code, expectedErrorCode);
-                      resolve();
-                    });
+                  return test.peerConnectionV2.update(offerDescription).then(() => {
+                    throw new Error('Unexpected resolution');
+                  }, error => {
+                    assert(error instanceof expectedErrorClass);
+                    assert.equal(error.code, expectedErrorCode);
                   });
                 });
               });
@@ -1004,14 +999,13 @@ describe('PeerConnectionV2', () => {
                 it(`should throw a ${expectedError}`, () => {
                   var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
                   var offerDescription = test.state().setDescription(makeOffer(), 1);
-                  return new Promise((resolve, reject) => {
-                    return test.peerConnectionV2.offer().then(() => {
-                      return test.peerConnectionV2.update(offerDescription);
-                    }).then(reject, error => {
-                      assert(error instanceof expectedErrorClass);
-                      assert.equal(error.code, expectedErrorCode);
-                      resolve();
-                    });
+                  return test.peerConnectionV2.offer().then(() => {
+                    return test.peerConnectionV2.update(offerDescription);
+                  }).then(() => {
+                    throw new Error('Unexpected resolution');
+                  }, error => {
+                    assert(error instanceof expectedErrorClass);
+                    assert.equal(error.code, expectedErrorCode);
                   });
                 });
               });
@@ -1468,7 +1462,7 @@ function makePeerConnection(options) {
     peerConnection.emit(event.type, event);
   };
 
-  peerConnection.setLocalDescription = (description, resolve, reject) => {
+  peerConnection.setLocalDescription = description => new Promise((resolve, reject) => {
     if (options.errorScenario === 'setLocalDescription') {
       reject(new Error('Testing setLocalDescription error'));
       return;
@@ -1484,9 +1478,9 @@ function makePeerConnection(options) {
     }
     peerConnection.localDescription = description;
     resolve();
-  };
+  });
 
-  peerConnection.setRemoteDescription = (description, resolve, reject) => {
+  peerConnection.setRemoteDescription = description => new Promise((resolve, reject) => {
     if (options.errorScenario === 'setRemoteDescription') {
       reject(new Error('Testing setRemoteDescription error'));
       return;
@@ -1502,9 +1496,9 @@ function makePeerConnection(options) {
     }
     peerConnection.remoteDescription = description;
     resolve();
-  };
+  });
 
-  peerConnection.createOffer = (resolve, reject) => {
+  peerConnection.createOffer = () => new Promise((resolve, reject) => {
     if (options.errorScenario === 'createOffer') {
       reject(new Error('Testing createOffer error'));
       return;
@@ -1516,9 +1510,9 @@ function makePeerConnection(options) {
       return;
     }
     reject(new Error('Ran out of offers'));
-  };
+  });
 
-  peerConnection.createAnswer = (resolve, reject) => {
+  peerConnection.createAnswer = () => new Promise((resolve, reject) => {
     if (options.errorScenario === 'createAnswer') {
       reject(new Error('Testing createAnswer error'));
       return;
@@ -1530,7 +1524,7 @@ function makePeerConnection(options) {
       return;
     }
     reject(new Error('Ran out of answers'));
-  };
+  });
 
   peerConnection.close = () => {
     peerConnection.signalingState = 'closed';
@@ -1549,7 +1543,7 @@ function makePeerConnection(options) {
   peerConnection.getLocalStreams = () => localStreams;
   peerConnection.getRemoteStreams = () => remoteStreams;
 
-  peerConnection.addIceCandidate = (candidate, resolve) => resolve();
+  peerConnection.addIceCandidate = candidate => Promise.resolve();
 
   return peerConnection;
 }
