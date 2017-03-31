@@ -105,42 +105,43 @@ inherits(RTCPeerConnection, EventEmitter);
 
 RTCPeerConnection.prototype.addEventListener = RTCPeerConnection.prototype.addListener;
 
-RTCPeerConnection.prototype.createOffer = function createOffer(successCallback, failureCallback, constraints) {
-  var offer = DUMMY_SDP;
-  successCallback(offer);
+RTCPeerConnection.prototype.createOffer = function createOffer() {
+  return Promise.resolve(new RTCSessionDescription({ type: 'offer', sdp: DUMMY_SDP }));
 };
 
-RTCPeerConnection.prototype.createAnswer = function createAnswer(successCallback, failureCallback, constraints) {
-  var answer = DUMMY_SDP;
-  successCallback(answer);
+RTCPeerConnection.prototype.createAnswer = function createAnswer() {
+  return Promise.resolve(new RTCSessionDescription({ type: 'answer', sdp: DUMMY_SDP }));
 };
 
 RTCPeerConnection.prototype.removeEventListener = RTCPeerConnection.prototype.removeListener;
 
-RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description, successCallback, errorCallback) {
-  this.localDescription = new RTCSessionDescription(description);
-  var self = this;
-  setTimeout(function() {
-    successCallback();
-    if (self.onicecandidate) {
-      self.onicecandidate.call(self, { candidate: null });
-      self.emit('icecandidate', { candidate: null });
-    }
+RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description) {
+  return new Promise(resolve => {
+    this.localDescription = new RTCSessionDescription(description);
+    setTimeout(() => {
+      resolve();
+      if (this.onicecandidate) {
+        this.onicecandidate({ candidate: null });
+        this.emit('icecandidate', { candidate: null });
+      }
+    });
   });
 };
 
-RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription(description, successCallback, errorCallback) {
-  this.remoteDescription = new RTCSessionDescription(description);
-  setTimeout(function() {
-    setTimeout(successCallback);
+RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription(description) {
+  return new Promise(resolve => {
+    this.remoteDescription = new RTCSessionDescription(description);
+    setTimeout(() => {
+      resolve();
+    });
   });
 };
 
 RTCPeerConnection.prototype.updateIce = function updateIce(configuration, constraints) {
 };
 
-RTCPeerConnection.prototype.addIceCandidate = function addIceCandidate(candidate, successCallback, failureCallback) {
-  successCallback();
+RTCPeerConnection.prototype.addIceCandidate = function addIceCandidate() {
+  return Promise.resolve();
 };
 
 RTCPeerConnection.prototype.getConfiguration = function getConfiguration() {
@@ -182,9 +183,10 @@ RTCPeerConnection.prototype.setIdentityProvider = function setIdentityProvider()
 RTCPeerConnection.prototype.getIdentityAssertion = function getIdentityAssertion() {
 };
 
-function RTCSessionDescription(sdp) {
-  this.type = 'offer';
-  this.sdp = sdp || DUMMY_SDP;
+function RTCSessionDescription(init) {
+  init = init || {};
+  this.type = init.type || 'offer';
+  this.sdp = init.sdp || DUMMY_SDP;
 }
 
 RTCSessionDescription.prototype.toJSON = function toJSON() {
