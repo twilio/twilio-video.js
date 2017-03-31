@@ -7,6 +7,7 @@ const sinon = require('sinon');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const { a, combinationContext } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   describe('constructor', () => {
@@ -1081,168 +1082,88 @@ describe('PeerConnectionV2', () => {
       });
     });
 
-    context('called with candidates', () => {
-      let test;
+    context('candidates', () => {
+      combinationContext([
+        [
+          [true, false],
+          x => `whose username fragment ${x ? 'matches' : 'does not match'} that of`
+        ],
+        [
+          ['offer', 'answer'],
+          x => `the current remote "${x}" description`
+        ],
+        [
+          ['newer', 'equal', 'older'],
+          x => `at ${a(x)} ${x} revision`
+        ]
+      ], ([matches, type, newerEqualOrOlder]) => {
+        let test;
 
-      beforeEach(() => {
-        test = makeTest({ offers: 1, answers: 1 });
-        test.pc.addIceCandidate = sinon.spy(test.pc.addIceCandidate);
-      });
+        beforeEach(async () => {
+          test = makeTest({ offers: 1, answers: 1 });
+          test.pc.addIceCandidate = sinon.spy(test.pc.addIceCandidate);
 
-      context('whose username fragment matches that of the current remote', () => {
-        context('answer description', () => {
-          beforeEach(async () => {
+          const descriptionUfrag = 'foo';
+          const descriptionRev = 1;
+
+          let candidatesUfrag = matches ? descriptionUfrag : 'bar';
+          let candidatesRev = 1;
+
+          if (type === 'answer') {
             await test.pcv2.offer();
-            await test.pcv2.update(test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1));
-            await test.pcv2.update(test.state().setIce(makeIce('bar', 1)));
+
+            const answer = makeAnswer({ ufrag: descriptionUfrag });
+            const answerDescription = test.state().setDescription(answer, descriptionRev);
+            await test.pcv2.update(answerDescription);
+          } else {
+            const offer = makeOffer({ ufrag: descriptionUfrag });
+            const offerDescription = test.state().setDescription(offer, descriptionRev);
+            await test.pcv2.update(offerDescription);
+          }
+
+          let ice = makeIce(candidatesUfrag, candidatesRev);
+          let iceState = test.state().setIce(ice, candidatesRev);
+          await test.pcv2.update(iceState);
+
+          // NOTE(mroberts): Just a sanity check.
+          if (matches) {
             assert.deepEqual(
               test.pc.addIceCandidate.args[0][0],
               { candidate: 'candidate1' });
-          });
+          }
 
-          context('at a new revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('bar', 2)));
-            });
+          switch (newerEqualOrOlder) {
+            case 'newer':
+              candidatesRev++;
+              break;
+            case 'equal':
+              break;
+            case 'older':
+              candidatesRev--;
+              break;
+          }
 
-            it('calls addIceCandidate with any new ICE candidates on the underlying RTCPeerConnection', () => {
-              assert.deepEqual(
-                test.pc.addIceCandidate.args[1][0],
-                { candidate: 'candidate2' });
-            });
-          });
-
-          context('at the same revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('bar', 1)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.calledOnce(test.pc.addIceCandidate);
-            });
-          });
-
-          context('at an old revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('bar', 0)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.calledOnce(test.pc.addIceCandidate);
-            });
-          });
+          ice = makeIce(candidatesUfrag, candidatesRev);
+          iceState = test.state().setIce(ice);
+          await test.pcv2.update(iceState);
         });
 
-        context('offer description', () => {
-          beforeEach(async () => {
-            await test.pcv2.update(test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2));
-            await test.pcv2.update(test.state().setIce(makeIce('foo', 1)));
+        if (matches && newerEqualOrOlder === 'newer') {
+          it('calls addIceCandidate with any new ICE candidates on the underlying RTCPeerConnection', () => {
+            sinon.assert.calledTwice(test.pc.addIceCandidate);
             assert.deepEqual(
-              test.pc.addIceCandidate.args[0][0],
-              { candidate: 'candidate1' });
+              test.pc.addIceCandidate.args[1][0],
+              { candidate: 'candidate2' });
           });
-
-          context('at a new revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('foo', 2)));
-            });
-
-            it('calls addIceCandidate with any new ICE candidates on the underlying RTCPeerConnection', () => {
-              assert.deepEqual(
-                test.pc.addIceCandidate.args[1][0],
-                { candidate: 'candidate2' });
-            });
-          });
-
-          context('at the same revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('foo', 1)));
-            });
-
-            it('does nothing', () => {
+        } else {
+          it('does nothing', () => {
+            if (matches) {
               sinon.assert.calledOnce(test.pc.addIceCandidate);
-            });
-          });
-
-          context('at an old revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('foo', 0)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.calledOnce(test.pc.addIceCandidate);
-            });
-          });
-        });
-      });
-
-      context('whose username fragment does not match that of the current remote', () => {
-        context('answer description', () => {
-          beforeEach(async () => {
-            await test.pcv2.offer();
-            await test.pcv2.update(test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
-            await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
-          });
-
-          context('at a new revision', () => {
-            it('does nothing', () => {
+            } else {
               sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
+            }
           });
-
-          context('at the same revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
-          });
-
-          context('at an old revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('buzz', 0)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
-          });
-        });
-
-        context('offer description', () => {
-          beforeEach(async () => {
-            await test.pcv2.update(test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1));
-            await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
-          });
-
-          context('at a new revision', () => {
-            it('does nothing', () => {
-              sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
-          });
-
-          context('at the same revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
-          });
-
-          context('at an old revision', () => {
-            beforeEach(async () => {
-              await test.pcv2.update(test.state().setIce(makeIce('buzz', 0)));
-            });
-
-            it('does nothing', () => {
-              sinon.assert.notCalled(test.pc.addIceCandidate);
-            });
-          });
-        });
+        }
       });
     });
   });
