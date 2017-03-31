@@ -1169,92 +1169,84 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('"candidates" event', () => {
-    let test;
+    ['initial', 'subsequent', 'final'].forEach(which => {
+      const description = 'when the underlying RTCPeerConnection\'s "icecandidate" event fires with' + {
+        initial: 'an initial candidate for the current username fragment',
+        subsequent: 'a subsequent candidate for the current username fragment',
+        final: 'without a candidate (ICE gathering completed)'
+      }[which];
 
-    beforeEach(async () => {
-      test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
-      await test.pcv2.offer();
-    });
+      context(description, () => {
+        let test;
+        let iceState;
 
-    context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with an initial candidate for the current username fragment', () => {
-      let iceState;
+        beforeEach(async () => {
+          test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
 
-      beforeEach(async () => {
-        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+          await test.pcv2.offer();
 
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: { candidate: 'candidate1' }
+          let iceStatePromise;
+
+          if (which === 'initial') {
+            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+          }
+
+          test.pc.emit('icecandidate', {
+            type: 'icecandidate',
+            candidate: { candidate: 'candidate1' }
+          });
+
+          if (which === 'subsequent') {
+            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+          }
+
+          test.pc.emit('icecandidate', {
+            type: 'icecandidate',
+            candidate: { candidate: 'candidate2' }
+          });
+
+          if (which === 'final') {
+            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+          }
+
+          test.pc.emit('icecandidate', {
+            type: 'icecandidate',
+            candidate: null
+          });
+
+          iceState = await iceStatePromise;
         });
 
-        iceState = await iceStatePromise;
-      });
+        context('emits the event', () => {
+          it('with the correct ID', () => {
+            assert.equal(iceState.id, test.pcv2.id);
+          });
 
-      it('emits the event with a single-element list of ICE candidates', () => {
-        assert.deepEqual(
-          iceState,
-          test.state().setIce(makeIce('foo', 1)));
-      });
-    });
+          if (which === 'initial') {
+            it('with a single-element list of ICE candidates', () => {
+              assert.deepEqual(
+                iceState.ice.candidates,
+                [{ candidate: 'candidate1' }]);
+            });
+          } else {
+            it('with the full list of ICE candidates gathered up to that point', () => {
+              assert.deepEqual(
+                iceState.ice.candidates,
+                [{ candidate: 'candidate1' },
+                 { candidate: 'candidate2' }]);
+            });
+          }
 
-    context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with subsequent candidates for the current username fragment', () => {
-      let iceState;
-
-      beforeEach(async () => {
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: { candidate: 'candidate1' }
+          if (which === 'final') {
+            it('with completed set to true', () => {
+              assert(iceState.ice.complete);
+            });
+          } else {
+            it('with completed unset', () => {
+              assert(!iceState.ice.complete);
+            });
+          }
         });
-
-        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
-
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: { candidate: 'candidate2' }
-        });
-
-        iceState = await iceStatePromise;
-      });
-
-      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        assert.deepEqual(
-          iceState,
-          test.state().setIce(makeIce('foo', 2)));
-      });
-    });
-
-    context('when the underlying RTCPeerConnection\'s "icecandidate" fires without a candidate (ICE gathering completed)', () => {
-      let iceState;
-
-      beforeEach(async () => {
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: { candidate: 'candidate1' }
-        });
-
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: { candidate: 'candidate2' }
-        });
-
-        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
-
-        test.pc.emit('icecandidate', {
-          type: 'icecandidate',
-          candidate: null
-        });
-
-        iceState = await iceStatePromise;
-      });
-
-      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        const endOfCandidatesIceState = test.state().setIce(makeIce('foo', 2));
-        endOfCandidatesIceState.ice.complete = true;
-        endOfCandidatesIceState.ice.revision = 3;
-
-        assert.deepEqual(
-          iceState,
-          endOfCandidatesIceState);
       });
     });
   });
