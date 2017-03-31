@@ -89,16 +89,12 @@ describe('connect', () => {
   });
 
   it('should reject if the token is invalid', () => {
-    return new Promise((resolve, reject) => {
-      connect('foo').then(reject, error => {
-        try {
-          assert(error instanceof AccessTokenInvalidError);
-          assert.equal(error.code, 20101);
-          resolve();
-        } catch(e) {
-          reject(e);
-        }
-      });
+    return connect('foo').then(() => {
+      throw new Error('Unexpected resolution');
+    }, error => {
+      console.log(error);
+      assert(error instanceof AccessTokenInvalidError);
+      assert.equal(error.code, 20101);
     });
   });
 });
