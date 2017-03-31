@@ -1,171 +1,191 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events');
-var FakeMediaStream = require('../../../../lib/fakemediastream').FakeMediaStream;
-var FakeMediaStreamTrack = require('../../../../lib/fakemediastream').FakeMediaStreamTrack;
-var PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
-var TwilioErrors = require('../../../../../lib/util/twilio-video-errors');
-var MediaClientLocalDescFailedError = TwilioErrors.MediaClientLocalDescFailedError;
-var MediaClientRemoteDescFailedError = TwilioErrors.MediaClientRemoteDescFailedError;
-var sinon = require('sinon');
+const assert = require('assert');
+const EventEmitter = require('events');
+const sinon = require('sinon');
+
+const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
+const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
+const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 describe('PeerConnectionV2', () => {
   describe('constructor', () => {
+    let test;
+
+    beforeEach(() => {
+      test = makeTest();
+    });
+
     it('sets .id', function() {
-      var test = makeTest();
-      assert.equal(test.id, test.peerConnectionV2.id);
+      assert.equal(test.pcv2.id, test.id);
     });
   });
 
   describe('#addMediaStream', () => {
+    let test;
+    let stream;
+    let result;
+
+    beforeEach(() => {
+      test = makeTest();
+      stream = {};
+      result = test.pcv2.addMediaStream(stream);
+    });
+
     it('returns undefined', () => {
-      var test = makeTest();
-      var mediaStream = {};
-      assert.equal(undefined, test.peerConnectionV2.addMediaStream(mediaStream));
+      assert.equal(result);
     });
 
     it('calls addStream on the underlying RTCPeerConnection', () => {
-      var test = makeTest();
-      test.peerConnection.addStream = sinon.spy(test.peerConnection.addStream);
-      var mediaStream = {};
-      test.peerConnectionV2.addMediaStream(mediaStream);
-      assert(test.peerConnection.addStream.calledWith(mediaStream));
+      assert.deepEqual(test.pc.getLocalStreams(), [stream]);
     });
   });
 
   describe('#close', () => {
     context('in signaling state "closed"', () => {
+      let test;
+      let initialState;
+      let result;
+
+      beforeEach(() => {
+        test = makeTest();
+        test.pc.close = sinon.spy(test.pc.close);
+        test.pcv2.close();
+
+        initialState = test.pcv2.getState();
+        result = test.pcv2.close();
+      });
+
       it('returns undefined', () => {
-        var test = makeTest();
-        test.peerConnectionV2.close();
-        assert.equal(undefined, test.peerConnectionV2.close());
+        assert.equal(result);
       });
 
       it('does not call close on the underlying RTCPeerConnection', () => {
-        var test = makeTest();
-        test.peerConnectionV2.close();
-        test.peerConnection.close = sinon.spy(test.peerConnection.close);
-        test.peerConnectionV2.close();
-        assert(!test.peerConnection.close.calledOnce);
+        assert(test.pc.close.calledOnce);
       });
 
       it('does not update the local description', () => {
-        var test = makeTest();
-        test.peerConnectionV2.close();
-        var before = test.peerConnectionV2.getState();
-        test.peerConnectionV2.close();
-        assert.deepEqual(
-          before,
-          test.peerConnectionV2.getState());
+        assert.deepEqual(test.pcv2.getState(), initialState);
       });
     });
 
     context('in signaling state "stable"', () => {
+      let test;
+      let description;
+      let result;
+
+      beforeEach(async () => {
+        test = makeTest();
+        test.pc.close = sinon.spy(test.pc.close);
+
+        [description, result] = await Promise.all([
+          new Promise(resolve => test.pcv2.once('description', resolve)),
+          test.pcv2.close()
+        ]);
+      });
+
       it('returns undefined', () => {
-        var test = makeTest();
-        assert.equal(undefined, test.peerConnectionV2.close());
+        assert.equal(result);
       });
 
       it('calls close on the underlying RTCPeerConnection', () => {
-        var test = makeTest();
-        test.peerConnection.close = sinon.spy(test.peerConnection.close);
-        test.peerConnectionV2.close();
-        assert(test.peerConnection.close.calledOnce);
+        assert(test.pc.close.calledOnce);
       });
 
       it('sets the local description to a close description and increments the revision', () => {
-        var test = makeTest();
-        test.peerConnectionV2.close();
-        assert.deepEqual(
-          test.state().setDescription(makeClose(), 1),
-          test.peerConnectionV2.getState());
+        assert.deepEqual(test.pcv2.getState(), test.state().setDescription(makeClose(), 1));
       });
 
       it('emits a "description" event with the new local description', () => {
-        var test = makeTest();
-        test.peerConnectionV2.once('description', description => {
-          assert.deepEqual(
-            test.state().setDescription(makeClose(), 1),
-            description);
-        });
-        test.peerConnectionV2.close();
+        assert.deepEqual(description, test.state().setDescription(makeClose(), 1));
       });
     });
   });
 
   describe('#getRemoteMediaStreamTracks', () => {
     it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
-      var test = makeTest();
-      var remoteStream = new FakeMediaStream();
-      var remoteTracks = [
+      const test = makeTest();
+      const remoteStream = new FakeMediaStream();
+      const remoteTracks = [
         new FakeMediaStreamTrack('audio'),
         new FakeMediaStreamTrack('video')
       ];
 
       remoteStream.addTrack(remoteTracks[0]);
       remoteStream.addTrack(remoteTracks[1]);
-      test.peerConnection.getRemoteStreams = () => [ remoteStream ];
-      assert.deepEqual(test.peerConnectionV2.getRemoteMediaStreamTracks(), remoteTracks);
+      test.pc.getRemoteStreams = () => [remoteStream];
+      assert.deepEqual(test.pcv2.getRemoteMediaStreamTracks(), remoteTracks);
     });
   });
 
   describe('#getState', () => {
+    let test;
+
+    beforeEach(() => {
+      test = makeTest({ offers: 1, answers: 1 });
+    });
+
     context('before setting a local description', () => {
       it('returns null', () => {
-        var test = makeTest();
-        assert.equal(null, test.peerConnectionV2.getState());
+        assert.equal(test.pcv2.getState(), null);
       });
     });
 
     context('after setting a local', () => {
       context('answer description', () => {
         context('with #update', () => {
+          beforeEach(async () => {
+            const offer = makeOffer();
+            const offerDescription = test.state().setDescription(offer, 1);
+            await test.pcv2.update(offerDescription);
+          });
+
           it('returns the local description', () => {
-            var test = makeTest({ answers: 1 });
-            var offerDescription = test.state().setDescription(makeOffer(), 1);
-            return test.peerConnectionV2.update(offerDescription).then(() => {
-              assert.deepEqual(
-                test.state().setDescription(test.answers[0], 1),
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              test.state().setDescription(test.answers[0], 1));
           });
         });
       });
 
       context('close description', () => {
         context('with #close', () => {
+          beforeEach(() => {
+            test.pcv2.close();
+          });
+
           it('returns the local description', () => {
-            var test = makeTest();
-            test.peerConnectionV2.close();
             assert.deepEqual(
-              test.state().setDescription(makeClose(), 1),
-              test.peerConnectionV2.getState());
+              test.pcv2.getState(),
+              test.state().setDescription(makeClose(), 1));
           });
         });
       });
 
       context('offer description', () => {
         context('with #offer', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+          });
+
           it('returns the local description', () => {
-            var test = makeTest({ offers: 1 });
-            return test.peerConnectionV2.offer().then(() => {
-              assert.deepEqual(
-                test.state().setDescription(test.offers[0], 1),
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              test.state().setDescription(test.offers[0], 1));
           });
         });
 
         context('with #update', () => {
+          beforeEach(async () => {
+            const createOffer = makeCreateOffer();
+            const createOfferDescription = test.state().setDescription(createOffer, 1);
+            await test.pcv2.update(createOfferDescription);
+          });
+
           it('returns the local description', () => {
-            var test = makeTest({ offers: 1 });
-            var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-            return test.peerConnectionV2.update(createOfferDescription).then(() => {
-              assert.deepEqual(
-                test.state().setDescription(test.offers[0], 2),
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              test.state().setDescription(test.offers[0], 2));
           });
         });
       });
@@ -173,224 +193,247 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#offer', () => {
+    let test;
+    let description;
+    let result;
+
+    beforeEach(async () => {
+      test = makeTest({ offers: 2 });
+
+      [description, result] = await Promise.all([
+        new Promise(resolve => test.pcv2.once('description', resolve)),
+        test.pcv2.offer()
+      ]);
+    });
+
     it('returns a Promise for undefined', () => {
-      var test = makeTest({ offers: 1 });
-      return test.peerConnectionV2.offer().then(peerConnectionV2 => {
-        assert.equal(undefined, peerConnectionV2);
-      });
+      assert.equal(result);
     });
 
     it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
-      var test = makeTest({ offers: 1 });
-      return test.peerConnectionV2.offer().then(peerConnectionV2 => {
-        assert.equal(test.offers[0], test.peerConnection.localDescription);
-      });
+      assert.equal(test.pc.localDescription, test.offers[0]);
     });
 
-    it('sets the local description to an offer description and increments the revision', () => {
-      var test = makeTest({ offers: 2 });
-      return test.peerConnectionV2.offer().then(() => {
-        assert.deepEqual(
-          test.state().setDescription(test.offers[0], 1),
-          test.peerConnectionV2.getState());
-        return test.peerConnectionV2.offer();
-      }).then(() => {
-        assert.deepEqual(
-          test.state().setDescription(test.offers[1], 2),
-          test.peerConnectionV2.getState());
-      });
+    it('sets the local description to an offer description and increments the revision', async () => {
+      assert.deepEqual(
+        test.pcv2.getState(),
+        test.state().setDescription(test.offers[0], 1));
+
+      // NOTE(mroberts): Test a subsequent call to offer, too.
+      await test.pcv2.offer();
+      assert.deepEqual(
+        test.pcv2.getState(),
+        test.state().setDescription(test.offers[1], 2));
     });
 
     it('emits a "description" event with the new local description', () => {
-      var test = makeTest({ offers: 1 });
-      test.peerConnectionV2.offer();
-      return new Promise(resolve => {
-        test.peerConnectionV2.once('description', resolve);
-      }).then(description => {
-        assert.deepEqual(
-          test.state().setDescription(test.offers[0], 1),
-          description);
-      });
+      assert.deepEqual(
+        description,
+        test.state().setDescription(test.offers[0], 1));
     });
 
-    ['createOffer', 'setLocalDescription'].forEach(scenario => {
-      context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-        it('should throw a MediaClientLocalDescFailedError', () => {
-          var test = makeTest({ offers: 1, errorScenario: scenario });
-          return test.peerConnectionV2.offer().then(() => {
-            throw new Error('Unexpected resolution');
-          }, error => {
+    // TODO(mroberts): Would be nice to somehow consolidate this with the
+    // `beforeEach` call (or move it out).
+    ['createOffer', 'setLocalDescription'].forEach(errorScenario => {
+      context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
+        it('should throw a MediaClientLocalDescFailedError', async () => {
+          const test = makeTest({ offers: 1, errorScenario });
+          try {
+            await test.pcv2.offer();
+          } catch (error) {
             assert(error instanceof MediaClientLocalDescFailedError);
             assert.equal(error.code, 53400);
-          });
+            return;
+          }
+          throw new Error('Unexpected resolution');
         });
       });
     });
   });
 
   describe('#removeMediaStream', () => {
+    let test;
+    let mediaStream;
+    let result;
+
+    beforeEach(() => {
+      test = makeTest();
+      mediaStream = {};
+      test.pcv2.addMediaStream(mediaStream);
+      result = test.pcv2.removeMediaStream(mediaStream);
+    });
+
     it('returns undefined', () => {
-      var test = makeTest();
-      var mediaStream = {};
-      test.peerConnectionV2.addMediaStream(mediaStream);
-      assert.equal(undefined, test.peerConnectionV2.removeMediaStream(mediaStream));
+      assert.equal(result);
     });
 
     it('calls removeStream on the underlying RTCPeerConnection', () => {
-      var test = makeTest();
-      test.peerConnection.removeStream = sinon.spy();
-      var mediaStream = {};
-      test.peerConnectionV2.addMediaStream(mediaStream);
-      test.peerConnectionV2.removeMediaStream(mediaStream);
-      assert(test.peerConnection.removeStream.calledWith(mediaStream));
+      assert.deepEqual(test.pc.getLocalStreams(), []);
     });
   });
 
   describe('#setConfiguration', () => {
+    let test;
+
+    beforeEach(() => {
+      test = makeTest();
+    });
+
     context('when setConfiguration is supported by the underlying RTCPeerConnection', () => {
       it('calls setConfiguration on the underlying RTCPeerConnection', () => {
-        var test = makeTest();
-        var configuration;
-        test.peerConnection.setConfiguration = _configuration => configuration = _configuration;
-        test.peerConnectionV2.setConfiguration({
+        let configuration;
+        test.pc.setConfiguration = _configuration => {
+          configuration = _configuration;
+        };
+
+        test.pcv2.setConfiguration({
           iceServers: ['foo'],
           iceTransportPolicy: 'bar'
         });
+
         assert.deepEqual(
+          configuration,
           {
             bundlePolicy: 'max-bundle',
             iceServers: ['foo'],
             iceTransportPolicy: 'bar',
             rtcpMuxPolicy: 'require'
-          },
-          configuration);
+          });
       });
     });
 
     context('when setConfiguration is not supported by the underlying RTCPeerConnection', () => {
       it('does not call setConfiguration on the underlying RTCPeerConnection', () => {
-        var test = makeTest();
-        test.peerConnectionV2.setConfiguration({ fizz: 'buzz' });
+        test.pcv2.setConfiguration({ fizz: 'buzz' });
       });
     });
   });
 
   describe('#update', () => {
     context('called with', () => {
+      let test;
+
+      beforeEach(() => {
+        test = makeTest({ offers: 2, answers: 1 });
+        test.pc.addIceCandidate = sinon.spy(test.pc.addIceCandidate);
+        test.pc.close = sinon.spy(test.pc.close);
+        test.pc.setLocalDescription = sinon.spy(test.pc.setLocalDescription);
+        test.pc.setRemoteDescription = sinon.spy(test.pc.setRemoteDescription);
+      });
+
       context('an answer description at', () => {
         context('a new revision', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+
+            const answerDescription = test.state().setDescription(makeAnswer(), 2);
+            await test.pcv2.update(answerDescription);
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 1 });
-            var answerDescription = test.state().setDescription(makeAnswer(), 2);
-            return test.peerConnectionV2.offer().then(() => {
-              return test.peerConnectionV2.update(answerDescription);
-            }).then(() => {
-              assert(!test.peerConnection.setRemoteDescription.calledOnce);
-            });
+            sinon.assert.notCalled(test.pc.setRemoteDescription);
           });
         });
 
         context('the same revision', () => {
           context('in signaling state "closed"', () => {
+            beforeEach(async () => {
+              const closeDescription = test.state().setDescription(makeClose(), 1);
+              await test.pcv2.update(closeDescription);
+
+              const answerDescription = test.state().setDescription(makeAnswer(), 1);
+              await test.pcv2.update(answerDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var answerDescription = test.state().setDescription(makeAnswer(), 1);
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                test.peerConnection.setRemoteDescription = sinon.spy(test.peerConnection.setRemoteDescription);
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                assert(!test.peerConnection.setRemoteDescription.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.setRemoteDescription);
             });
           });
 
           context('in signaling state "have-local-offer"', () => {
-            it('calls setRemoteDescription with the answer description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              var answer = makeAnswer();
-              var answerDescription = test.state().setDescription(answer, 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  Object.assign({ revision: 1 }, answer),
-                  test.peerConnection.remoteDescription);
-              });
+            let before;
+            let answer;
+
+            beforeEach(async () => {
+              const candidates = test.state().setIce(makeIce('bar', 1));
+              await test.pcv2.update(candidates);
+
+              await test.pcv2.offer();
+              before = test.pcv2.getState();
+
+              answer = makeAnswer({ ufrag: 'bar' });
+              const answerDescription = test.state().setDescription(answer, 1);
+              await test.pcv2.update(answerDescription);
             });
 
+            it('calls setRemoteDescription with the answer description on the underlying RTCPeerConnection', () => {
+              assert.deepEqual(
+                test.pc.remoteDescription,
+                Object.assign({ revision: 1 }, answer));
+            });
+
+            // TODO(mroberts): Would be nice to somehow consolidate this with
+            // the `beforeEach` call (or move it out).
             context('when setRemoteDescription on the underlying RTCPeerConnection fails', () => {
-              it('should throw a MediaClientRemoteDescFaileError', () => {
-                var test = makeTest({ offers: 1, errorScenario: 'setRemoteDescription' });
-                var answer = makeAnswer();
-                var answerDescription = test.state().setDescription(answer, 1);
-                return test.peerConnectionV2.offer().then(() => {
-                  return test.peerConnectionV2.update(answerDescription);
-                }).then(() => {
-                  throw new Error('Unexpected resolution');
-                }, error => {
+              let test;
+              let answerDescription;
+
+              beforeEach(async () => {
+                test = makeTest({ offers: 1, errorScenario: 'setRemoteDescription' });
+
+                await test.pcv2.offer();
+
+                const answer = makeAnswer();
+                answerDescription = test.state().setDescription(answer, 1);
+              });
+
+              it('should throw a MediaClientRemoteDescFaileError', async () => {
+                try {
+                  await test.pcv2.update(answerDescription);
+                } catch (error) {
                   assert(error instanceof MediaClientRemoteDescFailedError);
                   assert.equal(error.code, 53402);
-                });
+                  return;
+                }
+
+                throw new Error('Unexpected resolution');
               });
             });
 
             it('calls addIceCandidate with any previously-received matching ICE candidates on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              var answerDescription = test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1);
-              var candidates = test.state().setIce(makeIce('bar', 1));
-              return test.peerConnectionV2.update(candidates).then(() => {
-                return test.peerConnectionV2.offer();
-              }).then(() => {
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate1' },
-                  test.peerConnection.addIceCandidate.args[0][0]);
-              });
+              sinon.assert.calledOnce(test.pc.addIceCandidate);
+              sinon.assert.calledWith(test.pc.addIceCandidate, sinon.match({ candidate: 'candidate1' }));
             });
 
             it('does not update the local description', () => {
-              var test = makeTest({ offers: 1 });
-              var answerDescription = test.state().setDescription(makeAnswer(), 1);
-              var before;
-              return test.peerConnectionV2.offer().then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(test.pcv2.getState(), before);
             });
           });
 
           context('in signaling state "stable"', () => {
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              const answer = makeAnswer();
+              const answerDescription = test.state().setDescription(answer, 1);
+              await test.pcv2.update(answerDescription);
+              await test.pcv2.update(answerDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              var answerDescription = test.state().setDescription(makeAnswer(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                test.peerConnection.setRemoteDescription = sinon.spy(test.peerConnection.setRemoteDescription);
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                assert(!test.peerConnection.setRemoteDescription.calledOnce);
-              });
+              assert(test.pc.setRemoteDescription.calledOnce);
             });
           });
         });
 
         context('an old revision', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+            await test.pcv2.update(test.state().setDescription(makeAnswer(), 0));
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 1 });
-            return test.peerConnectionV2.offer().then(() => {
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeAnswer(), 0));
-            }).then(() => {
-              assert(!test.peerConnection.setRemoteDescription.calledOnce);
-            });
+            assert(!test.pc.setRemoteDescription.calledOnce);
           });
         });
       });
@@ -398,138 +441,135 @@ describe('PeerConnectionV2', () => {
       context('a close description at', () => {
         context('a new revision', () => {
           context('in signaling state "closed"', () => {
+            beforeEach(async () => {
+              const close = makeClose();
+              const closeDescription1 = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription1);
+
+              const closeDescription2 = test.state().setDescription(close, 2);
+              await test.pcv2.update(closeDescription2);
+            });
+
             it('does nothing', () => {
-              var test = makeTest();
-              var closeDescription1 = test.state().setDescription(makeClose(), 1);
-              var closeDescription2 = test.state().setDescription(makeClose(), 2);
-              return test.peerConnectionV2.update(closeDescription1).then(() => {
-                test.peerConnection.close = sinon.spy();
-                return test.peerConnectionV2.update(closeDescription2);
-              }).then(() => {
-                assert(!test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.close);
             });
           });
 
           context('in signaling state "have-local-offer"', () => {
+            let before;
+
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              before = test.pcv2.getState();
+
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 2);
+              await test.pcv2.update(closeDescription);
+            });
+
             it('calls close on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.close = sinon.spy();
-              var closeDescription = test.state().setDescription(makeClose(), 2);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert(test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.close);
             });
 
             it('does not update the local description', () => {
-              var test = makeTest({ offers: 1 });
-              var closeDescription = test.state().setDescription(makeClose(), 2);
-              var before;
-              return test.peerConnectionV2.offer().then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
 
           context('in signaling state "stable"', () => {
+            let before;
+
+            beforeEach(async () => {
+              before = test.pcv2.getState();
+
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+            });
+
             it('calls close on the underlying RTCPeerConnection', () => {
-              var test = makeTest();
-              test.peerConnection.close = sinon.spy();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                assert(test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.close);
             });
 
             it('does not update the local description', () => {
-              var test = makeTest();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var before;
-              before = test.peerConnectionV2.getState();
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
         });
 
         context('the same revision', () => {
           context('in signaling state "closed"', () => {
+            beforeEach(async () => {
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+              await test.pcv2.update(closeDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                test.peerConnection.close = sinon.spy();
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert(!test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.close);
             });
           });
 
           context('in signaling state "have-local-offer"', () => {
+            let before;
+
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              before = test.pcv2.getState();
+
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+            });
+
             it('calls close on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.close = sinon.spy();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert(test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.close);
             });
 
             it('does not update the local description', () => {
-              var test = makeTest({ offers: 1 });
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var before;
-              return test.peerConnectionV2.offer().then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
 
           context('in signaling state "stable"', () => {
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              const answer = makeAnswer();
+              const answerDescription = test.state().setDescription(answer, 1);
+              await test.pcv2.update(answerDescription);
+
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.close = sinon.spy();
-              var answerDescription = test.state().setDescription(makeAnswer(), 1);
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                return test.peerConnectionV2.update(closeDescription);
-              }).then(() => {
-                assert(!test.peerConnection.close.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.close);
             });
           });
         });
 
         context('an old revision', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+
+            const close = makeClose();
+            const closeDescription = test.state().setDescription(close, 0);
+            await test.pcv2.update(closeDescription);
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 1 });
-            test.peerConnection.close = sinon.spy();
-            return test.peerConnectionV2.offer().then(() => {
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeClose(), 0));
-            }).then(() => {
-              assert(!test.peerConnection.close.calledOnce);
-            });
+            sinon.assert.notCalled(test.pc.close);
           });
         });
       });
@@ -537,118 +577,138 @@ describe('PeerConnectionV2', () => {
       context('a create-offer description at', () => {
         context('a new revision', () => {
           context('in signaling state "closed"', () => {
+            let before;
+
+            beforeEach(async () => {
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+
+              before = test.pcv2.getState();
+
+              const createOffer = makeCreateOffer();
+              const createOfferDescription = test.state().setDescription(createOffer, 2);
+              await test.pcv2.update(createOfferDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var createOfferDescription = test.state().setDescription(makeCreateOffer(), 2);
-              var before;
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(createOfferDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
 
           context('in signaling state "stable"', () => {
-            it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-              return test.peerConnectionV2.update(createOfferDescription).then(() => {
-                assert.deepEqual(
-                  test.offers[0],
-                  test.peerConnection.localDescription);
-              });
+            let offer;
+
+            beforeEach(async () => {
+              const createOffer = makeCreateOffer();
+              const createOfferDescription = test.state().setDescription(createOffer, 1);
+
+              const resultPromise = test.pcv2.update(createOfferDescription);
+              offer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              await resultPromise;
             });
 
-            ['createOffer', 'setLocalDescription'].forEach(scenario => {
-              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                it('should throw a MediaClientLocalDescFailedError', () => {
-                  var test = makeTest({ offers: 1, errorScenario: scenario });
-                  var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-                  return test.peerConnectionV2.update(createOfferDescription).then(() => {
-                    throw new Error('Unexpected resolution');
-                  }, error => {
+            it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
+              assert.deepEqual(
+                test.pc.localDescription,
+                test.offers[0]);
+            });
+
+            // TODO(mroberts): Would be nice to somehow consolidate this with
+            // the `beforeEach` call (or move it out).
+            ['createOffer', 'setLocalDescription'].forEach(errorScenario => {
+              context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
+                it('should throw a MediaClientLocalDescFailedError', async () => {
+                  const test = makeTest({ offers: 1, errorScenario });
+
+                  const createOffer = makeCreateOffer();
+                  const createOfferDescription = test.state().setDescription(createOffer, 1);
+                  try {
+                    await test.pcv2.update(createOfferDescription);
+                  } catch (error) {
                     assert(error instanceof MediaClientLocalDescFailedError);
                     assert.equal(error.code, 53400);
-                  });
+                    return;
+                  }
+
+                  throw new Error('Unexpected resolution');
                 });
               });
             });
 
             it('sets the local description to an offer description and increments the revision', () => {
-              var test = makeTest({ offers: 1 });
-              var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-              return test.peerConnectionV2.update(createOfferDescription).then(() => {
-                assert.deepEqual(
-                  test.state().setDescription(test.offers[0], 2),
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                test.state().setDescription(test.offers[0], 2));
             });
 
             it('emits a "description" event with the new local description', () => {
-              var test = makeTest({ offers: 1 });
-              var createOfferDescription = test.state().setDescription(makeCreateOffer(), 1);
-              test.peerConnectionV2.update(createOfferDescription);
-              return new Promise(resolve => {
-                test.peerConnectionV2.once('description', resolve);
-              }).then(description => {
-                assert.deepEqual(
-                  test.state().setDescription(test.offers[0], 2),
-                  description);
-              });
+              assert.deepEqual(
+                offer,
+                test.state().setDescription(test.offers[0], 2));
             });
           });
 
           context('in signaling state "have-local-offer"', () => {
+            let before;
+
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              before = test.pcv2.getState();
+
+              const createOffer = makeCreateOffer();
+              const createOfferDescription = test.state().setDescription(createOffer, 2);
+              await test.pcv2.update(createOfferDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              var createOfferDescription = test.state().setDescription(makeCreateOffer(), 2);
-              var before;
-              return test.peerConnectionV2.offer().then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(createOfferDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
         });
 
         context('the same revision', () => {
+          let before;
+
+          beforeEach(async () => {
+            await test.pcv2.offer();
+
+            before = test.pcv2.getState();
+
+            const createOffer = makeCreateOffer();
+            const createOfferDescription = test.state().setDescription(createOffer, 1);
+            await test.pcv2.update(createOfferDescription);
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 2 });
-            var before;
-            return test.peerConnectionV2.offer().then(() => {
-              before = test.peerConnectionV2.getState();
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeCreateOffer(), 1));
-            }).then(() => {
-              assert.deepEqual(
-                before,
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              before);
           });
         });
 
         context('an old revision', () => {
+          let before;
+
+          beforeEach(async () => {
+            await test.pcv2.offer();
+
+            before = test.pcv2.getState();
+
+            const createOffer = makeCreateOffer();
+            const createOfferDescription = test.state().setDescription(createOffer, 1);
+            await test.pcv2.update(createOfferDescription);
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 1 });
-            var before;
-            return test.peerConnectionV2.offer().then(() => {
-              before = test.peerConnectionV2.getState();
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeCreateOffer(), 0));
-            }).then(() => {
-              assert.deepEqual(
-                before,
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              before);
           });
         });
       });
@@ -656,221 +716,198 @@ describe('PeerConnectionV2', () => {
       context('an offer description at', () => {
         context('a new revision', () => {
           context('in signaling state "closed"', () => {
+            let before;
+
+            beforeEach(async () => {
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+
+              before = test.pcv2.getState();
+
+              const offer = makeOffer();
+              const offerDescription = test.state().setDescription(offer, 2);
+              await test.pcv2.update(offerDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var offerDescription = test.state().setDescription(makeOffer(), 2);
-              var before;
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
 
           context('in signaling state "have-local-offer" (glare)', () => {
+            let offer;
+            let answer;
+            let newOffer;
+
+            beforeEach(async () => {
+              test.pc.setLocalDescription = sinon.spy(test.pc.setLocalDescription);
+
+              await test.pcv2.offer();
+
+              offer = makeOffer();
+              const offerDescription = test.state().setDescription(offer, 2);
+
+              const resultPromise = test.pcv2.update(offerDescription);
+              answer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              newOffer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              await resultPromise;
+            });
+
             it('calls setLocalDescription with a rollback description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offer = makeOffer();
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(offer, 2)
-                );
-              }).then(() => {
-                assert.deepEqual(
-                  { type: 'rollback' },
-                  test.peerConnection.setLocalDescription.args[1][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[1][0],
+                { type: 'rollback' });
             });
 
             it('calls setRemoteDescription with the offer description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offer = makeOffer();
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(offer, 2));
-              }).then(() => {
-                assert.deepEqual(
-                  Object.assign({ revision: 2 }, offer),
-                  test.peerConnection.remoteDescription);
-              });
+              assert.deepEqual(
+                test.pc.remoteDescription,
+                Object.assign({ revision: 2 }, offer));
             });
 
             it('calls createAnswer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offer = makeOffer();
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(offer, 2));
-              }).then(() => {
-                assert.deepEqual(
-                  test.answers[0],
-                  test.peerConnection.setLocalDescription.args[2][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[2][0],
+                test.answers[0]);
             });
 
             it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offer = makeOffer();
-              var offerDescription = test.state().setDescription(offer, 2);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  test.offers[1],
-                  test.peerConnection.setLocalDescription.args[3][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[3][0],
+                test.offers[1]);
             });
 
             it('sets the local description to an offer description and increments the revision', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 2);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  test.state().setDescription(test.offers[1], 3),
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                test.state().setDescription(test.offers[1], 3));
             });
 
             it('emits two "description" events: first an answer description, then an offer description', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 2);
-              return test.peerConnectionV2.offer().then(() => {
-                test.peerConnectionV2.update(offerDescription);
-                return new Promise(resolve => {
-                  test.peerConnectionV2.once('description', answer => {
-                    test.peerConnectionV2.once('description', offer => {
-                      resolve([answer, offer]);
-                    });
-                  });
-                }).then(descriptions => {
-                  assert.deepEqual(
-                    test.state().setDescription(test.answers[0], 2),
-                    descriptions[0]);
-                  assert.deepEqual(
-                    test.state().setDescription(test.offers[1], 3),
-                    descriptions[1]);
-                });
-              });
+              assert.deepEqual(
+                answer,
+                test.state().setDescription(test.answers[0], 2));
+
+              assert.deepEqual(
+                newOffer,
+                test.state().setDescription(test.offers[1], 3));
             });
 
-            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
-              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedError = scenario === 'setRemoteDescription'
+            // TODO(mroberts): Would be nice to somehow consolidate this with
+            // the `beforeEach` call (or move it out).
+            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(errorScenario => {
+              context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
+                const expectedError = errorScenario === 'setRemoteDescription'
                   ? 'MediaClientRemoteDescFailedError'
                   : 'MediaClientLocalDescFailedError';
-                var expectedErrorClass = scenario === 'setRemoteDescription'
+
+                const expectedErrorClass = errorScenario === 'setRemoteDescription'
                   ? MediaClientRemoteDescFailedError
                   : MediaClientLocalDescFailedError;
-                var expectedErrorCode = scenario === 'setRemoteDescription'
+
+                const expectedErrorCode = errorScenario === 'setRemoteDescription'
                   ? 53402
                   : 53400;
 
-                it(`should throw a ${expectedError}`, () => {
-                  var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
-                  var offerDescription = test.state().setDescription(makeOffer(), 2);
-                  return test.peerConnectionV2.offer().then(() => {
-                    return test.peerConnectionV2.update(offerDescription);
-                  }).then(() => {
-                    throw new Error('Unexpected resolution');
-                  }, error => {
+                it(`should throw a ${expectedError}`, async () => {
+                  const test = makeTest({ offers: 2, answers: 1, errorScenario });
+
+                  const offer = makeOffer();
+                  const offerDescription = test.state().setDescription(offer, 2);
+                  try {
+                    await test.pcv2.offer();
+                    await test.pcv2.update(offerDescription);
+                  } catch (error) {
                     assert(error instanceof expectedErrorClass);
                     assert.equal(error.code, expectedErrorCode);
-                  });
+                    return;
+                  }
+
+                  throw new Error('Unexpected resolution');
                 });
               });
             });
           });
 
           context('in signaling state "stable"', () => {
+            let offer;
+            let answer;
+
+            beforeEach(async () => {
+              offer = makeOffer({ ufrag: 'foo' });
+              const offerDescription = test.state().setDescription(offer, 1);
+
+              const candidates = test.state().setIce(makeIce('foo', 1));
+              await test.pcv2.update(candidates);
+
+              const resultPromise = test.pcv2.update(offerDescription);
+              answer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              await resultPromise;
+            });
+
             it('calls setRemoteDescription with the offer description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ answers: 1 });
-              var offer = makeOffer();
-              var offerDescription = test.state().setDescription(offer, 1);
-              return test.peerConnectionV2.update(offerDescription).then(() => {
-                assert.deepEqual(
-                  Object.assign({ revision: 1 }, offer),
-                  test.peerConnection.remoteDescription);
-              });
+              assert.deepEqual(
+                test.pc.remoteDescription,
+                Object.assign({ revision: 1 }, offer));
             });
 
             it('calls createAnswer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.update(offerDescription).then(() => {
-                assert.deepEqual(
-                  test.answers[0],
-                  test.peerConnection.localDescription);
-              });
+              assert.deepEqual(
+                test.pc.localDescription,
+                test.answers[0]);
             });
 
             it('calls addIceCandidate with any previously-received matching ICE candidates on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ answers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              var offerDescription = test.state().setDescription(makeOffer({ ufrag: 'foo' }), 1);
-              var candidates = test.state().setIce(makeIce('foo', 1));
-              return test.peerConnectionV2.update(candidates).then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate1' },
-                  test.peerConnection.addIceCandidate.args[0][0]);
-              });
+              assert.deepEqual(
+                test.pc.addIceCandidate.args[0][0],
+                { candidate: 'candidate1' });
             });
 
             it('sets the local description to an answer description at the new revision', () => {
-              var test = makeTest({ answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.update(offerDescription).then(() => {
-                assert.deepEqual(
-                  test.state().setDescription(test.answers[0], 1),
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                test.state().setDescription(test.answers[0], 1));
             });
 
             it('emits a "description" event with the new local description', () => {
-              var test = makeTest({ answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              test.peerConnectionV2.update(offerDescription).then();
-              return new Promise(resolve => {
-                test.peerConnectionV2.once('description', resolve);
-              }).then(description => {
-                assert.deepEqual(
-                  test.state().setDescription(test.answers[0], 1),
-                  description);
-              });
+              assert.deepEqual(
+                answer,
+                test.state().setDescription(test.answers[0], 1));
             });
 
-            ['createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
-              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedError = scenario === 'setRemoteDescription'
+            // TODO(mroberts): Would be nice to somehow consolidate this with
+            // the `beforeEach` call (or move it out).
+            ['createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(errorScenario => {
+              context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
+                const expectedError = errorScenario === 'setRemoteDescription'
                   ? 'MediaClientRemoteDescFailedError'
                   : 'MediaClientLocalDescFailedError';
-                var expectedErrorClass = scenario === 'setRemoteDescription'
+
+                const expectedErrorClass = errorScenario === 'setRemoteDescription'
                   ? MediaClientRemoteDescFailedError
                   : MediaClientLocalDescFailedError;
-                var expectedErrorCode = scenario === 'setRemoteDescription'
+
+                const expectedErrorCode = errorScenario === 'setRemoteDescription'
                   ? 53402
                   : 53400;
 
-                it(`should throw a ${expectedError}`, () => {
-                  var test = makeTest({ answers: 1, errorScenario: scenario });
-                  var offerDescription = test.state().setDescription(makeOffer(), 1);
-                  return test.peerConnectionV2.update(offerDescription).then(() => {
-                    throw new Error('Unexpected resolution');
-                  }, error => {
+                it(`should throw a ${expectedError}`, async () => {
+                  const test = makeTest({ answers: 1, errorScenario });
+
+                  const offer = makeOffer();
+                  const offerDescription = test.state().setDescription(offer, 1);
+                  try {
+                    await test.pcv2.update(offerDescription);
+                  } catch (error) {
                     assert(error instanceof expectedErrorClass);
                     assert.equal(error.code, expectedErrorCode);
-                  });
+                    return;
+                  }
+
+                  throw new Error('Unexpected resolution');
                 });
               });
             });
@@ -879,303 +916,261 @@ describe('PeerConnectionV2', () => {
 
         context('the same revision', () => {
           context('in signaling state "closed"', () => {
+            let before;
+
+            beforeEach(async () => {
+              const close = makeClose();
+              const closeDescription = test.state().setDescription(close, 1);
+              await test.pcv2.update(closeDescription);
+
+              before = test.pcv2.getState();
+
+              const offer = makeOffer();
+              const offerDescription = test.state().setDescription(offer, 1);
+              await test.pcv2.update(offerDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest();
-              var closeDescription = test.state().setDescription(makeClose(), 1);
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              var before;
-              return test.peerConnectionV2.update(closeDescription).then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
 
           context('in signaling state "have-local-offer" (glare)', () => {
+            let offer;
+            let answer;
+            let newOffer;
+
+            beforeEach(async () => {
+              offer = makeOffer();
+              const offerDescription = test.state().setDescription(offer, 1);
+
+              await test.pcv2.offer();
+
+              const resultPromise = test.pcv2.update(offerDescription);
+              answer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              newOffer = await new Promise(resolve => test.pcv2.once('description', resolve));
+              await resultPromise;
+            });
+
             it('calls setLocalDescription with a rollback description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offer = makeOffer();
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(offer, 1)
-                );
-              }).then(() => {
-                assert.deepEqual(
-                  { type: 'rollback' },
-                  test.peerConnection.setLocalDescription.args[1][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[1][0],
+                { type: 'rollback' });
             });
 
             it('calls setRemoteDescription with the offer description on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offer = makeOffer();
-              var offerDescription = test.state().setDescription(offer, 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  Object.assign({ revision: 1 }, offer),
-                  test.peerConnection.remoteDescription);
-              });
+              assert.deepEqual(
+                test.pc.remoteDescription,
+                Object.assign({ revision: 1 }, offer));
             });
 
             it('calls createAnswer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  test.answers[0],
-                  test.peerConnection.setLocalDescription.args[2][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[2][0],
+                test.answers[0]);
             });
 
             it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              test.peerConnection.setLocalDescription = sinon.spy(test.peerConnection.setLocalDescription);
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  test.offers[1],
-                  test.peerConnection.setLocalDescription.args[3][0]);
-              });
+              assert.deepEqual(
+                test.pc.setLocalDescription.args[3][0],
+                test.offers[1]);
             });
 
             it('sets the local description to an offer description and increments the revision', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  test.state().setDescription(test.offers[1], 2),
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                test.state().setDescription(test.offers[1], 2));
             });
 
             it('emits a "description" event with the new local description', () => {
-              var test = makeTest({ offers: 2, answers: 1 });
-              var offerDescription = test.state().setDescription(makeOffer(), 1);
-              return test.peerConnectionV2.offer().then(() => {
-                test.peerConnectionV2.update(offerDescription);
-                return new Promise(resolve => {
-                  test.peerConnectionV2.once('description', answer => {
-                    test.peerConnectionV2.once('description', offer => {
-                      resolve([answer, offer]);
-                    });
-                  });
-                }).then(descriptions => {
-                  assert.deepEqual(
-                    test.state().setDescription(test.answers[0], 1),
-                    descriptions[0]);
-                  assert.deepEqual(
-                    test.state().setDescription(test.offers[1], 2),
-                    descriptions[1]);
-                });
-              });
+              assert.deepEqual(
+                answer,
+                test.state().setDescription(test.answers[0], 1));
+
+              assert.deepEqual(
+                newOffer,
+                test.state().setDescription(test.offers[1], 2));
             });
 
-            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(scenario => {
-              context(`when ${scenario} on the underlying RTCPeerConnection fails`, () => {
-                var expectedError = scenario === 'setRemoteDescription'
+            // TODO(mroberts): Would be nice to somehow consolidate this with
+            // the `beforeEach` call (or move it out).
+            ['createOffer', 'createAnswer', 'setLocalDescription', 'setRemoteDescription'].forEach(errorScenario => {
+              context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
+                const expectedError = errorScenario === 'setRemoteDescription'
                   ? 'MediaClientRemoteDescFailedError'
                   : 'MediaClientLocalDescFailedError';
-                var expectedErrorClass = scenario === 'setRemoteDescription'
+
+                const expectedErrorClass = errorScenario === 'setRemoteDescription'
                   ? MediaClientRemoteDescFailedError
                   : MediaClientLocalDescFailedError;
-                var expectedErrorCode = scenario === 'setRemoteDescription'
+
+                const expectedErrorCode = errorScenario === 'setRemoteDescription'
                   ? 53402
                   : 53400;
 
-                it(`should throw a ${expectedError}`, () => {
-                  var test = makeTest({ offers: 2, answers: 1, errorScenario: scenario });
-                  var offerDescription = test.state().setDescription(makeOffer(), 1);
-                  return test.peerConnectionV2.offer().then(() => {
-                    return test.peerConnectionV2.update(offerDescription);
-                  }).then(() => {
-                    throw new Error('Unexpected resolution');
-                  }, error => {
+                it(`should throw a ${expectedError}`, async () => {
+                  const test = makeTest({ offers: 2, answers: 1, errorScenario });
+
+                  const offer = makeOffer();
+                  const offerDescription = test.state().setDescription(offer, 1);
+                  try {
+                    await test.pcv2.offer();
+                    await test.pcv2.update(offerDescription);
+                  } catch (error) {
                     assert(error instanceof expectedErrorClass);
                     assert.equal(error.code, expectedErrorCode);
-                  });
+                    return;
+                  }
+
+                  throw new Error('Unexpected resolution');
                 });
               });
             });
           });
 
           context('in signaling state "stable"', () => {
+            let before;
+
+            beforeEach(async () => {
+              await test.pcv2.offer();
+
+              const answer = makeAnswer();
+              const answerDescription = test.state().setDescription(answer, 1);
+              await test.pcv2.update(answerDescription);
+
+              before = test.pcv2.getState();
+
+              const offer = makeOffer();
+              const offerDescription = test.state().setDescription(offer, 1);
+              await test.pcv2.update(offerDescription);
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              var answerDescription = test.state().setDescription(makeAnswer(), 1);
-              var offerDescription = test.state().setDescription(makeClose(), 1);
-              var before;
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(answerDescription);
-              }).then(() => {
-                before = test.peerConnectionV2.getState();
-                return test.peerConnectionV2.update(offerDescription);
-              }).then(() => {
-                assert.deepEqual(
-                  before,
-                  test.peerConnectionV2.getState());
-              });
+              assert.deepEqual(
+                test.pcv2.getState(),
+                before);
             });
           });
         });
 
         context('an old revision', () => {
+          let before;
+
+          beforeEach(async () => {
+            await test.pcv2.offer();
+
+            const answer = makeAnswer();
+            const answerDescription = test.state().setDescription(answer, 1);
+            await test.pcv2.update(answerDescription);
+
+            before = test.pcv2.getState();
+
+            const offer = makeOffer();
+            const offerDescription = test.state().setDescription(offer, 1);
+            await test.pcv2.update(offerDescription);
+          });
+
           it('does nothing', () => {
-            var test = makeTest({ offers: 1, answers: 1 });
-            var before;
-            return test.peerConnectionV2.offer().then(() => {
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeAnswer(), 1));
-            }).then(() => {
-              before = test.peerConnectionV2.getState();
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer(), 1));
-            }).then(() => {
-              assert.deepEqual(
-                before,
-                test.peerConnectionV2.getState());
-            });
+            assert.deepEqual(
+              test.pcv2.getState(),
+              before);
           });
         });
       });
     });
 
     context('called with candidates', () => {
+      let test;
+
+      beforeEach(() => {
+        test = makeTest({ offers: 1, answers: 1 });
+        test.pc.addIceCandidate = sinon.spy(test.pc.addIceCandidate);
+      });
+
       context('whose username fragment matches that of the current remote', () => {
         context('answer description', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+            await test.pcv2.update(test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1));
+            await test.pcv2.update(test.state().setIce(makeIce('bar', 1)));
+            assert.deepEqual(
+              test.pc.addIceCandidate.args[0][0],
+              { candidate: 'candidate1' });
+          });
+
           context('at a new revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('bar', 2)));
+            });
+
             it('calls addIceCandidate with any new ICE candidates on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 1));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 1)));
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate1' },
-                  test.peerConnection.addIceCandidate.args[0][0]);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 2)));
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate2' },
-                  test.peerConnection.addIceCandidate.args[1][0]);
-              });
+              assert.deepEqual(
+                test.pc.addIceCandidate.args[1][0],
+                { candidate: 'candidate2' });
             });
           });
 
           context('at the same revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('bar', 1)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }, 1)));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 1)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.addIceCandidate);
             });
           });
 
           context('at an old revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('bar', 0)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'bar' }), 2));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 2)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('bar', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.addIceCandidate);
             });
           });
         });
 
         context('offer description', () => {
+          beforeEach(async () => {
+            await test.pcv2.update(test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2));
+            await test.pcv2.update(test.state().setIce(makeIce('foo', 1)));
+            assert.deepEqual(
+              test.pc.addIceCandidate.args[0][0],
+              { candidate: 'candidate1' });
+          });
+
           context('at a new revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('foo', 2)));
+            });
+
             it('calls addIceCandidate with any new ICE candidates on the underlying RTCPeerConnection', () => {
-              var test = makeTest({ answers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 1)));
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate1' },
-                  test.peerConnection.addIceCandidate.args[0][0]);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 2)));
-              }).then(() => {
-                assert.deepEqual(
-                  { candidate: 'candidate2' },
-                  test.peerConnection.addIceCandidate.args[1][0]);
-              });
+              assert.deepEqual(
+                test.pc.addIceCandidate.args[1][0],
+                { candidate: 'candidate2' });
             });
           });
 
           context('at the same revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('foo', 1)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ answers: 1 });
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 1)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.addIceCandidate);
             });
           });
 
           context('at an old revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('foo', 0)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ answers: 1 });
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'foo' }), 2)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 2)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('foo', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.calledOnce(test.pc.addIceCandidate);
             });
           });
         });
@@ -1183,110 +1178,68 @@ describe('PeerConnectionV2', () => {
 
       context('whose username fragment does not match that of the current remote', () => {
         context('answer description', () => {
+          beforeEach(async () => {
+            await test.pcv2.offer();
+            await test.pcv2.update(test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
+            await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
+          });
+
           context('at a new revision', () => {
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
 
           context('at the same revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
 
           context('at an old revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('buzz', 0)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ offers: 1 });
-              return test.peerConnectionV2.offer().then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setDescription(makeAnswer({ ufrag: 'fizz' }), 1));
-              }).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 2)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
         });
 
         context('offer description', () => {
+          beforeEach(async () => {
+            await test.pcv2.update(test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1));
+            await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
+          });
+
           context('at a new revision', () => {
             it('does nothing', () => {
-              var test = makeTest({ answers: 1 });
-              test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
 
           context('at the same revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('buzz', 1)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ answers: 1 });
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
 
           context('at an old revision', () => {
+            beforeEach(async () => {
+              await test.pcv2.update(test.state().setIce(makeIce('buzz', 0)));
+            });
+
             it('does nothing', () => {
-              var test = makeTest({ answers: 1 });
-              return test.peerConnectionV2.update(
-                test.state().setDescription(makeOffer({ ufrag: 'fizz' }), 1)
-              ).then(() => {
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 2)));
-              }).then(() => {
-                test.peerConnection.addIceCandidate = sinon.spy(test.peerConnection.addIceCandidate);
-                return test.peerConnectionV2.update(
-                  test.state().setIce(makeIce('buzz', 1)));
-              }).then(() => {
-                assert(!test.peerConnection.addIceCandidate.calledOnce);
-              });
+              sinon.assert.notCalled(test.pc.addIceCandidate);
             });
           });
         });
@@ -1295,275 +1248,403 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('"candidates" event', () => {
+    let test;
+
+    beforeEach(async () => {
+      test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
+      await test.pcv2.offer();
+    });
+
     context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with an initial candidate for the current username fragment', () => {
-      it('emits the event with a single-element list of ICE candidates', () => {
-        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
-        return test.peerConnectionV2.offer().then(() => {
-          var promise = new Promise(resolve => {
-            test.peerConnectionV2.once('candidates', resolve);
-          });
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate1' }
-          });
-          return promise;
-        }).then(iceState => {
-          assert.deepEqual(
-            test.state().setIce(makeIce('foo', 1)),
-            iceState);
+      let iceState;
+
+      beforeEach(async () => {
+        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate1' }
         });
+
+        iceState = await iceStatePromise;
+      });
+
+      it('emits the event with a single-element list of ICE candidates', () => {
+        assert.deepEqual(
+          iceState,
+          test.state().setIce(makeIce('foo', 1)));
       });
     });
 
     context('when the underlying RTCPeerConnection\'s "icecandidate" event fires with subsequent candidates for the current username fragment', () => {
-      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
-        return test.peerConnectionV2.offer().then(() => {
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate1' }
-          });
-          var promise = new Promise(resolve => {
-            test.peerConnectionV2.once('candidates', resolve);
-          });
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate2' }
-          });
-          return promise;
-        }).then(iceState => {
-          assert.deepEqual(
-            test.state().setIce(makeIce('foo', 2)),
-            iceState);
+      let iceState;
+
+      beforeEach(async () => {
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate1' }
         });
+
+        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate2' }
+        });
+
+        iceState = await iceStatePromise;
+      });
+
+      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
+        assert.deepEqual(
+          iceState,
+          test.state().setIce(makeIce('foo', 2)));
       });
     });
 
     context('when the underlying RTCPeerConnection\'s "icecandidate" fires without a candidate (ICE gathering completed)', () => {
-      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
-        var test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
-        return test.peerConnectionV2.offer().then(() => {
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate1' }
-          });
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate2' }
-          });
-          var promise = new Promise(resolve => {
-            test.peerConnectionV2.once('candidates', resolve);
-          });
-          test.peerConnection.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: null
-          });
-          return promise;
-        }).then(iceState => {
-          var endOfCandidatesIceState = test.state().setIce(makeIce('foo', 2));
-          endOfCandidatesIceState.ice.complete = true;
-          endOfCandidatesIceState.ice.revision = 3;
-          assert.deepEqual(
-            endOfCandidatesIceState,
-            iceState);
+      let iceState;
+
+      beforeEach(async () => {
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate1' }
         });
+
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate2' }
+        });
+
+        const iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: null
+        });
+
+        iceState = await iceStatePromise;
+      });
+
+      it('emits the event with the full list of ICE candidates gathered up to that point', () => {
+        const endOfCandidatesIceState = test.state().setIce(makeIce('foo', 2));
+        endOfCandidatesIceState.ice.complete = true;
+        endOfCandidatesIceState.ice.revision = 3;
+
+        assert.deepEqual(
+          iceState,
+          endOfCandidatesIceState);
       });
     });
   });
 
   describe('"trackAdded" event', () => {
     context('when "track" events are supported by the underlying RTCPeerConnection', () => {
-      it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
-        var peerConnection = makePeerConnection();
+      let test;
+      let mediaStreamTrack;
+      let track;
+
+      beforeEach(async () => {
+        const pc = makePeerConnection();
+
         function RTCPeerConnection() {
-          return peerConnection;
+          return pc;
         }
+
         RTCPeerConnection.prototype.ontrack = null;
-        var test = makeTest({
+
+        test = makeTest({
           RTCPeerConnection: RTCPeerConnection
         });
-        var promise = new Promise(resolve => {
-          test.peerConnectionV2.once('trackAdded', mediaStreamTrack => {
-            resolve(mediaStreamTrack);
-          })
-        });
 
-        var mediaStreamTrack = { id: '456' };
-        var mediaStream = { id: 'abc' };
+        mediaStreamTrack = { id: '456' };
+        const mediaStream = { id: 'abc' };
 
-        peerConnection.emit('track', {
+        const trackPromise = new Promise(resolve => test.pcv2.once('trackAdded', resolve));
+
+        pc.emit('track', {
           type: 'track',
           track: mediaStreamTrack,
           streams: [mediaStream]
         });
 
-        return promise.then(track => {
-          assert.equal(mediaStreamTrack, track);
-        });
+        track = await trackPromise;
+      });
+
+      it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
+        assert.equal(mediaStreamTrack, track);
       });
     });
   });
 });
 
+/**
+ * @interace TestOptions
+ * @extends MockPeerConnectionOptions
+ * @extends PeerConnectionV2Options
+ * @property {string} [id]
+ * @property {MockPeerConnection} [pc]
+ * @property {PeerConnectionV2} [pcv2]
+ */
+
+/**
+ * @interface Test
+ * @extends TestOptions
+ * @property {string} id
+ * @property {MockPeerConnection} pc
+ * @property {PeerConnectionV2} pcv2
+ * @property {function(): PeerConnectionStateBuilder} state
+ */
+
+/**
+ * Make a {@link Test}. This function extends any options object you pass it.
+ * @param {TestOptions} [options]
+ * @returns {Test}
+ */
 function makeTest(options) {
   options = options || {};
   options.id = options.id || makeId();
-  options.peerConnection = options.peerConnection || makePeerConnection(options);
-  options.peerConnectionV2 = makePeerConnectionV2(options);
+  options.pc = options.pc || makePeerConnection(options);
+  options.pcv2 = makePeerConnectionV2(options);
+
   const id = options.id;
   options.state = function state() {
     return new PeerConnectionStateBuilder(id);
   };
+
   return options;
 }
 
+/**
+ * @interface MockPeerConnectionOptions
+ * @property {number|Array<RTCSessionDescriptionInit|Description>} [offers=0] -
+ *   provide a number to seed the {@link MockPeerConnection} with exactly that
+ *   number of offers; otherwise, you can provide RTCSessionDescriptionInit or
+ *   {@link Description} instances directly
+ * @property {number|Array<RTCSessionDescriptionInit|Description>} [answers=0] -
+ *   number of answers; otherwise, you can provide RTCSessionDescriptionInit or
+ *   {@link Description} instances directly
+ * @property {string} [errorScenario] - one of "createOffer", "createAnswer",
+ *   "setLocalDescription", or "setRemoteDescription"; set to cause one of
+ *   these methods to fail
+ */
+
+/**
+ * Make a {@link MockPeerConnection}. This function extends any options object
+ * you pass it.
+ * @param {MockPeerConnectionOptions} [options]
+ * @returns {MockPeerConnectionOptions}
+ */
 function makePeerConnection(options) {
   options = options || {};
   options.offers = options.offers || [];
   options.answers = options.answers || [];
 
   if (typeof options.offers === 'number') {
-    var offers = [];
-    for (var i = 0; i < options.offers; i++) {
+    const offers = [];
+    for (let i = 0; i < options.offers; i++) {
       offers.push(makeOffer());
     }
     options.offers = offers;
   }
 
   if (typeof options.answers === 'number') {
-    var answers = [];
-    for (var i = 0; i < options.answers; i++) {
+    const answers = [];
+    for (let i = 0; i < options.answers; i++) {
       answers.push(makeAnswer());
     }
     options.answers = answers;
   }
 
-  options.offers = options.offers.map(description => description instanceof Description
-    ? description : new Description(description));
+  options.offers = options.offers.map(description =>
+    description instanceof Description
+      ? description
+      : new Description(description));
 
-  options.answers = options.answers.map(description => description instanceof Description
-    ? description : new Description(description));
+  options.answers = options.answers.map(description =>
+    description instanceof Description
+      ? description
+      : new Description(description));
 
-  var offerIndex = 0;
-  var answerIndex = 0;
-
-  var peerConnection = new EventEmitter();
-
-  var localStreams = [];
-  var remoteStreams = [];
-
-  peerConnection.signalingState = 'stable';
-  peerConnection.localDescription = null;
-  peerConnection.remoteDescription = null;
-
-  peerConnection.addEventListener = peerConnection.addListener;
-  peerConnection.removeEventListener = peerConnection.removeListener;
-  peerConnection.dispatchEvent = event => {
-    peerConnection.emit(event.type, event);
-  };
-
-  peerConnection.setLocalDescription = description => new Promise((resolve, reject) => {
-    if (options.errorScenario === 'setLocalDescription') {
-      reject(new Error('Testing setLocalDescription error'));
-      return;
-    }
-    if (peerConnection.signalingState === 'stable' &&
-        description.type === 'offer') {
-      peerConnection.signalingState = 'have-local-offer';
-      peerConnection.emit('signalingstatechange');
-    } else if (peerConnection.signalingState === 'have-remote-offer' &&
-               (description.type === 'answer' || description.type === 'rollback')) {
-      peerConnection.signalingState = 'stable';
-      peerConnection.emit('signalingstatechange');
-    }
-    peerConnection.localDescription = description;
-    resolve();
-  });
-
-  peerConnection.setRemoteDescription = description => new Promise((resolve, reject) => {
-    if (options.errorScenario === 'setRemoteDescription') {
-      reject(new Error('Testing setRemoteDescription error'));
-      return;
-    }
-    if (peerConnection.signalingState === 'stable' &&
-        description.type === 'offer') {
-      peerConnection.signalingState = 'have-remote-offer';
-      peerConnection.emit('signalingstatechanged');
-    } else if (peerConnection.signalingState === 'have-local-offer' &&
-               (description.type === 'answer' || description.type === 'rollback')) {
-      peerConnection.signalingState = 'stable';
-      peerConnection.emit('signalingstatechange');
-    }
-    peerConnection.remoteDescription = description;
-    resolve();
-  });
-
-  peerConnection.createOffer = () => new Promise((resolve, reject) => {
-    if (options.errorScenario === 'createOffer') {
-      reject(new Error('Testing createOffer error'));
-      return;
-    }
-
-    var offer = options.offers[offerIndex++];
-    if (offer) {
-      resolve(offer);
-      return;
-    }
-    reject(new Error('Ran out of offers'));
-  });
-
-  peerConnection.createAnswer = () => new Promise((resolve, reject) => {
-    if (options.errorScenario === 'createAnswer') {
-      reject(new Error('Testing createAnswer error'));
-      return;
-    }
-
-    var answer = options.answers[answerIndex++];
-    if (answer) {
-      resolve(answer);
-      return;
-    }
-    reject(new Error('Ran out of answers'));
-  });
-
-  peerConnection.close = () => {
-    peerConnection.signalingState = 'closed';
-    peerConnection.emit('signalingstatechange');
-  };
-
-  peerConnection.addStream = stream => localStreams.push(stream);
-
-  peerConnection.removeStream = stream => {
-    var i = localStreams.indexOf(stream);
-    if (i > -1) {
-      localStreams.splice(i);
-    }
-  };
-
-  peerConnection.getLocalStreams = () => localStreams;
-  peerConnection.getRemoteStreams = () => remoteStreams;
-
-  peerConnection.addIceCandidate = candidate => Promise.resolve();
-
-  return peerConnection;
+  return new MockPeerConnection(
+    options.offers,
+    options.answers,
+    options.errorScenario);
 }
 
+/**
+ * @extends RTCPeerConnection
+ * @property {Array<MediaStream>} localStreams
+ * @property {Array<MediaStream>} remoteStreams
+ * @property {number} offerIndex
+ * @property {number} answerIndex
+ * @property {Array<Description>} offers
+ * @property {Array<Description>} answers
+ * @property {?string} errorScenario
+ */
+class MockPeerConnection extends EventEmitter {
+  /**
+   * Construct a {@link MockPeerConnection}.
+   * @param {Array<Description>} offers
+   * @param {Array<Description>} answers
+   * @param {?string} [errorScenario]
+   */
+  constructor(offers, answers, errorScenario) {
+    super();
+
+    this.localStreams = [];
+    this.remoteStreams = [];
+
+    this.offerIndex = 0;
+    this.answerIndex = 0;
+
+    this.offers = offers;
+    this.answers = answers;
+    this.errorScenario = errorScenario || null;
+
+    this.signalingState = 'stable';
+    this.localDescription = null;
+    this.remoteDescription = null;
+  }
+
+  addEventListener() {
+    return this.addListener.apply(this, arguments);
+  }
+
+  removeEventListener() {
+    return this.removeListener.apply(this, arguments);
+  }
+
+  dispatchEvent(event) {
+    this.emit(event.type, event);
+  }
+
+  setLocalDescription(description) {
+    if (this.errorScenario === 'setLocalDescription') {
+      return Promise.reject(new Error('Testing setLocalDescription error'));
+    } else if (this.signalingState === 'stable' &&
+        description.type === 'offer') {
+      this.signalingState = 'have-local-offer';
+      this.emit('signalingstatechange');
+    } else if (this.signalingState === 'have-remote-offer' &&
+               (description.type === 'answer' || description.type === 'rollback')) {
+      this.signalingState = 'stable';
+      this.emit('signalingstatechange');
+    }
+
+    this.localDescription = description;
+    return Promise.resolve();
+  }
+
+  setRemoteDescription(description) {
+    if (this.errorScenario === 'setRemoteDescription') {
+      return Promise.reject(new Error('Testing setRemoteDescription error'));
+    } else if (this.signalingState === 'stable' &&
+        description.type === 'offer') {
+      this.signalingState = 'have-remote-offer';
+      this.emit('signalingstatechanged');
+    } else if (this.signalingState === 'have-local-offer' &&
+               (description.type === 'answer' || description.type === 'rollback')) {
+      this.signalingState = 'stable';
+      this.emit('signalingstatechange');
+    }
+
+    this.remoteDescription = description;
+    return Promise.resolve();
+  }
+
+  createOffer() {
+    if (this.errorScenario === 'createOffer') {
+      return Promise.reject(new Error('Testing createOffer error'));
+    }
+
+    const offer = this.offers[this.offerIndex++];
+    return offer
+      ? Promise.resolve(offer)
+      : Promise.reject(new Error('Ran out of offers'));
+  }
+
+  createAnswer() {
+    if (this.errorScenario === 'createAnswer') {
+      return Promise.reject(new Error('Testing createAnswer error'));
+    }
+
+    const answer = this.answers[this.answerIndex++];
+    return answer
+      ? Promise.resolve(answer)
+      : Promise.reject(new Error('Ran out of answers'));
+  }
+
+  close() {
+    this.signalingState = 'closed';
+    this.emit('signalingstatechange');
+  }
+
+  addStream(stream) {
+    this.localStreams.push(stream);
+  }
+
+  removeStream(stream) {
+    const i = this.localStreams.indexOf(stream);
+    if (i > -1) {
+      this.localStreams.splice(i);
+    }
+  }
+
+  getLocalStreams() {
+    return this.localStreams;
+  }
+
+  getRemoteStreams() {
+    return this.remoteStreams;
+  }
+
+  addIceCandidate() {
+    return Promise.resolve();
+  }
+}
+
+/**
+ * Make a random {@link PeerConnectionV2} ID.
+ * @returns {number} id
+ */
 function makeId() {
   return Math.floor(Math.random() * 100 + 0.5);
 }
 
+/**
+ * The identity function.
+ * @param {A} a
+ * @returns {A} a
+ */
 function identity(a) {
   return a;
 }
 
+/**
+ * @interface PeerConnectionV2Options
+ * @property {string} [id]
+ * @property {MockPeerConnection} [pc]
+ * @property {RTCPeerConnection.} [RTCPeerConnection]
+ */
+
+/**
+ * Make a {@link PeerConnectionV2}. This function extends any options object
+ * you pass it.
+ * @param {PeerConnectionV2Options} [options]
+ * @returns {PeerConnectionV2}
+ */
 function makePeerConnectionV2(options) {
   options = options || {};
   options.id = options.id || makeId();
-  var peerConnection = options.peerConnection || makePeerConnection(options);
+
+  const pc = options.pc || makePeerConnection(options);
   function RTCPeerConnection() {
-    return peerConnection;
+    return pc;
   }
+
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
+
   return new PeerConnectionV2(options.id, {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
@@ -1572,35 +1653,83 @@ function makePeerConnectionV2(options) {
   });
 }
 
-function PeerConnectionStateBuilder(id) {
-  this.id = id;
+/**
+ * @classdesc A {@link PeerConnectionStateBuilder} makes it easier to build the
+ *   Room Signaling Protocol (RSP) payloads expected by a
+ *   {@link PeerConnectionV2}.
+ * @property {string} id
+ */
+class PeerConnectionStateBuilder {
+  /**
+   * Construct a {@link PeerConnectionStateBuilder}.
+   * @param {string} id
+   */
+  constructor(id) {
+    this.id = id;
+  }
+
+  /**
+   * Set a description.
+   * @param {RTCSessionDescriptionInit} description
+   * @param {number} revision
+   * @returns {this}
+   */
+  setDescription(description, revision) {
+    this.description = Object.assign({
+      revision: revision
+    }, description);
+
+    return this;
+  }
+
+  /**
+   * Set ICE.
+   * @param {ICE} ice
+   * @returns {this}
+   */
+  setIce(ice) {
+    this.ice = {
+      candidates: ice.candidates.slice(),
+      revision: ice.revision,
+      ufrag: ice.ufrag
+    };
+
+    return this;
+  }
 }
 
-PeerConnectionStateBuilder.prototype.setDescription = function setDescription(description, revision) {
-  this.description = Object.assign({
-    revision: revision
-  }, description);
-  return this;
-};
-
-PeerConnectionStateBuilder.prototype.setIce = function setIce(ice) {
-  this.ice = {
-    candidates: ice.candidates.slice(),
-    revision: ice.revision,
-    ufrag: ice.ufrag
-  };
-  return this;
-};
-
-function Description(description) {
-  Object.assign(this, description);
+/**
+ * @extends RTCSessionDescription
+ */
+class Description {
+  /**
+   * Construct a {@link Description}.
+   * @param {RTCSessionDescriptionInit} description
+   */
+  constructor(description) {
+    Object.assign(this, description);
+  }
 }
 
+/**
+ * @interface DescriptionOptions
+ * @property {string} [ufrag]
+ */
+
+/**
+ * Make a {@link Description}. This function extends any options object you
+ * pass it.
+ * @param {string} type - "offer", "answer", "pranswer", "rollback",
+ *   or "create-offer"
+ * @param {DescriptionOptions} [options]
+ */
 function makeDescription(type, options) {
   options = options || {};
-  var description = {
+
+  const description = {
     type: type
   };
+
   if (type === 'offer' ||
       type === 'answer' ||
       type === 'pranswer') {
@@ -1609,34 +1738,68 @@ function makeDescription(type, options) {
       description.sdp += 'a=ice-ufrag:' + options.ufrag + '\r\n';
     }
   }
+
   return new Description(description);
 }
 
+/**
+ * Make a "close" {@link Description}.
+ * @returns {Description}
+ */
 function makeClose() {
   return makeDescription('close');
 }
 
+/**
+ * Make a "create-offer" {@link Description}.
+ * @returns {Description}
+ */
 function makeCreateOffer() {
   return makeDescription('create-offer');
 }
 
+/**
+ * Make a "offer" {@link Description}.
+ * @returns {Description}
+ */
 function makeOffer(options) {
   return makeDescription('offer', options);
 }
 
+/**
+ * Make a "answer" {@link Description}.
+ * @returns {Description}
+ */
 function makeAnswer(options) {
   return makeDescription('answer', options);
 }
 
+/**
+ * @interface ICE
+ * @property {Array<RTCIceCandidateInit>} candidates
+ * @property {number} revision
+ * @property {string} ufrag
+ */
+
+/**
+ * Make {@link ICE}. Count specifies both the revision and the number of ICE
+ * candidates to generate.
+ * @param {string} ufrag
+ * @param {number} [count=0]
+ * @returns {ICE}
+ */
 function makeIce(ufrag, count) {
   count = count || 0;
-  var ice = {
+
+  const ice = {
     candidates: [],
     revision: count,
     ufrag: ufrag
   };
-  for (var i = 0; i < count; i++) {
+
+  for (let i = 0; i < count; i++) {
     ice.candidates.push({ candidate: 'candidate' + (i + 1) });
   }
+
   return ice;
 }
