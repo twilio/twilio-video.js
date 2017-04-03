@@ -121,74 +121,51 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#getState', () => {
-    let test;
+    [
+      [
+        'before setting a local description',
+        test => {},
+        () => null
+      ],
+      [
+        'after setting a local description by calling #close',
+        test => test.pcv2.close(),
+        test => test.state().setDescription(makeClose(), 1)
+      ],
+      [
+        'after setting a local description by calling #offer',
+        test => test.pcv2.offer(),
+        test => test.state().setDescription(test.offers[0], 1)
+      ],
+      [
+        'after setting a local description by calling #update with an answer description',
+        async test => {
+          await test.pcv2.offer();
+          await test.pcv2.update(test.state().setDescription(makeAnswer(), 1))
+        },
+        test => test.state().setDescription(test.offers[0], 1)
+      ],
+      [
+        'after setting a local description by calling #update with a close description',
+        test => test.pcv2.update(test.state().setDescription(makeClose(), 1)),
+        () => null
+      ],
+      [
+        'after setting a local description by calling #update with an offer description',
+        test => test.pcv2.update(test.state().setDescription(makeOffer(), 1)),
+        test => test.state().setDescription(test.answers[0], 1)
+      ]
+    ].forEach(([description, before, expectedState]) => {
+      let test;
 
-    beforeEach(() => {
-      test = makeTest({ offers: 1, answers: 1 });
-    });
-
-    context('before setting a local description', () => {
-      it('returns null', () => {
-        assert.equal(test.pcv2.getState(), null);
-      });
-    });
-
-    context('after setting a local', () => {
-      context('answer description', () => {
-        context('with #update', () => {
-          beforeEach(async () => {
-            const offer = makeOffer();
-            const offerDescription = test.state().setDescription(offer, 1);
-            await test.pcv2.update(offerDescription);
-          });
-
-          it('returns the local description', () => {
-            assert.deepEqual(
-              test.pcv2.getState(),
-              test.state().setDescription(test.answers[0], 1));
-          });
-        });
-      });
-
-      context('close description', () => {
-        context('with #close', () => {
-          beforeEach(() => {
-            test.pcv2.close();
-          });
-
-          it('returns the local description', () => {
-            assert.deepEqual(
-              test.pcv2.getState(),
-              test.state().setDescription(makeClose(), 1));
-          });
-        });
-      });
-
-      context('offer description', () => {
-        context('with #offer', () => {
-          beforeEach(async () => {
-            await test.pcv2.offer();
-          });
-
-          it('returns the local description', () => {
-            assert.deepEqual(
-              test.pcv2.getState(),
-              test.state().setDescription(test.offers[0], 1));
-          });
+      context(description, () => {
+        beforeEach(async () => {
+          test = makeTest({ offers: 1, answers: 1 });
+          await before(test);
         });
 
-        context('with #update', () => {
-          beforeEach(async () => {
-            const createOffer = makeCreateOffer();
-            const createOfferDescription = test.state().setDescription(createOffer, 1);
-            await test.pcv2.update(createOfferDescription);
-          });
-
-          it('returns the local description', () => {
-            assert.deepEqual(
-              test.pcv2.getState(),
-              test.state().setDescription(test.offers[0], 2));
-          });
+        it('returns the local description', () => {
+          assert.deepEqual(test.pcv2.getState(), expectedState(test));
         });
       });
     });
