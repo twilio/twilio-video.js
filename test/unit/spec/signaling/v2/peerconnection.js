@@ -43,62 +43,63 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#close', () => {
-    context('in signaling state "closed"', () => {
+    ['closed', 'stable', 'have-local-offer'].forEach(signalingState => {
       let test;
-      let initialState;
+      let before;
       let result;
-
-      beforeEach(() => {
-        test = makeTest();
-        test.pc.close = sinon.spy(test.pc.close);
-        test.pcv2.close();
-
-        initialState = test.pcv2.getState();
-        result = test.pcv2.close();
-      });
-
-      it('returns undefined', () => {
-        assert.equal(result);
-      });
-
-      it('does not call close on the underlying RTCPeerConnection', () => {
-        assert(test.pc.close.calledOnce);
-      });
-
-      it('does not update the local description', () => {
-        assert.deepEqual(test.pcv2.getState(), initialState);
-      });
-    });
-
-    context('in signaling state "stable"', () => {
-      let test;
       let description;
-      let result;
+      const revision = signalingState === 'have-local-offer' ? 2 : 1;
 
-      beforeEach(async () => {
-        test = makeTest();
-        test.pc.close = sinon.spy(test.pc.close);
+      context(`in signaling state ${signalingState}`, () => {
+        beforeEach(async () => {
+          test = makeTest({ offers: 1 });
 
-        [description, result] = await Promise.all([
-          new Promise(resolve => test.pcv2.once('description', resolve)),
-          test.pcv2.close()
-        ]);
-      });
+          switch (signalingState) {
+            case 'closed':
+              test.pcv2.close();
+            case 'stable':
+              break;
+            case 'have-local-offer':
+              await test.pcv2.offer();
+              break;
+          }
 
-      it('returns undefined', () => {
-        assert.equal(result);
-      });
+          const nextDescription = new Promise(resolve => test.pcv2.once('description', resolve));
 
-      it('calls close on the underlying RTCPeerConnection', () => {
-        assert(test.pc.close.calledOnce);
-      });
+          test.pc.close = sinon.spy(test.pc.close);
+          before = test.pcv2.getState();
+          result = test.pcv2.close();
 
-      it('sets the local description to a close description and increments the revision', () => {
-        assert.deepEqual(test.pcv2.getState(), test.state().setDescription(makeClose(), 1));
-      });
+          if (signalingState !== 'closed') {
+            description = await nextDescription;
+          }
+        });
 
-      it('emits a "description" event with the new local description', () => {
-        assert.deepEqual(description, test.state().setDescription(makeClose(), 1));
+        it('returns undefined', () => {
+          assert.equal(result);
+        });
+
+        if (signalingState === 'closed') {
+          it('does not call close on the underlying RTCPeerConnection', () => {
+            sinon.assert.notCalled(test.pc.close);
+          });
+
+          it('does not update the state', () => {
+            assert.deepEqual(test.pcv2.getState(), before);
+          });
+        } else {
+          it('calls close on the underlying RTCPeerConnection', () => {
+            sinon.assert.calledOnce(test.pc.close);
+          });
+
+          it('sets the local description to a close description and increments the revision', () => {
+            assert.deepEqual(test.pcv2.getState(), test.state().setDescription(makeClose(), revision));
+          });
+
+          it('emits a "description" event with the new local description', () => {
+            assert.deepEqual(description, test.state().setDescription(makeClose(), revision));
+          });
+        }
       });
     });
   });
