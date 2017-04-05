@@ -2,7 +2,10 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
+var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
+var LocalAudioTrack = require('../../../lib/media/track/localaudiotrack');
 var LocalParticipant = require('../../../lib/localparticipant');
+var LocalVideoTrack = require('../../../lib/media/track/localvideotrack');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
 
@@ -292,6 +295,72 @@ describe('LocalParticipant', () => {
       });
 
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
+        let test;
+        let tracks1;
+        let tracks2;
+
+        beforeEach(() => {
+          tracks1 = [];
+          tracks2 = [];
+          [tracks1, tracks2].forEach(tracks => {
+            const audioTrack = new LocalAudioTrack(new FakeMediaStreamTrack('audio'), { log });
+            audioTrack.stop = sinon.spy();
+            tracks.push(audioTrack);
+
+            const videoTrack = new LocalVideoTrack(new FakeMediaStreamTrack('video'), { log });
+            videoTrack.stop = sinon.spy();
+            tracks.push(videoTrack);
+          });
+        });
+
+        context('and shouldStopLocalTracks is true', () => {
+          beforeEach(() => {
+            test = makeTest({
+              LocalAudioTrack,
+              LocalVideoTrack,
+              shouldStopLocalTracks: true,
+              state: 'connected',
+              tracks: tracks1
+            });
+
+            tracks2.forEach(track => test.participant.addTrack(track));
+
+            test.signaling.emit('stateChanged', 'disconnected');
+          });
+
+          it('stops any LocalTracks passed at construction', () => {
+            tracks1.forEach(track => sinon.assert.calledOnce(track.stop));
+          });
+
+          it('does not stop any LocalTracks added after construction', () => {
+            tracks2.forEach(track => sinon.assert.notCalled(track.stop));
+          });
+        });
+
+        context('and shouldStopLocalTracks is false', () => {
+          beforeEach(() => {
+            test = makeTest({
+              LocalAudioTrack,
+              LocalVideoTrack,
+              shouldStopLocalTracks: true,
+              state: 'connected',
+              tracks: tracks1
+            });
+
+            tracks2.forEach(track => test.participant.addTrack(track));
+
+            test.signaling.emit('stateChanged', 'disconnected');
+          });
+
+          it('does not stop any LocalTracks passed at construction', () => {
+            tracks1.forEach(track => sinon.assert.calledOnce(track.stop));
+          });
+
+          it('does not stop any LocalTracks added after construction', () => {
+            tracks2.forEach(track => sinon.assert.notCalled(track.stop));
+          });
+        });
+
         it('does not re-emit "stateChanged" event states', () => {
           var test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
@@ -307,10 +376,10 @@ describe('LocalParticipant', () => {
 
 function makeLocalTrackConstructors(options) {
   options = options || {};
-  options.LocalAudioTrack = sinon.spy(function() {
+  options.LocalAudioTrack = options.LocalAudioTrack || sinon.spy(function() {
     this.stop = sinon.spy();
   });
-  options.LocalVideoTrack = sinon.spy(function() {
+  options.LocalVideoTrack = options.LocalVideoTrack || sinon.spy(function() {
     this.stop = sinon.spy();
   });
   return options;
