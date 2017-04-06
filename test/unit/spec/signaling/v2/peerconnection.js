@@ -365,7 +365,7 @@ describe('PeerConnectionV2', () => {
 
         // NOTE(mroberts): Although the PeerConnectionV2's Description revision
         // is initialized to 0, all Descriptions sent by the server begin at 1.
-        rev = test.pcv2._descriptionRevision || 1;
+        rev = test.pcv2._descriptionRevision; // || 1;
         switch (newerEqualOrOlder) {
           case 'newer':
             rev++;
@@ -439,10 +439,9 @@ describe('PeerConnectionV2', () => {
                 if (initial) {
                   beforeEach(setup);
                   return itMightEventuallyAnswer();
-                } else {
-                  beforeEach(setup);
-                  return itShouldHandleGlare();
                 }
+                beforeEach(setup);
+                return itShouldHandleGlare();
               }
             }
             break;
@@ -453,14 +452,13 @@ describe('PeerConnectionV2', () => {
             }
             break;
           case 'create-offer':
-            if (signalingState === 'stable') {
-              if (initial && newerEqualOrOlder !== 'older') {
+            if (newerEqualOrOlder !== 'older') {
+              if (signalingState === 'have-local-offer' && initial) {
                 beforeEach(setup);
-                return itShouldCreateOffer();
-              } else if (newerEqualOrOlder === 'newer') {
-                beforeEach(setup);
-                return itShouldCreateOffer();
+                return itShouldEventuallyCreateOffer();
               }
+              beforeEach(setup);
+              return itShouldCreateOffer();
             }
             break;
           default: // 'close'
@@ -633,7 +631,8 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldCreateOffer() {
-        const expectedOfferIndex = initial ? 0 : 1;
+        let expectedOfferIndex = initial ? 0 : 1;
+        expectedOfferIndex += signalingState === 'have-local-offer' ? 1 : 0;
 
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
@@ -659,6 +658,49 @@ describe('PeerConnectionV2', () => {
 
         it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
           assert.equal(test.pc.signalingState, 'have-local-offer');
+        });
+      }
+
+      function itShouldEventuallyCreateOffer() {
+        let expectedOfferIndex = initial ? 0 : 1;
+        expectedOfferIndex += signalingState === 'have-local-offer' ? 1 : 0;
+
+        itDoesNothing();
+
+        context('then, once the initial answer is received', () => {
+          let answer;
+
+          beforeEach(async () => {
+            const answer = makeAnswer();
+            const answerDescription = test.state().setDescription(answer, 1);
+            await test.pcv2.update(answerDescription);
+          });
+
+          it('returns a Promise that resolves to undefined', () => {
+            assert.equal(result);
+          });
+
+          it('should call createOffer on the underlying RTCPeerConnection', () => {
+            sinon.assert.calledOnce(test.pc.createOffer);
+          });
+
+          it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
+            sinon.assert.calledOnce(test.pc.setLocalDescription);
+            sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
+          });
+
+          it('should emit a "description" event with the PeerConnectionV2 state set to the resulting offer at the newer revision', () => {
+            assert.equal(descriptions.length, 1);
+            assert.deepEqual(descriptions[0], test.state().setDescription(test.offers[expectedOfferIndex], rev + 1));
+          });
+
+          it('should set the state on the PeerConnectionV2 to the resulting offer at the newer revision', () => {
+            assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.offers[expectedOfferIndex], rev + 1));
+          });
+
+          it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
+            assert.equal(test.pc.signalingState, 'have-local-offer');
+          });
         });
       }
 
