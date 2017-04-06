@@ -172,48 +172,150 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('#offer', () => {
-    let test;
-    let description;
-    let result;
+    combinationContext([
+      [
+        [true, false],
+        x => `${x ? 'before' : 'after'} the initial round of negotiation`
+      ],
+      [
+        ['stable', 'have-local-offer'],
+        x => `in signaling state "${x}"`
+      ]
+    ], ([initial, signalingState]) => {
+      let test;
+      let descriptions;
+      let rev;
+      let stateBefore;
+      let signalingStateBefore;
+      let result;
 
-    beforeEach(async () => {
-      test = makeTest({ offers: 2 });
+      if (signalingState === 'have-local-offer' && initial) {
+        beforeEach(setup);
+        return itShouldEventuallyCreateOffer();
+      }
 
-      [description, result] = await Promise.all([
-        new Promise(resolve => test.pcv2.once('description', resolve)),
-        test.pcv2.offer()
-      ]);
-    });
+      beforeEach(setup);
+      return itShouldCreateOffer();
 
-    it('returns a Promise for undefined', () => {
-      assert.equal(result);
-    });
+      async function setup() {
+        test = makeTest({ offers: [makeOffer({session:1}), makeOffer({session:2}), makeOffer({session:3})] });
+        descriptions = [];
+        rev = 0;
 
-    it('calls createOffer and setLocalDescription on the underlying RTCPeerConnection', () => {
-      assert.equal(test.pc.localDescription, test.offers[0]);
-    });
+        if (!initial) {
+          await test.pcv2.offer();
+          const answer = makeAnswer();
+          const answerDescription = test.state().setDescription(answer, 1);
+          await test.pcv2.update(answerDescription);
+          rev++;
+        }
 
-    it('sets the local description to an offer description and increments the revision', async () => {
-      assert.deepEqual(
-        test.pcv2.getState(),
-        test.state().setDescription(test.offers[0], 1));
+        switch (signalingState) {
+          case 'stable':
+            break;
+          default: // 'have-local-offer'
+            await test.pcv2.offer();
+            break;
+        }
 
-      // NOTE(mroberts): Test a subsequent call to offer, too.
-      await test.pcv2.offer();
-      assert.deepEqual(
-        test.pcv2.getState(),
-        test.state().setDescription(test.offers[1], 2));
-    });
+        test.pcv2.on('description', description => descriptions.push(description));
+        test.pc.createOffer = sinon.spy(test.pc.createOffer);
+        test.pc.setLocalDescription = sinon.spy(test.pc.setLocalDescription);
 
-    it('emits a "description" event with the new local description', () => {
-      assert.deepEqual(
-        description,
-        test.state().setDescription(test.offers[0], 1));
+        stateBefore = test.pcv2.getState();
+        signalingStateBefore = test.pc.signalingState;
+
+        result = await test.pcv2.offer();
+      }
+
+      function itShouldCreateOffer() {
+        const expectedOfferIndex = {
+          stable: {
+            true: 0,
+            false: 1
+          },
+          'have-local-offer': {
+            true: 1,
+            false: 2
+          }
+        }[signalingState][initial];
+
+        it('returns a Promise that resolves to undefined', () => {
+          assert.equal(result);
+        });
+
+        it('should call createOffer on the underlying RTCPeerConnection', () => {
+          sinon.assert.calledOnce(test.pc.createOffer);
+        });
+
+        it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
+          sinon.assert.calledOnce(test.pc.setLocalDescription);
+          sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
+        });
+
+        it('should emit a "description" event with the PeerConnectionV2 state set to the resulting offer at the newer revision', () => {
+          const expectedRev = signalingState === 'have-local-offer' ? rev + 2 : rev + 1;
+          assert.equal(descriptions.length, 1);
+          assert.deepEqual(descriptions[0], test.state().setDescription(test.offers[expectedOfferIndex], expectedRev));
+        });
+
+        it('should set the state on the PeerConnectionV2 to the resulting offer at the newer revision', () => {
+          const expectedRev = signalingState === 'have-local-offer' ? rev + 2 : rev + 1;
+          assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.offers[expectedOfferIndex], expectedRev));
+        });
+
+        it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
+          assert.equal(test.pc.signalingState, 'have-local-offer');
+        });
+      }
+
+      function itShouldEventuallyCreateOffer() {
+        it('returns a Promise that resolves to undefined', () => {
+          assert.equal(result);
+        });
+
+        it('should not emit a "description" event', () => {
+          assert.equal(descriptions.length, 0);
+        });
+
+        it('should not change the state on the PeerConnectionV2', () => {
+          assert.deepEqual(test.pcv2.getState(), stateBefore);
+        });
+
+        it('should not change the signalingState on the underlying RTCPeerConnection', () => {
+          assert.equal(test.pc.signalingState, signalingStateBefore);
+        });
+
+        context('then, once the initial answer is received', () => {
+          let answer;
+
+          beforeEach(async () => {
+            const answer = makeAnswer();
+            const answerDescription = test.state().setDescription(answer, 1);
+            await test.pcv2.update(answerDescription);
+          });
+
+          itShouldCreateOffer();
+        });
+      }
     });
 
     // TODO(mroberts): Would be nice to somehow consolidate this with the
     // `beforeEach` call (or move it out).
     ['createOffer', 'setLocalDescription'].forEach(errorScenario => {
+      let test;
+      let description;
+      let result;
+
+      beforeEach(async () => {
+        test = makeTest({ offers: 2 });
+
+        [description, result] = await Promise.all([
+          new Promise(resolve => test.pcv2.once('description', resolve)),
+          test.pcv2.offer()
+        ]);
+      });
+
       context(`when ${errorScenario} on the underlying RTCPeerConnection fails`, () => {
         it('should throw a MediaClientLocalDescFailedError', async () => {
           const test = makeTest({ offers: 1, errorScenario });
@@ -363,9 +465,7 @@ describe('PeerConnectionV2', () => {
             break;
         }
 
-        // NOTE(mroberts): Although the PeerConnectionV2's Description revision
-        // is initialized to 0, all Descriptions sent by the server begin at 1.
-        rev = test.pcv2._descriptionRevision; // || 1;
+        rev = test.pcv2._descriptionRevision;
         switch (newerEqualOrOlder) {
           case 'newer':
             rev++;
