@@ -431,40 +431,48 @@ describe('PeerConnectionV2', () => {
           case 'offer':
             if (signalingState === 'stable') {
               if (newerEqualOrOlder === 'newer' || (newerEqualOrOlder === 'equal' && initial)) {
+                beforeEach(setup);
                 return itShouldAnswer();
               }
             } else if (signalingState === 'have-local-offer') {
-              if (newerEqualOrOlder === 'newer') {
-                return itShouldHandleGlare();
-              } else if (newerEqualOrOlder === 'equal') {
-                return itShouldHandleGlare();
+              if (newerEqualOrOlder !== 'older') {
+                if (initial) {
+                  beforeEach(setup);
+                  return itMightEventuallyAnswer();
+                } else {
+                  beforeEach(setup);
+                  return itShouldHandleGlare();
+                }
               }
             }
             break;
           case 'answer':
             if (signalingState === 'have-local-offer' && newerEqualOrOlder === 'equal') {
+              beforeEach(setup);
               return itShouldApplyAnswer();
             }
             break;
           case 'create-offer':
             if (signalingState === 'stable') {
               if (initial && newerEqualOrOlder !== 'older') {
+                beforeEach(setup);
                 return itShouldCreateOffer();
               } else if (newerEqualOrOlder === 'newer') {
+                beforeEach(setup);
                 return itShouldCreateOffer();
               }
             }
             break;
           default: // 'close'
+            beforeEach(setup);
             return itShouldClose();
         }
       }
 
+      beforeEach(setup);
       itDoesNothing();
 
       function itShouldAnswer() {
-        beforeEach(setup);
-
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
         });
@@ -492,9 +500,41 @@ describe('PeerConnectionV2', () => {
         });
       }
 
-      function itShouldHandleGlare() {
-        beforeEach(setup);
+      function itMightEventuallyAnswer() {
+        itDoesNothing();
 
+        context('then, once the initial answer is received', () => {
+          let answer;
+
+          beforeEach(async () => {
+            const answer = makeAnswer();
+            const answerDescription = test.state().setDescription(answer, 1);
+            await test.pcv2.update(answerDescription);
+          });
+
+          if (newerEqualOrOlder === 'newer') {
+            return itShouldAnswer();
+          }
+
+          it('returns a Promise that resolves to undefined', () => {
+            assert.equal(result);
+          });
+
+          it('should not emit a "description" event', () => {
+            assert.equal(descriptions.length, 0);
+          });
+
+          it('should not change the state on the PeerConnectionV2', () => {
+            assert.deepEqual(test.pcv2.getState(), stateBefore);
+          });
+
+          it('should leave the underlying RTCPeerConnection in signalingState "stable"', () => {
+            assert.equal(test.pc.signalingState, 'stable');
+          });
+        });
+      }
+
+      function itShouldHandleGlare() {
         const expectedOfferIndex = initial ? 1 : 2;
 
         it('returns a Promise that resolves to undefined', () => {
@@ -558,8 +598,6 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldApplyAnswer() {
-        beforeEach(setup);
-
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
         });
@@ -595,8 +633,6 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldCreateOffer() {
-        beforeEach(setup);
-
         const expectedOfferIndex = initial ? 0 : 1;
 
         it('returns a Promise that resolves to undefined', () => {
@@ -627,8 +663,6 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldClose() {
-        beforeEach(setup);
-
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
         });
@@ -650,9 +684,7 @@ describe('PeerConnectionV2', () => {
         });
       }
 
-      function itDoesNothing(signalingState) {
-        beforeEach(setup);
-
+      function itDoesNothing() {
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
         });
