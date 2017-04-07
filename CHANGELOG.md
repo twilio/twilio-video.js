@@ -12,7 +12,7 @@ Bug Fixes
 - Fixed a bug that could lead to media- and Track-related failures that
   resulting from the way we handle out-of-order SDP offers and answers; now,
   all PeerConnections will wait until an initial round of negotiation is
-  complete before applying or creating subsequent offers
+  complete before applying or creating subsequent offers (JSDK-1176)
 
 1.0.0-beta5
 ===========
