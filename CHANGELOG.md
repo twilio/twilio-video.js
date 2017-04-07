@@ -1,3 +1,19 @@
+1.0.0-beta6
+===========
+
+Bug Fixes
+---------
+
+- Fixed a bug where attempting to remove a LocalTrack from the LocalParticipant
+  after disconnecting from a Room threw an Error (JSDK-1233)
+- Fixed a regression between 1.0.0-beta4 and 1.0.0-beta5 where
+  automatically-acquired LocalTracks were not stopped after disconnecting from
+  the Room
+- Fixed a bug that could lead to media- and Track-related failures that
+  resulting from the way we handle out-of-order SDP offers and answers; now,
+  all PeerConnections will wait until an initial round of negotiation is
+  complete before applying or creating subsequent offers
+
 1.0.0-beta5
 ===========
 
