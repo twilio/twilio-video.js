@@ -1,123 +1,134 @@
 'use strict';
 
-var assert = require('assert');
-var connect = require('../../../lib/connect');
-var createLocalTracks = require('../../../lib/createlocaltracks');
-var credentials = require('../../env');
-var fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
-var getToken = require('../../lib/token').getToken.bind(null, credentials);
-var logLevel = credentials.logLevel;
-var randomName = require('../../lib/util').randomName;
-var wsServer = credentials.wsServer;
-var PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
+const assert = require('assert');
+const connect = require('../../../lib/connect');
+const createLocalTracks = require('../../../lib/createlocaltracks');
+const credentials = require('../../env');
+const fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
+const getToken = require('../../lib/token').getToken.bind(null, credentials);
+const logLevel = credentials.logLevel;
+const randomName = require('../../lib/util').randomName;
+const wsServer = credentials.wsServer;
+const PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
 
-describe('Participant', () => {
-  var options = {};
-  if (wsServer) {
-    options.wsServer = wsServer;
-  }
-  if (logLevel) {
-    options.logLevel = logLevel;
-  }
-
-  options.getUserMedia = fakeGetUserMedia;
+describe('Participant', function() {
+  this.timeout(30000);
 
   describe('events', () => {
-    var roomName = null;
-    var aliceRoom = null;
-    var alice = null;
-    var bobRoom = null;
-    var bob = null;
+    let roomName;
+    let alice;
+    let aliceRoom;
+    let aliceToken;
+    let bob;
+    let bobRoom;
+    let bobToken;
+    let options;
+    let mediaStreamTracks;
 
     beforeEach(() => {
       roomName = randomName();
       alice = randomName();
+      aliceToken = getToken({ address: alice });
       bob = randomName();
+      bobToken = getToken({ address: bob });
+
+      options = {};
+      mediaStreamTracks = [];
+
+      if (wsServer) {
+        options.wsServer = wsServer;
+      }
+
+      if (logLevel) {
+        options.logLevel = logLevel;
+      }
+
+      options.mediaStreamTracks = [];
+
+      if (navigator.userAgent === 'Node') {
+        options.getUserMedia = fakeGetUserMedia;
+
+        options.PeerConnectionManager = function(options) {
+          const peerConnectionManager = new PeerConnectionManager(options);
+          peerConnectionManager.getRemoteMediaStreamTracks = () => mediaStreamTracks;
+          return peerConnectionManager;
+        };
+      }
     });
 
     context('when alice (with audio and video tracks) and bob connect to the Room,', () => {
-      it('should populate alice\'s Participant in bob\'s Room with her Tracks', () => {
-        return createFakeLocalTracks(alice, options).then(tracks => {
-          return connect(getToken({ address: alice }), Object.assign({
-            name: roomName,
-            tracks: tracks
-          }, options));
-        }).then(room => {
-          aliceRoom = room;
-          PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeMediaStreamTracks.get(alice);
-          return connect(getToken({ address: bob }), Object.assign({
-            name: roomName
-          }, options));
-        }).then(room => {
-          bobRoom = room;
-          var aliceParticipantSid = aliceRoom.localParticipant.sid;
-          assert(bobRoom.participants.has(aliceParticipantSid));
+      it('should populate alice\'s Participant in bob\'s Room with her Tracks', async () => {
+        const tracks = await createLocalTracks(options);
+        mediaStreamTracks = tracks.map(track => track.mediaStreamTrack);
 
-          var aliceTracks = bobRoom.participants.get(aliceParticipantSid).tracks;
-          assert.equal(aliceTracks.size, 2);
+        const aliceRoom = await connect(aliceToken, Object.assign({
+          name: roomName,
+          tracks
+        }, options));
 
-          fakeMediaStreamTracks.get(alice).forEach(track => {
-            var aliceTrack = aliceTracks.get(track.id);
-            assert.equal(aliceTrack.id, track.id);
-            assert.equal(aliceTrack.kind, track.kind);
-          });
+        const bobRoom = await connect(bobToken, Object.assign({
+          name: roomName
+        }, options));
+
+        const aliceParticipantSid = aliceRoom.localParticipant.sid;
+        const aliceParticipant = bobRoom.participants.get(aliceParticipantSid);
+        assert(aliceParticipant);
+
+        const aliceTracks = aliceParticipant.tracks;
+        while (aliceTracks.size < 2) {
+          await new Promise(resolve => aliceParticipant.once('trackAdded', resolve));
+        }
+
+        assert.equal(aliceTracks.size, 2);
+
+        mediaStreamTracks.forEach(track => {
+          const aliceTrack = aliceTracks.get(track.id);
+          assert.equal(aliceTrack.id, track.id);
+          assert.equal(aliceTrack.kind, track.kind);
         });
       });
 
       context('when bob later disconnects from the Room,', () => {
-        it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', () => {
-          return createFakeLocalTracks(alice, options).then(tracks => {
-            return connect(getToken({ address: alice }), Object.assign({
-              name: roomName,
-              tracks: tracks
-            }, options));
-          }).then(room => {
-            aliceRoom = room;
-            PeerConnectionManager.prototype.getRemoteMediaStreamTracks = () => fakeMediaStreamTracks.get(alice);
-            return connect(getToken({ address: bob }), Object.assign({
-              name: roomName
-            }, options));
-          }).then(room => {
-            bobRoom = room;
-            return new Promise((resolve, reject) => {
-              var aliceParticipantSid = aliceRoom.localParticipant.sid;
-              var aliceParticipant = bobRoom.participants.get(aliceParticipantSid);
+        it('should not trigger "trackRemoved" event on alice\'s Participant in bob\'s Room', async () => {
+          const tracks = await createLocalTracks(options);
+          mediaStreamTracks = tracks.map(track => track.mediaStreamTrack);
 
-              aliceParticipant.on('trackRemoved',
-                () => reject(new Error('"trackRemoved" triggered on alice\'s Participant')));
-              bobRoom.disconnect();
-              setTimeout(resolve);
-            });
+          const aliceRoom = await connect(aliceToken, Object.assign({
+            name: roomName,
+            tracks
+          }, options));
+
+          const bobRoom = await connect(bobToken, Object.assign({
+            name: roomName
+          }, options));
+
+          const aliceParticipantSid = aliceRoom.localParticipant.sid;
+          const aliceParticipant = bobRoom.participants.get(aliceParticipantSid);
+
+          const aliceTracks = aliceParticipant.tracks;
+          while (aliceTracks.size < 2) {
+            await new Promise(resolve => aliceParticipant.once('trackAdded', resolve));
+          }
+
+          await new Promise((resolve, reject) => {
+            aliceParticipant.on('trackRemoved', () => reject(new Error('"trackRemoved" triggered on alice\'s Participant')));
+            bobRoom.disconnect();
+            setTimeout(resolve);
           });
         });
       });
     });
 
     afterEach(() => {
+      mediaStreamTracks.forEach(mediaStreamTrack => mediaStreamTrack.stop());
+
       if (aliceRoom) {
         aliceRoom.disconnect();
-        aliceRoom = null;
       }
-      fakeMediaStreamTracks.delete(alice);
-      alice = null;
 
       if (bobRoom) {
         bobRoom.disconnect();
-        bobRoom = null;
       }
-      bob = null;
-      PeerConnectionManager.prototype.getRemoteMediaStreamTracks = getRemoteMediaStreamTracks;
     });
   });
 });
-
-var fakeMediaStreamTracks = new Map();
-var getRemoteMediaStreamTracks =
-  PeerConnectionManager.prototype.getRemoteMediaStreamTracks;
-
-function createFakeLocalTracks(name, options) {
-  return createLocalTracks(options).then(tracks => {
-    fakeMediaStreamTracks.set(name, tracks.map(track => track.mediaStreamTrack));
-    return tracks;
-  });
-}

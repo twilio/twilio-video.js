@@ -57,7 +57,9 @@
   "scripts": {
     "lint": "eslint ./lib",
     "test:unit": "mocha ./test/unit/index.js",
-    "test:integration": "mocha ./test/integration/index.js --timeout 5000",
+    "test:integration:node": "mocha ./test/integration/index.js",
+    "test:integration:browser": "karma start integration.conf.js",
+    "test:integration": "npm-run-all test:integration:node test:integration:browser",
     "test:integration:travis": "node ./scripts/integration.js",
     "test:tracks": "karma start tracks.conf.js",
     "test:umd": "mocha ./test/umd/index.js",
@@ -88,7 +90,8 @@
     "cover": "istanbul cover _mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "sip.js": "twilio/SIP.js.git#420ed46ba6751b32e99950fb6fb84683afb820cc",
+    "browserify": "^14.3.0",
+    "sip.js": "twilio/SIP.js.git#b884c74892836f70ced6010353852ebd9ce5b199",
     "ws": "^1.0.1",
     "xmlhttprequest": "^1.8.0"
   },

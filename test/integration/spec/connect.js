@@ -1,81 +1,92 @@
 'use strict';
 
-var assert = require('assert');
-var connect = require('../../../lib/connect');
-var credentials = require('../../env');
-var getToken = require('../../lib/token').getToken.bind(null, credentials);
-var logLevel = credentials.logLevel;
-var wsServer = credentials.wsServer;
+const assert = require('assert');
+const connect = require('../../../lib/connect');
+const credentials = require('../../env');
+const getToken = require('../../lib/token').getToken.bind(null, credentials);
+const logLevel = credentials.logLevel;
+const randomName = require('../../lib/util').randomName;
+const wsServer = credentials.wsServer;
 
 describe('connect', function() {
-  var aliceName = randomName();
-  var aliceToken = getToken({ address: aliceName });
-  var bobName = randomName();
-  var bobToken = getToken({ address: bobName });
-  var charlieName = randomName();
-  var charlieToken = getToken({ address: charlieName });
-  var bobRoom = null;
-  var charlieRoom = null;
+  this.timeout(30000);
 
-  var options = {
-    debug: false
-  };
+  let aliceName;
+  let aliceToken;
+  let bobName;
+  let bobToken;
+  let charlieName;
+  let charlieToken;
+  let bobRoom;
+  let charlieRoom;
+  let options;
 
-  if (wsServer) {
-    options.wsServer = wsServer;
-  }
-  if (logLevel) {
-    options.logLevel = logLevel;
-  }
+  beforeEach(() => {
+    aliceName = randomName();
+    aliceToken = getToken({ address: aliceName });
+    bobName = randomName();
+    bobToken = getToken({ address: bobName });
+    charlieName = randomName();
+    charlieToken = getToken({ address: charlieName });
 
-  it('should reject if logLevel is invalid', function() {
-    return connect(aliceToken, { logLevel: 'foo' }).then(() => {
-      throw new Error('Unexpectedly resolved!');
-    }, error => {
-      assert(error instanceof RangeError);
-      assert(/level must be one of/.test(error.message));
-    });
+    options = {
+      debug: false
+    };
+
+    if (wsServer) {
+      options.wsServer = wsServer;
+    }
+
+    if (logLevel) {
+      options.logLevel = logLevel;
+    }
   });
 
-  it('should be cancelable', function(done) {
-    var cancelablePromise = connect(aliceToken, options);
-    cancelablePromise.cancel().then(() => done(new Error('Unexpected resolution')), () => done());
+  it('should reject if logLevel is invalid', async () => {
+    try {
+      await connect(aliceToken, { logLevel: 'foo' });
+    } catch (error) {
+      assert(error instanceof RangeError);
+      assert(/level must be one of/.test(error.message));
+      return;
+    }
+    throw new Error('Unexpectedly resolved!');
+  });
+
+  it('should be cancelable', async () => {
+    const cancelablePromise = connect(aliceToken, options);
+    try {
+      await cancelablePromise.cancel();
+    } catch (error) {
+      return;
+    }
+    throw new Error('Unexpectedly resolved');
   });
 
   context('when called without a Room name', () => {
-    it('should connect bob and charlie to different Rooms', () => {
-      return connect(bobToken, options).then((_bobRoom) => {
-        bobRoom = _bobRoom;
-        return connect(charlieToken);
-      }).then((_charlieRoom) => {
-        charlieRoom = _charlieRoom;
-        assert.notEqual(charlieRoom.sid, bobRoom.sid);
-      });
+    it('should connect bob and charlie to different Rooms', async () => {
+      bobRoom = await connect(bobToken, options);
+      charlieRoom = await connect(charlieToken);
+      assert.notEqual(charlieRoom.sid, bobRoom.sid);
     });
   });
 
   context('when called with the same Room name', () => {
-    it('should connect bob and charlie to the same Room', () => {
-      return connect(bobToken, Object.assign({ name: 'foo' }, options)).then((_bobRoom) => {
-        bobRoom = _bobRoom;
-        return connect(charlieToken, Object.assign({ name: 'foo' }, options));
-      }).then((_charlieRoom) => {
-        charlieRoom = _charlieRoom;
-        assert.equal(charlieRoom.sid, bobRoom.sid);
-      });
+    it('should connect bob and charlie to the same Room', async () => {
+      const name = randomName();
+      bobRoom = await connect(bobToken, Object.assign({ name }, options));
+      charlieRoom = await connect(charlieToken, Object.assign({ name }, options));
+      assert.equal(charlieRoom.sid, bobRoom.sid);
     });
   });
 
-  after(() => {
+  afterEach(() => {
     if (bobRoom) {
       bobRoom.disconnect();
     }
+
     if (charlieRoom) {
       charlieRoom.disconnect();
     }
   });
 });
-
-function randomName() {
-  return Math.random().toString(36).slice(2);
-}

@@ -49,7 +49,7 @@ MediaStream.prototype.stop = function stop() {
 };
 
 var navigator = {
-  userAgent: 'foo'
+  userAgent: 'Node'
 };
 
 function getUserMedia(constraints, successCallback, errorCallback) {
