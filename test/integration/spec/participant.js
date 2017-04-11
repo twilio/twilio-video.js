@@ -3,11 +3,10 @@
 const assert = require('assert');
 const connect = require('../../../lib/connect');
 const createLocalTracks = require('../../../lib/createlocaltracks');
-const credentials = require('../../env');
-const fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
-const getToken = require('../../lib/token').getToken.bind(null, credentials);
-const logLevel = credentials.logLevel;
-const randomName = require('../../lib/util').randomName;
+const { fakeGetUserMedia } = require('../../lib/fakemediastream');
+const getToken = require('../../lib/token');
+const { logLevel, wsServer } = require('../../env');
+const { randomName } = require('../../lib/util');
 const PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
 
 describe('Participant', function() {
@@ -27,9 +26,9 @@ describe('Participant', function() {
     beforeEach(() => {
       roomName = randomName();
       alice = randomName();
-      aliceToken = getToken({ address: alice });
+      aliceToken = getToken(alice);
       bob = randomName();
-      bobToken = getToken({ address: bob });
+      bobToken = getToken(bob);
 
       options = {};
       mediaStreamTracks = [];

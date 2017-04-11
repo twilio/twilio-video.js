@@ -3,9 +3,8 @@
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 const a = require('../../../lib/util').a;
 const assert = require('assert');
-const credentials = require('../../../env');
-const getToken = require('../../../lib/token').getToken.bind(null, credentials);
-const wsServerInsights = credentials.wsServerInsights;
+const getToken = require('../../../lib/token');
+const { wsServerInsights } = require('../../../env');
 
 const options = {};
 if (wsServerInsights) {
@@ -13,9 +12,9 @@ if (wsServerInsights) {
 }
 
 const tokens = new Map([
-  ['expired', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzczNzE5OGZiYTEyNDc3MjkxYTQ4OWI5NDUxMDdkZWYzLTE0OTAwNTQwNjUiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJiIiwidmlkZW8iOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTNjQ2OWU5NWYwYjJlMmM4ZjkzMTA4Njk4OGQ2OWY4MTUifX0sImlhdCI6MTQ5MDA1NDA2NSwiZXhwIjoxNDkwMDU3NjY1LCJpc3MiOiJTSzczNzE5OGZiYTEyNDc3MjkxYTQ4OWI5NDUxMDdkZWYzIiwic3ViIjoiQUNlMDQ0NmM0OGJkMjBhYjZmNjgzNDUzN2EwN2JlZGFkYiJ9.nvntolfv2Gffy5e-Kux_nUWgbjHqPJZU4TNMvTbciMc'],
+  ['expired', getToken('foo', { ttl: 60 * -1000 })],
   ['invalid', 'foo'],
-  ['valid', getToken({ address: 'foo' }) ]
+  ['valid', getToken('foo') ]
 ]);
 
 describe('InsightsPublisher', () => {

@@ -11,8 +11,8 @@ try {
 // Copy environment variables
 [
   ['ACCOUNT_SID',               'accountSid'],
-  ['SIGNING_KEY_SID',           'signingKeySid'],
-  ['SIGNING_KEY_SECRET',        'signingKeySecret'],
+  ['API_KEY_SID',               'apiKeySid'],
+  ['API_KEY_SECRET'   ,         'apiKeySecret'],
   ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
   ['ECS_SERVER',                'ecsServer'],
   ['WS_SERVER',                 'wsServer'],
@@ -29,8 +29,8 @@ try {
 // Ensure required variables are present
 [
   'accountSid',
-  'signingKeySid',
-  'signingKeySecret',
+  'apiKeySid',
+  'apiKeySecret',
   'configurationProfileSid'
 ].forEach(function forEachRequiredKey(key) {
   if (!(key in env)) {

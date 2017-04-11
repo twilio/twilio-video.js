@@ -1,30 +1,74 @@
 'use strict';
 
-var twilio = require('twilio');
+const { AccessToken } = require('twilio');
+const credentials = require('../env');
+
+const defaultOptions = Object.assign({
+  grant: 'video',
+  ttl: 60 * 1000
+}, credentials);
 
 /**
- * Credentials:
- *   accountSid
- *   configurationProfileSid
- *   signingKeySid
- *   signingKeySecret
- * Options:
- *   address - Name of client
- *   duration - Time in milliseconds the token should be good for
+ * @typedef {object} CreateTokenOptions
+ * @property {string} accountSid
+ * @property {string} apiKeySecret
+ * @property {string} apiKeySid
+ * @property {string} configurationProfileSid
+ * @property {?string} [grant="video"] - one of "video", "conversations", or null
+ * @property {number} [ttl=60000]
  */
-function getAccessToken(credentials, options) {
-  options = options || {};
-  var accessTokenGenerator = new twilio.AccessToken(
-    credentials.accountSid,
-    credentials.signingKeySid,
-    credentials.signingKeySecret,
-    options.duration ? { ttl: options.duration } : {});
-  accessTokenGenerator.identity = options.address;
-  accessTokenGenerator.addGrant(
-    new twilio.AccessToken.ConversationsGrant({
-      configurationProfileSid: credentials.configurationProfileSid
-    }));
-  return accessTokenGenerator.toJwt();
+
+/**
+ * Create an Access Token. Options specified in {@link CreateTokenOptions} take
+ * precedence over environment variables, which take precedence over hard-coded
+ * defaults. If any option is unspecified which lacks a default value, this
+ * function throws.
+ * @param {string} identity
+ * @param {CreateTokenOptions} [options]
+ * @throws Error
+ */
+function createToken(identity, options) {
+  options = Object.assign({}, defaultOptions, options);
+
+  const {
+    accountSid,
+    apiKeySecret,
+    apiKeySid,
+    configurationProfileSid,
+    ttl
+  } = options;
+
+  const accessToken = new AccessToken(
+    accountSid,
+    apiKeySid,
+    apiKeySecret,
+    { ttl });
+
+  accessToken.identity = identity;
+
+  let grant = options.grant;
+  switch (grant) {
+    case 'conversations':
+      grant = new AccessToken.ConversationsGrant({
+        identity,
+        configurationProfileSid
+      });
+      break;
+    case 'video':
+      grant = new AccessToken.VideoGrant({
+        identity,
+        configurationProfileSid
+      });
+      break;
+    default:
+      // Do nothing.
+  }
+
+  if (grant) {
+    accessToken.addGrant(grant);
+  }
+
+  return accessToken.toJwt('HS256');
 }
 
-module.exports.getToken = getAccessToken;
+module.exports = createToken;

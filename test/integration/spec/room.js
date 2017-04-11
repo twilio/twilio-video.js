@@ -2,10 +2,9 @@
 
 const assert = require('assert');
 const connect = require('../../../lib/connect');
-const credentials = require('../../env');
-const getToken = require('../../lib/token').getToken.bind(null, credentials);
-const logLevel = credentials.logLevel;
-const randomName = require('../../lib/util').randomName;
+const getToken = require('../../lib/token');
+const { logLevel, wsServer } = require('../../env');
+const { randomName } = require('../../lib/util');
 
 describe('Room', function() {
   this.timeout(30000);
@@ -35,7 +34,7 @@ describe('Room', function() {
       alice = randomName();
       roomName = randomName();
 
-      const aliceToken = getToken({ address: alice });
+      const aliceToken = getToken(alice);
       aliceRoom = await connect(aliceToken, Object.assign({
         name: roomName
       }, options));
@@ -71,11 +70,11 @@ describe('Room', function() {
     beforeEach(() => {
       roomName = randomName();
       alice = randomName();
-      aliceToken = getToken({ address: alice });
+      aliceToken = getToken(alice);
       bob = randomName();
-      bobToken = getToken({ address: bob });
+      bobToken = getToken(bob);
       charlie = randomName();
-      charlieToken = getToken({ address: charlie });
+      charlieToken = getToken(charlie);
     });
 
     context('when alice connects to the Room first,', () => {

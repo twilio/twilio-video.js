@@ -1,9 +1,8 @@
 'use strict';
 
-const credentials = require('../env');
 const getOptions = require('./options');
-const getToken = require('../lib/token').getToken.bind(null, credentials);
-const spawn = require('child_process').spawn;
+const getToken = require('../lib/token');
+const { spawn } = require('child_process').spawn;
 const waitForServer = require('./waitforserver');
 const webdriver = require('./webdriver');
 
@@ -49,7 +48,7 @@ function runFrameworkTest(options) {
     });
 
     beforeEach(() => {
-      token = getToken({ address: 'twilio-video.js-framework-test' });
+      token = getToken('twilio-video.js-framework-test');
       return driver.get(`http://${host}:${port}?token=${token}`);
     });
 

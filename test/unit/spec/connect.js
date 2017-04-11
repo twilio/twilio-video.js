@@ -87,16 +87,6 @@ describe('connect', () => {
       });
     });
   });
-
-  it('should reject if the token is invalid', () => {
-    return connect('foo').then(() => {
-      throw new Error('Unexpected resolution');
-    }, error => {
-      console.log(error);
-      assert(error instanceof AccessTokenInvalidError);
-      assert.equal(error.code, 20101);
-    });
-  });
 });
 
 function FakeLocalTrack(mediaStream, mediaStreamTrack) {

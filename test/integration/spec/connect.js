@@ -2,10 +2,9 @@
 
 const assert = require('assert');
 const connect = require('../../../lib/connect');
-const credentials = require('../../env');
-const getToken = require('../../lib/token').getToken.bind(null, credentials);
-const logLevel = credentials.logLevel;
-const randomName = require('../../lib/util').randomName;
+const getToken = require('../../lib/token');
+const { logLevel, wsServer } = require('../../env');
+const { randomName } = require('../../lib/util');
 
 describe('connect', function() {
   this.timeout(30000);
@@ -22,11 +21,11 @@ describe('connect', function() {
 
   beforeEach(() => {
     aliceName = randomName();
-    aliceToken = getToken({ address: aliceName });
+    aliceToken = getToken(aliceName);
     bobName = randomName();
-    bobToken = getToken({ address: bobName });
+    bobToken = getToken(bobName);
     charlieName = randomName();
-    charlieToken = getToken({ address: charlieName });
+    charlieToken = getToken(charlieName);
 
     options = {
       debug: false
