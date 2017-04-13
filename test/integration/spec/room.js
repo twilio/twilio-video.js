@@ -4,13 +4,18 @@ const assert = require('assert');
 const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
 const { flatMap } = require('../../../lib/util');
-const { logLevel, wsServer } = require('../../env');
+const env = require('../../env');
 const { participantsConnected, randomName, tracksAdded } = require('../../lib/util');
 const Participant = require('../../../lib/participant');
 
-describe('Room', function() {
-  const options = {};
+const options = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((options, option) => {
+  if (env[option] !== undefined) {
+    options[option] = env[option];
+  }
+  return options;
+}, {});
 
+describe('Room', function() {
   this.timeout(30000);
 
   describe('disconnect', () => {
@@ -20,7 +25,7 @@ describe('Room', function() {
       const identities = [randomName(), randomName(), randomName()];
       const tokens = identities.map(getToken);
       const name = randomName();
-      rooms = await Promise.all(tokens.map(token => connect(token, { name })));
+      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
     });
 
@@ -95,7 +100,7 @@ describe('Room', function() {
 
     it('is raised whenever a Participant connects to the Room', async () => {
       const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
-      thatRoom = await connect(getToken(randomName()), { name: thisRoom.name });
+      thatRoom = await connect(getToken(randomName()), Object.assign({ name: thisRoom.name }, options));
       thisParticipant = await participantConnected;
       thatParticipant = thatRoom.localParticipant;
       assert(thatParticipant instanceof Participant);
@@ -124,7 +129,7 @@ describe('Room', function() {
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
       const name = randomName();
-      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, { name })));
+      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
       thisParticipant = thisRoom.localParticipant;
     });
 

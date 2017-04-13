@@ -5,10 +5,17 @@ const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
 const { combinationContext, participantsConnected, pairs, randomName, tracksAdded } = require('../../lib/util');
-const { logLevel, wsServer } = require('../../env');
+const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
 const TwilioError = require('../../../lib/util/twilioerror');
+
+const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
+  if (env[option] !== undefined) {
+    defaultOptions[option] = env[option];
+  }
+  return defaultOptions;
+}, {});
 
 describe('connect', function() {
   this.timeout(30000);
@@ -39,16 +46,16 @@ describe('connect', function() {
       { grant: null },
       20101
     ]
-  ].forEach(([description, options, expectedCode]) => {
+  ].forEach(([description, defaultOptions, expectedCode]) => {
     describe(`called ${description}`, () => {
       let token;
       let cancelablePromise;
 
       beforeEach(() => {
         const identity = randomName();
-        token = getToken(identity, options);
+        token = getToken(identity, defaultOptions);
         // NOTE(mroberts): We expect this to print errors, so disable logging.
-        cancelablePromise = connect(token, { logLevel: 'off', tracks: [] });
+        cancelablePromise = connect(token, Object.assign({}, defaultOptions, { logLevel: 'off', tracks: [] }));
       });
 
       it(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
@@ -74,7 +81,7 @@ describe('connect', function() {
     beforeEach(() => {
       const identity = randomName();
       token = getToken(identity);
-      cancelablePromise = connect(token, { logLevel, tracks: [] });
+      cancelablePromise = connect(token, Object.assign({}, defaultOptions, { logLevel, tracks: [] }));
     });
 
     it.skip('should return a CancelablePromise that rejects with a RangeError', async () => {
@@ -129,7 +136,7 @@ describe('connect', function() {
     before(async () => {
       identities = Array.from(Array(n).keys()).map(() => randomName());
       const tokens = identities.map(getToken);
-      const options = {}
+      const options = Object.assign({}, defaultOptions);
       if (withoutTracks) {
         options.tracks = [];
       }
@@ -230,7 +237,7 @@ describe('connect', function() {
     let room;
 
     beforeEach(async () => {
-      const options = { name: randomName(), tracks: [] };
+      const options = Object.assign({ name: randomName(), tracks: [] }, defaultOptions);
 
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
@@ -266,7 +273,7 @@ describe('connect', function() {
     let cancelablePromise;
 
     beforeEach(async () => {
-      const options = { tracks: [] };
+      const options = Object.assign({ tracks: [] }, defaultOptions);
       cancelablePromise = connect(getToken(randomName(), options));
       cancelablePromise.cancel();
     });
