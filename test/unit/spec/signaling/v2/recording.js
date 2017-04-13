@@ -1,9 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var RecordingV2 = require('../../../../../lib/signaling/v2/recording');
-var sinon = require('sinon');
-var util = require('../../../../../lib/util');
+const assert = require('assert');
+const { combinationContext } = require('../../../../lib/util'); 
+const RecordingV2 = require('../../../../../lib/signaling/v2/recording');
+const sinon = require('sinon');
 
 describe('RecordingV2', () => {
   // RecordingV2
@@ -16,32 +16,25 @@ describe('RecordingV2', () => {
   });
 
   describe('#update, when called with a recordingState at', () => {
-    [
-      ['a newer revision', 2],
-      ['the current revision', 1],
-      ['an older revision', 0]
-    ].forEach(pair => {
-      const revision = pair[1];
-      const revisionDescription = pair[0];
-
-      context(revisionDescription + ' and .enabled set to', () => {
-        [
-          false,
-          true
-        ].forEach(enabled => {
-          context(enabled + ', when .isEnabled is', () => {
-            [
-              null,
-              false,
-              true
-            ].forEach(isEnabled => {
-              context(isEnabled, () => {
-                testUpdate(revision, enabled, isEnabled);
-              });
-            });
-          });
-        });
-      });
+    combinationContext([
+      [
+        [2, 1, 0],
+        x => ({
+          2: 'a newer revision',
+          1: 'the current revision',
+          0: 'an older revision'
+        })[x] + ' and .enabled set to'
+      ],
+      [
+        [false, true],
+        x => x + ', when .isEnabled is'
+      ],
+      [
+        [null, false, true],
+        x => x
+      ]
+    ], ([revision, enabled, isEnabled]) => {
+      testUpdate(revision, enabled, isEnabled);
     });
   });
 
@@ -49,37 +42,32 @@ describe('RecordingV2', () => {
   // ------------------
 
   describe('#disable, called when the RecordingV2\'s .isEnabled property is', () => {
-    [
-      null,
-      false,
-      true
-    ].forEach(isEnabled => {
-      context(isEnabled, () => {
-        testEnableOrDisable('disable', null, isEnabled);
-      });
+    combinationContext([
+      [
+        [null, false, true],
+        x => x
+      ]
+    ], ([isEnabled]) => {
+      testEnableOrDisable('disable', null, isEnabled);
     });
   });
 
   describe('#enable, called', () => {
-    [
-      ['with false', false],
-      ['with true', true],
-      ['without arguments', null]
-    ].forEach(pair => {
-      const enableDescription = pair[0];
-      const enable = pair[1];
-
-      context(enableDescription + ' when the RecordingV2\'s .isEnabled property is', () => {
-        [
-          null,
-          false,
-          true
-        ].forEach(isEnabled => {
-          context(isEnabled, () => {
-            testEnableOrDisable('enable', enable, isEnabled);
-          });
-        });
-      });
+    combinationContext([
+      [
+        [false, true, null],
+        x => ({
+          false: 'with false',
+          true: 'with true',
+          null: 'without arguments'
+        })[x] + ' when the RecordingV2\'s .isEnabled property is'
+      ],
+      [
+        [null, true, false],
+        x => x
+      ]
+    ], ([enable, isEnabled]) => {
+      testEnableOrDisable('enable', enable, isEnabled);
     });
   });
 });
