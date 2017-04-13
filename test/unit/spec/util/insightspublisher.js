@@ -2,7 +2,6 @@
 
 const EventTarget = require('../../../../lib/eventtarget');
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
-const TwilioError = require('../../../../lib/util/twilioerror');
 const assert = require('assert');
 const inherits = require('util').inherits;
 const sinon = require('sinon');
@@ -316,9 +315,8 @@ describe('InsightsPublisher', () => {
             assert(publisher._ws.close.calledOnce);
           });
 
-          it('should emit a "disconnected" event with a TwilioError', () => {
-            assert(disconnectedError instanceof TwilioError);
-            assert.equal(disconnectedError.code, 9000);
+          it('should emit a "disconnected" event with an Error', () => {
+            assert(disconnectedError instanceof Error);
             assert.equal(disconnectedError.message, 'foo');
           });
 

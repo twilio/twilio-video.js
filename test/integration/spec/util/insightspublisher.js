@@ -19,10 +19,8 @@ const tokens = new Map([
 
 describe('InsightsPublisher', () => {
   describe('connect', () => {
-    [ [ 'expired', 9202 ], [ 'invalid', 9004 ], [ 'valid' ] ].forEach(scenario => {
+    ['expired', 'invalid', 'valid'].forEach(tokenType => {
       var publisher;
-      const tokenType = scenario[0];
-      const expectedErrorCode = scenario[1];
 
       context(`when attempted with ${a(tokenType)} ${tokenType} token`, () => {
         before(() => {
@@ -35,7 +33,7 @@ describe('InsightsPublisher', () => {
         });
 
         const description = tokenType !== 'valid'
-          ? `should disconnect with the error code ${expectedErrorCode}`
+          ? 'should disconnect with an Error'
           : 'should be successful';
 
         const test = tokenType !== 'valid' ? async () => {
@@ -44,7 +42,6 @@ describe('InsightsPublisher', () => {
             publisher.once('disconnected', resolve);
           });
           assert(error instanceof Error);
-          assert.equal(error.code, expectedErrorCode);
         } : () => new Promise((resolve, reject) => {
           publisher.once('connected', resolve);
           publisher.once('disconnected', error => reject(error || new Error('Unexpected disconnect')));

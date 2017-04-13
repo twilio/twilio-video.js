@@ -6,6 +6,7 @@ const createLocalTracks = require('../../../lib/createlocaltracks');
 const { fakeGetUserMedia } = require('../../lib/fakemediastream');
 const getToken = require('../../lib/token');
 const { logLevel, wsServer } = require('../../env');
+const env = require('../../env');
 const { randomName } = require('../../lib/util');
 const PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
 
@@ -34,8 +35,8 @@ describe('Participant', function() {
       mediaStreamTracks = [];
 
       [ 'ecsServer', 'wsServer', 'wsServerInsights' ].forEach(server => {
-        if (credentials[server]) {
-          options[server] = credentials[server];
+        if (env[server]) {
+          options[server] = env[server];
         }
       });
 
