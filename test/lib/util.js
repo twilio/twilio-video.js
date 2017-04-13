@@ -153,6 +153,23 @@ function combinations(xss) {
 }
 
 /**
+ * Combine every element of an Array with the remaining elements of the Array.
+ * The combine function defaults to pairing the element with the remaining
+ * elements of the Array.
+ * @param {Array<X>} xs
+ * @param {function(X, Array<X>): Y} [combine]
+ * @returns {Array<Y>} ys
+ */
+function pairs(xs, combine) {
+  combine = combine || ((x, xs) => [x, xs]);
+  return xs.reduce((ys, x, i) => {
+    const remaining = xs.slice();
+    remaining.splice(i, 1);
+    return ys.concat([combine(x, remaining)]);
+  }, []);
+}
+
+/**
  * Take the product of two Arrays. The combine function defaults to Cartesian
  * product.
  * @param {Array<X>} xs
@@ -171,7 +188,34 @@ function randomName() {
   return Math.random().toString(36).slice(2);
 }
 
+/**
+ * Wait for {@link Participant}s to connect to a {@link Room}.
+ * @param {Room} room - the {@link Room}
+ * @param {number} n - the number of {@link Participant}s to wait for
+ * @returns Promise<void>
+ */
+async function participantsConnected(room, n) {
+  while (room.participants.size < n) {
+    await new Promise(resolve => room.once('participantConnected', resolve));
+  }
+}
+
+/**
+ * Wait for {@link Track}s to be added to a {@link Participant}.
+ * @param {Participant} participant - the {@link Participant}
+ * @param {number} n - the number of {@link Track}s to wait for
+ * @returns Promise<void>
+ */
+async function tracksAdded(participant, n) {
+  while (participant.tracks.size < n) {
+    await new Promise(resolve => participant.once('trackAdded', resolve));
+  }
+}
+
 exports.a = a;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
+exports.pairs = pairs;
+exports.participantsConnected = participantsConnected;
 exports.randomName = randomName;
+exports.tracksAdded = tracksAdded;
