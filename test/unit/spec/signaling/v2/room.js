@@ -39,6 +39,44 @@ describe('RoomV2', () => {
         test.room.state);
     });
 
+    it('should periodically call .publishEvent on the underlying Transport', async () => {
+      var test = makeTest({ statsPublishIntervalMs: 50 });
+      var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      var expectedArgs = [
+        [
+          'quality',
+          'stats-report',
+          {
+            audioTrackStats: [ { bar: 'baz' } ],
+            localAudioTrackStats: [ { zee: 'foo' } ],
+            localVideoTrackStats: [ { foo: 'bar' } ],
+            participantSid: test.localParticipant.sid,
+            peerConnectionId: 'foo',
+            roomSid: test.sid,
+            videoTrackStats: [ { baz: 'zee' } ]
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            audioTrackStats: [ { xyz: 'uvw' } ],
+            localAudioTrackStats: [ { abc: 'def' } ],
+            localVideoTrackStats: [ { ghi: 'jkl' } ],
+            participantSid: test.localParticipant.sid,
+            peerConnectionId: 'bar',
+            roomSid: test.sid,
+            videoTrackStats: [ { pqr: 'mno' } ]
+          }
+        ]
+      ];
+
+      expectedArgs = expectedArgs.concat(expectedArgs, expectedArgs);
+      await wait(175);
+      sinon.assert.callCount(test.transport.publishEvent, 6);
+      assert.deepEqual(test.transport.publishEvent.args, expectedArgs);
+    });
+
     context('.participants', () => {
       it('constructs a new ParticipantV2 for each Participant state', () => {
         var sid1 = makeParticipantSid();
@@ -284,6 +322,19 @@ describe('RoomV2', () => {
         test.room.once('participantDisconnected', () => participantDisconnected = true);
         test.room.disconnect();
         assert(!participantDisconnected);
+      });
+
+      it('should stop the periodic calls to .publishEvent on the underlying Transport', async () => {
+        var publishEventCallCount;
+        var test = makeTest({ statsPublishIntervalMs: 50 });
+        var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        await wait(175);
+        publishEventCallCount = test.transport.publishEvent.callCount;
+        test.room.disconnect();
+
+        await wait(100);
+        sinon.assert.callCount(test.transport.publishEvent, publishEventCallCount);
       });
     });
 
@@ -1000,6 +1051,7 @@ function makeTransport(options) {
   var transport = new EventEmitter();
   transport.disconnect = sinon.spy(() => {});
   transport.publish = sinon.spy(() => {});
+  transport.publishEvent = sinon.spy(() => {});
   transport.sync = sinon.spy(() => {});
   return transport;
 };
@@ -1009,6 +1061,21 @@ function makePeerConnectionManager(options) {
   peerConnectionManager.dequeue = sinon.spy(() => {});
   peerConnectionManager.setMediaStreamTracks = sinon.spy(() => {});
   peerConnectionManager.getRemoteMediaStreamTracks = sinon.spy(() => []);
+
+  peerConnectionManager.getStats = () => Promise.resolve([{
+    localAudioTrackStats: [ { zee: 'foo' } ],
+    localVideoTrackStats: [ { foo: 'bar' } ],
+    peerConnectionId: 'foo',
+    remoteAudioTrackStats: [ { bar: 'baz' } ],
+    remoteVideoTrackStats: [ { baz: 'zee' } ]
+  }, {
+    localAudioTrackStats: [ { abc: 'def' } ],
+    localVideoTrackStats: [ { ghi: 'jkl' } ],
+    peerConnectionId: 'bar',
+    remoteAudioTrackStats: [ { xyz: 'uvw' } ],
+    remoteVideoTrackStats: [ { pqr: 'mno' } ]
+  }]);
+
   peerConnectionManager.update = sinon.spy(() => {});
   return peerConnectionManager;
 }

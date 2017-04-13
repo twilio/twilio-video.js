@@ -187,6 +187,10 @@ describe('Transport', () => {
         assert(test.ua.stop.calledOnce);
       });
 
+      it('calls .disconnect() on the underlying ._eventPublisher', () => {
+        sinon.assert.calledOnce(test.eventPublisher.disconnect);
+      });
+
       context('when calling .terminate', () => {
         it('sets the body to a disconnect RSP request', () => {
           assert.deepEqual({
@@ -225,6 +229,10 @@ describe('Transport', () => {
 
       it('calls .stop on the underlying SIP.js UA', () => {
         assert(test.ua.stop.calledOnce);
+      });
+
+      it('calls .disconnect() on the underlying ._eventPublisher', () => {
+        sinon.assert.calledOnce(test.eventPublisher.disconnect);
       });
 
       context('when calling .terminate', () => {
@@ -266,6 +274,10 @@ describe('Transport', () => {
 
       it('does not call .stop on the underlying SIP.js UA', () => {
         assert(!test.ua.stop.calledTwice);
+      });
+
+      it('does not call .disconnect() on the underlying ._eventPublisher', () => {
+        sinon.assert.calledOnce(test.eventPublisher.disconnect);
       });
     });
 
@@ -651,6 +663,25 @@ describe('Transport', () => {
           });
         });
       });
+    });
+  });
+
+  describe('#publishEvent', () => {
+    var test;
+    var ret;
+
+    before(() => {
+      test = makeTest();
+      test.connect();
+      ret = test.transport.publishEvent('foo', 'bar', { baz: 1 });
+    });
+
+    it('should call .publish() on the underlying ._eventPublisher', () => {
+      sinon.assert.calledWith(test.eventPublisher.publish, 'foo', 'bar', { baz: 1 });
+    });
+
+    it('should return the value returned by calling .publish() on the underlying ._eventPublisher', () => {
+      assert.equal(ret, 'baz');
     });
   });
 
@@ -2246,6 +2277,7 @@ function makeTest(options) {
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.session = options.session || makeSession(options);
   options.ua = options.ua || makeUA(options);
+  options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
   options.SIPJSMediaHandler = options.SIPJSMediaHandler || makeSIPJSMediaHandlerConstructor(options);
   options.transport = options.transport || new Transport(
     options.name,
@@ -2308,6 +2340,14 @@ function makeUA(options) {
   ua.once = sinon.spy(() => {});
   ua.stop = sinon.spy(() => {});
   return ua;
+}
+
+function makeInsightsPublisherConstructor(testOptions) {
+  return function InsightsPublisher() {
+    this.disconnect = sinon.spy(() => {});
+    this.publish = sinon.spy(() => 'baz');
+    testOptions.eventPublisher = this;
+  };
 }
 
 function makeSIPJSMediaHandlerConstructor(testOptions) {

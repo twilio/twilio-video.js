@@ -11,3 +11,4 @@ if (typeof Array.prototype.includes !== 'function') {
 require('./spec/room');
 require('./spec/connect');
 require('./spec/participant');
+require('./spec/util/insightspublisher');

@@ -8,7 +8,6 @@ const fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
 const getToken = require('../../lib/token').getToken.bind(null, credentials);
 const logLevel = credentials.logLevel;
 const randomName = require('../../lib/util').randomName;
-const wsServer = credentials.wsServer;
 const PeerConnectionManager = require('../../../lib/signaling/v2/peerconnectionmanager');
 
 describe('Participant', function() {
@@ -35,9 +34,11 @@ describe('Participant', function() {
       options = {};
       mediaStreamTracks = [];
 
-      if (wsServer) {
-        options.wsServer = wsServer;
-      }
+      [ 'ecsServer', 'wsServer', 'wsServerInsights' ].forEach(server => {
+        if (credentials[server]) {
+          options[server] = credentials[server];
+        }
+      });
 
       if (logLevel) {
         options.logLevel = logLevel;

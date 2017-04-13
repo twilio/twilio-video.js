@@ -6,7 +6,6 @@ const credentials = require('../../env');
 const getToken = require('../../lib/token').getToken.bind(null, credentials);
 const logLevel = credentials.logLevel;
 const randomName = require('../../lib/util').randomName;
-const wsServer = credentials.wsServer;
 
 describe('Room', function() {
   this.timeout(30000);
@@ -16,9 +15,11 @@ describe('Room', function() {
   beforeEach(() => {
     options = {};
 
-    if (wsServer) {
-      options.wsServer = wsServer;
-    }
+    [ 'ecsServer', 'wsServer', 'wsServerInsights' ].forEach(server => {
+      if (credentials[server]) {
+        options[server] = credentials[server];
+      }
+    });
 
     if (logLevel) {
       options.logLevel = logLevel;

@@ -183,6 +183,10 @@ RTCPeerConnection.prototype.setIdentityProvider = function setIdentityProvider()
 RTCPeerConnection.prototype.getIdentityAssertion = function getIdentityAssertion() {
 };
 
+RTCPeerConnection.prototype.getStats = function getStats() {
+  return Promise.resolve([]);
+};
+
 function RTCSessionDescription(init) {
   init = init || {};
   this.type = init.type || 'offer';

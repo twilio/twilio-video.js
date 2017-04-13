@@ -6,7 +6,6 @@ const credentials = require('../../env');
 const getToken = require('../../lib/token').getToken.bind(null, credentials);
 const logLevel = credentials.logLevel;
 const randomName = require('../../lib/util').randomName;
-const wsServer = credentials.wsServer;
 
 describe('connect', function() {
   this.timeout(30000);
@@ -33,9 +32,11 @@ describe('connect', function() {
       debug: false
     };
 
-    if (wsServer) {
-      options.wsServer = wsServer;
-    }
+    [ 'ecsServer', 'wsServer', 'wsServerInsights' ].forEach(server => {
+      if (credentials[server]) {
+        options[server] = credentials[server];
+      }
+    });
 
     if (logLevel) {
       options.logLevel = logLevel;
@@ -44,7 +45,7 @@ describe('connect', function() {
 
   it('should reject if logLevel is invalid', async () => {
     try {
-      await connect(aliceToken, { logLevel: 'foo' });
+      await connect(aliceToken, Object.assign({ logLevel: 'foo' }, options));
     } catch (error) {
       assert(error instanceof RangeError);
       assert(/level must be one of/.test(error.message));
@@ -66,7 +67,7 @@ describe('connect', function() {
   context('when called without a Room name', () => {
     it('should connect bob and charlie to different Rooms', async () => {
       bobRoom = await connect(bobToken, options);
-      charlieRoom = await connect(charlieToken);
+      charlieRoom = await connect(charlieToken, options);
       assert.notEqual(charlieRoom.sid, bobRoom.sid);
     });
   });
