@@ -3,207 +3,189 @@
 const assert = require('assert');
 const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
+const { flatMap } = require('../../../lib/util');
 const { logLevel, wsServer } = require('../../env');
-const { randomName } = require('../../lib/util');
+const { participantsConnected, randomName, tracksAdded } = require('../../lib/util');
+const Participant = require('../../../lib/participant');
 
 describe('Room', function() {
+  const options = {};
+
   this.timeout(30000);
 
-  let options;
-
-  beforeEach(() => {
-    options = {};
-
-    [ 'ecsServer', 'wsServer', 'wsServerInsights' ].forEach(server => {
-      if (credentials[server]) {
-        options[server] = credentials[server];
-      }
-    });
-
-    if (logLevel) {
-      options.logLevel = logLevel;
-    }
-  });
-
-  describe('constructor', () => {
-    let alice;
-    let roomName;
-    let aliceRoom;
+  describe('disconnect', () => {
+    let rooms;
 
     beforeEach(async () => {
-      alice = randomName();
-      roomName = randomName();
-
-      const aliceToken = getToken(alice);
-      aliceRoom = await connect(aliceToken, Object.assign({
-        name: roomName
-      }, options));
-    });
-
-    it('should set the .sid property', () => {
-      assert(aliceRoom.sid);
-    });
-
-    it('should set the .localParticipant property', () => {
-      assert(aliceRoom.localParticipant);
+      const identities = [randomName(), randomName(), randomName()];
+      const tokens = identities.map(getToken);
+      const name = randomName();
+      rooms = await Promise.all(tokens.map(token => connect(token, { name })));
+      await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
     });
 
     afterEach(() => {
-      if (aliceRoom) {
-        aliceRoom.disconnect();
-      }
+      rooms.forEach(room => room.disconnect());
+    });
+
+    it('should set the Room\'s LocalParticipant\'s .state to "disconnected"', () => {
+      const room = rooms[0];
+      room.disconnect();
+      assert.equal(room.localParticipant.state, 'disconnected');
+    });
+
+    it('should not change the Room\'s .participants Map', () => {
+      const room = rooms[0];
+      const participantsBefore = [...room.participants.keys()];
+      room.disconnect();
+      const participantsAfter = [...room.participants.keys()];
+      assert.deepEqual(participantsBefore, participantsAfter);
+    });
+
+    it('should not change Room\'s Participant\'s .states', () => {
+      const room = rooms[0];
+      room.disconnect();
+      room.participants.forEach(participant => assert.equal(participant.state, 'connected'));
+    });
+
+    it('should not change Room\'s Participant\'s .tracks', () => {
+      const room = rooms[0];
+      const tracksBefore = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
+      room.disconnect();
+      const tracksAfter = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
+      assert.deepEqual(tracksAfter, tracksBefore);
+    });
+
+    it('should raise a "participantDisconnected" event for every other Participant connected to the Room', async () => {
+      const room = rooms[0];
+      const participantsDisconnected = rooms.slice(1).map(room => {
+        return new Promise(resolve => room.once('participantDisconnected', resolve));
+      });
+      room.disconnect();
+      await participantsDisconnected;
     });
   });
 
-  describe('participant events:', () => {
-    let roomName;
-    let alice;
-    let aliceToken;
-    let aliceRoom;
-    let bob;
-    let bobToken;
-    let bobRoom;
-    let charlie;
-    let charlieRoom;
-    let charlieToken;
+  describe('getStats', () => {
+    it.skip('TODO', () => {});
+  });
 
-    beforeEach(() => {
-      roomName = randomName();
-      alice = randomName();
-      aliceToken = getToken(alice);
-      bob = randomName();
-      bobToken = getToken(bob);
-      charlie = randomName();
-      charlieToken = getToken(charlie);
+  describe('"disconnected" event', () => {
+    it.skip('is raised whenever the LocalParticipant is disconnected via the REST API', () => {
+      // TODO(mroberts): POST to the REST API to disconnect the LocalParticipant from the Room.
+    });
+  });
+
+  describe('"participantConnected" event', () => {
+    let thisRoom;
+    let thatRoom;
+    let thisParticipant;
+    let thatParticipant;
+
+    before(async () => {
+      thisRoom = await connect(getToken(randomName()), options);
     });
 
-    context('when alice connects to the Room first,', () => {
-      it('should have an empty participants Map', async () => {
-        aliceRoom = await connect(aliceToken, Object.assign({
-          name: roomName
-        }, options));
-        assert.equal(0, aliceRoom.participants.size);
-      });
+    after(() => {
+      thisRoom.disconnect();
+      if (thatRoom) {
+        thatRoom.disconnect();
+      }
     });
 
-    context('when bob connects to the Room after alice,', () => {
-      // We are observing here that for some reason, "participantConnected"
-      // is not being triggered for aliceRoom when bob connects. So,
-      // skipping this test for now. This will be investigated later.
-      // TODO(@mmalavalli): Investigate this issue.
-      it.skip('should trigger "participantConnected" on alice\'s Room', async () => {
-        aliceRoom = await connect(aliceToken, Object.assign({
-          name: roomName
-        }, options));
-
-        const [connectedParticipant, bobRoom] = await Promise.all([
-          new Promise(resolve => aliceRoom.once('participantConnected', resolve)),
-          connect(bobToken, Object.assign({
-              name: roomName
-          }, options))
-        ]);
-
-        assert.equal(bob, connectedParticipant.identity);
-      });
-
-      it('should not trigger "participantConnected" on bob\'s Room', async () => {
-        aliceRoom = await connect(aliceToken, Object.assign({
-          name: roomName
-        }, options));
-
-        bobRoom = await connect(bobToken, Object.assign({
-          name: roomName
-        }, options));
-
-        await new Promise((resolve, reject) => {
-          setTimeout(resolve);
-          bobRoom.on('participantConnected', () => reject(
-            new Error('"participantConnected" was triggered for alice')
-          ));
-        });
-      });
-
-      context('and later disconnects from the Room,', () => {
-        it('should not trigger "participantDisconnected" for alice on bob\'s Room object', async () => {
-          aliceRoom = await connect(aliceToken, Object.assign({
-            name: roomName
-          }, options));
-
-          bobRoom = await connect(bobToken, Object.assign({
-            name: roomName
-          }, options));
-
-          await new Promise((resolve, reject) => {
-            setTimeout(resolve);
-            bobRoom.on('participantDisconnected', () => reject(
-              new Error('"participantDisconnected" was triggered for alice')
-            ));
-            bobRoom.disconnect();
-          });
-        });
-      });
-
-      it('should retain alice in bob\'s Room participants Map in "connected" state', async () => {
-        aliceRoom = await connect(aliceToken, Object.assign({
-          name: roomName
-        }, options));
-
-        bobRoom = await connect(bobToken, Object.assign({
-          name: roomName
-        }, options));
-        bobRoom.disconnect();
-
-        const aliceSid = aliceRoom.localParticipant.sid;
-        assert(bobRoom.participants.has(aliceSid));
-
-        const aliceParticipant = bobRoom.participants.get(aliceSid);
-        assert.equal(alice, aliceParticipant.identity);
-        assert.equal('connected', aliceParticipant.state);
-      });
+    it('is raised whenever a Participant connects to the Room', async () => {
+      const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
+      thatRoom = await connect(getToken(randomName()), { name: thisRoom.name });
+      thisParticipant = await participantConnected;
+      thatParticipant = thatRoom.localParticipant;
+      assert(thatParticipant instanceof Participant);
+      assert.equal(thisParticipant.sid, thatParticipant.sid);
+      assert.equal(thisParticipant.identity, thatParticipant.identity);
     });
 
-    context('when charlie connects to the Room after alice and bob,', () => {
-      it('should populate charlie\'s participant Map with alice and bob, both in "connected" state', async () => {
-        aliceRoom = await connect(aliceToken, Object.assign({
-          name: roomName
-        }, options));
-
-        bobRoom = await connect(bobToken, Object.assign({
-          name: roomName
-        }, options));
-
-        charlieRoom = await connect(charlieToken, Object.assign({
-          name: roomName
-        }, options));
-        assert.equal(charlieRoom.participants.size, 2);
-
-        const aliceSid = aliceRoom.localParticipant.sid;
-        const bobSid = bobRoom.localParticipant.sid;
-
-        assert(charlieRoom.participants.has(aliceSid));
-        const aliceParticipant = charlieRoom.participants.get(aliceSid);
-        assert.equal(alice, aliceParticipant.identity);
-        assert.equal('connected', aliceParticipant.state);
-
-        assert(charlieRoom.participants.has(bobSid));
-        const bobParticipant = charlieRoom.participants.get(bobSid);
-        assert.equal(bob, bobParticipant.identity);
-        assert.equal('connected', bobParticipant.state);
+    describe('is raised whenever a Participant connects to the Room and', () => {
+      it('should add the Participant to the Room\'s .participants Map', () => {
+        assert.equal(thisRoom.participants.get(thisParticipant.sid), thisParticipant);
       });
+
+      it('should set the Participant\'s .state to "connected"', () => {
+        assert(thisParticipant.state, 'connected');
+      });
+    });
+  });
+
+  describe('"participantDisconnected" event', () => {
+    let thisRoom;
+    let thatRoom;
+    let thisParticipant;
+    let thatParticipant;
+
+    beforeEach(async () => {
+      const identities = [randomName(), randomName()];
+      const tokens = identities.map(getToken);
+      const name = randomName();
+      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, { name })));
+      thisParticipant = thisRoom.localParticipant;
     });
 
     afterEach(() => {
-      if (aliceRoom) {
-        aliceRoom.disconnect();
-      }
+      thisRoom.disconnect();
+      thatRoom.disconnect();
+    });
 
-      if (bobRoom) {
-        bobRoom.disconnect();
-      }
+    it('is raised whenever a Participant disconnects from the Room', async () => {
+      const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
+      thisRoom.disconnect();
+      thatParticipant = await participantDisconnected;
 
-      if (charlieRoom) {
-        charlieRoom.disconnect();
-      }
+      assert(thatParticipant instanceof Participant);
+      assert.equal(thatParticipant.sid, thisParticipant.sid);
+      assert.equal(thatParticipant.identity, thisParticipant.identity);
+    });
+
+    describe('is raised whenever a Participant disconnects from the Room and', () => {
+      let tracksBefore;
+      let tracksAfter;
+
+      beforeEach(async () => {
+        tracksBefore = [...thisParticipant.tracks.keys()].sort();
+
+        // NOTE(mroberts): We don't actually raise Track events in Node, so skip these.
+        if (navigator.userAgent !== 'Node') {
+          await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
+            tracksAdded(participant, thisParticipant.tracks.size)));
+        }
+
+        const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
+        thisRoom.disconnect();
+        thatParticipant = await participantDisconnected;
+
+        tracksAfter = [...thatParticipant.tracks.keys()].sort();
+      });
+
+      it('should delete the Participant from the Room\'s .participants Map', () => {
+        assert(!thatRoom.participants.has(thatParticipant.sid));
+      });
+
+      it('should set the Participant\'s .state to "disconnected"', () => {
+        assert.equal(thatParticipant.state, 'disconnected');
+      });
+
+      it('should not change the Participant\'s .tracks', () => {
+        assert.deepEqual(tracksAfter, tracksBefore);
+      });
+    });
+  });
+
+  describe('"recordingStarted" event', () => {
+    it.skip('is raised whenever recording is started on the Room via the REST API', () => {
+      // TODO(mroberts): POST to the REST API to start recording on the Room.
+    });
+  });
+
+  describe('"recordingStopped" event', () => {
+    it.skip('is raised whenever recording is stopped on the Room via the REST API', () => {
+      // TODO(mroberts): POST to the REST API to stop recording on the Room.
     });
   });
 });
