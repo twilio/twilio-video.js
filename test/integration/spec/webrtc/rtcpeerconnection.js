@@ -31,6 +31,10 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(testAddIceCandidate);
   });
 
+  describe('#getLocalStreams, called from signaling state', () => {
+    signalingStates.forEach(testGetLocalStreams);
+  });
+
   describe('#getRemoteStreams, called from signaling state', () => {
     signalingStates.forEach(testGetRemoteStreams);
   });
@@ -261,6 +265,27 @@ function testAddIceCandidate(signalingState) {
   });
 }
 
+function testGetLocalStreams(signalingState) {
+  context(JSON.stringify(signalingState), () => {
+    var test;
+
+    beforeEach(() => {
+      return makeTest({ signalingState: signalingState })
+        .then(_test => test = _test);
+    });
+
+    if (signalingState === 'closed') {
+      it('should return an array', () => {
+        assert.deepEqual(test.peerConnection.getLocalStreams(), []);
+      });
+    } else {
+      it('should return the result of calling getLocalStreams() on the underlying RTCPeerConnection', () => {
+        assert.deepEqual(test.peerConnection.getLocalStreams(), test.peerConnection._peerConnection.getLocalStreams());
+      });
+    }
+  });
+}
+
 function testGetRemoteStreams(signalingState) {
   context(JSON.stringify(signalingState), () => {
     var test;
@@ -274,8 +299,7 @@ function testGetRemoteStreams(signalingState) {
       it('should return an empty array', () => {
         assert.deepEqual(test.peerConnection.getRemoteStreams(), []);
       });
-    }
-    else {
+    } else {
       it('should return the result of calling getRemoteStreams() on the underlying RTCPeerConnection', () => {
         assert.deepEqual(test.peerConnection.getRemoteStreams(), test.peerConnection._peerConnection.getRemoteStreams());
       });
