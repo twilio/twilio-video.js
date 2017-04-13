@@ -17,3 +17,5 @@ const childProcess = spawnSync('npm', ['run', 'test:integration'], {
 if (childProcess.error) {
   throw childProcess.error;
 }
+
+process.exit(childProcess.status);
