@@ -9,7 +9,7 @@ module.exports = (config) => {
       'test/integration/index.js': ['browserify']
     },
     browserify: {
-      transform: ['envify', ['babelify', { presets: 'es2015'}]]
+      transform: ['envify', ['babelify', { presets: ['es2015', 'es2017']}]]
     },
     reporters: ['spec'],
     port: 9876,

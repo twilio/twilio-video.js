@@ -9,7 +9,7 @@ module.exports = (config) => {
       'test/webrtc.js': ['browserify']
     },
     browserify: {
-      transform: [['babelify', { presets: 'es2015' }]]
+      transform: [['babelify', { presets: ['es2015', 'es2017'] }]]
     },
     reporters: ['spec'],
     port: 9876,
