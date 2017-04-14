@@ -8,6 +8,9 @@ module.exports = (config) => {
     preprocessors: {
       'test/integration/index.js': ['browserify']
     },
+    browserify: {
+      transform: ['envify']
+    },
     reporters: ['spec'],
     port: 9876,
     colors: true,
