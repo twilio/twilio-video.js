@@ -1,5 +1,5 @@
 const assert = require('assert');
-const createLocalTracks = require('../lib/createlocaltrack');
+const createLocalTracks = require('../../../lib/createlocaltrack');
 
 const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
 
@@ -7,7 +7,10 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
   const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
 
-  describe(description, () => {
+  (navigator.userAgent === 'Node'
+    ? describe.skip
+    : describe
+  )(description, () => {
     let localTrack = null;
 
     beforeEach(() => {
