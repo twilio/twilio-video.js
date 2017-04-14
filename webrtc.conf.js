@@ -9,12 +9,22 @@ module.exports = (config) => {
       'test/webrtc.js': ['browserify']
     },
     browserify: {
-      transform: [['babelify', { presets: ['es2015', 'es2017'] }]]
+      transform: [
+        ['babelify', {
+          presets: ['es2015', 'es2017'],
+          plugins: [
+            ['transform-runtime', {
+              polyfill: false,
+              regenerator: true
+            }]
+          ]
+        }]
+      ]
     },
     reporters: ['spec'],
     port: 9876,
     colors: true,
-    logLevel: config.LOG_INFO,
+    logLevel: config.LOG_DEBUG,
     autoWatch: true,
     browsers: ['ChromeWebRTC', 'FirefoxWebRTC'],
     singleRun: true,
