@@ -2,7 +2,7 @@
 
 const getOptions = require('./options');
 const getToken = require('../lib/token');
-const { spawn } = require('child_process').spawn;
+const { spawn } = require('child_process');
 const waitForServer = require('./waitforserver');
 const webdriver = require('./webdriver');
 
