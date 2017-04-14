@@ -3,16 +3,22 @@ language: node_js
 node_js:
   - 7
 addons:
-  firefox: "51.0"
+  apt:
+    packages:
+      - pulseaudio
 env:
   global:
-    - CHROME_BIN=chromium-browser
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
     - PATH=$HOME/.meteor:$PATH
+    - CHROME_BIN=$TRAVIS_BUILD_DIR/browsers/bin/chrome-stable
+    - FIREFOX_BIN=$TRAVIS_BUILD_DIR/browsers/bin/firefox-stable
 before_script:
+  - BROWSER=chrome BVER=stable ./node_modules/travis-multirunner/setup.sh
+  - BROWSER=firefox BVER=stable ./node_modules/travis-multirunner/setup.sh
   - curl https://install.meteor.com | /bin/sh
   - sh -e /etc/init.d/xvfb start
+  - pulseaudio --start
 script: npm run build:travis
 notifications:
   slack:

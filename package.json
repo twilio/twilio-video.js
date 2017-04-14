@@ -49,6 +49,7 @@
     "rimraf": "^2.5.4",
     "selenium-webdriver": "^3.0.1",
     "sinon": "^1.17.7",
+    "travis-multirunner": "^3.1.0",
     "twilio": "^2.11.1",
     "uglify-js": "^2.7.5",
     "vinyl-fs": "^2.4.4",
