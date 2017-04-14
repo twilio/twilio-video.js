@@ -23,6 +23,37 @@ var log = require('../../../../lib/fakelog');
   describe(description, function() {
     var track;
 
+    describe('constructor', () => {
+      var mediaStreamTrack;
+
+      before(() => {
+        mediaStreamTrack = new MediaStreamTrack('foo', kind[description]);
+      });
+
+      context('when called without the "options" argument', () => {
+        [
+          [
+            'when called without the "new" keyword',
+            () => LocalTrack(mediaStreamTrack)
+          ],
+          [
+            'when called with the "new" keyword',
+            () => new LocalTrack(mediaStreamTrack)
+          ]
+        ].forEach(([ scenario, createLocalTrack ]) => {
+          context(scenario, () => {
+            it('should not throw', () => {
+              assert.doesNotThrow(createLocalTrack);
+            });
+
+            it(`should return an instance of ${description}`, () => {
+              assert(createLocalTrack() instanceof LocalTrack);
+            });
+          });
+        });
+      });
+    });
+
     describe('.isStopped', () => {
       it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
         track = createTrack(LocalTrack, '1', kind[description]);
