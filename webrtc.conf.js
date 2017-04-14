@@ -8,6 +8,9 @@ module.exports = (config) => {
     preprocessors: {
       'test/webrtc.js': ['browserify']
     },
+    browserify: {
+      transform: ['babelify']
+    },
     reporters: ['spec'],
     port: 9876,
     colors: true,
@@ -16,6 +19,7 @@ module.exports = (config) => {
     browsers: ['ChromeWebRTC', 'FirefoxWebRTC'],
     singleRun: true,
     concurrency: 1,
+    browserNoActivityTimeout: 30000,
     customLaunchers: {
       ChromeWebRTC: {
         base: 'Chrome',
