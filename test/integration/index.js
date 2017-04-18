@@ -11,5 +11,5 @@ if (typeof Array.prototype.includes !== 'function') {
 require('./spec/localtracks');
 require('./spec/connect');
 require('./spec/room');
-require('./spec/participant');
+require('./spec/localparticipant');
 require('./spec/util/insightspublisher');

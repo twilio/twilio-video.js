@@ -4,6 +4,10 @@ function a(word) {
   return word.match(/^[aeiou]/) ? 'an' : 'a';
 }
 
+function capitalize(word) {
+  return word[0].toUpperCase() + word.slice(1);
+}
+
 /**
  * A {@link Tree<X, Y>} is a Rose Tree whose edges are labeled with values of
  * type `X`, and whose nodes are labeled with values of type `Y`.
@@ -212,10 +216,24 @@ async function tracksAdded(participant, n) {
   }
 }
 
+/**
+ * Wait for {@link Track}s to be removed from a {@link Participant}.
+ * @param {Participant} participant - the {@link Participant}
+ * @param {number} n - the final number of {@link Track}s to count down to
+ * @returns Promise<void>
+ */
+async function tracksRemoved(participant, n) {
+  while (participant.tracks.size > n) {
+    await new Promise(resolve => participant.once('trackRemoved', resolve));
+  }
+}
+
 exports.a = a;
+exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
 exports.randomName = randomName;
 exports.tracksAdded = tracksAdded;
+exports.tracksRemoved = tracksRemoved;

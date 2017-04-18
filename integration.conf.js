@@ -9,6 +9,7 @@ module.exports = (config) => {
       'test/integration/index.js': ['browserify']
     },
     browserify: {
+      debug: true,
       transform: [
         'envify',
         ['babelify', {
