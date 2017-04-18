@@ -1,5 +1,9 @@
 'use strict';
 
+if (typeof window === 'undefined') {
+  require('../../lib/mockwebrtc')();
+}
+
 const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');

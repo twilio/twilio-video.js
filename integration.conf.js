@@ -1,13 +1,13 @@
 module.exports = (config) => {
+  const files = config.files;
   config.set({
     basePath: '',
     frameworks: ['browserify', 'mocha'],
-    files: [
-      'test/integration/index.js'
-    ],
-    preprocessors: {
-      'test/integration/index.js': ['browserify']
-    },
+    files,
+    preprocessors: files.reduce((files, file) => {
+      files[file] = ['browserify'];
+      return files;
+    }, {}),
     browserify: {
       debug: true,
       transform: [
@@ -49,5 +49,5 @@ module.exports = (config) => {
         }
       }
     }
-  })
-}
+  });
+};
