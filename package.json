@@ -64,7 +64,7 @@
     "lint": "eslint ./lib",
     "test:unit": "mocha ./test/unit/index.js",
     "test:integration:node": "mocha ./test/integration/index.js",
-    "test:integration:browser": "karma start integration.conf.js",
+    "test:integration:browser": "node ./scripts/karma.js ./test/integration/index.js",
     "test:integration": "npm-run-all test:integration:node test:integration:browser",
     "test:integration:travis": "node ./scripts/integration.js",
     "test:umd": "mocha ./test/umd/index.js",
