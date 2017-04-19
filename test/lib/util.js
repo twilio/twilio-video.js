@@ -228,6 +228,18 @@ async function tracksRemoved(participant, n) {
   }
 }
 
+/**
+ * Wait for a {@link Track} to start.
+ * @param {Track} track - the {@link Track}
+ * @returns Promise<void>
+ */
+async function trackStarted(track) {
+  if (track.isStarted) {
+    return;
+  }
+  await new Promise(resolve => track.once('started', resolve));
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
@@ -237,3 +249,4 @@ exports.participantsConnected = participantsConnected;
 exports.randomName = randomName;
 exports.tracksAdded = tracksAdded;
 exports.tracksRemoved = tracksRemoved;
+exports.trackStarted = trackStarted;

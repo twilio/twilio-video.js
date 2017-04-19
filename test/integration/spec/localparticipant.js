@@ -13,6 +13,7 @@ const Track = require('../../../lib/media/track');
 const {
   connect,
   createLocalAudioTrack,
+  createLocalTracks,
   createLocalVideoTrack
 } = require('../../../lib');
 
@@ -23,7 +24,8 @@ const {
   pairs,
   randomName,
   tracksAdded,
-  tracksRemoved
+  tracksRemoved,
+  trackStarted
 } = require('../../lib/util');
 
 const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
@@ -32,6 +34,8 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   }
   return defaultOptions;
 }, {});
+
+const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
 
 (navigator.userAgent === 'Node'
   ? describe.skip
@@ -256,6 +260,161 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
           thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
         });
       });
+    });
+  });
+
+  // NOTE(mroberts): The following test reproduces the issue described in
+  //
+  //   https://github.com/twilio/twilio-video.js/issues/72
+  //
+  // This can be fixed on the server-side, where we erroneously drop an answer.
+  // Until that fix is deployed, we'll leave the test skipped.
+  describe('#removeTrack and #addTrack called with two different LocalVideoTracks in quick succession', () => {
+    let thisRoom;
+    let thisParticipant;
+    let thisTrack1;
+    let thisTrack2;
+    let thatRoom;
+    let thatParticipant;
+    let thatTrack1;
+    let thatTrack2;
+
+    before(async () => {
+      const name = randomName();
+      const constraints = { video: true, fake: true };
+
+      // Answerer
+      const thoseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      thatRoom = await connect(getToken(randomName()), thoseOptions);
+
+      [thisTrack1] = await createLocalTracks(constraints);
+
+      // Offerer
+      const theseOptions = Object.assign({ name, tracks: [thisTrack1] }, defaultOptions);
+      thisRoom = await connect(getToken(randomName()), theseOptions);
+      thisParticipant = thisRoom.localParticipant;
+
+      await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
+      thatParticipant = thatRoom.participants.get(thisParticipant.sid);
+      assert(thatParticipant);
+
+      await tracksAdded(thatParticipant, thisParticipant.tracks.size);
+
+      // NOTE(mroberts): Wait 10 seconds.
+      await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+
+      thisParticipant.removeTrack(thisTrack1);
+      [thisTrack2] = await createLocalTracks(constraints);
+      thisParticipant.addTrack(thisTrack2);
+
+      [thatTrack1, thatTrack2] = await Promise.all([
+        new Promise(resolve => thatParticipant.once('trackRemoved', resolve)),
+        new Promise(resolve => thatParticipant.once('trackAdded', resolve))
+      ]);
+    });
+
+    after(() => {
+      thisTrack1.stop();
+      thisTrack2.stop();
+      thisRoom.disconnect();
+      thatRoom.disconnect();
+    });
+
+    it('should eventually raise a "trackRemoved" event with the removed LocalVideoTrack', () => {
+      assert.equal(thatTrack1.id, thisTrack1.id);
+      assert.equal(thatTrack1.kind, thisTrack1.kind);
+      assert.equal(thatTrack1.enabled, thisTrack1.enabled);
+      if (!isFirefox) {
+        assert.equal(thatTrack1.mediaStreamTrack.readyState, 'ended');
+      }
+    });
+
+    it('should eventually raise a "trackAdded" event with the added LocalVideoTrack', () => {
+      assert.equal(thatTrack2.id, thisTrack2.id);
+      assert.equal(thatTrack2.kind, thisTrack2.kind);
+      assert.equal(thatTrack2.enabled, thisTrack2.enabled);
+      assert.equal(thatTrack2.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
+    });
+
+    it('should eventually raise a "trackStarted" event for the added LocalVideoTrack', async () => {
+      await trackStarted(thatTrack2);
+    });
+  });
+
+  // NOTE(mroberts): The following test reproduces the issue described in
+  //
+  //   https://github.com/twilio/twilio-video.js/issues/81
+  //
+  // This issue cannot be fixed on the server-side, and arises from the fact
+  // that Chrome chooses new SSRCs when createOffer is called again, without
+  // calling setLocalDescription. This is a consequence of the workaround we've
+  // chosen for supporting rollback. We are still evaluating a fix for this
+  // issue.
+  describe('#addTrack called twice with two different LocalTracks in quick succession', () => {
+    let thisRoom;
+    let thisParticipant;
+    let thisAudioTrack;
+    let thisVideoTrack;
+    let thatRoom;
+    let thatParticipant;
+    let thatAudioTrack;
+    let thatVideoTrack;
+
+    before(async () => {
+      const name = randomName();
+      const constraints = { audio: true, video: true, fake: true };
+
+      // Answerer
+      const thoseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      thatRoom = await connect(getToken(randomName()), thoseOptions);
+
+      [thisAudioTrack, thisVideoTrack] = await createLocalTracks(constraints);
+
+      // Offerer
+      const theseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      thisRoom = await connect(getToken(randomName()), theseOptions);
+      thisParticipant = thisRoom.localParticipant;
+
+      await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
+      thatParticipant = thatRoom.participants.get(thisParticipant.sid);
+      assert(thatParticipant);
+
+      // NOTE(mroberts): Wait 10 seconds.
+      await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+
+      [thisAudioTrack, thisVideoTrack].forEach(thisParticipant.addTrack, thisParticipant);
+
+      await tracksAdded(thatParticipant, 2);
+      [thatAudioTrack] = [...thatParticipant.audioTracks.values()];
+      [thatVideoTrack] = [...thatParticipant.videoTracks.values()];
+    });
+
+    after(() => {
+      thisAudioTrack.stop();
+      thisVideoTrack.stop();
+      thisRoom.disconnect();
+      thatRoom.disconnect();
+    });
+
+    it('should eventually raise a "trackAdded" event with the added LocalVideoTrack', () => {
+      assert.equal(thatAudioTrack.id, thisAudioTrack.id);
+      assert.equal(thatAudioTrack.kind, thisAudioTrack.kind);
+      assert.equal(thatAudioTrack.enabled, thisAudioTrack.enabled);
+      assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
+
+      assert.equal(thatVideoTrack.id, thisVideoTrack.id);
+      assert.equal(thatVideoTrack.kind, thisVideoTrack.kind);
+      assert.equal(thatVideoTrack.enabled, thisVideoTrack.enabled);
+      assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
+    });
+
+    // NOTE(mroberts): There are in fact two MediaStreamTracks for every Track
+    // object, due to the SSRC change in Chrome.
+    (isFirefox
+      ? it
+      : it.skip
+    )('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
+      await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
 });
