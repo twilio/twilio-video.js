@@ -13,6 +13,16 @@ Bug Fixes
   resulting from the way we handle out-of-order SDP offers and answers; now,
   all PeerConnections will wait until an initial round of negotiation is
   complete before applying or creating subsequent offers (JSDK-1176)
+- Fixed a bug where calling `cancel` on the CancelablePromise returned by
+  `connect` could throw an Error
+- Fixed a bug in the LocalAudioTrack and LocalVideoTrack constructors: `options`
+  should have been optional (JSDK-1251)
+- Fixed a bug where Room's `getStats` method could reject if outbound statistics
+  were missing in Firefox
+- Fixed a bug where Room's `getStats` method could reject if called after
+  disconnecting from a Room in Firefox
+- Fixed a bug in our message retry logic that caused us to retry messages after
+  disconnecting from a Room
 
 1.0.0-beta5
 ===========
