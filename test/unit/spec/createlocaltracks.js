@@ -3,6 +3,7 @@
 var assert = require('assert');
 var createLocalTracks = require('../../../lib/createlocaltracks');
 var fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
+var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
 var sinon = require('sinon');
 
 describe('createLocalTracks', () => {
@@ -94,6 +95,7 @@ function makeOptions() {
       this.id = mediaStreamTrack.id;
       this.kind = mediaStreamTrack.kind;
       this.mediaStreamTrack = mediaStreamTrack;
-    })
+    }),
+    MediaStreamTrack: FakeMediaStreamTrack
   };
 }

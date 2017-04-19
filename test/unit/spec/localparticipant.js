@@ -3,11 +3,30 @@
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
-var LocalAudioTrack = require('../../../lib/media/track/localaudiotrack');
+var inherits = require('util').inherits;
 var LocalParticipant = require('../../../lib/localparticipant');
-var LocalVideoTrack = require('../../../lib/media/track/localvideotrack');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
+
+const LocalAudioTrack = sinon.spy(function(mediaStreamTrack) {
+  EventEmitter.call(this);
+  if (mediaStreamTrack) {
+    this.id = mediaStreamTrack.id;
+    this.kind = mediaStreamTrack.kind;
+  }
+  this.stop = sinon.spy();
+});
+inherits(LocalAudioTrack, EventEmitter);
+
+const LocalVideoTrack = sinon.spy(function(mediaStreamTrack) {
+  EventEmitter.call(this);
+  if (mediaStreamTrack) {
+    this.id = mediaStreamTrack.id;
+    this.kind = mediaStreamTrack.kind;
+  }
+  this.stop = sinon.spy();
+});
+inherits(LocalVideoTrack, EventEmitter);
 
 describe('LocalParticipant', () => {
   describe('constructor', () => {
@@ -36,7 +55,7 @@ describe('LocalParticipant', () => {
 
       beforeEach(() => {
         test = makeTest();
-        test.participant[`_${method}`] = sinon.spy();
+        test.participant[`_${method}`] = sinon.spy(() => ({ foo: 'bar', stop: sinon.spy() }));
       });
 
       context('when called with an invalid argument', () => {
@@ -59,14 +78,45 @@ describe('LocalParticipant', () => {
           assert.doesNotThrow(() => test.participant[method](new test.LocalVideoTrack()));
         });
 
-        it(`should call ._${method} with the given LocalTrack`, () => {
+        it(`should call ._${method} with the given LocalTrack and return its return value`, () => {
           var localAudioTrack = new test.LocalAudioTrack();
-          test.participant[method](localAudioTrack);
+          var ret = test.participant[method](localAudioTrack);
+          delete(ret.stop);
           assert(test.participant[`_${method}`].calledWith(localAudioTrack));
+          assert.deepEqual(ret, { foo: 'bar' });
 
           var localVideoTrack = new test.LocalVideoTrack();
-          test.participant[method](localVideoTrack);
+          ret = test.participant[method](localVideoTrack);
+          delete(ret.stop);
           assert(test.participant[`_${method}`].calledWith(localVideoTrack));
+          assert.deepEqual(ret, { foo: 'bar' });
+        });
+      });
+
+      context('when called with a MediaStreamTrack', () => {
+        it('should not throw', () => {
+          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('audio')));
+          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('video')));
+        });
+
+        it(`should call ._${method} with the corresponding LocalTrack and return its return value`, () => {
+          var localAudioTrack = new FakeMediaStreamTrack('audio');
+          var ret = test.participant[method](localAudioTrack);
+          var _methodArg = test.participant[`_${method}`].args[0][0];
+
+          delete(ret.stop);
+          assert(test.LocalAudioTrack.calledWith(localAudioTrack));
+          assert(_methodArg instanceof test.LocalAudioTrack);
+          assert.deepEqual(ret, { foo: 'bar' });
+
+          var localVideoTrack = new FakeMediaStreamTrack('video');
+          ret = test.participant[method](localVideoTrack);
+          _methodArg = test.participant[`_${method}`].args[1][0];
+
+          delete(ret.stop);
+          assert(test.LocalVideoTrack.calledWith(localVideoTrack));
+          assert(_methodArg instanceof test.LocalVideoTrack);
+          assert.deepEqual(ret, { foo: 'bar' });
         });
       });
 
@@ -75,26 +125,95 @@ describe('LocalParticipant', () => {
           [ 'when called without the "stop" argument' ],
           [ 'when called with stop=true', true ],
           [ 'when called with stop=false', false ]
-        ].forEach(scenario => {
-          var stop = scenario[1];
+        ].forEach(([ scenario, stop ]) => {
           var shouldCallStop = typeof stop === 'undefined' || stop
             ? true : false;
 
-          context(scenario[0], () => {
-            it(`should ${shouldCallStop ? '' : 'not'} call .stop on the given LocalTrack`, () => {
+          context(scenario, () => {
+            it(`should ${shouldCallStop ? '' : 'not'} call .stop on the LocalTrack returned by ._${method}`, () => {
               [
                 test.LocalAudioTrack,
-                test.LocalVideoTrack
+                test.LocalVideoTrack,
+                FakeMediaStreamTrack.bind(null, 'audio'),
+                FakeMediaStreamTrack.bind(null, 'video')
               ].forEach(LocalTrack => {
                 var localTrack = new LocalTrack();
-                test.participant[method](localTrack, stop);
-                assert(shouldCallStop ? localTrack.stop.calledOnce
-                  : !localTrack.stop.calledOnce);
+                var ret = test.participant[method](localTrack, stop);
+                assert(shouldCallStop ? ret.stop.calledOnce
+                  : !ret.stop.calledOnce);
               });
             });
           });
         });
       }
+    });
+  });
+
+  [
+    'addTracks',
+    'removeTracks'
+  ].forEach(method => {
+    describe(`#${method}`, () => {
+      var test;
+      var trackMethod = method.slice(0, -1);
+
+      beforeEach(() => {
+        test = makeTest();
+        test.participant[trackMethod] = sinon.spy(track => {
+          return track.kind === 'audio' ? null : { foo: 'bar', stop: sinon.spy() };
+        });
+      });
+
+      context('when called with an invalid argument', () => {
+        it('should throw', () => {
+          assert.throws(() => test.participant[method]('invalid tracks argument'));
+        });
+      });
+
+      context('when called with an array of', () => {
+        [
+          [
+            'LocalTracks',
+            LocalAudioTrack.bind(null, new FakeMediaStreamTrack('audio')),
+            LocalVideoTrack.bind(null, new FakeMediaStreamTrack('video'))
+          ],
+          [
+            'MediaStreamTracks',
+            FakeMediaStreamTrack.bind(null, 'audio'),
+            FakeMediaStreamTrack.bind(null, 'video')
+          ]
+        ].forEach(([ arrayItemType, LocalAudioTrack, LocalVideoTrack ]) => {
+          context(arrayItemType, () => {
+            it('should not throw', () => {
+              assert.doesNotThrow(() => test.participant[method]([
+                new LocalAudioTrack(),
+                new LocalVideoTrack()
+              ]));
+            });
+
+            it(`should call .${trackMethod} for each LocalTrack`, () => {
+              var localAudioTrack = new LocalAudioTrack();
+              var localVideoTrack = new LocalVideoTrack();
+
+              test.participant[method]([ localAudioTrack, localVideoTrack ]);
+              sinon.assert.callCount(test.participant[trackMethod], 2);
+              sinon.assert.calledWith(test.participant[trackMethod], localAudioTrack);
+              sinon.assert.calledWith(test.participant[trackMethod], localVideoTrack);
+            });
+
+            it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
+              var localAudioTrack = new LocalAudioTrack();
+              var localVideoTrack = new LocalVideoTrack();
+              var ret = test.participant[method]([ localAudioTrack, localVideoTrack ]);
+
+              assert(Array.isArray(ret));
+              assert.equal(ret.length, 1);
+              delete(ret[0].stop);
+              assert.deepEqual(ret[0], { foo: 'bar' });
+            });
+          });
+        });
+      });
     });
   });
 
@@ -304,11 +423,9 @@ describe('LocalParticipant', () => {
           tracks2 = [];
           [tracks1, tracks2].forEach(tracks => {
             const audioTrack = new LocalAudioTrack(new FakeMediaStreamTrack('audio'), { log });
-            audioTrack.stop = sinon.spy();
             tracks.push(audioTrack);
 
             const videoTrack = new LocalVideoTrack(new FakeMediaStreamTrack('video'), { log });
-            videoTrack.stop = sinon.spy();
             tracks.push(videoTrack);
           });
         });
@@ -376,17 +493,14 @@ describe('LocalParticipant', () => {
 
 function makeLocalTrackConstructors(options) {
   options = options || {};
-  options.LocalAudioTrack = options.LocalAudioTrack || sinon.spy(function() {
-    this.stop = sinon.spy();
-  });
-  options.LocalVideoTrack = options.LocalVideoTrack || sinon.spy(function() {
-    this.stop = sinon.spy();
-  });
+  options.LocalAudioTrack = options.LocalAudioTrack || LocalAudioTrack;
+  options.LocalVideoTrack = options.LocalVideoTrack || LocalVideoTrack;
   return options;
 }
 
 function makeTest(options) {
   options = makeLocalTrackConstructors(options || {});
+  options.MediaStreamTrack = options.MediaStreamTrack || FakeMediaStreamTrack;
   options.signaling = options.signaling || makeSignaling(options);
   options.tracks = options.tracks || [];
   options.log = log;

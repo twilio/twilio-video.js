@@ -1,7 +1,7 @@
 'use strict';
 
 function a(word) {
-  return word.match(/^[aeiou]/) ? 'an' : 'a';
+  return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
 }
 
 function capitalize(word) {

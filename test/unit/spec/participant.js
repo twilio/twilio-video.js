@@ -1,5 +1,6 @@
 'use strict';
 
+var a = require('../../lib/util').a;
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var Participant = require('../../../lib/participant');
@@ -81,6 +82,78 @@ describe('Participant', function() {
 
       it('should set .videoTracks to an empty Map', () => {
         assert.equal(test.participant.videoTracks.size, 0);
+      });
+    });
+  });
+
+  [
+    [ '_addTrack', 'add' , 'to' ],
+    [ '_removeTrack', 'remove', 'from' ]
+  ].forEach(([ method, action, toOrFrom ]) => {
+    describe(`#${method}`, () => {
+      var newTrack;
+      var newTrackSignaling;
+      var ret;
+      var test;
+      var trackSignaling;
+      var track;
+
+      before(() => {
+        test = makeTest();
+      });
+
+      [ 'Audio', 'Video' ].forEach(kind => {
+        context(`when ${a(kind)} ${kind}Track with the same .id exists in .tracks`, () => {
+          before(() => {
+            trackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
+            newTrackSignaling = makeTrackSignaling({ id: trackSignaling.id, kind: kind.toLowerCase() });
+            track = new test[`${kind}Track`](trackSignaling.mediaStreamTrack, trackSignaling);
+            newTrack = new test[`${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
+            test.participant.tracks.set(track.id, track);
+            test.participant[`${kind.toLowerCase()}Tracks`].set(track.id, track);
+            ret = test.participant[method](newTrack);
+          });
+
+          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the ${kind}Track ${toOrFrom} .tracks`, () => {
+            assert(method === '_addTrack'
+              ? test.participant.tracks.get(newTrack.id) === track
+              : !test.participant.tracks.has(newTrack.id));
+          });
+
+          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the ${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
+            assert(method === '_addTrack'
+              ? test.participant[`${kind.toLowerCase()}Tracks`].get(newTrack.id) === track
+              : !test.participant[`${kind.toLowerCase()}Tracks`].has(newTrack.id));
+          });
+
+          it(`should return ${method === '_addTrack' ? 'null' : `the ${kind}Track`}`, () => {
+            assert.equal(ret, method === '_addTrack' ? null : track);
+          });
+        });
+
+        context(`when ${a(kind)} ${kind}Track with the same .id does not exist in .tracks`, () => {
+          before(() => {
+            newTrackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
+            newTrack = new test[`${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
+            ret = test.participant[method](newTrack);
+          });
+
+          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the ${kind}Track ${toOrFrom} .tracks`, () => {
+            assert(method === '_addTrack'
+              ? test.participant.tracks.get(newTrack.id) === newTrack
+              : !test.participant.tracks.has(newTrack.id));
+          });
+
+          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the ${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
+            assert(method === '_addTrack'
+              ? test.participant[`${kind.toLowerCase()}Tracks`].get(newTrack.id) === newTrack
+              : !test.participant[`${kind.toLowerCase()}Tracks`].has(newTrack.id));
+          });
+
+          it(`should return ${method === '_addTrack' ? `the ${kind}Track` : 'null'}`, () => {
+            assert.equal(ret, method === '_addTrack' ? newTrack : null);
+          });
+        });
       });
     });
   });
