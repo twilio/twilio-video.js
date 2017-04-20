@@ -41,7 +41,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
   ? describe.skip
   : describe
 )('LocalParticipant', function() {
-  this.timeout(30000);
+  this.timeout(60000);
 
   describe('#addTrack', () => {
     combinationContext([

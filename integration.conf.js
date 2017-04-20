@@ -31,7 +31,7 @@ module.exports = (config) => {
     browsers: ['ChromeWebRTC', 'FirefoxWebRTC'],
     singleRun: true,
     concurrency: 1,
-    browserNoActivityTimeout: 30000,
+    browserNoActivityTimeout: 60000,
     customLaunchers: {
       ChromeWebRTC: {
         base: 'Chrome',
