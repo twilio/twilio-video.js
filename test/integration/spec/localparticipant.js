@@ -269,7 +269,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
   //
   // This can be fixed on the server-side, where we erroneously drop an answer.
   // Until that fix is deployed, we'll leave the test skipped.
-  describe('#removeTrack and #addTrack called with two different LocalVideoTracks in quick succession', () => {
+  describe.skip('#removeTrack and #addTrack called with two different LocalVideoTracks in quick succession', () => {
     let thisRoom;
     let thisParticipant;
     let thisTrack1;
