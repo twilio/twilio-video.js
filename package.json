@@ -90,6 +90,7 @@
     "build:min.js": "uglifyjs ./dist/twilio-video.js -o ./dist/twilio-video.min.js --comments \"/^! twilio-video.js/\" -b beautify=false,ascii_only=true",
     "build": "npm-run-all clean lint docs cover test:webrtc test:integration build:js build:min.js test:umd",
     "build:travis": "npm-run-all clean lint docs cover test:webrtc test:integration:travis build:js build:min.js test:umd test:framework",
+    "build:quick": "npm-run-all clean lint docs build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "clean": "rimraf ./coverage ./dist",
     "cover": "istanbul cover _mocha -- ./test/unit/index.js"
