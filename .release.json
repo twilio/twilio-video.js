@@ -18,7 +18,7 @@
         "git rm -rf --ignore-unmatch dist",
         "npm run clean",
         "npm run build",
-        "git add .",
+        "git add package.json bower.json",
         "git add -f dist",
         "git commit -m \"${RELEASE_VERSION}\"",
         "git tag ${RELEASE_VERSION}",
@@ -32,7 +32,7 @@
         "node ./node_modules/.bin/release --bump ${RELEASE_VERSION} ${DEVELOPMENT_VERSION}",
         "git rm -rf dist",
         "npm run clean",
-        "git add .",
+        "git add package.json bower.json",
         "git commit -m \"${DEVELOPMENT_VERSION}\"",
         "git push origin ${BRANCH}"
       ]
