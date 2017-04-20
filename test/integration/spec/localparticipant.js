@@ -343,11 +343,6 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
   //
   //   https://github.com/twilio/twilio-video.js/issues/81
   //
-  // This issue cannot be fixed on the server-side, and arises from the fact
-  // that Chrome chooses new SSRCs when createOffer is called again, without
-  // calling setLocalDescription. This is a consequence of the workaround we've
-  // chosen for supporting rollback. We are still evaluating a fix for this
-  // issue.
   describe('#addTrack called twice with two different LocalTracks in quick succession', () => {
     let thisRoom;
     let thisParticipant;
@@ -406,9 +401,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
       assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
     });
 
-    // NOTE(mroberts): There are in fact two MediaStreamTracks for every Track
-    // object, due to the SSRC change in Chrome.
-    it.skip('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
+    it('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });

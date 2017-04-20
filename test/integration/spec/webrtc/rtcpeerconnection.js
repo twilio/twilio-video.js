@@ -6,6 +6,7 @@ var RTCIceCandidate = require('../../../../lib/webrtc/rtcicecandidate');
 var RTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 var RTCPeerConnection = require('../../../../lib/webrtc/rtcpeerconnection');
 var util = require('../../../lib/util');
+var { flatMap } = require('../../../../lib/util');
 
 var sdpTypes = [
   'answer',
@@ -61,6 +62,35 @@ describe('RTCPeerConnection', function() {
     });
   });
 
+  describe('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+    let offer1;
+    let offer2;
+
+    before(async () => {
+      const constraints = { audio: true, video: true };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.addStream(stream);
+      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+      offer1 = await pc.createOffer(options);
+      offer2 = await pc.createOffer(options);
+      pc.close();
+      stream.getTracks().forEach(track => track.stop());
+    });
+
+    it('does not change the SSRCs for any MediaStreamTrack in the SDP', () => {
+      const ssrcAttrs1 = offer1.sdp.match(/^a=ssrc:.*$/gm);
+      const ssrcAttrs2 = offer2.sdp.match(/^a=ssrc:.*$/gm);
+      assert.deepEqual(ssrcAttrs2, ssrcAttrs1);
+    });
+
+    it('does not change the SSRC groups in the SDP', () => {
+      const ssrcGroups1 = offer1.sdp.match(/^a=ssrc-group:.*$/gm);
+      const ssrcGroups2 = offer2.sdp.match(/^a=ssrc-group:.*$/gm);
+      assert.deepEqual(ssrcGroups2, ssrcGroups1);
+    });
+  });
+
   describe('#setLocalDescription, called from signaling state', () => {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState) + ' with a description of type', () => {
@@ -73,6 +103,58 @@ describe('RTCPeerConnection', function() {
     signalingStates.forEach(signalingState => {
       context(JSON.stringify(signalingState) + ' with a description of type', () => {
         sdpTypes.forEach(sdpType => testSetDescription(false, signalingState, sdpType));
+      });
+    });
+  });
+
+  describe('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+    let offer1;
+    let offer2;
+
+    beforeEach(async () => {
+      const constraints = { audio: true, video: true };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.addStream(stream);
+      const options = { offerToReceiveAudio: true, offerToReceiveVideo: true };
+      offer1 = await pc.createOffer(options);
+      offer2 = await pc.createOffer(options);
+      pc.close();
+      stream.getTracks().forEach(track => track.stop());
+
+      // Here is a dumb way to change SSRCs: just delete any SSRC groups, then
+      // strip the leading digit from each SSRC.
+      offer2.sdp = offer2.sdp.replace(/^\r\na=ssrc-group:.*$/gm, '');
+      offer2.sdp = offer2.sdp.replace(/^a=ssrc:[0-9]([0-9]+)(.*)$/gm, 'a=ssrc:$1$2');
+    });
+
+    // NOTE(mroberts): This is the crux of the issue at the heart of CSDK-1206:
+    //
+    //   Chrome's WebRTC implementation treats changing the SSRC as removing a track
+    //   with the old SSRC and adding a track with the new one. This probably isn't
+    //   the right thing to do (especially when we go to Unified Plan SDP) but it's
+    //   the way it's worked for a while.
+    //
+    (isFirefox
+      ? it
+      : it.skip
+    )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+
+      await pc.setRemoteDescription(offer1);
+      const answer1 = await pc.createAnswer();
+      await pc.setLocalDescription(answer1);
+      const tracksBefore = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+
+      await pc.setRemoteDescription(offer2);
+      const answer2 = await pc.createAnswer();
+      await pc.setLocalDescription(answer2);
+      const tracksAfter = flatMap(pc.getRemoteStreams(), stream => stream.getTracks());
+
+      assert.equal(tracksAfter.length, tracksBefore.length);
+      tracksAfter.forEach((trackAfter, i) => {
+        const trackBefore = tracksBefore[i];
+        assert.equal(trackAfter, trackBefore);
       });
     });
   });

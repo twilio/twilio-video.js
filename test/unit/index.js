@@ -46,6 +46,7 @@ require('./spec/signaling/v2/transport');
 require('./spec/util/index');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
+require('./spec/util/sdp');
 require('./spec/util/twilioerror');
 
 require('./spec/webrtc/getstats');

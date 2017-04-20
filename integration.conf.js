@@ -1,5 +1,7 @@
 module.exports = (config) => {
-  const files = config.files;
+  const files = config.files && config.files.length
+    ? config.files
+    : ['test/integration/index.js'];
   config.set({
     basePath: '',
     frameworks: ['browserify', 'mocha'],
