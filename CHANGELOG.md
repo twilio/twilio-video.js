@@ -1,5 +1,32 @@
-1.0.0-beta6
-===========
+1.0.0-beta6 (in-progress)
+=========================
+
+New Features
+------------
+
+- You can now `connect` to a Room using an Array of MediaStreamTracks without
+  constructing LocalAudioTracks or LocalVideoTracks. For example, if you
+  already have a reference to a MediaStream, `stream`, you can call
+
+  ```js
+  connect(token, { tracks: stream.getTracks() });
+  ```
+
+- You can now call LocalParticipant's `addTrack` and `removeTrack` methods
+  with a MediaStreamTrack. If successful, these methods return the LocalTrack
+  added or removed; otherwise, they return `null`.
+
+- Added two new methods to LocalParticipant, `addTracks` and `removeTracks`, for
+  adding and removing multiple LocalTracks at a time. These methods accept
+  either an Array of LocalTracks or MediaStreamTracks, and return an Array of
+  the LocalTracks added or removed. For example, if you already have a reference
+  to a MediaStream, `stream`, you can call
+
+  ```js
+  localParticipant.addTracks(stream.getTracks());
+
+  localParticiapnt.removeTracks(stream.getTracks());
+  ```
 
 Bug Fixes
 ---------
@@ -23,6 +50,30 @@ Bug Fixes
   disconnecting from a Room in Firefox
 - Fixed a bug in our message retry logic that caused us to retry messages after
   disconnecting from a Room
+
+Known Issues
+------------
+
+- Despite the addition of `addTracks`, adding multiple LocalTracks in quick
+  succession is likely to cause media failures, and so it is recommended to
+  either
+
+  - Stagger the addition or removal of LocalTracks, or
+  - Use the `enable` and `disable` functionality in lieu of adding and removing
+    LocalTracks.
+
+  A solution has been identified and will be included in the next release.
+
+- There exists an interoperability issue between Firefox and other WebRTC
+  implementations (including Chrome and Twilio's iOS and Android SDKs) that can
+  cause media failures if Firefox does not share a LocalAudioTrack. If you are
+  developing an application that will interoperate with Firefox, please ensure
+  you always share a LocalAudioTrack until this issue is resolved. You can
+  share a muted LocalAudioTrack by calling `disable`. For example,
+
+  ```js
+  localAudioTrack.disable();
+  ```
 
 1.0.0-beta5
 ===========
