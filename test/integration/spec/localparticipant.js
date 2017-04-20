@@ -410,10 +410,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
 
     // NOTE(mroberts): There are in fact two MediaStreamTracks for every Track
     // object, due to the SSRC change in Chrome.
-    (isFirefox
-      ? it
-      : it.skip
-    )('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
+    it.skip('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
