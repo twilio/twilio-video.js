@@ -20,7 +20,7 @@ const options = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce
 }, {});
 
 describe('Room', function() {
-  this.timeout(30000);
+  this.timeout(60000);
 
   describe('disconnect', () => {
     let rooms;

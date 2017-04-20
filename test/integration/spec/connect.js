@@ -22,7 +22,7 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
 }, {});
 
 describe('connect', function() {
-  this.timeout(30000);
+  this.timeout(60000);
 
   [
     [
