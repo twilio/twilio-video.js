@@ -1,3 +1,20 @@
+1.0.0-beta7 (in-progress)
+=========================
+
+Bug Fixes
+---------
+
+- The first known issue in 1.0.0-beta6 stems from a behavior in Chrome: Chrome
+  will treat an SSRC change for a MediaStreamTrack as adding and removing the
+  MediaStreamTrack; this caused a problem in our SDK, as the first
+  MediaStreamTrack would be raised to the user wrapped in a Track object, but
+  would eventually become unusable due to the SSRC change. We workaround this
+  behavior by "fixing" the SSRCs announced in an SDP between calls to
+  `createOffer`. Firefox does not exhibit this behavior. (CSDK-1206)
+- Calling `addTrack`, `removeTrack`, or their plural variants in the same tick
+  could lead to sending more messages than necessary; we landed an optimization
+  to reduce these additional messages. (JSDK-1257)
+
 1.0.0-beta6
 ===========
 
