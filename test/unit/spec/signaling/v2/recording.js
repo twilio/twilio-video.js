@@ -31,7 +31,7 @@ describe('RecordingV2', () => {
       ],
       [
         [null, false, true],
-        x => x
+        String
       ]
     ], ([revision, enabled, isEnabled]) => {
       testUpdate(revision, enabled, isEnabled);
@@ -45,7 +45,7 @@ describe('RecordingV2', () => {
     combinationContext([
       [
         [null, false, true],
-        x => x
+        String
       ]
     ], ([isEnabled]) => {
       testEnableOrDisable('disable', null, isEnabled);
@@ -64,7 +64,7 @@ describe('RecordingV2', () => {
       ],
       [
         [null, true, false],
-        x => x
+        String
       ]
     ], ([enable, isEnabled]) => {
       testEnableOrDisable('enable', enable, isEnabled);

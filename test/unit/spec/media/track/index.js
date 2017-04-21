@@ -262,7 +262,7 @@ describe('Track', function() {
     });
 
     it('should return an element with the tagName of .kind', function() {
-      assert.equal(track._createElement()._localName, 'video');
+      assert.equal(track._createElement().tagName.toLowerCase(), 'video');
     });
   });
 
