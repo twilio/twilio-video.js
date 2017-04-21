@@ -34,7 +34,7 @@ Until we release twilio-video.js 1.0.0 proper, you must specify a specific
 pre-release. For example,
 
 ```
-bower install twilio-video#1.0.0-beta6 --save
+bower install twilio-video#1.0.0-beta7 --save
 ```
 
 ### CDN
@@ -43,7 +43,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/1.0.0-beta6/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/1.0.0-beta7/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
