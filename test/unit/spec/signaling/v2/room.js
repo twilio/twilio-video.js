@@ -447,32 +447,75 @@ describe('RoomV2', () => {
   });
 
   describe('LocalParticipantSignaling', () => {
+    context('multiple Track events in the same tick', () => {
+      context('two "trackAdded" events', () => {
+        it('should call .setMediaStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+          const tracks = [ makeTrack(), makeTrack() ];
+          const test = makeTest({ tracks });
+          tracks.forEach(track => test.localParticipant.emit('trackAdded', track));
+          await new Promise(resolve => setTimeout(resolve));
+          sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracks, 1);
+          assert.deepEqual(tracks.map(track => track.mediaStreamTrack),
+            test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
+        });
+      });
+    });
+
+    context('"trackAdded" event followed by "trackRemoved" event', () => {
+      it('should call .setMediaStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+        const [ track, addedTrack, removedTrack ] = [ makeTrack(), makeTrack(), makeTrack() ];
+        const test = makeTest({ tracks: [ track, addedTrack ] });
+        test.localParticipant.emit('trackAdded', addedTrack);
+        test.localParticipant.emit('trackRemoved', removedTrack);
+        await new Promise(resolve => setTimeout(resolve));
+        sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracks, 1);
+        assert.deepEqual([ track.mediaStreamTrack, addedTrack.mediaStreamTrack ],
+          test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
+      });
+    });
+
+    context('two "trackRemoved" events', () => {
+      it('should call .setMediaStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+        const [ track, removedTrack1, removedTrack2 ] = [ makeTrack(), makeTrack(), makeTrack() ];
+        const test = makeTest({ tracks: [ track ] });
+        test.localParticipant.emit('trackRemoved', removedTrack1);
+        test.localParticipant.emit('trackRemoved', removedTrack2);
+        await new Promise(resolve => setTimeout(resolve));
+        sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracks, 1);
+        assert.deepEqual([ track.mediaStreamTrack ],
+          test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
+      });
+    });
+
     context('"trackAdded" event', () => {
-      it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', () => {
+      it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreamTracks on the PeerConnectionManager', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual([track.mediaStreamTrack],
           test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
       });
 
-      it('calls .update on the LocalParticipantSignaling', () => {
+      it('calls .update on the LocalParticipantSignaling', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert(test.localParticipant.update.calledOnce);
       });
 
-      it('calls .publish on the Transport with the LocalparticipantSignaling state', () => {
+      it('calls .publish on the Transport with the LocalparticipantSignaling state', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
           {
             participant: {
@@ -484,32 +527,35 @@ describe('RoomV2', () => {
     });
 
     context('"trackRemoved" event', () => {
-      it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', () => {
+      it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
           [track.mediaStreamTrack],
           test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
       });
 
-      it('calls .update on the LocalParticipantSignaling', () => {
+      it('calls .update on the LocalParticipantSignaling', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert(test.localParticipant.update.calledOnce);
       });
 
-      it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
+      it('calls .publish on the Transport with the LocalParticipantSignaling state', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
+        await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
           {
             participant: {
