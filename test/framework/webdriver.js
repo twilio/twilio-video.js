@@ -16,6 +16,10 @@ function buildWebDriverForChrome() {
     .addArguments('use-fake-device-for-media-stream')
     .addArguments('use-fake-ui-for-media-stream');
 
+  if (process.env.CHROME_BIN) {
+    chromeOptions.setChromeBinaryPath(process.env.CHROME_BIN);
+  }
+
   return new webdriver.Builder()
     .forBrowser('chrome')
     .setChromeOptions(chromeOptions)
