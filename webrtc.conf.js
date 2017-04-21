@@ -1,4 +1,8 @@
 module.exports = (config) => {
+  const browsers = {
+    chrome: ['ChromeWebRTC'],
+    firefox: ['FirefoxWebRTC']
+  }[process.env.BROWSER] || ['ChromeWebRTC', 'FirefoxWebRTC'];
   config.set({
     basePath: '',
     frameworks: ['browserify', 'mocha'],
@@ -8,25 +12,12 @@ module.exports = (config) => {
     preprocessors: {
       'test/webrtc.js': ['browserify']
     },
-    browserify: {
-      transform: [
-        ['babelify', {
-          presets: ['es2015', 'es2017'],
-          plugins: [
-            ['transform-runtime', {
-              polyfill: false,
-              regenerator: true
-            }]
-          ]
-        }]
-      ]
-    },
     reporters: ['spec'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_DEBUG,
     autoWatch: true,
-    browsers: ['ChromeWebRTC', 'FirefoxWebRTC'],
+    browsers,
     singleRun: true,
     concurrency: 1,
     browserNoActivityTimeout: 30000,

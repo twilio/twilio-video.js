@@ -24,53 +24,55 @@ describe('Room', function() {
 
   describe('disconnect', () => {
     let rooms;
+    let room;
+    let participantsBefore;
+    let participantsAfter;
+    let tracksBefore;
+    let tracksAfter;
+    let participantsDisconnected;
 
-    beforeEach(async () => {
+    before(async () => {
       const identities = [randomName(), randomName(), randomName()];
       const tokens = identities.map(getToken);
       const name = randomName();
       rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
+
+      room = rooms[0];
+      participantsBefore = [...room.participants.keys()];
+      tracksBefore = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
+
+      participantsDisconnected = rooms.slice(1).map(room => {
+        return new Promise(resolve => room.once('participantDisconnected', resolve));
+      });
+
+      room.disconnect();
+
+      participantsAfter = [...room.participants.keys()];
+      tracksAfter = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
     });
 
-    afterEach(() => {
+    after(() => {
       rooms.forEach(room => room.disconnect());
     });
 
     it('should set the Room\'s LocalParticipant\'s .state to "disconnected"', () => {
-      const room = rooms[0];
-      room.disconnect();
       assert.equal(room.localParticipant.state, 'disconnected');
     });
 
     it('should not change the Room\'s .participants Map', () => {
-      const room = rooms[0];
-      const participantsBefore = [...room.participants.keys()];
-      room.disconnect();
-      const participantsAfter = [...room.participants.keys()];
       assert.deepEqual(participantsBefore, participantsAfter);
     });
 
     it('should not change Room\'s Participant\'s .states', () => {
-      const room = rooms[0];
-      room.disconnect();
       room.participants.forEach(participant => assert.equal(participant.state, 'connected'));
     });
 
     it('should not change Room\'s Participant\'s .tracks', () => {
-      const room = rooms[0];
-      const tracksBefore = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
-      room.disconnect();
-      const tracksAfter = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
       assert.deepEqual(tracksAfter, tracksBefore);
     });
 
     it('should raise a "participantDisconnected" event for every other Participant connected to the Room', async () => {
-      const room = rooms[0];
-      const participantsDisconnected = rooms.slice(1).map(room => {
-        return new Promise(resolve => room.once('participantDisconnected', resolve));
-      });
-      room.disconnect();
       await participantsDisconnected;
     });
   });
@@ -128,50 +130,47 @@ describe('Room', function() {
     let thatRoom;
     let thisParticipant;
     let thatParticipant;
+    let tracksBefore;
+    let tracksAfter;
 
-    beforeEach(async () => {
+    before(async () => {
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
       const name = randomName();
+
       [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
       thisParticipant = thisRoom.localParticipant;
+
+      tracksBefore = [...thisParticipant.tracks.keys()].sort();
+
+      await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));
+
+      if (navigator.userAgent !== 'Node') {
+        await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
+          tracksAdded(participant, thisParticipant.tracks.size)));
+      }
+
+      const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
+
+      thisRoom.disconnect();
+
+      thatParticipant = await participantDisconnected;
+
+      tracksAfter = [...thatParticipant.tracks.keys()].sort();
     });
 
-    afterEach(() => {
+    after(() => {
       thisRoom.disconnect();
       thatRoom.disconnect();
     });
 
     it('is raised whenever a Participant disconnects from the Room', async () => {
-      const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
-      thisRoom.disconnect();
-      thatParticipant = await participantDisconnected;
-
       assert(thatParticipant instanceof Participant);
       assert.equal(thatParticipant.sid, thisParticipant.sid);
       assert.equal(thatParticipant.identity, thisParticipant.identity);
     });
 
     describe('is raised whenever a Participant disconnects from the Room and', () => {
-      let tracksBefore;
-      let tracksAfter;
-
-      beforeEach(async () => {
-        tracksBefore = [...thisParticipant.tracks.keys()].sort();
-
-        // NOTE(mroberts): We don't actually raise Track events in Node, so skip these.
-        if (navigator.userAgent !== 'Node') {
-          await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
-            tracksAdded(participant, thisParticipant.tracks.size)));
-        }
-
-        const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
-        thisRoom.disconnect();
-        thatParticipant = await participantDisconnected;
-
-        tracksAfter = [...thatParticipant.tracks.keys()].sort();
-      });
-
       it('should delete the Participant from the Room\'s .participants Map', () => {
         assert(!thatRoom.participants.has(thatParticipant.sid));
       });
