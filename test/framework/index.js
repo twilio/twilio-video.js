@@ -37,6 +37,10 @@ function runFrameworkTest(options) {
         stdio: 'inherit'
       });
 
+      // NOTE(mroberts): Always test with Chrome until we can fix Firefox.
+      // driver = process.env.BROWSER === 'firefox'
+      //   ? webdriver.buildWebDriverForFirefox()
+      //   : webdriver.buildWebDriverForChrome();
       driver = webdriver.buildWebDriverForChrome();
 
       return waitForServer(host, port, timeout);
