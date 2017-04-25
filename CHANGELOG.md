@@ -4,8 +4,8 @@
 1.0.0-beta7 has been promoted to 1.0.0! 
 
 This library uses [Semantic Versioning](http://semver.org/): We've removed the 
-`beta` metadata, and we're proud to share the first generally available release 
-of twilio-video.js.
+pre-release identifier, and we're proud to share the first generally available
+release of twilio-video.js.
 
 1.0.0-beta7 (April 21, 2017)
 ============================
