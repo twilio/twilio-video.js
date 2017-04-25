@@ -1,5 +1,14 @@
-1.0.0-beta7
-===========
+1.0.0 (April 25, 2017)
+======================
+
+1.0.0-beta7 has been promoted to 1.0.0! 
+
+This library uses [Semantic Versioning](http://semver.org/): We've removed the 
+pre-release identifier, and we're proud to share the first generally available
+release of twilio-video.js.
+
+1.0.0-beta7 (April 21, 2017)
+============================
 
 Bug Fixes
 ---------
@@ -15,8 +24,8 @@ Bug Fixes
   could lead to sending more messages than necessary; we landed an optimization
   to reduce these additional messages. (JSDK-1257)
 
-1.0.0-beta6
-===========
+1.0.0-beta6 (April 20, 2017)
+============================
 
 New Features
 ------------
@@ -92,8 +101,8 @@ Known Issues
   localAudioTrack.disable();
   ```
 
-1.0.0-beta5
-===========
+1.0.0-beta5 (March 20, 2017)
+============================
 
 We are very close to releasing the 1.0.0 APIs. This release includes a number of
 simplifications to the twilio-video APIs, namely
@@ -171,8 +180,8 @@ Bug Fixes
   pages that did not specify a charset
 - Fixed an EventEmitter leak in StateMachine that was warning in the console
 
-1.0.0-beta4
-===========
+1.0.0-beta4 (January 25, 2017)
+==============================
 
 New Features
 ------------
@@ -191,8 +200,8 @@ Bug Fixes
   in certain configurations with Angular, Meteor, and React apps. This release
   updates those dependencies.
 
-1.0.0-beta3
-===========
+1.0.0-beta3 (December 8, 2016)
+==============================
 
 New Features
 ------------
@@ -218,15 +227,15 @@ Bug Fixes
   multiple VideoTracks, the attach method might render a different VideoTrack
   than intended
 
-1.0.0-beta2
-===========
+1.0.0-beta2 (October 14, 2016)
+==============================
 
 This release was created to remove a file that was accidentally uploaded to the
 NPM registry. The file included credentials (API Keys) to a test Twilio account
 and were revoked when discovered.
 
-1.0.0-beta1
-===========
+1.0.0-beta1 (October 3, 2016)
+=============================
 
 In this release, the SDK has been renamed twilio-video.js and replaces the
 earlier twilio-conversations.js. twilio-video.js offers the following
@@ -259,8 +268,8 @@ Bug Fixes
 - A number of stability improvements have been made in the transition away from
   invites towards a Room-based model.
 
-0.13.10
-=======
+0.13.10 (October 3, 2016)
+=========================
 
 Bug Fixes
 ---------
@@ -270,8 +279,8 @@ Bug Fixes
 - Fixed a bug where `isStarted` was always false and "trackStarted" events were
   never raised in Firefox (JSDK-950).
 
-0.13.9
-======
+0.13.9 (July 26, 2016)
+======================
 
 Bug Fixes
 ---------
@@ -281,16 +290,16 @@ Bug Fixes
   callee's IncomingInvite will emit the "canceled" event
 - Fixed a bug where IncomingInvite was never emitting the "failed" event
 
-0.13.8
-======
+0.13.8 (June 11, 2016)
+======================
 
 Bug Fixes
 ---------
 
 - Fixed Track playback on Chrome 48 for Android (JSDK-661)
 
-0.13.7
-======
+0.13.7 (June 17, 2016)
+======================
 
 Bug Fixes
 ---------
@@ -299,8 +308,8 @@ Bug Fixes
   and readded (JSDK-574)
 - Fixed a strict mode error that affected Safari (JSDK-692)
 
-0.13.6
-======
+0.13.6 (June 6, 2016)
+=====================
 
 New Features
 ------------
@@ -317,8 +326,8 @@ Bug Fixes
 - Silenced deprecation warnings in Firefox regarding `getUserMedia` and ICE
   server `urls` (JSDK-642)
 
-0.13.5
-======
+0.13.5 (March 16, 2016)
+=======================
 
 New Features
 ------------
@@ -349,8 +358,8 @@ Bug Fixes
 - Fixed a bug where calling `invite` on a disconnected Conversation raised an
   an exception (JSDK-605)
 
-0.13.4
-======
+0.13.4 (February 4, 2016)
+=========================
 
 Bug Fixes
 ---------
@@ -367,8 +376,8 @@ Bug Fixes
 - Fixed a bug where calling `stop` on a LocalTrack caused it to be removed
   (JSDK-549)
 
-0.13.3
-======
+0.13.3 (January 21, 2016)
+=========================
 
 New Features
 ------------
@@ -389,13 +398,13 @@ Bug Fixes
 - Fixed a bug where the `isEnded` property of a Track was always false, even
   after calling `stop` (JSDK-444)
 
-0.13.2
-======
+0.13.2 (December 16, 2015)
+==========================
 
 Added twilio-conversations.js to NPM and Bower.
 
-0.13.1
-======
+0.13.1 (December 16, 2015)
+==========================
 
 Bug Fixes
 ---------
@@ -407,8 +416,8 @@ Bug Fixes
   reliably during the creation of an `OutgoingInvite` or when
   `IncomingInvite#accept` is called.
 
-0.13.0
-======
+0.13.0 (December 15, 2015)
+==========================
 
 New Features
 ------------
