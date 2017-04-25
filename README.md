@@ -5,13 +5,14 @@ twilio-video.js
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-Note that this is a beta release. You may encounter bugs and instability, and
-the APIs available in this release may change in subsequent releases.
+* [API Docs](//media.twiliocdn.com/sdk/js/video/v1/docs)
+* [Quickstart and Examples](//github.com/twilio/video-quickstart-js)
 
-**We want your feedback!** Email Rob Brazier, Product Manager for Programmable
-Video at [rbrazier@twilio.com](mailto:rbrazier@twilio.com) with suggested
-improvements, feature requests and general feedback. If you need technical
-support, contact [help@twilio.com](mailto:help@twilio.com).
+**We want your feedback!** Email
+[video-product@twilio.com](mailto:video-product@twilio.com) with suggested
+improvements, feature requests and general feedback, or feel free to open a
+GitHub issue. If you need technical support, contact
+[help@twilio.com](mailto:help@twilio.com).
 
 Installation
 ------------
@@ -19,7 +20,7 @@ Installation
 ### NPM
 
 ```
-npm install twilio-video@beta --save
+npm install twilio-video --save
 ```
 
 Using this method, you can `require` twilio-video.js like so:
@@ -30,11 +31,8 @@ const Video = require('twilio-video');
 
 ### Bower
 
-Until we release twilio-video.js 1.0.0 proper, you must specify a specific
-pre-release. For example,
-
 ```
-bower install twilio-video#1.0.0-beta7 --save
+bower install twilio-video --save
 ```
 
 ### CDN
@@ -43,7 +41,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/1.0.0-beta7/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/v1/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
