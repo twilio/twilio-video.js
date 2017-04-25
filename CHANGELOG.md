@@ -1,9 +1,11 @@
-twilio-video.js uses [Semantic Versioning](http://semver.org/).
-
 1.0.0 (April 25, 2017)
 ======================
 
-1.0.0-beta7 has been promoted to 1.0.0! We're proud to share the first generally available release of twilio-video.js.
+1.0.0-beta7 has been promoted to 1.0.0! 
+
+twilio-video.js uses [Semantic Versioning](http://semver.org/): We've removed the 
+`beta` metadata, and we're proud to share the first generally available release 
+of twilio-video.js.
 
 1.0.0-beta7 (April 21, 2017)
 ============================
