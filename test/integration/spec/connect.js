@@ -88,7 +88,7 @@ describe('connect', function() {
       cancelablePromise = connect(token, Object.assign({}, defaultOptions, { logLevel, tracks: [] }));
     });
 
-    it.skip('should return a CancelablePromise that rejects with a RangeError', async () => {
+    it('should return a CancelablePromise that rejects with a RangeError', async () => {
       try {
         const room = await cancelablePromise;
         room.disconnect();
@@ -97,7 +97,6 @@ describe('connect', function() {
         assert(error instanceof RangeError);
         assert(/level must be one of/.test(error.message));
       }
-      // FIXME(mroberts): This doesn't hold (JSDK-1250).
       assert(cancelablePromise instanceof CancelablePromise);
     });
   });
