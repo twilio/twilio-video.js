@@ -48,7 +48,7 @@ describe('connect', function() {
     [
       'without a grant',
       { grant: null },
-      20101
+      20106
     ]
   ].forEach(([description, defaultOptions, expectedCode]) => {
     describe(`called ${description}`, () => {
