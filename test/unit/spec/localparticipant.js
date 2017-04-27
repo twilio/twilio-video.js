@@ -214,6 +214,31 @@ describe('LocalParticipant', () => {
           });
         });
       });
+
+      if (method === 'removeTracks') {
+        [ undefined, true, false ].forEach(stop => {
+          var scenario = typeof stop === 'undefined'
+            ? 'when called without the "stop" argument'
+            : `when called with stop=${stop}`;
+
+          context(scenario, () => {
+            it(`should call .${trackMethod} for each item in the "tracks" argument with stop=${stop}`, () => {
+              var tracks = [
+                new LocalAudioTrack(new FakeMediaStreamTrack('audio')),
+                new LocalVideoTrack(new FakeMediaStreamTrack('video'))
+              ];
+
+              if (typeof stop === 'undefined') {
+                test.participant[method](tracks);
+              } else {
+                test.participant[method](tracks, stop);
+              }
+              sinon.assert.calledWith(test.participant[trackMethod], tracks[0], stop);
+              sinon.assert.calledWith(test.participant[trackMethod], tracks[1], stop);
+            });
+          });
+        });
+      }
     });
   });
 

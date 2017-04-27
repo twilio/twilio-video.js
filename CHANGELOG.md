@@ -1,3 +1,26 @@
+1.0.1 (under development)
+=========================
+
+New Features
+------------
+
+- You can now call the LocalParticipant's `removeTracks` method with an
+  optional second boolean argument `stop` to specify whether the removed
+  LocalTacks should be stopped. If `stop` is not specified, then the removed
+  LocalTracks will be stopped. This mirrors the behavior of the LocalParticicipant's
+  `removeTrack` method.
+  
+  ```js
+  // Stops the removed LocalTracks
+  localParticipant.removeTracks(tracks);
+  localParticipant.removeTracks(tracks, true);
+  ```
+  
+  ```js
+  // Does not stop the removed LocalTracks
+  localParticipant.removeTracks(tracks, false);
+  ```
+
 1.0.0 (April 25, 2017)
 ======================
 
