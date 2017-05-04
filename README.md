@@ -1,7 +1,7 @@
 twilio-video.js
 ===============
 
-[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![Build Status](https://travis-ci.org/twilio/twilio-video.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-video.js)
+[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![Linux Build Status](https://travis-ci.org/twilio/twilio-video.js.svg?branch=master)](https://travis-ci.org/twilio/twilio-video.js) [![Windows Build status](https://ci.appveyor.com/api/projects/status/gi5cj6dpfudsqhtg?svg=true)](https://ci.appveyor.com/project/markandrus/twilio-video-js)
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
