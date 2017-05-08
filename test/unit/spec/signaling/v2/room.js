@@ -73,7 +73,6 @@ describe('RoomV2', () => {
 
       expectedArgs = expectedArgs.concat(expectedArgs, expectedArgs);
       await wait(175);
-      sinon.assert.callCount(test.transport.publishEvent, 6);
       assert.deepEqual(test.transport.publishEvent.args, expectedArgs);
     });
 
