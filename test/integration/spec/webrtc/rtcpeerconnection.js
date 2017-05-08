@@ -361,7 +361,14 @@ function testGetLocalStreams(signalingState) {
         assert.deepEqual(test.peerConnection.getLocalStreams(), []);
       });
     } else {
-      it('should return the result of calling getLocalStreams() on the underlying RTCPeerConnection', () => {
+      // NOTE(mroberts): See the comment in
+      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
+      // we test this API the way we do.
+      it('should return an array of MediaStreams containing the ' +
+         'MediaStreamTracks added to the underlying RTCPeerConnection', () => {
+        if (isFirefox) {
+          return;
+        }
         assert.deepEqual(test.peerConnection.getLocalStreams(), test.peerConnection._peerConnection.getLocalStreams());
       });
     }
@@ -382,7 +389,14 @@ function testGetRemoteStreams(signalingState) {
         assert.deepEqual(test.peerConnection.getRemoteStreams(), []);
       });
     } else {
-      it('should return the result of calling getRemoteStreams() on the underlying RTCPeerConnection', () => {
+      // NOTE(mroberts): See the comment in
+      // lib/webrtc/rtcpeerconnection/firefox.js for an explanation as to why
+      // we test this API the way we do.
+      it('should return an array of MediaStreams containing the ' +
+         'MediaStreamTracks received on the underlying RTCPeerConnection', () => {
+        if (isFirefox) {
+          return;
+        }
         assert.deepEqual(test.peerConnection.getRemoteStreams(), test.peerConnection._peerConnection.getRemoteStreams());
       });
     }
@@ -597,8 +611,16 @@ function testAddStream() {
     return makeTest().then(_test => test = _test);
   });
 
-  it('should add a stream to the RTCPeerConnection', () => {
+  // NOTE(mroberts): See the comment in lib/webrtc/rtcpeerconnection/firefox.js
+  // for an explanation as to why we test this API the way we do.
+  it('should add each of the MediaStream\'s MediaStreamTracks to the RTCPeerConnection', () => {
     test.peerConnection.addStream(stream);
+    if (isFirefox) {
+      const expectedTracks = stream.getTracks();
+      const actualTracks = test.peerConnection.getLocalStreams()[0].getTracks();
+      assertMediaStreamTracksEqual(actualTracks, expectedTracks);
+      return;
+    }
     assert.equal(test.peerConnection.getLocalStreams()[0], stream);
   });
 
@@ -1155,4 +1177,9 @@ c=IN IP4 127.0.0.1\r
   }
 
   return setup.then(() => test);
+}
+
+function assertMediaStreamTracksEqual(actualTracks, expectedTracks) {
+  assert.equal(actualTracks.length, expectedTracks.length);
+  actualTracks.forEach((actualTrack, i) => assert.equal(actualTrack, expectedTracks[i]));
 }
