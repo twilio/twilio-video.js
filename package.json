@@ -93,7 +93,7 @@
     "build:quick": "npm-run-all clean lint docs build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "clean": "rimraf ./coverage ./dist",
-    "cover": "istanbul cover _mocha -- ./test/unit/index.js"
+    "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
     "sip.js": "twilio/SIP.js.git#b884c74892836f70ced6010353852ebd9ce5b199",
