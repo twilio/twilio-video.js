@@ -491,23 +491,6 @@ describe('Transport', () => {
             test.transport.publish({ foo: 'bar' });
           });
         });
-
-        it('should execute the exponential backoff', () => {
-          var allowance = constants.PUBLISH_BACKOFF_MS >> 1;
-          var backoff = constants.PUBLISH_BACKOFF_MS;
-          var jitter = constants.PUBLISH_BACKOFF_JITTER;
-          var delay;
-          var high;
-          var low;
-
-          assert.equal(sendRequestCallTimes.length, constants.PUBLISH_MAX_ATTEMPTS);
-          for (var i = 1; i < sendRequestCallTimes.length; i++) {
-            delay = sendRequestCallTimes[i] - sendRequestCallTimes[i - 1];
-            high = backoff * (1 << (i - 1)) + jitter + allowance;
-            low = backoff * (1 << (i - 1)) - jitter;
-            assert(delay <= high && delay >= low);
-          }
-        });
       });
     });
 

@@ -331,12 +331,6 @@ describe('InsightsPublisher', () => {
             assert(reconnectingEmitted);
           });
 
-          it('should wait for options.reconnectIntervalMs before reconnecting', async () => {
-            var allowanceMs = 10;
-            await reconnectDeferreds[1].promise;
-            assert(timestamps[1] - timestamps[0] < 100 + allowanceMs);
-          });
-
           it('should decrement the ._reconnectAttemptsLeft', async () => {
             await reconnectDeferreds[1].promise;
             assert.equal(publisher._reconnectAttemptsLeft, reconnectAttemptsLeft - 1);
