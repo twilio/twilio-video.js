@@ -298,21 +298,20 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
 
       await tracksAdded(thatParticipant, thisParticipant.tracks.size);
 
-      // NOTE(mroberts): Wait 10 seconds.
-      await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+      // NOTE(mroberts): Wait 5 seconds.
+      await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+
+      const trackRemoved = new Promise(resolve => thatParticipant.once('trackRemoved', resolve));
+      const trackAdded = new Promise(resolve => thatParticipant.once('trackAdded', resolve));
 
       thisParticipant.removeTrack(thisTrack1);
       [thisTrack2] = await createLocalTracks(constraints);
       thisParticipant.addTrack(thisTrack2);
 
-      [thatTrack1, thatTrack2] = await Promise.all([
-        new Promise(resolve => thatParticipant.once('trackRemoved', resolve)),
-        new Promise(resolve => thatParticipant.once('trackAdded', resolve))
-      ]);
+      [thatTrack1, thatTrack2] = await Promise.all([trackRemoved, trackAdded]);
     });
 
     after(() => {
-      thisTrack1.stop();
       thisTrack2.stop();
       thisRoom.disconnect();
       thatRoom.disconnect();
@@ -372,8 +371,8 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
       thatParticipant = thatRoom.participants.get(thisParticipant.sid);
       assert(thatParticipant);
 
-      // NOTE(mroberts): Wait 10 seconds.
-      await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+      // NOTE(mroberts): Wait 5 seconds.
+      await new Promise(resolve => setTimeout(resolve, 5 * 1000));
 
       [thisAudioTrack, thisVideoTrack].forEach(thisParticipant.addTrack, thisParticipant);
 

@@ -107,8 +107,8 @@ describe('connect', function() {
       x => `called with${x ? '' : 'out'} a Room name and`
     ],
     [
-      [false, true],
-      x => x ? 'the default, automatically-acquired LocalTracks' : 'no LocalTracks'
+      [true, false],
+      x => x ? 'no LocalTracks' : 'the default, automatically-acquired LocalTracks'
     ],
     [
       // TODO(mroberts): Run this with 10 Participants.
@@ -239,7 +239,7 @@ describe('connect', function() {
     let cancelablePromise;
     let room;
 
-    beforeEach(async () => {
+    before(async () => {
       const options = Object.assign({ name: randomName(), tracks: [] }, defaultOptions);
 
       const identities = [randomName(), randomName()];
@@ -275,7 +275,7 @@ describe('connect', function() {
   describe('called with a Room name and canceled before connecting', () => {
     let cancelablePromise;
 
-    beforeEach(async () => {
+    before(async () => {
       const options = Object.assign({ tracks: [] }, defaultOptions);
       cancelablePromise = connect(getToken(randomName(), options));
       cancelablePromise.cancel();

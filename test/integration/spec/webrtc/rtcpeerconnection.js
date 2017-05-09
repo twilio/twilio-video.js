@@ -22,6 +22,7 @@ var signalingStates = [
 ];
 
 var isFirefox = typeof mozRTCPeerConnection !== 'undefined';
+var isChrome = !isFirefox;
 
 describe('RTCPeerConnection', function() {
   this.timeout(30000);
@@ -445,7 +446,10 @@ function testClose(signalingState) {
     };
 
     Object.keys(expected).forEach(property => {
-      it('should set .' + property + ' to ' + JSON.stringify(expected[property]), () => {
+      (property === 'iceGatheringState' && isChrome
+        ? it.skip
+        : it
+      )('should set .' + property + ' to ' + JSON.stringify(expected[property]), () => {
         assert.equal(test.peerConnection[property], expected[property]);
       });
     });

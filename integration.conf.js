@@ -2,6 +2,10 @@ module.exports = (config) => {
   const files = config.files && config.files.length
     ? config.files
     : ['test/integration/index.js'];
+  const browsers = {
+    chrome: ['ChromeWebRTC'],
+    firefox: ['FirefoxWebRTC']
+  }[process.env.BROWSER] || ['ChromeWebRTC', 'FirefoxWebRTC'];
   config.set({
     basePath: '',
     frameworks: ['browserify', 'mocha'],
@@ -13,16 +17,7 @@ module.exports = (config) => {
     browserify: {
       debug: true,
       transform: [
-        'envify',
-        ['babelify', {
-          presets: ['es2015', 'es2017'],
-          plugins: [
-            ['transform-runtime', {
-              polyfill: false,
-              regenerator: true
-            }]
-          ]
-        }]
+        'envify'
       ]
     },
     reporters: ['spec'],
@@ -30,10 +25,10 @@ module.exports = (config) => {
     colors: true,
     logLevel: config.LOG_DEBUG,
     autoWatch: true,
-    browsers: ['ChromeWebRTC', 'FirefoxWebRTC'],
+    browsers,
     singleRun: true,
     concurrency: 1,
-    browserNoActivityTimeout: 60000,
+    browserNoActivityTimeout: 120000,
     customLaunchers: {
       ChromeWebRTC: {
         base: 'Chrome',

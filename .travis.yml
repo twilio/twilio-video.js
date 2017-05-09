@@ -7,16 +7,21 @@ addons:
     packages:
       - pulseaudio
 env:
+  matrix:
+    - BROWSER=chrome BVER=stable
+    - BROWSER=chrome BVER=beta
+    - BROWSER=firefox BVER=stable
+    - BROWSER=firefox BVER=beta
   global:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
     - PATH=$HOME/.meteor:$PATH
-    - CHROME_BIN=$TRAVIS_BUILD_DIR/node_modules/travis-multirunner/browsers/bin/chrome-stable
-    - FIREFOX_BIN=$TRAVIS_BUILD_DIR/node_modules/travis-multirunner/browsers/bin/firefox-stable
 before_script:
   - cd node_modules/travis-multirunner
-  - BROWSER=chrome BVER=stable ./setup.sh
-  - BROWSER=firefox BVER=stable ./setup.sh
+  - BROWSER=chrome ./setup.sh
+  - BROWSER=firefox ./setup.sh
+  - export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
+  - export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
   - cd ../..
   - curl https://install.meteor.com | /bin/sh
   - sh -e /etc/init.d/xvfb start
