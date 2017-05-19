@@ -6,4 +6,5 @@ dist
 node_modules
 npm-debug.log
 test.json
+yarn.lock
 .idea
