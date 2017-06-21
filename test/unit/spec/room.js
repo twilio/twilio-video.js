@@ -3,7 +3,6 @@
 var assert = require('assert');
 var Room = require('../../../lib/room');
 var RoomSignaling = require('../../../lib/signaling/room');
-var Participant = require('../../../lib/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 var SignalingConnectionDisconnectedError = require('../../../lib/util/twilio-video-errors').SignalingConnectionDisconnectedError;
 var sinon = require('sinon');
@@ -54,7 +53,7 @@ describe('Room', function() {
       });
     });
 
-    it('should re-emit Participants trackAdded event for matching Participant only', function() {
+    it('should re-emit Participants trackAdded event for matching RemoteParticipant only', function() {
       var spy = new sinon.spy();
       room.on('trackAdded', spy);
 
@@ -62,7 +61,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit Participants trackRemoved event for matching Participant only', function() {
+    it('should re-emit Participants trackRemoved event for matching RemoteParticipant only', function() {
       var spy = new sinon.spy();
       room.on('trackRemoved', spy);
 
@@ -70,7 +69,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should not re-emit Participant events if the Participant is no longer in the room', function() {
+    it('should not re-emit Participant events if the RemoteParticipant is no longer in the room', function() {
       participants['foo'].emit('disconnected');
 
       var spy = new sinon.spy();
