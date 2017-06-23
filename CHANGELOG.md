@@ -1,6 +1,13 @@
 1.0.1 (under development)
 =========================
 
+Known Issues
+------------
+
+- In Firefox 55 (beta), participants who connect to an SFU Room will not see each
+  other's media Tracks. This does NOT happen in a P2P Room. Once we fix this issue,
+  an SDK upgrade will NOT be necessary.
+
 New Features
 ------------
 
