@@ -54,6 +54,15 @@ var log = require('../../../../lib/fakelog');
       });
     });
 
+    describe('.isEnabled', () => {
+      it('should set the .isEnabled to the MediaStreamTrack\'s .enabled property', () => {
+        track = createTrack(LocalTrack, '1', kind[description]);
+        assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
+        track.mediaStreamTrack.enabled = !track.mediaStreamTrack.enabled;
+        assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
+      });
+    });
+
     describe('.isStopped', () => {
       it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
         track = createTrack(LocalTrack, '1', kind[description]);
@@ -86,6 +95,60 @@ var log = require('../../../../lib/fakelog');
           track.mediaStreamTrack.emit('ended');
 
           return stoppedEvent;
+        });
+      });
+    });
+
+    describe('#disable', () => {
+      before(() => {
+        track = createTrack(LocalTrack, 'foo', kind[description]);
+        track.enable = sinon.spy();
+        track.disable();
+      });
+
+      it('should call .enable with false', () => {
+        sinon.assert.calledWith(track.enable, false);
+      });
+    });
+
+    describe('#enable', () => {
+      context('when called with the same boolean value as the underlying MediaStreamTrack\'s .enabled', () => {
+        var trackDisabledEmitted = false;
+        var trackEnabledEmitted = false;
+
+        before(() => {
+          track =  createTrack(LocalTrack, 'foo', kind[description]);
+          track.mediaStreamTrack.enabled = Math.random() > 0.5;
+          track.on('disabled', () => trackDisabledEmitted = true);
+          track.on('enabled', () => trackEnabledEmitted = true);
+        });
+
+        it('should not emit the "disabled" or "enabled" events', () => {
+          track.enable(track.mediaStreamTrack.enabled);
+          assert(!(trackDisabledEmitted || trackEnabledEmitted));
+        });
+      });
+
+      [ true, false ].forEach(enabled => {
+        context(`when .enable is called with ${enabled}`, () => {
+          context(`and the underlying MediaStreamTrack's .enabled is ${!enabled}`, () => {
+            var eventEmitted = false;
+
+            before(() => {
+              track =  createTrack(LocalTrack, 'foo', kind[description]);
+              track.mediaStreamTrack.enabled = !enabled;
+              track.on(enabled ? 'enabled' : 'disabled', () => eventEmitted = true);
+              track.enable(enabled);
+            });
+
+            it(`should set the underlying MediaStreamTrack's .enabled to ${enabled}`, () => {
+              assert.equal(track.mediaStreamTrack.enabled, enabled);
+            });
+
+            it(`should emit the ${enabled ? 'enabled' : 'disabled'} event`, () => {
+              assert(eventEmitted);
+            });
+          });
         });
       });
     });
@@ -130,7 +193,8 @@ function MediaStreamTrack(id, kind) {
 
   Object.defineProperties(this, {
     id: { value: id },
-    kind: { value: kind }
+    kind: { value: kind },
+    enabled: { value: true, writable: true }
   });
 }
 

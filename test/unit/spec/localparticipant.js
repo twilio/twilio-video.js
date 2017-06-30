@@ -7,6 +7,7 @@ var inherits = require('util').inherits;
 var LocalParticipant = require('../../../lib/localparticipant');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
+var { capitalize } = require('../../lib/util');
 
 const LocalAudioTrack = sinon.spy(function(mediaStreamTrack) {
   EventEmitter.call(this);
@@ -290,76 +291,111 @@ describe('LocalParticipant', () => {
   describe('LocalTrack events', () => {
     context('"trackAdded" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .addTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connecting' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackAdded', track);
-          assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.addTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .addTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackAdded', track);
-          assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.addTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('does not call .addTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'disconnected' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
 
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('does not call .addTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
     });
 
+    [ 'disable', 'enable' ].forEach(trackMethod => {
+      context(`"track${capitalize(trackMethod)}d" event`, () => {
+        [ 'connecting', 'connected' ].forEach(state => {
+          context(`when the LocalParticipant .state is "${state}"`, () => {
+            it(`should call .${trackMethod} on the LocalTrack\'s PublishedTrackSignaling`, () => {
+              var test = makeTest({ state });
+              var track = { id: 'foo', mediaStreamTrack: 'bar' };
+              var trackSignaling = { id: 'foo' , [trackMethod]: sinon.spy() };
+              test.signaling.tracks = { get: () => trackSignaling };
+              test.participant.emit(`track${capitalize(trackMethod)}d`, track);
+              sinon.assert.calledOnce(trackSignaling[trackMethod]);
+            });
+          });
+        });
+
+        [ 'is', 'transitions to' ].forEach(action => {
+          context(`when the LocalParticipant .state ${action} "disconnected"`, () => {
+            it(`should not call .${trackMethod} on the LocalTrack\'s PublishedTrackSignaling`, () => {
+              var test = makeTest({ state: action === 'is' ? 'disconnected' : 'connected' });
+              var track = { id: 'foo', mediaStreamTrack: 'bar' };
+              var trackSignaling = { id: 'foo' , [trackMethod]: sinon.spy() };
+
+              test.signaling.tracks = { get: () => trackSignaling };
+              if (action === 'transitions to') {
+                test.signaling.emit('stateChanged', 'disconnected');
+              }
+
+              test.participant.emit(`track${capitalize(trackMethod)}d`, track);
+              assert(!trackSignaling[trackMethod].calledOnce);
+            });
+          });
+        });
+      });
+    });
+
     context('"trackRemoved" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .removeTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connecting' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackRemoved', track);
-          assert.equal(track._signaling, test.signaling.removeTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.removeTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .removeTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackRemoved', track);
-          assert.equal(track._signaling, test.signaling.removeTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.removeTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('does not call .removeTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'disconnected' });
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
       });
 
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('does not call .removeTrack with the LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
-          var track = { _signaling: {} };
+          var track = { id: 'foo', mediaStreamTrack: 'bar' };
           test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
@@ -410,33 +446,36 @@ describe('LocalParticipant', () => {
 
     context('.tracks', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .addTrack with each LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var track = new EventEmitter();
-          track._signaling = {};
+          track.id = 'foo';
+          track.mediaStreamTrack = 'bar';
           var test = makeTest({
             state: 'connecting',
             tracks: [track]
           });
-          assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.addTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('calls .addTrack with each LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var track = new EventEmitter();
-          track._signaling = {};
+          track.id = 'foo';
+          track.mediaStreamTrack = 'bar';
           var test = makeTest({
             state: 'connected',
             tracks: [track]
           });
-          assert.equal(track._signaling, test.signaling.addTrack.args[0][0]);
+          assert.equal(track.mediaStreamTrack, test.signaling.addTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .addTrack with each LocalTrack\'s TrackSignaling on the ParticipantSignaling', () =>{
+        it('does not call .addTrack with each LocalTrack\'s PublishedTrackSignaling on the ParticipantSignaling', () =>{
           var track = new EventEmitter();
-          track._signaling = {};
+          track.id = 'foo';
+          track.mediaStreamTrack = 'bar';
           var test = makeTest({
             state: 'disconnected',
             tracks: [track]

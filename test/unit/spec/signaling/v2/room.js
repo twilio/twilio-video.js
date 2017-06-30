@@ -509,7 +509,7 @@ describe('RoomV2', () => {
         });
         test.localParticipant.emit('trackAdded', track);
         await new Promise(resolve => setTimeout(resolve));
-        assert(test.localParticipant.update.calledOnce);
+        assert(test.localParticipant.incrementRevision.calledOnce);
       });
 
       it('calls .publish on the Transport with the LocalparticipantSignaling state', async () => {
@@ -549,7 +549,7 @@ describe('RoomV2', () => {
         });
         test.localParticipant.emit('trackRemoved', track);
         await new Promise(resolve => setTimeout(resolve));
-        assert(test.localParticipant.update.calledOnce);
+        assert(test.localParticipant.incrementRevision.calledOnce);
       });
 
       it('calls .publish on the Transport with the LocalParticipantSignaling state', async () => {
@@ -785,6 +785,23 @@ describe('RoomV2', () => {
         assert.equal(
           test.sid,
           test.room.sid);
+      });
+    });
+
+    context('.participant', () => {
+      it('should update the newly published LocalTrackV2s with their corresponding SIDs', () => {
+        var id = makeId();
+        var test = makeTest();
+        var track = makeTrack({ id });
+
+        test.room.localParticipant.tracks.push(track);
+        test.transport.emit('message', {
+          participant: {
+            sid: 'bar',
+            tracks: [ { id: id, sid: 'foo' } ]
+          }
+        });
+        assert.equal(track.sid, 'foo');
       });
     });
 
@@ -1173,7 +1190,17 @@ function makeLocalParticipant(options) {
   localParticipant.identity = makeIdentity();
   localParticipant.revision = 0;
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
-  localParticipant.update = sinon.spy(() => localParticipant.revision++);
+
+  localParticipant.update = sinon.spy(localParticipantState => {
+    localParticipantState.tracks.forEach(localTrackState => {
+      const localTrackV2 = localParticipant.tracks.find(track => track.id === localTrackState.id);
+      if (localTrackV2) {
+        localTrackV2.sid = localTrackState.sid;
+      }
+    });
+  });
+
+  localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);
   localParticipant.tracks = options.tracks;
   localParticipant.disconnect = sinon.spy(() => {});
   return localParticipant;
@@ -1183,6 +1210,7 @@ function makeTrack(options) {
   var track = new EventEmitter();
   options = options || {};
   track.id = options.id || makeId();
+  track.sid = null;
   track.mediaStreamTrack = {};
   track.disable = () => {
     track.isEnabled = false;
