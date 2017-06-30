@@ -31,7 +31,7 @@ describe('RemoteParticipantV2', () => {
     });
 
     context('.tracks', () => {
-      it('constructs a new TrackV2 from each trackState', () => {
+      it('constructs a new RemoteTrackV2 from each trackState', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -40,11 +40,11 @@ describe('RemoteParticipantV2', () => {
             { id: id2 }
           ]
         });
-        assert.equal(id1, test.trackV2s[0].id);
-        assert.equal(id2, test.trackV2s[1].id);
+        assert.equal(id1, test.remoteTrackV2s[0].id);
+        assert.equal(id2, test.remoteTrackV2s[1].id);
       });
 
-      it('adds the newly-constructed TrackV2s to the RemoteParticipantV2\'s .tracks Map', () => {
+      it('adds the newly-constructed RemoteTrackV2s to the RemoteParticipantV2\'s .tracks Map', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -54,14 +54,14 @@ describe('RemoteParticipantV2', () => {
           ]
         });
         assert.equal(
-          test.trackV2s[0],
+          test.remoteTrackV2s[0],
           test.participant.tracks.get(id1));
         assert.equal(
-          test.trackV2s[1],
+          test.remoteTrackV2s[1],
           test.participant.tracks.get(id2));
       });
 
-      it('calls getMediaStreamTrack with the newly-constructed TrackV2s\' IDs', () => {
+      it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2s\' IDs', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -74,7 +74,7 @@ describe('RemoteParticipantV2', () => {
         assert.equal(id2, test.getMediaStreamTrack.args[1][0]);
       });
 
-      it('calls setMediaStreamTrack on the newly-constructed TrackV2s with the results of calling getMediaStreamTrack', () => {
+      it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2s with the results of calling getMediaStreamTrack', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -90,10 +90,10 @@ describe('RemoteParticipantV2', () => {
         return test.getMediaStreamTrackDeferred.promise.then(() => {
           assert.equal(
             mediaStreamTrack,
-            test.trackV2s[0].setMediaStreamTrack.args[0][0]);
+            test.remoteTrackV2s[0].setMediaStreamTrack.args[0][0]);
           assert.equal(
             mediaStreamTrack,
-            test.trackV2s[1].setMediaStreamTrack.args[0][0]);
+            test.remoteTrackV2s[1].setMediaStreamTrack.args[0][0]);
         });
       });
     });
@@ -118,37 +118,37 @@ describe('RemoteParticipantV2', () => {
           test.participant.revision);
       });
 
-      context('which includes a new trackState not matching an existing TrackV2', () => {
-        it('constructs a new TrackV2 from the trackState', () => {
+      context('which includes a new trackState not matching an existing RemoteTrackV2', () => {
+        it('constructs a new RemoteTrackV2 from the trackState', () => {
           var test = makeTest();
           var id = makeId();
           var participantState = test.state(test.revision + 1).setTrack({ id: id });
           test.participant.update(participantState);
-          assert.equal(id, test.trackV2s[0].id);
+          assert.equal(id, test.remoteTrackV2s[0].id);
         });
 
-        it('adds the newly-constructed TrackV2 to the RemoteParticipantV2\'s .tracks Map', () => {
+        it('adds the newly-constructed RemoteTrackV2 to the RemoteParticipantV2\'s .tracks Map', () => {
           var test = makeTest();
           var id = makeId();
           var participantState = test.state(test.revision + 1).setTrack({ id: id });
           test.participant.update(participantState);
           assert.equal(
-            test.trackV2s[0],
+            test.remoteTrackV2s[0],
             test.participant.tracks.get(id));
         });
 
-        it('emits the "trackAdded" event with the newly-constructed TrackV2', () => {
+        it('emits the "trackAdded" event with the newly-constructed RemoteTrackV2', () => {
           var test = makeTest();
           var participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           var track;
           test.participant.once('trackAdded', _track => track = _track);
           test.participant.update(participantState);
           assert.equal(
-            test.trackV2s[0],
+            test.remoteTrackV2s[0],
             track);
         });
 
-        it('calls getMediaStreamTrack with the newly-constructed TrackV2\'s ID', () => {
+        it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var id = makeId();
           var participantState = test.state(test.revision + 1).setTrack({ id: id });
@@ -156,7 +156,7 @@ describe('RemoteParticipantV2', () => {
           assert.equal(id, test.getMediaStreamTrack.args[0][0]);
         });
 
-        it('calls setMediaStreamTrack on the newly-constructed TrackV2 with the result of calling getMediaStreamTrack', () => {
+        it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrack', () => {
           var test = makeTest();
           var participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
@@ -165,35 +165,35 @@ describe('RemoteParticipantV2', () => {
           return test.getMediaStreamTrackDeferred.promise.then(() => {
             assert.equal(
               mediaStreamTrack,
-              test.trackV2s[0].setMediaStreamTrack.args[0][0]);
+              test.remoteTrackV2s[0].setMediaStreamTrack.args[0][0]);
           });
         });
 
-        it('calls update with the trackState on the newly-constructed TrackV2', () => {
+        it('calls update with the trackState on the newly-constructed RemoteTrackV2', () => {
           var test = makeTest();
           var id = makeId();
           var participantState = test.state(test.revision + 1).setTrack({ id: id, fizz: 'buzz' });
           test.participant.update(participantState);
           assert.deepEqual(
             { id: id, fizz: 'buzz' },
-            test.trackV2s[0].update.args[0][0]);
+            test.remoteTrackV2s[0].update.args[0][0]);
         });
       });
 
-      context('which includes a trackState matching an existing TrackV2', () => {
-        it('calls update with the trackState on the existing TrackV2', () => {
+      context('which includes a trackState matching an existing RemoteTrackV2', () => {
+        it('calls update with the trackState on the existing RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision + 1).setTrack({ id: id, fizz: 'buzz' });
           test.participant.update(participantState);
           assert.deepEqual(
             { id: id, fizz: 'buzz' },
-            test.trackV2s[0].update.args[1][0]);
+            test.remoteTrackV2s[0].update.args[1][0]);
         });
       });
 
-      context('which no longer includes a trackState matching an existing TrackV2', () => {
-        it('deletes the TrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+      context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
+        it('deletes the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision + 1);
@@ -201,7 +201,7 @@ describe('RemoteParticipantV2', () => {
           assert(!test.participant.tracks.has(id));
         });
 
-        it('emits the "trackRemoved" event with the TrackV2', () => {
+        it('emits the "trackRemoved" event with the RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision + 1);
@@ -209,7 +209,7 @@ describe('RemoteParticipantV2', () => {
           test.participant.once('trackRemoved', _track => track = _track);
           test.participant.update(participantState);
           assert.equal(
-            test.trackV2s[0],
+            test.remoteTrackV2s[0],
             track);
         });
       });
@@ -345,15 +345,15 @@ describe('RemoteParticipantV2', () => {
           test.participant.revision);
       });
 
-      context('which includes a new trackState not matching an existing TrackV2', () => {
-        it('does not construct a new TrackV2 from the trackState', () => {
+      context('which includes a new trackState not matching an existing RemoteTrackV2', () => {
+        it('does not construct a new RemoteTrackV2 from the trackState', () => {
           var test = makeTest();
           var participantState = test.state(test.revision).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert.equal(0, test.trackV2s.length);
+          assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrack with a newly-constructed TrackV2\'s ID', () => {
+        it('does not call getMediaStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var participantState = test.state(test.revision).setTrack({ id: makeId() });
           test.participant.update(participantState);
@@ -361,28 +361,28 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('which includes a trackState matching an existing TrackV2', () => {
-        it('does not call update with the trackState on the existing TrackV2', () => {
+      context('which includes a trackState matching an existing RemoteTrackV2', () => {
+        it('does not call update with the trackState on the existing RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision).setTrack({ id: id });
           test.participant.update(participantState);
-          assert(!test.trackV2s[0].update.calledTwice);
+          assert(!test.remoteTrackV2s[0].update.calledTwice);
         });
       });
 
-      context('which no longer includes a trackState matching an existing TrackV2', () => {
-        it('does not delete the TrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+      context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
+        it('does not delete the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision);
           test.participant.update(participantState);
           assert.equal(
-            test.trackV2s[0],
+            test.remoteTrackV2s[0],
             test.participant.tracks.get(id));
         });
 
-        it('does not emit the "trackRemoved" event with the TrackV2', () => {
+        it('does not emit the "trackRemoved" event with the RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision);
@@ -523,15 +523,15 @@ describe('RemoteParticipantV2', () => {
           test.participant.revision);
       });
 
-      context('which includes a new trackState not matching an existing TrackV2', () => {
-        it('does not construct a new TrackV2 from the trackState', () => {
+      context('which includes a new trackState not matching an existing RemoteTrackV2', () => {
+        it('does not construct a new RemoteTrackV2 from the trackState', () => {
           var test = makeTest();
           var participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert.equal(0, test.trackV2s.length);
+          assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrack with a newly-constructed TrackV2\'s ID', () => {
+        it('does not call getMediaStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
@@ -539,28 +539,28 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('which includes a trackState matching an existing TrackV2', () => {
-        it('does not call update with the trackState on the existing TrackV2', () => {
+      context('which includes a trackState matching an existing RemoteTrackV2', () => {
+        it('does not call update with the trackState on the existing RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision - 1).setTrack({ id: id });
           test.participant.update(participantState);
-          assert(!test.trackV2s[0].update.calledTwice);
+          assert(!test.remoteTrackV2s[0].update.calledTwice);
         });
       });
 
-      context('which no longer includes a trackState matching an existing TrackV2', () => {
-        it('does not delete the TrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+      context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
+        it('does not delete the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision - 1);
           test.participant.update(participantState);
           assert.equal(
-            test.trackV2s[0],
+            test.remoteTrackV2s[0],
             test.participant.tracks.get(id));
         });
 
-        it('does not emit the "trackRemoved" event with the TrackV2', () => {
+        it('does not emit the "trackRemoved" event with the RemoteTrackV2', () => {
           var id = makeId();
           var test = makeTest({ tracks: [ { id: id } ] });
           var participantState = test.state(test.revision - 1);
@@ -688,29 +688,29 @@ describe('RemoteParticipantV2', () => {
 
   describe('#addTrack', () => {
     it('returns the RemoteParticipantV2', () => {
-      var TrackV2 = makeTrackV2Constructor();
+      var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
-      var track = new TrackV2({ id: makeId() });
+      var track = new RemoteTrackV2({ id: makeId() });
       assert.equal(
         test.participant,
         test.participant.addTrack(track));
     });
 
-    it('adds the TrackV2 to the RemoteParticipantV2\'s .tracks Map', () => {
-      var TrackV2 = makeTrackV2Constructor();
+    it('adds the RemoteTrackV2 to the RemoteParticipantV2\'s .tracks Map', () => {
+      var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
       var id = makeId();
-      var track = new TrackV2({ id: id });
+      var track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
       assert.equal(
         track,
         test.participant.tracks.get(id));
     });
 
-    it('emits the "trackAdded" event with the TrackV2', () => {
-      var TrackV2 = makeTrackV2Constructor();
+    it('emits the "trackAdded" event with the RemoteTrackV2', () => {
+      var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
-      var track = new TrackV2({ id: makeId() });
+      var track = new RemoteTrackV2({ id: makeId() });
       var trackAdded;
       test.participant.once('trackAdded', track => trackAdded = track);
       test.participant.addTrack(track);
@@ -719,20 +719,20 @@ describe('RemoteParticipantV2', () => {
         trackAdded);
     });
 
-    it('calls getMediaStreamTrack with the newly-constructed TrackV2\'s ID', () => {
-      var TrackV2 = makeTrackV2Constructor();
+    it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
+      var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
       var id = makeId();
-      var track = new TrackV2({ id: id });
+      var track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
       assert.equal(id, test.getMediaStreamTrack.args[0][0]);
     });
 
-    it('calls setMediaStreamTrack on the newly-constructed TrackV2 with the result of calling getMediaStreamTrack', () => {
-      var TrackV2 = makeTrackV2Constructor();
+    it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrack', () => {
+      var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
       var id = makeId();
-      var track = new TrackV2({ id: id });
+      var track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
       var mediaStreamTrack = {};
       test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
@@ -891,44 +891,44 @@ describe('RemoteParticipantV2', () => {
   });
 
   describe('#removeTrack', () => {
-    context('when the TrackV2 to remove was previously added', () => {
+    context('when the RemoteTrackV2 to remove was previously added', () => {
       it('returns true', () => {
         var test = makeTest({ tracks: [ { id: makeId() } ] });
         assert.equal(
           true,
-          test.participant.removeTrack(test.trackV2s[0]));
+          test.participant.removeTrack(test.remoteTrackV2s[0]));
       });
 
-      it('deletes the TrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+      it('deletes the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
         var test = makeTest({ tracks: [ { id: makeId() } ] });
-        test.participant.removeTrack(test.trackV2s[0]);
-        assert(!test.participant.tracks.has(test.trackV2s[0].id));
+        test.participant.removeTrack(test.remoteTrackV2s[0]);
+        assert(!test.participant.tracks.has(test.remoteTrackV2s[0].id));
       });
 
-      it('emits the "trackRemoved" event with the TrackV2', () => {
+      it('emits the "trackRemoved" event with the RemoteTrackV2', () => {
         var test = makeTest({ tracks: [ { id: makeId() } ] });
         var trackRemoved;
         test.participant.once('trackRemoved', track => trackRemoved = track);
-        test.participant.removeTrack(test.trackV2s[0]);
+        test.participant.removeTrack(test.remoteTrackV2s[0]);
         assert.equal(
-          test.trackV2s[0],
+          test.remoteTrackV2s[0],
           trackRemoved);
       });
     });
 
-    context('when the TrackV2 to remove was not previously added', () => {
+    context('when the RemoteTrackV2 to remove was not previously added', () => {
       it('returns false', () => {
-        var TrackV2 = makeTrackV2Constructor();
-        var track = new TrackV2({ id: makeId() });
+        var RemoteTrackV2 = makeRemoteTrackV2Constructor();
+        var track = new RemoteTrackV2({ id: makeId() });
         var test = makeTest();
         assert.equal(
           false,
           test.participant.removeTrack(track));
       });
 
-      it('does not emit the "trackRemoved" event with the TrackV2', () => {
-        var TrackV2 = makeTrackV2Constructor();
-        var track = new TrackV2({ id: makeId() });
+      it('does not emit the "trackRemoved" event with the RemoteTrackV2', () => {
+        var RemoteTrackV2 = makeRemoteTrackV2Constructor();
+        var track = new RemoteTrackV2({ id: makeId() });
         var test = makeTest();
         var trackRemoved = false;
         test.participant.once('trackRemoved', () => trackRemoved = true);
@@ -966,13 +966,13 @@ function makeTest(options) {
   options.revision = options.revision || makeRevision();
   options.sid = options.sid || makeSid();
   options.tracks = options.tracks || [];
-  options.trackV2s = options.trackV2s || [];
+  options.remoteTrackV2s = options.remoteTrackV2s || [];
 
   options.getMediaStreamTrackDeferred = options.getMediaStreamTrackDeferred
     || util.defer();
   options.getMediaStreamTrack = options.getMediaStreamTrack
     || sinon.spy(() => options.getMediaStreamTrackDeferred.promise);
-  options.TrackV2 = options.TrackV2 || makeTrackV2Constructor(options);
+  options.RemoteTrackV2 = options.RemoteTrackV2 || makeRemoteTrackV2Constructor(options);
 
   options.participant = options.participant || makeRemoteParticipantV2(options);
 
@@ -1020,13 +1020,13 @@ function makeRemoteParticipantV2(options) {
   return new RemoteParticipantV2(options, options.getMediaStreamTrack, options);
 }
 
-function makeTrackV2Constructor(testOptions) {
+function makeRemoteTrackV2Constructor(testOptions) {
   testOptions = testOptions || {};
-  testOptions.trackV2s = testOptions.trackV2s || [];
-  return function TrackV2(trackState) {
+  testOptions.remoteTrackV2s = testOptions.remoteTrackV2s || [];
+  return function RemoteTrackV2(trackState) {
     this.id = trackState.id;
     this.setMediaStreamTrack = sinon.spy(() => {});
     this.update = sinon.spy(() => this);
-    testOptions.trackV2s.push(this);
+    testOptions.remoteTrackV2s.push(this);
   };
 }

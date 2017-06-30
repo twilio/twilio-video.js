@@ -50,14 +50,14 @@ describe('Participant', function() {
         });
       });
 
-      it('should set .audioTracks to a Map of AudioTrack ID => AudioTrack', () => {
+      it('should set .audioTracks to a Map of RemoteAudioTrack ID => RemoteAudioTrack', () => {
         assert.equal(test.participant.audioTracks.size, 1);
         test.participant.audioTracks.forEach(track => {
           assert.equal(track, audioTrack);
         });
       });
 
-      it('should set .videoTracks to a Map of VideoTrack ID => VideoTrack', () => {
+      it('should set .videoTracks to a Map of RemoteVideoTrack ID => RemoteVideoTrack', () => {
         assert.equal(test.participant.videoTracks.size, 1);
         test.participant.videoTracks.forEach(track => {
           assert.equal(track, videoTrack);
@@ -103,54 +103,54 @@ describe('Participant', function() {
       });
 
       [ 'Audio', 'Video' ].forEach(kind => {
-        context(`when ${a(kind)} ${kind}Track with the same .id exists in .tracks`, () => {
+        context(`when ${a(kind)} Remote${kind}Track with the same .id exists in .tracks`, () => {
           before(() => {
             trackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
             newTrackSignaling = makeTrackSignaling({ id: trackSignaling.id, kind: kind.toLowerCase() });
-            track = new test[`${kind}Track`](trackSignaling.mediaStreamTrack, trackSignaling);
-            newTrack = new test[`${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
+            track = new test[`Remote${kind}Track`](trackSignaling.mediaStreamTrack, trackSignaling);
+            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
             test.participant.tracks.set(track.id, track);
             test.participant[`${kind.toLowerCase()}Tracks`].set(track.id, track);
             ret = test.participant[method](newTrack);
           });
 
-          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the ${kind}Track ${toOrFrom} .tracks`, () => {
+          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the Remote${kind}Track ${toOrFrom} .tracks`, () => {
             assert(method === '_addTrack'
               ? test.participant.tracks.get(newTrack.id) === track
               : !test.participant.tracks.has(newTrack.id));
           });
 
-          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the ${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
+          it(`${method === '_addTrack' ? 'should not' : 'should'} ${action} the Remote${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
             assert(method === '_addTrack'
               ? test.participant[`${kind.toLowerCase()}Tracks`].get(newTrack.id) === track
               : !test.participant[`${kind.toLowerCase()}Tracks`].has(newTrack.id));
           });
 
-          it(`should return ${method === '_addTrack' ? 'null' : `the ${kind}Track`}`, () => {
+          it(`should return ${method === '_addTrack' ? 'null' : `the Remote${kind}Track`}`, () => {
             assert.equal(ret, method === '_addTrack' ? null : track);
           });
         });
 
-        context(`when ${a(kind)} ${kind}Track with the same .id does not exist in .tracks`, () => {
+        context(`when ${a(kind)} Remote${kind}Track with the same .id does not exist in .tracks`, () => {
           before(() => {
             newTrackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
-            newTrack = new test[`${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
+            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaStreamTrack, newTrackSignaling);
             ret = test.participant[method](newTrack);
           });
 
-          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the ${kind}Track ${toOrFrom} .tracks`, () => {
+          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the Remote${kind}Track ${toOrFrom} .tracks`, () => {
             assert(method === '_addTrack'
               ? test.participant.tracks.get(newTrack.id) === newTrack
               : !test.participant.tracks.has(newTrack.id));
           });
 
-          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the ${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
+          it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the Remote${kind}Track ${toOrFrom} .${kind.toLowerCase()}Tracks`, () => {
             assert(method === '_addTrack'
               ? test.participant[`${kind.toLowerCase()}Tracks`].get(newTrack.id) === newTrack
               : !test.participant[`${kind.toLowerCase()}Tracks`].has(newTrack.id));
           });
 
-          it(`should return ${method === '_addTrack' ? `the ${kind}Track` : 'null'}`, () => {
+          it(`should return ${method === '_addTrack' ? `the Remote${kind}Track` : 'null'}`, () => {
             assert.equal(ret, method === '_addTrack' ? newTrack : null);
           });
         });
@@ -329,7 +329,7 @@ describe('Participant', function() {
         });
 
         context('if the Promise returned by .getMediaStreamTrack resolves', () => {
-          it('constructs a new AudioTrack or VideoTrack, depending on the TrackSignaling\'s .kind', () => {
+          it('constructs a new RemoteAudioTrack or RemoteVideoTrack, depending on the TrackSignaling\'s .kind', () => {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
@@ -339,11 +339,11 @@ describe('Participant', function() {
               audioTrack.getMediaStreamTrackDeferred.promise,
               videoTrack.getMediaStreamTrackDeferred.promise
             ]).then(() => {
-              assert.equal(audioTrack.mediaStreamTrack, test.AudioTrack.args[0][0]);
-              assert.equal(audioTrack, test.AudioTrack.args[0][1]);
+              assert.equal(audioTrack.mediaStreamTrack, test.RemoteAudioTrack.args[0][0]);
+              assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
-              assert.equal(videoTrack.mediaStreamTrack, test.VideoTrack.args[0][0]);
-              assert.equal(videoTrack, test.VideoTrack.args[0][1]);
+              assert.equal(videoTrack.mediaStreamTrack, test.RemoteVideoTrack.args[0][0]);
+              assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
             });
           });
 
@@ -413,8 +413,8 @@ describe('Participant', function() {
           var videoTrack = makeTrackSignaling({ kind: 'video' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
-          assert(!test.AudioTrack.calledOnce);
-          assert(!test.VideoTrack.calledOnce);
+          assert(!test.RemoteAudioTrack.calledOnce);
+          assert(!test.RemoteVideoTrack.calledOnce);
         });
 
         it('does not call ._addTrack on the Participant', () => {
@@ -446,8 +446,8 @@ describe('Participant', function() {
           var videoTrack = makeTrackSignaling({ kind: 'video' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
-          assert(!test.AudioTrack.calledOnce);
-          assert(!test.VideoTrack.calledOnce);
+          assert(!test.RemoteAudioTrack.calledOnce);
+          assert(!test.RemoteVideoTrack.calledOnce);
         });
 
         it('does not call ._addTrack on the Participant', () => {
@@ -593,7 +593,7 @@ describe('Participant', function() {
         });
 
         context('if the Promise returned by .getMediaStreamTrack resolves', () => {
-          it('constructs a new AudioTrack or VideoTrack, depending on the TrackSignaling\'s .kind', () => {
+          it('constructs a new RemoteAudioTrack or RemoteVideoTrack, depending on the TrackSignaling\'s .kind', () => {
             var test = makeTest({
               trackSignalings: [
                 { kind: 'audio' },
@@ -606,11 +606,11 @@ describe('Participant', function() {
               audioTrack.getMediaStreamTrackDeferred.promise,
               videoTrack.getMediaStreamTrackDeferred.promise
             ]).then(() => {
-              assert.equal(audioTrack.mediaStreamTrack, test.AudioTrack.args[0][0]);
-              assert.equal(audioTrack, test.AudioTrack.args[0][1]);
+              assert.equal(audioTrack.mediaStreamTrack, test.RemoteAudioTrack.args[0][0]);
+              assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
-              assert.equal(videoTrack.mediaStreamTrack, test.VideoTrack.args[0][0]);
-              assert.equal(videoTrack, test.VideoTrack.args[0][1]);
+              assert.equal(videoTrack.mediaStreamTrack, test.RemoteVideoTrack.args[0][0]);
+              assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
             });
           });
 
@@ -731,7 +731,7 @@ function makeTest(options) {
   }
   options.trackSignalings = options.trackSignalings ? options.trackSignalings.map(makeTrackSignaling) : [];
 
-  options.AudioTrack = sinon.spy(function AudioTrack(mediaStreamTrack, signaling) {
+  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(mediaStreamTrack, signaling) {
     EventEmitter.call(this);
     this.id = signaling.id;
     this.kind = signaling.kind;
@@ -739,9 +739,9 @@ function makeTest(options) {
     this.signaling = signaling;
     options.tracks.push(this);
   });
-  inherits(options.AudioTrack, EventEmitter);
+  inherits(options.RemoteAudioTrack, EventEmitter);
 
-  options.VideoTrack = sinon.spy(function VideoTrack(mediaStreamTrack, signaling) {
+  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(mediaStreamTrack, signaling) {
     EventEmitter.call(this);
     this.id = signaling.id;
     this.kind = signaling.kind;
@@ -749,7 +749,7 @@ function makeTest(options) {
     this.signaling = signaling;
     options.tracks.push(this);
   });
-  inherits(options.VideoTrack, EventEmitter);
+  inherits(options.RemoteVideoTrack, EventEmitter);
 
   options.log = log;
   options.signaling = options.signaling || makeSignaling(options);

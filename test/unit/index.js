@@ -41,7 +41,8 @@ require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
-require('./spec/signaling/v2/track');
+require('./spec/signaling/v2/publishedtrack');
+require('./spec/signaling/v2/remotetrack');
 require('./spec/signaling/v2/transport');
 
 require('./spec/util/index');
