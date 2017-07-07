@@ -21,7 +21,9 @@ const tokens = new Map([
   ['valid', getToken('foo') ]
 ]);
 
-describe('InsightsPublisher', () => {
+describe('InsightsPublisher', function() {
+  this.timeout(30000);
+
   describe('connect', () => {
     ['expired', 'invalid', 'valid'].forEach(tokenType => {
       var publisher;
