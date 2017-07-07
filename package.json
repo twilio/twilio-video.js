@@ -65,7 +65,7 @@
     "test:integration": "npm-run-all test:integration:node test:integration:browser",
     "test:integration:travis": "node ./scripts/integration.js",
     "test:umd": "mocha ./test/umd/index.js",
-    "test:webrtc": "karma start webrtc.conf.js",
+    "test:webrtc": "karma start karma/webrtc.conf.js",
     "test:framework:angular:install": "cd ./test/framework/twilio-video-angular && rimraf ./node_modules && npm install",
     "test:framework:angular:test": "node ./scripts/framework.js twilio-video-angular",
     "test:framework:angular:run": "mocha ./test/framework/twilio-video-angular.js",

@@ -6,7 +6,7 @@ const { Server, stopper } = require('karma');
 const { parseConfig } = require('karma').config;
 const { join } = require('path');
 
-const configFile = join(__dirname, '..', 'integration.conf.js');
+const configFile = join(__dirname, '..', 'karma', 'integration.conf.js');
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 
 
