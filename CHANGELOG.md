@@ -1,14 +1,5 @@
-1.0.1 (under development)
+1.1.0 (under development)
 =========================
-
-Known Issues
-------------
-
-- In Firefox 55 (beta), Participants who connect to a Group Room will not see each
-  other's Tracks. This issue does not impact Peer-to-Peer Rooms. Our engineering team
-  is already working on resolving this issue. Once corrected, customers should not
-  need to upgrade the version of twilio-video.js used by their app to receive the fix
-  (the issue is a back-end issue only).
 
 New Features
 ------------
@@ -29,6 +20,26 @@ New Features
   // Does not stop the removed LocalTracks
   localParticipant.removeTracks(tracks, false);
   ```
+
+Bug Fixes
+---------
+
+- twilio-video.js can now be used alongside adapter.js. twilio-video.js checks
+  whether or not an RTCPeerConnection implementation supports the "track" event
+  by checking for an `ontrack` property on the RTCPeerConnection. adapter.js
+  sets this property; however it only dispatches "track" events _if_ a function
+  is assigned to the `ontrack` property, meaning that event handlers attached
+  with `addEventListener` will never fire. We now work around this issue by
+  assigning a function to `ontrack`.
+
+Known Issues
+------------
+
+- In Firefox 55 (beta), Participants who connect to a Group Room will not see each
+  other's Tracks. This issue does not impact Peer-to-Peer Rooms. Our engineering team
+  is already working on resolving this issue. Once corrected, customers should not
+  need to upgrade the version of twilio-video.js used by their app to receive the fix
+  (the issue is a back-end issue only).
 
 1.0.0 (April 25, 2017)
 ======================
