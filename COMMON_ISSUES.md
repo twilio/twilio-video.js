@@ -25,25 +25,6 @@ twilio-video.js requires WebRTC, and neither Safari nor Internet Explorer
 support WebRTC. While twilio-video.js will load in these browsers, actually
 connecting to a Room or acquiring LocalTracks will fail.
 
-adapter.js
-----------
-
-The [webrtc/adapter](https://github.com/webrtc/adapter) project provides "a
-shim to insulate apps from spec changes and prefix differences" with respect to
-browsers' WebRTC APIs and implementations. Developers often use this library
-when writing WebRTC applications so that they don't have to manually handle the
-quirks and divergences between each browser.
-
-twilio-video.js bundles a similar set of adapters internally, including support
-for some features not implemented by adapter.js, such as rollback.  However,
-twilio-video.js and adapter.js differ in their approaches: twilio-video.js
-_wraps_ browser APIs, like RTCPeerConnection, and uses these wrapped versions
-internally; adapter.js _mutates_ browser APIs. This mutation causes
-twilio-video.js's wrapped adapters to break.
-
-We plan to evaluate changes we can make to twilio-video.js in order to
-work alongside adapter.js, but until then adapter.js is unsupported.
-
 VideoTrack shared by Firefox appears black
 ------------------------------------------
 
