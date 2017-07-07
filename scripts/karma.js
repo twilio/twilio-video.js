@@ -6,9 +6,8 @@ const { Server, stopper } = require('karma');
 const { parseConfig } = require('karma').config;
 const { join } = require('path');
 
-const configFile = join(__dirname, '..', 'karma', 'integration.conf.js');
+const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
-
 
 function getTestPaths(path) {
   var stat = statSync(path);
