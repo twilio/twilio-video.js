@@ -170,51 +170,56 @@ describe('RTCPeerConnection', function() {
 
   describe('"track" event', () => {
     context('when a new MediaStreamTrack is added', () => {
-      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', () => {
-        var audioTrack;
-        var videoTrack;
-        var theMediaStream = new MediaStream();
-        var pc1 = new RTCPeerConnection({ iceServers: [] });
-        var pc2 = new RTCPeerConnection({ iceServers: [] });
+      it('should trigger a "track" event on the remote RTCPeerConnection with the added MediaStreamTrack', async () => {
+        const pc1 = new RTCPeerConnection({ iceServers: [] });
+        const pc2 = new RTCPeerConnection({ iceServers: [] });
 
-        return makeStream({ audio: true, fake: true }).then(mediaStream => {
-          audioTrack = mediaStream.getAudioTracks()[0];
-          theMediaStream.addTrack(audioTrack);
-          pc1.addStream(theMediaStream);
-          return pc1.createOffer();
-        }).then(offer => {
-          return Promise.all([
-            pc1.setLocalDescription(offer),
-            pc2.setRemoteDescription(offer).then(() => pc2.createAnswer()),
-            waitForEvent(pc2, 'track').then(e => assert.equal(e.track.id, audioTrack.id))
-          ]);
-        }).then(results => {
-          var answer = results[1];
-          return Promise.all([
-            pc1.setRemoteDescription(answer),
-            pc2.setLocalDescription(answer)
-          ]);
-        }).then(() => {
-          return makeStream({ video: true, fake: true });
-        }).then(mediaStream => {
-          videoTrack = mediaStream.getVideoTracks()[0];
-          pc1.removeStream(theMediaStream);
-          theMediaStream.addTrack(videoTrack);
-          pc1.addStream(theMediaStream);
-          return pc1.createOffer();
-        }).then(offer => {
-          return Promise.all([
-            pc1.setLocalDescription(offer),
-            pc2.setRemoteDescription(offer).then(() => pc2.createAnswer()),
-            waitForEvent(pc2, 'track').then(e => assert.equal(e.track.id, videoTrack.id))
-          ]);
-        }).then(results => {
-          var answer = results[1];
-          return Promise.all([
-            pc1.setRemoteDescription(answer),
-            pc2.setLocalDescription(answer)
-          ]);
-        });
+        const stream = new MediaStream();
+
+        const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
+        stream.addTrack(localAudioTrack);
+
+        pc1.addStream(stream);
+        const trackEvent1 = waitForEvent(pc2, 'track');
+
+        const offer1 = await pc1.createOffer();
+        await Promise.all([
+          pc1.setLocalDescription(offer1),
+          pc2.setRemoteDescription(offer1)
+        ]);
+
+        const answer1 = await pc2.createAnswer();
+
+        const { track: remoteAudioTrack } = await trackEvent1;
+        assert.equal(remoteAudioTrack.id, localAudioTrack.id);
+
+        await Promise.all([
+          pc1.setRemoteDescription(answer1),
+          pc2.setLocalDescription(answer1)
+        ]);
+
+        const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
+
+        pc1.removeStream(stream);
+        stream.addTrack(localVideoTrack);
+        pc1.addStream(stream);
+        const trackEvent2 = waitForEvent(pc2, 'track');
+
+        const offer2 = await pc1.createOffer();
+        await Promise.all([
+          pc1.setLocalDescription(offer2),
+          pc2.setRemoteDescription(offer2)
+        ]);
+
+        const answer2 = await pc2.createAnswer();
+
+        const { track: remoteVideoTrack } = await trackEvent2;
+        assert.equal(remoteVideoTrack.id, localVideoTrack.id);
+
+        await Promise.all([
+          pc1.setRemoteDescription(answer2),
+          pc2.setLocalDescription(answer2)
+        ]);
       });
     });
   });
