@@ -1,7 +1,7 @@
 /* eslint no-process-env:0 */
 'use strict';
 
-function makeConf(defaultFile, browserNoActivityTimeout) {
+function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
   return function conf(config) {
     let files = [];
@@ -25,6 +25,11 @@ function makeConf(defaultFile, browserNoActivityTimeout) {
     config.set({
       basePath: '',
       frameworks: ['browserify', 'mocha'],
+      client: {
+        mocha: {
+          require: requires
+        }
+      },
       files,
       preprocessors,
       browserify: {
