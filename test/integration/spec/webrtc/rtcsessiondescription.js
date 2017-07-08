@@ -5,6 +5,8 @@ const ChromeRTCSessionDescription = require('../../../../lib/webrtc/rtcsessionde
 const SessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 const { combinationContext } = require('../../../lib/util');
 
+const isSafari = navigator.userAgent.match(/Version\/(\d+).(\d+)/);
+
 describe('RTCSessionDescription', () => {
   describe('constructor', () => {
     var description;
@@ -88,7 +90,8 @@ describe('RTCSessionDescription', () => {
         assert.equal(description.type, 'rollback');
       });
 
-      context('setting .sdp', () => {
+      (isSafari ? context.skip : context)
+      ('setting .sdp', () => {
         var newSdp = 'new fake sdp';
 
         beforeEach(() => {
@@ -104,7 +107,8 @@ describe('RTCSessionDescription', () => {
         });
       });
 
-      context('setting .type to', () => {
+      (isSafari ? context.skip : context)
+      ('setting .type to', () => {
         combinationContext([
           [
             ['offer', 'answer', 'pranswer', 'rollback'],
@@ -214,7 +218,8 @@ describe('RTCSessionDescription', () => {
         });
       }
 
-      context('setting .sdp', () => {
+      (isSafari ? context.skip : context)
+      ('setting .sdp', () => {
         var newSdp = 'new fake sdp';
 
         beforeEach(() => {
@@ -232,7 +237,8 @@ describe('RTCSessionDescription', () => {
         }
       });
 
-      context('setting .type to', () => {
+      (isSafari ? context.skip : context)
+      ('setting .type to', () => {
         combinationContext([
           [
             ['offer', 'answer', 'pranswer'],
