@@ -50,6 +50,10 @@ This library uses [Semantic Versioning](http://semver.org/): We've removed the
 pre-release identifier, and we're proud to share the first generally available
 release of twilio-video.js.
 
+Known issues
+------------
+- Network handoff is not supported: The JavaScript SDK will not recover its Room media or signaling connection when the device switches from one network to another. (issue #128)
+
 1.0.0-beta7 (April 21, 2017)
 ============================
 
