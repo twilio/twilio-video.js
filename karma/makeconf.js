@@ -17,10 +17,22 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       return Object.assign({ [file]: 'browserify' });
     }, {});
 
-    const browsers = {
+    let browsers = {
       chrome: ['ChromeWebRTC'],
-      firefox: ['FirefoxWebRTC']
-    }[process.env.BROWSER] || ['ChromeWebRTC', 'FirefoxWebRTC'];
+      firefox: ['FirefoxWebRTC'],
+      safari: ['SafariTechPreview']
+    };
+
+    if (process.env.BROWSER) {
+      browsers = browsers[process.env.BROWSER];
+      if (!browsers) {
+        throw new Error('Unknown browser');
+      }
+    } else if (process.platform === 'darwin') {
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC', 'SafariTechPreview'];
+    } else {
+      browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
+    }
 
     config.set({
       basePath: '',
