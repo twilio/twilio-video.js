@@ -32,15 +32,6 @@ Bug Fixes
   with `addEventListener` will never fire. We now work around this issue by
   assigning a function to `ontrack`.
 
-Known Issues
-------------
-
-- In Firefox 55 (beta), Participants who connect to a Group Room will not see each
-  other's Tracks. This issue does not impact Peer-to-Peer Rooms. Our engineering team
-  is already working on resolving this issue. Once corrected, customers should not
-  need to upgrade the version of twilio-video.js used by their app to receive the fix
-  (the issue is a back-end issue only).
-
 1.0.0 (April 25, 2017)
 ======================
 
