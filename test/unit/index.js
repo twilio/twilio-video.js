@@ -32,6 +32,7 @@ require('./spec/iceserversource/nts');
 
 require('./spec/media/track');
 require('./spec/media/track/localtrack');
+require('./spec/media/track/publishedtrack');
 
 require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');

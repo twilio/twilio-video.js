@@ -10,6 +10,7 @@ const env = require('../../env');
 const { flatMap, guessBrowser } = require('../../../lib/util');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const Track = require('../../../lib/media/track');
+const PublishedTrack = require('../../../lib/media/track/publishedtrack');
 
 const {
   connect,
@@ -164,6 +165,146 @@ const isSafari = guess === 'safari';
     });
   });
 
+  describe('#publishTrack', () => {
+    let publishedTracks = [];
+    let room;
+    let tracks;
+
+    const setup = async () => {
+      const name = randomName();
+      const options = Object.assign({ name, tracks: [] }, defaultOptions);
+      const token = getToken(randomName());
+      [ room, tracks ] = await Promise.all([
+        connect(token, options),
+        createLocalTracks()
+      ]);
+    };
+
+    [
+      [
+        'when two LocalTracks (audio and video) are published sequentially',
+        async () => {
+          publishedTracks = [
+            await room.localParticipant.publishTrack(tracks[0]),
+            await room.localParticipant.publishTrack(tracks[1])
+          ];
+        }
+      ],
+      [
+        'when two LocalTracks (audio and video) are published together',
+        async () => {
+          publishedTracks = await Promise.all(tracks.map(track => {
+            return room.localParticipant.publishTrack(track);
+          }));
+        }
+      ]
+    ].forEach(([ ctx, publish ]) => {
+      context(ctx, () => {
+        before(async () => {
+          await setup();
+          await publish();
+        });
+
+        it('should return PublishedTracks for both LocalTracks', () => {
+          publishedTracks.forEach((publishedTrack, i) => {
+            const track = tracks[i];
+            assert(publishedTrack instanceof PublishedTrack);
+            assert.equal(publishedTrack.id, track.id);
+            assert.equal(publishedTrack.kind, track.kind);
+            assert(typeof publishedTrack.sid, 'string');
+          });
+        });
+
+        it('should add both the LocalTracks to the LocalParticipant\'s .tracks and their respective kinds\' .(audio/video)Tracks collections', () => {
+          tracks.forEach(track => {
+            assert.equal(room.localParticipant.tracks.get(track.id), track);
+            assert.equal(room.localParticipant[`${track.kind}Tracks`].get(track.id), track);
+          });
+        });
+
+        it('should add both the PublishedTracks to the LocalParticipant\'s .publishedTracks and their respective kinds\' .published(Audio/Video)Tracks collections', () => {
+          publishedTracks.forEach(track => {
+            assert.equal(room.localParticipant.publishedTracks.get(track.id), track);
+            assert.equal(room.localParticipant[`published${capitalize(track.kind)}Tracks`].get(track.id), track);
+          });
+        });
+
+        after(() => {
+          publishedTracks = [];
+          room.disconnect();
+          tracks = [];
+        });
+      });
+    });
+
+    context('when a LocalTrack is published to two Rooms', () => {
+      let anotherRoom;
+
+      before(async () => {
+        const name = randomName();
+        const options = Object.assign({ name, tracks: [] }, defaultOptions);
+        const token = getToken(randomName());
+
+        [ anotherRoom ] = await Promise.all([
+          connect(token, options),
+          setup()
+        ]);
+
+        publishedTracks = await Promise.all([
+          room.localParticipant.publishTrack(tracks[0]),
+          anotherRoom.localParticipant.publishTrack(tracks[0])
+        ]);
+      });
+
+      it('should add the LocalTrack to the LocalParticipant\'s .tracks in both Rooms', () => {
+        assert.equal(room.localParticipant.tracks.get(tracks[0].id), tracks[0]);
+        assert.equal(anotherRoom.localParticipant.tracks.get(tracks[0].id), tracks[0]);
+      });
+
+      it('should create two different PublishedTracks', () => {
+        assert(publishedTracks[0] instanceof PublishedTrack);
+        assert(publishedTracks[1] instanceof PublishedTrack);
+        assert.notEqual(publishedTracks[0], publishedTracks[1]);
+      });
+
+      it('should add each PublishedTrack to its corresponding Room\'s LocalParticipant .publishedTracks', () => {
+        assert.equal(room.localParticipant.publishedTracks.get(tracks[0].id), publishedTracks[0]);
+        assert.equal(anotherRoom.localParticipant.publishedTracks.get(tracks[0].id), publishedTracks[1]);
+      });
+
+      it('should assign different SIDs to the two PublishedTracks', () => {
+        assert.notEqual(publishedTracks[0].sid, publishedTracks[1].sid);
+      });
+
+      after(() => {
+        publishedTracks = [];
+        room.disconnect();
+        anotherRoom.disconnect();
+        tracks = [];
+      });
+    });
+
+    context('when the Room disconnects while a LocalTrack is being published', () => {
+      before(setup);
+
+      it('should reject the Promise returned by LocalParticipant#publishTrack with an Error', async () => {
+        try {
+          const promise = room.localParticipant.publishTrack(tracks[0]);
+          room.disconnect();
+          await promise;
+        } catch (error) {
+          return;
+        }
+        throw new Error('Unexpected resolution');
+      });
+
+      after(() => {
+        publishedTracks = [];
+        tracks = [];
+      });
+    });
+  });
+  
   describe('#removeTrack', () => {
     combinationContext([
       [

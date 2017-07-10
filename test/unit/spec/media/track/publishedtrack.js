@@ -22,11 +22,11 @@ var sinon = require('sinon');
         [
           [
             'when called without the "new" keyword',
-            () => PublishedTrack('foo', 'bar')
+            () => PublishedTrack('foo', 'bar', () => {})
           ],
           [
             'when called with the "new" keyword',
-            () => new PublishedTrack('bar', 'baz')
+            () => new PublishedTrack('bar', 'baz', () => {})
           ]
         ].forEach(([ scenario, createPublishedTrack ]) => {
           context(scenario, () => {
@@ -42,21 +42,39 @@ var sinon = require('sinon');
       });
 
       it('should populate the .id property', () => {
-        var publishedTrack = new PublishedTrack('foo', 'bar');
+        var publishedTrack = new PublishedTrack('foo', 'bar', () => {});
         assert.equal(publishedTrack.id, 'bar');
       });
 
       it('should populate the .kind property', () => {
-        var publishedTrack = new PublishedTrack('foo', 'bar');
+        var publishedTrack = new PublishedTrack('foo', 'bar', () => {});
         assert.equal(publishedTrack.kind, kind[description]);
       });
 
       it('should populate the .sid property', () => {
-        var publishedTrack = new PublishedTrack('foo', 'bar');
+        var publishedTrack = new PublishedTrack('foo', 'bar', () => {});
         assert.equal(publishedTrack.sid, 'foo');
       });
     });
 
-    describe('#unpublish', () => {});
+    describe('#unpublish', () => {
+      var publishedTrack;
+      var ret;
+      var unpublish;
+
+      before(() => {
+        unpublish = sinon.spy();
+        publishedTrack = new PublishedTrack('foo', 'bar', unpublish);
+        ret = publishedTrack.unpublish();
+      });
+
+      it('should call the unpublish callback (with the PublishedTrack) that is passed to the constructor', () => {
+        sinon.assert.calledWith(unpublish, publishedTrack);
+      });
+
+      it('should return the PublishedTrack', () => {
+        assert.equal(ret, publishedTrack);
+      });
+    });
   });
 });

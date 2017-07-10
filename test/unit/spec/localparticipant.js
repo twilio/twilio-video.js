@@ -7,13 +7,14 @@ var inherits = require('util').inherits;
 var LocalParticipant = require('../../../lib/localparticipant');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
-var { capitalize } = require('../../lib/util');
+var { a, capitalize } = require('../../lib/util');
 
 const LocalAudioTrack = sinon.spy(function(mediaStreamTrack) {
   EventEmitter.call(this);
   if (mediaStreamTrack) {
     this.id = mediaStreamTrack.id;
     this.kind = mediaStreamTrack.kind;
+    this.mediaStreamTrack = mediaStreamTrack;
   }
   this.stop = sinon.spy();
 });
@@ -24,6 +25,7 @@ const LocalVideoTrack = sinon.spy(function(mediaStreamTrack) {
   if (mediaStreamTrack) {
     this.id = mediaStreamTrack.id;
     this.kind = mediaStreamTrack.kind;
+    this.mediaStreamTrack = mediaStreamTrack;
   }
   this.stop = sinon.spy();
 });
@@ -286,6 +288,278 @@ describe('LocalParticipant', () => {
           encodingParameters === null ? {maxAudioBitrate: null, maxVideoBitrate: null} : encodingParameters);
       });
     }
+  });
+
+  describe('#publishTrack', () => {
+    var options;
+    var test;
+
+    beforeEach(() => {
+      options = {
+        PublishedAudioTrack: function(sid, id) {
+          this.sid = sid;
+          this.id = id;
+        },
+        PublishedVideoTrack: function(sid, id) {
+          this.sid = sid;
+          this.id = id;
+        }
+      };
+      test = makeTest(options);
+    });
+
+    context('when called with an invalid argument', () => {
+      [
+        [
+          'should return a rejected Promise with a TypeError',
+          (error, addTrack) => error instanceof TypeError
+        ],
+        [
+          'should not call .addTrack on the underlying ParticipantSignaling',
+          (error, addTrack) => addTrack.callCount === 0
+        ]
+      ].forEach(([ expectation, assertion ]) => {
+        it(`${expectation}`, async () => {
+          try {
+            await test.participant.publishTrack('invalid track argument');
+          } catch(error) {
+            assert(assertion(error, test.signaling.addTrack));
+            return;
+          }
+          throw new Error('Unexpected resolution');
+        });
+      });
+    });
+
+    [
+      [ 'LocalTrack', kind => kind === 'audio'
+        ? new LocalAudioTrack(new FakeMediaStreamTrack(kind))
+        : new LocalVideoTrack(new FakeMediaStreamTrack(kind)) ],
+      [ 'MediaStreamTrack', kind => new FakeMediaStreamTrack(kind) ]
+    ].forEach(([ trackType, createTrack ]) => {
+      [
+        'audio',
+        'video'
+      ].forEach(kind => {
+        context(`when called with ${a(kind)} ${kind} ${trackType}`, () => {
+          context(`when the .publishedTracks collection already has an entry for the ${trackType}'s .id`, () => {
+            it('should return a Promise that is resolved with the entry from the .publishedTracks', async () => {
+              var localTrack = createTrack(kind);
+              test.participant.publishedTracks.set(localTrack.id, { foo: 'bar' });
+              var publishedTrack = await test.participant.publishTrack(localTrack);
+              assert.equal(publishedTrack, test.participant.publishedTracks.get(localTrack.id));
+            });
+          });
+
+          [ true, false ].forEach(hasLocalTrack => {
+            context(`when the .tracks collection ${hasLocalTrack ? 'already has' : 'doesn\'t have'} an entry for the ${trackType}'s .id`, () => {
+              var localTrack;
+              var publishedTrack;
+
+              beforeEach(async () => {
+                localTrack = createTrack(kind);
+                if (hasLocalTrack) {
+                  test.participant.tracks.set(localTrack.id, localTrack);
+                }
+                test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
+                publishedTrack = await test.participant.publishTrack(localTrack);
+              });
+
+              it(`should ${hasLocalTrack ? 'not' : ''} call .addTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack`, () => {
+                assert(hasLocalTrack ?
+                  test.signaling.addTrack.callCount === 0 :
+                  test.signaling.addTrack.args[0][0] instanceof FakeMediaStreamTrack);
+              });
+
+              context('when the SID is set for the underlying PublishedTrackSignaling', () => {
+                var otherKind = kind === 'audio' ? 'video' : 'audio';
+
+                it(`should resolve the returned Promise with a Published${capitalize(kind)}Track`, () => {
+                  var PublishedTrack = options[`Published${capitalize(kind)}Track`];
+                  assert(publishedTrack instanceof PublishedTrack);
+                  assert.equal(publishedTrack.sid, 'foo');
+                  assert.equal(publishedTrack.id, localTrack.id);
+                });
+
+                it(`should add the Published${capitalize(kind)}Track to the .publishedTracks and .published${capitalize(kind)}Tracks collections`, () => {
+                  assert.equal(publishedTrack, test.participant.publishedTracks.get(localTrack.id));
+                  assert.equal(publishedTrack, test.participant[`published${capitalize(kind)}Tracks`].get(localTrack.id));
+                });
+
+                it(`should not add the Published${capitalize(kind)}Track to the .published${capitalize(otherKind)}Tracks collections`, () => {
+                  assert(!test.participant[`published${capitalize(otherKind)}Tracks`].has(localTrack.id));
+                });
+              });
+
+              context('when there is an error while setting the SID for the underlying PublishedTrackSignaling', () => {
+                var error;
+                var localTrack2 = createTrack(kind);
+
+                beforeEach(async () => {
+                  test.signaling.tracks.set(localTrack2.id, makeTrackSignaling(localTrack2.id, 'bar', 'baz'));
+                  try {
+                    await test.participant.publishTrack(localTrack2);
+                  } catch(_error) {
+                    error = _error;
+                  }
+                });
+
+                it('should reject the returned Promise with the given error', () => {
+                  assert.equal(error, 'baz');
+                });
+
+                it(`should not add the Local${capitalize(kind)}Track to the .tracks collection`, () => {
+                  assert(!test.participant.tracks.has(localTrack2.id));
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('#unpublishTrack', () => {
+    var test;
+
+    beforeEach(() => {
+      test = makeTest();
+    });
+
+    context('when called with an invalid argument', () => {
+      [
+        [
+          'should throw a TypeError',
+          (error, removeTrack) => error instanceof TypeError
+        ],
+        [
+          'should not call .removeTrack on the underlying ParticipantSignaling',
+          (error, removeTrack) => removeTrack.callCount === 0
+        ]
+      ].forEach(([expectation, assertion]) => {
+        it(`${expectation}`, () => {
+          try {
+            test.participant.unpublishTrack('invalid track argument');
+          } catch (error) {
+            assert(assertion(error, test.signaling.removeTrack));
+            return;
+          }
+          throw new Error('Unexpected success');
+        });
+      });
+    });
+
+    [
+      ['LocalTrack', kind => kind === 'audio'
+        ? new LocalAudioTrack(new FakeMediaStreamTrack(kind))
+        : new LocalVideoTrack(new FakeMediaStreamTrack(kind))],
+      ['MediaStreamTrack', kind => new FakeMediaStreamTrack(kind)]
+    ].forEach(([trackType, createTrack]) => {
+      [
+        'audio',
+        'video'
+      ].forEach(kind => {
+        var localTrack;
+
+        context(`when the .publishedTracks collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
+          context(`and the .tracks collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
+            var ret;
+            var track;
+
+            beforeEach(() => {
+              localTrack = createTrack(kind);
+
+              track = new test[`Local${capitalize(kind)}Track`](
+                localTrack instanceof FakeMediaStreamTrack
+                  ? localTrack : localTrack.mediaStreamTrack);
+
+              test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
+              test.participant.tracks.set(localTrack.id, track);
+              test.participant[`${kind}Tracks`].set(localTrack.id, track);
+              test.participant.publishedTracks.set(localTrack.id, { id: localTrack.id, sid: 'foo' });
+              test.participant[`published${capitalize(kind)}Tracks`].set(localTrack.id, { id: localTrack.id, sid: 'foo' });
+              ret = test.participant.unpublishTrack(localTrack);
+            });
+
+            it(`should remove the ${kind} ${trackType} from the .tracks and .${kind}Tracks collections`, () => {
+              assert(!test.participant.tracks.has(localTrack.id));
+              assert(!test.participant[`${kind}Tracks`].has(localTrack.id));
+            });
+
+            it(`should remove the ${kind} ${trackType}'s entry from the .publishedTracks and .published${capitalize(kind)}Tracks collections`, () => {
+              assert(!test.participant.publishedTracks.has(localTrack.id));
+              assert(!test.participant[`published${capitalize(kind)}Tracks`].has(localTrack.id));
+            });
+
+            it('should call .removeTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack', () => {
+              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack);
+            });
+
+            it(`should return the PublishedTrack corresponding to the unpublished ${kind} ${trackType}`, () => {
+              assert.deepEqual(ret, { id: localTrack.id, sid: 'foo' });
+            });
+          });
+        });
+
+        context(`when the .publishedTracks collection does not have an entry for the given ${kind} ${trackType}'s ID`, () => {
+          context(`and the .tracks collection has the given ${kind} ${trackType}`, () => {
+            var ret;
+            var track;
+            var trackSignaling;
+
+            beforeEach(() => {
+              localTrack = createTrack(kind);
+
+              track = new test[`Local${capitalize(kind)}Track`](
+                localTrack instanceof FakeMediaStreamTrack
+                  ? localTrack : localTrack.mediaStreamTrack);
+
+              trackSignaling = makeTrackSignaling(localTrack.id, 'foo');
+              test.signaling.tracks.set(localTrack.id, trackSignaling);
+              test.participant.tracks.set(localTrack.id, track);
+              test.participant[`${kind}Tracks`].set(localTrack.id, track);
+              ret = test.participant.unpublishTrack(localTrack);
+            });
+
+            it(`should remove the ${kind} ${trackType} from the .tracks and .${kind}Tracks collections`, () => {
+              assert(!test.participant.tracks.has(localTrack.id));
+              assert(!test.participant[`${kind}Tracks`].has(localTrack.id));
+            });
+
+            it('should reject the pending Promise returned by the previous call to LocalParticipant#publishTrack', () => {
+              assert(trackSignaling.publishFailed.args[0][0] instanceof Error);
+            });
+
+            it(`should call .removeTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack`, () => {
+              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack);
+            });
+
+            it('should return null', () => {
+              assert.equal(ret, null);
+            });
+          });
+
+          context(`and the .tracks collection does not have the given ${kind} ${trackType}`, () => {
+            beforeEach(() => {
+              localTrack = createTrack(kind);
+            });
+
+            it('should not throw', () => {
+              assert.doesNotThrow(() => test.participant.unpublishTrack(localTrack));
+            });
+
+            it('should not call .removeTrack on the underlying ParticipantSignaling', () => {
+              test.participant.unpublishTrack(localTrack);
+              sinon.assert.callCount(test.signaling.removeTrack, 0);
+            });
+
+            it('should return null', () => {
+              assert.equal(test.participant.unpublishTrack(localTrack), null);
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('LocalTrack events', () => {
@@ -618,6 +892,16 @@ function makeTest(options) {
   return options;
 }
 
+function makeTrackSignaling(id, sid, getSidError) {
+  var signaling = {};
+  signaling.id = id;
+  signaling.getSid = sinon.spy(() => getSidError
+    ? Promise.reject(getSidError)
+    : Promise.resolve(sid));
+  signaling.publishFailed = sinon.spy(() => {});
+  return signaling;
+}
+
 function makeSignaling(options) {
   var signaling = new EventEmitter();
   options = options || {};
@@ -628,5 +912,6 @@ function makeSignaling(options) {
   signaling.addTrack = sinon.spy(() => {});
   signaling.removeTrack = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
+  signaling.tracks = new Map();
   return signaling;
 }
