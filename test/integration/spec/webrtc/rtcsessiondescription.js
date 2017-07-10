@@ -5,7 +5,9 @@ const ChromeRTCSessionDescription = require('../../../../lib/webrtc/rtcsessionde
 const SessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 const { combinationContext } = require('../../../lib/util');
 
-const isSafari = navigator.userAgent.match(/Version\/(\d+).(\d+)/);
+const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
+const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
+const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
 
 describe('RTCSessionDescription', () => {
   describe('constructor', () => {
