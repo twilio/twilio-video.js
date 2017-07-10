@@ -35,7 +35,9 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
-const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
+const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
+const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
+const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
 
 (navigator.userAgent === 'Node'
   ? describe.skip
@@ -321,7 +323,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
       assert.equal(thatTrack1.id, thisTrack1.id);
       assert.equal(thatTrack1.kind, thisTrack1.kind);
       assert.equal(thatTrack1.enabled, thisTrack1.enabled);
-      if (!isFirefox) {
+      if (!isFirefox && !isSafari) {
         assert.equal(thatTrack1.mediaStreamTrack.readyState, 'ended');
       }
     });

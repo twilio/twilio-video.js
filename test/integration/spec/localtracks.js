@@ -7,7 +7,9 @@ if (typeof window === 'undefined') {
 const assert = require('assert');
 const createLocalTracks = require('../../../lib/createlocaltrack');
 
-const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
+const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
+const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
+const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];
@@ -79,7 +81,7 @@ const isFirefox = navigator.userAgent.indexOf("Firefox") > 0;
       });
 
       context('when the underlying MediaStreamTrack ends', () => {
-        (isFirefox ? it.skip : it)('emits "stopped"', () => {
+        (isFirefox || isSafari ? it.skip : it)('emits "stopped"', () => {
           localTrack.mediaStreamTrack.stop();
           return stoppedEvent;
         });
