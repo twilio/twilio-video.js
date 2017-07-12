@@ -11,6 +11,8 @@ const { flatMap, guessBrowser } = require('../../../lib/util');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const Track = require('../../../lib/media/track');
 const PublishedTrack = require('../../../lib/media/track/publishedtrack');
+const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
+const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 
 const {
   connect,
@@ -47,123 +49,6 @@ const isSafari = guess === 'safari';
   : describe
 )('LocalParticipant', function() {
   this.timeout(60000);
-
-  describe('#addTrack', () => {
-    combinationContext([
-      [
-        [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled'}`
-      ],
-      [
-        ['audio', 'video'],
-        x => `Local${capitalize(x)}Track`
-      ],
-      [
-        ['never', 'previously'],
-        x => `that has ${x} been added`
-      ]
-    ], ([isEnabled, kind, when]) => {
-      let thisRoom;
-      let thisParticipant;
-      let thisTrack;
-      let thoseRooms;
-      let thoseParticipants;
-      let thoseTracksBefore;
-      let thoseTracks;
-
-      before(async () => {
-        const name = randomName();
-        const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaultOptions);
-
-        thisTrack = kind === 'audio'
-          ? await createLocalAudioTrack()
-          : await createLocalVideoTrack();
-        thisTrack.enable(isEnabled);
-
-        const tracks = when === 'previously'
-          ? [thisTrack]
-          : [];
-
-        const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
-        const theseOptions = Object.assign({ tracks }, options);
-        thisRoom = await connect(thisToken, theseOptions);
-        thisParticipant = thisRoom.localParticipant;
-
-        const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
-        const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
-
-        await Promise.all([thisRoom].concat(thoseRooms).map(room => {
-          return participantsConnected(room, identities.length - 1);
-        }));
-
-        thoseParticipants = thoseRooms.map(thatRoom => {
-          return thatRoom.participants.get(thisParticipant.sid);
-        });
-
-        await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksAdded(thatParticipant, thisParticipant.tracks.size);
-        }));
-
-        thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
-          return [...thatParticipant.tracks.values()];
-        });
-
-        if (when === 'previously') {
-          thisParticipant.removeTrack(thisTrack, false);
-
-          await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
-          }));
-        }
-
-        thisParticipant.addTrack(thisTrack);
-
-        thoseTracks = await Promise.all(thoseParticipants.map(thatParticipant => {
-          return new Promise(resolve => thatParticipant.once('trackAdded', resolve));
-        }));
-      });
-
-      after(() => {
-        thisTrack.stop();
-        [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
-      });
-
-      it('should raise a "trackAdded" event on the corresponding Participants with a Track', () => {
-        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof Track));
-      });
-
-      describe('should raise a "trackAdded" event on the corresponding Participants with a Track and', () => {
-        it('should set each Track\'s .id to the LocalTrack\'s .id', () => {
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisTrack.id));
-        });
-
-        it(`should set each Track's .kind to "${kind}"`, () => {
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-        });
-
-        it(`should set each Track's .isEnabled state to ${isEnabled}`, () => {
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-        });
-
-        if (when === 'previously') {
-          it('the Track should be a new Track instance, despite sharing the same .id as the previously-added Track', () => {
-            assert.equal(thoseTracksBefore.length, thoseTracks.length);
-            thoseTracksBefore.forEach((thatTrackBefore, i) => {
-              const thatTrackAfter = thoseTracks[i];
-              assert.equal(thatTrackAfter.id, thatTrackBefore.id);
-              assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
-              assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
-              assert.notEqual(thatTrackAfter, thatTrackBefore);
-            });
-          });
-        }
-      });
-    });
-  });
 
   describe('#publishTrack', () => {
     let publishedTracks = [];
@@ -211,7 +96,7 @@ const isSafari = guess === 'safari';
             assert(publishedTrack instanceof PublishedTrack);
             assert.equal(publishedTrack.id, track.id);
             assert.equal(publishedTrack.kind, track.kind);
-            assert(typeof publishedTrack.sid, 'string');
+            assert(publishedTrack.sid.match(/^MT[a-f0-9]{32}$/));
           });
         });
 
@@ -303,9 +188,7 @@ const isSafari = guess === 'safari';
         tracks = [];
       });
     });
-  });
-  
-  describe('#removeTrack', () => {
+
     combinationContext([
       [
         [true, false],
@@ -316,12 +199,135 @@ const isSafari = guess === 'safari';
         x => `Local${capitalize(x)}Track`
       ],
       [
-        ['added', 'added, removed, and then added again'],
+        ['never', 'previously'],
+        x => `that has ${x} been published`
+      ]
+    ], ([isEnabled, kind, when]) => {
+      let thisRoom;
+      let thisParticipant;
+      let thisPublishedTrack;
+      let thisTrack;
+      let thoseRooms;
+      let thoseParticipants;
+      let thoseTracksBefore;
+      let thoseTracks;
+
+      before(async () => {
+        const name = randomName();
+        const identities = [randomName(), randomName(), randomName()];
+        const options = Object.assign({ name }, defaultOptions);
+
+        thisTrack = kind === 'audio'
+          ? await createLocalAudioTrack()
+          : await createLocalVideoTrack();
+        thisTrack.enable(isEnabled);
+
+        const tracks = when === 'previously'
+          ? [thisTrack]
+          : [];
+
+        const thisIdentity = identities[0];
+        const thisToken = getToken(thisIdentity);
+        const theseOptions = Object.assign({ tracks }, options);
+        thisRoom = await connect(thisToken, theseOptions);
+        thisParticipant = thisRoom.localParticipant;
+
+        const thoseIdentities = identities.slice(1);
+        const thoseTokens = thoseIdentities.map(getToken);
+        const thoseOptions = Object.assign({ tracks: [] }, options);
+        thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+
+        await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+          return participantsConnected(room, identities.length - 1);
+        }));
+
+        thoseParticipants = thoseRooms.map(thatRoom => {
+          return thatRoom.participants.get(thisParticipant.sid);
+        });
+
+        await Promise.all(thoseParticipants.map(thatParticipant => {
+          return tracksAdded(thatParticipant, thisParticipant.tracks.size);
+        }));
+
+        thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
+          return [...thatParticipant.tracks.values()];
+        });
+
+        if (when === 'previously') {
+          thisParticipant.unpublishTrack(thisTrack);
+
+          await Promise.all(thoseParticipants.map(thatParticipant => {
+            return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
+          }));
+        }
+
+        [thisPublishedTrack, ...thoseTracks] = await Promise.all([
+          thisParticipant.publishTrack(thisTrack),
+          ...thoseParticipants.map(thatParticipant => new Promise(resolve => thatParticipant.once('trackAdded', resolve)))
+        ]);
+      });
+
+      after(() => {
+        thisTrack.stop();
+        [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
+      });
+
+      it('should raise a "trackAdded" event on the corresponding Participants with a RemoteTrack', () => {
+        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof (thatTrack.kind === 'audio' ? RemoteAudioTrack : RemoteVideoTrack)));
+      });
+
+      describe('should raise a "trackAdded" event on the corresponding Participants with a RemoteTrack and', () => {
+        it('should set the RemoteTrack\'s .sid to the PublishedTrack\'s .sid', () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisPublishedTrack.sid));
+        });
+
+        it('should set each RemoteTrack\'s .id to the PublishedTrack\'s .id', () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisPublishedTrack.id));
+        });
+
+        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
+        });
+
+        it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+        });
+
+        if (when === 'previously') {
+          it('the RemoteTrack should be a new RemoteTrack instance, despite sharing the same .id as the previously-added RemoteTrack', () => {
+            assert.equal(thoseTracksBefore.length, thoseTracks.length);
+            thoseTracksBefore.forEach((thatTrackBefore, i) => {
+              const thatTrackAfter = thoseTracks[i];
+              assert.equal(thatTrackAfter.id, thatTrackBefore.id);
+              assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
+              assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
+              assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
+              assert.notEqual(thatTrackAfter, thatTrackBefore);
+            });
+          });
+        }
+      });
+    });
+  });
+  
+  describe('#unpublishTrack', () => {
+    combinationContext([
+      [
+        [true, false],
+        x => `called with ${x ? 'an enabled' : 'a disabled'}`
+      ],
+      [
+        ['audio', 'video'],
+        x => `Local${capitalize(x)}Track`
+      ],
+      [
+        ['published', 'published, unpublished, and then published again'],
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
       let thisRoom;
       let thisParticipant;
+      let thisPublishedTrack;
       let thisTrack;
       let thoseRooms;
       let thoseParticipants;
@@ -362,21 +368,20 @@ const isSafari = guess === 'safari';
           return tracksAdded(thatParticipant, thisParticipant.tracks.size);
         }));
 
-        if (when !== 'added') {
-          thisParticipant.removeTrack(thisTrack, false);
+        if (when !== 'published') {
+          thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
             return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
           }));
 
-          thisParticipant.addTrack(thisTrack);
-
-          await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksAdded(thatParticipant, thisParticipant.tracks.size);
-          }));
+          await Promise.all([
+            thisParticipant.publishTrack(thisTrack),
+            ...thoseParticipants.map(thatParticipant => tracksAdded(thatParticipant, thisParticipant.tracks.size))
+          ]);
         }
 
-        thisParticipant.removeTrack(thisTrack, false);
+        thisPublishedTrack = thisParticipant.unpublishTrack(thisTrack);
 
         thoseTracks = await Promise.all(thoseParticipants.map(thatParticipant => {
           return new Promise(resolve => thatParticipant.once('trackRemoved', resolve));
@@ -388,20 +393,24 @@ const isSafari = guess === 'safari';
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
 
-      it('should raise a "trackRemoved" event on the corresponding Participants with a Track', () => {
-        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof Track));
+      it('should raise a "trackRemoved" event on the corresponding Participants with a RemoteTrack', () => {
+        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof (thatTrack.kind === 'audio' ? RemoteAudioTrack : RemoteVideoTrack)));
       });
 
-      describe('should raise a "trackRemoved" event on the corresponding Participants with a Track and', () => {
-        it('should set each Track\'s .id to the LocalTrack\'s .id', () => {
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisTrack.id));
+      describe('should raise a "trackRemoved" event on the corresponding Participants with a RemoteTrack and', () => {
+        it('should set the RemoteTrack\'s .sid to the PublishedTrack\'s .sid', () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisPublishedTrack.sid));
         });
 
-        it(`should set each Track's .kind to "${kind}"`, () => {
+        it('should set each RemoteTrack\'s .id to the PublishedTrack\'s .id', () => {
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisPublishedTrack.id));
+        });
+
+        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
           thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
         });
 
-        it(`should set each Track's .isEnabled state to ${isEnabled}`, () => {
+        it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
           thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
         });
       });
@@ -412,9 +421,11 @@ const isSafari = guess === 'safari';
   //
   //   https://github.com/twilio/twilio-video.js/issues/72
   //
-  describe('#removeTrack and #addTrack called with two different LocalVideoTracks in quick succession', () => {
+  describe('#unpublishTrack and #publishTrack called with two different LocalVideoTracks in quick succession', () => {
     let thisRoom;
     let thisParticipant;
+    let thisPublishedTrack1;
+    let thisPublishedTrack2;
     let thisTrack1;
     let thisTrack2;
     let thatRoom;
@@ -449,11 +460,14 @@ const isSafari = guess === 'safari';
       const trackRemoved = new Promise(resolve => thatParticipant.once('trackRemoved', resolve));
       const trackAdded = new Promise(resolve => thatParticipant.once('trackAdded', resolve));
 
-      thisParticipant.removeTrack(thisTrack1);
+      thisPublishedTrack1 = thisParticipant.unpublishTrack(thisTrack1);
       [thisTrack2] = await createLocalTracks(constraints);
-      thisParticipant.addTrack(thisTrack2);
 
-      [thatTrack1, thatTrack2] = await Promise.all([trackRemoved, trackAdded]);
+      [thatTrack1, thatTrack2, thisPublishedTrack2] = await Promise.all([
+        trackRemoved,
+        trackAdded,
+        thisParticipant.publishTrack(thisTrack2)
+      ]);
     });
 
     after(() => {
@@ -462,23 +476,25 @@ const isSafari = guess === 'safari';
       thatRoom.disconnect();
     });
 
-    it('should eventually raise a "trackRemoved" event with the removed LocalVideoTrack', () => {
-      assert.equal(thatTrack1.id, thisTrack1.id);
-      assert.equal(thatTrack1.kind, thisTrack1.kind);
-      assert.equal(thatTrack1.enabled, thisTrack1.enabled);
+    it('should eventually raise a "trackRemoved" event with the unpublished LocalVideoTrack', () => {
+      assert.equal(thatTrack1.sid, thisPublishedTrack1.sid)
+      assert.equal(thatTrack1.id, thisPublishedTrack1.id);
+      assert.equal(thatTrack1.kind, thisPublishedTrack1.kind);
+      assert.equal(thatTrack1.enabled, thisPublishedTrack1.enabled);
       if (!isFirefox && !isSafari) {
         assert.equal(thatTrack1.mediaStreamTrack.readyState, 'ended');
       }
     });
 
-    it('should eventually raise a "trackAdded" event with the added LocalVideoTrack', () => {
-      assert.equal(thatTrack2.id, thisTrack2.id);
-      assert.equal(thatTrack2.kind, thisTrack2.kind);
-      assert.equal(thatTrack2.enabled, thisTrack2.enabled);
+    it('should eventually raise a "trackAdded" event with the published LocalVideoTrack', () => {
+      assert.equal(thatTrack2.sid, thisPublishedTrack2.sid);
+      assert.equal(thatTrack2.id, thisPublishedTrack2.id);
+      assert.equal(thatTrack2.kind, thisPublishedTrack2.kind);
+      assert.equal(thatTrack2.enabled, thisPublishedTrack2.enabled);
       assert.equal(thatTrack2.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
     });
 
-    it('should eventually raise a "trackStarted" event for the added LocalVideoTrack', async () => {
+    it('should eventually raise a "trackStarted" event for the published LocalVideoTrack', async () => {
       await trackStarted(thatTrack2);
     });
   });
@@ -487,10 +503,12 @@ const isSafari = guess === 'safari';
   //
   //   https://github.com/twilio/twilio-video.js/issues/81
   //
-  describe('#addTrack called twice with two different LocalTracks in quick succession', () => {
+  describe('#publishTrack called twice with two different LocalTracks in quick succession', () => {
     let thisRoom;
     let thisParticipant;
     let thisAudioTrack;
+    let thisPublishedAudioTrack;
+    let thisPublishedVideoTrack;
     let thisVideoTrack;
     let thatRoom;
     let thatParticipant;
@@ -519,9 +537,12 @@ const isSafari = guess === 'safari';
       // NOTE(mroberts): Wait 5 seconds.
       await new Promise(resolve => setTimeout(resolve, 5 * 1000));
 
-      [thisAudioTrack, thisVideoTrack].forEach(thisParticipant.addTrack, thisParticipant);
+      [ thisPublishedAudioTrack, thisPublishedVideoTrack] =  await Promise.all([
+        thisParticipant.publishTrack(thisAudioTrack),
+        thisParticipant.publishTrack(thisVideoTrack),
+        tracksAdded(thatParticipant, 2)
+      ]);
 
-      await tracksAdded(thatParticipant, 2);
       [thatAudioTrack] = [...thatParticipant.audioTracks.values()];
       [thatVideoTrack] = [...thatParticipant.videoTracks.values()];
     });
@@ -533,19 +554,21 @@ const isSafari = guess === 'safari';
       thatRoom.disconnect();
     });
 
-    it('should eventually raise a "trackAdded" event with the added LocalVideoTrack', () => {
-      assert.equal(thatAudioTrack.id, thisAudioTrack.id);
-      assert.equal(thatAudioTrack.kind, thisAudioTrack.kind);
-      assert.equal(thatAudioTrack.enabled, thisAudioTrack.enabled);
+    it('should eventually raise a "trackAdded" event for each published LocalTracks', () => {
+      assert.equal(thatAudioTrack.sid, thisPublishedAudioTrack.sid);
+      assert.equal(thatAudioTrack.id, thisPublishedAudioTrack.id);
+      assert.equal(thatAudioTrack.kind, thisPublishedAudioTrack.kind);
+      assert.equal(thatAudioTrack.enabled, thisPublishedAudioTrack.enabled);
       assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
 
-      assert.equal(thatVideoTrack.id, thisVideoTrack.id);
-      assert.equal(thatVideoTrack.kind, thisVideoTrack.kind);
-      assert.equal(thatVideoTrack.enabled, thisVideoTrack.enabled);
+      assert.equal(thatVideoTrack.sid, thisPublishedVideoTrack.sid);
+      assert.equal(thatVideoTrack.id, thisPublishedVideoTrack.id);
+      assert.equal(thatVideoTrack.kind, thisPublishedVideoTrack.kind);
+      assert.equal(thatVideoTrack.enabled, thisPublishedVideoTrack.enabled);
       assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
     });
 
-    it('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
+    it('should eventually raise a "trackStarted" event for each published LocalTrack', async () => {
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
