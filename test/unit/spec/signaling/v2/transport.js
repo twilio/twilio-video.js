@@ -2261,6 +2261,7 @@ function makeTest(options) {
   options.session = options.session || makeSession(options);
   options.ua = options.ua || makeUA(options);
   options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
+  options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
   options.SIPJSMediaHandler = options.SIPJSMediaHandler || makeSIPJSMediaHandlerConstructor(options);
   options.transport = options.transport || new Transport(
     options.name,
