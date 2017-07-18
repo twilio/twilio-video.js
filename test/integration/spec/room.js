@@ -9,8 +9,8 @@ const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
 const { flatMap } = require('../../../lib/util');
 const env = require('../../env');
-const { participantsConnected, randomName, tracksAdded } = require('../../lib/util');
-const Participant = require('../../../lib/participant');
+const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
+const RemoteParticipant = require('../../../lib/remoteparticipant');
 
 const options = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((options, option) => {
   if (env[option] !== undefined) {
@@ -25,11 +25,13 @@ describe('Room', function() {
   describe('disconnect', () => {
     let rooms;
     let room;
+    let participants;
     let participantsBefore;
     let participantsAfter;
     let tracksBefore;
     let tracksAfter;
     let participantsDisconnected;
+    let tracksUnsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName(), randomName()];
@@ -39,12 +41,18 @@ describe('Room', function() {
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
 
       room = rooms[0];
+      participants = [...room.participants.values()];
       participantsBefore = [...room.participants.keys()];
       tracksBefore = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
 
-      participantsDisconnected = rooms.slice(1).map(room => {
+      participantsDisconnected = Promise.all(rooms.slice(1).map(room => {
         return new Promise(resolve => room.once('participantDisconnected', resolve));
-      });
+      }));
+
+      tracksUnsubscribed = Promise.all(participants.map(participant => {
+        const n = participant.tracks.size;
+        return waitForTracks('trackUnsubscribed', participant, n);
+      }));
 
       room.disconnect();
 
@@ -64,7 +72,7 @@ describe('Room', function() {
       assert.deepEqual(participantsBefore, participantsAfter);
     });
 
-    it('should not change Room\'s Participant\'s .states', () => {
+    it('should not change Room\'s RemoteParticipant\'s .states', () => {
       room.participants.forEach(participant => assert.equal(participant.state, 'connected'));
     });
 
@@ -72,8 +80,12 @@ describe('Room', function() {
       assert.deepEqual(tracksAfter, tracksBefore);
     });
 
-    it('should raise a "participantDisconnected" event for every other Participant connected to the Room', async () => {
+    it('should raise a "participantDisconnected" event for every other RemoteParticipant connected to the Room', async () => {
       await participantsDisconnected;
+    });
+
+    it('should raise a "trackUnsubscribed" event for each RemoteParticipant\'s RemoteTracks', async () => {
+      await tracksUnsubscribed;
     });
   });
 
@@ -104,22 +116,22 @@ describe('Room', function() {
       }
     });
 
-    it('is raised whenever a Participant connects to the Room', async () => {
+    it('is raised whenever a RemoteParticipant connects to the Room', async () => {
       const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
       thatRoom = await connect(getToken(randomName()), Object.assign({ name: thisRoom.name }, options));
       thisParticipant = await participantConnected;
       thatParticipant = thatRoom.localParticipant;
-      assert(thatParticipant instanceof Participant);
+      assert(thisParticipant instanceof RemoteParticipant);
       assert.equal(thisParticipant.sid, thatParticipant.sid);
       assert.equal(thisParticipant.identity, thatParticipant.identity);
     });
 
-    describe('is raised whenever a Participant connects to the Room and', () => {
-      it('should add the Participant to the Room\'s .participants Map', () => {
+    describe('is raised whenever a RemoteParticipant connects to the Room and', () => {
+      it('should add the RemoteParticipant to the Room\'s .participants Map', () => {
         assert.equal(thisRoom.participants.get(thisParticipant.sid), thisParticipant);
       });
 
-      it('should set the Participant\'s .state to "connected"', () => {
+      it('should set the RemoteParticipant\'s .state to "connected"', () => {
         assert(thisParticipant.state, 'connected');
       });
     });
@@ -130,8 +142,9 @@ describe('Room', function() {
     let thatRoom;
     let thisParticipant;
     let thatParticipant;
-    let tracksBefore;
     let tracksAfter;
+    let tracksBefore;
+    let tracksUnsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName()];
@@ -140,8 +153,6 @@ describe('Room', function() {
 
       [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
       thisParticipant = thisRoom.localParticipant;
-
-      tracksBefore = [...thisParticipant.tracks.keys()].sort();
 
       await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));
 
@@ -152,11 +163,16 @@ describe('Room', function() {
 
       const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
 
+      thatParticipant = [...thatRoom.participants.values()][0];
+      tracksBefore = [...thatParticipant.tracks.values()];
+
+      const n = thatParticipant.tracks.size;
+      tracksUnsubscribed = waitForTracks('trackUnsubscribed', thatParticipant, n);
+
       thisRoom.disconnect();
 
       thatParticipant = await participantDisconnected;
-
-      tracksAfter = [...thatParticipant.tracks.keys()].sort();
+      tracksAfter = [...thatParticipant.tracks.values()];
     });
 
     after(() => {
@@ -164,23 +180,26 @@ describe('Room', function() {
       thatRoom.disconnect();
     });
 
-    it('is raised whenever a Participant disconnects from the Room', async () => {
-      assert(thatParticipant instanceof Participant);
+    it('is raised whenever a RemoteParticipant disconnects from the Room', () => {
+      assert(thatParticipant instanceof RemoteParticipant);
       assert.equal(thatParticipant.sid, thisParticipant.sid);
       assert.equal(thatParticipant.identity, thisParticipant.identity);
     });
 
-    describe('is raised whenever a Participant disconnects from the Room and', () => {
-      it('should delete the Participant from the Room\'s .participants Map', () => {
+    describe('is raised whenever a RemoteParticipant disconnects from the Room and', () => {
+      it('should delete the RemoteParticipant from the Room\'s .participants Map', () => {
         assert(!thatRoom.participants.has(thatParticipant.sid));
       });
 
-      it('should set the Participant\'s .state to "disconnected"', () => {
+      it('should set the RemoteParticipant\'s .state to "disconnected"', () => {
         assert.equal(thatParticipant.state, 'disconnected');
       });
 
-      // NOTE(mroberts): Small regression in backend. Unskip when fixed.
-      it.skip('should not change the Participant\'s .tracks', () => {
+      it('should fire the "trackUnsubscribed" event for the RemoteParticipant\'s RemoteTracks', async () => {
+        await tracksUnsubscribed;
+      });
+
+      it('should not change the RemoteParticipant\'s .tracks', () => {
         assert.deepEqual(tracksAfter, tracksBefore);
       });
     });

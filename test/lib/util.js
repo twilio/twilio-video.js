@@ -191,14 +191,18 @@ function product(xs, ys, combine) {
   }, []);
 }
 
+function randomBoolean() {
+  return Math.random() < 0.5;
+}
+
 function randomName() {
   return Math.random().toString(36).slice(2);
 }
 
 /**
- * Wait for {@link Participant}s to connect to a {@link Room}.
+ * Wait for {@link RemoteParticipant}s to connect to a {@link Room}.
  * @param {Room} room - the {@link Room}
- * @param {number} n - the number of {@link Participant}s to wait for
+ * @param {number} n - the number of {@link RemoteParticipant}s to wait for
  * @returns Promise<void>
  */
 async function participantsConnected(room, n) {
@@ -208,9 +212,9 @@ async function participantsConnected(room, n) {
 }
 
 /**
- * Wait for {@link Track}s to be added to a {@link Participant}.
- * @param {Participant} participant - the {@link Participant}
- * @param {number} n - the number of {@link Track}s to wait for
+ * Wait for {@link RemoteTrack}s to be added to a {@link RemoteParticipant}.
+ * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
+ * @param {number} n - the number of {@link RemoteTrack}s to wait for
  * @returns Promise<void>
  */
 async function tracksAdded(participant, n) {
@@ -220,9 +224,9 @@ async function tracksAdded(participant, n) {
 }
 
 /**
- * Wait for {@link Track}s to be removed from a {@link Participant}.
- * @param {Participant} participant - the {@link Participant}
- * @param {number} n - the final number of {@link Track}s to count down to
+ * Wait for {@link RemoteTrack}s to be removed from a {@link RemoteParticipant}.
+ * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
+ * @param {number} n - the final number of {@link RemoteTrack}s to count down to
  * @returns Promise<void>
  */
 async function tracksRemoved(participant, n) {
@@ -232,8 +236,8 @@ async function tracksRemoved(participant, n) {
 }
 
 /**
- * Wait for a {@link Track} to start.
- * @param {Track} track - the {@link Track}
+ * Wait for a {@link RemoteTrack} to start.
+ * @param {RemoteTrack} track - the {@link RemoteTrack}
  * @returns Promise<void>
  */
 async function trackStarted(track) {
@@ -262,6 +266,29 @@ function makeEncodingParameters(options) {
   return encodingParameters;
 }
 
+/**
+ * Wait for a certain number of {@link RemoteTrack} events.
+ * @param {string} event - the event to wait for
+ * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
+ * @param {number} n - the number of events to wait for
+ * @returns {Promise.<Array<RemoteTracks>>}
+ */
+async function waitForTracks(event, participant, n) {
+  if (n <= 0) {
+    return [];
+  }
+  return await new Promise(resolve => {
+    const tracks = [];
+    participant.on(event, function onevent(track) {
+      tracks.push(track);
+      if (--n === 0) {
+        participant.removeListener(event, onevent);
+        resolve(tracks);
+      }
+    });
+  });
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
@@ -269,7 +296,9 @@ exports.combinations = combinations;
 exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
+exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksAdded = tracksAdded;
 exports.tracksRemoved = tracksRemoved;
 exports.trackStarted = trackStarted;
+exports.waitForTracks = waitForTracks;

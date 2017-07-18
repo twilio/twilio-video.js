@@ -3,6 +3,7 @@
 var assert = require('assert');
 var Room = require('../../../lib/room');
 var RoomSignaling = require('../../../lib/signaling/room');
+var ParticipantSignaling = require('../../../lib/signaling/participant');
 var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 var SignalingConnectionDisconnectedError = require('../../../lib/util/twilio-video-errors').SignalingConnectionDisconnectedError;
 var sinon = require('sinon');
@@ -11,7 +12,7 @@ var log = require('../../lib/fakelog');
 describe('Room', function() {
   var room;
   var options = { log: log };
-  var localParticipant = new RemoteParticipantSignaling('PAXXX', 'client');
+  var localParticipant = new ParticipantSignaling('PAXXX', 'client');
   var signaling;
 
   beforeEach(function() {
@@ -39,7 +40,7 @@ describe('Room', function() {
     });
   });
 
-  describe('Participant events', function() {
+  describe('RemoteParticipant events', function() {
     var participants;
 
     beforeEach(function() {
@@ -53,7 +54,7 @@ describe('Room', function() {
       });
     });
 
-    it('should re-emit Participants trackAdded event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', function() {
       var spy = new sinon.spy();
       room.on('trackAdded', spy);
 
@@ -61,7 +62,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit Participants trackRemoved event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', function() {
       var spy = new sinon.spy();
       room.on('trackRemoved', spy);
 
@@ -69,15 +70,35 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should not re-emit Participant events if the RemoteParticipant is no longer in the room', function() {
+    it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackSubscribed', spy);
+
+      participants['foo'].emit('trackSubscribed');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackUnsubscribed', spy);
+
+      participants['bar'].emit('trackUnsubscribed');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', function() {
       participants['foo'].emit('disconnected');
 
       var spy = new sinon.spy();
       room.on('trackAdded', spy);
       room.on('trackRemoved', spy);
+      room.on('trackSubscribed', spy);
+      room.on('trackUnsubscribed', spy);
 
       participants['foo'].emit('trackAdded');
       participants['foo'].emit('trackRemoved');
+      participants['foo'].emit('trackSubscribed');
+      participants['foo'].emit('trackUnsubscribed');
       assert.equal(spy.callCount, 0);
     });
   });
@@ -93,6 +114,22 @@ describe('Room', function() {
         assert(spy.args[0][1] instanceof SignalingConnectionDisconnectedError);
         assert.equal(spy.args[0][1].code, 53001);
       });
+    });
+
+    it('should unsubscribe all the RemoteParticipants\' RemoteTracks', () => {
+      [
+        new RemoteParticipantSignaling('PA000', 'foo'),
+        new RemoteParticipantSignaling('PA111', 'bar')
+      ].forEach(signaling.connectParticipant.bind(signaling));
+
+      var participants = {};
+      room.participants.forEach(function(participant) {
+        participant._removeAllSubscribedTracks = sinon.spy();
+        participants[participant.identity] = participant;
+      });
+      signaling.preempt('disconnected');
+      sinon.assert.calledOnce(participants['foo']._removeAllSubscribedTracks);
+      sinon.assert.calledOnce(participants['bar']._removeAllSubscribedTracks);
     });
   });
 });
