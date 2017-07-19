@@ -13,6 +13,7 @@ const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
 const TwilioError = require('../../../lib/util/twilioerror');
+const sinon = require('sinon');
 
 const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
   if (env[option] !== undefined) {
@@ -277,7 +278,7 @@ describe('connect', function() {
 
     before(async () => {
       const options = Object.assign({ tracks: [] }, defaultOptions);
-      cancelablePromise = connect(getToken(randomName(), options));
+      cancelablePromise = connect(getToken(randomName()), options);
       cancelablePromise.cancel();
     });
 
@@ -291,6 +292,42 @@ describe('connect', function() {
         assert(error instanceof Error);
         assert.equal(error.message, 'Canceled');
       }
+    });
+  });
+
+  [ true, false ].forEach(insights => {
+    describe(`called with isInsightsEnabled = ${insights}`, () => {
+      let InsightsPublisher;
+      let NullInsightsPublisher;
+      let room;
+
+      before(async () => {
+        InsightsPublisher = sinon.spy(function InsightsPublisher() {
+          this.disconnect = sinon.spy();
+          this.publish = sinon.spy();
+        });
+
+        NullInsightsPublisher = sinon.spy(function NullInsightsPublisher() {
+          this.disconnect = sinon.spy();
+          this.publish = sinon.spy();
+        });
+
+        const options = Object.assign({
+          tracks: [],
+          insights,
+          InsightsPublisher,
+          NullInsightsPublisher
+        }, defaultOptions);
+
+        room = await connect(getToken(randomName()), options);
+      });
+
+      it(`should ${insights ? '' : 'not'} publish events to the Insights gateway`, () => {
+        const EventPublisher = insights ? InsightsPublisher : NullInsightsPublisher;
+        const TheOtherEventPublisher = insights ? NullInsightsPublisher : InsightsPublisher;
+        sinon.assert.calledOnce(EventPublisher);
+        sinon.assert.callCount(TheOtherEventPublisher, 0);
+      });
     });
   });
 });
