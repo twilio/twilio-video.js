@@ -5,6 +5,7 @@ const connect = require('../../../lib/connect');
 const fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
 const FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
 const inherits = require('util').inherits;
+const MockIceServerSource = require('../../lib/mockiceserversource');
 const RoomSignaling = require('../../../lib/signaling/room');
 const Signaling = require('../../../lib/signaling');
 const sinon = require('sinon');
@@ -35,11 +36,10 @@ describe('connect', () => {
         }
       });
 
-      it('calls .stop() on the IceServerSource', async () => {
-        const iceServerSource = new EventEmitter();
-        iceServerSource.start = () => Promise.resolve([]);
-        const stop = iceServerSource.stop = sinon.spy(() => {});
-        const promise = connect(token, { tracks: [], iceServers: iceServerSource });
+      it('never calls .start() on the IceServerSource', async () => {
+        const createLocalTracks = () => Promise.resolve([]);
+        const iceServerSource = new MockIceServerSource();
+        const promise = connect(token, { createLocalTracks, iceServers: iceServerSource });
         promise.cancel();
         try {
           await promise;
@@ -47,7 +47,7 @@ describe('connect', () => {
         } catch (error) {
           // Do nothing.
         }
-        assert(stop.calledOnce);
+        assert(!iceServerSource.start.calledOnce);
       });
     });
 
@@ -81,14 +81,12 @@ describe('connect', () => {
     describe('when it fails', () => {
       it('calls .stop() on the IceServerSource', async () => {
         const mockSignaling = new Signaling();
-        mockSignaling.connect = () => Promise.reject();
+        mockSignaling.connect = () => Promise.resolve(() => { throw new Error() });
         function signaling() {
           return mockSignaling;
         }
 
-        const iceServerSource = new EventEmitter();
-        iceServerSource.start = () => [];
-        const stop = iceServerSource.stop = sinon.spy(() => {});
+        const iceServerSource = new MockIceServerSource();
 
         try {
           await connect(token, {
@@ -101,7 +99,7 @@ describe('connect', () => {
           // Do nothing.
         }
 
-        assert(stop.calledOnce);
+        assert(iceServerSource.stop.calledOnce);
       });
     });
   });

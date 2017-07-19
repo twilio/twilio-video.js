@@ -4,6 +4,7 @@ var assert = require('assert');
 var CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 var createCancelableRoomSignalingPromise = require('../../../../../lib/signaling/v2/cancelableroomsignalingpromise');
 var EventEmitter = require('events').EventEmitter;
+var MockIceServerSource = require('../../../../lib/mockiceserversource');
 var SignalingConnectionDisconnectedError = require('../../../../../lib/util/twilio-video-errors')
   .SignalingConnectionDisconnectedError;
 
@@ -404,8 +405,7 @@ function makeTest(options) {
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
-  const mockIceServerSource = new EventEmitter();
-  mockIceServerSource.stop = () => {};
+  const mockIceServerSource = new MockIceServerSource();
   options.iceServerSource = options.iceServerSource || mockIceServerSource;
 
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(

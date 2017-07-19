@@ -4,6 +4,7 @@ const assert = require('assert');
 const EventEmitter = require('events').EventEmitter;
 const NTSIceServerSource = require('../../../../lib/iceserversource/nts');
 const util = require('../../../../lib/util');
+const { createTwilioError } = require('../../../../lib/util/twilio-video-errors');
 
 const token = 'foo';
 const iceServers = [];
@@ -140,22 +141,60 @@ describe('NTSIceServerSource', () => {
     });
 
     describe('when getConfiguration rejects', () => {
-      let nts;
+      describe('with an Access Token error', () => {
+        const error = createTwilioError(20103, 'Invalid Access Token issuer/subject');
+        const options = { getConfiguration: () => Promise.reject(error) };
+        let nts;
+        let iceServers;
 
-      it('returns the default ICE servers', () => {
-        const options = { getConfiguration: () => Promise.reject() };
-        nts = new NTSIceServerSource(token, options);
-        return nts.start().then(iceServers => {
+        beforeEach(async () => {
+          nts = new NTSIceServerSource(token, options);
+          iceServers = await nts.start();
+        });
+
+        it('returns the default ICE servers', async () => {
           assert.deepEqual([
             {
               "urls": "stun:global.stun.twilio.com:3478?transport=udp"
             }
           ], iceServers);
         });
+
+        it('stops the NTSIceServerSource', () => {
+          assert(!nts.isStarted);
+        });
+
+        afterEach(() => {
+          nts.stop();
+        });
       });
 
-      afterEach(() => {
-        nts.stop();
+      describe('with any other error', () => {
+        const error = new Error();
+        const options = { getConfiguration: () => Promise.reject(error) };
+        let nts;
+        let iceServers;
+
+        beforeEach(async () => {
+          nts = new NTSIceServerSource(token, options);
+          iceServers = await nts.start();
+        });
+
+        it('returns the default ICE servers', async () => {
+          assert.deepEqual([
+            {
+              "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+            }
+          ], iceServers);
+        });
+
+        it('does not stop the NTSIceServerSource', () => {
+          assert(nts.isStarted);
+        });
+
+        afterEach(() => {
+          nts.stop();
+        });
       });
     });
 

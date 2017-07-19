@@ -4,6 +4,7 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var FakeMediaStream = require('../../../../lib/fakemediastream').FakeMediaStream;
 var inherits = require('util').inherits;
+var MockIceServerSource = require('../../../../lib/mockiceserversource');
 var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
 var sinon = require('sinon');
 var util = require('../../../../../lib/util');
@@ -24,8 +25,9 @@ describe('PeerConnectionManager', () => {
       });
     });
 
-    it('calls stop on the IceServerSource', () => {
+    it('calls stop on the IceServerSource', async () => {
       const test = makeTest();
+      await test.iceServerSource.start();
       test.peerConnectionManager.close();
       assert(test.iceServerSource.stop.calledOnce);
     })
@@ -521,9 +523,7 @@ function makeTest(options) {
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
 
-  const mockIceServerSource = new EventEmitter();
-  mockIceServerSource.start = () => Promise.resolve([]);
-  mockIceServerSource.stop = sinon.spy(() => {});
+  const mockIceServerSource = new MockIceServerSource();
   options.iceServerSource = options.iceServerSource || mockIceServerSource;
 
   options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options.iceServerSource, options);
