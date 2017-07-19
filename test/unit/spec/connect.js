@@ -21,23 +21,33 @@ describe('connect', () => {
     });
 
     describe('and then immediately canceled by calling .cancel()', () => {
-      it('calls .stop() on the LocalTracks', () => {
-        return fakeGetUserMedia({ audio: true, video: true }).then(stream => {
-          const localTracks = stream.getTracks().map(track => {
-            return new FakeLocalTrack(track);
-          });
-          const createLocalTracks = () => {
-            return Promise.resolve(localTracks);
-          }
-          const promise = connect(token, { createLocalTracks, iceServers: [] });
+      it('calls .stop() on the LocalTracks', async () => {
+        const stream = await fakeGetUserMedia({ audio: true, video: true });
+        const localTracks = stream.getTracks().map(track => new FakeLocalTrack(track));
+        const createLocalTracks = () => Promise.resolve(localTracks);
+        const promise = connect(token, { createLocalTracks, iceServers: [] });
+        promise.cancel();
+        try {
+          await promise;
+          throw new Error('Unexpected resolution');
+        } catch (error) {
+          localTracks.forEach(track => assert(track.stop.calledOnce));
+        }
+      });
 
-          promise.cancel();
-          return promise.then(() => {
-            throw new Error('Unexpected resolution');
-          }, () => {
-            localTracks.forEach(track => assert(track.stop.calledOnce));
-          });
-        });
+      it('calls .stop() on the IceServerSource', async () => {
+        const iceServerSource = new EventEmitter();
+        iceServerSource.start = () => Promise.resolve([]);
+        const stop = iceServerSource.stop = sinon.spy(() => {});
+        const promise = connect(token, { tracks: [], iceServers: iceServerSource });
+        promise.cancel();
+        try {
+          await promise;
+          throw new Error('Unexpected resolution');
+        } catch (error) {
+          // Do nothing.
+        }
+        assert(stop.calledOnce);
       });
     });
 
@@ -48,7 +58,7 @@ describe('connect', () => {
         const createLocalTracks = () => Promise.resolve(tracks);
 
         const mockSignaling = new Signaling();
-        mockSignaling.connect = () => () => new RoomSignaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
         function signaling() {
           return mockSignaling;
         }
@@ -65,6 +75,33 @@ describe('connect', () => {
           signaling });
 
         assert.equal(shouldStopLocalTracks, true);
+      });
+    });
+
+    describe('when it fails', () => {
+      it('calls .stop() on the IceServerSource', async () => {
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.reject();
+        function signaling() {
+          return mockSignaling;
+        }
+
+        const iceServerSource = new EventEmitter();
+        iceServerSource.start = () => [];
+        const stop = iceServerSource.stop = sinon.spy(() => {});
+
+        try {
+          await connect(token, {
+            iceServers: iceServerSource,
+            signaling,
+            tracks: []
+          });
+          throw new Error('Unexpected resolution');
+        } catch (error) {
+          // Do nothing.
+        }
+
+        assert(stop.calledOnce);
       });
     });
   });
@@ -88,7 +125,7 @@ describe('connect', () => {
         ], false ]
       ].forEach(( [ scenario, getTracks, shouldFail ] ) => {
         const mockSignaling = new Signaling();
-        mockSignaling.connect = () => () => new RoomSignaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
 
         var createLocalTracks;
         var tracks;
@@ -154,7 +191,7 @@ describe('connect', () => {
         const tracks = stream.getTracks().map(track => new FakeLocalTrack(track));
 
         const mockSignaling = new Signaling();
-        mockSignaling.connect = () => () => new RoomSignaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
         function signaling() {
           return mockSignaling;
         }

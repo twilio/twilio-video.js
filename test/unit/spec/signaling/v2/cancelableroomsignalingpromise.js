@@ -403,10 +403,16 @@ function makeTest(options) {
   };
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
+
+  const mockIceServerSource = new EventEmitter();
+  mockIceServerSource.stop = () => {};
+  options.iceServerSource = options.iceServerSource || mockIceServerSource;
+
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
     options.ua,
     options.localParticipant,
+    options.iceServerSource,
     options);
   return options;
 }

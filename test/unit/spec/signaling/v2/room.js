@@ -274,6 +274,12 @@ describe('RoomV2', () => {
           newState);
       });
 
+      it('calls .close on the PeerConnectionManager', () => {
+        var test = makeTest();
+        test.room.disconnect();
+        assert(test.peerConnectionManager.close.calledOnce);
+      });
+
       it('calls .disconnect on the Transport', () => {
         var test = makeTest();
         test.room.disconnect();
@@ -1101,6 +1107,7 @@ function makeTransport(options) {
 
 function makePeerConnectionManager(options) {
   var peerConnectionManager = new EventEmitter();
+  peerConnectionManager.close = sinon.spy(() => {});
   peerConnectionManager.dequeue = sinon.spy(() => {});
   peerConnectionManager.setMediaStreamTracks = sinon.spy(() => {});
   peerConnectionManager.getRemoteMediaStreamTracks = sinon.spy(() => []);

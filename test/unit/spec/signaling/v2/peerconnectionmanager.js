@@ -24,6 +24,12 @@ describe('PeerConnectionManager', () => {
       });
     });
 
+    it('calls stop on the IceServerSource', () => {
+      const test = makeTest();
+      test.peerConnectionManager.close();
+      assert(test.iceServerSource.stop.calledOnce);
+    })
+
     it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', () => {
       var test = makeTest();
       var mediaStream = makeMediaStream();
@@ -514,7 +520,13 @@ function makeTest(options) {
   options.MediaStream = options.MediaStream || FakeMediaStream;
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
-  options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options);
+
+  const mockIceServerSource = new EventEmitter();
+  mockIceServerSource.start = () => Promise.resolve([]);
+  mockIceServerSource.stop = sinon.spy(() => {});
+  options.iceServerSource = options.iceServerSource || mockIceServerSource;
+
+  options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options.iceServerSource, options);
   options.peerConnectionManager.setConfiguration({ iceServers: [] });
   return options;
 }
