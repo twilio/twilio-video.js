@@ -1,3 +1,25 @@
+1.2.0 (in progress)
+===================
+
+New Features
+------------
+
+- Video Insights can be enabled or disabled by setting `insights` to `true` or
+  `false` in the ConnectOptions. `insights` defaults to `true`. We recommend to
+  leave Video Insights enabled in order to aid troubleshooting.
+
+Bug Fixes
+---------
+
+- Added some missing documentation to ConnectOptions and
+  CreateLocalTracksOptions. Both options objects accept `audio` and `video`
+  properties which may be set to a boolean or
+  [MediaTrackConstraints](https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints).
+  We added this to the documentation. (JSDK-1365)
+- Fixed a bug where twilio-video.js would continue polling for configuration
+  data, despite being disconnected from a Room and despite the Access Token
+  having expired. (JSDK-1407)
+
 1.1.0 (July 12, 2017)
 =====================
 
