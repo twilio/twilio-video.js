@@ -6,6 +6,10 @@ Bug Fixes
 
 - In Firefox, we were raising a `peerIdentity` TypeError in the console.
   (JSDK-1372)
+- `detach`ing a Track in Chrome could result in that Track continuing to
+  playback, even if the &lt;audio&gt; or &lt;video&gt; elements it was
+  `attach`ed to were removed from the DOM
+  ([#140](https://github.com/twilio/twilio-video.js/issues/140)).
 
 1.2.0 (July 21, 2017)
 =====================
