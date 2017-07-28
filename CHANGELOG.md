@@ -1,3 +1,12 @@
+1.2.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- In Firefox, we were raising a `peerIdentity` TypeError in the console.
+  (JSDK-1372)
+
 1.2.0 (July 21, 2017)
 =====================
 
