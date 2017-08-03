@@ -70,7 +70,7 @@
     "test:umd": "mocha ./test/umd/index.js",
     "test:webrtc:native": "karma start karma/webrtc.conf.js",
     "test:webrtc:adapter": "karma start karma/webrtc.adapter.conf.js",
-    "test:webrtc": "npm-run-all test:webrtc:*",
+    "test:webrtc": "npm-run-all test:webrtc:native",
     "test:framework:angular:install": "cd ./test/framework/twilio-video-angular && rimraf ./node_modules && npm install",
     "test:framework:angular:test": "node ./scripts/framework.js twilio-video-angular",
     "test:framework:angular:run": "mocha ./test/framework/twilio-video-angular.js",
