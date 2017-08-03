@@ -2,34 +2,63 @@ dist: trusty
 language: node_js
 node_js:
   - 7
+
 addons:
   apt:
     packages:
       - pulseaudio
+
 env:
-  matrix:
-    - BROWSER=chrome BVER=stable
-    - BROWSER=chrome BVER=beta
-    - BROWSER=firefox BVER=stable
-    - BROWSER=firefox BVER=beta
   global:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
     - PATH=$HOME/.meteor:$PATH
+
 matrix:
+  include:
+    - os: linux
+      env: BROWSER=chrome BVER=stable
+
+    - os: linux
+      env: BROWSER=chrome BVER=beta
+
+    - os: linux
+      env: BROWSER=firefox BVER=stable
+
+    - os: linux
+      env: BROWSER=firefox BVER=beta
+
+    - os: osx
+      sudo: required
+      osx_image: xcode8.3
+      env: BROWSER=safari BVER=unstable
+
   allow_failures:
+    - env: BROWSER=chrome BVER=stable
     - env: BROWSER=chrome BVER=beta
+    - env: BROWSER=safari BVER=unstable
+
 before_script:
-  - cd node_modules/travis-multirunner
-  - BROWSER=chrome ./setup.sh
-  - BROWSER=firefox ./setup.sh
-  - export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
-  - export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
-  - cd ../..
-  - curl https://install.meteor.com | /bin/sh
-  - sh -e /etc/init.d/xvfb start
-  - pulseaudio --start
+  - |
+    set -e
+    cd node_modules/travis-multirunner
+    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+      BROWSER=chrome ./setup.sh
+      BROWSER=firefox ./setup.sh
+      export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
+      export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
+    else
+      BROWSER=safari ./setup.sh
+    fi
+    cd ../..
+    curl https://install.meteor.com | /bin/sh
+    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+      sh -e /etc/init.d/xvfb start
+      pulseaudio --start
+    fi
+
 script: npm run build:travis
+
 notifications:
   slack:
     on_pull_requests: false
