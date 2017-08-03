@@ -18,12 +18,31 @@ Canary or Nightly releases. We will, however, stay abreast of changes in browser
 beta releases so that we can adopt changes in advance of each browser's next
 stable release.
 
-Safari, Internet Explorer, and WebRTC-incompatible Browsers
------------------------------------------------------------
+Safari
+------
 
-twilio-video.js requires WebRTC, and neither Safari nor Internet Explorer
-support WebRTC. While twilio-video.js will load in these browsers, actually
-connecting to a Room or acquiring LocalTracks will fail.
+twilio-video.js 1.2.1 introduces experimental support for Safari 11 and newer.
+Support for Safari is "experimental" because, at the time of writing, Safari
+does not support VP8. This means you may experience codec issues in Group Rooms.
+You may also experience codec issues in Peer-to-Peer (P2P) Rooms containing
+Android- or iOS-based Participants who do not support H.264. However, P2P Rooms
+with browser-based Participants should work.
+
+Microsoft Edge
+--------------
+
+Although Microsoft Edge includes some WebRTC support, it also includes some
+limitations that make it difficult to support today. We plan on adding Edge
+support to twilio-video.js, but we may do so by leveraging Edge's ORTC APIs
+instead.
+
+Internet Explorer and WebRTC-incompatible Browsers
+--------------------------------------------------
+
+twilio-video.js requires WebRTC, which is not supported by Internet Explorer.
+While twilio-video.js will load in Internet Explorer and other browsers that
+do not support WebRTC, attempting to connect to a Room or attempting to acquire
+LocalTracks will fail.
 
 Aggressive Browser Extensions and Plugins
 -----------------------------------------
