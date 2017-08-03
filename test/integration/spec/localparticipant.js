@@ -7,7 +7,7 @@ if (typeof window === 'undefined') {
 const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');
-const { flatMap } = require('../../../lib/util');
+const { flatMap, guessBrowser } = require('../../../lib/util');
 const Track = require('../../../lib/media/track');
 
 const {
@@ -35,9 +35,10 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
-const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
-const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
-const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
+const guess = guessBrowser();
+const isChrome = guess === 'chrome';
+const isFirefox = guess === 'firefox';
+const isSafari = guess === 'safari';
 
 (navigator.userAgent === 'Node'
   ? describe.skip

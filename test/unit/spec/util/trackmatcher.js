@@ -1,44 +1,8 @@
 'use strict';
 
 const assert = require('assert');
+const { makeSdpWithTracks } = require('../../../lib/sdp');
 const TrackMatcher = require('../../../../lib/util/trackmatcher');
-
-/**
- * @interface TracksByKind
- * @property {Array<string>} [audio]
- * @property {Array<string>} [video]
- */
-
-/**
- * @param {TracksByKind} kinds
- * @returns {string} sdp
- */
-function makeSdpWithTracks(kinds) {
-  const session = `\
-v=0\r
-o=- 0 1 IN IP4 0.0.0.0\r
-s=-\r
-t=0 0\r
-a=ice-ufrag:0000\r
-a=ice-pwd:0000000000000000000000\r
-a=fingerprint:sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00\r
-`;
-  return ['audio', 'video'].reduce((sdp, kind) => {
-    const media = `\
-m=${kind} 9 UDP/TLS/RTP/SAVPF 0\r
-c=IN IP4 0.0.0.0\r
-a=sendrecv\r
-a=rtcp-mux\r
-`;
-    const ids = kinds[kind] || [];
-    return ids.reduce((sdp, id) => {
-      return sdp + `\
-a=ssrc:1 cname:0\r
-a=ssrc:1 msid:stream ${id}\r
-`;
-    }, sdp + media);
-  }, session);
-}
 
 /**
  * @interface TrackMatcherTest

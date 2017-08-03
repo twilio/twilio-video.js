@@ -5,8 +5,9 @@ var MediaStream = require('../../../../lib/webrtc/mediastream');
 var RTCIceCandidate = require('../../../../lib/webrtc/rtcicecandidate');
 var RTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
 var RTCPeerConnection = require('../../../../lib/webrtc/rtcpeerconnection');
+var { makeSdpWithTracks } = require('../../../lib/sdp');
 var util = require('../../../lib/util');
-var { flatMap } = require('../../../../lib/util');
+var { flatMap, guessBrowser } = require('../../../../lib/util');
 
 var sdpTypes = [
   'answer',
@@ -21,9 +22,10 @@ var signalingStates = [
   'stable'
 ];
 
-const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
-const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
-const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
+const guess = guessBrowser();
+const isChrome = guess === 'chrome';
+const isFirefox = guess === 'firefox';
+const isSafari = guess === 'safari';
 
 describe('RTCPeerConnection', function() {
   this.timeout(30000);
@@ -228,6 +230,45 @@ describe('RTCPeerConnection', function() {
         ]);
       });
     });
+
+    if (isSafari) {
+      it('is raised in the order that new MSIDs are signaled in the SDP', async () => {
+        const tracksByKinds = [
+          { audio: [ { id: 'track1', ssrc: 1 } ] },
+          { audio: [ { id: 'track1', ssrc: 1 },
+                     { id: 'track2', ssrc: 2 },
+                     { id: 'track3', ssrc: 3 } ] },
+          { audio: [ { id: 'track2', ssrc: 2 } ] },
+          { audio: [ { id: 'track1', ssrc: 1 } ] }
+        ];
+
+        const matches = [
+          ['track1'],
+          ['track2', 'track3'],
+          [],
+          ['track1']
+        ];
+
+        const trackEvents = [];
+        const pc = new RTCPeerConnection();
+        pc.ontrack = trackEvent => trackEvents.push(trackEvent);
+
+        for (const i in tracksByKinds) {
+          const tracksByKind = tracksByKinds[i];
+          const sdp = makeSdpWithTracks(tracksByKind);
+          const offer = new RTCSessionDescription({ type: 'offer', sdp });
+
+          await pc.setRemoteDescription(offer);
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+          assert.equal(trackEvents.length, matches[i].length);
+          trackEvents.splice(0).forEach((trackEvent, j) => {
+            assert.equal(trackEvent.track.id, matches[i][j]);
+          });
+        }
+      });
+    }
   });
 });
 
