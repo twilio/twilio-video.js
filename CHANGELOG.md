@@ -1,6 +1,17 @@
 1.2.1 (in progress)
 ===================
 
+In addition to the following bug fixes, this release introduces experimental
+support for Safari 11 and newer. Support for Safari is "experimental" because,
+at the time of writing, Safari does not support VP8. This means you may
+experience codec issues in Group Rooms. You may also experience codec issues in
+Peer-to-Peer (P2P) Rooms containing Android- or iOS-based Participants who do
+not support H.264. However, P2P Rooms with browser-based Participants should
+work.
+
+twilio-video.js will log these same caveats as a warning if you call `connect`
+in Safari 11. You can disable this warning by setting the `logLevel` to "warn".
+
 Bug Fixes
 ---------
 
