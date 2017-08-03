@@ -6,10 +6,12 @@ if (typeof window === 'undefined') {
 
 const assert = require('assert');
 const createLocalTracks = require('../../../lib/createlocaltrack');
+const { guessBrowser } = require('../../../lib/util');
 
-const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
-const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
-const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
+const guess = guessBrowser();
+const isChrome = guess === 'chrome';
+const isFirefox = guess === 'firefox';
+const isSafari = guess === 'safari';
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];

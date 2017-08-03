@@ -3,11 +3,13 @@
 const assert = require('assert');
 const ChromeRTCSessionDescription = require('../../../../lib/webrtc/rtcsessiondescription/chrome');
 const SessionDescription = require('../../../../lib/webrtc/rtcsessiondescription');
+const { guessBrowser } = require('../../../../lib/util');
 const { combinationContext } = require('../../../lib/util');
 
-const isChrome = typeof webkitRTCPeerConnection !== 'undefined';
-const isFirefox = typeof mozRTCPeerConnection !== 'undefined';
-const isSafari = !isChrome && !isFirefox && navigator.userAgent.match(/AppleWebKit\/(\d+)\./);
+const guess = guessBrowser();
+const isChrome = guess === 'chrome';
+const isFirefox = guess === 'firefox';
+const isSafari = guess === 'safari';
 
 describe('RTCSessionDescription', () => {
   describe('constructor', () => {
