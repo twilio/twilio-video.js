@@ -16,9 +16,6 @@ env:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
     - PATH=$HOME/.meteor:$PATH
-matrix:
-  allow_failures:
-    - env: BROWSER=chrome BVER=beta
 before_script:
   - cd node_modules/travis-multirunner
   - BROWSER=chrome ./setup.sh
