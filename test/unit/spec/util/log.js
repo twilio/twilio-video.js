@@ -200,6 +200,25 @@ describe('Log', function() {
     });
   });
 
+  describe('#warnOnce(deprecationWarning)', function() {
+    context('the first time the warning is passed', function() {
+      it('should call #log(Log.WARN, message)', function() {
+        var log = Log('foo', component('bar'), { foo: 'warn' });
+        log.warnOnce('baz');
+        sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
+      });
+    });
+
+    context('subsequent times the warning is passed', function() {
+      it('should call #log(Log.WARN, message)', function() {
+        var log = Log('foo', component('bar'), { foo: 'warn' });
+        log.warnOnce('baz');
+        log.warnOnce('baz');
+        sinon.assert.calledOnce(log.log);
+      });
+    });
+  });
+
   describe('#error(messages)', function() {
     it('should call #log(Log.ERROR, message)', function() {
       var log = Log('foo', component('bar'), { foo: 'error' });
