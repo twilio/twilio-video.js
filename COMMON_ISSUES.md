@@ -25,28 +25,6 @@ twilio-video.js requires WebRTC, and neither Safari nor Internet Explorer
 support WebRTC. While twilio-video.js will load in these browsers, actually
 connecting to a Room or acquiring LocalTracks will fail.
 
-VideoTrack shared by Firefox appears black
-------------------------------------------
-
-This issue can occur when connecting to a peer-to-peer Room with a Firefox-based
-Participant who is not sharing audio. (If all the other Participants are
-Firefox-based, this issue will not occur.) The issue arises due to a difference
-in bundle behavior between Google and Mozilla's WebRTC implementations. For
-more information, see [Issue 6280](https://bugs.chromium.org/p/webrtc/issues/detail?id=6280)
-on the WebRTC bug tracker.
-
-The suggested workaround is to always share audio from Firefox-based
-Participants when connecting to a peer-to-peer Room. If you do not intend to
-playback the audio, you can `disable` the Track before connecting. For example,
-
-```js
-const audioTrack = await Twilio.Video.createLocalAudioTrack();
-
-audioTrack.disable();
-
-const room = await Twilio.Video.connect(token, { tracks: [audioTrack] });
-```
-
 Aggressive Browser Extensions and Plugins
 -----------------------------------------
 

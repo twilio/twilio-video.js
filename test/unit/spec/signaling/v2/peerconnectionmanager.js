@@ -2,7 +2,7 @@
 
 var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
-var FakeMediaStream = require('../../../../lib/fakemediastream').FakeMediaStream;
+var { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 var inherits = require('util').inherits;
 var MockIceServerSource = require('../../../../lib/mockiceserversource');
 var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
@@ -43,6 +43,16 @@ describe('PeerConnectionManager', () => {
         test.peerConnectionManager.close();
         assert(test.peerConnectionV2s[0].close.calledOnce);
         assert(test.peerConnectionV2s[1].close.calledOnce);
+      });
+    });
+
+    context('when AudioContext is supported', () => {
+      it('should call .stop on its underlying dummy audio MediaStreamTrack', async () => {
+        const test = makeTest({ isAudioContextSupported: true });
+        const dummyTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
+        const promise = new Promise(resolve => dummyTrack.addEventListener('ended', resolve));
+        test.peerConnectionManager.close();
+        await promise;
       });
     });
   });
@@ -171,165 +181,175 @@ describe('PeerConnectionManager', () => {
   });
 
   describe('#setMediaStreamTracks', () => {
-    it('returns the PeerConnectionManager', () => {
-      var test = makeTest();
-      var mediaStream1 = makeMediaStream();
-      var mediaStream2 = makeMediaStream();
-      var mediaStream3 = makeMediaStream();
-      test.peerConnectionManager.setMediaStreamTracks(
-        getTracks([mediaStream1, mediaStream2]));
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        assert.equal(
-          test.peerConnectionManager,
+    [ true, false ].forEach(isAudioContextSupported => {
+      context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
+        it('returns the PeerConnectionManager', () => {
+          var test = makeTest({ isAudioContextSupported });
+          var mediaStream1 = makeMediaStream();
+          var mediaStream2 = makeMediaStream();
+          var mediaStream3 = makeMediaStream();
           test.peerConnectionManager.setMediaStreamTracks(
-            getTracks([mediaStream2, mediaStream3])));
-      });
-    });
+            getTracks([mediaStream1, mediaStream2]));
+          return test.peerConnectionManager.createAndOffer().then(() => {
+            return test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
+          }).then(() => {
+            assert.equal(
+              test.peerConnectionManager,
+              test.peerConnectionManager.setMediaStreamTracks(
+                getTracks([mediaStream2, mediaStream3])));
+          });
+        });
 
-    context('when called with the same MediaStreamTracks as the last time', () => {
-      it('should not call addMediaStream on the underlying PeerConnectionV2s', () => {
-        var test = makeTest();
-        var mediaStream1 = makeMediaStream({ audio: 1 });
-        var mediaStream2 = makeMediaStream({ video: 1 });
-        test.peerConnectionManager.setMediaStreamTracks(
-          getTracks([mediaStream1, mediaStream2]));
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
+        context('when called with the same MediaStreamTracks as the last time', () => {
+          it('should not call addMediaStream on the underlying PeerConnectionV2s', () => {
+            var test = makeTest({ isAudioContextSupported });
+            var mediaStream1 = makeMediaStream({ audio: 1 });
+            var mediaStream2 = makeMediaStream({ video: 1 });
+            test.peerConnectionManager.setMediaStreamTracks(
+              getTracks([mediaStream1, mediaStream2]));
+            return test.peerConnectionManager.createAndOffer().then(() => {
+              return test.peerConnectionManager.update([
+                { id: '123' }
+              ]);
+            }).then(() => {
+              test.peerConnectionManager.setMediaStreamTracks(
+                getTracks([mediaStream2, mediaStream1]));
+              assert.equal(test.peerConnectionV2s[0].addMediaStream.callCount, 1);
+            });
+          });
+        });
+
+        it('calls addMediaStream with the ._localMediaStream containing the remaining MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+          var test = makeTest({ isAudioContextSupported });
+          var mediaStream1 = makeMediaStream({ audio: 1 });
+          var mediaStream2 = makeMediaStream({ video: 1 });
+          var mediaStream3 = makeMediaStream({ video: 1 });
           test.peerConnectionManager.setMediaStreamTracks(
-            getTracks([mediaStream2, mediaStream1]));
-          assert.equal(test.peerConnectionV2s[0].addMediaStream.callCount, 1);
-        });
-      });
-    });
+            getTracks([mediaStream1, mediaStream2]));
+          return test.peerConnectionManager.createAndOffer().then(() => {
+            return test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
+          }).then(() => {
+            test.peerConnectionManager.setMediaStreamTracks(
+              getTracks([mediaStream2, mediaStream3]));
 
-    it('calls addMediaStream with the ._localMediaStream containing the remaining MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-      var test = makeTest();
-      var mediaStream1 = makeMediaStream({ audio: 1 });
-      var mediaStream2 = makeMediaStream({ video: 1 });
-      var mediaStream3 = makeMediaStream({ video: 1 });
-      test.peerConnectionManager.setMediaStreamTracks(
-        getTracks([mediaStream1, mediaStream2]));
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionManager.setMediaStreamTracks(
-          getTracks([mediaStream2, mediaStream3]));
+            const addedMediaStreams = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.addMediaStream.args[1][0]);
+            const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
 
-        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-          test.peerConnectionV2s[0].addMediaStream.args[1][0].getTracks());
+            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+              addedMediaStreams[0].getTracks().filter(track => dummyAudioTrack !== track));
 
-        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-          test.peerConnectionV2s[1].addMediaStream.args[1][0].getTracks());
-      });
-    });
-
-    it('calls addMediaStream with the ._localMediaStream containing the new MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-      var test = makeTest();
-      var mediaStream1 = makeMediaStream({ video: 1 });
-      var mediaStream2 = makeMediaStream({ audio: 1 });
-      var mediaStream3 = makeMediaStream({ audio: 1 });
-      test.peerConnectionManager.setMediaStreamTracks(
-        getTracks([mediaStream1, mediaStream2]));
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionManager.setMediaStreamTracks(
-          getTracks([mediaStream2, mediaStream3]));
-
-        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-          test.peerConnectionV2s[0].addMediaStream.args[1][0].getTracks());
-
-        assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-          test.peerConnectionV2s[1].addMediaStream.args[1][0].getTracks());
-      });
-    });
-
-    context('when the MediaStreamTracks changed', () => {
-      it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-        var test = makeTest();
-
-        var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
-        var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
-        var audioTrack3 = makeMediaStreamTrack({ kind: 'audio' });
-
-        var mediaStream1 = makeMediaStream({
-          audio: [audioTrack1]
+            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+              addedMediaStreams[1].getTracks().filter(track => dummyAudioTrack !== track));
+          });
         });
 
-        var mediaStream2 = makeMediaStream({
-          audio: [audioTrack1, audioTrack2]
-        });
-
-        var mediaStream3 = makeMediaStream({
-          audio: [audioTrack2, audioTrack3]
-        });
-
-        test.peerConnectionManager.setMediaStreamTracks(
-          getTracks([mediaStream1, mediaStream2]));
-
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-          test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
-
+        it('calls addMediaStream with the ._localMediaStream containing the new MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+          var test = makeTest({ isAudioContextSupported });
+          var mediaStream1 = makeMediaStream({ video: 1 });
+          var mediaStream2 = makeMediaStream({ audio: 1 });
+          var mediaStream3 = makeMediaStream({ audio: 1 });
           test.peerConnectionManager.setMediaStreamTracks(
-            getTracks([mediaStream2, mediaStream3]));
+            getTracks([mediaStream1, mediaStream2]));
+          return test.peerConnectionManager.createAndOffer().then(() => {
+            return test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
+          }).then(() => {
+            test.peerConnectionManager.setMediaStreamTracks(
+              getTracks([mediaStream2, mediaStream3]));
 
-          assert(test.peerConnectionV2s[0].offer.calledOnce);
-          assert(test.peerConnectionV2s[1].offer.calledOnce);
-        });
-      });
-    });
+            const addedMediaStreams = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.addMediaStream.args[1][0]);
+            const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
 
-    context('when the MediaStreamTracks did not change', () => {
-      it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-        var test = makeTest();
+            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+              addedMediaStreams[0].getTracks().filter(track => dummyAudioTrack !== track));
 
-        var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
-        var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
-
-        var mediaStream1 = makeMediaStream({
-          audio: [audioTrack1]
-        });
-
-        var mediaStream2 = makeMediaStream({
-          audio: [audioTrack1, audioTrack2]
+            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
+              addedMediaStreams[1].getTracks().filter(track => dummyAudioTrack !== track));
+          });
         });
 
-        var mediaStream3 = makeMediaStream({
-          audio: [audioTrack1]
+        context('when the MediaStreamTracks changed', () => {
+          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+            var test = makeTest({ isAudioContextSupported });
+
+            var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
+            var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
+            var audioTrack3 = makeMediaStreamTrack({ kind: 'audio' });
+
+            var mediaStream1 = makeMediaStream({
+              audio: [audioTrack1]
+            });
+
+            var mediaStream2 = makeMediaStream({
+              audio: [audioTrack1, audioTrack2]
+            });
+
+            var mediaStream3 = makeMediaStream({
+              audio: [audioTrack2, audioTrack3]
+            });
+
+            test.peerConnectionManager.setMediaStreamTracks(
+              getTracks([mediaStream1, mediaStream2]));
+
+            return test.peerConnectionManager.createAndOffer().then(() => {
+              return test.peerConnectionManager.update([
+                { id: '123' }
+              ]);
+            }).then(() => {
+              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+
+              test.peerConnectionManager.setMediaStreamTracks(
+                getTracks([mediaStream2, mediaStream3]));
+
+              assert(test.peerConnectionV2s[0].offer.calledOnce);
+              assert(test.peerConnectionV2s[1].offer.calledOnce);
+            });
+          });
         });
 
-        test.peerConnectionManager.setMediaStreamTracks(
-          getTracks([mediaStream1, mediaStream2]));
+        context('when the MediaStreamTracks did not change', () => {
+          it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+            var test = makeTest({ isAudioContextSupported });
 
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          return test.peerConnectionManager.update([
-            { id: '123' }
-          ]);
-        }).then(() => {
-          test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-          test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            var audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
+            var audioTrack2 = makeMediaStreamTrack({ kind: 'audio' });
 
-          test.peerConnectionManager.setMediaStreamTracks(
-            getTracks([mediaStream2, mediaStream3]));
+            var mediaStream1 = makeMediaStream({
+              audio: [audioTrack1]
+            });
 
-          assert(!test.peerConnectionV2s[0].offer.calledOnce);
-          assert(!test.peerConnectionV2s[1].offer.calledOnce);
+            var mediaStream2 = makeMediaStream({
+              audio: [audioTrack1, audioTrack2]
+            });
+
+            var mediaStream3 = makeMediaStream({
+              audio: [audioTrack1]
+            });
+
+            test.peerConnectionManager.setMediaStreamTracks(
+              getTracks([mediaStream1, mediaStream2]));
+
+            return test.peerConnectionManager.createAndOffer().then(() => {
+              return test.peerConnectionManager.update([
+                { id: '123' }
+              ]);
+            }).then(() => {
+              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+
+              test.peerConnectionManager.setMediaStreamTracks(
+                getTracks([mediaStream2, mediaStream3]));
+
+              assert(!test.peerConnectionV2s[0].offer.calledOnce);
+              assert(!test.peerConnectionV2s[1].offer.calledOnce);
+            });
+          });
         });
       });
     });
@@ -358,15 +378,21 @@ describe('PeerConnectionManager', () => {
         });
       });
 
-      it('calls addMediaStream with the ._localMediaStream containing any previously-added MediaStreamTracks on the new PeerConnectionV2', () => {
-        var test = makeTest();
-        var mediaStream = makeMediaStream();
-        test.peerConnectionManager.setMediaStreamTracks(mediaStream.getTracks());
-        return test.peerConnectionManager.update([
-          { id: '123', fizz: 'buzz' }
-        ]).then(() => {
-          assert.deepEqual(mediaStream.getTracks(),
-            test.peerConnectionV2s[0].addMediaStream.args[0][0].getTracks());
+      [ true, false ].forEach(isAudioContextSupported => {
+        context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
+          it(`calls addMediaStream with the ._localMediaStream containing any previously-added MediaStreamTracks ${isAudioContextSupported ? ' and the dummy audio MediaStreamTrack' : ''} on the new PeerConnectionV2`, () => {
+            var test = makeTest({ isAudioContextSupported });
+            var mediaStream = makeMediaStream();
+            test.peerConnectionManager.setMediaStreamTracks(mediaStream.getTracks());
+            return test.peerConnectionManager.update([
+              { id: '123', fizz: 'buzz' }
+            ]).then(() => {
+              const addedMediaStream = test.peerConnectionV2s[0].addMediaStream.args[0][0];
+              const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
+              assert.deepEqual(mediaStream.getTracks(),
+                addedMediaStream.getTracks().filter(track => dummyAudioTrack !== track));
+            });
+          });
         });
       });
 
@@ -519,6 +545,8 @@ describe('PeerConnectionManager', () => {
 function makeTest(options) {
   options = options || {};
   options.iceServers = options.iceServers || [];
+  options.isAudioContextSupported = options.isAudioContextSupported || false;
+  options.audioContext = options.audioContext || makeAudioContext(options);
   options.MediaStream = options.MediaStream || FakeMediaStream;
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
@@ -529,6 +557,17 @@ function makeTest(options) {
   options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options.iceServerSource, options);
   options.peerConnectionManager.setConfiguration({ iceServers: [] });
   return options;
+}
+
+function makeAudioContext(testOptions) {
+  function AudioContext() {
+    this.close = sinon.spy(() => {});
+    this.createMediaStreamDestination = sinon.spy(() => {
+      const getAudioTracks = sinon.spy(() => [ new FakeMediaStreamTrack('audio') ]);
+      return { stream: { getAudioTracks } };
+    });
+  }
+  return testOptions.isAudioContextSupported ? new AudioContext() : null;
 }
 
 function makePeerConnectionV2Constructor(testOptions) {
