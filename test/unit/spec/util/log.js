@@ -165,6 +165,25 @@ describe('Log', function() {
     });
   });
 
+  describe('#deprecated(deprecationWarning)', function() {
+    context('the first time the deprecationWarning is passed', function() {
+      it('should call #log(Log.WARN, message)', function() {
+        var log = Log('foo', component('bar'), { foo: 'warn' });
+        log.deprecated('baz');
+        sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
+      });
+    });
+
+    context('subsequent times the deprecationWarning is passed', function() {
+      it('should call #log(Log.WARN, message)', function() {
+        var log = Log('foo', component('bar'), { foo: 'warn' });
+        log.deprecated('baz');
+        log.deprecated('baz');
+        sinon.assert.calledOnce(log.log);
+      });
+    });
+  });
+
   describe('#info(messages)', function() {
     it('should call #log(Log.INFO, message)', function() {
       var log = Log('foo', component('bar'), { foo: 'info' });
