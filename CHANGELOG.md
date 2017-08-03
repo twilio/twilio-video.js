@@ -21,6 +21,14 @@ Bug Fixes
   playback, even if the &lt;audio&gt; or &lt;video&gt; elements it was
   `attach`ed to were removed from the DOM
   ([#140](https://github.com/twilio/twilio-video.js/issues/140)).
+- Previously, connecting to a Room with a mixture of Chrome- and Firefox-based
+  Participants could result in receiving black frames from any Firefox
+  Participants who were not sharing audio. This issue arose due to a difference
+  in bundle behavior between Chrome and Firefox
+  ([Issue 6280](https://bugs.chromium.org/p/webrtc/issues/detail?id=6280)). We
+  now workaround this issue by adding a "dummy" audio MediaStreamTrack to the
+  underlying RTCPeerConnections in Firefox. This ensures the first media section
+  remains bundled. (JSDK-1443)
 
 1.2.0 (July 21, 2017)
 =====================
