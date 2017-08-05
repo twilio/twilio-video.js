@@ -20,7 +20,9 @@ const isSafari = guess === 'safari';
   (navigator.userAgent === 'Node'
     ? describe.skip
     : describe
-  )(description, () => {
+  )(description, function() {
+    this.timeout(10000);
+
     let localTrack = null;
 
     beforeEach(() => {
