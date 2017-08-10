@@ -57,12 +57,29 @@ on the WebRTC bug tracker.
 The suggested workaround is to always share audio from Firefox-based
 Participants when connecting to a peer-to-peer Room. If you do not intend to
 playback the audio, you can `disable` the Track before connecting. For example,
+using the microphone:
 
 ```js
 const audioTrack = await Twilio.Video.createLocalAudioTrack();
-
 audioTrack.disable();
+```
 
+Or, if you do not want to request microphone access, create a "dummy" Track
+using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API):
+
+```js
+const audioContext = typeof AudioContext !== 'undefined'
+  ? new AudioContext()
+  : new webkitAudioContext()
+const node = audioContext.createMediaStreamDestination()
+const stream = node.stream
+const dummyTrack = stream.getAudioTracks()[0]
+const audioTrack = new Twilio.Video.LocalAudioTrack(dummyTrack);
+```
+
+Then, pass the `audioTrack` to `connect`:
+
+```js
 const room = await Twilio.Video.connect(token, { tracks: [audioTrack] });
 ```
 
