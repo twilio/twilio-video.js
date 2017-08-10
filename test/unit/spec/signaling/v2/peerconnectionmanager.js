@@ -1,13 +1,14 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-var inherits = require('util').inherits;
-var MockIceServerSource = require('../../../../lib/mockiceserversource');
-var PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
-var sinon = require('sinon');
-var util = require('../../../../../lib/util');
+const assert = require('assert');
+const EventEmitter = require('events').EventEmitter;
+const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const inherits = require('util').inherits;
+const MockIceServerSource = require('../../../../lib/mockiceserversource');
+const { AudioContextFactory } = require('../../../../../lib/webaudio/audiocontext');
+const PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
+const sinon = require('sinon');
+const util = require('../../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
   describe('#close', () => {
@@ -53,6 +54,14 @@ describe('PeerConnectionManager', () => {
         const promise = new Promise(resolve => dummyTrack.addEventListener('ended', resolve));
         test.peerConnectionManager.close();
         await promise;
+      });
+
+      it('should call .release on its AudioContextFactory', () => {
+        const test = makeTest({ isAudioContextSupported: true });
+        test.audioContextFactory.release = sinon.spy(test.audioContextFactory.release);
+        test.peerConnectionManager.close();
+        sinon.assert.calledOnce(test.audioContextFactory.release);
+        sinon.assert.calledWith(test.audioContextFactory.release, test.peerConnectionManager);
       });
     });
   });
@@ -546,7 +555,7 @@ function makeTest(options) {
   options = options || {};
   options.iceServers = options.iceServers || [];
   options.isAudioContextSupported = options.isAudioContextSupported || false;
-  options.audioContext = options.audioContext || makeAudioContext(options);
+  options.audioContextFactory = options.audioContextFactory || makeAudioContextFactory(options);
   options.MediaStream = options.MediaStream || FakeMediaStream;
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
@@ -559,7 +568,7 @@ function makeTest(options) {
   return options;
 }
 
-function makeAudioContext(testOptions) {
+function makeAudioContextFactory(testOptions) {
   function AudioContext() {
     this.close = sinon.spy(() => {});
     this.createMediaStreamDestination = sinon.spy(() => {
@@ -567,7 +576,8 @@ function makeAudioContext(testOptions) {
       return { stream: { getAudioTracks } };
     });
   }
-  return testOptions.isAudioContextSupported ? new AudioContext() : null;
+  const audioContextFactory = new AudioContextFactory({ AudioContext });
+  return testOptions.isAudioContextSupported ? audioContextFactory : null;
 }
 
 function makePeerConnectionV2Constructor(testOptions) {
