@@ -9,6 +9,11 @@ Peer-to-Peer (P2P) Rooms containing Android- or iOS-based Participants who do
 not support H.264. However, P2P Rooms with browser-based Participants should
 work.
 
+We are also experimenting with the ability to specify the set of codecs a Group
+Room supports. This would allow you to create an H264-only Group Room, for
+example. Please email [video-product@twilio.com](mailto:video-product@twilio.com)
+if you would like to try this out.
+
 twilio-video.js will log these same caveats as a warning if you call `connect`
 in Safari 11. You can disable this warning by setting the `logLevel` to "warn".
 
