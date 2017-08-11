@@ -3,6 +3,7 @@
 function makeFakeLog() {
   var fakeLog = {
     debug: () => {},
+    deprecated: () => {},
     info: () => {},
     warn: () => {},
     error: () => {}
