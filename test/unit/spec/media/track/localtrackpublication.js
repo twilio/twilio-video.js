@@ -1,20 +1,22 @@
 'use strict';
 
-var assert = require('assert');
-var LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
-var LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
-var sinon = require('sinon');
+const assert = require('assert');
+const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
+const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
+const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const sinon = require('sinon');
 
 [
   ['LocalAudioTrackPublication', LocalAudioTrackPublication],
   ['LocalVideoTrackPublication', LocalVideoTrackPublication]
 ].forEach(pair => {
-  var description = pair[0];
-  var LocalTrackPublication = pair[1];
-  var kind = {
+  const description = pair[0];
+  const LocalTrackPublication = pair[1];
+  const kind = {
     LocalAudioTrackPublication: 'audio',
     LocalVideoTrackPublication: 'video'
-  };
+  }[description];
+  const track = new FakeMediaStreamTrack(kind);
 
   describe(description, function() {
     describe('constructor', () => {
@@ -22,11 +24,11 @@ var sinon = require('sinon');
         [
           [
             'when called without the "new" keyword',
-            () => LocalTrackPublication('foo', 'bar', () => {})
+            () => LocalTrackPublication('foo', track, () => {})
           ],
           [
             'when called with the "new" keyword',
-            () => new LocalTrackPublication('bar', 'baz', () => {})
+            () => new LocalTrackPublication('bar', track, () => {})
           ]
         ].forEach(([ scenario, createLocalTrackPublication ]) => {
           context(scenario, () => {
@@ -41,18 +43,18 @@ var sinon = require('sinon');
         });
       });
 
-      it('should populate the .id property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', 'bar', () => {});
-        assert.equal(localTrackPublication.id, 'bar');
+      it('should populate the .track property', () => {
+        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
+        assert.equal(localTrackPublication.track, track);
       });
 
       it('should populate the .kind property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', 'bar', () => {});
-        assert.equal(localTrackPublication.kind, kind[description]);
+        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
+        assert.equal(localTrackPublication.kind, kind);
       });
 
       it('should populate the .sid property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', 'bar', () => {});
+        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
         assert.equal(localTrackPublication.sid, 'foo');
       });
     });
@@ -64,7 +66,7 @@ var sinon = require('sinon');
 
       before(() => {
         unpublish = sinon.spy();
-        localTrackPublication = new LocalTrackPublication('foo', 'bar', unpublish);
+        localTrackPublication = new LocalTrackPublication('foo', track, unpublish);
         ret = localTrackPublication.unpublish();
       });
 
