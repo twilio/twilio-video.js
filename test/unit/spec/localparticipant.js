@@ -154,6 +154,7 @@ describe('LocalParticipant', () => {
 
   [
     'addTracks',
+    'publishTracks',
     'removeTracks',
     'unpublishTracks',
   ].forEach(method => {
@@ -164,6 +165,11 @@ describe('LocalParticipant', () => {
       beforeEach(() => {
         test = makeTest();
         test.participant[trackMethod] = sinon.spy(track => {
+          if (trackMethod.startsWith('publish')) {
+            // TODO(mroberts): Here is a very bare-bones "mock"
+            // LocalTrackPublication. We should improve this later.
+            return { id: track.id };
+          }
           return track.kind === 'audio' ? null : { foo: 'bar', stop: sinon.spy() };
         });
       });
@@ -205,16 +211,29 @@ describe('LocalParticipant', () => {
               sinon.assert.calledWith(test.participant[trackMethod], localVideoTrack);
             });
 
-            it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
-              var localAudioTrack = new LocalAudioTrack();
-              var localVideoTrack = new LocalVideoTrack();
-              var ret = test.participant[method]([ localAudioTrack, localVideoTrack ]);
+            if (method === 'publishTracks') {
+              it(`should return a Promise for an array of LocalTrackPublications`, async () => {
+                var localAudioTrack = new LocalAudioTrack();
+                var localVideoTrack = new LocalVideoTrack();
+                var ret = await test.participant[method]([ localAudioTrack, localVideoTrack ]);
 
-              assert(Array.isArray(ret));
-              assert.equal(ret.length, 1);
-              delete(ret[0].stop);
-              assert.deepEqual(ret[0], { foo: 'bar' });
-            });
+                assert(Array.isArray(ret));
+                assert.equal(ret.length, 2);
+                assert.equal(ret[0].id, localAudioTrack.id);
+                assert.equal(ret[1].id, localVideoTrack.id);
+              });
+            } else {
+              it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
+                var localAudioTrack = new LocalAudioTrack();
+                var localVideoTrack = new LocalVideoTrack();
+                var ret = test.participant[method]([ localAudioTrack, localVideoTrack ]);
+
+                assert(Array.isArray(ret));
+                assert.equal(ret.length, 1);
+                delete(ret[0].stop);
+                assert.deepEqual(ret[0], { foo: 'bar' });
+              });
+            }
           });
         });
       });
