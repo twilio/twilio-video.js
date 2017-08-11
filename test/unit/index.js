@@ -32,7 +32,7 @@ require('./spec/iceserversource/nts');
 
 require('./spec/media/track');
 require('./spec/media/track/localtrack');
-require('./spec/media/track/publishedtrack');
+require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/remotetrack');
 
 require('./spec/signaling/v2');
@@ -43,7 +43,7 @@ require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
-require('./spec/signaling/v2/publishedtrack');
+require('./spec/signaling/v2/localtrackpublication');
 require('./spec/signaling/v2/remotetrack');
 require('./spec/signaling/v2/transport');
 
