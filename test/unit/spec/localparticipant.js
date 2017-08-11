@@ -168,7 +168,7 @@ describe('LocalParticipant', () => {
           if (trackMethod.startsWith('publish')) {
             // TODO(mroberts): Here is a very bare-bones "mock"
             // LocalTrackPublication. We should improve this later.
-            return { id: track.id };
+            return { track, sid: track.id };
           }
           return track.kind === 'audio' ? null : { foo: 'bar', stop: sinon.spy() };
         });
@@ -219,8 +219,8 @@ describe('LocalParticipant', () => {
 
                 assert(Array.isArray(ret));
                 assert.equal(ret.length, 2);
-                assert.equal(ret[0].id, localAudioTrack.id);
-                assert.equal(ret[1].id, localVideoTrack.id);
+                assert.equal(ret[0].track, localAudioTrack);
+                assert.equal(ret[1].track, localVideoTrack);
               });
             } else {
               it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
@@ -316,13 +316,13 @@ describe('LocalParticipant', () => {
 
     beforeEach(() => {
       options = {
-        LocalAudioTrackPublication: function(sid, id) {
+        LocalAudioTrackPublication: function(sid, track) {
           this.sid = sid;
-          this.id = id;
+          this.track = track;
         },
-        LocalVideoTrackPublication: function(sid, id) {
+        LocalVideoTrackPublication: function(sid, track) {
           this.sid = sid;
-          this.id = id;
+          this.track = track;
         }
       };
       test = makeTest(options);
@@ -362,12 +362,12 @@ describe('LocalParticipant', () => {
         'video'
       ].forEach(kind => {
         context(`when called with ${a(kind)} ${kind} ${trackType}`, () => {
-          context(`when the .trackPublications collection already has an entry for the ${trackType}'s .id`, () => {
+          context(`when the .trackPublications collection already has an entry for the ${trackType}`, () => {
             it('should return a Promise that is resolved with the entry from the .trackPublications', async () => {
               var localTrack = createTrack(kind);
-              test.participant.trackPublications.set(localTrack.id, { foo: 'bar' });
+              test.participant.trackPublications.set('foo', { track: localTrack, sid: 'foo' });
               var localTrackPublication = await test.participant.publishTrack(localTrack);
-              assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrack.id));
+              assert.equal(localTrackPublication, test.participant.trackPublications.get('foo'));
             });
           });
 
@@ -398,12 +398,12 @@ describe('LocalParticipant', () => {
                   var LocalTrackPublication = options[`Local${capitalize(kind)}TrackPublication`];
                   assert(localTrackPublication instanceof LocalTrackPublication);
                   assert.equal(localTrackPublication.sid, 'foo');
-                  assert.equal(localTrackPublication.id, localTrack.id);
+                  assert.equal(localTrackPublication.track.id, localTrack.id);
                 });
 
                 it(`should add the ${capitalize(kind)}TrackPublication to the .trackPublications and .${kind}TrackPublications collections`, () => {
-                  assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrack.id));
-                  assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrack.id));
+                  assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrackPublication.sid));
+                  assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrackPublication.sid));
                 });
 
                 it(`should not add the ${capitalize(kind)}TrackPublication to the .${otherKind}TrackPublications collections`, () => {
@@ -421,7 +421,9 @@ describe('LocalParticipant', () => {
                     await test.participant.publishTrack(localTrack2);
                   } catch(_error) {
                     error = _error;
+                    return;
                   }
+                  throw new Error('Unexpectedly resolved');
                 });
 
                 it('should reject the returned Promise with the given error', () => {
@@ -481,7 +483,7 @@ describe('LocalParticipant', () => {
       ].forEach(kind => {
         var localTrack;
 
-        context(`when the .trackPublications collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
+        context(`when the .trackPublications collection has an entry for the given ${kind} ${trackType}`, () => {
           context(`and the .tracks collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
             var ret;
             var track;
@@ -496,8 +498,8 @@ describe('LocalParticipant', () => {
               test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
               test.participant.tracks.set(localTrack.id, track);
               test.participant[`${kind}Tracks`].set(localTrack.id, track);
-              test.participant.trackPublications.set(localTrack.id, { id: localTrack.id, sid: 'foo' });
-              test.participant[`${kind}TrackPublications`].set(localTrack.id, { id: localTrack.id, sid: 'foo' });
+              test.participant.trackPublications.set('foo', { track, sid: 'foo' });
+              test.participant[`${kind}TrackPublications`].set('foo', { track, sid: 'foo' });
               ret = test.participant.unpublishTrack(localTrack);
             });
 
@@ -516,7 +518,8 @@ describe('LocalParticipant', () => {
             });
 
             it(`should return the LocalTrackPublication corresponding to the unpublished ${kind} ${trackType}`, () => {
-              assert.deepEqual(ret, { id: localTrack.id, sid: 'foo' });
+              assert.equal(ret.sid, 'foo');
+              assert.equal(ret.track.id, localTrack.id);
             });
           });
         });
