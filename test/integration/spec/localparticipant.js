@@ -10,7 +10,7 @@ const env = require('../../env');
 const { flatMap, guessBrowser } = require('../../../lib/util');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const Track = require('../../../lib/media/track');
-const PublishedTrack = require('../../../lib/media/track/publishedtrack');
+const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 
@@ -52,7 +52,7 @@ const isSafari = guess === 'safari';
   this.timeout(60000);
 
   describe('#publishTrack', () => {
-    let publishedTracks = [];
+    let trackPublications = [];
     let room;
     let tracks;
 
@@ -70,7 +70,7 @@ const isSafari = guess === 'safari';
       [
         'when two LocalTracks (audio and video) are published sequentially',
         async () => {
-          publishedTracks = [
+          trackPublications = [
             await room.localParticipant.publishTrack(tracks[0]),
             await room.localParticipant.publishTrack(tracks[1])
           ];
@@ -79,7 +79,7 @@ const isSafari = guess === 'safari';
       [
         'when two LocalTracks (audio and video) are published together',
         async () => {
-          publishedTracks = await Promise.all(tracks.map(track => {
+          trackPublications = await Promise.all(tracks.map(track => {
             return room.localParticipant.publishTrack(track);
           }));
         }
@@ -91,13 +91,13 @@ const isSafari = guess === 'safari';
           await publish();
         });
 
-        it('should return PublishedTracks for both LocalTracks', () => {
-          publishedTracks.forEach((publishedTrack, i) => {
+        it('should return LocalTrackPublications for both LocalTracks', () => {
+          trackPublications.forEach((localTrackPublication, i) => {
             const track = tracks[i];
-            assert(publishedTrack instanceof PublishedTrack);
-            assert.equal(publishedTrack.id, track.id);
-            assert.equal(publishedTrack.kind, track.kind);
-            assert(publishedTrack.sid.match(/^MT[a-f0-9]{32}$/));
+            assert(localTrackPublication instanceof LocalTrackPublication);
+            assert.equal(localTrackPublication.id, track.id);
+            assert.equal(localTrackPublication.kind, track.kind);
+            assert(localTrackPublication.sid.match(/^MT[a-f0-9]{32}$/));
           });
         });
 
@@ -108,15 +108,15 @@ const isSafari = guess === 'safari';
           });
         });
 
-        it('should add both the PublishedTracks to the LocalParticipant\'s .publishedTracks and their respective kinds\' .published(Audio/Video)Tracks collections', () => {
-          publishedTracks.forEach(track => {
-            assert.equal(room.localParticipant.publishedTracks.get(track.id), track);
-            assert.equal(room.localParticipant[`published${capitalize(track.kind)}Tracks`].get(track.id), track);
+        it('should add both the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' .(audio/video)TrackPublications collections', () => {
+          trackPublications.forEach(track => {
+            assert.equal(room.localParticipant.trackPublications.get(track.id), track);
+            assert.equal(room.localParticipant[`${track.kind}TrackPublications`].get(track.id), track);
           });
         });
 
         after(() => {
-          publishedTracks = [];
+          trackPublications = [];
           room.disconnect();
           tracks = [];
         });
@@ -136,7 +136,7 @@ const isSafari = guess === 'safari';
           setup()
         ]);
 
-        publishedTracks = await Promise.all([
+        trackPublications = await Promise.all([
           room.localParticipant.publishTrack(tracks[0]),
           anotherRoom.localParticipant.publishTrack(tracks[0])
         ]);
@@ -147,23 +147,23 @@ const isSafari = guess === 'safari';
         assert.equal(anotherRoom.localParticipant.tracks.get(tracks[0].id), tracks[0]);
       });
 
-      it('should create two different PublishedTracks', () => {
-        assert(publishedTracks[0] instanceof PublishedTrack);
-        assert(publishedTracks[1] instanceof PublishedTrack);
-        assert.notEqual(publishedTracks[0], publishedTracks[1]);
+      it('should create two different LocalTrackPublications', () => {
+        assert(trackPublications[0] instanceof LocalTrackPublication);
+        assert(trackPublications[1] instanceof LocalTrackPublication);
+        assert.notEqual(trackPublications[0], trackPublications[1]);
       });
 
-      it('should add each PublishedTrack to its corresponding Room\'s LocalParticipant .publishedTracks', () => {
-        assert.equal(room.localParticipant.publishedTracks.get(tracks[0].id), publishedTracks[0]);
-        assert.equal(anotherRoom.localParticipant.publishedTracks.get(tracks[0].id), publishedTracks[1]);
+      it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .trackPublications', () => {
+        assert.equal(room.localParticipant.trackPublications.get(tracks[0].id), trackPublications[0]);
+        assert.equal(anotherRoom.localParticipant.trackPublications.get(tracks[0].id), trackPublications[1]);
       });
 
-      it('should assign different SIDs to the two PublishedTracks', () => {
-        assert.notEqual(publishedTracks[0].sid, publishedTracks[1].sid);
+      it('should assign different SIDs to the two LocalTrackPublications', () => {
+        assert.notEqual(trackPublications[0].sid, trackPublications[1].sid);
       });
 
       after(() => {
-        publishedTracks = [];
+        trackPublications = [];
         room.disconnect();
         anotherRoom.disconnect();
         tracks = [];
@@ -185,7 +185,7 @@ const isSafari = guess === 'safari';
       });
 
       after(() => {
-        publishedTracks = [];
+        trackPublications = [];
         tracks = [];
       });
     });
@@ -206,7 +206,7 @@ const isSafari = guess === 'safari';
     ], ([isEnabled, kind, when]) => {
       let thisRoom;
       let thisParticipant;
-      let thisPublishedTrack;
+      let thisLocalTrackPublication;
       let thisTrack;
       let thoseRooms;
       let thoseParticipants;
@@ -264,7 +264,7 @@ const isSafari = guess === 'safari';
           }));
         }
 
-        [thisPublishedTrack, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
+        [thisLocalTrackPublication, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
             return Promise.all(thoseParticipants.map(thatParticipant => {
@@ -291,14 +291,14 @@ const isSafari = guess === 'safari';
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the PublishedTrack\'s .sid', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .sid', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisPublishedTrack.sid));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
           });
 
-          it('should set each RemoteTrack\'s .id to the PublishedTrack\'s .id', () => {
+          it('should set each RemoteTrack\'s .id to the LocalTrackPublication\'s .id', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisPublishedTrack.id));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisLocalTrackPublication.id));
           });
 
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
@@ -347,7 +347,7 @@ const isSafari = guess === 'safari';
     ], ([isEnabled, kind, when]) => {
       let thisRoom;
       let thisParticipant;
-      let thisPublishedTrack;
+      let thisLocalTrackPublication;
       let thisTrack;
       let thoseRooms;
       let thoseParticipants;
@@ -404,7 +404,7 @@ const isSafari = guess === 'safari';
           ]);
         }
 
-        thisPublishedTrack = thisParticipant.unpublishTrack(thisTrack);
+        thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
 
         thoseUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(track => {
           return new Promise(resolve => track.once('unsubscribed', resolve));
@@ -438,14 +438,14 @@ const isSafari = guess === 'safari';
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the PublishedTrack\'s .sid', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .sid', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisPublishedTrack.sid));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
           });
 
-          it('should set each RemoteTrack\'s .id to the PublishedTrack\'s .id', () => {
+          it('should set each RemoteTrack\'s .id to the LocalTrackPublication\'s .id', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisPublishedTrack.id));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisLocalTrackPublication.id));
           });
 
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
@@ -474,8 +474,8 @@ const isSafari = guess === 'safari';
   describe('#unpublishTrack and #publishTrack called with two different LocalVideoTracks in quick succession', () => {
     let thisRoom;
     let thisParticipant;
-    let thisPublishedTrack1;
-    let thisPublishedTrack2;
+    let thisLocalTrackPublication1;
+    let thisLocalTrackPublication2;
     let thisTrack1;
     let thisTrack2;
     let thatRoom;
@@ -516,10 +516,10 @@ const isSafari = guess === 'safari';
       const trackAddedPromise = new Promise(resolve => thatParticipant.once('trackAdded', resolve));
       const trackSubscribedPromise = new Promise(resolve => thatParticipant.once('trackSubscribed', resolve));
 
-      thisPublishedTrack1 = thisParticipant.unpublishTrack(thisTrack1);
+      thisLocalTrackPublication1 = thisParticipant.unpublishTrack(thisTrack1);
       [thisTrack2] = await createLocalTracks(constraints);
 
-      [thatTrackUnsubscribed, thatTrackRemoved, thatTrackAdded, thatTrackSubscribed, thisPublishedTrack2] = await Promise.all([
+      [thatTrackUnsubscribed, thatTrackRemoved, thatTrackAdded, thatTrackSubscribed, thisLocalTrackPublication2] = await Promise.all([
         trackUnsubscribedPromise,
         trackRemovedPromise,
         trackAddedPromise,
@@ -560,10 +560,10 @@ const isSafari = guess === 'safari';
     [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksPublished[event];
-        assert.equal(thatTrack.sid, thisPublishedTrack2.sid)
-        assert.equal(thatTrack.id, thisPublishedTrack2.id);
-        assert.equal(thatTrack.kind, thisPublishedTrack2.kind);
-        assert.equal(thatTrack.enabled, thisPublishedTrack2.enabled);
+        assert.equal(thatTrack.sid, thisLocalTrackPublication2.sid)
+        assert.equal(thatTrack.id, thisLocalTrackPublication2.id);
+        assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
+        assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
         assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
       });
     });
@@ -581,8 +581,8 @@ const isSafari = guess === 'safari';
     let thisRoom;
     let thisParticipant;
     let thisAudioTrack;
-    let thisPublishedAudioTrack;
-    let thisPublishedVideoTrack;
+    let thisLocalAudioTrackPublication;
+    let thisLocalVideoTrackPublication;
     let thisVideoTrack;
     let thatRoom;
     let thatParticipant;
@@ -613,7 +613,7 @@ const isSafari = guess === 'safari';
 
       let thoseTracksAdded;
       let thoseTracksSubscribed;
-      [ thisPublishedAudioTrack, thisPublishedVideoTrack, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
+      [ thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
         thisParticipant.publishTrack(thisAudioTrack),
         thisParticipant.publishTrack(thisVideoTrack),
         waitForTracks('trackAdded', thatParticipant, 2),
@@ -642,17 +642,17 @@ const isSafari = guess === 'safari';
     [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
       it(`should eventually raise a "${event}" event for each published LocalTracks`, () => {
         const thatAudioTrack = thoseAudioTracks[event];
-        assert.equal(thatAudioTrack.sid, thisPublishedAudioTrack.sid);
-        assert.equal(thatAudioTrack.id, thisPublishedAudioTrack.id);
-        assert.equal(thatAudioTrack.kind, thisPublishedAudioTrack.kind);
-        assert.equal(thatAudioTrack.enabled, thisPublishedAudioTrack.enabled);
+        assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.sid);
+        assert.equal(thatAudioTrack.id, thisLocalAudioTrackPublication.id);
+        assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
+        assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
         assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
 
         const thatVideoTrack = thoseVideoTracks[event];
-        assert.equal(thatVideoTrack.sid, thisPublishedVideoTrack.sid);
-        assert.equal(thatVideoTrack.id, thisPublishedVideoTrack.id);
-        assert.equal(thatVideoTrack.kind, thisPublishedVideoTrack.kind);
-        assert.equal(thatVideoTrack.enabled, thisPublishedVideoTrack.enabled);
+        assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.sid);
+        assert.equal(thatVideoTrack.id, thisLocalVideoTrackPublication.id);
+        assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
+        assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
         assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
       });
     });

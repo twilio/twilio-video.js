@@ -193,23 +193,23 @@ describe('connect', function() {
         });
 
         [ 'tracks', 'audioTracks', 'videoTracks' ].forEach(tracks => {
-          var publishedTracks = `published${capitalize(tracks)}`;
+          var trackPublications = `${tracks.slice(0, tracks.length - 1)}Publications`;
 
-          it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .${publishedTracks} Map with the corresponding ${capitalize(publishedTracks)}`, () => {
+          it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .${trackPublications} Map with the corresponding ${capitalize(trackPublications)}`, () => {
             rooms.forEach(room => {
-              assert.equal(room.localParticipant[tracks].size, room.localParticipant[publishedTracks].size);
+              assert.equal(room.localParticipant[tracks].size, room.localParticipant[trackPublications].size);
               room.localParticipant[tracks].forEach(track => {
-                var publishedTrack = room.localParticipant[publishedTracks].get(track.id);
-                assert(publishedTrack);
-                assert.equal(publishedTrack.id, track.id);
-                assert.equal(publishedTrack.kind, track.kind);
+                var localTrackPublication = room.localParticipant[trackPublications].get(track.id);
+                assert(localTrackPublication);
+                assert.equal(localTrackPublication.id, track.id);
+                assert.equal(localTrackPublication.kind, track.kind);
               });
             });
           });
 
-          it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(publishedTracks)}' .sid to a unique Track SID`, () => {
+          it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(trackPublications)}' .sid to a unique Track SID`, () => {
             rooms.forEach(room => {
-              var tracks = room.localParticipant[publishedTracks];
+              var tracks = room.localParticipant[trackPublications];
               tracks.forEach(track => assert(track.sid.match(/^MT[a-f0-9]{32}$/)));
             });
           });
@@ -257,9 +257,9 @@ describe('connect', function() {
               const participant = participants.get(localParticipant.sid);
               assert(participant);
               const trackSids = [...participant.tracks.values()].map(track => track.sid).sort();
-              const publishedTrackSids = [...localParticipant.publishedTracks.values()].map(track => track.sid).sort();
-              assert.equal(trackSids.length, publishedTrackSids.length);
-              assert.deepEqual(trackSids, publishedTrackSids);
+              const localTrackPublicationSids = [...localParticipant.trackPublications.values()].map(track => track.sid).sort();
+              assert.equal(trackSids.length, localTrackPublicationSids.length);
+              assert.deepEqual(trackSids, localTrackPublicationSids);
             });
           });
         });
