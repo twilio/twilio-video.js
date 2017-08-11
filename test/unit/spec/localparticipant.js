@@ -154,7 +154,8 @@ describe('LocalParticipant', () => {
 
   [
     'addTracks',
-    'removeTracks'
+    'removeTracks',
+    'unpublishTracks',
   ].forEach(method => {
     describe(`#${method}`, () => {
       var test;
