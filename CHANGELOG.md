@@ -1,5 +1,5 @@
-1.2.1 (in progress)
-===================
+1.2.1 (August 14, 2017)
+=======================
 
 In addition to the following bug fixes, this release introduces experimental
 support for Safari 11 and newer. Support for Safari is "experimental" because,
