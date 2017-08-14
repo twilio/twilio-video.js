@@ -1,11 +1,11 @@
-1.2.2 (In progress)
+1.2.2 (in progress)
 ===================
 
 Bug Fixes
 ---------
 
 - In Chrome, `Room#getStats()` did not provide valid values for those Participants
-  with more than one Tracks of the same kind (audio or video). (JSDK-1329)
+  with more than one Track of the same kind (audio or video). (JSDK-1329)
 
 1.2.1 (August 14, 2017)
 =======================
