@@ -465,14 +465,20 @@ describe('PeerConnectionV2', () => {
             break;
         }
 
-        rev = test.pcv2._descriptionRevision;
+        rev = test.pcv2._lastStableDescriptionRevision;
         switch (newerEqualOrOlder) {
           case 'newer':
-            rev++;
+            rev += 2;
             break;
           case 'equal':
+            if (type === 'answer') {
+              rev++;
+            }
             break;
           default: // 'older'
+            if (type === 'answer') {
+              break;
+            }
             rev--;
             break;
         }
@@ -529,38 +535,32 @@ describe('PeerConnectionV2', () => {
       if (signalingState !== 'closed') {
         switch (type) {
           case 'offer':
-            if (signalingState === 'stable') {
-              if (newerEqualOrOlder === 'newer' || (newerEqualOrOlder === 'equal' && initial)) {
-                beforeEach(setup);
-                return itShouldAnswer();
-              }
-            } else if (signalingState === 'have-local-offer') {
-              if (newerEqualOrOlder !== 'older') {
-                if (initial) {
-                  beforeEach(setup);
-                  return itMightEventuallyAnswer();
-                }
-                beforeEach(setup);
-                return itShouldHandleGlare();
-              }
+            if (newerEqualOrOlder !== 'newer') {
+              break;
             }
-            break;
+            beforeEach(setup);
+            if (signalingState === 'have-local-offer') {
+              if (initial) {
+                return itMightEventuallyAnswer();
+              }
+              return itShouldHandleGlare();
+            }
+            return itShouldAnswer();
           case 'answer':
-            if (signalingState === 'have-local-offer' && newerEqualOrOlder === 'equal') {
-              beforeEach(setup);
-              return itShouldApplyAnswer();
+            if (newerEqualOrOlder !== 'equal' || signalingState !== 'have-local-offer') {
+              break;
             }
-            break;
+            beforeEach(setup);
+            return itShouldApplyAnswer();
           case 'create-offer':
-            if (newerEqualOrOlder !== 'older') {
-              if (signalingState === 'have-local-offer' && initial) {
-                beforeEach(setup);
-                return itShouldEventuallyCreateOffer();
-              }
-              beforeEach(setup);
-              return itShouldCreateOffer();
+            if (newerEqualOrOlder !== 'newer') {
+              break;
             }
-            break;
+            beforeEach(setup);
+            if (signalingState === 'have-local-offer' && initial) {
+              return itShouldEventuallyCreateOffer();
+            }
+            return itShouldCreateOffer();
           default: // 'close'
             beforeEach(setup);
             return itShouldClose();
