@@ -10,7 +10,7 @@ not support H.264. However, P2P Rooms with browser-based Participants should
 work.
 
 We are also experimenting with the ability to specify the set of codecs a Group
-Room supports. This would allow you to create an H264-only Group Room, for
+Room supports. This would allow you to create an H.264-only Group Room, for
 example. Please email [video-product@twilio.com](mailto:video-product@twilio.com)
 if you would like to try this out.
 
@@ -22,10 +22,6 @@ Bug Fixes
 
 - In Firefox, we were raising a `peerIdentity` TypeError in the console.
   (JSDK-1372)
-- `detach`ing a Track in Chrome could result in that Track continuing to
-  playback, even if the &lt;audio&gt; or &lt;video&gt; elements it was
-  `attach`ed to were removed from the DOM
-  ([#140](https://github.com/twilio/twilio-video.js/issues/140)).
 
 1.2.0 (July 21, 2017)
 =====================
