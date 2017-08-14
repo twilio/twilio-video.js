@@ -1,9 +1,11 @@
 'use strict';
 
+var { flatMap } = require('../../lib/util');
 var randomId = require('./util').randomName;
 
-function FakeChromeRTCStatsReport(type, stats) {
+function FakeChromeRTCStatsReport(trackId, type, stats) {
   Object.defineProperties(this, Object.assign({
+    googTrackId: { value: trackId },
     id: { value: randomId() },
     type: { value: type },
     timestamp: { value: new Date() }
@@ -27,8 +29,8 @@ function FakeChromeRTCStatsResponse() {
   });
 }
 
-FakeChromeRTCStatsResponse.prototype._addReport = function _addReport(type, stats) {
-  this._result.push(new FakeChromeRTCStatsReport(type, stats));
+FakeChromeRTCStatsResponse.prototype._addReport = function _addReport(trackId, type, stats) {
+  this._result.push(new FakeChromeRTCStatsReport(trackId, type, stats));
 };
 
 FakeChromeRTCStatsResponse.prototype.result = function result() {
@@ -65,7 +67,11 @@ FakeRTCPeerConnection.prototype.getStats = function getStats() {
 
   if (typeof args[0] === 'function') {
     var response = new FakeChromeRTCStatsResponse();
-    response._addReport('ssrc', this._options.chromeFakeStats);
+    flatMap([ ...this.localStreams, ...this.remoteStreams ], stream => {
+      return stream.getTracks();
+    }).forEach(track => {
+      response._addReport(track.id, 'ssrc', this._options.chromeFakeStats);
+    });
     args[0](response);
   } else if (typeof args[1] === 'function') {
     args[1](this._options.firefoxFakeStats);
