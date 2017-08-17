@@ -68,9 +68,6 @@
     "test:integration": "npm-run-all test:integration:node test:integration:browser",
     "test:integration:travis": "node ./scripts/integration.js",
     "test:umd": "mocha ./test/umd/index.js",
-    "test:webrtc:native": "karma start karma/webrtc.conf.js",
-    "test:webrtc:adapter": "karma start karma/webrtc.adapter.conf.js",
-    "test:webrtc": "npm-run-all test:webrtc:native",
     "test:framework:angular:install": "cd ./test/framework/twilio-video-angular && rimraf ./node_modules && npm install",
     "test:framework:angular:test": "node ./scripts/framework.js twilio-video-angular",
     "test:framework:angular:run": "mocha ./test/framework/twilio-video-angular.js",
@@ -90,14 +87,15 @@
     "test": "npm-run-all test:unit test:integration",
     "build:js": "node ./scripts/build.js ./src/twilio-video.js ./LICENSE.md ./dist/twilio-video.js",
     "build:min.js": "uglifyjs ./dist/twilio-video.js -o ./dist/twilio-video.min.js --comments \"/^! twilio-video.js/\" -b beautify=false,ascii_only=true",
-    "build": "npm-run-all clean lint docs cover test:webrtc test:integration build:js build:min.js test:umd",
-    "build:travis": "npm-run-all clean lint docs cover test:webrtc test:integration:travis build:js build:min.js test:umd test:framework",
+    "build": "npm-run-all clean lint docs cover test:integration build:js build:min.js test:umd",
+    "build:travis": "npm-run-all clean lint docs cover test:integration:travis build:js build:min.js test:umd test:framework",
     "build:quick": "npm-run-all clean lint docs build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "clean": "rimraf ./coverage ./dist",
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
+    "@twilio/webrtc": "twilio/twilio-webrtc.js.git",
     "sip.js": "twilio/SIP.js.git#b884c74892836f70ced6010353852ebd9ce5b199",
     "ws": "^2.3.1",
     "xmlhttprequest": "^1.8.0"
