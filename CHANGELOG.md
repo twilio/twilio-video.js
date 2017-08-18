@@ -1,11 +1,18 @@
 1.2.2 (in progress)
 ===================
 
+This is primarily a bug fix release; however, we've also factored out two
+dependencies (@twilio/sip.js and @twilio/webrtc) for easier management of the
+project.
+
 Bug Fixes
 ---------
 
 - In Chrome, `Room#getStats()` did not provide valid values for those Participants
   with more than one Track of the same kind (audio or video). (JSDK-1329)
+- Fixed a rare scenario where the SDK could "get stuck" negotiating with the
+  server. We are evaluating whether or not to patch this behavior server-side
+  as well, so that older clients can receive the fix, too. (JSDK-1454)
 
 1.2.1 (August 14, 2017)
 =======================
