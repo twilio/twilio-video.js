@@ -242,6 +242,51 @@ describe('LocalParticipant', () => {
     });
   });
 
+  describe('#setParameters', () => {
+    var test;
+
+    context('when the EncodingParameters is', () => {
+      [
+        ['foo', 'not an object'],
+        [{maxAudioBitrate: 'bar', maxVideoBitrate: 1000}, 'an object that has .maxAudioBitrate which is not a number'],
+        [{maxAudioBitrate: 1000, maxVideoBitrate: false}, 'an object that has .maxVideoBitrate which is not a number'],
+        [{maxAudioBitrate: 'foo', maxVideoBitrate: true}, 'an object which has both .maxAudioBitrate and .maxVideoBitrate which are not numbers']
+      ].forEach(([encodingParameters, scenario]) => {
+        context(scenario, () => itShould(encodingParameters, true));
+      });
+
+      [
+        [undefined, 'undefined'],
+        [null, 'null'],
+        [{}, 'an object which does not have .maxAudioBitrate and .maxVideoBitrate'],
+        [{maxAudioBitrate: null, maxVideoBitrate: null}, 'an object where both .maxAudioBitrate and .maxVideoBitrate are null'],
+        [{maxVideoBitrate: 1000}, 'an object that does not have .maxAudioBitrate'],
+        [{maxAudioBitrate: null, maxVideoBitrate: 1000}, 'an object where .maxAudioBitrate is null'],
+        [{maxAudioBitrate: 1000}, 'an object that does not have .maxVideoBitrate'],
+        [{maxAudioBitrate: 1000, maxVideoBitrate: null}, 'an object where .maxVideoBitrate is null'],
+        [{maxAudioBitrate: 1000, maxVideoBitrate: 2000}, 'an object which has both .maxAudioBitrate and .maxVideoBitrate which are numbers']
+      ].forEach(([encodingParameters, scenario]) => {
+        context(scenario, () => itShould(encodingParameters, false));
+      });
+    });
+
+    function itShould(encodingParameters, throwAndFail) {
+      before(() => {
+        test = makeTest();
+      });
+
+      it(`should ${throwAndFail ? '' : 'not '}throw`, () => {
+        assert[throwAndFail ? 'throws' : 'doesNotThrow'](() => test.participant.setParameters(encodingParameters));
+      });
+
+      it(`should ${throwAndFail ? 'not ' : ''}call .setParameters on the underlying ParticipantSignaling`, () => {
+        sinon.assert.callCount(test.signaling.setParameters, throwAndFail ? 0 : 1);
+        !throwAndFail && sinon.assert.calledWith(test.signaling.setParameters,
+          encodingParameters === null ? {maxAudioBitrate: null, maxVideoBitrate: null} : encodingParameters);
+      });
+    }
+  });
+
   describe('LocalTrack events', () => {
     context('"trackAdded" event', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
@@ -543,5 +588,6 @@ function makeSignaling(options) {
   signaling.state = options.state;
   signaling.addTrack = sinon.spy(() => {});
   signaling.removeTrack = sinon.spy(() => {});
+  signaling.setParameters = sinon.spy(() => {});
   return signaling;
 }
