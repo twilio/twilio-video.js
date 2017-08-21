@@ -1,12 +1,12 @@
 'use strict';
 
 var assert = require('assert');
+var { makeEncodingParameters } = require('../../../../lib/util');
 var CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 var createCancelableRoomSignalingPromise = require('../../../../../lib/signaling/v2/cancelableroomsignalingpromise');
 var EventEmitter = require('events').EventEmitter;
 var MockIceServerSource = require('../../../../lib/mockiceserversource');
-var SignalingConnectionDisconnectedError = require('../../../../../lib/util/twilio-video-errors')
-  .SignalingConnectionDisconnectedError;
+var { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
 
 var sinon = require('sinon');
 var util = require('../../../../../lib/util');
@@ -413,6 +413,7 @@ function makeTest(options) {
     options.ua,
     options.localParticipant,
     options.iceServerSource,
+    makeEncodingParameters(options),
     options);
   return options;
 }
