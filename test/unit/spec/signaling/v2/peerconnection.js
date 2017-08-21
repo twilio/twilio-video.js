@@ -7,7 +7,7 @@ const sinon = require('sinon');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const { a, combinationContext } = require('../../../../lib/util');
+const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   describe('constructor', () => {
@@ -1356,25 +1356,6 @@ function identity(a) {
  * @property {MockPeerConnection} [pc]
  * @property {RTCPeerConnection.} [RTCPeerConnection]
  */
-
-/**
- * Make a fake {@link EncodingParametersImpl}.
- * @param {PeerConnectionV2Options} [options]
- */
-function makeEncodingParameters(options) {
-  const encodingParameters = new EventEmitter();
-  encodingParameters.maxAudioBitrate = options.maxAudioBitrate || null;
-  encodingParameters.maxVideoBitrate = options.maxVideoBitrate || null;
-  encodingParameters.update = sinon.spy(params => {
-    encodingParameters.maxAudioBitrate = params.maxAudioBitrate;
-    encodingParameters.maxVideoBitrate = params.maxVideoBitrate;
-    encodingParameters.emit('changed');
-  });
-
-  options = options || {};
-  options.encodingParameters = encodingParameters;
-  return encodingParameters;
-}
 
 /**
  * Make a {@link PeerConnectionV2}. This function extends any options object

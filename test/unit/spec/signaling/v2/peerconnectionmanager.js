@@ -4,6 +4,7 @@ const assert = require('assert');
 const EventEmitter = require('events').EventEmitter;
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const inherits = require('util').inherits;
+const { makeEncodingParameters } = require('../../../../lib/util');
 const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { AudioContextFactory } = require('../../../../../lib/webaudio/audiocontext');
 const PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
@@ -563,7 +564,11 @@ function makeTest(options) {
   const mockIceServerSource = new MockIceServerSource();
   options.iceServerSource = options.iceServerSource || mockIceServerSource;
 
-  options.peerConnectionManager = options.peerConnectionManager || new PeerConnectionManager(options.iceServerSource, options);
+  options.peerConnectionManager = options.peerConnectionManager
+    || new PeerConnectionManager(
+      options.iceServerSource,
+      makeEncodingParameters(options),
+      options);
   options.peerConnectionManager.setConfiguration({ iceServers: [] });
   return options;
 }
@@ -581,7 +586,7 @@ function makeAudioContextFactory(testOptions) {
 }
 
 function makePeerConnectionV2Constructor(testOptions) {
-  return function PeerConnectionV2(id, options) {
+  return function PeerConnectionV2(id, encodingParameters, options) {
     var peerConnectionV2 = new EventEmitter();
 
     peerConnectionV2.configuration = {
