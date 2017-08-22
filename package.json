@@ -62,11 +62,9 @@
   "scripts": {
     "lint": "eslint ./lib",
     "test:unit": "mocha ./test/unit/index.js",
-    "test:integration:node": "mocha ./test/integration/index.js",
-    "test:integration:browser": "node ./scripts/karma.js karma/integration.conf.js",
-    "test:integration:browser:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
-    "test:integration": "npm-run-all test:integration:node test:integration:browser",
+    "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration:travis": "node ./scripts/integration.js",
+    "test:integration": "node ./scripts/karma.js karma/integration.conf.js",
     "test:umd": "mocha ./test/umd/index.js",
     "test:framework:angular:install": "cd ./test/framework/twilio-video-angular && rimraf ./node_modules && npm install",
     "test:framework:angular:test": "node ./scripts/framework.js twilio-video-angular",
