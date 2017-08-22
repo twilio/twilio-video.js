@@ -1,5 +1,5 @@
-1.2.2 (in progress)
-===================
+1.2.2 (August 22, 2017)
+=======================
 
 This is primarily a bug fix release; however, we've also factored out two
 dependencies (@twilio/sip.js and @twilio/webrtc) for easier management of the
