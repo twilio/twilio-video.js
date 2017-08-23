@@ -95,8 +95,7 @@ const isSafari = guess === 'safari';
           trackPublications.forEach((localTrackPublication, i) => {
             const track = tracks[i];
             assert(localTrackPublication instanceof LocalTrackPublication);
-            assert.equal(localTrackPublication.id, track.id);
-            assert.equal(localTrackPublication.kind, track.kind);
+            assert.equal(localTrackPublication.track, track);
             assert(localTrackPublication.sid.match(/^MT[a-f0-9]{32}$/));
           });
         });
@@ -109,9 +108,9 @@ const isSafari = guess === 'safari';
         });
 
         it('should add both the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' .(audio/video)TrackPublications collections', () => {
-          trackPublications.forEach(track => {
-            assert.equal(room.localParticipant.trackPublications.get(track.id), track);
-            assert.equal(room.localParticipant[`${track.kind}TrackPublications`].get(track.id), track);
+          trackPublications.forEach(trackPublication => {
+            assert.equal(room.localParticipant.trackPublications.get(trackPublication.sid), trackPublication);
+            assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.sid), trackPublication);
           });
         });
 
@@ -154,8 +153,12 @@ const isSafari = guess === 'safari';
       });
 
       it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .trackPublications', () => {
-        assert.equal(room.localParticipant.trackPublications.get(tracks[0].id), trackPublications[0]);
-        assert.equal(anotherRoom.localParticipant.trackPublications.get(tracks[0].id), trackPublications[1]);
+        const localTrackPublication1 = [...room.localParticipant.trackPublications.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        const localTrackPublication2 = [...anotherRoom.localParticipant.trackPublications.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        assert.equal(localTrackPublication1.track, tracks[0]);
+        assert.equal(localTrackPublication2.track, tracks[0]);
       });
 
       it('should assign different SIDs to the two LocalTrackPublications', () => {
@@ -296,11 +299,6 @@ const isSafari = guess === 'safari';
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
           });
 
-          it('should set each RemoteTrack\'s .id to the LocalTrackPublication\'s .id', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisLocalTrackPublication.id));
-          });
-
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
             const thoseTracks = thoseTracksMap[event];
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
@@ -312,15 +310,16 @@ const isSafari = guess === 'safari';
           });
 
           if (when === 'previously') {
-            it('the RemoteTrack should be a new RemoteTrack instance, despite sharing the same .id as the previously-added RemoteTrack', () => {
+            it('the RemoteTrack should be a new RemoteTrack instance', () => {
               const thoseTracks = thoseTracksMap[event];
               assert.equal(thoseTracksBefore.length, thoseTracks.length);
               thoseTracksBefore.forEach((thatTrackBefore, i) => {
                 const thatTrackAfter = thoseTracks[i];
-                assert.equal(thatTrackAfter.id, thatTrackBefore.id);
+                if (!isFirefox && !isSafari) {
+                  assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
+                }
                 assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
                 assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
-                assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
                 assert.notEqual(thatTrackAfter, thatTrackBefore);
               });
             });
@@ -443,11 +442,6 @@ const isSafari = guess === 'safari';
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
           });
 
-          it('should set each RemoteTrack\'s .id to the LocalTrackPublication\'s .id', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.id, thisLocalTrackPublication.id));
-          });
-
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
             const thoseTracks = thoseTracksMap[event];
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
@@ -547,10 +541,9 @@ const isSafari = guess === 'safari';
     [ 'trackUnsubscribed', 'trackRemoved' ].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksUnpublished[event];
-        assert.equal(thatTrack.sid, thisPublishedTrack1.sid)
-        assert.equal(thatTrack.id, thisPublishedTrack1.id);
-        assert.equal(thatTrack.kind, thisPublishedTrack1.kind);
-        assert.equal(thatTrack.enabled, thisPublishedTrack1.enabled);
+        assert.equal(thatTrack.sid, thisLocalTrackPublication1.sid)
+        assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
+        assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
         if (!isFirefox && !isSafari) {
           assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
         }
@@ -561,7 +554,6 @@ const isSafari = guess === 'safari';
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksPublished[event];
         assert.equal(thatTrack.sid, thisLocalTrackPublication2.sid)
-        assert.equal(thatTrack.id, thisLocalTrackPublication2.id);
         assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
         assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
@@ -569,6 +561,9 @@ const isSafari = guess === 'safari';
     });
 
     it('should eventually raise a "trackStarted" event for the published LocalVideoTrack', async () => {
+      if (isFirefox /* && isGroupRoom */) {
+        return;
+      }
       await trackStarted(thatTrackAdded);
     });
   });
@@ -643,14 +638,12 @@ const isSafari = guess === 'safari';
       it(`should eventually raise a "${event}" event for each published LocalTracks`, () => {
         const thatAudioTrack = thoseAudioTracks[event];
         assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.sid);
-        assert.equal(thatAudioTrack.id, thisLocalAudioTrackPublication.id);
         assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
         assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
         assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
 
         const thatVideoTrack = thoseVideoTracks[event];
         assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.sid);
-        assert.equal(thatVideoTrack.id, thisLocalVideoTrackPublication.id);
         assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
         assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
         assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);

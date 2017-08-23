@@ -199,10 +199,9 @@ describe('connect', function() {
             rooms.forEach(room => {
               assert.equal(room.localParticipant[tracks].size, room.localParticipant[trackPublications].size);
               room.localParticipant[tracks].forEach(track => {
-                var localTrackPublication = room.localParticipant[trackPublications].get(track.id);
+                const localTrackPublication = [...room.localParticipant[trackPublications].values()].find(
+                  localTrackPublication => localTrackPublication.track === track);
                 assert(localTrackPublication);
-                assert.equal(localTrackPublication.id, track.id);
-                assert.equal(localTrackPublication.kind, track.kind);
               });
             });
           });
