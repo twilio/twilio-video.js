@@ -27,6 +27,10 @@ require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 
+require('./spec/data/datastreamtrack');
+require('./spec/data/localdatastreamtrack');
+require('./spec/data/remotedatastreamtrack');
+
 require('./spec/iceserversource/constant');
 require('./spec/iceserversource/nts');
 
