@@ -8,6 +8,7 @@ const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');
 const { flatMap, guessBrowser } = require('../../../lib/util');
+const { getMediaSections } = require('../../../lib/util/sdp');
 const Track = require('../../../lib/media/track');
 
 const {
@@ -405,6 +406,112 @@ const isSafari = guess === 'safari';
 
     it('should eventually raise a "trackStarted" event for each added LocalTrack', async () => {
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
+    });
+  });
+
+  describe('#setParameters', () => {
+    const initialEncodingParameters = {
+      maxAudioBitrate: 20000,
+      maxVideoBitrate: 40000
+    };
+
+    combinationContext([
+      [
+        [undefined, null, 25000],
+        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+      ],
+      [
+        [undefined, null, 45000],
+        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+      ]
+    ], ([maxAudioBitrate, maxVideoBitrate]) => {
+      const encodingParameters = [
+        ['maxAudioBitrate', maxAudioBitrate],
+        ['maxVideoBitrate', maxVideoBitrate]
+      ].reduce((params, [prop, value]) => {
+        if (typeof value !== 'undefined') {
+          params[prop] = value;
+        }
+        return params;
+      }, {});
+
+      const maxBitrates = {
+        audio: encodingParameters.maxAudioBitrate,
+        video: encodingParameters.maxVideoBitrate
+      };
+
+      let peerConnections;
+      let remoteDescriptions;
+      let thisRoom;
+      let thoseRooms;
+
+      before(async () => {
+        const options = Object.assign({name: randomName()}, initialEncodingParameters, defaultOptions);
+        const token = getToken(randomName());
+        thisRoom = await connect(token, options);
+
+        const thoseOptions = Object.assign({name: options.name}, defaultOptions);
+        const thoseTokens = [randomName(), randomName()].map(getToken);
+        thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+        await participantsConnected(thisRoom, thoseRooms.length);
+        const thoseParticipants = [...thisRoom.participants.values()];
+        await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
+        peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+        thisRoom.localParticipant.setParameters(encodingParameters);
+
+        const getRemoteDescription = pc => Object.keys(encodingParameters).length > 0
+          ? new Promise(resolve => {
+            const pcSetRemoteDescription = pc.setRemoteDescription;
+            pc.setRemoteDescription = function setRemoteDescription(description) {
+              resolve(description);
+              pc.setRemoteDescription = pcSetRemoteDescription;
+              return pcSetRemoteDescription.call(this, description);
+            };
+          })
+          : Promise.resolve(pc.remoteDescription);
+
+        remoteDescriptions = await Promise.all(peerConnections.map(getRemoteDescription));
+      });
+
+      ['audio', 'video'].forEach(kind => {
+        const action = typeof maxBitrates[kind] === 'undefined'
+          ? 'preserve'
+          : maxBitrates[kind]
+            ? 'set'
+            : 'remove';
+        const newOrExisting = maxBitrates[kind]
+          ? 'new'
+          : 'existing';
+
+        it(`should ${action} the ${newOrExisting} .max${capitalize(kind)}Bitrate`, () => {
+          flatMap(remoteDescriptions, description => {
+            return getMediaSections(description.sdp, kind, '(recvonly|sendrecv)');
+          }).forEach(section => {
+            const modifier = guessBrowser() === 'firefox'
+              ? 'TIAS'
+              : 'AS';
+            var maxBitrate = action === 'preserve'
+              ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
+              : maxBitrates[kind];
+
+            maxBitrate = maxBitrate
+              ? guessBrowser() === 'firefox'
+                ? maxBitrate
+                : Math.round((maxBitrate + 16000) / 950)
+              : null;
+
+            const bLinePattern = maxBitrate
+              ? new RegExp(`\r\nb=${modifier}:${maxBitrate}`)
+              : /\r\nb=(AS|TIAS)/;
+            assert(maxBitrate ? bLinePattern.test(section) : !bLinePattern.test(section));
+          });
+        });
+      });
+
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+      });
     });
   });
 });

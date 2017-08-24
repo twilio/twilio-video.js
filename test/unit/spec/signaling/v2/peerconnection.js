@@ -7,7 +7,7 @@ const sinon = require('sinon');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const { a, combinationContext } = require('../../../../lib/util');
+const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   describe('constructor', () => {
@@ -438,7 +438,12 @@ describe('PeerConnectionV2', () => {
       let result;
 
       async function setup() {
-        test = makeTest({ offers: 3, answers: 2 });
+        test = makeTest({
+          offers: 3,
+          answers: 2,
+          maxAudioBitrate: 40,
+          maxVideoBitrate: 50
+        });
         descriptions = [];
         const ufrag = 'foo';
 
@@ -570,6 +575,15 @@ describe('PeerConnectionV2', () => {
       beforeEach(setup);
       itDoesNothing();
 
+      function itShouldApplyBandwidthConstraints() {
+        it('should apply the specified bandwidth constraints to the remote description', () => {
+          const maxVideoBitrate = test.setBitrateParameters.args[0].pop();
+          const maxAudioBitrate = test.setBitrateParameters.args[0].pop();
+          assert.equal(maxAudioBitrate, test.maxAudioBitrate);
+          assert.equal(maxVideoBitrate, test.maxVideoBitrate);
+        });
+      }
+
       function itShouldAnswer() {
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
@@ -596,6 +610,8 @@ describe('PeerConnectionV2', () => {
         it('should leave the underlying RTCPeerConnection in signalingState "stable"', () => {
           assert.equal(test.pc.signalingState, 'stable');
         });
+
+        itShouldApplyBandwidthConstraints();
       }
 
       function itMightEventuallyAnswer() {
@@ -629,6 +645,8 @@ describe('PeerConnectionV2', () => {
           it('should leave the underlying RTCPeerConnection in signalingState "stable"', () => {
             assert.equal(test.pc.signalingState, 'stable');
           });
+
+          itShouldApplyBandwidthConstraints();
         });
       }
 
@@ -693,6 +711,8 @@ describe('PeerConnectionV2', () => {
         it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
           assert.equal(test.pc.signalingState, 'have-local-offer');
         });
+
+        itShouldApplyBandwidthConstraints();
       }
 
       function itShouldApplyAnswer() {
@@ -728,6 +748,8 @@ describe('PeerConnectionV2', () => {
         it('should leave the underlying RTCPeerConnection in signalingState "stable"', () => {
           assert.equal(test.pc.signalingState, 'stable');
         });
+
+        itShouldApplyBandwidthConstraints();
       }
 
       function itShouldCreateOffer() {
@@ -801,6 +823,8 @@ describe('PeerConnectionV2', () => {
           it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
             assert.equal(test.pc.signalingState, 'have-local-offer');
           });
+
+          itShouldApplyBandwidthConstraints();
         });
       }
 
@@ -1065,6 +1089,20 @@ describe('PeerConnectionV2', () => {
       it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
         assert.equal(mediaStreamTrack, track);
       });
+    });
+  });
+
+  describe('when the underlying EncodingParametersImpl is updated with new values', () => {
+    let test;
+
+    before(() => {
+      test = makeTest({ offers: 3, answers: 3 });
+    });
+
+    it('should emit a "description" event with a new offer', async () => {
+      test.encodingParameters.update({ maxAudioBitrate: 20, maxVideoBitrate: 30 });
+      const { description } = await new Promise(resolve => test.pcv2.once('description', resolve));
+      assert.deepEqual({ type: description.type, sdp: description.sdp }, test.pc.localDescription);
     });
   });
 });
@@ -1335,12 +1373,14 @@ function makePeerConnectionV2(options) {
   }
 
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
+  options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
 
-  return new PeerConnectionV2(options.id, {
+  return new PeerConnectionV2(options.id, makeEncodingParameters(options), {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
+    setBitrateParameters: options.setBitrateParameters
   });
 }
 

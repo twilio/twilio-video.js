@@ -7,8 +7,10 @@ if (typeof window === 'undefined') {
 const assert = require('assert');
 const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
+const { guessBrowser } = require('../../../lib/util');
+const { getMediaSections } = require('../../../lib/util/sdp');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { combinationContext, participantsConnected, pairs, randomName, tracksAdded } = require('../../lib/util');
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded } = require('../../lib/util');
 const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
@@ -327,6 +329,80 @@ describe('connect', function() {
         const TheOtherEventPublisher = insights ? NullInsightsPublisher : InsightsPublisher;
         sinon.assert.calledOnce(EventPublisher);
         sinon.assert.callCount(TheOtherEventPublisher, 0);
+      });
+    });
+  });
+
+  (navigator.userAgent === 'Node'
+    ? describe.skip
+    : describe)('called with EncodingParameters', () => {
+    combinationContext([
+      [
+        [undefined, null, 20000],
+        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+      ],
+      [
+        [undefined, null, 40000],
+        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+      ]
+    ], ([maxAudioBitrate, maxVideoBitrate]) => {
+      const encodingParameters = [
+        ['maxAudioBitrate', maxAudioBitrate],
+        ['maxVideoBitrate', maxVideoBitrate]
+      ].reduce((params, [prop, value]) => {
+        if (typeof value !== 'undefined') {
+          params[prop] = value;
+        }
+        return params;
+      }, {});
+
+      const maxBitrates = {
+        audio: encodingParameters.maxAudioBitrate,
+        video: encodingParameters.maxVideoBitrate
+      };
+
+      let peerConnections;
+      let thisRoom;
+      let thoseRooms;
+
+      before(async () => {
+        const options = Object.assign({name: randomName()}, encodingParameters, defaultOptions);
+        const token = getToken(randomName());
+        thisRoom = await connect(token, options);
+
+        const thoseOptions = Object.assign({name: options.name}, defaultOptions);
+        const thoseTokens = [randomName(), randomName()].map(getToken);
+        thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+        await participantsConnected(thisRoom, thoseRooms.length);
+        const thoseParticipants = [...thisRoom.participants.values()];
+        await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
+        peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+      });
+
+      ['audio', 'video'].forEach(kind => {
+        it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+          flatMap(peerConnections, pc => {
+            return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
+          }).forEach(section => {
+            const modifier = guessBrowser() === 'firefox'
+              ? 'TIAS'
+              : 'AS';
+            const maxBitrate = maxBitrates[kind]
+              ? guessBrowser() === 'firefox'
+                ? maxBitrates[kind]
+                : Math.round((maxBitrates[kind] + 16000) / 950)
+              : null;
+            const bLinePattern = maxBitrate
+              ? new RegExp(`\r\nb=${modifier}:${maxBitrate}`)
+              : /\r\nb=(AS|TIAS)/;
+            assert(maxBitrate ? bLinePattern.test(section) : !bLinePattern.test(section));
+          });
+        });
+      });
+
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
       });
     });
   });

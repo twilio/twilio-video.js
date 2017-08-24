@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require('assert');
+var { makeEncodingParameters } = require('../../../../lib/util');
 var EventEmitter = require('events').EventEmitter;
 var LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
 var SignalingV2 = require('../../../../../lib/signaling/v2');
@@ -699,8 +700,8 @@ describe('SignalingV2', () => {
   describe('#createLocalParticipantSignaling', () => {
     it('returns a new LocalParticipantV2', () => {
       var test = makeTest();
-      var lp1 = test.signaling.createLocalParticipantSignaling();
-      var lp2 = test.signaling.createLocalParticipantSignaling();
+      var lp1 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
+      var lp2 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
       assert(lp1 instanceof LocalParticipantV2);
       assert(lp2 instanceof LocalParticipantV2);
       assert(lp1 !== lp2);
@@ -1132,6 +1133,7 @@ describe('SignalingV2', () => {
 function makeTest(options) {
   options = options || {};
 
+  options.encodingParameters = options.encodingParameters || makeEncodingParameters(options);
   options.uaConnectSucceeds = 'uaConnectSucceeds' in options
     ? options.uaConnectSucceeds : true;
   options.UA = options.UA || sinon.spy(function UA() {

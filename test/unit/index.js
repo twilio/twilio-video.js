@@ -20,9 +20,10 @@ require('./spec/connect');
 require('./spec/createlocaltrack');
 require('./spec/createlocaltracks');
 require('./spec/ecs');
-require('./spec/room');
+require('./spec/encodingparameters');
 require('./spec/localparticipant');
 require('./spec/participant');
+require('./spec/room');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 
@@ -46,6 +47,7 @@ require('./spec/signaling/v2/transport');
 require('./spec/util/index');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
+require('./spec/util/sdp');
 require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');

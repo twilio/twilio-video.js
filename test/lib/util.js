@@ -1,5 +1,8 @@
 'use strict';
 
+const sinon = require('sinon');
+const { EventEmitter } = require('events');
+
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
 }
@@ -240,10 +243,30 @@ async function trackStarted(track) {
   await new Promise(resolve => track.once('started', resolve));
 }
 
+/**
+ * Make a fake {@link EncodingParametersImpl}.
+ * @param {PeerConnectionV2Options} [options]
+ */
+function makeEncodingParameters(options) {
+  const encodingParameters = new EventEmitter();
+  encodingParameters.maxAudioBitrate = options.maxAudioBitrate || null;
+  encodingParameters.maxVideoBitrate = options.maxVideoBitrate || null;
+  encodingParameters.update = sinon.spy(params => {
+    encodingParameters.maxAudioBitrate = params.maxAudioBitrate;
+    encodingParameters.maxVideoBitrate = params.maxVideoBitrate;
+    encodingParameters.emit('changed');
+  });
+
+  options = options || {};
+  options.encodingParameters = encodingParameters;
+  return encodingParameters;
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
+exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
 exports.randomName = randomName;
