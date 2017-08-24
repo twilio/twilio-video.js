@@ -243,7 +243,7 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#getRemoteMediaStreamTracks', () => {
+  describe('#getRemoteMediaAndDataStreamTracks', () => {
     it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
       const test = makeTest();
       const remoteStream = new FakeMediaStream();
@@ -255,7 +255,7 @@ describe('PeerConnectionV2', () => {
       remoteStream.addTrack(remoteTracks[0]);
       remoteStream.addTrack(remoteTracks[1]);
       test.pc.getRemoteStreams = () => [remoteStream];
-      assert.deepEqual(test.pcv2.getRemoteMediaStreamTracks(), remoteTracks);
+      assert.deepEqual(test.pcv2.getRemoteMediaAndDataStreamTracks(), remoteTracks);
     });
   });
 
@@ -1301,6 +1301,17 @@ describe('PeerConnectionV2', () => {
 
       it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
         assert.equal(mediaStreamTrack, track);
+      });
+    });
+
+    context('when a "datachannel" event is raised on the underlying RTCPeerConnection', () => {
+      it('emits a "trackAdded" event with a RemoteDataStreamTrack', () => {
+        const test = makeTest();
+        const channel = makeDataChannel();
+        let trackAdded;
+        test.pcv2.once('trackAdded', _trackAdded => trackAdded = _trackAdded);
+        test.pc.dispatchEvent({ type: 'datachannel', channel });
+        assert.equal(trackAdded.id, channel.label);
       });
     });
   });

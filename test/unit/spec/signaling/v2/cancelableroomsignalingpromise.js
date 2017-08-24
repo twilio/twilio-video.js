@@ -27,12 +27,12 @@ describe('createCancelableRoomSignalingPromise', () => {
     assert(test.peerConnectionManager.setConfiguration.calledOnce);
   });
 
-  it('calls .setMediaStreamTracks with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
+  it('calls .setMediaAndDataStreamTracks with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
     var track1 = {
-      mediaStreamTrack: {}
+      mediaOrDataStreamTrack: {}
     };
     var track2 = {
-      mediaStreamTrack: {}
+      mediaOrDataStreamTrack: {}
     };
     var test = makeTest({
       tracks: [
@@ -40,8 +40,8 @@ describe('createCancelableRoomSignalingPromise', () => {
         track2
       ]
     });
-    assert.deepEqual([track1.mediaStreamTrack, track2.mediaStreamTrack],
-      test.peerConnectionManager.setMediaStreamTracks.args[0][0]);
+    assert.deepEqual([track1.mediaOrDataStreamTrack, track2.mediaOrDataStreamTrack],
+      test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
   });
 
   it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
@@ -424,8 +424,8 @@ function makePeerConnectionManagerConstructor(testOptions) {
     var peerConnectionManager = new EventEmitter();
     peerConnectionManager.close = sinon.spy(() => {});
     peerConnectionManager.setConfiguration = sinon.spy(() => {});
-    peerConnectionManager.setMediaStreamTracks = sinon.spy(() => {});
-    peerConnectionManager.getRemoteMediaStreamTracks = sinon.spy(() => []);
+    peerConnectionManager.setMediaAndDataStreamTracks = sinon.spy(() => {});
+    peerConnectionManager.getRemoteMediaAndDataStreamTracks = sinon.spy(() => []);
     peerConnectionManager.update = sinon.spy(() => {});
     peerConnectionManager.dequeue = sinon.spy(() => {});
     peerConnectionManager.createAndOffer = sinon.spy(() => {
