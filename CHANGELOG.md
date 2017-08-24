@@ -1,3 +1,43 @@
+1.3.0 (in progress)
+===================
+
+New Features
+------------
+
+- twilio-video.js now features an API for setting and updating bandwidth
+  constraints. When you `connect` to a Room, you can specify an optional
+  `maxAudioBitrate` and an optional `maxVideoBitrate`, both in bits per second
+  (bps). For example, to connect with a maximum audio bitrate of 6 kilobits per
+  second and a maximum video bitrate of 100 kilobits per second:
+
+  ```js
+  const room = await connect(token, {
+    maxAudioBitrate: 6000,
+    maxVideoBitrate: 100000
+  });
+  ```
+
+  You can also update your `maxAudioBitrate` and `maxVideoBitrate` while
+  participating in a Room. For example, to reset your maximum bitrates for audio
+  and video, you could set each to `null`:
+
+  ```js
+  room.localParticipant.setParameters({
+    maxAudioBitrate: null,
+    maxVideoBitrate: null
+  });
+  ```
+
+  If you want to change only one value—for example, just the maximum audio
+  bitrate—you can omit the other value. For example, to update only the maximum
+  audio bitrate, leaving the maximum video bitrate unchanged:
+
+  ```js
+  room.localParticipant.setParameters({ maxAudioBitrate: 12000 });
+  ```
+
+  Please refer to the API docs for more information.
+
 1.2.2 (August 22, 2017)
 =======================
 
