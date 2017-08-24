@@ -61,7 +61,7 @@ describe('RemoteParticipantV2', () => {
           test.participant.tracks.get(id2));
       });
 
-      it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2s\' IDs', () => {
+      it('calls getMediaOrDataStreamTrack with the newly-constructed RemoteTrackV2s\' IDs', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -70,11 +70,11 @@ describe('RemoteParticipantV2', () => {
             { id: id2 }
           ]
         });
-        assert.equal(id1, test.getMediaStreamTrack.args[0][0]);
-        assert.equal(id2, test.getMediaStreamTrack.args[1][0]);
+        assert.equal(id1, test.getMediaOrDataStreamTrack.args[0][0]);
+        assert.equal(id2, test.getMediaOrDataStreamTrack.args[1][0]);
       });
 
-      it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2s with the results of calling getMediaStreamTrack', () => {
+      it('calls setMediaOrDataStreamTrack on the newly-constructed RemoteTrackV2s with the results of calling getMediaOrDataStreamTrack', () => {
         var id1 = makeId();
         var id2 = makeId();
         var test = makeTest({
@@ -86,14 +86,14 @@ describe('RemoteParticipantV2', () => {
         // NOTE(mroberts): Really we should provide mediaStreamTrack1 and
         // mediaStreamTrack2, etc., but it is a pain to setup.
         var mediaStreamTrack = {};
-        test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
-        return test.getMediaStreamTrackDeferred.promise.then(() => {
+        test.getMediaOrDataStreamTrackDeferred.resolve(mediaStreamTrack);
+        return test.getMediaOrDataStreamTrackDeferred.promise.then(() => {
           assert.equal(
             mediaStreamTrack,
-            test.remoteTrackV2s[0].setMediaStreamTrack.args[0][0]);
+            test.remoteTrackV2s[0].setMediaOrDataStreamTrack.args[0][0]);
           assert.equal(
             mediaStreamTrack,
-            test.remoteTrackV2s[1].setMediaStreamTrack.args[0][0]);
+            test.remoteTrackV2s[1].setMediaOrDataStreamTrack.args[0][0]);
         });
       });
     });
@@ -148,24 +148,24 @@ describe('RemoteParticipantV2', () => {
             track);
         });
 
-        it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
+        it('calls getMediaOrDataStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var id = makeId();
           var participantState = test.state(test.revision + 1).setTrack({ id: id });
           test.participant.update(participantState);
-          assert.equal(id, test.getMediaStreamTrack.args[0][0]);
+          assert.equal(id, test.getMediaOrDataStreamTrack.args[0][0]);
         });
 
-        it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrack', () => {
+        it('calls setMediaOrDataStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaOrDataStreamTrack', () => {
           var test = makeTest();
           var participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
           var mediaStreamTrack = {};
-          test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
-          return test.getMediaStreamTrackDeferred.promise.then(() => {
+          test.getMediaOrDataStreamTrackDeferred.resolve(mediaStreamTrack);
+          return test.getMediaOrDataStreamTrackDeferred.promise.then(() => {
             assert.equal(
               mediaStreamTrack,
-              test.remoteTrackV2s[0].setMediaStreamTrack.args[0][0]);
+              test.remoteTrackV2s[0].setMediaOrDataStreamTrack.args[0][0]);
           });
         });
 
@@ -353,11 +353,11 @@ describe('RemoteParticipantV2', () => {
           assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
+        it('does not call getMediaOrDataStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var participantState = test.state(test.revision).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert(!test.getMediaStreamTrack.calledOnce);
+          assert(!test.getMediaOrDataStreamTrack.calledOnce);
         });
       });
 
@@ -531,11 +531,11 @@ describe('RemoteParticipantV2', () => {
           assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
+        it('does not call getMediaOrDataStreamTrack with a newly-constructed RemoteTrackV2\'s ID', () => {
           var test = makeTest();
           var participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert(!test.getMediaStreamTrack.calledOnce);
+          assert(!test.getMediaOrDataStreamTrack.calledOnce);
         });
       });
 
@@ -719,27 +719,27 @@ describe('RemoteParticipantV2', () => {
         trackAdded);
     });
 
-    it('calls getMediaStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
+    it('calls getMediaOrDataStreamTrack with the newly-constructed RemoteTrackV2\'s ID', () => {
       var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
       var id = makeId();
       var track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
-      assert.equal(id, test.getMediaStreamTrack.args[0][0]);
+      assert.equal(id, test.getMediaOrDataStreamTrack.args[0][0]);
     });
 
-    it('calls setMediaStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrack', () => {
+    it('calls setMediaOrDataStreamTrack on the newly-constructed RemoteTrackV2 with the result of calling getMediaOrDataStreamTrack', () => {
       var RemoteTrackV2 = makeRemoteTrackV2Constructor();
       var test = makeTest();
       var id = makeId();
       var track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
       var mediaStreamTrack = {};
-      test.getMediaStreamTrackDeferred.resolve(mediaStreamTrack);
-      return test.getMediaStreamTrackDeferred.promise.then(() => {
+      test.getMediaOrDataStreamTrackDeferred.resolve(mediaStreamTrack);
+      return test.getMediaOrDataStreamTrackDeferred.promise.then(() => {
         assert.equal(
           mediaStreamTrack,
-          track.setMediaStreamTrack.args[0][0]);
+          track.setMediaOrDataStreamTrack.args[0][0]);
       });
     });
   });
@@ -968,10 +968,10 @@ function makeTest(options) {
   options.tracks = options.tracks || [];
   options.remoteTrackV2s = options.remoteTrackV2s || [];
 
-  options.getMediaStreamTrackDeferred = options.getMediaStreamTrackDeferred
+  options.getMediaOrDataStreamTrackDeferred = options.getMediaOrDataStreamTrackDeferred
     || util.defer();
-  options.getMediaStreamTrack = options.getMediaStreamTrack
-    || sinon.spy(() => options.getMediaStreamTrackDeferred.promise);
+  options.getMediaOrDataStreamTrack = options.getMediaOrDataStreamTrack
+    || sinon.spy(() => options.getMediaOrDataStreamTrackDeferred.promise);
   options.RemoteTrackV2 = options.RemoteTrackV2 || makeRemoteTrackV2Constructor(options);
 
   options.participant = options.participant || makeRemoteParticipantV2(options);
@@ -1017,7 +1017,7 @@ RemoteParticipantStateBuilder.prototype.setTracks = function setTracks(tracks) {
 };
 
 function makeRemoteParticipantV2(options) {
-  return new RemoteParticipantV2(options, options.getMediaStreamTrack, options);
+  return new RemoteParticipantV2(options, options.getMediaOrDataStreamTrack, options);
 }
 
 function makeRemoteTrackV2Constructor(testOptions) {
@@ -1025,7 +1025,7 @@ function makeRemoteTrackV2Constructor(testOptions) {
   testOptions.remoteTrackV2s = testOptions.remoteTrackV2s || [];
   return function RemoteTrackV2(trackState) {
     this.id = trackState.id;
-    this.setMediaStreamTrack = sinon.spy(() => {});
+    this.setMediaOrDataStreamTrack = sinon.spy(() => {});
     this.update = sinon.spy(() => this);
     testOptions.remoteTrackV2s.push(this);
   };

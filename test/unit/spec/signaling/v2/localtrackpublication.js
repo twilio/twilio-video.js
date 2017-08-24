@@ -28,7 +28,7 @@ describe('LocalTrackPublicationV2', () => {
         });
 
         it('should set .mediaStreamTrack', () => {
-          assert.equal(localTrackPublicationV2.mediaStreamTrack, mediaStreamTrack);
+          assert.equal(localTrackPublicationV2.mediaOrDataStreamTrack, mediaStreamTrack);
         });
 
         it('should set .sid to null', () => {
