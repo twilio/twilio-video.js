@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const EventEmitter = require('events');
+const EventTarget = require('../../../../../lib/eventtarget');
 const sinon = require('sinon');
 
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
@@ -19,6 +20,111 @@ describe('PeerConnectionV2', () => {
 
     it('sets .id', function() {
       assert.equal(test.pcv2.id, test.id);
+    });
+  });
+
+  describe('#addDataStreamTrack, called with a LocalDataStreamTrack that has', () => {
+    let test;
+    let localDataStreamTrack;
+
+    beforeEach(() => {
+      test = makeTest();
+      localDataStreamTrack = makeLocalDataStreamTrack();
+    });
+
+    describe('never been added', () => {
+      describe('calls createDataChannel on the underlying RTCPeerConnection, and,', () => {
+        let result;
+
+        describe('if that call succeeds,', () => {
+          beforeEach(() => {
+            test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
+            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            sinon.assert.calledOnce(test.pc.createDataChannel);
+            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id, localDataStreamTrack);
+          });
+
+          it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {
+            sinon.assert.calledOnce(localDataStreamTrack.addDataChannel);
+            sinon.assert.calledWith(localDataStreamTrack.addDataChannel, test.pc.dataChannels[0]);
+          });
+
+          it('returns undefined', () => {
+            assert.equal(result, undefined);
+          });
+        });
+
+        describe('if that call fails,', () => {
+          beforeEach(() => {
+            test.pc.createDataChannel = () => { throw new Error() };
+            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+          });
+
+          it('returns undefined', () => {
+            assert.equal(result, undefined);
+          });
+        });
+      });
+    });
+
+    describe('already been added', () => {
+      let result;
+
+      beforeEach(() => {
+        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+
+        test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
+        result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+      });
+
+      it('does not call createDataChannel on the underlying RTCPeerConnection', () => {
+        sinon.assert.notCalled(test.pc.createDataChannel);
+      });
+
+      it('returns undefined', () => {
+        assert.equal(result, undefined);
+      });
+    });
+
+    describe('been removed', () => {
+      let result;
+
+      beforeEach(() => {
+        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+        test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+        localDataStreamTrack.addDataChannel.reset();
+      });
+
+      describe('calls createDataChannel on the underlying RTCPeerConnection, and,', () => {
+        describe('if that call succeeds,', () => {
+          beforeEach(() => {
+            test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
+            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            sinon.assert.calledOnce(test.pc.createDataChannel);
+            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id, localDataStreamTrack);
+          });
+
+          it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {
+            sinon.assert.calledOnce(localDataStreamTrack.addDataChannel);
+            sinon.assert.calledWith(localDataStreamTrack.addDataChannel, test.pc.dataChannels[0]);
+          });
+
+          it('returns undefined', () => {
+            assert.equal(result, undefined);
+          });
+        });
+
+        describe('if that call fails,', () => {
+          beforeEach(() => {
+            test.pc.createDataChannel = () => { throw new Error() };
+            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+          });
+
+          it('returns undefined', () => {
+            assert.equal(result, undefined);
+          });
+        });
+      });
     });
   });
 
@@ -101,6 +207,39 @@ describe('PeerConnectionV2', () => {
           });
         }
       });
+    });
+
+    it('removes RTCDataChannels from any LocalDataStreamTracks currently added to the PeerConnectionV2', () => {
+      const test = makeTest();
+      const localDataStreamTrack1 = makeLocalDataStreamTrack();
+      const localDataStreamTrack2 = makeLocalDataStreamTrack();
+      test.pcv2.addDataStreamTrack(localDataStreamTrack1);
+      test.pcv2.addDataStreamTrack(localDataStreamTrack2);
+      test.pcv2.removeDataStreamTrack(localDataStreamTrack1);
+      localDataStreamTrack1.removeDataChannel.reset();
+      test.pcv2.close();
+      sinon.assert.notCalled(localDataStreamTrack1.removeDataChannel);
+      sinon.assert.calledOnce(localDataStreamTrack2.removeDataChannel);
+      sinon.assert.calledWith(localDataStreamTrack2.removeDataChannel, test.pc.dataChannels[1]);
+    });
+  });
+
+  describe('#getRemoteDataStreamTracks', () => {
+    it('returns RemoteDataStreamTracks for any RTCDataChannels raised by the underlying RTCPeerConnection that have yet to be closed', () => {
+      const test = makeTest();
+      const dataChannel1 = makeDataChannel();
+      const dataChannel2 = makeDataChannel();
+      const dataChannel3 = makeDataChannel();
+      test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel1 });
+      test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
+      test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel3 });
+      assert.deepEqual(
+        test.pcv2.getRemoteDataStreamTracks().map(dataStreamTrack => dataStreamTrack.id),
+        [dataChannel1, dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
+      dataChannel1.dispatchEvent({ type: 'close' });
+      assert.deepEqual(
+        test.pcv2.getRemoteDataStreamTracks().map(dataStreamTrack => dataStreamTrack.id),
+        [dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
     });
   });
 
@@ -328,6 +467,66 @@ describe('PeerConnectionV2', () => {
           }
           throw new Error('Unexpected resolution');
         });
+      });
+    });
+  });
+
+  describe('#removeDataStreamTrack, called with a LocalDataStreamTrack that has', () => {
+    let test;
+    let localDataStreamTrack;
+    let result;
+
+    beforeEach(() => {
+      test = makeTest();
+      localDataStreamTrack = makeLocalDataStreamTrack();
+    });
+
+    describe('never been added', () => {
+      beforeEach(() => {
+        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+      });
+
+      it('does not call removeDataChannel on the LocalDataStreamTrack', () => {
+        sinon.assert.notCalled(localDataStreamTrack.removeDataChannel);
+      });
+
+      it('returns undefined', () => {
+        assert.equal(result, undefined);
+      });
+    });
+
+    describe('been added', () => {
+      beforeEach(() => {
+        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+
+        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+      });
+
+      it('calls removeDataChannel on the LocalDataStreamTrack with the underlying RTCDataChannel', () => {
+        sinon.assert.calledOnce(localDataStreamTrack.removeDataChannel);
+        sinon.assert.calledWith(localDataStreamTrack.removeDataChannel, test.pc.dataChannels[0]);
+      });
+
+      it('returns undefined', () => {
+        assert.equal(result, undefined);
+      });
+    });
+
+    describe('been removed', () => {
+      beforeEach(() => {
+        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+        test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+        localDataStreamTrack.removeDataChannel.reset();
+
+        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+      });
+
+      it('does not call removeDataChannel on the LocalDataStreamTrack', () => {
+        sinon.assert.notCalled(localDataStreamTrack.removeDataChannel);
+      });
+
+      it('returns undefined', () => {
+        assert.equal(result, undefined);
       });
     });
   });
@@ -1240,9 +1439,11 @@ class MockPeerConnection extends EventEmitter {
 
     this.offerIndex = 0;
     this.answerIndex = 0;
+    this.dataChannelIndex = 0;
 
     this.offers = offers;
     this.answers = answers;
+    this.dataChannels = [];
     this.errorScenario = errorScenario || null;
 
     this.signalingState = 'stable';
@@ -1316,6 +1517,12 @@ class MockPeerConnection extends EventEmitter {
     return answer
       ? Promise.resolve(answer)
       : Promise.reject(new Error('Ran out of answers'));
+  }
+
+  createDataChannel(label, options) {
+    return this.dataChannels[this.dataChannelIndex++] = Object.assign({
+      label
+    }, options);
   }
 
   close() {
@@ -1550,4 +1757,20 @@ function makeIce(ufrag, count) {
   }
 
   return ice;
+}
+
+function makeLocalDataStreamTrack(id) {
+  id = id || makeId();
+  return {
+    id,
+    addDataChannel: sinon.spy(() => {}),
+    removeDataChannel: sinon.spy(() => {})
+  };
+}
+
+function makeDataChannel(id) {
+  id = id || makeId();
+  const dataChannel = new EventTarget();
+  dataChannel.label = id;
+  return dataChannel;
 }
