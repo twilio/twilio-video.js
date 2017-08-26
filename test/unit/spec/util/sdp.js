@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { combinationContext } = require('../../../lib/util');
 const { makeSdpWithTracks } = require('../../../lib/mocksdp');
-const { setBitrateParameters } = require('../../../../lib/util/sdp');
+const { setBitrateParameters, setCodecPreferences } = require('../../../../lib/util/sdp');
 
 describe('setBitrateParameters', () => {
   context('when there is no existing b= line in the SDP', () => {
@@ -101,3 +101,48 @@ describe('setBitrateParameters', () => {
     });
   });
 });
+
+describe('setCodecPreferences', () => {
+  combinationContext([
+    [
+      ['planb', 'unified'],
+      x => `when called with a ${x} sdp`
+    ],
+    [
+      ['', 'PCMA,G722'],
+      x => `when preferredAudioCodecs is ${x ? 'not ': ''}empty`
+    ],
+    [
+      ['', 'H264,VP9'],
+      x => `when preferredVideoCodecs is ${x ? 'not ': ''}empty`
+    ]
+  ], ([sdpType, preferredAudioCodecs, preferredVideoCodecs]) => {
+    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',') : [];
+    preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',') : [];
+    context(`should ${preferredAudioCodecs.length ? 'update the' : 'preserve the existing'} audio codec order`, () => {
+      it(`and ${preferredVideoCodecs.length ? 'update the' : 'preserve the existing'} video codec order`, () => {
+        const expectedAudioCodecIds = preferredAudioCodecs.length
+          ? ['8', '101', '9', '109', '0']
+          : ['109', '9', '0', '8', '101'];
+        const expectedVideoCodecIds = preferredVideoCodecs.length
+          ? ['126', '97', '121', '120']
+          : ['120', '121', '126', '97'];
+        itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds);
+      });
+    });
+  });
+});
+
+function itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds) {
+  const sdp = makeSdpWithTracks(sdpType, {
+    audio: ['audio-1', 'audio-2'],
+    video: ['video-1', 'video-2']
+  });
+  const modifiedSdp = setCodecPreferences(sdp, preferredAudioCodecs, preferredVideoCodecs);
+  modifiedSdp.split('\r\nm=').slice(1).forEach(section => {
+    const kind = section.split(' ')[0];
+    const expectedCodecIds = kind === 'audio' ? expectedAudioCodecIds : expectedVideoCodecIds;
+    const codecIds = section.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
+    assert.equal(codecIds.join(' '), expectedCodecIds.join(' '));
+  });
+}
