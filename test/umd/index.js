@@ -9,6 +9,7 @@ var publicVars = [
   'createLocalTracks',
   'createLocalVideoTrack',
   'LocalAudioTrack',
+  'LocalDataTrack',
   'LocalVideoTrack'
 ];
 

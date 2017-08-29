@@ -35,8 +35,10 @@ require('./spec/iceserversource/constant');
 require('./spec/iceserversource/nts');
 
 require('./spec/media/track/mediatrack');
+require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localtrackpublication');
+require('./spec/media/track/remotedatatrack');
 require('./spec/media/track/remotemediatrack');
 
 require('./spec/signaling/v2');
