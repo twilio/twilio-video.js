@@ -2,13 +2,10 @@
 
 const sinon = require('sinon');
 const { EventEmitter } = require('events');
+const { capitalize } = require('../../lib/util');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
-}
-
-function capitalize(word) {
-  return word[0].toUpperCase() + word.slice(1);
 }
 
 /**

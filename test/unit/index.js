@@ -34,10 +34,10 @@ require('./spec/data/remotedatastreamtrack');
 require('./spec/iceserversource/constant');
 require('./spec/iceserversource/nts');
 
-require('./spec/media/track');
-require('./spec/media/track/localtrack');
+require('./spec/media/track/mediatrack');
+require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localtrackpublication');
-require('./spec/media/track/remotetrack');
+require('./spec/media/track/remotemediatrack');
 
 require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
