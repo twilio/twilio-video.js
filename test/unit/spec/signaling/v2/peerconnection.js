@@ -248,6 +248,13 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
         });
 
+        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
+          sinon.assert.calledWith(test.setCodecPreferences,
+            test.offers[expectedOfferIndex].sdp,
+            test.preferredCodecs.audio,
+            test.preferredCodecs.video);
+        });
+
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
@@ -593,6 +600,15 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createAnswer);
         });
 
+        it('should call setCodecPreferences on the resulting answer\'s sdp string', () => {
+          sinon.assert.calledWith(
+            test.setCodecPreferences,
+            test.answers[0].sdp,
+            test.preferredCodecs.audio,
+            test.preferredCodecs.video
+          );
+        });
+
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.answers[0]);
@@ -682,6 +698,15 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createAnswer);
         });
 
+        it('should call setCodecPreferences on the resulting answer\'s sdp string', () => {
+          sinon.assert.calledWith(
+            test.setCodecPreferences,
+            test.answers[0].sdp,
+            test.preferredCodecs.audio,
+            test.preferredCodecs.video
+          );
+        });
+
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
           assert.deepEqual(test.pc.setLocalDescription.args[1][0], test.answers[0]);
         });
@@ -692,6 +717,15 @@ describe('PeerConnectionV2', () => {
 
         it('should call createOffer on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
+        });
+
+        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
+          sinon.assert.calledWith(
+            test.setCodecPreferences,
+            test.offers[expectedOfferIndex].sdp,
+            test.preferredCodecs.audio,
+            test.preferredCodecs.video
+          );
         });
 
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
@@ -764,6 +798,15 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
         });
 
+        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
+          sinon.assert.calledWith(
+            test.setCodecPreferences,
+            test.offers[expectedOfferIndex].sdp,
+            test.preferredCodecs.audio,
+            test.preferredCodecs.video
+          );
+        });
+
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
@@ -804,6 +847,15 @@ describe('PeerConnectionV2', () => {
 
           it('should call createOffer on the underlying RTCPeerConnection', () => {
             sinon.assert.calledOnce(test.pc.createOffer);
+          });
+
+          it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
+            sinon.assert.calledWith(
+              test.setCodecPreferences,
+              test.offers[expectedOfferIndex].sdp,
+              test.preferredCodecs.audio,
+              test.preferredCodecs.video
+            );
           });
 
           it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
@@ -1374,13 +1426,15 @@ function makePeerConnectionV2(options) {
 
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
-
-  return new PeerConnectionV2(options.id, makeEncodingParameters(options), {
+  options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
+  options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
+  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
-    setBitrateParameters: options.setBitrateParameters
+    setBitrateParameters: options.setBitrateParameters,
+    setCodecPreferences: options.setCodecPreferences
   });
 }
 

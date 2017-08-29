@@ -568,6 +568,7 @@ function makeTest(options) {
     || new PeerConnectionManager(
       options.iceServerSource,
       makeEncodingParameters(options),
+      { audio: [], video: [] },
       options);
   options.peerConnectionManager.setConfiguration({ iceServers: [] });
   return options;
