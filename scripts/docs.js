@@ -16,7 +16,9 @@ const publicClasses = [
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
+  'lib/media/track/datatrack.js',
   'lib/media/track/localaudiotrack.js',
+  'lib/media/track/localdatatrack.js',
   'lib/media/track/localmediatrack.js',
   'lib/media/track/localvideotrack.js',
   'lib/media/track/localaudiotrackpublication.js',
@@ -25,6 +27,7 @@ const publicClasses = [
   'lib/media/track/localvideotrackpublication.js',
   'lib/media/track/mediatrack.js',
   'lib/media/track/remoteaudiotrack.js',
+  'lib/media/track/remotedatatrack.js',
   'lib/media/track/remotemediatrack.js',
   'lib/media/track/remotetrack.js',
   'lib/media/track/remotevideotrack.js',
@@ -46,7 +49,8 @@ const publicClasses = [
 
 const publicConstructors = [
   'LocalAudioTrack',
-  'LocalVideoTrack'
+  'LocalVideoTrack',
+  'LocalDataTrack'
 ];
 
 const privateConstructors = [
@@ -60,6 +64,7 @@ const privateConstructors = [
   'LocalVideoTrackPublication',
   'MediaTrack',
   'RemoteAudioTrack',
+  'RemoteDataTrack',
   'RemoteTrack',
   'RemoteVideoTrack',
   'RemoteParticipant',
