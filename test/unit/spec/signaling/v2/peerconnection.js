@@ -41,7 +41,7 @@ describe('PeerConnectionV2', () => {
             test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
             result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
             sinon.assert.calledOnce(test.pc.createDataChannel);
-            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id, localDataStreamTrack);
+            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id);
           });
 
           it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {
@@ -101,7 +101,7 @@ describe('PeerConnectionV2', () => {
             test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
             result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
             sinon.assert.calledOnce(test.pc.createDataChannel);
-            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id, localDataStreamTrack);
+            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id);
           });
 
           it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {

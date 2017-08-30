@@ -4,6 +4,7 @@ var assert = require('assert');
 var EventEmitter = require('events').EventEmitter;
 var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
 var inherits = require('util').inherits;
+var LocalDataStreamTrack = require('../../../lib/data/localdatastreamtrack');
 var LocalParticipant = require('../../../lib/localparticipant');
 var sinon = require('sinon');
 var log = require('../../lib/fakelog');
@@ -30,6 +31,16 @@ const LocalVideoTrack = sinon.spy(function(mediaStreamTrack) {
   this.stop = sinon.spy();
 });
 inherits(LocalVideoTrack, EventEmitter);
+
+const LocalDataTrack = sinon.spy(function(dataStreamTrack) {
+  EventEmitter.call(this);
+  if (dataStreamTrack) {
+    this.id = dataStreamTrack.id;
+    this.kind = 'data';
+    this._dataStreamTrack = dataStreamTrack;
+  }
+});
+inherits(LocalDataTrack, EventEmitter);
 
 describe('LocalParticipant', () => {
   describe('constructor', () => {
@@ -75,24 +86,19 @@ describe('LocalParticipant', () => {
         });
       });
 
-      context('when called with a LocalTrack', () => {
-        it('should not throw', () => {
-          assert.doesNotThrow(() => test.participant[method](new test.LocalAudioTrack()));
-          assert.doesNotThrow(() => test.participant[method](new test.LocalVideoTrack()));
-        });
+      ['Audio', 'Video', 'Data'].forEach(kind => {
+        context(`when called with a Local${kind}Track`, () => {
+          it('should not throw', () => {
+            assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
+          });
 
-        it(`should call ._${method} with the given LocalTrack and return its return value`, () => {
-          var localAudioTrack = new test.LocalAudioTrack();
-          var ret = test.participant[method](localAudioTrack);
-          delete(ret.stop);
-          assert(test.participant[`_${method}`].calledWith(localAudioTrack));
-          assert.deepEqual(ret, { foo: 'bar' });
-
-          var localVideoTrack = new test.LocalVideoTrack();
-          ret = test.participant[method](localVideoTrack);
-          delete(ret.stop);
-          assert(test.participant[`_${method}`].calledWith(localVideoTrack));
-          assert.deepEqual(ret, { foo: 'bar' });
+          it(`should call ._${method} with the given Local${kind}Track and return its return value`, () => {
+            var localTrack = new test[`Local${kind}Track`]();
+            var ret = test.participant[method](localTrack);
+            delete(ret.stop);
+            assert(test.participant[`_${method}`].calledWith(localTrack));
+            assert.deepEqual(ret, { foo: 'bar' });
+          });
         });
       });
 
@@ -185,51 +191,59 @@ describe('LocalParticipant', () => {
           [
             'LocalTracks',
             LocalAudioTrack.bind(null, new FakeMediaStreamTrack('audio')),
-            LocalVideoTrack.bind(null, new FakeMediaStreamTrack('video'))
+            LocalVideoTrack.bind(null, new FakeMediaStreamTrack('video')),
+            LocalDataTrack.bind(null, new LocalDataStreamTrack()),
           ],
           [
             'MediaStreamTracks',
             FakeMediaStreamTrack.bind(null, 'audio'),
-            FakeMediaStreamTrack.bind(null, 'video')
+            FakeMediaStreamTrack.bind(null, 'video'),
+            LocalDataTrack.bind(null, new LocalDataStreamTrack())
           ]
-        ].forEach(([ arrayItemType, LocalAudioTrack, LocalVideoTrack ]) => {
+        ].forEach(([ arrayItemType, LocalAudioTrack, LocalVideoTrack, LocalDataTrack ]) => {
           context(arrayItemType, () => {
             it('should not throw', () => {
               assert.doesNotThrow(() => test.participant[method]([
                 new LocalAudioTrack(),
-                new LocalVideoTrack()
+                new LocalVideoTrack(),
+                new LocalDataTrack()
               ]));
             });
 
             it(`should call .${trackMethod} for each LocalTrack`, () => {
               var localAudioTrack = new LocalAudioTrack();
               var localVideoTrack = new LocalVideoTrack();
+              var localDataTrack = new LocalDataTrack();
 
-              test.participant[method]([ localAudioTrack, localVideoTrack ]);
-              sinon.assert.callCount(test.participant[trackMethod], 2);
+              test.participant[method]([ localAudioTrack, localVideoTrack, localDataTrack ]);
+              sinon.assert.callCount(test.participant[trackMethod], 3);
               sinon.assert.calledWith(test.participant[trackMethod], localAudioTrack);
               sinon.assert.calledWith(test.participant[trackMethod], localVideoTrack);
+              sinon.assert.calledWith(test.participant[trackMethod], localDataTrack);
             });
 
             if (method === 'publishTracks') {
               it(`should return a Promise for an array of LocalTrackPublications`, async () => {
                 var localAudioTrack = new LocalAudioTrack();
                 var localVideoTrack = new LocalVideoTrack();
-                var ret = await test.participant[method]([ localAudioTrack, localVideoTrack ]);
+                var localDataTrack = new LocalDataTrack();
+                var ret = await test.participant[method]([ localAudioTrack, localVideoTrack, localDataTrack ]);
 
                 assert(Array.isArray(ret));
-                assert.equal(ret.length, 2);
+                assert.equal(ret.length, 3);
                 assert.equal(ret[0].track, localAudioTrack);
                 assert.equal(ret[1].track, localVideoTrack);
+                assert.equal(ret[2].track, localDataTrack);
               });
             } else {
               it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
                 var localAudioTrack = new LocalAudioTrack();
                 var localVideoTrack = new LocalVideoTrack();
-                var ret = test.participant[method]([ localAudioTrack, localVideoTrack ]);
+                var localDataTrack = new LocalDataTrack();
+                var ret = test.participant[method]([ localAudioTrack, localVideoTrack, localDataTrack ]);
 
                 assert(Array.isArray(ret));
-                assert.equal(ret.length, 1);
+                assert.equal(ret.length, 2);
                 delete(ret[0].stop);
                 assert.deepEqual(ret[0], { foo: 'bar' });
               });
@@ -248,7 +262,8 @@ describe('LocalParticipant', () => {
             it(`should call .${trackMethod} for each item in the "tracks" argument with stop=${stop}`, () => {
               var tracks = [
                 new LocalAudioTrack(new FakeMediaStreamTrack('audio')),
-                new LocalVideoTrack(new FakeMediaStreamTrack('video'))
+                new LocalVideoTrack(new FakeMediaStreamTrack('video')),
+                new LocalDataTrack(new LocalDataStreamTrack())
               ];
 
               if (typeof stop === 'undefined') {
@@ -323,6 +338,10 @@ describe('LocalParticipant', () => {
         LocalVideoTrackPublication: function(sid, track) {
           this.sid = sid;
           this.track = track;
+        },
+        LocalDataTrackPublication: function(sid, track) {
+          this.sid = sid;
+          this.track = track;
         }
       };
       test = makeTest(options);
@@ -352,14 +371,27 @@ describe('LocalParticipant', () => {
     });
 
     [
-      [ 'LocalTrack', kind => kind === 'audio'
-        ? new LocalAudioTrack(new FakeMediaStreamTrack(kind))
-        : new LocalVideoTrack(new FakeMediaStreamTrack(kind)) ],
-      [ 'MediaStreamTrack', kind => new FakeMediaStreamTrack(kind) ]
+      [
+        'LocalTrack',
+        kind => ({
+          audio: new LocalAudioTrack(new FakeMediaStreamTrack(kind)),
+          video: new LocalVideoTrack(new FakeMediaStreamTrack(kind)),
+          data: new LocalDataTrack(new LocalDataStreamTrack())
+        }[kind])
+      ],
+      [
+        'MediaStreamTrack',
+        kind => ({
+          audio: new FakeMediaStreamTrack(kind),
+          video: new FakeMediaStreamTrack(kind),
+          data: new LocalDataTrack(new LocalDataStreamTrack())
+        }[kind])
+      ]
     ].forEach(([ trackType, createTrack ]) => {
       [
         'audio',
-        'video'
+        'video',
+        'data'
       ].forEach(kind => {
         context(`when called with ${a(kind)} ${kind} ${trackType}`, () => {
           context(`when the .trackPublications collection already has an entry for the ${trackType}`, () => {
@@ -385,14 +417,22 @@ describe('LocalParticipant', () => {
                 localTrackPublication = await test.participant.publishTrack(localTrack);
               });
 
-              it(`should ${hasLocalTrack ? 'not' : ''} call .addTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack`, () => {
-                assert(hasLocalTrack ?
-                  test.signaling.addTrack.callCount === 0 :
-                  test.signaling.addTrack.args[0][0] instanceof FakeMediaStreamTrack);
+              it(`should ${hasLocalTrack ? 'not ' : ''}call .addTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack`, () => {
+                if (hasLocalTrack) {
+                  sinon.assert.notCalled(test.signaling.addTrack);
+                  return;
+                }
+                sinon.assert.calledOnce(test.signaling.addTrack);
+                assert(test.signaling.addTrack.args[0][0] instanceof FakeMediaStreamTrack
+                  || test.signaling.addTrack.args[0][0] instanceof LocalDataStreamTrack);
               });
 
               context('when the SID is set for the underlying LocalTrackPublicationSignaling', () => {
-                var otherKind = kind === 'audio' ? 'video' : 'audio';
+                var otherKinds = {
+                  audio: ['video', 'data'],
+                  video: ['audio', 'data'],
+                  data: ['audio', 'video']
+                }[kind]
 
                 it(`should resolve the returned Promise with a ${capitalize(kind)}TrackPublication`, () => {
                   var LocalTrackPublication = options[`Local${capitalize(kind)}TrackPublication`];
@@ -406,8 +446,10 @@ describe('LocalParticipant', () => {
                   assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrackPublication.sid));
                 });
 
-                it(`should not add the ${capitalize(kind)}TrackPublication to the .${otherKind}TrackPublications collections`, () => {
-                  assert(!test.participant[`${otherKind}TrackPublications`].has(localTrack.id));
+                otherKinds.forEach(otherKind => {
+                  it(`should not add the ${capitalize(kind)}TrackPublication to the .${otherKind}TrackPublications collection`, () => {
+                    assert(!test.participant[`${otherKind}TrackPublications`].has(localTrack.id));
+                  });
                 });
               });
 
@@ -472,14 +514,27 @@ describe('LocalParticipant', () => {
     });
 
     [
-      ['LocalTrack', kind => kind === 'audio'
-        ? new LocalAudioTrack(new FakeMediaStreamTrack(kind))
-        : new LocalVideoTrack(new FakeMediaStreamTrack(kind))],
-      ['MediaStreamTrack', kind => new FakeMediaStreamTrack(kind)]
+      [
+        'LocalTrack',
+        kind => ({
+          audio: new LocalAudioTrack(new FakeMediaStreamTrack(kind)),
+          video: new LocalVideoTrack(new FakeMediaStreamTrack(kind)),
+          data: new LocalDataTrack(new LocalDataStreamTrack())
+        }[kind])
+      ],
+      [
+        'MediaStreamTrack',
+        kind => ({
+          audio: new FakeMediaStreamTrack(kind),
+          video: new FakeMediaStreamTrack(kind),
+          data: new LocalDataTrack(new LocalDataStreamTrack())
+        }[kind])
+      ]
     ].forEach(([trackType, createTrack]) => {
       [
         'audio',
-        'video'
+        'video',
+        'data'
       ].forEach(kind => {
         var localTrack;
 
@@ -492,8 +547,8 @@ describe('LocalParticipant', () => {
               localTrack = createTrack(kind);
 
               track = new test[`Local${capitalize(kind)}Track`](
-                localTrack instanceof FakeMediaStreamTrack
-                  ? localTrack : localTrack.mediaStreamTrack);
+                (localTrack instanceof FakeMediaStreamTrack || localTrack instanceof LocalDataStreamTrack)
+                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._dataStreamTrack));
 
               test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
               test.participant.tracks.set(localTrack.id, track);
@@ -514,7 +569,8 @@ describe('LocalParticipant', () => {
             });
 
             it('should call .removeTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack', () => {
-              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack);
+              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack
+                || test.signaling.removeTrack.args[0][0] instanceof LocalDataStreamTrack);
             });
 
             it(`should return the LocalTrackPublication corresponding to the unpublished ${kind} ${trackType}`, () => {
@@ -534,8 +590,8 @@ describe('LocalParticipant', () => {
               localTrack = createTrack(kind);
 
               track = new test[`Local${capitalize(kind)}Track`](
-                localTrack instanceof FakeMediaStreamTrack
-                  ? localTrack : localTrack.mediaStreamTrack);
+                (localTrack instanceof FakeMediaStreamTrack || localTrack instanceof LocalDataStreamTrack)
+                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._dataStreamTrack));
 
               trackSignaling = makeTrackSignaling(localTrack.id, 'foo');
               test.signaling.tracks.set(localTrack.id, trackSignaling);
@@ -554,7 +610,8 @@ describe('LocalParticipant', () => {
             });
 
             it(`should call .removeTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack`, () => {
-              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack);
+              assert(test.signaling.removeTrack.args[0][0] instanceof FakeMediaStreamTrack
+                || test.signaling.removeTrack.args[0][0] instanceof LocalDataStreamTrack);
             });
 
             it('should return null', () => {
@@ -900,6 +957,7 @@ describe('LocalParticipant', () => {
 function makeLocalTrackConstructors(options) {
   options = options || {};
   options.LocalAudioTrack = options.LocalAudioTrack || LocalAudioTrack;
+  options.LocalDataTrack = options.LocalDataTrack || LocalDataTrack;
   options.LocalVideoTrack = options.LocalVideoTrack || LocalVideoTrack;
   return options;
 }

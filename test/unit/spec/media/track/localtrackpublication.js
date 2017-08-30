@@ -1,22 +1,26 @@
 'use strict';
 
 const assert = require('assert');
+const LocalDataStreamTrack = require('../../../../../lib/data/localdatastreamtrack');
 const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
 const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
+const LocalDataTrackPublication = require('../../../../../lib/media/track/localdatatrackpublication');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const sinon = require('sinon');
 
 [
   ['LocalAudioTrackPublication', LocalAudioTrackPublication],
-  ['LocalVideoTrackPublication', LocalVideoTrackPublication]
+  ['LocalVideoTrackPublication', LocalVideoTrackPublication],
+  ['LocalDataTrackPublication', LocalDataTrackPublication]
 ].forEach(pair => {
   const description = pair[0];
   const LocalTrackPublication = pair[1];
   const kind = {
     LocalAudioTrackPublication: 'audio',
-    LocalVideoTrackPublication: 'video'
+    LocalVideoTrackPublication: 'video',
+    LocalDataTrackPublication: 'data'
   }[description];
-  const track = new FakeMediaStreamTrack(kind);
+  const track = kind === 'data' ? new LocalDataStreamTrack() : new FakeMediaStreamTrack(kind);
 
   describe(description, function() {
     describe('constructor', () => {
