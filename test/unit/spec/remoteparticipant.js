@@ -30,6 +30,7 @@ describe('RemoteParticipant', function() {
       var test;
       var audioTrack;
       var videoTrack;
+      var dataTrack;
 
       before(() => {
         audioTrack = new EventEmitter();
@@ -40,13 +41,21 @@ describe('RemoteParticipant', function() {
         videoTrack.id = 'videoTrack';
         videoTrack.kind = 'video';
 
-        test = makeTest({ tracks: [ audioTrack, videoTrack ] });
+        dataTrack = new EventEmitter();
+        dataTrack.id = 'dataTrack';
+        dataTrack.kind = 'data';
+
+        test = makeTest({ tracks: [ audioTrack, videoTrack, dataTrack ] });
       });
 
       it('should set .tracks to a Map of RemoteTrack ID => RemoteTrack', () => {
-        assert.equal(test.participant.tracks.size, 2);
+        assert.equal(test.participant.tracks.size, 3);
         test.participant.tracks.forEach(track => {
-          assert.equal(track, track.kind === 'audio' ? audioTrack : videoTrack);
+          assert.equal(track, {
+            audio: audioTrack,
+            video: videoTrack,
+            data: dataTrack
+          }[track.kind]);
         });
       });
 
@@ -61,6 +70,13 @@ describe('RemoteParticipant', function() {
         assert.equal(test.participant.videoTracks.size, 1);
         test.participant.videoTracks.forEach(track => {
           assert.equal(track, videoTrack);
+        });
+      });
+
+      it('should set .dataTracks to a Map of RemoteDataTrack ID => RemoteDataTrack', () => {
+        assert.equal(test.participant.dataTracks.size, 1);
+        test.participant.dataTracks.forEach(track => {
+          assert.equal(track, dataTrack);
         });
       });
     });
@@ -83,6 +99,10 @@ describe('RemoteParticipant', function() {
       it('should set .videoTracks to an empty Map', () => {
         assert.equal(test.participant.videoTracks.size, 0);
       });
+
+      it('should set .dataTracks to an empty Map', () => {
+        assert.equal(test.participant.dataTracks.size, 0);
+      });
     });
   });
 
@@ -104,7 +124,7 @@ describe('RemoteParticipant', function() {
         test = makeTest();
       });
 
-      [ 'Audio', 'Video' ].forEach(kind => {
+      [ 'Audio', 'Video', 'Data' ].forEach(kind => {
         context(`when ${a(kind)} Remote${kind}Track with the same .id exists in .tracks`, () => {
           before(() => {
             trackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
@@ -233,6 +253,17 @@ describe('RemoteParticipant', function() {
         assert.equal(track, trackEnabled);
       });
 
+      it('re-emits "message" events', () => {
+        var track = new EventEmitter();
+        var trackMessageEvent;
+        var test = makeTest({ tracks: [ track ] });
+        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        var data = util.makeUUID();
+        track.emit('message', data, track);
+        assert.equal(data, trackMessageEvent.data);
+        assert.equal(track, trackMessageEvent.track);
+      });
+
       it('re-emits "started" events', () => {
         var track = new EventEmitter();
         var trackStarted;
@@ -275,6 +306,18 @@ describe('RemoteParticipant', function() {
         test.participant.once('trackEnabled', track => trackEnabled = track);
         track.emit('enabled', track);
         assert(!trackEnabled);
+      });
+
+      it('does not re-emit "message" events', () => {
+        var track = new EventEmitter();
+         track._unsubscribe = sinon.spy();
+        var trackMessageEvent;
+        var test = makeTest({ tracks: [ track ] });
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        var data = util.makeUUID();
+        track.emit('message', data, track);
+        assert(!trackMessageEvent);
       });
 
       it('does not re-emit "started" events', () => {
@@ -336,6 +379,16 @@ describe('RemoteParticipant', function() {
         assert(!trackEnabled);
       });
 
+      it('does not re-emit "message" events', () => {
+        var track = new EventEmitter();
+        var trackMessageEvent;
+        var test = makeTest({ tracks: [ track ], state: 'disconnected' });
+        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        var data = util.makeUUID();
+        track.emit('message', data, track);
+        assert(!trackMessageEvent);
+      });
+
       it('does not re-emit "started" events', () => {
         var track = new EventEmitter();
         var trackStarted;
@@ -387,14 +440,13 @@ describe('RemoteParticipant', function() {
           var test = makeTest();
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
-          assert(
-            audioTrack.id,
-            audioTrack.getMediaOrDataStreamTrack.args[0][0]);
-          assert(
-            videoTrack.id,
-            videoTrack.getMediaOrDataStreamTrack.args[0][0]);
+          test.signaling.emit('trackAdded', dataTrack);
+          sinon.assert.calledOnce(audioTrack.getMediaOrDataStreamTrack);
+          sinon.assert.calledOnce(videoTrack.getMediaOrDataStreamTrack);
+          sinon.assert.calledOnce(dataTrack.getMediaOrDataStreamTrack);
         });
 
         context('if the Promise returned by .getMediaOrDataStreamTrack resolves', () => {
@@ -402,17 +454,23 @@ describe('RemoteParticipant', function() {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('trackAdded', audioTrack);
             test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert.equal(audioTrack.mediaOrDataStreamTrack, test.RemoteAudioTrack.args[0][0]);
               assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
               assert.equal(videoTrack.mediaOrDataStreamTrack, test.RemoteVideoTrack.args[0][0]);
               assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
+
+              assert.equal(dataTrack.mediaOrDataStreamTrack, test.RemoteDataTrack.args[0][0]);
+              assert.equal(dataTrack, test.RemoteDataTrack.args[0][1]);
             });
           });
 
@@ -420,16 +478,21 @@ describe('RemoteParticipant', function() {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('trackAdded', audioTrack);
             test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], test.participant.tracks.get(test.tracks[0].id));
               assert.equal(test.tracks[1], test.participant.tracks.get(test.tracks[1].id));
+              assert.equal(test.tracks[2], test.participant.tracks.get(test.tracks[2].id));
               assert.equal(test.tracks[0], test.participant.audioTracks.get(test.tracks[0].id));
               assert.equal(test.tracks[1], test.participant.videoTracks.get(test.tracks[1].id));
+              assert.equal(test.tracks[2], test.participant.dataTracks.get(test.tracks[2].id));
             });
           });
 
@@ -438,6 +501,7 @@ describe('RemoteParticipant', function() {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             var tracks = [];
             var subscribed = [];
 
@@ -455,16 +519,20 @@ describe('RemoteParticipant', function() {
 
             test.signaling.emit('trackAdded', audioTrack);
             test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
 
             return Promise.all([
               trackEventsPromise,
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], tracks[0]);
               assert.equal(test.tracks[1], tracks[1]);
+              assert.equal(test.tracks[2], tracks[2]);
               assert.equal(test.tracks[0], subscribed[0]);
               assert.equal(test.tracks[1], subscribed[1]);
+              assert.equal(test.tracks[2], subscribed[2]);
             });
           });
         });
@@ -476,10 +544,13 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('stateChanged', 'disconnected');
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
           assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
         });
 
         it('does not construct a new RemoteTrack', () => {
@@ -487,10 +558,13 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('stateChanged', 'disconnected');
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!test.RemoteAudioTrack.calledOnce);
           assert(!test.RemoteVideoTrack.calledOnce);
+          assert(!test.RemoteDataTrack.calledOnce);
         });
 
         it('does not call ._addTrack on the RemoteParticipant', () => {
@@ -499,8 +573,10 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('stateChanged', 'disconnected');
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!test.participant._addTrack.calledOnce);
         });
       });
@@ -510,20 +586,26 @@ describe('RemoteParticipant', function() {
           var test = makeTest({ state: 'disconnected' });
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
           assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
         });
 
         it('does not construct a new RemoteTrack', () => {
           var test = makeTest({ state: 'disconnected' });
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!test.RemoteAudioTrack.calledOnce);
           assert(!test.RemoteVideoTrack.calledOnce);
+          assert(!test.RemoteDataTrack.calledOnce);
         });
 
         it('does not call ._addTrack on the RemoteParticipant', () => {
@@ -531,8 +613,10 @@ describe('RemoteParticipant', function() {
           test.participant._addTrack = sinon.spy();
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
+          var dataTrack = makeTrackSignaling({ kind: 'data' });
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
           assert(!test.participant._addTrack.calledOnce);
         });
       });
@@ -545,6 +629,7 @@ describe('RemoteParticipant', function() {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             var tracks = [];
             var unsubscribed = [];
 
@@ -562,6 +647,7 @@ describe('RemoteParticipant', function() {
 
             test.signaling.emit('trackAdded', audioTrack);
             test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
 
             var unsubscribedEventPromises = [...test.participant.tracks.values()].map(track => {
               return new Promise(resolve => track.once('unsubscribed', resolve));
@@ -569,20 +655,25 @@ describe('RemoteParticipant', function() {
 
             test.signaling.emit('trackRemoved', audioTrack);
             test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
 
             return Promise.all([
               trackEventsPromise,
               ...unsubscribedEventPromises,
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], tracks[0]);
               assert.equal(test.tracks[1], tracks[1]);
+              assert.equal(test.tracks[2], tracks[2]);
               assert.equal(test.tracks[0], unsubscribed[0]);
               assert.equal(test.tracks[1], unsubscribed[1]);
+              assert.equal(test.tracks[2], unsubscribed[2]);
               assert.equal(test.participant.tracks.size, 0);
               assert.equal(test.participant.audioTracks.size, 0);
               assert.equal(test.participant.videoTracks.size, 0);
+              assert.equal(test.participant.dataTracks.size, 0);
             });
           });
         });
@@ -593,11 +684,14 @@ describe('RemoteParticipant', function() {
             test.participant._removeTrack = sinon.spy();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('trackRemoved', audioTrack);
             test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -612,14 +706,18 @@ describe('RemoteParticipant', function() {
             test.participant._removeTrack = sinon.spy();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('trackAdded', audioTrack);
             test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
             test.signaling.emit('stateChanged', 'disconnected');
             test.signaling.emit('trackRemoved', audioTrack);
             test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -632,12 +730,15 @@ describe('RemoteParticipant', function() {
             test.participant._removeTrack = sinon.spy();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('stateChanged', 'disconnected');
             test.signaling.emit('trackRemoved', audioTrack);
             test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -652,11 +753,14 @@ describe('RemoteParticipant', function() {
             test.participant._removeTrack = sinon.spy();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
+            var dataTrack = makeTrackSignaling({ kind: 'data' });
             test.signaling.emit('trackRemoved', audioTrack);
             test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -685,20 +789,26 @@ describe('RemoteParticipant', function() {
             var test = makeTest({
               trackSignalings: [
                 { kind: 'audio' },
-                { kind: 'video' }
+                { kind: 'video' },
+                { kind: 'data' }
               ]
             });
             var audioTrack = test.trackSignalings[0];
             var videoTrack = test.trackSignalings[1];
+            var dataTrack = test.trackSignalings[2];
             return Promise.all([
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(() => {
               assert.equal(audioTrack.mediaOrDataStreamTrack, test.RemoteAudioTrack.args[0][0]);
               assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
               assert.equal(videoTrack.mediaOrDataStreamTrack, test.RemoteVideoTrack.args[0][0]);
               assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
+
+              assert.equal(dataTrack.mediaOrDataStreamTrack, test.RemoteDataTrack.args[0][0]);
+              assert.equal(dataTrack, test.RemoteDataTrack.args[0][1]);
             });
           });
 
@@ -706,7 +816,8 @@ describe('RemoteParticipant', function() {
             var test = makeTest({
               trackSignalings: [
                 { kind: 'audio' },
-                { kind: 'video' }
+                { kind: 'video' },
+                { kind: 'data' }
               ]
             });
             var tracksAddedPromise = new Promise(resolve => {
@@ -721,14 +832,17 @@ describe('RemoteParticipant', function() {
 
             var audioTrack = test.trackSignalings[0];
             var videoTrack = test.trackSignalings[1];
+            var dataTrack = test.trackSignalings[2];
 
             return Promise.all([
               tracksAddedPromise,
               audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise
+              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+              dataTrack.getMediaOrDataStreamTrackDeferred.promise
             ]).then(results => {
               assert.equal(test.tracks[0], results[0][0]);
               assert.equal(test.tracks[1], results[0][1]);
+              assert.equal(test.tracks[2], results[0][2]);
             });
           });
         });
@@ -740,13 +854,16 @@ describe('RemoteParticipant', function() {
             state: 'disconnected',
             trackSignalings: [
               { kind: 'audio' },
-              { kind: 'video' }
+              { kind: 'video' },
+              { kind: 'data' }
             ]
           });
           var audioTrack = test.trackSignalings[0];
           var videoTrack = test.trackSignalings[1];
+          var dataTrack = test.trackSignalings[1];
           assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
           assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
         });
 
         it('does not construct new RemoteTracks', () => {
@@ -754,14 +871,17 @@ describe('RemoteParticipant', function() {
             state: 'disconnected',
             trackSignalings: [
               { kind: 'audio' },
-              { kind: 'video' }
+              { kind: 'video' },
+              { kind: 'data' }
             ]
           });
           var audioTrack = test.trackSignalings[0];
           var videoTrack = test.trackSignalings[1];
+          var dataTrack = test.trackSignalings[1];
           return Promise.all([
             audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-            videoTrack.getMediaOrDataStreamTrackDeferred.promise
+            videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+            dataTrack.getMediaOrDataStreamTrackDeferred.promise
           ]).then(() => {
             assert.equal(0, test.tracks.length);
           });
@@ -773,14 +893,17 @@ describe('RemoteParticipant', function() {
             state: 'disconnected',
             trackSignalings: [
               { kind: 'audio' },
-              { kind: 'video' }
+              { kind: 'video' },
+              { kind: 'data' }
             ]
           });
           var audioTrack = test.trackSignalings[0];
           var videoTrack = test.trackSignalings[1];
+          var dataTrack = test.trackSignalings[2];
           return Promise.all([
             audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-            videoTrack.getMediaOrDataStreamTrackDeferred.promise
+            videoTrack.getMediaOrDataStreamTrackDeferred.promise,
+            dataTrack.getMediaOrDataStreamTrackDeferred.promise
           ]).then(() => {
             assert(!test.participant._addTrack.calledOnce);
           });
@@ -840,6 +963,17 @@ function makeTest(options) {
     options.tracks.push(this);
   });
   inherits(options.RemoteVideoTrack, EventEmitter);
+
+  options.RemoteDataTrack = sinon.spy(function RemoteDataTrack(dataStreamTrack, signaling) {
+    EventEmitter.call(this);
+    this.id = signaling.id;
+    this.kind = signaling.kind;
+    this._dataStreamTrack = dataStreamTrack;
+    this.signaling = signaling;
+    this._unsubscribe = this.emit.bind(this, 'unsubscribed', this);
+    options.tracks.push(this);
+  });
+  inherits(options.RemoteDataTrack, EventEmitter);
 
   options.log = log;
   options.signaling = options.signaling || makeSignaling(options);
