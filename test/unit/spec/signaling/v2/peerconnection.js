@@ -584,6 +584,15 @@ describe('PeerConnectionV2', () => {
         });
       }
 
+      function itShouldApplyCodecPreferences() {
+        it('should apply the specified codec preferences to the remote description', () => {
+          const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
+          const preferredAudioCodecs = test.setCodecPreferences.args[0].pop();
+          assert.equal(preferredAudioCodecs, test.preferredCodecs.audio);
+          assert.equal(preferredVideoCodecs, test.preferredCodecs.video);
+        });
+      }
+
       function itShouldAnswer() {
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
@@ -612,6 +621,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itMightEventuallyAnswer() {
@@ -647,6 +657,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 
@@ -713,6 +724,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldApplyAnswer() {
@@ -750,6 +762,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldCreateOffer() {
@@ -825,6 +838,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 
@@ -1374,13 +1388,15 @@ function makePeerConnectionV2(options) {
 
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
-
-  return new PeerConnectionV2(options.id, makeEncodingParameters(options), {
+  options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
+  options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
+  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
-    setBitrateParameters: options.setBitrateParameters
+    setBitrateParameters: options.setBitrateParameters,
+    setCodecPreferences: options.setCodecPreferences
   });
 }
 

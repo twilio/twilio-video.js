@@ -366,23 +366,13 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        const options = Object.assign({name: randomName()}, encodingParameters, defaultOptions);
-        const token = getToken(randomName());
-        thisRoom = await connect(token, options);
-
-        const thoseOptions = Object.assign({name: options.name}, defaultOptions);
-        const thoseTokens = [randomName(), randomName()].map(getToken);
-        thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
-
-        await participantsConnected(thisRoom, thoseRooms.length);
-        const thoseParticipants = [...thisRoom.participants.values()];
-        await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
-        peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+        [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters);
       });
 
       ['audio', 'video'].forEach(kind => {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           flatMap(peerConnections, pc => {
+            assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
           }).forEach(section => {
             const modifier = guessBrowser() === 'firefox'
@@ -406,4 +396,69 @@ describe('connect', function() {
       });
     });
   });
+
+  (navigator.userAgent === 'Node'
+    ? describe.skip
+    : describe)('called with preferred audio and video codecs', () => {
+    let peerConnections;
+    let thisRoom;
+    let thoseRooms;
+
+    const testOptions = {
+      preferredAudioCodecs: ['PCMU', 'invalid', 'PCMA'],
+      preferredVideoCodecs: ['invalid', 'H264', 'VP8']
+    };
+
+    before(async () => {
+      [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
+    });
+
+    it('should apply the codec preferences to all remote descriptions', () => {
+      flatMap(peerConnections, pc => {
+        assert(pc.remoteDescription.sdp);
+        return getMediaSections(pc.remoteDescription.sdp);
+      }).forEach(section => {
+        const codecMap = createCodecMap(section);
+        const expectedCodecIds = /m=audio/.test(section)
+          ? flatMap(testOptions.preferredAudioCodecs, codecName => codecMap.get(codecName.toLowerCase()) || [])
+          : flatMap(testOptions.preferredVideoCodecs, codecName => codecMap.get(codecName.toLowerCase()) || []);
+        const actualCodecIds = getCodecIds(section);
+        expectedCodecIds.forEach((expectedCodecId, i) => assert.equal(expectedCodecId, actualCodecIds[i]));
+      });
+    });
+
+    after(() => {
+      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+    });
+  });
 });
+
+function createCodecMap(mediaSection) {
+  return getCodecIds(mediaSection).reduce((codecMap, codecId) => {
+    const rtpmapPattern = new RegExp('a=rtpmap:' + codecId + ' ([^/]+)');
+    const codecName = mediaSection.match(rtpmapPattern)[1].toLowerCase();
+    const codecIds = codecMap.get(codecName) || [];
+    codecMap.set(codecName, codecIds.concat(codecId));
+    return codecMap;
+  }, new Map());
+}
+
+function getCodecIds(mediaSection) {
+  return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
+}
+
+async function setup(testOptions) {
+  const options = Object.assign({name: randomName()}, testOptions, defaultOptions);
+  const token = getToken(randomName());
+  const thisRoom = await connect(token, options);
+
+  const thoseOptions = Object.assign({name: options.name}, defaultOptions);
+  const thoseTokens = [randomName(), randomName()].map(getToken);
+  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+  await participantsConnected(thisRoom, thoseRooms.length);
+  const thoseParticipants = [...thisRoom.participants.values()];
+  await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
+  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+  return [thisRoom, thoseRooms, peerConnections];
+}

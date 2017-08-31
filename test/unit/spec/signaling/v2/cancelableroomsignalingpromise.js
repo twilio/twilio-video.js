@@ -414,6 +414,7 @@ function makeTest(options) {
     options.localParticipant,
     options.iceServerSource,
     makeEncodingParameters(options),
+    { audio: [], video: [] },
     options);
   return options;
 }
