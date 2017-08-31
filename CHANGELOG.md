@@ -7,7 +7,10 @@ New Features
 - twilio-video.js now features an API for setting and updating bandwidth
   constraints. When you `connect` to a Room, you can specify an optional
   `maxAudioBitrate` and an optional `maxVideoBitrate`, both in bits per second
-  (bps). For example, to connect with a maximum audio bitrate of 6 kilobits per
+  (bps). These values are set as hints for variable bitrate codecs, but will not
+  take effect for fixed bitrate codecs.
+
+  For example, to connect with a maximum audio bitrate of 6 kilobits per
   second and a maximum video bitrate of 100 kilobits per second:
 
   ```js
@@ -36,7 +39,32 @@ New Features
   room.localParticipant.setParameters({ maxAudioBitrate: 12000 });
   ```
 
-  Please refer to the API docs for more information.
+- twilio-video.js now features an API for setting preferred codecs when
+  publishing Tracks. When you `connect` to a Room, you can specify an optional
+  `preferredAudioCodecs` array and an optional `preferredVideoCodecs` array.
+  These are codec "preferences" because they will only be applied if your
+  browser and the type of Room you are connected to support them. If a
+  preference cannot be satisfied, we will fallback to the next best codec.
+
+  For example, to connect with a preferred video codec of H.264:
+
+  ```js
+  const room = await connect(token, {
+    preferredVideoCodecs: ['H264']
+  });
+  ```
+
+  You can also specify more than one preferred codec. For example, to connect
+  with a preferred audio codec of iSAC, falling back to Opus if iSAC is
+  unavailable:
+
+  ```js
+  const room = await connect(token, {
+    preferredAudioCodecs: ['isac', 'opus']
+  });
+  ```
+
+Please refer to the API docs for more information on both of these features.
 
 1.2.2 (August 22, 2017)
 =======================
