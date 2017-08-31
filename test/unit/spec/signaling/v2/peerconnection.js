@@ -248,13 +248,6 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
         });
 
-        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
-          sinon.assert.calledWith(test.setCodecPreferences,
-            test.offers[expectedOfferIndex].sdp,
-            test.preferredCodecs.audio,
-            test.preferredCodecs.video);
-        });
-
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
@@ -591,6 +584,15 @@ describe('PeerConnectionV2', () => {
         });
       }
 
+      function itShouldApplyCodecPreferences() {
+        it('should apply the specified codec preferences to the remote description', () => {
+          const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
+          const preferredAudioCodecs = test.setCodecPreferences.args[0].pop();
+          assert.equal(preferredAudioCodecs, test.preferredCodecs.audio);
+          assert.equal(preferredVideoCodecs, test.preferredCodecs.video);
+        });
+      }
+
       function itShouldAnswer() {
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
@@ -598,15 +600,6 @@ describe('PeerConnectionV2', () => {
 
         it('should call createAnswer on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.createAnswer);
-        });
-
-        it('should call setCodecPreferences on the resulting answer\'s sdp string', () => {
-          sinon.assert.calledWith(
-            test.setCodecPreferences,
-            test.answers[0].sdp,
-            test.preferredCodecs.audio,
-            test.preferredCodecs.video
-          );
         });
 
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
@@ -628,6 +621,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itMightEventuallyAnswer() {
@@ -663,6 +657,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 
@@ -698,15 +693,6 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createAnswer);
         });
 
-        it('should call setCodecPreferences on the resulting answer\'s sdp string', () => {
-          sinon.assert.calledWith(
-            test.setCodecPreferences,
-            test.answers[0].sdp,
-            test.preferredCodecs.audio,
-            test.preferredCodecs.video
-          );
-        });
-
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
           assert.deepEqual(test.pc.setLocalDescription.args[1][0], test.answers[0]);
         });
@@ -717,15 +703,6 @@ describe('PeerConnectionV2', () => {
 
         it('should call createOffer on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
-        });
-
-        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
-          sinon.assert.calledWith(
-            test.setCodecPreferences,
-            test.offers[expectedOfferIndex].sdp,
-            test.preferredCodecs.audio,
-            test.preferredCodecs.video
-          );
         });
 
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
@@ -747,6 +724,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldApplyAnswer() {
@@ -784,6 +762,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldCreateOffer() {
@@ -796,15 +775,6 @@ describe('PeerConnectionV2', () => {
 
         it('should call createOffer on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
-        });
-
-        it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
-          sinon.assert.calledWith(
-            test.setCodecPreferences,
-            test.offers[expectedOfferIndex].sdp,
-            test.preferredCodecs.audio,
-            test.preferredCodecs.video
-          );
         });
 
         it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
@@ -849,15 +819,6 @@ describe('PeerConnectionV2', () => {
             sinon.assert.calledOnce(test.pc.createOffer);
           });
 
-          it('should call setCodecPreferences on the resulting offer\'s sdp string', () => {
-            sinon.assert.calledWith(
-              test.setCodecPreferences,
-              test.offers[expectedOfferIndex].sdp,
-              test.preferredCodecs.audio,
-              test.preferredCodecs.video
-            );
-          });
-
           it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
             sinon.assert.calledOnce(test.pc.setLocalDescription);
             sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
@@ -877,6 +838,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 

@@ -413,10 +413,10 @@ describe('connect', function() {
       [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
     });
 
-    it('should apply the codec preferences to all local descriptions', () => {
+    it('should apply the codec preferences to all remote descriptions', () => {
       flatMap(peerConnections, pc => {
-        assert(pc.localDescription.sdp);
-        return getMediaSections(pc.localDescription.sdp);
+        assert(pc.remoteDescription.sdp);
+        return getMediaSections(pc.remoteDescription.sdp);
       }).forEach(section => {
         const codecMap = createCodecMap(section);
         const expectedCodecIds = /m=audio/.test(section)
