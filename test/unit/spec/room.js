@@ -62,11 +62,51 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
+    it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackDimensionsChanged', spy);
+
+      participants['foo'].emit('trackDimensionsChanged');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackDisabled', spy);
+
+      participants['foo'].emit('trackDisabled');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackEnabled', spy);
+
+      participants['foo'].emit('trackEnabled');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackMessage', spy);
+
+      participants['foo'].emit('trackMessage');
+      assert.equal(spy.callCount, 1);
+    });
+
     it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', function() {
       var spy = new sinon.spy();
       room.on('trackRemoved', spy);
 
       participants['bar'].emit('trackRemoved');
+      assert.equal(spy.callCount, 1);
+    });
+
+    it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', function() {
+      var spy = new sinon.spy();
+      room.on('trackStarted', spy);
+
+      participants['foo'].emit('trackStarted');
       assert.equal(spy.callCount, 1);
     });
 
@@ -91,12 +131,22 @@ describe('Room', function() {
 
       var spy = new sinon.spy();
       room.on('trackAdded', spy);
+      room.on('trackDimensionsChanged', spy);
+      room.on('trackDisabled', spy);
+      room.on('trackEnabled', spy);
+      room.on('trackMessage', spy);
       room.on('trackRemoved', spy);
+      room.on('trackStarted', spy);
       room.on('trackSubscribed', spy);
       room.on('trackUnsubscribed', spy);
 
       participants['foo'].emit('trackAdded');
+      participants['foo'].emit('trackDimensionsChanged');
+      participants['foo'].emit('trackDisabled');
+      participants['foo'].emit('trackEnabled');
+      participants['foo'].emit('trackMessage');
       participants['foo'].emit('trackRemoved');
+      participants['foo'].emit('trackStarted');
       participants['foo'].emit('trackSubscribed');
       participants['foo'].emit('trackUnsubscribed');
       assert.equal(spy.callCount, 0);
