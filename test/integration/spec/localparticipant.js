@@ -12,13 +12,15 @@ const { getMediaSections } = require('../../../lib/util/sdp');
 const Track = require('../../../lib/media/track');
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
+const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 
 const {
   connect,
   createLocalAudioTrack,
   createLocalTracks,
-  createLocalVideoTrack
+  createLocalVideoTrack,
+  LocalDataTrack
 } = require('../../../lib');
 
 const {
@@ -45,6 +47,9 @@ const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 
+// TODO(mroberts): Some of the DataTrack tests will fail until VIDEO-936 is fixed.
+const { enableDataTrackTests } = env;
+
 (navigator.userAgent === 'Node'
   ? describe.skip
   : describe
@@ -64,20 +69,26 @@ const isSafari = guess === 'safari';
         connect(token, options),
         createLocalTracks()
       ]);
+      if (enableDataTrackTests) {
+        tracks.push(new LocalDataTrack());
+      }
     };
 
     [
       [
-        'when two LocalTracks (audio and video) are published sequentially',
+        `when ${enableDataTrackTests ? 'three' : 'two'} LocalTracks (${enableDataTrackTests ? 'audio, video, and data' : 'audio and video'}) are published sequentially`,
         async () => {
           trackPublications = [
             await room.localParticipant.publishTrack(tracks[0]),
             await room.localParticipant.publishTrack(tracks[1])
           ];
+          if (enableDataTrackTests) {
+            trackPublications.push(await room.localParticipant.publishTrack(tracks[2]));
+          };
         }
       ],
       [
-        'when two LocalTracks (audio and video) are published together',
+        `when ${enableDataTrackTests ? 'three' : 'two'} LocalTracks (${enableDataTrackTests ? 'audio, video, and date' : 'audio and video'}) are published together`,
         async () => {
           trackPublications = await Promise.all(tracks.map(track => {
             return room.localParticipant.publishTrack(track);
@@ -91,7 +102,7 @@ const isSafari = guess === 'safari';
           await publish();
         });
 
-        it('should return LocalTrackPublications for both LocalTracks', () => {
+        it('should return LocalTrackPublications for each LocalTrack', () => {
           trackPublications.forEach((localTrackPublication, i) => {
             const track = tracks[i];
             assert(localTrackPublication instanceof LocalTrackPublication);
@@ -100,14 +111,14 @@ const isSafari = guess === 'safari';
           });
         });
 
-        it('should add both the LocalTracks to the LocalParticipant\'s .tracks and their respective kinds\' .(audio/video)Tracks collections', () => {
+        it('should add each of the LocalTracks to the LocalParticipant\'s .tracks and their respective kinds\' collections', () => {
           tracks.forEach(track => {
             assert.equal(room.localParticipant.tracks.get(track.id), track);
             assert.equal(room.localParticipant[`${track.kind}Tracks`].get(track.id), track);
           });
         });
 
-        it('should add both the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' .(audio/video)TrackPublications collections', () => {
+        it('should add each of the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' collections', () => {
           trackPublications.forEach(trackPublication => {
             assert.equal(room.localParticipant.trackPublications.get(trackPublication.sid), trackPublication);
             assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.sid), trackPublication);
@@ -199,7 +210,9 @@ const isSafari = guess === 'safari';
         x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
-        ['audio', 'video'],
+        enableDataTrackTests
+          ? ['audio', 'video', 'data']
+          : ['audio', 'video'],
         x => `Local${capitalize(x)}Track`
       ],
       [
@@ -220,13 +233,24 @@ const isSafari = guess === 'safari';
 
       before(async () => {
         const name = randomName();
-        const identities = [randomName(), randomName(), randomName()];
+        // TODO(mroberts): Update when VIDEO-954 is fixed.
+        const identities = kind === 'data'
+          ? [randomName(), randomName()]
+          : [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
 
-        thisTrack = kind === 'audio'
-          ? await createLocalAudioTrack()
-          : await createLocalVideoTrack();
-        thisTrack.enable(isEnabled);
+        thisTrack = await {
+          audio: createLocalAudioTrack,
+          video: createLocalVideoTrack,
+          data: LocalDataTrack
+        }[kind]();
+
+        // TODO(mroberts): Really this test needs to be refactored so that only
+        // the LocalAudio- and LocalVideo-Track tests test the enable/disable
+        // functionality.
+        if (kind !== 'data') {
+          thisTrack.enable(isEnabled);
+        }
 
         const tracks = when === 'previously'
           ? [thisTrack]
@@ -236,6 +260,7 @@ const isSafari = guess === 'safari';
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
+        console.log(thisRoom.sid);
         thisParticipant = thisRoom.localParticipant;
 
         const thoseIdentities = identities.slice(1);
@@ -283,14 +308,20 @@ const isSafari = guess === 'safari';
       });
 
       after(() => {
-        thisTrack.stop();
+        if (kind !== 'data') {
+          thisTrack.stop();
+        }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
 
       [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
         it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
           const thoseTracks = thoseTracksMap[event];
-          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof (thatTrack.kind === 'audio' ? RemoteAudioTrack : RemoteVideoTrack)));
+          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+            audio: RemoteAudioTrack,
+            video: RemoteVideoTrack,
+            data: RemoteDataTrack
+          }[thatTrack.kind]));
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
@@ -304,10 +335,12 @@ const isSafari = guess === 'safari';
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
           });
 
-          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-          });
+          if (kind !== 'data') {
+            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+              const thoseTracks = thoseTracksMap[event];
+              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+            });
+          }
 
           if (when === 'previously') {
             it('the RemoteTrack should be a new RemoteTrack instance', () => {
@@ -336,7 +369,9 @@ const isSafari = guess === 'safari';
         x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
-        ['audio', 'video'],
+        enableDataTrackTests
+          ? ['audio', 'video', 'data']
+          : ['audio', 'video'],
         x => `Local${capitalize(x)}Track`
       ],
       [
@@ -357,13 +392,24 @@ const isSafari = guess === 'safari';
 
       before(async () => {
         const name = randomName();
-        const identities = [randomName(), randomName(), randomName()];
+        // TODO(mroberts): Update when VIDEO-954 is fixed.
+        const identities = kind === 'data'
+          ? [randomName(), randomName()]
+          : [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
 
-        thisTrack = kind === 'audio'
-          ? await createLocalAudioTrack()
-          : await createLocalVideoTrack();
-        thisTrack.enable(isEnabled);
+        thisTrack = await {
+          audio: createLocalAudioTrack,
+          video: createLocalVideoTrack,
+          data: LocalDataTrack
+        }[kind]();
+
+        // TODO(mroberts): Really this test needs to be refactored so that only
+        // the LocalAudio- and LocalVideo-Track tests test the enable/disable
+        // functionality.
+        if (kind !== 'data') {
+          thisTrack.enable(isEnabled);
+        }
 
         const tracks = [thisTrack];
 
@@ -422,7 +468,9 @@ const isSafari = guess === 'safari';
       });
 
       after(() => {
-        thisTrack.stop();
+        if (kind !== 'data') {
+          thisTrack.stop();
+        }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
 
@@ -433,7 +481,11 @@ const isSafari = guess === 'safari';
       [ 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
         it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
           const thoseTracks = thoseTracksMap[event];
-          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof (thatTrack.kind === 'audio' ? RemoteAudioTrack : RemoteVideoTrack)));
+          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+            audio: RemoteAudioTrack,
+            video: RemoteVideoTrack,
+            data: RemoteDataTrack
+          }[thatTrack.kind]));
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
@@ -447,10 +499,12 @@ const isSafari = guess === 'safari';
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
           });
 
-          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-          });
+          if (kind !== 'data') {
+            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+              const thoseTracks = thoseTracksMap[event];
+              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+            });
+          }
 
           it(`should set each RemoteTrack's .isSubscribed to false`, () => {
             const thoseTracks = thoseTracksMap[event];
