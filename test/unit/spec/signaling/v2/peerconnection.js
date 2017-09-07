@@ -1183,6 +1183,85 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('#update, called in signaling state "stable", with an offer that', () => {
+    [true, false].forEach(lacks => {
+      describe(`${lacks ? 'lacks' : 'has'} an m= application section, when the PeerConnectionV2 has one ore more LocalDataStreamTracks`, () => {
+        // The Test
+        let test;
+
+        // The Description passed to `update`
+        let desc;
+
+        // Description events emitted by the PeerConnectionV2
+        let descriptions;
+
+        // The result of calling `update`
+        let result;
+
+        beforeEach(async () => {
+          test = makeTest({
+            offers: 1,
+            answers: 1
+          });
+          descriptions = [];
+
+          const dataStreamTrack = makeLocalDataStreamTrack();
+          test.pcv2.addDataStreamTrack(dataStreamTrack);
+
+          const offer = makeOffer();
+          if (!lacks) {
+            offer.sdp += 'm=application foo bar baz\r\na=sendrecv\r\n';
+          }
+          desc = test.state().setDescription(offer, 1);
+
+          test.pcv2.on('description', description => descriptions.push(description));
+          test.pc.createAnswer = sinon.spy(test.pc.createAnswer);
+          test.pc.createOffer = sinon.spy(test.pc.createOffer);
+          test.pc.setLocalDescription = sinon.spy(test.pc.setLocalDescription);
+          test.pc.setRemoteDescription = sinon.spy(test.pc.setRemoteDescription);
+
+          result = await test.pcv2.update(desc);
+        });
+
+        it('should return a Promise that resolves to undefined', () => {
+          assert.equal(result);
+        });
+
+        it('should called createAnswer on the underlying RTCPeerConnection', () => {
+          sinon.assert.calledOnce(test.pc.createAnswer);
+        });
+
+        it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
+          (lacks ? sinon.assert.calledTwice : sinon.assert.calledOnce)(test.pc.setLocalDescription);
+          sinon.assert.calledWith(test.pc.setLocalDescription, test.answers[0]);
+        });
+
+        it('should emit a "description" event with the PeerConnectionV2 state set to the resulting answer at the same revision', () => {
+          assert.equal(descriptions.length, lacks ? 2 : 1);
+          assert.deepEqual(descriptions[0], test.state().setDescription(test.answers[0], 1));
+        });
+
+        if (!lacks) {
+          return;
+        }
+
+        it('should call createOffer on the underlying RTCPeerConnection', () => {
+          sinon.assert.calledOnce(test.pc.createOffer);
+        });
+
+        it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting answer', () => {
+          sinon.assert.calledTwice(test.pc.setLocalDescription);
+          sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[0]);
+        });
+
+        it('should emit a "description" event with the PeerConnectionV2 state set to the resulting offer at the same revision', () => {
+          assert.equal(descriptions.length, 2);
+          assert.deepEqual(descriptions[1], test.state().setDescription(test.offers[0], 2));
+        });
+      });
+    });
+  });
+
   describe('"candidates" event', () => {
     ['initial', 'subsequent', 'final'].forEach(which => {
       const description = 'when the underlying RTCPeerConnection\'s "icecandidate" event fires with' + {

@@ -7,6 +7,7 @@ const processEnv = {
   API_KEY_SECRET: process.env.API_KEY_SECRET,
   CONFIGURATION_PROFILE_SID: process.env.CONFIGURATION_PROFILE_SID,
   ECS_SERVER: process.env.ECS_SERVER,
+  ENABLE_DATATRACK_TESTS: process.env.ENABLE_DATATRACK_TESTS,
   WS_SERVER: process.env.WS_SERVER,
   WS_SERVER_INSIGHTS: process.env.WS_SERVER_INSIGHTS,
   LOG_LEVEL: process.env.LOG_LEVEL
@@ -19,6 +20,7 @@ const env = [
   ['API_KEY_SECRET'   ,         'apiKeySecret'],
   ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
   ['ECS_SERVER',                'ecsServer'],
+  ['ENABLE_DATATRACK_TESTS',    'enableDataTrackTests'],
   ['WS_SERVER',                 'wsServer'],
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
   ['LOG_LEVEL',                 'logLevel']
