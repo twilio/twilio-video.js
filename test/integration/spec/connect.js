@@ -431,6 +431,36 @@ describe('connect', function() {
       [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
     });
   });
+
+  (navigator.userAgent === 'Node'
+    ? describe.skip
+    : describe)('when called with a fixed bitrate preferred audio codec', () => {
+    let peerConnections;
+    let thisRoom;
+    let thoseRooms;
+
+    const testOptions = {
+      maxAudioBitrate: 10000,
+      preferredAudioCodecs: ['PCMA', 'isac', 'opus']
+    };
+
+    before(async () => {
+      [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
+    });
+
+    it('should not apply the audio bitrate limit to the remote descriptions', () => {
+      flatMap(peerConnections, pc => {
+        assert(pc.remoteDescription.sdp);
+        return getMediaSections(pc.remoteDescription.sdp, 'audio');
+      }).forEach(section => {
+        assert(!/b=(AS|TIAS):([0-9]+)/.test(section));
+      });
+    });
+
+    after(() => {
+      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+    });
+  });
 });
 
 function createCodecMap(mediaSection) {
