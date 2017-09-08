@@ -66,6 +66,13 @@ New Features
 
 Please refer to the API docs for more information on both of these features.
 
+Bug Fixes
+---------
+
+- Track's `attach` method now sets the `playsInline` attribute on &lt;audio&gt;
+  and &lt;video&gt; elements. This is necessary to allow playback in Safari 11
+  on iOS.
+
 1.2.2 (August 22, 2017)
 =======================
 
