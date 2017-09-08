@@ -485,6 +485,10 @@ describe('Track', function() {
         assert(el.autoplay);
       });
 
+      it('should set the .playsInline of the HTMLMediaElement to true', () => {
+        assert(el.playsInline);
+      });
+
       it('should add the HTMLMediaElement to the ._attachments Set', () => {
         assert(track._attachments.has(el));
       });
@@ -522,6 +526,10 @@ describe('Track', function() {
 
       it('should set the .autoplay of the HTMLMediaElement to true', () => {
         assert(el.autoplay);
+      });
+
+      it('should set the .playsInline of the HTMLMediaElement to true', () => {
+        assert(el.playsInline);
       });
 
       it('should add the HTMLMediaElement to the ._attachments Set', () => {
