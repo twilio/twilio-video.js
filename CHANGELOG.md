@@ -10,12 +10,12 @@ New Features
   (bps). These values are set as hints for variable bitrate codecs, but will not
   take effect for fixed bitrate codecs.
 
-  For example, to connect with a maximum audio bitrate of 6 kilobits per
+  For example, to connect with a maximum audio bitrate of 64 kilobits per
   second and a maximum video bitrate of 100 kilobits per second:
 
   ```js
   const room = await connect(token, {
-    maxAudioBitrate: 6000,
+    maxAudioBitrate: 64000,
     maxVideoBitrate: 100000
   });
   ```
