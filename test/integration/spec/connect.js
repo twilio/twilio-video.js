@@ -419,11 +419,11 @@ describe('connect', function() {
         return getMediaSections(pc.remoteDescription.sdp);
       }).forEach(section => {
         const codecMap = createCodecMap(section);
-        const expectedCodecIds = /m=audio/.test(section)
+        const expectedPayloadTypes = /m=audio/.test(section)
           ? flatMap(testOptions.preferredAudioCodecs, codecName => codecMap.get(codecName.toLowerCase()) || [])
           : flatMap(testOptions.preferredVideoCodecs, codecName => codecMap.get(codecName.toLowerCase()) || []);
-        const actualCodecIds = getCodecIds(section);
-        expectedCodecIds.forEach((expectedCodecId, i) => assert.equal(expectedCodecId, actualCodecIds[i]));
+        const actualPayloadTypes = getCodecPayloadTypes(section);
+        expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
       });
     });
 
@@ -453,7 +453,15 @@ describe('connect', function() {
         assert(pc.remoteDescription.sdp);
         return getMediaSections(pc.remoteDescription.sdp, 'audio');
       }).forEach(section => {
-        assert(!/b=(AS|TIAS):([0-9]+)/.test(section));
+        const codecMap = createCodecMap(section);
+        const payloadTypes = getCodecPayloadTypes(section);
+        const fixedBitratePayloadTypes = new Set([
+          ...(codecMap.get('pcma') || []),
+          ...(codecMap.get('pcmu') || [])
+        ]);
+        if (fixedBitratePayloadTypes.has(payloadTypes[0])) {
+          assert(!/b=(AS|TIAS):([0-9]+)/.test(section));
+        }
       });
     });
 
@@ -464,16 +472,16 @@ describe('connect', function() {
 });
 
 function createCodecMap(mediaSection) {
-  return getCodecIds(mediaSection).reduce((codecMap, codecId) => {
-    const rtpmapPattern = new RegExp('a=rtpmap:' + codecId + ' ([^/]+)');
+  return getCodecPayloadTypes(mediaSection).reduce((codecMap, payloadType) => {
+    const rtpmapPattern = new RegExp('a=rtpmap:' + payloadType + ' ([^/]+)');
     const codecName = mediaSection.match(rtpmapPattern)[1].toLowerCase();
-    const codecIds = codecMap.get(codecName) || [];
-    codecMap.set(codecName, codecIds.concat(codecId));
+    const payloadTypes = codecMap.get(codecName) || [];
+    codecMap.set(codecName, payloadTypes.concat(payloadType));
     return codecMap;
   }, new Map());
 }
 
-function getCodecIds(mediaSection) {
+function getCodecPayloadTypes(mediaSection) {
   return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
 }
 
