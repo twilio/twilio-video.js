@@ -18,26 +18,46 @@ env:
 matrix:
   include:
     - os: linux
-      env: BROWSER=chrome BVER=stable
+      env: BROWSER=chrome BVER=stable TOPOLOGY=P2P
 
     - os: linux
-      env: BROWSER=chrome BVER=beta
+      env: BROWSER=chrome BVER=stable TOPOLOGY=SFU
 
     - os: linux
-      env: BROWSER=firefox BVER=stable
+      env: BROWSER=chrome BVER=beta TOPOLOGY=P2P
 
     - os: linux
-      env: BROWSER=firefox BVER=beta
+      env: BROWSER=chrome BVER=beta TOPOLOGY=SFU
 
-    - os: osx
-      sudo: required
-      osx_image: xcode8.3
-      env: BROWSER=safari BVER=unstable
+    - os: linux
+      env: BROWSER=firefox BVER=stable TOPOLOGY=P2P
+
+    - os: linux
+      env: BROWSER=firefox BVER=stable TOPOLOGY=SFU
+
+    - os: linux
+      env: BROWSER=firefox BVER=beta TOPOLOGY=P2P
+
+    - os: linux
+      env: BROWSER=firefox BVER=beta TOPOLOGY=SFU
+
+    # - os: osx
+    #   sudo: required
+    #   osx_image: xcode8.3
+    #   env: BROWSER=safari BVER=unstable TOPOLOGY=P2P
+
+    # - os: osx
+    #   sudo: required
+    #   osx_image: xcode8.3
+    #   env: BROWSER=safari BVER=unstable TOPOLOGY=SFU
 
   allow_failures:
-    - env: BROWSER=chrome BVER=stable
-    - env: BROWSER=chrome BVER=beta
-    - env: BROWSER=safari BVER=unstable
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=P2P
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=SFU
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=P2P
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=SFU
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=P2P
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=SFU
 
 before_script:
   - |
@@ -56,6 +76,9 @@ before_script:
     if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
       sh -e /etc/init.d/xvfb start
       pulseaudio --start
+    fi
+    if [ "${TOPOLOGY}" == 'P2P' ]; then
+      export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_P2P
     fi
 
 script: npm run build:travis
