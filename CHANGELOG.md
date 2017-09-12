@@ -1,5 +1,5 @@
-1.3.0 (in progress)
-===================
+1.3.0 (September 11, 2017)
+==========================
 
 New Features
 ------------
@@ -11,12 +11,12 @@ New Features
   take effect for fixed bitrate codecs.
 
   For example, to connect with a maximum audio bitrate of 64 kilobits per
-  second and a maximum video bitrate of 100 kilobits per second:
+  second and a maximum video bitrate of 500 kilobits per second:
 
   ```js
   const room = await connect(token, {
     maxAudioBitrate: 64000,
-    maxVideoBitrate: 100000
+    maxVideoBitrate: 500000
   });
   ```
 
@@ -31,12 +31,12 @@ New Features
   });
   ```
 
-  If you want to change only one value—for example, just the maximum audio
+  If you want to change only one value—for example, just the maximum video
   bitrate—you can omit the other value. For example, to update only the maximum
-  audio bitrate, leaving the maximum video bitrate unchanged:
+  video bitrate, leaving the maximum audio bitrate unchanged:
 
   ```js
-  room.localParticipant.setParameters({ maxAudioBitrate: 12000 });
+  room.localParticipant.setParameters({ maxVideoBitrate: 1000000 });
   ```
 
 - twilio-video.js now features an API for setting preferred codecs when
