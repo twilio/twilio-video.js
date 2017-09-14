@@ -606,9 +606,9 @@ describe('RemoteTrackV2', () => {
     });
   });
 
-  describe('#getMediaOrDataStreamTrack', () => {
-    context('called after setMediaOrDataStreamTrack', () => {
-      it('returns a Promise that resolves to the MediaStreamTrack passed to setMediaOrDataStreamTrack', () => {
+  describe('#getMediaStreamTrackOrDataTrackTransceiver', () => {
+    context('called after setMediaStreamTrackOrDataTrackTransceiver', () => {
+      it('returns a Promise that resolves to the MediaStreamTrack passed to setMediaStreamTrackOrDataTrackTransceiver', () => {
         var track = new RemoteTrackV2({
           id: makeId(),
           enabled: makeEnabled(),
@@ -617,15 +617,15 @@ describe('RemoteTrackV2', () => {
           subscribed: makeSubscribed()
         });
         var mediaStreamTrack = {};
-        track.setMediaOrDataStreamTrack(mediaStreamTrack);
-        return track.getMediaOrDataStreamTrack().then(track => {
+        track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack);
+        return track.getMediaStreamTrackOrDataTrackTransceiver().then(track => {
           assert.equal(mediaStreamTrack, track);
         });
       });
     });
 
-    context('called before setMediaOrDataStreamTrack', () => {
-      it('returns a Promise that resolves to the MediaStreamTrack eventually passed to setMediaOrDataStreamTrack', () => {
+    context('called before setMediaStreamTrackOrDataTrackTransceiver', () => {
+      it('returns a Promise that resolves to the MediaStreamTrack eventually passed to setMediaStreamTrackOrDataTrackTransceiver', () => {
         var track = new RemoteTrackV2({
           id: makeId(),
           enabled: makeEnabled(),
@@ -634,16 +634,16 @@ describe('RemoteTrackV2', () => {
           subscribed: makeSubscribed()
         });
         var mediaStreamTrack = {};
-        var promise = track.getMediaOrDataStreamTrack().then(track => {
+        var promise = track.getMediaStreamTrackOrDataTrackTransceiver().then(track => {
           assert.equal(mediaStreamTrack, track);
         });
-        track.setMediaOrDataStreamTrack(mediaStreamTrack);
+        track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack);
         return promise;
       });
     });
   });
 
-  describe('#setMediaOrDataStreamTrack', () => {
+  describe('#setMediaStreamTrackOrDataTrackTransceiver', () => {
     it('returns the RemoteTrackV2', () => {
       var track = new RemoteTrackV2({
         id: makeId(),
@@ -653,7 +653,7 @@ describe('RemoteTrackV2', () => {
         subscribed: makeSubscribed()
       });
       var mediaStreamTrack = {};
-      assert.equal(track, track.setMediaOrDataStreamTrack(mediaStreamTrack));
+      assert.equal(track, track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack));
     });
   });
 });

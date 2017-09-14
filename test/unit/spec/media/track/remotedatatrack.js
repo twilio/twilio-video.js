@@ -4,18 +4,18 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
-const RemoteDataStreamTrack = require('../../../../../lib/data/remotedatastreamtrack');
+const DataTrackReceiver = require('../../../../../lib/data/receiver');
 const EventTarget = require('../../../../../lib/eventtarget');
 const RemoteDataTrack = require('../../../../../lib/media/track/remotedatatrack');
 const { makeUUID } = require('../../../../../lib/util');
 
 describe('RemoteDataTrack', () => {
-  let dataStreamTrack;
+  let dataTrackReceiver;
   let trackSignaling;
   let dataTrack;
 
   beforeEach(() => {
-    dataStreamTrack = new RemoteDataStreamTrack(makeDataChannel());
+    dataTrackReceiver = new DataTrackReceiver(makeDataChannel());
   });
 
   describe('constructor, called with a RemoteTrackSignaling instance whose .isSubscribed property is', () => {
@@ -26,15 +26,15 @@ describe('RemoteDataTrack', () => {
 
         beforeEach(() => {
           trackSignaling = makeTrackSignaling(isSubscribed, makeUUID());
-          dataTrack = new RemoteDataTrack(dataStreamTrack, trackSignaling);
+          dataTrack = new RemoteDataTrack(dataTrackReceiver, trackSignaling);
         });
 
         it('returns an instance of RemoteDataTrack', () => {
           assert(dataTrack instanceof RemoteDataTrack);
         });
 
-        it('sets .id to the RemoteDataStreamTrack\'s ID', () => {
-          assert.equal(dataTrack.id, dataStreamTrack.id);
+        it('sets .id to the DataTrackReceiver\'s ID', () => {
+          assert.equal(dataTrack.id, dataTrackReceiver.id);
         });
 
         it(`sets .isSubscribed to ${isSubscribed}`, () => {
@@ -52,7 +52,7 @@ describe('RemoteDataTrack', () => {
     });
   });
 
-  describe('"message" event, raised by the underlying RemoteDataStreamTrack, when the TrackSignaling\'s .isSubscribed property is', () => {
+  describe('"message" event, raised by the underlying DataTrackReceiver, when the TrackSignaling\'s .isSubscribed property is', () => {
     [true, false].forEach(isSubscribed => {
       describe(isSubscribed.toString(), () => {
         let trackSignaling;
@@ -61,14 +61,14 @@ describe('RemoteDataTrack', () => {
 
         beforeEach(() => {
           trackSignaling = makeTrackSignaling(isSubscribed, makeUUID());
-          dataTrack = new RemoteDataTrack(dataStreamTrack, trackSignaling);
+          dataTrack = new RemoteDataTrack(dataTrackReceiver, trackSignaling);
           expectedData = makeUUID();
         });
 
-        it('re-emits the "message" event from the underlying RemoteDataStreamTrack', () => {
+        it('re-emits the "message" event from the underlying DataTrackReceiver', () => {
           let actualData;
           dataTrack.on('message', data => actualData = data);
-          dataStreamTrack.emit('message', expectedData);
+          dataTrackReceiver.emit('message', expectedData);
           assert.equal(actualData, expectedData);
         });
       });

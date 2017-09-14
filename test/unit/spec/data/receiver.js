@@ -1,26 +1,26 @@
 'use strict';
 
 const assert = require('assert');
-const RemoteDataStreamTrack = require('../../../../lib/data/remotedatastreamtrack');
+const DataTrackReceiver = require('../../../../lib/data/receiver');
 const EventTarget = require('../../../../lib/eventtarget');
 const { makeUUID } = require('../../../../lib/util');
 
-describe('RemoteDataStreamTrack', () => {
+describe('DataTrackReceiver', () => {
   let dataChannel;
-  let remoteDataStreamTrack;
+  let dataTrackReceiver;
 
   beforeEach(() => {
     dataChannel = makeDataChannel();
-    remoteDataStreamTrack = new RemoteDataStreamTrack(dataChannel);
+    dataTrackReceiver = new DataTrackReceiver(dataChannel);
   });
 
   describe('constructor', () => {
     it('sets .id to the RTCDataChannel\'s label', () => {
-      assert.equal(remoteDataStreamTrack.id, dataChannel.label);
+      assert.equal(dataTrackReceiver.id, dataChannel.label);
     });
 
     it('sets .kind to "data"', () => {
-      assert.equal(remoteDataStreamTrack.kind, 'data');
+      assert.equal(dataTrackReceiver.kind, 'data');
     });
   });
 
@@ -31,9 +31,9 @@ describe('RemoteDataStreamTrack', () => {
       data = makeUUID();
     });
 
-    it('the RemoteDataStreamTrack emits a "message" event', () => {
+    it('the DataTrackReceiver emits a "message" event', () => {
       let actualData;
-      remoteDataStreamTrack.once('message', data => actualData = data);
+      dataTrackReceiver.once('message', data => actualData = data);
       dataChannel.dispatchEvent({ type: 'message', data });
       assert.equal(actualData, data);
     });

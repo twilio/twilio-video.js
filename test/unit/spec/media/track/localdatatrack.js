@@ -3,19 +3,19 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const LocalDataStreamTrack = require('../../../../../lib/data/localdatastreamtrack');
+const DataTrackSender = require('../../../../../lib/data/sender');
 const LocalDataTrack = require('../../../../../lib/media/track/localdatatrack');
 const { randomName } = require('../../../../lib/util');
 
 describe('LocalDataTrack', () => {
-  let dataStreamTrack;
+  let dataTrackSender;
   let dataTrack;
 
   beforeEach(() => {
     dataTrack = new LocalDataTrack({
-      LocalDataStreamTrack: function() {
-        dataStreamTrack = new LocalDataStreamTrack();
-        return dataStreamTrack;
+      DataTrackSender: function() {
+        dataTrackSender = new DataTrackSender();
+        return dataTrackSender;
       }
     });
   });
@@ -25,12 +25,12 @@ describe('LocalDataTrack', () => {
       assert(dataTrack instanceof LocalDataTrack);
     });
 
-    it('constructs a new LocalDataStreamTrack', () => {
-      assert(dataStreamTrack instanceof LocalDataStreamTrack);
+    it('constructs a new DataTrackSender', () => {
+      assert(dataTrackSender instanceof DataTrackSender);
     });
 
-    it('sets .id to the LocalDataStreamTrack\'s ID', () => {
-      assert.equal(dataTrack.id, dataStreamTrack.id);
+    it('sets .id to the DataTrackSender\'s ID', () => {
+      assert.equal(dataTrack.id, dataTrackSender.id);
     });
 
     it('sets .kind to "data"', () => {
@@ -43,13 +43,13 @@ describe('LocalDataTrack', () => {
 
     beforeEach(() => {
       data = randomName();
-      dataStreamTrack.send = sinon.spy(dataStreamTrack.send.bind(dataStreamTrack));
+      dataTrackSender.send = sinon.spy(dataTrackSender.send.bind(dataTrackSender));
       dataTrack.send(data);
     });
 
-    it('calls #send on the underlying LocalDataStreamTrack', () => {
-      sinon.assert.calledOnce(dataStreamTrack.send);
-      sinon.assert.calledWith(dataStreamTrack.send, data);
+    it('calls #send on the underlying DataTrackSender', () => {
+      sinon.assert.calledOnce(dataTrackSender.send);
+      sinon.assert.calledWith(dataTrackSender.send, data);
     });
   });
 });

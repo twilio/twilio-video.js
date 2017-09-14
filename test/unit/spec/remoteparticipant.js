@@ -129,8 +129,8 @@ describe('RemoteParticipant', function() {
           before(() => {
             trackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
             newTrackSignaling = makeTrackSignaling({ id: trackSignaling.id, kind: kind.toLowerCase() });
-            track = new test[`Remote${kind}Track`](trackSignaling.mediaOrDataStreamTrack, trackSignaling);
-            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaOrDataStreamTrack, newTrackSignaling);
+            track = new test[`Remote${kind}Track`](trackSignaling.mediaStreamTrackOrDataTrackTransceiver, trackSignaling);
+            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaStreamTrackOrDataTrackTransceiver, newTrackSignaling);
             test.participant.tracks.set(track.id, track);
             test.participant[`${kind.toLowerCase()}Tracks`].set(track.id, track);
             participantEvents = {};
@@ -181,7 +181,7 @@ describe('RemoteParticipant', function() {
         context(`when ${a(kind)} Remote${kind}Track with the same .id does not exist in .tracks`, () => {
           before(() => {
             newTrackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
-            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaOrDataStreamTrack, newTrackSignaling);
+            newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaStreamTrackOrDataTrackTransceiver, newTrackSignaling);
             participantEvents = {};
             [ 'trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
               test.participant.once(event, track => participantEvents[event] = track);
@@ -436,7 +436,7 @@ describe('RemoteParticipant', function() {
 
     context('"trackAdded" event', () => {
       context('when the RemoteParticipant .state begins in "connected"', () => {
-        it('calls .getMediaOrDataStreamTrack on the RemoteTrackSignaling', () => {
+        it('calls .getMediaStreamTrackOrDataTrackTransceiver on the RemoteTrackSignaling', () => {
           var test = makeTest();
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
@@ -444,12 +444,12 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
           test.signaling.emit('trackAdded', dataTrack);
-          sinon.assert.calledOnce(audioTrack.getMediaOrDataStreamTrack);
-          sinon.assert.calledOnce(videoTrack.getMediaOrDataStreamTrack);
-          sinon.assert.calledOnce(dataTrack.getMediaOrDataStreamTrack);
+          sinon.assert.calledOnce(audioTrack.getMediaStreamTrackOrDataTrackTransceiver);
+          sinon.assert.calledOnce(videoTrack.getMediaStreamTrackOrDataTrackTransceiver);
+          sinon.assert.calledOnce(dataTrack.getMediaStreamTrackOrDataTrackTransceiver);
         });
 
-        context('if the Promise returned by .getMediaOrDataStreamTrack resolves', () => {
+        context('if the Promise returned by .getMediaStreamTrackOrDataTrackTransceiver resolves', () => {
           it('constructs a new RemoteAudioTrack or RemoteVideoTrack, depending on the RemoteTrackSignaling\'s .kind', () => {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
@@ -459,17 +459,17 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackAdded', videoTrack);
             test.signaling.emit('trackAdded', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
-              assert.equal(audioTrack.mediaOrDataStreamTrack, test.RemoteAudioTrack.args[0][0]);
+              assert.equal(audioTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteAudioTrack.args[0][0]);
               assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
-              assert.equal(videoTrack.mediaOrDataStreamTrack, test.RemoteVideoTrack.args[0][0]);
+              assert.equal(videoTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteVideoTrack.args[0][0]);
               assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
 
-              assert.equal(dataTrack.mediaOrDataStreamTrack, test.RemoteDataTrack.args[0][0]);
+              assert.equal(dataTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteDataTrack.args[0][0]);
               assert.equal(dataTrack, test.RemoteDataTrack.args[0][1]);
             });
           });
@@ -483,9 +483,9 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackAdded', videoTrack);
             test.signaling.emit('trackAdded', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], test.participant.tracks.get(test.tracks[0].id));
               assert.equal(test.tracks[1], test.participant.tracks.get(test.tracks[1].id));
@@ -523,9 +523,9 @@ describe('RemoteParticipant', function() {
 
             return Promise.all([
               trackEventsPromise,
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], tracks[0]);
               assert.equal(test.tracks[1], tracks[1]);
@@ -539,7 +539,7 @@ describe('RemoteParticipant', function() {
       });
 
       context('when the RemoteParticipant .state transitions to "disconnected"', () => {
-        it('does not call .getMediaOrDataStreamTrack on the RemoteTrackSignaling', () => {
+        it('does not call .getMediaStreamTrackOrDataTrackTransceiver on the RemoteTrackSignaling', () => {
           var test = makeTest();
           test.signaling.emit('stateChanged', 'disconnected');
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
@@ -548,9 +548,9 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
           test.signaling.emit('trackAdded', dataTrack);
-          assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!audioTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!videoTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!dataTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
         });
 
         it('does not construct a new RemoteTrack', () => {
@@ -582,7 +582,7 @@ describe('RemoteParticipant', function() {
       });
 
       context('when the RemoteParticipant .state begins in "disconnected"', () => {
-        it('does not call .getMediaOrDataStreamTrack on the RemoteTrackSignaling', () => {
+        it('does not call .getMediaStreamTrackOrDataTrackTransceiver on the RemoteTrackSignaling', () => {
           var test = makeTest({ state: 'disconnected' });
           var audioTrack = makeTrackSignaling({ kind: 'audio' });
           var videoTrack = makeTrackSignaling({ kind: 'video' });
@@ -590,9 +590,9 @@ describe('RemoteParticipant', function() {
           test.signaling.emit('trackAdded', audioTrack);
           test.signaling.emit('trackAdded', videoTrack);
           test.signaling.emit('trackAdded', dataTrack);
-          assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!audioTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!videoTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!dataTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
         });
 
         it('does not construct a new RemoteTrack', () => {
@@ -660,9 +660,9 @@ describe('RemoteParticipant', function() {
             return Promise.all([
               trackEventsPromise,
               ...unsubscribedEventPromises,
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert.equal(test.tracks[0], tracks[0]);
               assert.equal(test.tracks[1], tracks[1]);
@@ -689,9 +689,9 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackRemoved', videoTrack);
             test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -715,9 +715,9 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackRemoved', videoTrack);
             test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -736,9 +736,9 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackRemoved', videoTrack);
             test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -758,9 +758,9 @@ describe('RemoteParticipant', function() {
             test.signaling.emit('trackRemoved', videoTrack);
             test.signaling.emit('trackRemoved', dataTrack);
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
               assert(!test.participant._removeTrack.calledOnce);
             });
@@ -771,7 +771,7 @@ describe('RemoteParticipant', function() {
 
     context('.tracks', () => {
       context('when the RemoteParticipant .state begins in "connected"', () => {
-        it('calls .getMediaOrDataStreamTrack on each RemoteTrackSignaling', () => {
+        it('calls .getMediaStreamTrackOrDataTrackTransceiver on each RemoteTrackSignaling', () => {
           var test = makeTest({
             trackSignalings: [
               { kind: 'audio' },
@@ -780,11 +780,11 @@ describe('RemoteParticipant', function() {
           });
           var audioTrack = test.trackSignalings[0];
           var videoTrack = test.trackSignalings[1];
-          assert(audioTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(videoTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(audioTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(videoTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
         });
 
-        context('if the Promise returned by .getMediaOrDataStreamTrack resolves', () => {
+        context('if the Promise returned by .getMediaStreamTrackOrDataTrackTransceiver resolves', () => {
           it('constructs a new RemoteAudioTrack or RemoteVideoTrack, depending on the RemoteTrackSignaling\'s .kind', () => {
             var test = makeTest({
               trackSignalings: [
@@ -797,17 +797,17 @@ describe('RemoteParticipant', function() {
             var videoTrack = test.trackSignalings[1];
             var dataTrack = test.trackSignalings[2];
             return Promise.all([
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(() => {
-              assert.equal(audioTrack.mediaOrDataStreamTrack, test.RemoteAudioTrack.args[0][0]);
+              assert.equal(audioTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteAudioTrack.args[0][0]);
               assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
 
-              assert.equal(videoTrack.mediaOrDataStreamTrack, test.RemoteVideoTrack.args[0][0]);
+              assert.equal(videoTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteVideoTrack.args[0][0]);
               assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
 
-              assert.equal(dataTrack.mediaOrDataStreamTrack, test.RemoteDataTrack.args[0][0]);
+              assert.equal(dataTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteDataTrack.args[0][0]);
               assert.equal(dataTrack, test.RemoteDataTrack.args[0][1]);
             });
           });
@@ -836,9 +836,9 @@ describe('RemoteParticipant', function() {
 
             return Promise.all([
               tracksAddedPromise,
-              audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-              videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-              dataTrack.getMediaOrDataStreamTrackDeferred.promise
+              audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+              dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
             ]).then(results => {
               assert.equal(test.tracks[0], results[0][0]);
               assert.equal(test.tracks[1], results[0][1]);
@@ -849,7 +849,7 @@ describe('RemoteParticipant', function() {
       });
 
       context('when the RemoteParticipant .state beings in "disconnected"', () => {
-        it('does not call .getMediaOrDataStreamTrack on each RemoteTrackSignaling', () => {
+        it('does not call .getMediaStreamTrackOrDataTrackTransceiver on each RemoteTrackSignaling', () => {
           var test = makeTest({
             state: 'disconnected',
             trackSignalings: [
@@ -861,9 +861,9 @@ describe('RemoteParticipant', function() {
           var audioTrack = test.trackSignalings[0];
           var videoTrack = test.trackSignalings[1];
           var dataTrack = test.trackSignalings[1];
-          assert(!audioTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!videoTrack.getMediaOrDataStreamTrack.calledOnce);
-          assert(!dataTrack.getMediaOrDataStreamTrack.calledOnce);
+          assert(!audioTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!videoTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!dataTrack.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
         });
 
         it('does not construct new RemoteTracks', () => {
@@ -879,9 +879,9 @@ describe('RemoteParticipant', function() {
           var videoTrack = test.trackSignalings[1];
           var dataTrack = test.trackSignalings[1];
           return Promise.all([
-            audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-            videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-            dataTrack.getMediaOrDataStreamTrackDeferred.promise
+            audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+            videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+            dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
           ]).then(() => {
             assert.equal(0, test.tracks.length);
           });
@@ -901,9 +901,9 @@ describe('RemoteParticipant', function() {
           var videoTrack = test.trackSignalings[1];
           var dataTrack = test.trackSignalings[2];
           return Promise.all([
-            audioTrack.getMediaOrDataStreamTrackDeferred.promise,
-            videoTrack.getMediaOrDataStreamTrackDeferred.promise,
-            dataTrack.getMediaOrDataStreamTrackDeferred.promise
+            audioTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+            videoTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise,
+            dataTrack.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise
           ]).then(() => {
             assert(!test.participant._addTrack.calledOnce);
           });
@@ -964,11 +964,11 @@ function makeTest(options) {
   });
   inherits(options.RemoteVideoTrack, EventEmitter);
 
-  options.RemoteDataTrack = sinon.spy(function RemoteDataTrack(dataStreamTrack, signaling) {
+  options.RemoteDataTrack = sinon.spy(function RemoteDataTrack(dataTrackReceiver, signaling) {
     EventEmitter.call(this);
     this.id = signaling.id;
     this.kind = signaling.kind;
-    this._dataStreamTrack = dataStreamTrack;
+    this._dataTrackReceiver = dataTrackReceiver;
     this.signaling = signaling;
     this._unsubscribe = this.emit.bind(this, 'unsubscribed', this);
     options.tracks.push(this);
@@ -1004,10 +1004,10 @@ function makeTrackSignaling(options) {
   var track = new EventEmitter();
   track.id = options.id || makeId();
   track.kind = options.kind || makeKind();
-  track.mediaOrDataStreamTrack = { id: track.id, kind: track.kind };
+  track.mediaStreamTrackOrDataTrackTransceiver = { id: track.id, kind: track.kind };
   track.mediaStream = {};
-  track.getMediaOrDataStreamTrackDeferred = util.defer();
-  track.getMediaOrDataStreamTrackDeferred.resolve(track.mediaOrDataStreamTrack);
-  track.getMediaOrDataStreamTrack = sinon.spy(() => track.getMediaOrDataStreamTrackDeferred.promise);
+  track.getMediaStreamTrackOrDataTrackTransceiverDeferred = util.defer();
+  track.getMediaStreamTrackOrDataTrackTransceiverDeferred.resolve(track.mediaStreamTrackOrDataTrackTransceiver);
+  track.getMediaStreamTrackOrDataTrackTransceiver = sinon.spy(() => track.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise);
   return track;
 }
