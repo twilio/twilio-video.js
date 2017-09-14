@@ -1,3 +1,41 @@
+1.4.0 (in progress)
+===================
+
+New Features
+------------
+
+- `addTrack`, `addTracks`, `removeTrack`, and `removeTracks` are deprecated
+  in favor of new methods `publishTrack`, `publishTracks`, `unpublishTrack`, and
+  `unpublishTracks`, respectively. You can mostly treat these new methods as
+  drop-in replacements for the older methods; however, the new `publishTrack`
+  and `publishTracks` APIs return a Promise for a LocalTrackPublication or array
+  of LocalTrackPublications, respectively. This is important, because,
+  previously, the `addTrack` and `addTracks` APIs could give no indication as to
+  whether or not they succeeded. Keep in mind, when migrating from
+  `removeTrack` and `removeTracks` to `unpublishTrack` and `unpublishTracks`, if
+  you were previously using the `stop` parameter you will now need to stop
+  LocalTracks yourself.
+- We've added the LocalTrackPublication class. As mentioned above, calling
+  `publishTrack` or `publishTracks` will return Promises for
+  LocalTrackPublications. Additionally, any `tracks` you `connect` with will
+  produce LocalTrackPublications. These LocalTrackPublications represent your
+  LocalTrack as it was published to the Room, and they allow you to discover
+  your LocalTrack's SID in the context of the Room. You can access your
+  LocalParticipant's LocalTrackPublications via the `trackPublications` property
+  on the LocalParticipant.
+- We've added "trackSubscribed" and "trackUnsubscribed" events to remote
+  Participants. Currently, these are synonymous with "trackAdded" and
+  "trackRemoved", but, in the next major version, when we add subscription APIs,
+  these will take on new meaning.
+- Finally, we've added experimental "DataTrack" support. DataTracks build upon
+  WebRTC's RTCDataChannels, allowing you to send and receive arbitrary data
+  within a Room. Using DataTracks, you could send mouse events, transfer files,
+  and more. DataTracks can be published to a Room just like AudioTracks and
+  VideoTracks; however, support is "exprimental" because, at the time of
+  writing, DataTracks are only supported in Peer-to-Peer (P2P) Rooms.
+
+Please refer to the API docs for more information on each of these features.
+
 1.3.0 (September 11, 2017)
 ==========================
 
