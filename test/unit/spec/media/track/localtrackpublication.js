@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const LocalDataStreamTrack = require('../../../../../lib/data/localdatastreamtrack');
+const DataTrackSender = require('../../../../../lib/data/sender');
 const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
 const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
 const LocalDataTrackPublication = require('../../../../../lib/media/track/localdatatrackpublication');
@@ -20,7 +20,7 @@ const sinon = require('sinon');
     LocalVideoTrackPublication: 'video',
     LocalDataTrackPublication: 'data'
   }[description];
-  const track = kind === 'data' ? new LocalDataStreamTrack() : new FakeMediaStreamTrack(kind);
+  const track = kind === 'data' ? new DataTrackSender() : new FakeMediaStreamTrack(kind);
 
   describe(description, function() {
     describe('constructor', () => {

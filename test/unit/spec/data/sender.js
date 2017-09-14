@@ -2,23 +2,23 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
-const LocalDataStreamTrack = require('../../../../lib/data/localdatastreamtrack');
+const DataTrackSender = require('../../../../lib/data/sender');
 const { makeUUID } = require('../../../../lib/util');
 
-describe('LocalDataStreamTrack', () => {
-  let localDataStreamTrack;
+describe('DataTrackSender', () => {
+  let dataTrackSender;
 
   beforeEach(() => {
-    localDataStreamTrack = new LocalDataStreamTrack();
+    dataTrackSender = new DataTrackSender();
   });
 
   describe('constructor', () => {
     it('sets .id to a random ID', () => {
-      assert.notEqual(localDataStreamTrack.id, (new LocalDataStreamTrack()).id);
+      assert.notEqual(dataTrackSender.id, (new DataTrackSender()).id);
     });
 
     it('sets .kind to "data"', () => {
-      assert.equal(localDataStreamTrack.kind, 'data');
+      assert.equal(dataTrackSender.kind, 'data');
     });
   });
 
@@ -30,28 +30,28 @@ describe('LocalDataStreamTrack', () => {
     });
 
     describe('never been added', () => {
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.addDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.addDataChannel(dataChannel), dataTrackSender);
       });
     });
 
     describe('already been added', () => {
       beforeEach(() => {
-        localDataStreamTrack.addDataChannel(dataChannel);
+        dataTrackSender.addDataChannel(dataChannel);
       });
 
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.addDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.addDataChannel(dataChannel), dataTrackSender);
       });
     });
 
     describe('been removed', () => {
       beforeEach(() => {
-        localDataStreamTrack.removeDataChannel(dataChannel);
+        dataTrackSender.removeDataChannel(dataChannel);
       });
 
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.addDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.addDataChannel(dataChannel), dataTrackSender);
       });
     });
   });
@@ -64,29 +64,29 @@ describe('LocalDataStreamTrack', () => {
     });
 
     describe('never been added', () => {
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.removeDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.removeDataChannel(dataChannel), dataTrackSender);
       });
     });
 
     describe('been added', () => {
       beforeEach(() => {
-        localDataStreamTrack.addDataChannel(dataChannel);
+        dataTrackSender.addDataChannel(dataChannel);
       });
 
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.removeDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.removeDataChannel(dataChannel), dataTrackSender);
       });
     });
 
     describe('been removed', () => {
       beforeEach(() => {
-        localDataStreamTrack.addDataChannel(dataChannel);
-        localDataStreamTrack.removeDataChannel(dataChannel);
+        dataTrackSender.addDataChannel(dataChannel);
+        dataTrackSender.removeDataChannel(dataChannel);
       });
 
-      it('returns the LocalDataStreamTrack', () => {
-        assert.equal(localDataStreamTrack.removeDataChannel(dataChannel), localDataStreamTrack);
+      it('returns the DataTrackSender', () => {
+        assert.equal(dataTrackSender.removeDataChannel(dataChannel), dataTrackSender);
       });
     });
   });
@@ -102,13 +102,13 @@ describe('LocalDataStreamTrack', () => {
       dataChannel1 = makeDataChannel();
       dataChannel2 = makeDataChannel();
       dataChannel3 = makeDataChannel();
-      localDataStreamTrack.addDataChannel(dataChannel1);
-      localDataStreamTrack.addDataChannel(dataChannel2);
-      localDataStreamTrack.addDataChannel(dataChannel3);
+      dataTrackSender.addDataChannel(dataChannel1);
+      dataTrackSender.addDataChannel(dataChannel2);
+      dataTrackSender.addDataChannel(dataChannel3);
     });
 
     it('calls send on the added RTCDataChannels', () => {
-      localDataStreamTrack.send(data);
+      dataTrackSender.send(data);
       [dataChannel1, dataChannel2, dataChannel3].forEach(dataChannel => {
         sinon.assert.calledOnce(dataChannel.send);
         sinon.assert.calledWith(dataChannel.send, data);
@@ -118,7 +118,7 @@ describe('LocalDataStreamTrack', () => {
     describe('calls send on the added RTCDataChannels, and, if any of those calls to send throws', () => {
       it('continues calling send on the remaining RTCDataChannels', () => {
         dataChannel1.send = sinon.spy(() => { throw new Error() });
-        localDataStreamTrack.send(data);
+        dataTrackSender.send(data);
         [dataChannel1, dataChannel2, dataChannel3].forEach(dataChannel => {
           sinon.assert.calledOnce(dataChannel.send);
           sinon.assert.calledWith(dataChannel.send, data);
@@ -127,8 +127,8 @@ describe('LocalDataStreamTrack', () => {
     });
 
     it('does not call send on removed RTCDataChannels', () => {
-      localDataStreamTrack.removeDataChannel(dataChannel1);
-      localDataStreamTrack.send(data);
+      dataTrackSender.removeDataChannel(dataChannel1);
+      dataTrackSender.send(data);
       sinon.assert.notCalled(dataChannel1.send);
       [dataChannel2, dataChannel3].forEach(dataChannel => {
         sinon.assert.calledOnce(dataChannel.send);

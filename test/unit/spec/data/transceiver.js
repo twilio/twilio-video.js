@@ -1,25 +1,25 @@
 'use strict';
 
 const assert = require('assert');
-const DataStreamTrack = require('../../../../lib/data/datastreamtrack');
+const DataTrackTransceiver = require('../../../../lib/data/transceiver');
 const { makeUUID } = require('../../../../lib/util');
 
-describe('DataStreamTrack', () => {
+describe('DataTrackTransceiver', () => {
   describe('constructor', () => {
     let id;
-    let dataStreamTrack;
+    let dataTrackTransceiver;
 
     beforeEach(() => {
       id = makeUUID();
-      dataStreamTrack = new DataStreamTrack(id);
+      dataTrackTransceiver = new DataTrackTransceiver(id);
     });
 
     it('sets .id equal to the id passed into the constructor', () => {
-      assert.equal(dataStreamTrack.id, id);
+      assert.equal(dataTrackTransceiver.id, id);
     });
 
     it('sets .kind to "data"', () => {
-      assert.equal(dataStreamTrack.kind, 'data');
+      assert.equal(dataTrackTransceiver.kind, 'data');
     });
   });
 });

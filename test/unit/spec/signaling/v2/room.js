@@ -150,12 +150,12 @@ describe('RoomV2', () => {
         assert(test.peerConnectionManager.dequeue.calledWith('trackAdded'));
       });
 
-      context('before the getMediaOrDataStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-        it('calling getMediaOrDataStreamTrack resolves to the MediaStreamTrack and MediaStream', () => {
+      context('before the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+        it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack and MediaStream', () => {
           var id = makeId();
           var mediaStreamTrack = { id: id };
           var peerConnectionManager = makePeerConnectionManager();
-          peerConnectionManager.getRemoteMediaAndDataStreamTracks = () => [mediaStreamTrack];
+          peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = () => [mediaStreamTrack];
 
           var test = makeTest({
             participants: [
@@ -164,7 +164,7 @@ describe('RoomV2', () => {
             peerConnectionManager: peerConnectionManager
           });
 
-          return test.participantV2s[0].getMediaOrDataStreamTrack(id).then(track => {
+          return test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id).then(track => {
             assert.equal(mediaStreamTrack, track);
           });
         });
@@ -452,54 +452,54 @@ describe('RoomV2', () => {
   describe('LocalParticipantSignaling', () => {
     context('multiple Track events in the same tick', () => {
       context('two "trackAdded" events', () => {
-        it('should call .setMediaAndDataStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+        it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
           const tracks = [ makeTrack(), makeTrack() ];
           const test = makeTest({ tracks });
           tracks.forEach(track => test.localParticipant.emit('trackAdded', track));
           await new Promise(resolve => setTimeout(resolve));
-          sinon.assert.callCount(test.peerConnectionManager.setMediaAndDataStreamTracks, 1);
-          assert.deepEqual(tracks.map(track => track.mediaOrDataStreamTrack),
-            test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
+          sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
+          assert.deepEqual(tracks.map(track => track.mediaStreamTrackOrDataTrackTransceiver),
+            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
         });
       });
     });
 
     context('"trackAdded" event followed by "trackRemoved" event', () => {
-      it('should call .setMediaAndDataStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+      it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
         const [ track, addedTrack, removedTrack ] = [ makeTrack(), makeTrack(), makeTrack() ];
         const test = makeTest({ tracks: [ track, addedTrack ] });
         test.localParticipant.emit('trackAdded', addedTrack);
         test.localParticipant.emit('trackRemoved', removedTrack);
         await new Promise(resolve => setTimeout(resolve));
-        sinon.assert.callCount(test.peerConnectionManager.setMediaAndDataStreamTracks, 1);
-        assert.deepEqual([ track.mediaOrDataStreamTrack, addedTrack.mediaOrDataStreamTrack ],
-          test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
+        sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
+        assert.deepEqual([ track.mediaStreamTrackOrDataTrackTransceiver, addedTrack.mediaStreamTrackOrDataTrackTransceiver ],
+          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
     });
 
     context('two "trackRemoved" events', () => {
-      it('should call .setMediaAndDataStreamTracks once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
+      it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
         const [ track, removedTrack1, removedTrack2 ] = [ makeTrack(), makeTrack(), makeTrack() ];
         const test = makeTest({ tracks: [ track ] });
         test.localParticipant.emit('trackRemoved', removedTrack1);
         test.localParticipant.emit('trackRemoved', removedTrack2);
         await new Promise(resolve => setTimeout(resolve));
-        sinon.assert.callCount(test.peerConnectionManager.setMediaAndDataStreamTracks, 1);
-        assert.deepEqual([ track.mediaOrDataStreamTrack ],
-          test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
+        sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
+        assert.deepEqual([ track.mediaStreamTrackOrDataTrackTransceiver ],
+          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
     });
 
     context('"trackAdded" event', () => {
-      it('calls .setMediaAndDataStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreamTracks on the PeerConnectionManager', async () => {
+      it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreamTracks on the PeerConnectionManager', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
         await new Promise(resolve => setTimeout(resolve));
-        assert.deepEqual([track.mediaOrDataStreamTrack],
-          test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
+        assert.deepEqual([track.mediaStreamTrackOrDataTrackTransceiver],
+          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
 
       it('calls .update on the LocalParticipantSignaling', async () => {
@@ -530,7 +530,7 @@ describe('RoomV2', () => {
     });
 
     context('"trackRemoved" event', () => {
-      it('calls .setMediaAndDataStreamTracks with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', async () => {
+      it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', async () => {
         var track = makeTrack();
         var test = makeTest({
           tracks: [track]
@@ -538,8 +538,8 @@ describe('RoomV2', () => {
         test.localParticipant.emit('trackRemoved', track);
         await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
-          [track.mediaOrDataStreamTrack],
-          test.peerConnectionManager.setMediaAndDataStreamTracks.args[0][0]);
+          [track.mediaStreamTrackOrDataTrackTransceiver],
+          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
 
       it('calls .update on the LocalParticipantSignaling', async () => {
@@ -669,8 +669,8 @@ describe('RoomV2', () => {
 
     context('when the PeerConnectionManager emits a "trackAdded" event for a MediaStreamTrack with an ID that has', () => {
       context('never been used before', () => {
-        context('before the getMediaOrDataStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getMediaOrDataStreamTrack resolves to the MediaStreamTrack', () => {
+        context('before the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
                 { sid: makeSid() }
@@ -679,14 +679,14 @@ describe('RoomV2', () => {
             var id = makeId();
             var mediaStreamTrack = { id: id };
             test.peerConnectionManager.emit('trackAdded', mediaStreamTrack);
-            return test.participantV2s[0].getMediaOrDataStreamTrack(id).then(track => {
+            return test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id).then(track => {
               assert.equal(mediaStreamTrack, track);
             });
           });
         });
 
-        context('after the getMediaOrDataStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getMediaOrDataStreamTrack resolves to the MediaStreamTrack', () => {
+        context('after the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
                 { sid: makeSid() }
@@ -694,7 +694,7 @@ describe('RoomV2', () => {
             });
             var id = makeId();
             var mediaStreamTrack = { id: id };
-            var promise = test.participantV2s[0].getMediaOrDataStreamTrack(id);
+            var promise = test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
             test.peerConnectionManager.emit('trackAdded', mediaStreamTrack);
             return promise.then(track => {
               assert.equal(mediaStreamTrack, track);
@@ -704,8 +704,8 @@ describe('RoomV2', () => {
       });
 
       context('been used before', () => {
-        context('before the getMediaOrDataStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getMediaOrDataStreamTrack resolves to the MediaStreamTrack', () => {
+        context('before the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
                 { sid: makeSid() }
@@ -718,19 +718,19 @@ describe('RoomV2', () => {
 
             // First usage
             test.peerConnectionManager.emit('trackAdded', mediaStreamTrack1);
-            return test.participantV2s[0].getMediaOrDataStreamTrack(id).then(() => {
+            return test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id).then(() => {
 
               // Second usage
               test.peerConnectionManager.emit('trackAdded', mediaStreamTrack2);
-              return test.participantV2s[0].getMediaOrDataStreamTrack(id);
+              return test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
             }).then(track2 => {
               assert.equal(mediaStreamTrack2, track2);
             });
           });
         });
 
-        context('after the getMediaOrDataStreamTrack function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getMediaOrDataStreamTrack resolves to the MediaStreamTrack', () => {
+        context('after the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
+          it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
                 { sid: makeSid() }
@@ -742,12 +742,12 @@ describe('RoomV2', () => {
             var mediaStreamTrack2 = { id: id };
 
             // First usage
-            var promise = test.participantV2s[0].getMediaOrDataStreamTrack(id);
+            var promise = test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
             test.peerConnectionManager.emit('trackAdded', mediaStreamTrack1);
             return promise.then(pair => {
 
               // Second usage
-              promise = test.participantV2s[0].getMediaOrDataStreamTrack(id);
+              promise = test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
               test.peerConnectionManager.emit('trackAdded', mediaStreamTrack2);
               return promise;
             }).then(track2 => {
@@ -1091,11 +1091,11 @@ function makeRemoteParticipantV2Constructor(testOptions) {
   testOptions = testOptions || {};
   testOptions.participantV2s = [];
 
-  function RemoteParticipantV2(initialState, getMediaOrDataStreamTrack) {
+  function RemoteParticipantV2(initialState, getMediaStreamTrackOrDataTrackTransceiver) {
     EventEmitter.call(this);
     this.state = initialState.state || 'connected';
     this.sid = initialState.sid;
-    this.getMediaOrDataStreamTrack = getMediaOrDataStreamTrack;
+    this.getMediaStreamTrackOrDataTrackTransceiver = getMediaStreamTrackOrDataTrackTransceiver;
     this.disconnect = sinon.spy(() => {
       this.state = 'disconnected';
       this.emit('stateChanged', this.state);
@@ -1126,8 +1126,8 @@ function makePeerConnectionManager(options) {
   var peerConnectionManager = new EventEmitter();
   peerConnectionManager.close = sinon.spy(() => {});
   peerConnectionManager.dequeue = sinon.spy(() => {});
-  peerConnectionManager.setMediaAndDataStreamTracks = sinon.spy(() => {});
-  peerConnectionManager.getRemoteMediaAndDataStreamTracks = sinon.spy(() => []);
+  peerConnectionManager.setMediaStreamTracksAndDataTrackSenders = sinon.spy(() => {});
+  peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = sinon.spy(() => []);
 
   peerConnectionManager.getStats = () => Promise.resolve([{
     localAudioTrackStats: [ { zee: 'foo' } ],
@@ -1211,7 +1211,7 @@ function makeTrack(options) {
   options = options || {};
   track.id = options.id || makeId();
   track.sid = null;
-  track.mediaOrDataStreamTrack = {};
+  track.mediaStreamTrackOrDataTrackTransceiver = {};
   track.disable = () => {
     track.isEnabled = false;
     track.emit('updated');

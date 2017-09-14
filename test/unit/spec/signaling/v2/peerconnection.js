@@ -23,13 +23,13 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#addDataStreamTrack, called with a LocalDataStreamTrack that has', () => {
+  describe('#addDataTrackSender, called with a DataTrackSender that has', () => {
     let test;
-    let localDataStreamTrack;
+    let dataTrackSender;
 
     beforeEach(() => {
       test = makeTest();
-      localDataStreamTrack = makeLocalDataStreamTrack();
+      dataTrackSender = makeDataTrackSender();
     });
 
     describe('never been added', () => {
@@ -39,14 +39,14 @@ describe('PeerConnectionV2', () => {
         describe('if that call succeeds,', () => {
           beforeEach(() => {
             test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
-            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            result = test.pcv2.addDataTrackSender(dataTrackSender);
             sinon.assert.calledOnce(test.pc.createDataChannel);
-            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id);
+            sinon.assert.calledWith(test.pc.createDataChannel, dataTrackSender.id);
           });
 
-          it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {
-            sinon.assert.calledOnce(localDataStreamTrack.addDataChannel);
-            sinon.assert.calledWith(localDataStreamTrack.addDataChannel, test.pc.dataChannels[0]);
+          it('calls addDataChannel on the DataTrackSender with the resulting RTCDataChannel', () => {
+            sinon.assert.calledOnce(dataTrackSender.addDataChannel);
+            sinon.assert.calledWith(dataTrackSender.addDataChannel, test.pc.dataChannels[0]);
           });
 
           it('returns undefined', () => {
@@ -57,7 +57,7 @@ describe('PeerConnectionV2', () => {
         describe('if that call fails,', () => {
           beforeEach(() => {
             test.pc.createDataChannel = () => { throw new Error() };
-            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            result = test.pcv2.addDataTrackSender(dataTrackSender);
           });
 
           it('returns undefined', () => {
@@ -71,10 +71,10 @@ describe('PeerConnectionV2', () => {
       let result;
 
       beforeEach(() => {
-        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+        test.pcv2.addDataTrackSender(dataTrackSender);
 
         test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
-        result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+        result = test.pcv2.addDataTrackSender(dataTrackSender);
       });
 
       it('does not call createDataChannel on the underlying RTCPeerConnection', () => {
@@ -90,23 +90,23 @@ describe('PeerConnectionV2', () => {
       let result;
 
       beforeEach(() => {
-        test.pcv2.addDataStreamTrack(localDataStreamTrack);
-        test.pcv2.removeDataStreamTrack(localDataStreamTrack);
-        localDataStreamTrack.addDataChannel.reset();
+        test.pcv2.addDataTrackSender(dataTrackSender);
+        test.pcv2.removeDataTrackSender(dataTrackSender);
+        dataTrackSender.addDataChannel.reset();
       });
 
       describe('calls createDataChannel on the underlying RTCPeerConnection, and,', () => {
         describe('if that call succeeds,', () => {
           beforeEach(() => {
             test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
-            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            result = test.pcv2.addDataTrackSender(dataTrackSender);
             sinon.assert.calledOnce(test.pc.createDataChannel);
-            sinon.assert.calledWith(test.pc.createDataChannel, localDataStreamTrack.id);
+            sinon.assert.calledWith(test.pc.createDataChannel, dataTrackSender.id);
           });
 
-          it('calls addDataChannel on the LocalDataStreamTrack with the resulting RTCDataChannel', () => {
-            sinon.assert.calledOnce(localDataStreamTrack.addDataChannel);
-            sinon.assert.calledWith(localDataStreamTrack.addDataChannel, test.pc.dataChannels[0]);
+          it('calls addDataChannel on the DataTrackSender with the resulting RTCDataChannel', () => {
+            sinon.assert.calledOnce(dataTrackSender.addDataChannel);
+            sinon.assert.calledWith(dataTrackSender.addDataChannel, test.pc.dataChannels[0]);
           });
 
           it('returns undefined', () => {
@@ -117,7 +117,7 @@ describe('PeerConnectionV2', () => {
         describe('if that call fails,', () => {
           beforeEach(() => {
             test.pc.createDataChannel = () => { throw new Error() };
-            result = test.pcv2.addDataStreamTrack(localDataStreamTrack);
+            result = test.pcv2.addDataTrackSender(dataTrackSender);
           });
 
           it('returns undefined', () => {
@@ -209,23 +209,23 @@ describe('PeerConnectionV2', () => {
       });
     });
 
-    it('removes RTCDataChannels from any LocalDataStreamTracks currently added to the PeerConnectionV2', () => {
+    it('removes RTCDataChannels from any DataTrackSenders currently added to the PeerConnectionV2', () => {
       const test = makeTest();
-      const localDataStreamTrack1 = makeLocalDataStreamTrack();
-      const localDataStreamTrack2 = makeLocalDataStreamTrack();
-      test.pcv2.addDataStreamTrack(localDataStreamTrack1);
-      test.pcv2.addDataStreamTrack(localDataStreamTrack2);
-      test.pcv2.removeDataStreamTrack(localDataStreamTrack1);
-      localDataStreamTrack1.removeDataChannel.reset();
+      const dataTrackSender1 = makeDataTrackSender();
+      const dataTrackSender2 = makeDataTrackSender();
+      test.pcv2.addDataTrackSender(dataTrackSender1);
+      test.pcv2.addDataTrackSender(dataTrackSender2);
+      test.pcv2.removeDataTrackSender(dataTrackSender1);
+      dataTrackSender1.removeDataChannel.reset();
       test.pcv2.close();
-      sinon.assert.notCalled(localDataStreamTrack1.removeDataChannel);
-      sinon.assert.calledOnce(localDataStreamTrack2.removeDataChannel);
-      sinon.assert.calledWith(localDataStreamTrack2.removeDataChannel, test.pc.dataChannels[1]);
+      sinon.assert.notCalled(dataTrackSender1.removeDataChannel);
+      sinon.assert.calledOnce(dataTrackSender2.removeDataChannel);
+      sinon.assert.calledWith(dataTrackSender2.removeDataChannel, test.pc.dataChannels[1]);
     });
   });
 
-  describe('#getRemoteDataStreamTracks', () => {
-    it('returns RemoteDataStreamTracks for any RTCDataChannels raised by the underlying RTCPeerConnection that have yet to be closed', () => {
+  describe('#getDataTrackReceivers', () => {
+    it('returns DataTrackReceivers for any RTCDataChannels raised by the underlying RTCPeerConnection that have yet to be closed', () => {
       const test = makeTest();
       const dataChannel1 = makeDataChannel();
       const dataChannel2 = makeDataChannel();
@@ -234,16 +234,16 @@ describe('PeerConnectionV2', () => {
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel3 });
       assert.deepEqual(
-        test.pcv2.getRemoteDataStreamTracks().map(dataStreamTrack => dataStreamTrack.id),
+        test.pcv2.getDataTrackReceivers().map(dataTrackReceiver => dataTrackReceiver.id),
         [dataChannel1, dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
       dataChannel1.dispatchEvent({ type: 'close' });
       assert.deepEqual(
-        test.pcv2.getRemoteDataStreamTracks().map(dataStreamTrack => dataStreamTrack.id),
+        test.pcv2.getDataTrackReceivers().map(dataTrackReceiver => dataTrackReceiver.id),
         [dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
     });
   });
 
-  describe('#getRemoteMediaAndDataStreamTracks', () => {
+  describe('#getRemoteMediaStreamTracksAndDataTrackReceivers', () => {
     it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
       const test = makeTest();
       const remoteStream = new FakeMediaStream();
@@ -255,7 +255,7 @@ describe('PeerConnectionV2', () => {
       remoteStream.addTrack(remoteTracks[0]);
       remoteStream.addTrack(remoteTracks[1]);
       test.pc.getRemoteStreams = () => [remoteStream];
-      assert.deepEqual(test.pcv2.getRemoteMediaAndDataStreamTracks(), remoteTracks);
+      assert.deepEqual(test.pcv2.getRemoteMediaStreamTracksAndDataTrackReceivers(), remoteTracks);
     });
   });
 
@@ -471,23 +471,23 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#removeDataStreamTrack, called with a LocalDataStreamTrack that has', () => {
+  describe('#removeDataTrackSender, called with a DataTrackSender that has', () => {
     let test;
-    let localDataStreamTrack;
+    let dataTrackSender;
     let result;
 
     beforeEach(() => {
       test = makeTest();
-      localDataStreamTrack = makeLocalDataStreamTrack();
+      dataTrackSender = makeDataTrackSender();
     });
 
     describe('never been added', () => {
       beforeEach(() => {
-        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+        result = test.pcv2.removeDataTrackSender(dataTrackSender);
       });
 
-      it('does not call removeDataChannel on the LocalDataStreamTrack', () => {
-        sinon.assert.notCalled(localDataStreamTrack.removeDataChannel);
+      it('does not call removeDataChannel on the DataTrackSender', () => {
+        sinon.assert.notCalled(dataTrackSender.removeDataChannel);
       });
 
       it('returns undefined', () => {
@@ -497,14 +497,14 @@ describe('PeerConnectionV2', () => {
 
     describe('been added', () => {
       beforeEach(() => {
-        test.pcv2.addDataStreamTrack(localDataStreamTrack);
+        test.pcv2.addDataTrackSender(dataTrackSender);
 
-        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+        result = test.pcv2.removeDataTrackSender(dataTrackSender);
       });
 
-      it('calls removeDataChannel on the LocalDataStreamTrack with the underlying RTCDataChannel', () => {
-        sinon.assert.calledOnce(localDataStreamTrack.removeDataChannel);
-        sinon.assert.calledWith(localDataStreamTrack.removeDataChannel, test.pc.dataChannels[0]);
+      it('calls removeDataChannel on the DataTrackSender with the underlying RTCDataChannel', () => {
+        sinon.assert.calledOnce(dataTrackSender.removeDataChannel);
+        sinon.assert.calledWith(dataTrackSender.removeDataChannel, test.pc.dataChannels[0]);
       });
 
       it('returns undefined', () => {
@@ -514,15 +514,15 @@ describe('PeerConnectionV2', () => {
 
     describe('been removed', () => {
       beforeEach(() => {
-        test.pcv2.addDataStreamTrack(localDataStreamTrack);
-        test.pcv2.removeDataStreamTrack(localDataStreamTrack);
-        localDataStreamTrack.removeDataChannel.reset();
+        test.pcv2.addDataTrackSender(dataTrackSender);
+        test.pcv2.removeDataTrackSender(dataTrackSender);
+        dataTrackSender.removeDataChannel.reset();
 
-        result = test.pcv2.removeDataStreamTrack(localDataStreamTrack);
+        result = test.pcv2.removeDataTrackSender(dataTrackSender);
       });
 
-      it('does not call removeDataChannel on the LocalDataStreamTrack', () => {
-        sinon.assert.notCalled(localDataStreamTrack.removeDataChannel);
+      it('does not call removeDataChannel on the DataTrackSender', () => {
+        sinon.assert.notCalled(dataTrackSender.removeDataChannel);
       });
 
       it('returns undefined', () => {
@@ -1185,7 +1185,7 @@ describe('PeerConnectionV2', () => {
 
   describe('#update, called in signaling state "stable", with an offer that', () => {
     [true, false].forEach(lacks => {
-      describe(`${lacks ? 'lacks' : 'has'} an m= application section, when the PeerConnectionV2 has one ore more LocalDataStreamTracks`, () => {
+      describe(`${lacks ? 'lacks' : 'has'} an m= application section, when the PeerConnectionV2 has one ore more DataTrackSenders`, () => {
         // The Test
         let test;
 
@@ -1205,8 +1205,8 @@ describe('PeerConnectionV2', () => {
           });
           descriptions = [];
 
-          const dataStreamTrack = makeLocalDataStreamTrack();
-          test.pcv2.addDataStreamTrack(dataStreamTrack);
+          const dataTrackSender = makeDataTrackSender();
+          test.pcv2.addDataTrackSender(dataTrackSender);
 
           const offer = makeOffer();
           if (!lacks) {
@@ -1384,7 +1384,7 @@ describe('PeerConnectionV2', () => {
     });
 
     context('when a "datachannel" event is raised on the underlying RTCPeerConnection', () => {
-      it('emits a "trackAdded" event with a RemoteDataStreamTrack', () => {
+      it('emits a "trackAdded" event with a DataTrackReceiver', () => {
         const test = makeTest();
         const channel = makeDataChannel();
         let trackAdded;
@@ -1849,7 +1849,7 @@ function makeIce(ufrag, count) {
   return ice;
 }
 
-function makeLocalDataStreamTrack(id) {
+function makeDataTrackSender(id) {
   id = id || makeId();
   return {
     id,
