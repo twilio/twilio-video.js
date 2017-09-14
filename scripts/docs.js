@@ -16,7 +16,6 @@ const publicClasses = [
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
-  'lib/media/track/datatrack.js',
   'lib/media/track/localaudiotrack.js',
   'lib/media/track/localdatatrack.js',
   'lib/media/track/localvideotrack.js',
