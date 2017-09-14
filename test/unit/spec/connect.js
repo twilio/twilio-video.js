@@ -65,7 +65,6 @@ describe('connect', () => {
 
         let shouldStopLocalTracks;
         function LocalParticipant(localParticipantSignaling, localTracks, options) {
-          this._initialTracksPublished = [Promise.resolve()];
           shouldStopLocalTracks = options.shouldStopLocalTracks;
         }
 
@@ -131,7 +130,6 @@ describe('connect', () => {
         var room;
 
         function LocalParticipant() {
-          this._initialTracksPublished = [Promise.resolve()];
         }
 
         function signaling() {
@@ -199,7 +197,6 @@ describe('connect', () => {
 
         let shouldStopLocalTracks;
         function LocalParticipant(localParticipantSignaling, localTracks, options) {
-          this._initialTracksPublished = [Promise.resolve()];
           shouldStopLocalTracks = options.shouldStopLocalTracks;
         }
 
@@ -230,7 +227,6 @@ describe('connect', () => {
         }
 
         function LocalParticipant() {
-          this._initialTracksPublished = [Promise.reject('foo')];
         }
 
         try {
