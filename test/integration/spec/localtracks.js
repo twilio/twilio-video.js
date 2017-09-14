@@ -83,13 +83,6 @@ const isSafari = guess === 'safari';
           return stoppedEvent;
         });
       });
-
-      context('when the underlying MediaStreamTrack ends', () => {
-        (isFirefox || isSafari ? it.skip : it)('emits "stopped"', () => {
-          localTrack.mediaStreamTrack.stop();
-          return stoppedEvent;
-        });
-      });
     });
   });
 });
