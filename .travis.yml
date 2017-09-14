@@ -1,5 +1,5 @@
 # NOTE(mroberts): https://github.com/travis-ci/travis-ci/issues/4704
-group: deprecated-2017Q2
+filter_secrets: false
 language: node_js
 node_js:
   - 7
