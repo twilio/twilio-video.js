@@ -1,40 +1,206 @@
 1.4.0 (in progress)
 ===================
 
+This release includes a handful of new features as well as some deprecations.
+Please refer to the migration guide below for handling the deprecations.
+
 New Features
 ------------
 
-- `addTrack`, `addTracks`, `removeTrack`, and `removeTracks` are deprecated
-  in favor of new methods `publishTrack`, `publishTracks`, `unpublishTrack`, and
-  `unpublishTracks`, respectively. You can mostly treat these new methods as
-  drop-in replacements for the older methods; however, the new `publishTrack`
-  and `publishTracks` APIs return a Promise for a LocalTrackPublication or array
-  of LocalTrackPublications, respectively. This is important, because,
-  previously, the `addTrack` and `addTracks` APIs could give no indication as to
-  whether or not they succeeded. Keep in mind, when migrating from
-  `removeTrack` and `removeTracks` to `unpublishTrack` and `unpublishTracks`, if
-  you were previously using the `stop` parameter you will now need to stop
-  LocalTracks yourself.
-- We've added the LocalTrackPublication class. As mentioned above, calling
-  `publishTrack` or `publishTracks` will return Promises for
-  LocalTrackPublications. Additionally, any `tracks` you `connect` with will
-  produce LocalTrackPublications. These LocalTrackPublications represent your
-  LocalTrack as it was published to the Room, and they allow you to discover
-  your LocalTrack's SID in the context of the Room. You can access your
-  LocalParticipant's LocalTrackPublications via the `trackPublications` property
-  on the LocalParticipant.
-- We've added "trackSubscribed" and "trackUnsubscribed" events to remote
-  Participants. Currently, these are synonymous with "trackAdded" and
-  "trackRemoved", but, in the next major version, when we add subscription APIs,
-  these will take on new meaning.
-- Finally, we've added experimental "DataTrack" support. DataTracks build upon
-  WebRTC's RTCDataChannels, allowing you to send and receive arbitrary data
-  within a Room. Using DataTracks, you could send mouse events, transfer files,
-  and more. DataTracks can be published to a Room just like AudioTracks and
-  VideoTracks; however, support is "exprimental" because, at the time of
-  writing, DataTracks are only supported in Peer-to-Peer (P2P) Rooms.
+- Added `publishTrack`, `unpublishTrack`, and related methods to
+  LocalParticipant. `addTrack`, `removeTrack` and related methods are now
+  deprecated. Refer to the migration guide below.
+- Added "trackSubscribed" and "trackUnsubscribed" events. As of now, they are
+  emitted before and after the "trackAdded" and "trackRemoved" events,
+  respectively; however, in a future release, they will only be emitted when
+  a Track which has actually been subscribed to or unsubscribed from.
+- Added LocalTrackPublication classes. These classes allow you to discover your
+  Track SID, and, in a future release, will allow you to selectively subscribe
+  to or unsubscribe from RemoteTracks. It is also recommended that you starting
+  using Track SIDs instead of Track IDs to correlate Tracks.
+- Added experiment DataTrack support. Refer to the DataTrack guide below.
 
-Please refer to the API docs for more information on each of these features.
+Migration Guide
+---------------
+
+### Migrating from `addTrack` to `publishTrack`
+
+`addTrack` is deprecated and will be removed in the next major version. Please
+migrate to `publishTrack` as soon as possible. For the most part, you can treat
+the new method as a drop-in replacement for the old one. For example, where you
+previously had
+
+```js
+// Before
+room.localParticipant.addTrack(localTrack);
+```
+
+you can replace it with
+
+```js
+// After
+room.localParticipant.publishTrack(localTrack);
+```
+
+One short-coming of `addTrack` is that it could not tell if it was successful or
+not. With `publishTrack`, we actually return a Promise for a
+LocalTrackPublication. If publishing succeeds, you'll be able to print your
+Track SID:
+
+```js
+try {
+  const publication = await room.localParticipant.publishTrack(track);
+  console.log('Successfully published Track %s', publication.trackSid);
+} catch (error) {
+  console.error('Failed to publish Track!', error.message);
+}
+```
+
+Similarly, `addTracks` has been replaced by `publishTracks`.
+
+### Migrating from `removeTrack` to `unpublishTrack`
+
+Like `addTrack` and `publishTrack`, `removeTrack` is deprecated and has been
+replaced with `unpublishTrack`. For the most part, you can treat the new method
+as a drop-in replacement for the old one. The one caveat is that
+`unpublishTrack` will not automatically stop the Track for you. For example,
+where you previously had
+
+```js
+// Before
+room.localParticipant.removeTrack(localTrack);
+```
+
+you can replace it with
+
+```js
+// After
+room.localParticipant.unpublishTrack(localTrack);
+localTrack.stop();
+```
+
+Of course, you can omit the call to `stop` if you do not want to stop the Track.
+
+`unpublishTrack` will return the LocalTrackPublication if the Track was
+unpublished. For example, you can print the unpublished Track's SID:
+
+```js
+const publication = room.localParticipant.unpublishTrack(localTrack);
+if (publication) {
+  console.log('Successfully unpublished Track %s', publication.trackSid);
+}
+```
+
+Alternatively, if you already have a reference to a LocalTrackPublication, you
+can call `unpublish` directly on it.
+
+```js
+publication.unpublish();
+```
+
+Similarly, `removeTracks` has been replaced by `unpublishTracks`.
+
+### Migrating from Track IDs to Track SIDs
+
+In some applications, it makes sense to share metadata about a Track.
+Previously, the natural way to do this with twilio-video.js was to use the Track
+ID; however, in the next major release of twilio-video.js, Track IDs will be
+replaced by Track SIDs. SIDs—or "string identifiers"—are identifiers that Twilio
+assigns to resources. These identifiers are useful for debugging, sharing
+metadata out-of-band, and looking up resources in the REST API. For a long time,
+Rooms and Participants have had SIDs, but not Tracks. That changes in this
+release.
+
+Whereas before you may have associated metadata with a LocalTrack's ID, you
+should now associate that metadata with the LocalTrack's SID, as exposed by the
+LocalTrackPublication:
+
+```js
+// Before
+room.localParticipant.addTrack(localTrack);
+console.log('Added LocalTrack %s', localTrack.id);
+
+// After
+const publication = await room.localParticipant.publishTrack(localTrack);
+console.log('Published LocalTrack %s', publication.trackSid);
+```
+
+Similarly, for a RemoteTrack:
+
+```js
+// Before
+console.log('Received RemoteTrack %s', remoteTrack.id);
+
+// After
+console.log('Received RemoteTrack %s', remoteTrack.sid);
+```
+
+DataTrack
+---------
+
+This releases adds experimental support for "DataTracks". DataTracks are a new
+kind of Track, similar to AudioTracks and VideoTracks. DataTracks are different,
+though, in that they allow you to send and receive arbitrary data within a
+Room—not just audio and video. Using DataTracks, you could send mouse events,
+transfer files, or implement a simple chat mechanism in your Room. All of this
+is supported under-the-hood by WebRTC's RTCDataChannels.
+
+We're calling support for DataTracks "experimental" in this release becase, at
+the time of writing, they are currently only supported in Peer-to-Peer (P2P)
+Rooms. You will not (yet) be able to connect to Group Rooms with DataTracks. We
+plan to add this in a subsequent release.
+
+Constructing a new DataTrack is simple—just call the LocalDataTrack
+constructor:
+
+```js
+const { LocalDataTrack } = require('twilio');
+
+const localTrack = new LocalDataTrack();
+```
+
+Once you've constructed a DataTrack, you can either `connect` to a Room with it
+or publish it to a Room:
+
+```js
+// Option 1
+connect(token, { tracks: [localTrack] });
+
+// Option 2
+room.localParticipant.publishTrack(localTrack);
+```
+
+Once you've published the DataTrack to the Room, call `send` to transmit
+messages:
+
+```js
+localTrack.send('cool');
+```
+
+In order to receive a DataTrack, you'll want to iterate over a
+RemoteParticipant's Tracks and listen to the "trackAdded" event. Once you
+have a DataTrack, attach a listener to the "message" event:
+
+```js
+function handleTrack(remoteTrack) {
+  if (remoteTrack.kind === 'data') {
+    remoteTrack.on('message', data => {
+      console.log('Got message "%s" from DataTrack %s', data, remoteTrack.sid);
+    });
+  }
+}
+
+remoteParticipant.tracks.forEach(handleTrack);
+remoteParticipant.on('trackAdded', handleTrack);
+```
+
+You can also listen for the "trackMessage" on the RemoteParticipant:
+
+```js
+remoteParticipant.on('trackMessage', (data, remoteTrack) => {
+  console.log('Got message "%s" from DataTrack "%s"', data, remoteTrack.sid);
+});
+```
 
 1.3.0 (September 11, 2017)
 ==========================

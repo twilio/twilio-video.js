@@ -77,9 +77,9 @@ function participantConnected(participant) {
   div.id = participant.sid;
   div.innerText = participant.identity;
 
-  participant.on('trackAdded', track => trackAdded(div, track));
+  participant.on('trackSubscribed', track => trackAdded(div, track));
   participant.tracks.forEach(track => trackAdded(div, track));
-  participant.on('trackRemoved', trackRemoved);
+  participant.on('trackUnsubscribed', trackRemoved);
 
   document.body.appendChild(div);
 }
