@@ -107,7 +107,7 @@ const { enableDataTrackTests } = env;
             const track = tracks[i];
             assert(localTrackPublication instanceof LocalTrackPublication);
             assert.equal(localTrackPublication.track, track);
-            assert(localTrackPublication.sid.match(/^MT[a-f0-9]{32}$/));
+            assert(localTrackPublication.trackSid.match(/^MT[a-f0-9]{32}$/));
           });
         });
 
@@ -120,8 +120,8 @@ const { enableDataTrackTests } = env;
 
         it('should add each of the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' collections', () => {
           trackPublications.forEach(trackPublication => {
-            assert.equal(room.localParticipant.trackPublications.get(trackPublication.sid), trackPublication);
-            assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.sid), trackPublication);
+            assert.equal(room.localParticipant.trackPublications.get(trackPublication.trackSid), trackPublication);
+            assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.trackSid), trackPublication);
           });
         });
 
@@ -173,7 +173,7 @@ const { enableDataTrackTests } = env;
       });
 
       it('should assign different SIDs to the two LocalTrackPublications', () => {
-        assert.notEqual(trackPublications[0].sid, trackPublications[1].sid);
+        assert.notEqual(trackPublications[0].trackSid, trackPublications[1].trackSid);
       });
 
       after(() => {
@@ -325,9 +325,9 @@ const { enableDataTrackTests } = env;
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .sid', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
           });
 
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
@@ -489,9 +489,9 @@ const { enableDataTrackTests } = env;
         });
 
         describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .sid', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
             const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.sid));
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
           });
 
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
@@ -595,7 +595,7 @@ const { enableDataTrackTests } = env;
     [ 'trackUnsubscribed', 'trackRemoved' ].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksUnpublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication1.sid)
+        assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid)
         assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
         if (!isFirefox && !isSafari) {
@@ -607,7 +607,7 @@ const { enableDataTrackTests } = env;
     [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksPublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication2.sid)
+        assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid)
         assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
         assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
@@ -691,13 +691,13 @@ const { enableDataTrackTests } = env;
     [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
       it(`should eventually raise a "${event}" event for each published LocalTracks`, () => {
         const thatAudioTrack = thoseAudioTracks[event];
-        assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.sid);
+        assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.trackSid);
         assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
         assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
         assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
 
         const thatVideoTrack = thoseVideoTracks[event];
-        assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.sid);
+        assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.trackSid);
         assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
         assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
         assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);

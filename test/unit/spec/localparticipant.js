@@ -332,15 +332,15 @@ describe('LocalParticipant', () => {
     beforeEach(() => {
       options = {
         LocalAudioTrackPublication: function(sid, track) {
-          this.sid = sid;
+          this.trackSid = sid;
           this.track = track;
         },
         LocalVideoTrackPublication: function(sid, track) {
-          this.sid = sid;
+          this.trackSid = sid;
           this.track = track;
         },
         LocalDataTrackPublication: function(sid, track) {
-          this.sid = sid;
+          this.trackSid = sid;
           this.track = track;
         }
       };
@@ -437,13 +437,13 @@ describe('LocalParticipant', () => {
                 it(`should resolve the returned Promise with a ${capitalize(kind)}TrackPublication`, () => {
                   var LocalTrackPublication = options[`Local${capitalize(kind)}TrackPublication`];
                   assert(localTrackPublication instanceof LocalTrackPublication);
-                  assert.equal(localTrackPublication.sid, 'foo');
+                  assert.equal(localTrackPublication.trackSid, 'foo');
                   assert.equal(localTrackPublication.track.id, localTrack.id);
                 });
 
                 it(`should add the ${capitalize(kind)}TrackPublication to the .trackPublications and .${kind}TrackPublications collections`, () => {
-                  assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrackPublication.sid));
-                  assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrackPublication.sid));
+                  assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrackPublication.trackSid));
+                  assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrackPublication.trackSid));
                 });
 
                 otherKinds.forEach(otherKind => {

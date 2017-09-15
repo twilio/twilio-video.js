@@ -206,10 +206,10 @@ describe('connect', function() {
             });
           });
 
-          it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(trackPublications)}' .sid to a unique Track SID`, () => {
+          it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(trackPublications)}' .trackSid to a unique Track SID`, () => {
             rooms.forEach(room => {
-              var tracks = room.localParticipant[trackPublications];
-              tracks.forEach(track => assert(track.sid.match(/^MT[a-f0-9]{32}$/)));
+              var publications = room.localParticipant[trackPublications];
+              publications.forEach(publication => assert(publication.trackSid.match(/^MT[a-f0-9]{32}$/)));
             });
           });
         });
@@ -256,7 +256,7 @@ describe('connect', function() {
               const participant = participants.get(localParticipant.sid);
               assert(participant);
               const trackSids = [...participant.tracks.values()].map(track => track.sid).sort();
-              const localTrackPublicationSids = [...localParticipant.trackPublications.values()].map(track => track.sid).sort();
+              const localTrackPublicationSids = [...localParticipant.trackPublications.values()].map(publication => publication.trackSid).sort();
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
             });

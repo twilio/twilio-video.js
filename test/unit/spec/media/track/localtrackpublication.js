@@ -59,7 +59,7 @@ const sinon = require('sinon');
 
       it('should populate the .sid property', () => {
         var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
-        assert.equal(localTrackPublication.sid, 'foo');
+        assert.equal(localTrackPublication.trackSid, 'foo');
       });
     });
 
