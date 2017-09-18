@@ -91,14 +91,6 @@ describe('LocalParticipant', () => {
           it('should not throw', () => {
             assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
           });
-
-          it(`should call ._${method} with the given Local${kind}Track and return its return value`, () => {
-            var localTrack = new test[`Local${kind}Track`]();
-            var ret = test.participant[method](localTrack);
-            delete(ret.stop);
-            assert(test.participant[`_${method}`].calledWith(localTrack));
-            assert.deepEqual(ret, { foo: 'bar' });
-          });
         });
       });
 
@@ -107,54 +99,7 @@ describe('LocalParticipant', () => {
           assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('audio')));
           assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('video')));
         });
-
-        it(`should call ._${method} with the corresponding LocalTrack and return its return value`, () => {
-          var localAudioTrack = new FakeMediaStreamTrack('audio');
-          var ret = test.participant[method](localAudioTrack);
-          var _methodArg = test.participant[`_${method}`].args[0][0];
-
-          delete(ret.stop);
-          assert(test.LocalAudioTrack.calledWith(localAudioTrack));
-          assert(_methodArg instanceof test.LocalAudioTrack);
-          assert.deepEqual(ret, { foo: 'bar' });
-
-          var localVideoTrack = new FakeMediaStreamTrack('video');
-          ret = test.participant[method](localVideoTrack);
-          _methodArg = test.participant[`_${method}`].args[1][0];
-
-          delete(ret.stop);
-          assert(test.LocalVideoTrack.calledWith(localVideoTrack));
-          assert(_methodArg instanceof test.LocalVideoTrack);
-          assert.deepEqual(ret, { foo: 'bar' });
-        });
       });
-
-      if (method === 'removeTrack') {
-        [
-          [ 'when called without the "stop" argument' ],
-          [ 'when called with stop=true', true ],
-          [ 'when called with stop=false', false ]
-        ].forEach(([ scenario, stop ]) => {
-          var shouldCallStop = typeof stop === 'undefined' || stop
-            ? true : false;
-
-          context(scenario, () => {
-            it(`should ${shouldCallStop ? '' : 'not'} call .stop on the LocalTrack returned by ._${method}`, () => {
-              [
-                test.LocalAudioTrack,
-                test.LocalVideoTrack,
-                FakeMediaStreamTrack.bind(null, 'audio'),
-                FakeMediaStreamTrack.bind(null, 'video')
-              ].forEach(LocalTrack => {
-                var localTrack = new LocalTrack();
-                var ret = test.participant[method](localTrack, stop);
-                assert(shouldCallStop ? ret.stop.calledOnce
-                  : !ret.stop.calledOnce);
-              });
-            });
-          });
-        });
-      }
     });
   });
 
@@ -210,18 +155,6 @@ describe('LocalParticipant', () => {
               ]));
             });
 
-            it(`should call .${trackMethod} for each LocalTrack`, () => {
-              var localAudioTrack = new LocalAudioTrack();
-              var localVideoTrack = new LocalVideoTrack();
-              var localDataTrack = new LocalDataTrack();
-
-              test.participant[method]([ localAudioTrack, localVideoTrack, localDataTrack ]);
-              sinon.assert.callCount(test.participant[trackMethod], 3);
-              sinon.assert.calledWith(test.participant[trackMethod], localAudioTrack);
-              sinon.assert.calledWith(test.participant[trackMethod], localVideoTrack);
-              sinon.assert.calledWith(test.participant[trackMethod], localDataTrack);
-            });
-
             if (method === 'publishTracks') {
               it(`should return a Promise for an array of LocalTrackPublications`, async () => {
                 var localAudioTrack = new LocalAudioTrack();
@@ -235,48 +168,10 @@ describe('LocalParticipant', () => {
                 assert.equal(ret[1].track, localVideoTrack);
                 assert.equal(ret[2].track, localDataTrack);
               });
-            } else {
-              it(`should return an array of the non-null return values of all the calls to .${trackMethod}`, () => {
-                var localAudioTrack = new LocalAudioTrack();
-                var localVideoTrack = new LocalVideoTrack();
-                var localDataTrack = new LocalDataTrack();
-                var ret = test.participant[method]([ localAudioTrack, localVideoTrack, localDataTrack ]);
-
-                assert(Array.isArray(ret));
-                assert.equal(ret.length, 2);
-                delete(ret[0].stop);
-                assert.deepEqual(ret[0], { foo: 'bar' });
-              });
             }
           });
         });
       });
-
-      if (method === 'removeTracks') {
-        [ undefined, true, false ].forEach(stop => {
-          var scenario = typeof stop === 'undefined'
-            ? 'when called without the "stop" argument'
-            : `when called with stop=${stop}`;
-
-          context(scenario, () => {
-            it(`should call .${trackMethod} for each item in the "tracks" argument with stop=${stop}`, () => {
-              var tracks = [
-                new LocalAudioTrack(new FakeMediaStreamTrack('audio')),
-                new LocalVideoTrack(new FakeMediaStreamTrack('video')),
-                new LocalDataTrack(new DataTrackSender())
-              ];
-
-              if (typeof stop === 'undefined') {
-                test.participant[method](tracks);
-              } else {
-                test.participant[method](tracks, stop);
-              }
-              sinon.assert.calledWith(test.participant[trackMethod], tracks[0], stop);
-              sinon.assert.calledWith(test.participant[trackMethod], tracks[1], stop);
-            });
-          });
-        });
-      }
     });
   });
 
