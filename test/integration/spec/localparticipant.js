@@ -260,7 +260,6 @@ const { enableDataTrackTests } = env;
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
-        console.log(thisRoom.sid);
         thisParticipant = thisRoom.localParticipant;
 
         const thoseIdentities = identities.slice(1);
