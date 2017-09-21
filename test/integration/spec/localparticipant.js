@@ -47,7 +47,6 @@ const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 
-// TODO(mroberts): Some of the DataTrack tests will fail until VIDEO-936 is fixed.
 const { enableDataTrackTests } = env;
 
 (navigator.userAgent === 'Node'
@@ -233,10 +232,7 @@ const { enableDataTrackTests } = env;
 
       before(async () => {
         const name = randomName();
-        // TODO(mroberts): Update when VIDEO-954 is fixed.
-        const identities = kind === 'data'
-          ? [randomName(), randomName()]
-          : [randomName(), randomName(), randomName()];
+        const identities = [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
 
         thisTrack = await {
@@ -391,10 +387,7 @@ const { enableDataTrackTests } = env;
 
       before(async () => {
         const name = randomName();
-        // TODO(mroberts): Update when VIDEO-954 is fixed.
-        const identities = kind === 'data'
-          ? [randomName(), randomName()]
-          : [randomName(), randomName(), randomName()];
+        const identities = [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
 
         thisTrack = await {
