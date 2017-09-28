@@ -83,6 +83,9 @@ New Features
   These are codec "preferences" because they will only be applied if your
   browser and the type of Room you are connected to support them. If a
   preference cannot be satisfied, we will fallback to the next best codec.
+  Please note if you want to create a Group Room with a preferred codec you
+  will need to set the `VideoCodecs` property when [creating the Room using
+  the REST API](https://www.twilio.com/docs/api/video/rooms-resource). 
 
   For example, to connect with a preferred video codec of H.264:
 
