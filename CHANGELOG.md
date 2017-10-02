@@ -1,5 +1,5 @@
-1.4.0 (in progress)
-===================
+1.4.0 (October 2, 2017)
+=======================
 
 This release includes a handful of new features as well as some deprecations.
 Please refer to the migration guide below for handling the deprecations.
@@ -18,7 +18,9 @@ New Features
   Track SID, and, in a future release, will allow you to selectively subscribe
   to or unsubscribe from RemoteTracks. It is also recommended that you starting
   using Track SIDs instead of Track IDs to correlate Tracks.
-- Added experiment DataTrack support. Refer to the DataTrack guide below.
+- Added experimental DataTrack support. You can see a demo of it
+  [here](https://github.com/twilio/draw-with-twilio). Refer to the DataTrack
+  guide below for more information.
 
 Migration Guide
 ---------------
@@ -148,7 +150,8 @@ is supported under-the-hood by WebRTC's RTCDataChannels.
 We're calling support for DataTracks "experimental" in this release becase, at
 the time of writing, they are currently only supported in Peer-to-Peer (P2P)
 Rooms. You will not (yet) be able to connect to Group Rooms with DataTracks. We
-plan to add this in a subsequent release.
+plan to add this in a subsequent release. If you want to see a demo of
+DataTracks in action, see [here](https://github.com/twilio/draw-with-twilio).
 
 Constructing a new DataTrack is simple—just call the LocalDataTrack
 constructor:
