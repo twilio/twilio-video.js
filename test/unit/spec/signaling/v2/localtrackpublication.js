@@ -80,6 +80,75 @@ describe('LocalTrackPublicationV2', () => {
     });
   });
 
+  describe('#update', () => {
+    context('when called with a ReadyTrack payload', () => {
+      context('and the .sid is null', () => {
+        let localTrackPublicationV2;
+        let payload;
+        let ret;
+        let updated;
+
+        beforeEach(() => {
+          payload = { state: 'ready', sid: makeSid() };
+          localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
+          updated = false;
+          localTrackPublicationV2.once('updated', () => updated = true);
+          ret = localTrackPublicationV2.update(payload);
+        });
+
+        it('returns the LocalTrackPublicationV2', () => {
+          assert.equal(ret, localTrackPublicationV2);
+        });
+
+        it('sets the .sid', () => {
+          assert.equal(localTrackPublicationV2.sid, payload.sid);
+        });
+
+        it('.error remains null', () => {
+          assert.equal(localTrackPublicationV2.error, null);
+        });
+
+        it('emits the "updated" event', () => {
+          assert(updated);
+        });
+      });
+    });
+
+    context('when called with a FailedTrack payload', () => {
+      context('and the .error is null', () => {
+        let localTrackPublicationV2;
+        let payload;
+        let ret;
+        let updated;
+
+        beforeEach(() => {
+          payload = { state: 'failed', error: { code: 1, message: 'foo' } };
+          localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
+          updated = false;
+          localTrackPublicationV2.once('updated', () => updated = true);
+          ret = localTrackPublicationV2.update(payload);
+        });
+
+        it('returns the LocalTrackPublicationV2', () => {
+          assert.equal(ret, localTrackPublicationV2);
+        });
+
+        it('.sid remains null', () => {
+          assert.equal(localTrackPublicationV2.sid, null);
+        });
+
+        it('sets the .error to a TwilioError', () => {
+          assert.equal(localTrackPublicationV2.error.code, payload.error.code);
+          assert.equal(localTrackPublicationV2.error.message, payload.error.message);
+        });
+
+        it('emits the "updated" event', () => {
+          assert(updated);
+        });
+      });
+    });
+  });
+
   // TrackSignaling
   // --------------
 
@@ -126,48 +195,235 @@ describe('LocalTrackPublicationV2', () => {
     let sid;
     let updated;
 
-    before(() => {
+    beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       sid = makeSid();
       localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
-      localTrackPublicationV2.once('updated', () => updated = true);
-      ret = localTrackPublicationV2.setSid(sid);
+      updated = false;
+      // NOTE(mroberts): Suppress Node warnings.
+      localTrackPublicationV2.getSid().catch(() => {});
     });
 
     context('when .sid is null', () => {
+      beforeEach(() => {
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.setSid(sid);
+      });
+
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
+      });
+
       it('should set .sid to the value passed to it', () => {
         assert.equal(localTrackPublicationV2.sid, sid);
+      });
+
+      it('.error should remain null', () => {
+        assert.equal(localTrackPublicationV2.error, null);
       });
 
       it('should emit "updated"', () => {
         assert(updated);
       });
+
+      describe('#getSid', () => {
+        it('should resolve with the SID', async () => {
+          const _sid = await localTrackPublicationV2.getSid();
+          assert.equal(_sid, sid);
+        });
+      });
     });
 
     context('when .sid is non-null', () => {
-      let ret1;
-      let sid1;
-      let updated1;
+      beforeEach(() => {
+        localTrackPublicationV2.setSid(sid);
+        const newSid = makeSid();
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.setSid(newSid);
+      });
 
-      before(() => {
-        sid1 = makeSid();
-        localTrackPublicationV2.once('updated', () => updated1 = true);
-        ret1 = localTrackPublicationV2.setSid(sid1);
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
       });
 
       it('should not set .sid to the value passed to it', () => {
         assert.equal(localTrackPublicationV2.sid, sid);
       });
 
+      it('.error should remain null', () => {
+        assert.equal(localTrackPublicationV2.error, null);
+      });
+
       it('should not emit "updated"', () => {
-        assert(!updated1);
+        assert(!updated);
+      });
+
+      describe('#getSid', () => {
+        it('should resolve with the original SID', async () => {
+          const _sid = await localTrackPublicationV2.getSid();
+          assert.equal(_sid, sid);
+        });
       });
     });
 
-    it('should return the LocalTrackPublicationV2', () => {
-      assert.equal(ret, localTrackPublicationV2);
+    context('when .error is non-null', () => {
+      let error;
+
+      beforeEach(() => {
+        error = new Error('Track publication failed');
+        localTrackPublicationV2.publishFailed(error);
+        sid = makeSid();
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.setSid(sid);
+      });
+
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
+      });
+
+      it('.sid should remain null', () => {
+        assert.equal(localTrackPublicationV2.sid, null);
+      });
+
+      it('.error should remain the same', () => {
+        assert.equal(localTrackPublicationV2.error, error);
+      });
+
+      it('should not emit "updated"', () => {
+        assert(!updated);
+      });
+
+      describe('#getSid', () => {
+        it('should reject with the error', async () => {
+          const _error = await localTrackPublicationV2.getSid().then(() => {
+            throw new Error('Unexpected resolution');
+          }, error => error);
+          assert.equal(_error, error);
+        });
+      });
     });
   });
+
+  // LocalTrackSignaling
+  // -------------------
+
+  describe('#publishFailed', () => {
+    let localTrackPublicationV2;
+    let ret;
+    let error;
+    let updated;
+
+    beforeEach(() => {
+      const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
+      error = new Error('Track publication failed');
+      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+      // NOTE(mroberts): Suppress Node warnings.
+      localTrackPublicationV2.getSid().catch(() => {});
+      updated = false;
+    });
+
+    context('when .sid is null', () => {
+      beforeEach(() => {
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.publishFailed(error);
+      });
+
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
+      });
+
+      it('.sid should remain null', () => {
+        assert.equal(localTrackPublicationV2.sid, null);
+      });
+
+      it('should set .error to the error', () => {
+        assert.equal(localTrackPublicationV2.error, error);
+      });
+
+      it('should emit "updated"', () => {
+        assert(updated);
+      });
+
+      describe('#getSid', () => {
+        it('should reject with the error', async () => {
+          const _error = await localTrackPublicationV2.getSid().then(() => {
+            throw new Error('Unexpected resolution');
+          }, error => error);
+          assert.equal(_error, error);
+        });
+      });
+    });
+
+    context('when .sid is non-null', () => {
+      let sid;
+
+      beforeEach(() => {
+        sid = makeSid();
+        localTrackPublicationV2.setSid(sid);
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.publishFailed(error);
+      });
+
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
+      });
+
+      it('.sid should remain non-null', () => {
+        assert.equal(localTrackPublicationV2.sid, sid);
+      });
+
+      it('.error should remain null', () => {
+        assert.equal(localTrackPublicationV2.error, null);
+      });
+
+      it('should not emit "updated"', () => {
+        assert(!updated);
+      });
+
+      describe('#getSid', () => {
+        it('should resolve with the SID', async () => {
+          const _sid = await localTrackPublicationV2.getSid();
+          assert.equal(_sid, sid);
+        });
+      });
+    });
+
+    context('when .error is non-null', () => {
+      beforeEach(() => {
+        error = new Error('Track publication failed');
+        localTrackPublicationV2.publishFailed(error);
+        const newError = new Error('New error');
+        localTrackPublicationV2.once('updated', () => updated = true);
+        ret = localTrackPublicationV2.publishFailed(newError);
+      });
+
+      it('should return the LocalTrackPublicationV2', () => {
+        assert.equal(ret, localTrackPublicationV2);
+      });
+
+      it('.sid should remain null', () => {
+        assert.equal(localTrackPublicationV2.sid, null);
+      });
+
+      it('.error should remain the same', () => {
+        assert.equal(localTrackPublicationV2.error, error);
+      });
+
+      it('should not emit "updated"', () => {
+        assert(!updated);
+      });
+
+      describe('#getSid', () => {
+        it('should reject with the original error', async () => {
+          const _error = await localTrackPublicationV2.getSid().then(() => {
+            throw new Error('Unexpected resolution');
+          }, error => error);
+          assert.equal(_error, error);
+        });
+      });
+    });
+  });
+
 });
 
 function makeEnabled() {

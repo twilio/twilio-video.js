@@ -791,6 +791,7 @@ describe('RoomV2', () => {
     context('.participant', () => {
       it('should update the newly published LocalTrackV2s with their corresponding SIDs', () => {
         var id = makeId();
+        var sid = makeSid();
         var test = makeTest();
         var track = makeTrack({ id });
 
@@ -798,10 +799,18 @@ describe('RoomV2', () => {
         test.transport.emit('message', {
           participant: {
             sid: 'bar',
-            tracks: [ { id: id, sid: 'foo' } ]
+            tracks: [
+              { id: id }
+            ]
+          },
+          published: {
+            revision: 1,
+            tracks: [
+              { id, sid, state: 'ready' }
+            ]
           }
         });
-        assert.equal(track.sid, 'foo');
+        assert.equal(track.sid, sid);
       });
     });
 
