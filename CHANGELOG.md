@@ -1,3 +1,13 @@
+1.6.0 (in progress)
+===================
+
+New Features
+------------
+
+- Added DataTrack support in Group Rooms. Previously, DataTracks only worked in
+  Peer-to-peer Rooms. Now they work in both. Consequently, the "experimental"
+  warning has been removed.
+
 1.5.1 (October 13, 2017)
 ========================
 
