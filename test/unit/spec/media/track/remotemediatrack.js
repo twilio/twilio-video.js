@@ -40,7 +40,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
                 assert(track instanceof RemoteTrack);
               });
 
-              [ 'isEnabled', 'isSubscribed', 'sid' ].forEach(prop => {
+              [ 'isEnabled', 'isSubscribed', 'name', 'sid' ].forEach(prop => {
                 it(`should set the .${prop} property to the RemoteTrackSignaling's .${prop}`, () => {
                   assert.equal(track[prop], track._signaling[prop]);
                 });
@@ -82,6 +82,7 @@ function makeSignaling(isEnabled, isSubscribed, sid) {
   const signaling = new EventEmitter();
   signaling.isEnabled = isEnabled;
   signaling.isSubscribed = isSubscribed;
+  signaling.name = randomName();
   signaling.sid = sid;
   return signaling;
 }

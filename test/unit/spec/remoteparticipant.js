@@ -450,7 +450,7 @@ describe('RemoteParticipant', function() {
         });
 
         context('if the Promise returned by .getMediaStreamTrackOrDataTrackTransceiver resolves', () => {
-          it('constructs a new RemoteAudioTrack or RemoteVideoTrack, depending on the RemoteTrackSignaling\'s .kind', () => {
+          it('constructs a new RemoteTrack and sets its .name to that of the underlying RemoteTrackSignaling', () => {
             var test = makeTest();
             var audioTrack = makeTrackSignaling({ kind: 'audio' });
             var videoTrack = makeTrackSignaling({ kind: 'video' });
@@ -465,12 +465,15 @@ describe('RemoteParticipant', function() {
             ]).then(() => {
               assert.equal(audioTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteAudioTrack.args[0][0]);
               assert.equal(audioTrack, test.RemoteAudioTrack.args[0][1]);
+              assert.equal(audioTrack.name, test.tracks[0].name);
 
               assert.equal(videoTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteVideoTrack.args[0][0]);
               assert.equal(videoTrack, test.RemoteVideoTrack.args[0][1]);
+              assert.equal(videoTrack.name, test.tracks[1].name);
 
               assert.equal(dataTrack.mediaStreamTrackOrDataTrackTransceiver, test.RemoteDataTrack.args[0][0]);
               assert.equal(dataTrack, test.RemoteDataTrack.args[0][1]);
+              assert.equal(dataTrack.name, test.tracks[2].name);
             });
           });
 
@@ -947,6 +950,7 @@ function makeTest(options) {
     this.id = signaling.id;
     this.kind = signaling.kind;
     this.mediaStreamTrack = mediaStreamTrack;
+    this.name = signaling.name;
     this.signaling = signaling;
     this._unsubscribe = this.emit.bind(this, 'unsubscribed', this);
     options.tracks.push(this);
@@ -958,6 +962,7 @@ function makeTest(options) {
     this.id = signaling.id;
     this.kind = signaling.kind;
     this.mediaStreamTrack = mediaStreamTrack;
+    this.name = signaling.name;
     this.signaling = signaling;
     this._unsubscribe = this.emit.bind(this, 'unsubscribed', this);
     options.tracks.push(this);
@@ -968,6 +973,7 @@ function makeTest(options) {
     EventEmitter.call(this);
     this.id = signaling.id;
     this.kind = signaling.kind;
+    this.name = signaling.name;
     this._dataTrackReceiver = dataTrackReceiver;
     this.signaling = signaling;
     this._unsubscribe = this.emit.bind(this, 'unsubscribed', this);
@@ -1004,6 +1010,7 @@ function makeTrackSignaling(options) {
   var track = new EventEmitter();
   track.id = options.id || makeId();
   track.kind = options.kind || makeKind();
+  track.name = options.name || track.id;
   track.mediaStreamTrackOrDataTrackTransceiver = { id: track.id, kind: track.kind };
   track.mediaStream = {};
   track.getMediaStreamTrackOrDataTrackTransceiverDeferred = util.defer();

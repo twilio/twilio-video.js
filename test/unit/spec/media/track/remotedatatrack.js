@@ -45,6 +45,10 @@ describe('RemoteDataTrack', () => {
           assert.equal(dataTrack.kind, 'data');
         });
 
+        it('sets .name to the RemoteTrackSignaling\'s .name', () => {
+          assert.equal(dataTrack.name, trackSignaling.name);
+        });
+
         it('sets .sid to the RemoteTrackSignaling\'s SID', () => {
           assert.equal(dataTrack.sid, trackSignaling.sid);
         });
@@ -85,6 +89,7 @@ function makeDataChannel() {
 function makeTrackSignaling(isSubscribed, sid) {
   const signaling = new EventEmitter();
   signaling.isSubscribed = isSubscribed;
+  signaling.name = makeUUID();
   signaling.sid = sid;
   return signaling;
 }

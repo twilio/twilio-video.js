@@ -56,7 +56,7 @@ var log = require('../../../../lib/fakelog');
 
     describe('.isEnabled', () => {
       it('should set the .isEnabled to the MediaStreamTrack\'s .enabled property', () => {
-        track = crateLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
         assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
         track.mediaStreamTrack.enabled = !track.mediaStreamTrack.enabled;
         assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
@@ -65,7 +65,7 @@ var log = require('../../../../lib/fakelog');
 
     describe('.isStopped', () => {
       it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
-        track = crateLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
         track.mediaStreamTrack.readyState = 'ended';
         assert(track.isStopped);
         track.mediaStreamTrack.readyState = 'live';
@@ -73,10 +73,23 @@ var log = require('../../../../lib/fakelog');
       });
     });
 
+    describe('.name', () => {
+      [true, false].forEach(isNamePresentInOptions => {
+        context(`when .name is ${isNamePresentInOptions ? '' : 'not '}present in LocalTrackOptions`, () => {
+          it(`should set .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'MediaStreamTrack\'s ID'}`, () => {
+            track = isNamePresentInOptions
+              ? createLocalMediaTrack(LocalMediaTrack, '1', kind[description], 'foo')
+              : createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+            assert.equal(track.name, isNamePresentInOptions ? 'foo' : '1');
+          });
+        });
+      });
+    });
+
     describe('"trackStopped" event', () => {
       context('when the MediaStreamTrack emits onended event', () => {
         it('should emit LocalMediaTrack#stopped, passing the instance of LocalMediaTrack', () => {
-          track = crateLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+          track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
 
           const stoppedEvent = new Promise((resolve, reject) => {
             track.on('stopped', function(_track) {
@@ -101,7 +114,7 @@ var log = require('../../../../lib/fakelog');
 
     describe('#disable', () => {
       before(() => {
-        track = crateLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
         track.enable = sinon.spy();
         track.disable();
       });
@@ -117,7 +130,7 @@ var log = require('../../../../lib/fakelog');
         var trackEnabledEmitted = false;
 
         before(() => {
-          track =  crateLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+          track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
           track.mediaStreamTrack.enabled = Math.random() > 0.5;
           track.on('disabled', () => trackDisabledEmitted = true);
           track.on('enabled', () => trackEnabledEmitted = true);
@@ -135,7 +148,7 @@ var log = require('../../../../lib/fakelog');
             var eventEmitted = false;
 
             before(() => {
-              track =  crateLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+              track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
               track.mediaStreamTrack.enabled = !enabled;
               track.on(enabled ? 'enabled' : 'disabled', () => eventEmitted = true);
               track.enable(enabled);
@@ -161,7 +174,7 @@ var log = require('../../../../lib/fakelog');
       };
 
       before(function() {
-        track = crateLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
         track._createElement = sinon.spy(() => dummyElement);
       });
 
@@ -183,9 +196,10 @@ var log = require('../../../../lib/fakelog');
   });
 });
 
-function crateLocalMediaTrack(LocalMediaTrack, id, kind) {
+function createLocalMediaTrack(LocalMediaTrack, id, kind, name) {
   var mediaStreamTrack = new MediaStreamTrack(id, kind);
-  return new LocalMediaTrack(mediaStreamTrack, { log: log });
+  var options = name ? { log, name } : { log };
+  return new LocalMediaTrack(mediaStreamTrack, options);
 }
 
 function MediaStreamTrack(id, kind) {

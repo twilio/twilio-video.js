@@ -14,13 +14,15 @@ describe('LocalTrackPublicationV2', () => {
       context(`when called with${shouldUseNew ? '' : 'out'} "new"`, () => {
         let localTrackPublicationV2;
         let mediaStreamTrack;
+        let name;
 
         before(() => {
           mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
           mediaStreamTrack.enabled = makeEnabled();
+          name = makeUUID();
           localTrackPublicationV2 = shouldUseNew
-            ? new LocalTrackPublicationV2(mediaStreamTrack)
-            : LocalTrackPublicationV2(mediaStreamTrack);
+            ? new LocalTrackPublicationV2(mediaStreamTrack, name)
+            : LocalTrackPublicationV2(mediaStreamTrack, name);
         });
 
         it('should return a LocalTrackPublicationV2', () => {
@@ -33,6 +35,10 @@ describe('LocalTrackPublicationV2', () => {
 
         it('should set .sid to null', () => {
           assert.equal(localTrackPublicationV2.sid, null);
+        });
+
+        it('should set the .name property', () => {
+          assert.equal(localTrackPublicationV2.name, name);
         });
 
         [
@@ -55,7 +61,7 @@ describe('LocalTrackPublicationV2', () => {
       before(() => {
         mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         mediaStreamTrack.enabled = makeEnabled();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
         state = localTrackPublicationV2.getState();
       });
 
@@ -63,7 +69,8 @@ describe('LocalTrackPublicationV2', () => {
         [
           [ 'id', 'id' ],
           [ 'kind', 'kind' ],
-          [ 'enabled', 'isEnabled' ]
+          [ 'enabled', 'isEnabled' ],
+          [ 'name', 'name' ]
         ].forEach(([ stateProp, ltProp ]) => {
           it(`.${stateProp} is equal to the LocalTrackPublicationV2's ${ltProp}`, () => {
             assert.equal(state[stateProp], localTrackPublicationV2[ltProp]);
@@ -84,7 +91,7 @@ describe('LocalTrackPublicationV2', () => {
       before(() => {
         const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         sid = makeSid();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
       });
 
       it('should return a Promise that is resolved with the value passed to #setSid when it is eventually called', async () => {
@@ -102,7 +109,7 @@ describe('LocalTrackPublicationV2', () => {
       before(() => {
         const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         sid = makeSid();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
         localTrackPublicationV2.setSid(sid);
       });
 
@@ -122,7 +129,7 @@ describe('LocalTrackPublicationV2', () => {
     before(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       sid = makeSid();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
       localTrackPublicationV2.once('updated', () => updated = true);
       ret = localTrackPublicationV2.setSid(sid);
     });
