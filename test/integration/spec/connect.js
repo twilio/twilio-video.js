@@ -12,7 +12,7 @@ const getToken = require('../../lib/token');
 const { guessBrowser } = require('../../../lib/util');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded } = require('../../lib/util');
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
 const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
@@ -628,6 +628,31 @@ describe('connect', function() {
           [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
         });
       });
+    });
+  });
+
+  describe.only('called with a single LocalDataTrack in the tracks Array', () => {
+    let room;
+    let dataTrack;
+
+    before(async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      dataTrack = new LocalDataTrack();
+      const options = Object.assign({ tracks: [dataTrack] }, defaultOptions);
+      room = await connect(token, options);
+    });
+
+    after(() => {
+      room.disconnect();
+    });
+
+    it('eventually results in a LocalDataTrackPublication', async () => {
+      await tracksPublished(room.localParticipant, 1, 'data');
+      const publication = Array.from(room.localParticipant.dataTrackPublications.values()).find(publication => {
+        return publication.track === dataTrack;
+      });
+      assert(publication);
     });
   });
 });
