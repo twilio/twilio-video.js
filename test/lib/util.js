@@ -221,6 +221,33 @@ async function tracksAdded(participant, n) {
 }
 
 /**
+ * Wait for {@link LocalTrack}s to be published.
+ * @param {LocalParticipant} participant - the {@link LocalParticipant}
+ *   publishing the {@link LocalTrack}s
+ * @param {number} n - the number of {@link LocalTrack}s to wait for
+ * @param {Track.Kind} [kind] - an optional filter for {@link LocalTrack}s of a
+ *   particular kind
+ * @returns {Promise<void>}
+ */
+async function tracksPublished(participant, n, kind) {
+  const trackPublications = kind
+    ? participant[kind + 'TrackPublications']
+    : participant.trackPublications;
+  while (trackPublications.size < n) {
+    await new Promise(resolve => {
+      function trackPublished(publication) {
+        if (kind && publication.kind !== kind) {
+          return;
+        }
+        resolve();
+        participant.removeListener('trackPublished', trackPublished);
+      }
+      participant.on('trackPublished', trackPublished);
+    });
+  }
+}
+
+/**
  * Wait for {@link RemoteTrack}s to be removed from a {@link RemoteParticipant}.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the final number of {@link RemoteTrack}s to count down to
@@ -296,6 +323,7 @@ exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksAdded = tracksAdded;
+exports.tracksPublished = tracksPublished;
 exports.tracksRemoved = tracksRemoved;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;

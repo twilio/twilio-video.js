@@ -7,6 +7,14 @@ New Features
 - Added DataTrack support in Group Rooms. Previously, DataTracks only worked in
   Peer-to-peer Rooms. Now they work in both. Consequently, the "experimental"
   warning has been removed.
+- Added "trackPublicationFailed" and "trackPublished" events to the
+  LocalParticipant. Previously, if you failed to publish a LocalTrack when
+  connecting to a Room, there was no API to discover what went wrong. Now, if
+  you fail to publish a LocalTrack at `connect`-time—for example, due to a codec
+  mismatch or an invalid Track name—we will raise a "trackPublicationError" on
+  the LocalParticipant with an informative error. Similarly, if publication
+  succeeds, we will raise a "trackPublished" event with the resulting
+  LocalTrackPublication.
 
 1.5.1 (October 13, 2017)
 ========================
