@@ -387,18 +387,28 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
         });
 
-        it('should call setLocalDescription on the underlying RTCPeerConnection with the resulting offer', () => {
+        // NOTE(mroberts): This test should really be extended. Instead of popping
+        // arguments off of `setCodecPreferences`, we should validate that we
+        // apply transformed remote SDPs and emit transformed local SDPs.
+        it('should transform the resulting offer by applying any codec preferences', () => {
+          const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
+          const preferredAudioCodecs = test.setCodecPreferences.args[0].pop();
+          assert.equal(preferredAudioCodecs, test.preferredCodecs.audio);
+          assert.equal(preferredVideoCodecs, test.preferredCodecs.video);
+        });
+
+        it('should call setLocalDescription on the underlying RTCPeerConnection with the transformed offer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
         });
 
-        it('should emit a "description" event with the PeerConnectionV2 state set to the resulting offer at the newer revision', () => {
+        it('should emit a "description" event with the PeerConnectionV2 state set to the transformed offer at the newer revision', () => {
           const expectedRev = signalingState === 'have-local-offer' ? rev + 2 : rev + 1;
           assert.equal(descriptions.length, 1);
           assert.deepEqual(descriptions[0], test.state().setDescription(test.offers[expectedOfferIndex], expectedRev));
         });
 
-        it('should set the state on the PeerConnectionV2 to the resulting offer at the newer revision', () => {
+        it('should set the state on the PeerConnectionV2 to the transformed offer at the newer revision', () => {
           const expectedRev = signalingState === 'have-local-offer' ? rev + 2 : rev + 1;
           assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.offers[expectedOfferIndex], expectedRev));
         });
@@ -783,6 +793,9 @@ describe('PeerConnectionV2', () => {
         });
       }
 
+      // NOTE(mroberts): This test should really be extended. Instead of popping
+      // arguments off of `setCodecPreferences`, we should validate that we
+      // apply transformed remote SDPs and emit transformed local SDPs.
       function itShouldApplyCodecPreferences() {
         it('should apply the specified codec preferences to the remote description', () => {
           const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
@@ -993,6 +1006,8 @@ describe('PeerConnectionV2', () => {
         it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
           assert.equal(test.pc.signalingState, 'have-local-offer');
         });
+
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldEventuallyCreateOffer() {
