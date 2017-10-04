@@ -21,9 +21,11 @@ describe('createLocalTracks', () => {
         return createLocalTracks(options).then(tracks => {
           assert.equal(tracks.length, 2);
           assert(tracks[0] instanceof options.LocalAudioTrack);
+          assert(tracks[0].name, tracks[0].id);
           assert(options.LocalAudioTrack.calledWith(tracks[0].mediaStreamTrack));
           assert(tracks[1] instanceof options.LocalVideoTrack);
           assert(options.LocalVideoTrack.calledWith(tracks[1].mediaStreamTrack));
+          assert(tracks[1].name, tracks[1].id);
         });
       });
     });
@@ -44,6 +46,7 @@ describe('createLocalTracks', () => {
           assert.equal(tracks.length, 1);
           assert(tracks[0] instanceof options.LocalAudioTrack);
           assert(options.LocalAudioTrack.calledWith(tracks[0].mediaStreamTrack));
+          assert(tracks[0].name, tracks[0].id);
         });
       });
     });
@@ -64,6 +67,7 @@ describe('createLocalTracks', () => {
           assert.equal(tracks.length, 1);
           assert(tracks[0] instanceof options.LocalVideoTrack);
           assert(options.LocalVideoTrack.calledWith(tracks[0].mediaStreamTrack));
+          assert(tracks[0].name, tracks[0].id);
         });
       });
     });
@@ -81,20 +85,35 @@ describe('createLocalTracks', () => {
       });
     });
   });
+
+  context('when called with names for the requested LocalTracks', () => {
+    it('should resolve with an array of LocalTracks with the given names', async () => {
+      const options = Object.assign({
+        audio: { name: 'foo' },
+        video: { name: 'bar' }
+      }, makeOptions());
+      const localTracks = await createLocalTracks(options);
+      assert.deepEqual(localTracks.map(track => track.name), [ 'foo', 'bar' ]);
+    });
+  });
 });
 
 function makeOptions() {
   return {
     getUserMedia: fakeGetUserMedia,
-    LocalAudioTrack: sinon.spy(function(mediaStreamTrack) {
+    LocalAudioTrack: sinon.spy(function(mediaStreamTrack, options) {
+      options = options || {};
       this.id = mediaStreamTrack.id;
       this.kind = mediaStreamTrack.kind;
       this.mediaStreamTrack = mediaStreamTrack;
+      this.name = options.name || mediaStreamTrack.id;
     }),
-    LocalVideoTrack: sinon.spy(function(mediaStreamTrack) {
+    LocalVideoTrack: sinon.spy(function(mediaStreamTrack, options) {
+      options = options || {};
       this.id = mediaStreamTrack.id;
       this.kind = mediaStreamTrack.kind;
       this.mediaStreamTrack = mediaStreamTrack;
+      this.name = options.name || mediaStreamTrack.id;
     }),
     MediaStreamTrack: FakeMediaStreamTrack
   };
