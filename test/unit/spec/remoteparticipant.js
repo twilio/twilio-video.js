@@ -111,14 +111,16 @@ describe('RemoteParticipant', function() {
     [ '_removeTrack', 'remove', 'from' ]
   ].forEach(([ method, action, toOrFrom ]) => {
     describe(`#${method}`, () => {
-      var newTrack;
-      var newTrackSignaling;
-      var participantEvents;
-      var ret;
-      var test;
-      var trackSignaling;
-      var trackUnsubscribed;
-      var track;
+      let newTrack;
+      let newTrackSignaling;
+      let participantEvents;
+      let ret;
+      let test;
+      let trackSignaling;
+      let trackUnsubscribed;
+      let tracksOnceTrackUnsubscribed;
+      let tracksOnceUnsubscribed;
+      let track;
 
       before(() => {
         test = makeTest();
@@ -135,10 +137,20 @@ describe('RemoteParticipant', function() {
             test.participant[`${kind.toLowerCase()}Tracks`].set(track.id, track);
             participantEvents = {};
             trackUnsubscribed = null;
+            tracksOnceTrackUnsubscribed = null;
+            tracksOnceUnsubscribed = null;
             [ 'trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
-              test.participant.once(event, track => participantEvents[event] = track);
+              test.participant.once(event, track => {
+                participantEvents[event] = track;
+                if (event === 'trackUnsubscribed') {
+                  tracksOnceTrackUnsubscribed = Array.from(test.participant.tracks.values());
+                }
+              });
             });
-            track.once('unsubscribed', track => trackUnsubscribed = track);
+            track.once('unsubscribed', track => {
+              trackUnsubscribed = track;
+              tracksOnceUnsubscribed = Array.from(test.participant.tracks.values());
+            });
             ret = test.participant[method](newTrack);
           });
 
@@ -167,6 +179,14 @@ describe('RemoteParticipant', function() {
           } else {
             it('should emit "unsubscribed" on the removed RemoteTrack', () => {
               assert.equal(trackUnsubscribed, track);
+            });
+
+            it('should have removed the RemoteTrack when the "unsubscribed" event was emitted', () => {
+              assert.deepEqual(tracksOnceUnsubscribed, []);
+            });
+
+            it('should have removed the RemoteTrack when the "trackUnsubscribed" event was emitted', () => {
+              assert.deepEqual(tracksOnceTrackUnsubscribed, []);
             });
 
             it('should emit "trackRemoved" after "trackUnsubscribed"', () => {
