@@ -7,6 +7,13 @@ New Features
 - You can now specify Track names. Refer to the Track name guide below for more
   information.
 
+Bug Fixes
+---------
+
+- Fixed bug where RemoteTrack's "unsubscribed" event and RemoteParticipant's
+  "trackUnsubscribed" event fired before the RemoteTrack was removed from the
+  RemoteParticipant's `tracks` collections instead of after.
+
 Track Name Guide
 ----------------
 

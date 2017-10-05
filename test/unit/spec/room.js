@@ -174,12 +174,12 @@ describe('Room', function() {
 
       var participants = {};
       room.participants.forEach(function(participant) {
-        participant._removeAllSubscribedTracks = sinon.spy();
+        participant._unsubscribeTracks = sinon.spy();
         participants[participant.identity] = participant;
       });
       signaling.preempt('disconnected');
-      sinon.assert.calledOnce(participants['foo']._removeAllSubscribedTracks);
-      sinon.assert.calledOnce(participants['bar']._removeAllSubscribedTracks);
+      sinon.assert.calledOnce(participants['foo']._unsubscribeTracks);
+      sinon.assert.calledOnce(participants['bar']._unsubscribeTracks);
     });
   });
 });
