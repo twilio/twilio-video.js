@@ -2,25 +2,29 @@
 
 const assert = require('assert');
 const DataTrackSender = require('../../../../../lib/data/sender');
+const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
+const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
 const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
+const LocalDataTrack = require('../../../../../lib/media/track/localdatatrack');
 const LocalDataTrackPublication = require('../../../../../lib/media/track/localdatatrackpublication');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const sinon = require('sinon');
 
 [
-  ['LocalAudioTrackPublication', LocalAudioTrackPublication],
-  ['LocalVideoTrackPublication', LocalVideoTrackPublication],
-  ['LocalDataTrackPublication', LocalDataTrackPublication]
-].forEach(pair => {
-  const description = pair[0];
-  const LocalTrackPublication = pair[1];
+  ['LocalAudioTrackPublication', LocalAudioTrackPublication, LocalAudioTrack],
+  ['LocalVideoTrackPublication', LocalVideoTrackPublication, LocalVideoTrack],
+  ['LocalDataTrackPublication', LocalDataTrackPublication, LocalDataTrack]
+].forEach(([ description, LocalTrackPublication, LocalTrack ]) => {
   const kind = {
     LocalAudioTrackPublication: 'audio',
     LocalVideoTrackPublication: 'video',
     LocalDataTrackPublication: 'data'
   }[description];
-  const track = kind === 'data' ? new DataTrackSender() : new FakeMediaStreamTrack(kind);
+  const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+  const localTrack = kind === 'data'
+    ? new LocalTrack({ DataTrackSender })
+    : new LocalTrack(mediaStreamTrack);
 
   describe(description, function() {
     describe('constructor', () => {
@@ -28,11 +32,11 @@ const sinon = require('sinon');
         [
           [
             'when called without the "new" keyword',
-            () => LocalTrackPublication('foo', track, () => {})
+            () => LocalTrackPublication('foo', localTrack, () => {})
           ],
           [
             'when called with the "new" keyword',
-            () => new LocalTrackPublication('bar', track, () => {})
+            () => new LocalTrackPublication('bar', localTrack, () => {})
           ]
         ].forEach(([ scenario, createLocalTrackPublication ]) => {
           context(scenario, () => {
@@ -47,19 +51,16 @@ const sinon = require('sinon');
         });
       });
 
-      it('should populate the .track property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
-        assert.equal(localTrackPublication.track, track);
-      });
-
-      it('should populate the .kind property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
-        assert.equal(localTrackPublication.kind, kind);
-      });
-
-      it('should populate the .sid property', () => {
-        var localTrackPublication = new LocalTrackPublication('foo', track, () => {});
-        assert.equal(localTrackPublication.trackSid, 'foo');
+      [
+        ['kind', kind],
+        ['track', localTrack],
+        ['trackName', localTrack.name],
+        ['trackSid', 'foo']
+      ].forEach(([ prop, expectedValue ]) => {
+        it(`should populate the .${prop} property`, () => {
+          const localTrackPublication = new LocalTrackPublication('foo', localTrack, () => {});
+          assert.equal(localTrackPublication[prop], expectedValue);
+        });
       });
     });
 
@@ -70,7 +71,7 @@ const sinon = require('sinon');
 
       before(() => {
         unpublish = sinon.spy();
-        localTrackPublication = new LocalTrackPublication('foo', track, unpublish);
+        localTrackPublication = new LocalTrackPublication('foo', localTrack, unpublish);
         ret = localTrackPublication.unpublish();
       });
 

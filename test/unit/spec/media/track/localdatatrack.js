@@ -36,6 +36,28 @@ describe('LocalDataTrack', () => {
     it('sets .kind to "data"', () => {
       assert.equal(dataTrack.kind, 'data');
     });
+
+    [true, false].forEach(isNamePresentInOptions => {
+      let sender;
+      let track;
+
+      context(`when .name is ${isNamePresentInOptions ? '' : 'not '}present in LocalTrackOptions`, () => {
+        before(() => {
+          const nameOption = isNamePresentInOptions ? { name: 'foo' } : {};
+          track = new LocalDataTrack(Object.assign(nameOption, {
+            DataTrackSender: function() {
+              sender = new DataTrackSender();
+              return sender;
+            }
+          }));
+        });
+
+        it(`sets .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'DataTrackSender\'s ID'}`, () => {
+          assert.equal(track.name, isNamePresentInOptions ? 'foo' : sender.id);
+        });
+      });
+    });
+
   });
 
   describe('#send', () => {

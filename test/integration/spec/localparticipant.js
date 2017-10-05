@@ -215,10 +215,14 @@ const { enableDataTrackTests } = env;
         x => `Local${capitalize(x)}Track`
       ],
       [
+        [true, false],
+        x => `with${x ? '' : 'out'} a name for the LocalTrack`
+      ],
+      [
         ['never', 'previously'],
         x => `that has ${x} been published`
       ]
-    ], ([isEnabled, kind, when]) => {
+    ], ([isEnabled, kind, withName, when]) => {
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -230,16 +234,23 @@ const { enableDataTrackTests } = env;
       let thoseTracksSubscribed;
       let thoseTracksMap;
 
+      const localTrackNameByKind = {
+        audio: 'foo',
+        video: 'bar',
+        data: 'baz'
+      }[kind];
+
       before(async () => {
         const name = randomName();
         const identities = [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
+        const localTrackOptions = withName ? { name: localTrackNameByKind } : {};
 
         thisTrack = await {
           audio: createLocalAudioTrack,
           video: createLocalVideoTrack,
           data: LocalDataTrack
-        }[kind]();
+        }[kind](localTrackOptions);
 
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
@@ -328,6 +339,11 @@ const { enableDataTrackTests } = env;
           it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
             const thoseTracks = thoseTracksMap[event];
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
+          });
+
+          it('should set each RemoteTrack\'s .name to the LocalTrackPublication\'s .trackName', () => {
+            const thoseTracks = thoseTracksMap[event];
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
           });
 
           if (kind !== 'data') {
