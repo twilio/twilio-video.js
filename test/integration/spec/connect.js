@@ -6,6 +6,7 @@ if (typeof window === 'undefined') {
 
 const assert = require('assert');
 const connect = require('../../../lib/connect');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
 const getToken = require('../../lib/token');
 const { guessBrowser } = require('../../../lib/util');
@@ -15,6 +16,9 @@ const { capitalize, combinationContext, participantsConnected, pairs, randomName
 const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
+const LocalAudioTrack = require('../../../lib/media/track/localaudiotrack');
+const LocalDataTrack = require('../../../lib/media/track/localdatatrack');
+const LocalVideoTrack = require('../../../lib/media/track/localvideotrack');
 const TwilioError = require('../../../lib/util/twilioerror');
 const sinon = require('sinon');
 
@@ -24,6 +28,8 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   }
   return defaultOptions;
 }, {});
+
+const { enableDataTrackTests } = env;
 
 describe('connect', function() {
   this.timeout(60000);
@@ -498,6 +504,170 @@ describe('connect', function() {
       [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
     });
   });
+
+  (navigator.userAgent === 'Node' ? describe.skip : describe)('Track names', () => {
+    describe('when called with pre-created Tracks', () => {
+      combinationContext([
+        [
+          [{audio: 'foo', video: 'bar', data: 'baz'}, null],
+          x => `when called with${x ? '' : 'out'} Track names`
+        ],
+        [
+          [
+            {
+              source: 'createLocalAudioTrack and createLocalVideoTrack',
+              async getTracks(names) {
+                const options = names && {
+                  audio: {name: names.audio},
+                  video: {name: names.video}
+                };
+                return options ? await Promise.all([
+                  createLocalAudioTrack(options.audio),
+                  createLocalVideoTrack(options.video)
+                ]) : await Promise.all([
+                  createLocalAudioTrack(),
+                  createLocalVideoTrack()
+                ]);
+              }
+            },
+            {
+              source: 'createLocalTracks',
+              async getTracks(names) {
+                const options = names && {
+                  audio: {name: names.audio},
+                  video: {name: names.video}
+                };
+                return await (options ? createLocalTracks(options) : createLocalTracks());
+              }
+            },
+            {
+              source: 'LocalTrack constructors',
+              async getTracks(names) {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({
+                  audio: true,
+                  video: true
+                });
+                return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks()).map(track => {
+                  const LocalTrack = {
+                    audio: LocalAudioTrack,
+                    video: LocalVideoTrack
+                  }[track.kind];
+                  return names ? new LocalTrack(track, {name: names[track.kind]}) : new LocalTrack(track);
+                });
+              }
+            },
+            {
+              source: 'MediaStreamTracks from getUserMedia()',
+              async getTracks() {
+                const mediaStream = await navigator.mediaDevices.getUserMedia({
+                  audio: true,
+                  video: true
+                });
+                return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
+              }
+            }
+          ],
+          ({ source }) => `when Tracks are pre-created using ${source}`
+        ]
+      ], ([ names, { source, getTracks } ]) => {
+        if (source === 'MediaStreamTracks from getUserMedia()' && !!names) {
+          return;
+        }
+
+        let thisRoom;
+        let thoseRooms;
+        let thisParticipant;
+        let thisParticipants;
+
+        before(async () => {
+          const tracks = enableDataTrackTests
+            ? [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()]
+            : await getTracks(names);
+
+          [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
+          thisParticipant = thisRoom.localParticipant;
+          thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
+          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
+        });
+
+        it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
+          thisParticipant.tracks.forEach(track => {
+            assert.equal(track.name, names ? names[track.kind] : track.id);
+          });
+        });
+
+        it(`should set each LocalTrackPublication's .trackName to its ${names ? 'given name' : 'ID'}`, () => {
+          thisParticipant.trackPublications.forEach(trackPublication => {
+            assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track.id);
+          });
+        });
+
+        it(`should set each RemoteTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
+          flatMap(thisParticipants, participant => [...participant.tracks.values()]).forEach(track => {
+            assert.equal(track.name, names ? names[track.kind] : track.id);
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        });
+      });
+    });
+
+    describe('when called with constraints', () => {
+      combinationContext([
+        [
+          [{}, {audio: 'foo'}, {video: 'bar'}, {audio: 'foo', video: 'bar'}],
+          x => [
+            () => `when called without Track names`,
+            () => `when called with only ${x.audio ? 'an audio' : 'a video'} Track name`,
+            () => `when called with both audio and video Track names`
+          ][Object.keys(x).length]()
+        ]
+      ], ([ names ]) => {
+        let thisRoom;
+        let thoseRooms;
+        let thisParticipant;
+        let thisParticipants;
+
+        before(async () => {
+          const options = {
+            audio: names.audio ? { name: names.audio } : true,
+            video: names.video ? { name: names.video } : true,
+            name: randomName()
+          };
+          [ thisRoom, thoseRooms ] = await setup(options, {tracks: []}, 0);
+          thisParticipant = thisRoom.localParticipant;
+          thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
+          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, 2)));
+        });
+
+        ['audio', 'video'].forEach(kind => {
+          it(`should set the Local${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
+            thisParticipant[`${kind}Tracks`].forEach(track => {
+              assert.equal(track.name, names[kind] || track.id);
+            });
+          });
+
+          it(`should set the Local${capitalize(kind)}TrackPublication's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
+            thisParticipant[`${kind}TrackPublications`].forEach(trackPublication => {
+              assert.equal(trackPublication.trackName, names[kind] || trackPublication.track.id);
+            });
+          });
+
+          it(`should set each Remote${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
+            flatMap(thisParticipants, participant => [...participant[`${kind}Tracks`].values()]).forEach(track => {
+              assert.equal(track.name, names[kind] || track.id);
+            });
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        });
+      });
+    });
+  });
 });
 
 function createCodecMap(mediaSection) {
@@ -514,18 +684,18 @@ function getCodecPayloadTypes(mediaSection) {
   return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
 }
 
-async function setup(testOptions) {
+async function setup(testOptions, otherOptions, nTracks) {
   const options = Object.assign({name: randomName()}, testOptions, defaultOptions);
   const token = getToken(randomName());
   const thisRoom = await connect(token, options);
 
-  const thoseOptions = Object.assign({name: options.name}, defaultOptions);
+  const thoseOptions = Object.assign({name: options.name}, otherOptions || {}, defaultOptions);
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
   await participantsConnected(thisRoom, thoseRooms.length);
   const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
+  await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
   return [thisRoom, thoseRooms, peerConnections];
 }
