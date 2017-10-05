@@ -1,3 +1,81 @@
+1.5.0 (in progress)
+===================
+
+New Features
+------------
+
+- You can now specify Track names. Refer to the Track name guide below for more
+  information.
+
+Track Name Guide
+----------------
+
+### Setting Track names
+
+There are a few different ways you can specify Track names. For example, you can
+specify `name` as an `audio` or `video` constraint when calling any of
+`createLocalTracks`, `createLocalAudioTrack`, `createLocalVideoTrack`, or
+`connect`:
+
+```js
+createLocalTracks({
+  audio: { name: 'microphone' },
+  video: { name: 'camera' }
+});
+
+createLocalAudioTrack({ name: 'microphone' });
+createLocalVideoTrack({ name: 'camera' });
+
+connect(token, {
+  audio: { name: 'microphone' },
+  video: { name: 'camera' }
+});
+```
+
+These will create a LocalAudioTrack and a LocalVideoTrack with the names
+"microphone" and "camera", respectively. If you have a reference to a
+MediaStreamTrack, you can also pass the `name` to the LocalAudioTrack or
+LocalVideoTrack constructor:
+
+```js
+const localAudioTrack = new LocalAudioTrack(mediaStreamTrack1, { name: 'microphone' });
+const localVideoTrack = new LocalVideoTrack(mediaStreamTrack2, { name: 'camera' });
+```
+
+Similarly, for LocalDataTracks:
+
+```js
+const localDataTrack = new LocalDataTrack({ name: 'data' });
+```
+
+You can even pass these values if you use the MediaStreamTrack override for
+`publishTrack`. For example:
+
+```js
+room.localParticipant.publishTrack(mediaStreamTrack, { name: 'my-track' });
+```
+
+Please keep in mind:
+
+* If you do not specify a Track name, the Track's name will default to the
+  LocalTrack ID.
+* A single Participant cannot have two Tracks published with the same name at a
+  time.
+
+### Getting Track names
+
+You can check a LocalTrack or RemoteTrack's name by querying it's `name`
+property. For example,
+
+```js
+participant.on('trackSubscribed', track => {
+  console.log('Subscribed to Track "' + track.name + '"');
+});
+```
+
+This can be useful, for example, for distinguishing between a RemoteVideoTrack
+named "camera" and a RemoteVideoTrack named "screenshare".
+
 1.4.0 (October 2, 2017)
 =======================
 
