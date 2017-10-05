@@ -515,54 +515,16 @@ describe('connect', function() {
         [
           [
             {
-              source: 'createLocalAudioTrack and createLocalVideoTrack',
-              async getTracks(names) {
-                const options = names && {
-                  audio: {name: names.audio},
-                  video: {name: names.video}
-                };
-                return options ? await Promise.all([
-                  createLocalAudioTrack(options.audio),
-                  createLocalVideoTrack(options.video)
-                ]) : await Promise.all([
-                  createLocalAudioTrack(),
-                  createLocalVideoTrack()
-                ]);
-              }
-            },
-            {
               source: 'createLocalTracks',
               async getTracks(names) {
-                const options = names && {
-                  audio: {name: names.audio},
-                  video: {name: names.video}
-                };
+                const options = names && {audio: {name: names.audio}, video: {name: names.video}};
                 return await (options ? createLocalTracks(options) : createLocalTracks());
-              }
-            },
-            {
-              source: 'LocalTrack constructors',
-              async getTracks(names) {
-                const mediaStream = await navigator.mediaDevices.getUserMedia({
-                  audio: true,
-                  video: true
-                });
-                return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks()).map(track => {
-                  const LocalTrack = {
-                    audio: LocalAudioTrack,
-                    video: LocalVideoTrack
-                  }[track.kind];
-                  return names ? new LocalTrack(track, {name: names[track.kind]}) : new LocalTrack(track);
-                });
               }
             },
             {
               source: 'MediaStreamTracks from getUserMedia()',
               async getTracks() {
-                const mediaStream = await navigator.mediaDevices.getUserMedia({
-                  audio: true,
-                  video: true
-                });
+                const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
                 return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
               }
             }

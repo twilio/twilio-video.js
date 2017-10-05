@@ -52,7 +52,7 @@ describe('LocalDataTrack', () => {
           }));
         });
 
-        it(`sets .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'MediaStreamTrack\'s ID'}`, () => {
+        it(`sets .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'DataTrackSender\'s ID'}`, () => {
           assert.equal(track.name, isNamePresentInOptions ? 'foo' : sender.id);
         });
       });

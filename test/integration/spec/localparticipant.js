@@ -212,25 +212,17 @@ const { enableDataTrackTests } = env;
         enableDataTrackTests
           ? ['audio', 'video', 'data']
           : ['audio', 'video'],
-        x => x
-      ],
-      [
-        ['LocalTrack', 'MediaStreamTrack'],
-        x => x
-      ],
-      [
-        ['never', 'previously'],
-        x => `that has ${x} been published`
+        x => `Local${capitalize(x)}Track`
       ],
       [
         [true, false],
         x => `with${x ? '' : 'out'} a name for the LocalTrack`
+      ],
+      [
+        ['never', 'previously'],
+        x => `that has ${x} been published`
       ]
-    ], ([isEnabled, kind, localTrackType, when, localTrackShouldHaveName]) => {
-      if (kind === 'data' && localTrackType === 'MediaStreamTrack') {
-        return;
-      }
-
+    ], ([isEnabled, kind, withName, when]) => {
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -252,25 +244,19 @@ const { enableDataTrackTests } = env;
         const name = randomName();
         const identities = [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaultOptions);
-        const createLocalTrackByKind = {
+        const localTrackOptions = withName ? { name: localTrackNameByKind } : {};
+
+        thisTrack = await {
           audio: createLocalAudioTrack,
           video: createLocalVideoTrack,
           data: LocalDataTrack
-        }[kind];
-
-        thisTrack = await (localTrackShouldHaveName ? await createLocalTrackByKind({
-          name: localTrackNameByKind
-        }) : createLocalTrackByKind());
+        }[kind](localTrackOptions);
 
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
         // functionality.
         if (kind !== 'data') {
           thisTrack.enable(isEnabled);
-        }
-
-        if (localTrackType === 'MediaStreamTrack') {
-          thisTrack = thisTrack.mediaStreamTrack
         }
 
         const tracks = when === 'previously'
@@ -312,12 +298,8 @@ const { enableDataTrackTests } = env;
           }));
         }
 
-        const publishTrackPromise = localTrackType === 'MediaStreamTrack' && localTrackShouldHaveName
-          ? thisParticipant.publishTrack(thisTrack, {name: localTrackNameByKind})
-          : thisParticipant.publishTrack(thisTrack);
-
         [thisLocalTrackPublication, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
-          publishTrackPromise,
+          thisParticipant.publishTrack(thisTrack),
           ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
             return Promise.all(thoseParticipants.map(thatParticipant => {
               return waitForTracks(event, thatParticipant, 1).then(tracks => tracks[0]);
@@ -336,10 +318,6 @@ const { enableDataTrackTests } = env;
           thisTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
-      });
-
-      it(`should resolve with the corresponding LocalTrackPublication with .trackName set to ${localTrackShouldHaveName ? 'the given name' : 'its ID'}`, () => {
-        assert.equal(thisLocalTrackPublication.trackName, localTrackShouldHaveName ? localTrackNameByKind : thisLocalTrackPublication.track.id);
       });
 
       [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
