@@ -426,35 +426,44 @@ describe('connect', function() {
   });
 
   describe('called with preferred audio and video codecs', () => {
-    let peerConnections;
-    let thisRoom;
-    let thoseRooms;
+    combinationContext([
+      [
+        ['name', 'setting'],
+        x => `video codec ${x}s`
+      ]
+    ], ([codecType]) => {
+      let peerConnections;
+      let thisRoom;
+      let thoseRooms;
 
-    const testOptions = {
-      preferredAudioCodecs: ['PCMU', 'invalid', 'PCMA'],
-      preferredVideoCodecs: ['invalid', 'H264', 'VP8']
-    };
+      const testOptions = {
+        preferredAudioCodecs: ['PCMU', 'invalid', 'PCMA'],
+        preferredVideoCodecs: codecType === 'name' ? ['invalid', 'H264', 'VP8'] : [
+          { codec: 'invalid' }, { codec: 'H264' }, { codec: 'VP8' }
+        ]
+      };
 
-    before(async () => {
-      [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
-    });
-
-    it('should apply the codec preferences to all remote descriptions', () => {
-      flatMap(peerConnections, pc => {
-        assert(pc.remoteDescription.sdp);
-        return getMediaSections(pc.remoteDescription.sdp);
-      }).forEach(section => {
-        const codecMap = createCodecMap(section);
-        const expectedPayloadTypes = /m=audio/.test(section)
-          ? flatMap(testOptions.preferredAudioCodecs, codecName => codecMap.get(codecName.toLowerCase()) || [])
-          : flatMap(testOptions.preferredVideoCodecs, codecName => codecMap.get(codecName.toLowerCase()) || []);
-        const actualPayloadTypes = getCodecPayloadTypes(section);
-        expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
+      before(async () => {
+        [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
       });
-    });
 
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+      it('should apply the codec preferences to all remote descriptions', () => {
+        flatMap(peerConnections, pc => {
+          assert(pc.remoteDescription.sdp);
+          return getMediaSections(pc.remoteDescription.sdp);
+        }).forEach(section => {
+          const codecMap = createCodecMap(section);
+          const expectedPayloadTypes = /m=audio/.test(section)
+            ? flatMap(testOptions.preferredAudioCodecs, codec => codecMap.get(codec.toLowerCase()) || [])
+            : flatMap(testOptions.preferredVideoCodecs, codec => codecMap.get((codec.codec || codec).toLowerCase()) || []);
+          const actualPayloadTypes = getCodecPayloadTypes(section);
+          expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
+        });
+      });
+
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+      });
     });
   });
 

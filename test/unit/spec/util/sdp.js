@@ -123,7 +123,7 @@ describe('setCodecPreferences', () => {
     ]
   ], ([sdpType, preferredAudioCodecs, preferredVideoCodecs]) => {
     preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',') : [];
-    preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',') : [];
+    preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',').map(codec => ({ codec })) : [];
     context(`should ${preferredAudioCodecs.length ? 'update the' : 'preserve the existing'} audio codec order`, () => {
       it(`and ${preferredVideoCodecs.length ? 'update the' : 'preserve the existing'} video codec order`, () => {
         const expectedAudioCodecIds = preferredAudioCodecs.length
