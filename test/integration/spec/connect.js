@@ -183,6 +183,10 @@ describe('connect', function() {
         rooms.forEach(room => assert.equal(room.name, withName ? name : room.sid));
       });
 
+      it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .state to "connected"`, () => {
+        rooms.forEach(room => assert.equal(room.localParticipant.state, 'connected'));
+      });
+
       it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .sid to a ${n === 1 ? '' : 'unique '}Participant SID`, () => {
         const sids = new Set(rooms.map(room => room.localParticipant.sid));
         assert.equal(sids.size, n);
@@ -631,7 +635,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('called with a single LocalDataTrack in the tracks Array', () => {
+  describe('called with a single LocalDataTrack in the tracks Array', () => {
     let room;
     let dataTrack;
 
