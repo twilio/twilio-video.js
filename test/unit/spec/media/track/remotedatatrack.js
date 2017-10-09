@@ -45,8 +45,20 @@ describe('RemoteDataTrack', () => {
           assert.equal(dataTrack.kind, 'data');
         });
 
+        it('sets .maxPacketLifeTime to the DataTrackReceiver\'s .maxPacketLifeTime', () => {
+          assert.equal(dataTrack.maxPacketLifeTime, dataTrackReceiver.maxPacketLifeTime);
+        });
+
+        it('sets .maxRetransmits to the DataTrackReceiver\'s .maxRetransmits', () => {
+          assert.equal(dataTrack.maxRetransmits, dataTrackReceiver.maxRetransmits);
+        });
+
         it('sets .name to the RemoteTrackSignaling\'s .name', () => {
           assert.equal(dataTrack.name, trackSignaling.name);
+        });
+
+        it('sets .ordered to the DataTrackReceiver\'s .ordered', () => {
+          assert.equal(dataTrack.ordered, dataTrackReceiver.ordered);
         });
 
         it('sets .sid to the RemoteTrackSignaling\'s SID', () => {
@@ -83,6 +95,9 @@ describe('RemoteDataTrack', () => {
 function makeDataChannel() {
   const dataChannel = new EventTarget();
   dataChannel.label = makeUUID();
+  dataChannel.maxPacketLifeTime = Math.floor(Math.random() * 1000);
+  dataChannel.maxRetransmits = Math.floor(Math.random() * 1000);
+  dataChannel.ordered = Math.random() > 0.5;
   return dataChannel;
 }
 

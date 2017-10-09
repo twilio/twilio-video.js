@@ -22,6 +22,18 @@ describe('DataTrackReceiver', () => {
     it('sets .kind to "data"', () => {
       assert.equal(dataTrackReceiver.kind, 'data');
     });
+
+    it('sets .maxPacketLifeTime to the RTCDataChannel\'s .maxPacketLifeTime', () => {
+      assert.equal(dataTrackReceiver.maxPacketLifeTime, dataChannel.maxPacketLifeTime);
+    });
+
+    it('sets .maxRetransmits to the RTCDataChannel\'s .maxRetransmits', () => {
+      assert.equal(dataTrackReceiver.maxRetransmits, dataChannel.maxRetransmits);
+    });
+
+    it('sets .ordered to the RTCDataChannel\'s .ordered', () => {
+      assert.equal(dataTrackReceiver.ordered, dataChannel.ordered);
+    });
   });
 
   describe('when the underlying RTCDataChannel raises a "message" event', () => {
@@ -43,5 +55,8 @@ describe('DataTrackReceiver', () => {
 function makeDataChannel() {
   const dataChannel = new EventTarget();
   dataChannel.label = makeUUID();
+  dataChannel.maxPacketLifeTime = Math.floor(Math.random() * 1000);
+  dataChannel.maxRetransmits = Math.floor(Math.random() * 1000);
+  dataChannel.ordered = Math.random() > 0.5;
   return dataChannel;
 }

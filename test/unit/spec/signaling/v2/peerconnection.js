@@ -41,7 +41,11 @@ describe('PeerConnectionV2', () => {
             test.pc.createDataChannel = sinon.spy(test.pc.createDataChannel.bind(test.pc));
             result = test.pcv2.addDataTrackSender(dataTrackSender);
             sinon.assert.calledOnce(test.pc.createDataChannel);
-            sinon.assert.calledWith(test.pc.createDataChannel, dataTrackSender.id);
+            assert.deepEqual(test.pc.createDataChannel.args[0][1], {
+              maxPacketLifeTime: dataTrackSender.maxPacketLifeTime,
+              maxRetransmits: dataTrackSender.maxRetransmits,
+              ordered: dataTrackSender.ordered
+            });
           });
 
           it('calls addDataChannel on the DataTrackSender with the resulting RTCDataChannel', () => {
