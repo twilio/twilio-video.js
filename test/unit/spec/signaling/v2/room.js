@@ -1200,6 +1200,7 @@ function makeLocalParticipant(options) {
   localParticipant.revision = 0;
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
+  localParticipant.connect = () => {};
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = localParticipant.tracks.find(track => track.id === localTrackState.id);
