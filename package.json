@@ -46,7 +46,7 @@
     "requirejs": "^2.3.3",
     "rimraf": "^2.6.1",
     "selenium-webdriver": "3.3.0",
-    "sinon": "^2.1.0",
+    "sinon": "^4.0.1",
     "travis-multirunner": "^4.0.0",
     "twilio": "^2.11.1",
     "uglify-js": "^2.8.22",

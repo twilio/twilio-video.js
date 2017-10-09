@@ -124,8 +124,8 @@ describe('PeerConnectionManager', () => {
 
     it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', () => {
       const test = makeTest();
-      const dataTrackSender1 = new DataTrackSender();
-      const dataTrackSender2 = new DataTrackSender();
+      const dataTrackSender1 = new DataTrackSender(null, null, true);
+      const dataTrackSender2 = new DataTrackSender(null, null, true);
 
       // NOTE(mroberts): First we'll add two DataTrackSenders.
       test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders([dataTrackSender1, dataTrackSender2]);
@@ -254,8 +254,8 @@ describe('PeerConnectionManager', () => {
         context('when called with the same DataTrackSenders as the last time', () => {
           it('should not call addDataTrackSender or removeDataTrackSender on the underlying PeerConnectionV2s', () => {
             var test = makeTest({ isAudioContextSupported });
-            var dataTrackSender1 = new DataTrackSender();
-            var dataTrackSender2 = new DataTrackSender();
+            var dataTrackSender1 = new DataTrackSender(null, null, true);
+            var dataTrackSender2 = new DataTrackSender(null, null, true);
             test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
               [dataTrackSender1, dataTrackSender2]);
             return test.peerConnectionManager.createAndOffer().then(() => {
@@ -327,9 +327,9 @@ describe('PeerConnectionManager', () => {
 
         it('calls removeDataTrackSender with the removed DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', () => {
           var test = makeTest({ isAudioContextSupported });
-          var dataTrackSender1 = new DataTrackSender();
-          var dataTrackSender2 = new DataTrackSender();
-          var dataTrackSender3 = new DataTrackSender();
+          var dataTrackSender1 = new DataTrackSender(null, null, true);
+          var dataTrackSender2 = new DataTrackSender(null, null, true);
+          var dataTrackSender3 = new DataTrackSender(null, null, true);
           test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
             [dataTrackSender1, dataTrackSender2]);
           return test.peerConnectionManager.createAndOffer().then(() => {
@@ -349,9 +349,9 @@ describe('PeerConnectionManager', () => {
 
         it('calls addDataTrackSender with the added DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', () => {
           var test = makeTest({ isAudioContextSupported });
-          var dataTrackSender1 = new DataTrackSender();
-          var dataTrackSender2 = new DataTrackSender();
-          var dataTrackSender3 = new DataTrackSender();
+          var dataTrackSender1 = new DataTrackSender(null, null, true);
+          var dataTrackSender2 = new DataTrackSender(null, null, true);
+          var dataTrackSender3 = new DataTrackSender(null, null, true);
           test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
             [dataTrackSender1, dataTrackSender2]);
           return test.peerConnectionManager.createAndOffer().then(() => {
@@ -416,9 +416,9 @@ describe('PeerConnectionManager', () => {
           it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
             var test = makeTest({ isAudioContextSupported });
 
-            var dataTrackSender1 = new DataTrackSender();
-            var dataTrackSender2 = new DataTrackSender();
-            var dataTrackSender3 = new DataTrackSender();
+            var dataTrackSender1 = new DataTrackSender(null, null, true);
+            var dataTrackSender2 = new DataTrackSender(null, null, true);
+            var dataTrackSender3 = new DataTrackSender(null, null, true);
 
             test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
               [dataTrackSender1, dataTrackSender2]);
@@ -483,8 +483,8 @@ describe('PeerConnectionManager', () => {
           it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
             var test = makeTest({ isAudioContextSupported });
 
-            var dataTrackSender1 = new DataTrackSender();
-            var dataTrackSender2 = new DataTrackSender();
+            var dataTrackSender1 = new DataTrackSender(null, null, true);
+            var dataTrackSender2 = new DataTrackSender(null, null, true);
 
             test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
               [dataTrackSender1, dataTrackSender2]);
@@ -552,7 +552,7 @@ describe('PeerConnectionManager', () => {
 
       it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', () => {
         const test = makeTest();
-        const dataTrackSender = new DataTrackSender();
+        const dataTrackSender = new DataTrackSender(null, null, true);
         test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders([dataTrackSender]);
         return test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }

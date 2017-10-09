@@ -144,13 +144,13 @@ describe('LocalParticipant', () => {
             'LocalTracks',
             LocalAudioTrack.bind(null, new FakeMediaStreamTrack('audio')),
             LocalVideoTrack.bind(null, new FakeMediaStreamTrack('video')),
-            LocalDataTrack.bind(null, new DataTrackSender()),
+            LocalDataTrack.bind(null, new DataTrackSender(null, null, true)),
           ],
           [
             'MediaStreamTracks',
             FakeMediaStreamTrack.bind(null, 'audio'),
             FakeMediaStreamTrack.bind(null, 'video'),
-            LocalDataTrack.bind(null, new DataTrackSender())
+            LocalDataTrack.bind(null, new DataTrackSender(null, null, true))
           ]
         ].forEach(([ arrayItemType, LocalAudioTrack, LocalVideoTrack, LocalDataTrack ]) => {
           context(arrayItemType, () => {
@@ -282,7 +282,7 @@ describe('LocalParticipant', () => {
         kind => ({
           audio: new LocalAudioTrack(new FakeMediaStreamTrack(kind)),
           video: new LocalVideoTrack(new FakeMediaStreamTrack(kind)),
-          data: new LocalDataTrack(new DataTrackSender())
+          data: new LocalDataTrack(new DataTrackSender(null, null, true))
         }[kind])
       ],
       [
@@ -482,7 +482,7 @@ describe('LocalParticipant', () => {
         kind => ({
           audio: new LocalAudioTrack(new FakeMediaStreamTrack(kind)),
           video: new LocalVideoTrack(new FakeMediaStreamTrack(kind)),
-          data: new LocalDataTrack(new DataTrackSender())
+          data: new LocalDataTrack(new DataTrackSender(null, null, true))
         }[kind])
       ],
       [
@@ -490,7 +490,7 @@ describe('LocalParticipant', () => {
         kind => ({
           audio: new FakeMediaStreamTrack(kind),
           video: new FakeMediaStreamTrack(kind),
-          data: new LocalDataTrack(new DataTrackSender())
+          data: new LocalDataTrack(new DataTrackSender(null, null, true))
         }[kind])
       ]
     ].forEach(([trackType, createTrack]) => {

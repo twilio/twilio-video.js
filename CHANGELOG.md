@@ -7,6 +7,9 @@ New Features
 - Added DataTrack support in Group Rooms. Previously, DataTracks only worked in
   Peer-to-peer Rooms. Now they work in both. Consequently, the "experimental"
   warning has been removed.
+- Added LocalDataTrackOptions. These options allow you to configure the
+  `maxPacketLifeTime`, `maxRetransmits`, and `ordered` properties of a
+  LocalDataTrack's underlying RTCDataChannel(s).
 - Added "trackPublicationFailed" and "trackPublished" events to the
   LocalParticipant. Previously, if you failed to publish a LocalTrack when
   connecting to a Room, there was no API to discover what went wrong. Now, if

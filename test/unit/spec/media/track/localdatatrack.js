@@ -5,7 +5,7 @@ const sinon = require('sinon');
 
 const DataTrackSender = require('../../../../../lib/data/sender');
 const LocalDataTrack = require('../../../../../lib/media/track/localdatatrack');
-const { randomName } = require('../../../../lib/util');
+const { combinationContext, randomName } = require('../../../../lib/util');
 
 describe('LocalDataTrack', () => {
   let dataTrackSender;
@@ -14,7 +14,7 @@ describe('LocalDataTrack', () => {
   beforeEach(() => {
     dataTrack = new LocalDataTrack({
       DataTrackSender: function() {
-        dataTrackSender = new DataTrackSender();
+        dataTrackSender = new DataTrackSender(null, null, true);
         return dataTrackSender;
       }
     });
@@ -46,7 +46,7 @@ describe('LocalDataTrack', () => {
           const nameOption = isNamePresentInOptions ? { name: 'foo' } : {};
           track = new LocalDataTrack(Object.assign(nameOption, {
             DataTrackSender: function() {
-              sender = new DataTrackSender();
+              sender = new DataTrackSender(null, null, true);
               return sender;
             }
           }));
@@ -56,6 +56,53 @@ describe('LocalDataTrack', () => {
           assert.equal(track.name, isNamePresentInOptions ? 'foo' : sender.id);
         });
       });
+    });
+
+    combinationContext([
+      [
+        [
+          { option: 'maxPacketLifeTime',
+            defaultValue: null,
+            randomValue: () => Math.floor(Math.random() * 1000) },
+          { option: 'maxRetransmits',
+            defaultValue: null,
+            randomValue: () => Math.floor(Math.random() * 1000) },
+          { option: 'ordered',
+            defaultValue: true,
+            randomValue: () => Math.random() > 0.5 }
+        ],
+        x => `when .${x[0]} is`
+      ],
+      [
+        [true, false],
+        x => `${x ? 'present' : 'not present'} in LocalDataTrackOptions`
+      ]
+    ], ([{ option, defaultValue, randomValue }, isPresent]) => {
+      let sender;
+      let track;
+      let value;
+
+      beforeEach(() => {
+        value = randomValue();
+        const options = {};
+        if (isPresent) {
+          options[option] = value;
+        }
+        track = new LocalDataTrack(options);
+        sender = track._dataTrackSender;
+      });
+
+      if (isPresent) {
+        it(`should set .${option} to the specified value`, () => {
+          assert.equal(sender[option], value);
+          assert.equal(track[option], value);
+        });
+      } else {
+        it(`should set .${option} to the default value`, () => {
+          assert.equal(sender[option], defaultValue);
+          assert.equal(track[option], defaultValue);
+        });
+      }
     });
 
   });
