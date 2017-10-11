@@ -192,6 +192,7 @@ const { enableDataTrackTests } = env;
           room.disconnect();
           await promise;
         } catch (error) {
+          assert.equal(error.message, 'LocalParticipant disconnected');
           return;
         }
         throw new Error('Unexpected resolution');
