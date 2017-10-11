@@ -39,6 +39,25 @@ describe('RoomV2', () => {
         test.room.state);
     });
 
+    describe('.localParticipant', () => {
+      it('should call .update on the LocalParticipant with the `published` payload before calling `connect`', () => {
+        const localParticipant = makeLocalParticipant({ tracks: [] });
+        const methods = [];
+        const participant = { sid: 'foo', identity: 'bar' };
+        const published = {};
+        localParticipant.update = sinon.spy(() => methods.push('update'));
+        localParticipant.connect = sinon.spy(() => methods.push('connect'));
+        makeTest({
+          localParticipant,
+          participant,
+          published
+        });
+        assert.deepEqual(methods, ['update', 'connect']);
+        sinon.assert.calledWith(localParticipant.update, published);
+        sinon.assert.calledWith(localParticipant.connect, 'foo', 'bar');
+      });
+    });
+
     it('should periodically call .publishEvent on the underlying Transport', async () => {
       var test = makeTest({ statsPublishIntervalMs: 50 });
       var wait = ms => new Promise(resolve => setTimeout(resolve, ms));

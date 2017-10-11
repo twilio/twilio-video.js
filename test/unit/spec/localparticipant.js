@@ -296,9 +296,9 @@ describe('LocalParticipant', () => {
     ].forEach(([ trackType, kinds, createTrack ]) => {
       kinds.forEach(kind => {
         context(`when called with ${a(kind)} ${kind} ${trackType}`, () => {
-          context(`when the .trackPublications collection already has an entry for the ${trackType}`, () => {
-            [true, false].forEach(isConnected => {
-              context(`and the LocalParticipant\'s ParticipantSignaling is in the "${isConnected ? 'connected' : 'connecting'}" state`, () => {
+          [true, false].forEach(isConnected => {
+            context(`and the LocalParticipant\'s ParticipantSignaling is in the "${isConnected ? 'connected' : 'connecting'}" state`, () => {
+              context(`when the .trackPublications collection already has an entry for the ${trackType}`, () => {
                 let localTrack;
 
                 beforeEach(async () => {
@@ -319,6 +319,7 @@ describe('LocalParticipant', () => {
                   let trackPublishedEvent;
                   test.participant.on('trackPublished', () => trackPublishedEvent = true);
                   const localTrackPublication = await test.participant.publishTrack(localTrack);
+                  await new Promise(resolve => setTimeout(resolve));
                   assert(!trackPublishedEvent);
                 });
               });
