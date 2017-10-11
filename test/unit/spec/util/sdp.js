@@ -2,9 +2,9 @@
 
 const assert = require('assert');
 
-const { setBitrateParameters, setCodecPreferences } = require('../../../../lib/util/sdp');
+const { setBitrateParameters, setCodecPreferences, setSimulcast } = require('../../../../lib/util/sdp');
 
-const { makeSdpWithTracks } = require('../../../lib/mocksdp');
+const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../lib/mocksdp');
 const { combinationContext } = require('../../../lib/util');
 
 describe('setBitrateParameters', () => {
@@ -134,6 +134,69 @@ describe('setCodecPreferences', () => {
           : ['120', '121', '126', '97'];
         itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds);
       });
+    });
+  });
+});
+
+describe('setSimulcast', () => {
+  combinationContext([
+    [
+      [true, false],
+      x => `when the SDP ${x ? 'already has' : 'does not already have'} simulcast SSRCs`
+    ],
+    [
+      [true, false],
+      x => `when the payload type for VP8 is${x ? '' : ' not'} present in the m= line`
+    ],
+    [
+      [new Set(['01234']), new Set(['01234', '56789'])],
+      x => `when retransmission is${x.size === 2 ? '' : ' not'} supported`
+    ]
+  ], ([areSimSSRCsAlreadyPresent, isVP8PayloadTypePresent, ssrcs]) => {
+    let sdp;
+    let simSdp;
+
+    before(() => {
+      ssrcs = Array.from(ssrcs.values());
+      sdp = makeSdpForSimulcast(ssrcs);
+
+      if (!isVP8PayloadTypePresent) {
+        sdp = sdp.replace(/m=video 9 UDP\/TLS\/RTP\/SAVPF 120 121 126 97/,
+          'm=video 9 UDP/TLS/RTP/SAVPF 121 126 97');
+      }
+      if (areSimSSRCsAlreadyPresent) {
+        sdp = setSimulcast(sdp);
+      }
+      simSdp = setSimulcast(sdp);
+    });
+
+    if (!isVP8PayloadTypePresent || areSimSSRCsAlreadyPresent) {
+      it('should not add simulcast SSRCs for each video MediaStreamTrack ID', () => {
+        assert.equal(simSdp, sdp);
+      });
+      return;
+    }
+
+    it('should add simulcast SSRCs for each video MediaStreamTrack ID', () => {
+      const videoSection = `m=${simSdp.split('\r\nm=')[2]}`;
+      const simSSRCs = (videoSection.match(/^a=ssrc:.+ msid:.+$/gm) || []).map(line => {
+        return line.match(/^a=ssrc:([0-9]+)/)[1];
+      });
+
+      const flowPairs = (videoSection.match(/^a=ssrc-group:FID .+$/gm) || []).reduce((pairs, line) => {
+        const ssrcs = line.match(/^a=ssrc-group:FID ([0-9]+) ([0-9]+)$/).slice(1);
+        pairs.set(ssrcs[0], ssrcs[1]);
+        return pairs;
+      }, new Map());
+
+      assert.equal(simSSRCs.length, ssrcs.length * 3);
+      assert.equal(simSSRCs[0], ssrcs[0]);
+      assert.equal(flowPairs.size, ssrcs.length === 2 ? 3 : 0);
+
+      if (ssrcs.length === 2) {
+        assert.equal(simSSRCs[1], ssrcs[1]);
+        assert.equal(flowPairs.get(ssrcs[0]), ssrcs[1]);
+      }
     });
   });
 });
