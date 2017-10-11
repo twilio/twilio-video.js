@@ -75,4 +75,21 @@ a=ssrc:${ssrc} msid:stream ${id}\r
   }, session);
 }
 
+function makeSdpForSimulcast(ssrcs) {
+  const sdp = makeSdpWithTracks('planb', {
+    audio: ['audio-1'],
+    video: [{ id: 'video-1', ssrc: ssrcs[0] }]
+  });
+  const ssrcSdpLines = ssrcs.length === 2 ? [
+    `a=ssrc:${ssrcs[1]} cname:0`,
+    `a=ssrc:${ssrcs[1]} msid:stream video-1`
+  ] : [];
+  const fidSdpLines = ssrcs.length === 2
+    ? [`a=ssrc-group:FID ${ssrcs.join(' ')}`]
+    : [];
+  const aLines = [...ssrcSdpLines, ...fidSdpLines].join('\r\n');
+  return sdp + aLines + (aLines ? '\r\n' : '');
+}
+
 exports.makeSdpWithTracks = makeSdpWithTracks;
+exports.makeSdpForSimulcast = makeSdpForSimulcast;
