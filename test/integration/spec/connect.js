@@ -16,7 +16,7 @@ const TwilioError = require('../../../lib/util/twilioerror');
 const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
-const { isFirefox } = require('../../lib/guessbrowser');
+const { isChrome, isFirefox } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
 
@@ -726,6 +726,44 @@ describe('connect', function() {
         return publication.track === dataTrack;
       });
       assert(publication);
+    });
+  });
+
+  (isChrome ? describe : describe.skip)('VP8 simulcast', () => {
+    let peerConnections;
+    let thisRoom;
+    let thoseRooms;
+
+    before(async () => {
+      [thisRoom, thoseRooms, peerConnections] = await setup({
+        preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
+      });
+    });
+
+    it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
+      flatMap(peerConnections, pc => {
+        assert(pc.localDescription.sdp);
+        return getMediaSections(pc.localDescription.sdp, 'video');
+      }).forEach(section => {
+        const flowSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:FID .+$/gm), line => {
+          return line.split(' ').slice(1);
+        }));
+        const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
+          return line.split(' ').slice(1);
+        }));
+        const trackSSRCs = new Set(section.match(/^a=ssrc:.+ msid:.+$/gm).map(line => {
+          return line.match(/a=ssrc:([0-9]+)/)[1];
+        }));
+        assert.equal(flowSSRCs.size, 6);
+        assert.equal(simSSRCs.size, 3);
+        assert.equal(trackSSRCs.size, 6);
+        simSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+        flowSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+      });
+    });
+
+    after(() => {
+      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
     });
   });
 });
