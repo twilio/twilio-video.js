@@ -28,6 +28,20 @@ You may also experience codec issues in Peer-to-Peer (P2P) Rooms containing
 Android- or iOS-based Participants who do not support H.264. However, P2P Rooms
 with browser-based Participants should work.
 
+### Angular
+
+There is a misinteraction between one of Angular's libraries, Zone.js, and
+Safari's RTCPeerConnection APIs. For more information, see [here](https://github.com/angular/zone.js/issues/883)
+for the issue filed against Zone.js and [here](https://bugs.webkit.org/show_bug.cgi?id=175802)
+for the issue filed against WebKit. In order to work around this issue, you
+should include Zone.js's webapis-rtc-peer-connection.js in your app, after
+loading Zone.js. For example,
+
+```html
+<script src="node_modules/zone.js/dist/zone.js"></script>
+<script src="node_modules/zone.js/dist/webapis-rtc-peer-connection.js"></script>
+```
+
 Microsoft Edge
 --------------
 
