@@ -60,16 +60,16 @@ describe('connect', function() {
       { grant: null },
       20106
     ]
-  ].forEach(([description, defaultOptions, expectedCode]) => {
+  ].forEach(([description, extraOptions, expectedCode]) => {
     describe(`called ${description}`, () => {
       let token;
       let cancelablePromise;
 
       beforeEach(() => {
         const identity = randomName();
-        token = getToken(identity, defaultOptions);
+        token = getToken(identity, Object.assign({}, defaultOptions, extraOptions));
         // NOTE(mroberts): We expect this to print errors, so disable logging.
-        cancelablePromise = connect(token, Object.assign({}, defaultOptions, { logLevel: 'off', tracks: [] }));
+        cancelablePromise = connect(token, Object.assign({}, defaultOptions, extraOptions, { logLevel: 'off', tracks: [] }));
       });
 
       it(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
