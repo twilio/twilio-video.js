@@ -1,3 +1,12 @@
+1.5.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where we created too many MediaStreams in Firefox, leading to
+  extremely degraded audio quality. (JSDK-1588)
+
 1.5.0 (October 9, 2017)
 =======================
 
