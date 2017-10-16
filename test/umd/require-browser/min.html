@@ -5,12 +5,21 @@
   <body>
     <script data-main="js/main" src="js/require.js"/></script>
     <script>
+      var publicVars = [
+        'connect',
+        'createLocalAudioTrack',
+        'createLocalTracks',
+        'createLocalVideoTrack',
+        'isSupported',
+        'LocalAudioTrack',
+        'LocalDataTrack',
+        'LocalVideoTrack'
+      ];
       require(['../../../../dist/twilio-video.min'], function(video) {
         try {
-          if (video.createLocalTracks
-            && video.connect
-            && video.LocalAudioTrack
-            && video.LocalVideoTrack) {
+          if (publicVars.every(function(publicVar) {
+            return publicVar in video;
+          })) {
             window.callPhantom({
               status: 'success',
               version: video.version
@@ -18,7 +27,7 @@
           } else {
             window.callPhantom({
               status: 'failure',
-              reason: 'Client undefined'
+              reason: 'Video undefined'
             });
           }
         } catch(e) {
