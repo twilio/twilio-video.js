@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 
+const { flatMap } = require('../../../../lib/util');
 const { setBitrateParameters, setCodecPreferences, setSimulcast } = require('../../../../lib/util/sdp');
 
 const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../lib/mocksdp');
@@ -155,19 +156,21 @@ describe('setSimulcast', () => {
   ], ([areSimSSRCsAlreadyPresent, isVP8PayloadTypePresent, ssrcs]) => {
     let sdp;
     let simSdp;
+    let trackIdsToAttributes;
 
     before(() => {
       ssrcs = Array.from(ssrcs.values());
       sdp = makeSdpForSimulcast(ssrcs);
+      trackIdsToAttributes = new Map();
 
       if (!isVP8PayloadTypePresent) {
         sdp = sdp.replace(/m=video 9 UDP\/TLS\/RTP\/SAVPF 120 121 126 97/,
           'm=video 9 UDP/TLS/RTP/SAVPF 121 126 97');
       }
       if (areSimSSRCsAlreadyPresent) {
-        sdp = setSimulcast(sdp);
+        sdp = setSimulcast(sdp, trackIdsToAttributes);
       }
-      simSdp = setSimulcast(sdp);
+      simSdp = setSimulcast(sdp, trackIdsToAttributes);
     });
 
     if (!isVP8PayloadTypePresent || areSimSSRCsAlreadyPresent) {
@@ -185,7 +188,7 @@ describe('setSimulcast', () => {
 
       const flowPairs = (videoSection.match(/^a=ssrc-group:FID .+$/gm) || []).reduce((pairs, line) => {
         const ssrcs = line.match(/^a=ssrc-group:FID ([0-9]+) ([0-9]+)$/).slice(1);
-        pairs.set(ssrcs[0], ssrcs[1]);
+        pairs.set(ssrcs[1], ssrcs[0]);
         return pairs;
       }, new Map());
 
@@ -195,8 +198,35 @@ describe('setSimulcast', () => {
 
       if (ssrcs.length === 2) {
         assert.equal(simSSRCs[1], ssrcs[1]);
-        assert.equal(flowPairs.get(ssrcs[0]), ssrcs[1]);
+        assert.equal(flowPairs.get(ssrcs[1]), ssrcs[0]);
       }
+    });
+
+    context('when the SDP contains a previously added MediaStreamTrack ID', () => {
+      before(() => {
+        simSdp = setSimulcast(sdp, trackIdsToAttributes);
+      });
+
+      it('should not generate new simulcast SSRCs and re-use the existing simulcast SSRCs', () => {
+        const videoSection = `m=${simSdp.split('\r\nm=')[2]}`;
+        const trackAttributes = [...trackIdsToAttributes.values()][0];
+        const simSSRCs = (videoSection.match(/^a=ssrc:.+ msid:.+$/gm) || []).map(line => {
+          return line.match(/^a=ssrc:([0-9]+)/)[1];
+        });
+
+        const flowPairs = (videoSection.match(/^a=ssrc-group:FID .+$/gm) || []).reduce((pairs, line) => {
+          const ssrcs = line.match(/^a=ssrc-group:FID ([0-9]+) ([0-9]+)$/).slice(1);
+          pairs.set(ssrcs[1], ssrcs[0]);
+          return pairs;
+        }, new Map());
+
+        const existingSimSSRCs = trackAttributes.rtxPairs.size
+          ? flatMap([...trackAttributes.rtxPairs.entries()], pair => pair.reverse())
+          : [...trackAttributes.primarySSRCs.values()];
+
+        assert.deepEqual(simSSRCs, existingSimSSRCs);
+        assert.deepEqual([...flowPairs.entries()], [...trackAttributes.rtxPairs.entries()]);
+      });
     });
   });
 });
