@@ -29,8 +29,6 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
-const { enableDataTrackTests } = env;
-
 describe('connect', function() {
   this.timeout(60000);
 
@@ -546,9 +544,7 @@ describe('connect', function() {
         let thisParticipants;
 
         before(async () => {
-          const tracks = enableDataTrackTests
-            ? [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()]
-            : await getTracks(names);
+          const tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
 
           [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
           thisParticipant = thisRoom.localParticipant;
