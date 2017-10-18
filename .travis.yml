@@ -79,7 +79,6 @@ before_script:
     fi
     if [ "${TOPOLOGY}" == 'P2P' ]; then
       export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_P2P
-      export ENABLE_DATATRACK_TESTS=true
     else
       export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_SFU
     fi

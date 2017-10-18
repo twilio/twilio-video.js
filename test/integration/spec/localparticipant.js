@@ -47,8 +47,6 @@ const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 
-const { enableDataTrackTests } = env;
-
 (navigator.userAgent === 'Node'
   ? describe.skip
   : describe
@@ -68,26 +66,22 @@ const { enableDataTrackTests } = env;
         connect(token, options),
         createLocalTracks()
       ]);
-      if (enableDataTrackTests) {
-        tracks.push(new LocalDataTrack());
-      }
+      tracks.push(new LocalDataTrack());
     };
 
     [
       [
-        `when ${enableDataTrackTests ? 'three' : 'two'} LocalTracks (${enableDataTrackTests ? 'audio, video, and data' : 'audio and video'}) are published sequentially`,
+        `when three LocalTracks (audio, video, and data) are published sequentially`,
         async () => {
           trackPublications = [
             await room.localParticipant.publishTrack(tracks[0]),
-            await room.localParticipant.publishTrack(tracks[1])
+            await room.localParticipant.publishTrack(tracks[1]),
+            await room.localParticipant.publishTrack(tracks[2])
           ];
-          if (enableDataTrackTests) {
-            trackPublications.push(await room.localParticipant.publishTrack(tracks[2]));
-          };
         }
       ],
       [
-        `when ${enableDataTrackTests ? 'three' : 'two'} LocalTracks (${enableDataTrackTests ? 'audio, video, and date' : 'audio and video'}) are published together`,
+        `when three LocalTracks (audio, video, and date) are published together`,
         async () => {
           trackPublications = await Promise.all(tracks.map(track => {
             return room.localParticipant.publishTrack(track);
@@ -210,9 +204,7 @@ const { enableDataTrackTests } = env;
         x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
-        enableDataTrackTests
-          ? ['audio', 'video', 'data']
-          : ['audio', 'video'],
+        ['audio', 'video', 'data'],
         x => `Local${capitalize(x)}Track`
       ],
       [
@@ -381,9 +373,7 @@ const { enableDataTrackTests } = env;
         x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
-        enableDataTrackTests
-          ? ['audio', 'video', 'data']
-          : ['audio', 'video'],
+        ['audio', 'video', 'data'],
         x => `Local${capitalize(x)}Track`
       ],
       [

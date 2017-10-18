@@ -38,9 +38,6 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
-// TODO(mroberts): Some of the DataTrack tests will fail until VIDEO-936 is fixed.
-const { enableDataTrackTests } = env;
-
 (navigator.userAgent === 'Node'
     ? describe.skip
     : describe
@@ -53,9 +50,7 @@ const { enableDataTrackTests } = env;
         x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
-        enableDataTrackTests
-          ? ['audio', 'video', 'data']
-          : ['audio', 'video'],
+        ['audio', 'video', 'data'],
         x => `Local${capitalize(x)}Track`
       ],
       [
