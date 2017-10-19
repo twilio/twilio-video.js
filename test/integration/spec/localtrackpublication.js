@@ -7,7 +7,7 @@ if (typeof window === 'undefined') {
 const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');
-const { flatMap } = require('../../../lib/util');
+const { flatMap, guessBrowser } = require('../../../lib/util');
 const Track = require('../../../lib/media/track');
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
@@ -38,6 +38,9 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
+const guess = guessBrowser();
+const isFirefox = guess === 'firefox';
+
 (navigator.userAgent === 'Node'
     ? describe.skip
     : describe
@@ -58,6 +61,7 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
+      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -91,6 +95,10 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
         }
 
         const tracks = [thisTrack];
+        if (isFirefox) {
+          dummyAudioTrack = await createLocalAudioTrack();
+          tracks.push(dummyAudioTrack);
+        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -152,6 +160,9 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
+        }
+        if (dummyAudioTrack) {
+          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });

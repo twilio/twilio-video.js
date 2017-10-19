@@ -5,6 +5,7 @@ if (typeof window === 'undefined') {
 }
 
 const assert = require('assert');
+const { getUserMedia } = require('@twilio/webrtc');
 const connect = require('../../../lib/connect');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
@@ -28,6 +29,9 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   }
   return defaultOptions;
 }, {});
+
+const guess = guessBrowser();
+const isFirefox = guess === 'firefox';
 
 describe('connect', function() {
   this.timeout(60000);
@@ -161,8 +165,9 @@ describe('connect', function() {
       rooms = await Promise.all(cancelablePromises);
     });
 
-    after(async () => {
-      rooms.forEach(room => room.disconnect);
+    after(() => {
+      tracks.forEach(track => track.kind !== 'data' && track.stop());
+      rooms.forEach(room => room.disconnect());
     });
 
     it(`should return ${n === 1 ? 'a ' : ''}CancelablePromise${n === 1 ? '' : 's'} that resolve${n === 1 ? 's' : ''} to ${howManyRooms}`, async () => {
@@ -361,6 +366,10 @@ describe('connect', function() {
         room = await connect(getToken(randomName()), options);
       });
 
+      after(() => {
+        room.disconnect();
+      });
+
       it(`should ${insights ? '' : 'not'} publish events to the Insights gateway`, () => {
         const EventPublisher = insights ? InsightsPublisher : NullInsightsPublisher;
         const TheOtherEventPublisher = insights ? NullInsightsPublisher : InsightsPublisher;
@@ -412,11 +421,11 @@ describe('connect', function() {
             assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
           }).forEach(section => {
-            const modifier = guessBrowser() === 'firefox'
+            const modifier = isFirefox
               ? 'TIAS'
               : 'AS';
             const maxBitrate = maxBitrates[kind]
-              ? guessBrowser() === 'firefox'
+              ? isFirefox
                 ? maxBitrates[kind]
                 : Math.round((maxBitrates[kind] + 16000) / 950)
               : null;
@@ -526,7 +535,7 @@ describe('connect', function() {
             {
               source: 'MediaStreamTracks from getUserMedia()',
               async getTracks() {
-                const mediaStream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+                const mediaStream = await getUserMedia({audio: true, video: true});
                 return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
               }
             }
@@ -542,9 +551,10 @@ describe('connect', function() {
         let thoseRooms;
         let thisParticipant;
         let thisParticipants;
+        let tracks;
 
         before(async () => {
-          const tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
+          tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
 
           [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
           thisParticipant = thisRoom.localParticipant;
@@ -571,6 +581,7 @@ describe('connect', function() {
         });
 
         after(() => {
+          tracks.forEach(track => track.kind !== 'data' && track.stop());
           [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
         });
       });
@@ -634,16 +645,22 @@ describe('connect', function() {
   describe('called with a single LocalDataTrack in the tracks Array', () => {
     let room;
     let dataTrack;
+    let tracks;
 
     before(async () => {
       const identity = randomName();
       const token = getToken(identity);
       dataTrack = new LocalDataTrack();
-      const options = Object.assign({ tracks: [dataTrack] }, defaultOptions);
+      tracks = [dataTrack];
+      if (isFirefox) {
+        tracks.push(await createLocalAudioTrack());
+      }
+      const options = Object.assign({ tracks }, defaultOptions);
       room = await connect(token, options);
     });
 
     after(() => {
+      tracks.forEach(track => track.kind !== 'data' && track.stop());
       room.disconnect();
     });
 
