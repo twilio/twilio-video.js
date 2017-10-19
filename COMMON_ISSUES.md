@@ -109,3 +109,15 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
+
+RemoteDataTrack properties in Firefox
+-------------------------------------
+
+Firefox has not yet implemented getter's for RTCDataChannel's
+`maxPacketLifeTime` and `maxRetransmits` properties. As such, we cannot raise
+accurate values for the `maxPacketLifeTime` and `maxRetransmits` properties on
+RemoteDataTrack. (Setting these values still works, though!) See below for
+issues on the Firefox bug tracker:
+
+* [Bug 881532](https://bugzilla.mozilla.org/show_bug.cgi?id=881532)
+* [Bug 1278384](https://bugzilla.mozilla.org/show_bug.cgi?id=1278384)

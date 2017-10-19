@@ -7,18 +7,36 @@ const { makeUUID } = require('../../../../lib/util');
 
 describe('DataTrackSender', () => {
   let dataTrackSender;
+  let maxPacketLifeTime;
+  let maxRetransmits;
+  let ordered;
 
   beforeEach(() => {
-    dataTrackSender = new DataTrackSender();
+    maxPacketLifeTime = Math.floor(Math.random() * 1000);
+    maxRetransmits = Math.floor(Math.random() * 1000);
+    ordered = Math.random() > 0.5;
+    dataTrackSender = new DataTrackSender(maxPacketLifeTime, maxRetransmits, ordered);
   });
 
   describe('constructor', () => {
     it('sets .id to a random ID', () => {
-      assert.notEqual(dataTrackSender.id, (new DataTrackSender()).id);
+      assert.notEqual(dataTrackSender.id, (new DataTrackSender(null, null, true)).id);
     });
 
     it('sets .kind to "data"', () => {
       assert.equal(dataTrackSender.kind, 'data');
+    });
+
+    it('sets .maxPacketLifeTime to whatever value was passed in', () => {
+      assert.equal(dataTrackSender.maxPacketLifeTime, maxPacketLifeTime);
+    });
+
+    it('sets .maxRetransmits to whatever value was passed in', () => {
+      assert.equal(dataTrackSender.maxRetransmits, maxRetransmits);
+    });
+
+    it('sets .ordered to whatever value was passed in', () => {
+      assert.equal(dataTrackSender.ordered, ordered);
     });
   });
 

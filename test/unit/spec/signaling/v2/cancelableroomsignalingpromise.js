@@ -176,27 +176,6 @@ describe('createCancelableRoomSignalingPromise', () => {
       });
 
       context('and the .participant property is present', () => {
-        it('calls .connect with the .participant\'s .sid and .identity on the local ParticipantSignaling', () => {
-          var test = makeTest();
-          test.createAndOfferDeferred.resolve();
-          return test.createAndOfferDeferred.promise.then(() => {
-            var identity = makeIdentity();
-            var sid = makeParticipantSid();
-            test.transport.emit('connected', {
-              participant: {
-                sid: sid,
-                identity: identity
-              }
-            });
-            assert.equal(
-              sid,
-              test.localParticipant.connect.args[0][0]);
-            assert.equal(
-              identity,
-              test.localParticipant.connect.args[0][1]);
-          });
-        });
-
         it('constructs a new RoomV2', () => {
           var test = makeTest();
           test.createAndOfferDeferred.resolve();

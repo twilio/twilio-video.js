@@ -12,7 +12,7 @@ const getToken = require('../../lib/token');
 const { guessBrowser } = require('../../../lib/util');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded } = require('../../lib/util');
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
 const env = require('../../env');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
@@ -29,8 +29,6 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   }
   return defaultOptions;
 }, {});
-
-const { enableDataTrackTests } = env;
 
 describe('connect', function() {
   this.timeout(60000);
@@ -182,6 +180,10 @@ describe('connect', function() {
 
       it(`should set ${n === 1 ? 'the' : 'each'} Room's .name to ${withName ? 'the specified name' : 'its SID'}`, () => {
         rooms.forEach(room => assert.equal(room.name, withName ? name : room.sid));
+      });
+
+      it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .state to "connected"`, () => {
+        rooms.forEach(room => assert.equal(room.localParticipant.state, 'connected'));
       });
 
       it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .sid to a ${n === 1 ? '' : 'unique '}Participant SID`, () => {
@@ -543,9 +545,7 @@ describe('connect', function() {
         let thisParticipants;
 
         before(async () => {
-          const tracks = enableDataTrackTests
-            ? [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()]
-            : await getTracks(names);
+          const tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
 
           [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
           thisParticipant = thisRoom.localParticipant;
@@ -678,6 +678,31 @@ describe('connect', function() {
           });
         });
       });
+    });
+  });
+
+  describe('called with a single LocalDataTrack in the tracks Array', () => {
+    let room;
+    let dataTrack;
+
+    before(async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      dataTrack = new LocalDataTrack();
+      const options = Object.assign({ tracks: [dataTrack] }, defaultOptions);
+      room = await connect(token, options);
+    });
+
+    after(() => {
+      room.disconnect();
+    });
+
+    it('eventually results in a LocalDataTrackPublication', async () => {
+      await tracksPublished(room.localParticipant, 1, 'data');
+      const publication = Array.from(room.localParticipant.dataTrackPublications.values()).find(publication => {
+        return publication.track === dataTrack;
+      });
+      assert(publication);
     });
   });
 });

@@ -39,6 +39,25 @@ describe('RoomV2', () => {
         test.room.state);
     });
 
+    describe('.localParticipant', () => {
+      it('should call .update on the LocalParticipant with the `published` payload before calling `connect`', () => {
+        const localParticipant = makeLocalParticipant({ tracks: [] });
+        const methods = [];
+        const participant = { sid: 'foo', identity: 'bar' };
+        const published = {};
+        localParticipant.update = sinon.spy(() => methods.push('update'));
+        localParticipant.connect = sinon.spy(() => methods.push('connect'));
+        makeTest({
+          localParticipant,
+          participant,
+          published
+        });
+        assert.deepEqual(methods, ['update', 'connect']);
+        sinon.assert.calledWith(localParticipant.update, published);
+        sinon.assert.calledWith(localParticipant.connect, 'foo', 'bar');
+      });
+    });
+
     it('should periodically call .publishEvent on the underlying Transport', async () => {
       var test = makeTest({ statsPublishIntervalMs: 50 });
       var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -791,6 +810,7 @@ describe('RoomV2', () => {
     context('.participant', () => {
       it('should update the newly published LocalTrackV2s with their corresponding SIDs', () => {
         var id = makeId();
+        var sid = makeSid();
         var test = makeTest();
         var track = makeTrack({ id });
 
@@ -798,10 +818,18 @@ describe('RoomV2', () => {
         test.transport.emit('message', {
           participant: {
             sid: 'bar',
-            tracks: [ { id: id, sid: 'foo' } ]
+            tracks: [
+              { id: id }
+            ]
+          },
+          published: {
+            revision: 1,
+            tracks: [
+              { id, sid, state: 'ready' }
+            ]
           }
         });
-        assert.equal(track.sid, 'foo');
+        assert.equal(track.sid, sid);
       });
     });
 
@@ -1191,6 +1219,7 @@ function makeLocalParticipant(options) {
   localParticipant.revision = 0;
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
+  localParticipant.connect = () => {};
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = localParticipant.tracks.find(track => track.id === localTrackState.id);
