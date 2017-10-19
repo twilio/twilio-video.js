@@ -30,6 +30,7 @@ const {
   pairs,
   randomName,
   tracksAdded,
+  tracksPublished,
   tracksRemoved,
   trackStarted,
   waitForTracks
@@ -121,6 +122,7 @@ const isSafari = guess === 'safari';
         after(() => {
           trackPublications = [];
           room.disconnect();
+          tracks.forEach(track => track.kind !== 'data' && track.stop());
           tracks = [];
         });
       });
@@ -173,6 +175,7 @@ const isSafari = guess === 'safari';
         trackPublications = [];
         room.disconnect();
         anotherRoom.disconnect();
+        tracks.forEach(track => track.kind !== 'data' && track.stop());
         tracks = [];
       });
     });
@@ -194,6 +197,7 @@ const isSafari = guess === 'safari';
 
       after(() => {
         trackPublications = [];
+        tracks.forEach(track => track.kind !== 'data' && track.stop());
         tracks = [];
       });
     });
@@ -216,6 +220,7 @@ const isSafari = guess === 'safari';
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
+      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -255,12 +260,17 @@ const isSafari = guess === 'safari';
         const tracks = when === 'previously'
           ? [thisTrack]
           : [];
+        if (isFirefox && kind === 'data') {
+          dummyAudioTrack = await createLocalAudioTrack();
+          tracks.push(dummyAudioTrack);
+        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
+        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -294,8 +304,9 @@ const isSafari = guess === 'safari';
         [thisLocalTrackPublication, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
-            return Promise.all(thoseParticipants.map(thatParticipant => {
-              return waitForTracks(event, thatParticipant, 1).then(tracks => tracks[0]);
+            return Promise.all(thoseParticipants.map(async thatParticipant => {
+              const tracks = await waitForTracks(event, thatParticipant, 1);
+              return tracks.find(track => track.kind === kind);
             }));
           })
         ]);
@@ -309,6 +320,9 @@ const isSafari = guess === 'safari';
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
+        }
+        if (dummyAudioTrack) {
+          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
@@ -347,7 +361,8 @@ const isSafari = guess === 'safari';
           }
 
           if (when === 'previously') {
-            it('the RemoteTrack should be a new RemoteTrack instance', () => {
+            // FIXME(mroberts): JSDK-1601
+            (kind === 'data' ? it.skip : it)('the RemoteTrack should be a new RemoteTrack instance', () => {
               const thoseTracks = thoseTracksMap[event];
               assert.equal(thoseTracksBefore.length, thoseTracks.length);
               thoseTracksBefore.forEach((thatTrackBefore, i) => {
@@ -381,6 +396,7 @@ const isSafari = guess === 'safari';
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
+      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -411,12 +427,17 @@ const isSafari = guess === 'safari';
         }
 
         const tracks = [thisTrack];
+        if (isFirefox && kind === 'data') {
+          dummyAudioTrack = await createLocalAudioTrack();
+          tracks.push(dummyAudioTrack);
+        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
+        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -454,9 +475,10 @@ const isSafari = guess === 'safari';
           return new Promise(resolve => track.once('unsubscribed', resolve));
         });
 
-        [thoseTracksRemoved, thoseTracksUnsubscribed] = await Promise.all([ 'trackRemoved', 'trackUnsubscribed' ].map(event => {
-          return Promise.all(thoseParticipants.map(thatParticipant => {
-            return waitForTracks(event, thatParticipant, 1).then(tracks => tracks[0]);
+        [thoseTracksRemoved, thoseTracksUnsubscribed] = await Promise.all(['trackRemoved', 'trackUnsubscribed'].map(event => {
+          return Promise.all(thoseParticipants.map(async thatParticipant => {
+            const [track] = await waitForTracks(event, thatParticipant, 1);
+            return track;
           }));
         }));
 
@@ -469,6 +491,9 @@ const isSafari = guess === 'safari';
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
+        }
+        if (dummyAudioTrack) {
+          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
@@ -586,6 +611,7 @@ const isSafari = guess === 'safari';
     });
 
     after(() => {
+      thisTrack1.stop();
       thisTrack2.stop();
       thisRoom.disconnect();
       thatRoom.disconnect();
@@ -789,7 +815,7 @@ const isSafari = guess === 'safari';
           flatMap(remoteDescriptions, description => {
             return getMediaSections(description.sdp, kind, '(recvonly|sendrecv)');
           }).forEach(section => {
-            const modifier = guessBrowser() === 'firefox'
+            const modifier = isFirefox
               ? 'TIAS'
               : 'AS';
             var maxBitrate = action === 'preserve'
@@ -797,7 +823,7 @@ const isSafari = guess === 'safari';
               : maxBitrates[kind];
 
             maxBitrate = maxBitrate
-              ? guessBrowser() === 'firefox'
+              ? isFirefox
                 ? maxBitrate
                 : Math.round((maxBitrate + 16000) / 950)
               : null;
