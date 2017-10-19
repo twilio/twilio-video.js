@@ -14,6 +14,7 @@ const LocalTrackPublication = require('../../../lib/media/track/localtrackpublic
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
 const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
+const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
 const {
   connect,
@@ -376,6 +377,58 @@ const isSafari = guess === 'safari';
               });
             });
           }
+        });
+      });
+    });
+
+    describe('"trackPublishError" event', () => {
+      combinationContext([
+        [
+          [
+            {
+              createLocalTrack() {
+                const { name } = tracks.find(track => track.kind === 'audio');
+                return createLocalAudioTrack({ name });
+              },
+              scenario: 'a LocalTrack whose name is the same as one of the currently published LocalTracks',
+              TwilioError: TrackNameIsDuplicatedError
+            },
+            {
+              createLocalTrack() {
+                const name = '0'.repeat(130);
+                return createLocalAudioTrack({ name });
+              },
+              scenario: 'a LocalTrack whose name is too long',
+              TwilioError: TrackNameTooLongError
+            }
+          ],
+          x => `called with ${x}`
+        ]
+      ], ([{ createLocalTrack, scenario, TwilioError }]) => {
+        context(scenario, () => {
+          let trackPublishErrors;
+
+          before(async () => {
+            await setup();
+            const localTrack = await createLocalTrack();
+            trackPublishErrors = await Promise.all([
+              new Promise(resolve => room.localParticipant.once('trackPublishError', resolve)),
+              room.localParticipant.publishTrack(localTrack).catch(error => error)
+            ]);
+          });
+
+          it(`should emit a "trackPublishError on the Room's LocalParticipant with a ${TwilioError.name}`, () => {
+            assert(trackPublishError[0] instanceof TwilioError);
+          });
+
+          it(`should reject the Promise returned by LocalParticipant#publishTrack with a ${TwilioError.name}`, () => {
+            assert(trackPublishError[1] instanceof TwilioError);
+          });
+
+          after(() => {
+            room.disconnect();
+            tracks.forEach(track => track.stop());
+          });
         });
       });
     });
