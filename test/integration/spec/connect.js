@@ -642,7 +642,7 @@ describe('connect', function() {
       });
     });
 
-    describe('"trackPublishError" event', () => {
+    describe('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
@@ -651,7 +651,8 @@ describe('connect', function() {
                 const name = 'foo';
                 return Promise.all([
                   createLocalAudioTrack({ name }),
-                  createLocalAudioTrack({ name })
+                  createLocalVideoTrack({ name }),
+                  new LocalDataTrack()
                 ]);
               },
               scenario: 'Tracks whose names are the same',
@@ -661,32 +662,35 @@ describe('connect', function() {
               createLocalTracks() {
                 const name = '0'.repeat(130);
                 return Promise.all([
-                  createLocalAudioTrack({name})
+                  createLocalAudioTrack(),
+                  createLocalVideoTrack({ name }),
+                  new LocalDataTrack()
                 ]);
               },
               scenario: 'a Track whose name is too long',
               TwilioError: TrackNameTooLongError
             }
           ],
-          x => `called with ${x}`
+          ({ scenario }) => `called with ${scenario}`
         ]
       ], ([{ createLocalTracks, scenario, TwilioError }]) => {
-        context(scenario, () => {
-          let thisRoom;
-          let trackPublishError;
+        let room;
+        let tracks;
+        let trackPublicationFailed;
 
-          before(async () => {
-            [thisRoom] = await setup({ tracks: await createLocalTracks() }, {}, 0, true);
-            trackPublishError = await new Promise(resolve => thisRoom.localParticipant.once('trackPublishError', resolve));
-          });
+        before(async () => {
+          tracks = await createLocalTracks();
+          [room] = await setup({ tracks }, {}, 0, true);
+          trackPublicationFailed = await new Promise(resolve => room.localParticipant.once('trackPublicationFailed', resolve));
+        });
 
-          it(`should emit a "trackPublishError on the Room's LocalParticipant with a ${TwilioError.name}`, () => {
-            assert(trackPublishError instanceof TwilioError);
-          });
+        it(`should emit "trackPublicationFailed on the Room's LocalParticipant with a ${TwilioError.name}`, () => {
+          assert(trackPublicationFailed instanceof TwilioError);
+        });
 
-          after(() => {
-            thisRoom.disconnect();
-          });
+        after(() => {
+          room.disconnect();
+          tracks.forEach(track => track.stop && track.stop());
         });
       });
     });
