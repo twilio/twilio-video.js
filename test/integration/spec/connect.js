@@ -20,6 +20,7 @@ const LocalAudioTrack = require('../../../lib/media/track/localaudiotrack');
 const LocalDataTrack = require('../../../lib/media/track/localdatatrack');
 const LocalVideoTrack = require('../../../lib/media/track/localvideotrack');
 const TwilioError = require('../../../lib/util/twilioerror');
+const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 const sinon = require('sinon');
 
 const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
@@ -629,6 +630,55 @@ describe('connect', function() {
         });
       });
     });
+
+    describe('"trackPublishError" event', () => {
+      combinationContext([
+        [
+          [
+            {
+              createLocalTracks() {
+                const name = 'foo';
+                return Promise.all([
+                  createLocalAudioTrack({ name }),
+                  createLocalAudioTrack({ name })
+                ]);
+              },
+              scenario: 'Tracks whose names are the same',
+              TwilioError: TrackNameIsDuplicatedError
+            },
+            {
+              createLocalTracks() {
+                const name = '0'.repeat(130);
+                return Promise.all([
+                  createLocalAudioTrack({name})
+                ]);
+              },
+              scenario: 'a Track whose name is too long',
+              TwilioError: TrackNameTooLongError
+            }
+          ],
+          x => `called with ${x}`
+        ]
+      ], ([{ createLocalTracks, scenario, TwilioError }]) => {
+        context(scenario, () => {
+          let thisRoom;
+          let trackPublishError;
+
+          before(async () => {
+            [thisRoom] = await setup({ tracks: await createLocalTracks() }, {}, 0, true);
+            trackPublishError = await new Promise(resolve => thisRoom.localParticipant.once('trackPublishError', resolve));
+          });
+
+          it(`should emit a "trackPublishError on the Room's LocalParticipant with a ${TwilioError.name}`, () => {
+            assert(trackPublishError instanceof TwilioError);
+          });
+
+          after(() => {
+            thisRoom.disconnect();
+          });
+        });
+      });
+    });
   });
 });
 
@@ -646,10 +696,13 @@ function getCodecPayloadTypes(mediaSection) {
   return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
 }
 
-async function setup(testOptions, otherOptions, nTracks) {
+async function setup(testOptions, otherOptions, nTracks, alone) {
   const options = Object.assign({name: randomName()}, testOptions, defaultOptions);
   const token = getToken(randomName());
   const thisRoom = await connect(token, options);
+  if (alone) {
+    return [thisRoom];
+  }
 
   const thoseOptions = Object.assign({name: options.name}, otherOptions || {}, defaultOptions);
   const thoseTokens = [randomName(), randomName()].map(getToken);
