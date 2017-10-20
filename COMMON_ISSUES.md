@@ -58,28 +58,36 @@ While twilio-video.js will load in Internet Explorer and other browsers that
 do not support WebRTC, attempting to connect to a Room or attempting to acquire
 LocalTracks will fail.
 
-VideoTrack shared by Firefox appears black
-------------------------------------------
+Firefox
+-------
 
-This issue can occur when connecting to a peer-to-peer Room with a Firefox-based
-Participant who is not sharing audio. (If all the other Participants are
-Firefox-based, this issue will not occur.) The issue arises due to a difference
-in bundle behavior between Google and Mozilla's WebRTC implementations. For
-more information, see [Issue 6280](https://bugs.chromium.org/p/webrtc/issues/detail?id=6280)
-on the WebRTC bug tracker.
+### VideoTrack shows black frames or RemoteDataTrack doesn't receive messages
 
-The suggested workaround is to always share audio from Firefox-based
-Participants when connecting to a peer-to-peer Room. If you do not intend to
-playback the audio, you can `disable` the Track before connecting. For example,
-using the microphone:
+This issue can occur when connecting to a Peer-to-peer or Group Room with a
+Firefox-based Participant who is not sharing audio. WebRTC implementations like
+Chrome, Safari, and Twilio's media server expect to bundle on the first media
+section in an SDP, which is typically an audio media section; however, Firefox,
+when it sees that audio is not being sent or received, rejects its audio media
+section and attempts to bundle on a subsequent media section. The result is a
+broken ICE transport and the inability to send or receive video or data. There's
+a Chrome issue (see [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=6280))
+describing this scenario, as well as a [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1300863)
+tracking the work to stop rejecting the audio media section. There has also been
+[some discussion on the public-webrtc@w3.org mailing list](https://lists.w3.org/Archives/Public/public-webrtc/2017Aug/0076.html)
+discussing just what a WebRTC implementation should do.
+
+In the meantime, the suggested workaround is to always share audio from
+Firefox-based Participants when connecting to a Peer-to-peer Room. If you do not
+intend to playback the audio, you can `disable` the Track before connecting.
+For example, using the microphone:
 
 ```js
 const audioTrack = await Twilio.Video.createLocalAudioTrack();
 audioTrack.disable();
 ```
 
-Or, if you do not want to request microphone access, create a "dummy" Track
-using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API):
+If you do not want to request microphone access, you can go further and create a
+"dummy" Track using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API):
 
 ```js
 const audioContext = typeof AudioContext !== 'undefined'
@@ -97,6 +105,17 @@ Then, pass the `audioTrack` to `connect`:
 const room = await Twilio.Video.connect(token, { tracks: [audioTrack] });
 ```
 
+### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
+
+Firefox has not yet implemented getter's for RTCDataChannel's
+`maxPacketLifeTime` and `maxRetransmits` properties. As such, we cannot raise
+accurate values for the `maxPacketLifeTime` and `maxRetransmits` properties on
+RemoteDataTrack. (Setting these values still works, though!) See below for
+issues on the Firefox bug tracker:
+
+* [Bug 881532](https://bugzilla.mozilla.org/show_bug.cgi?id=881532)
+* [Bug 1278384](https://bugzilla.mozilla.org/show_bug.cgi?id=1278384)
+
 Aggressive Browser Extensions and Plugins
 -----------------------------------------
 
@@ -109,15 +128,3 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
-
-RemoteDataTrack properties in Firefox
--------------------------------------
-
-Firefox has not yet implemented getter's for RTCDataChannel's
-`maxPacketLifeTime` and `maxRetransmits` properties. As such, we cannot raise
-accurate values for the `maxPacketLifeTime` and `maxRetransmits` properties on
-RemoteDataTrack. (Setting these values still works, though!) See below for
-issues on the Firefox bug tracker:
-
-* [Bug 881532](https://bugzilla.mozilla.org/show_bug.cgi?id=881532)
-* [Bug 1278384](https://bugzilla.mozilla.org/show_bug.cgi?id=1278384)
