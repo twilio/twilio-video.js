@@ -722,6 +722,59 @@ describe('connect', function() {
         });
       });
     });
+
+    describe('"trackPublicationFailed" event', () => {
+      combinationContext([
+        [
+          [
+            {
+              createLocalTracks() {
+                const name = 'foo';
+                return Promise.all([
+                  createLocalAudioTrack({ name }),
+                  createLocalVideoTrack({ name }),
+                  new LocalDataTrack()
+                ]);
+              },
+              scenario: 'Tracks whose names are the same',
+              TwilioError: TrackNameIsDuplicatedError
+            },
+            {
+              createLocalTracks() {
+                const name = '0'.repeat(130);
+                return Promise.all([
+                  createLocalAudioTrack(),
+                  createLocalVideoTrack({ name }),
+                  new LocalDataTrack()
+                ]);
+              },
+              scenario: 'a Track whose name is too long',
+              TwilioError: TrackNameTooLongError
+            }
+          ],
+          ({ scenario }) => `called with ${scenario}`
+        ]
+      ], ([{ createLocalTracks, scenario, TwilioError }]) => {
+        let room;
+        let tracks;
+        let trackPublicationFailed;
+
+        before(async () => {
+          tracks = await createLocalTracks();
+          [room] = await setup({ tracks }, {}, 0, true);
+          trackPublicationFailed = await new Promise(resolve => room.localParticipant.once('trackPublicationFailed', resolve));
+        });
+
+        it(`should emit "trackPublicationFailed on the Room's LocalParticipant with a ${TwilioError.name}`, () => {
+          assert(trackPublicationFailed instanceof TwilioError);
+        });
+
+        after(() => {
+          room.disconnect();
+          tracks.forEach(track => track.stop && track.stop());
+        });
+      });
+    });
   });
 
   describe('called with a single LocalDataTrack in the tracks Array', () => {
