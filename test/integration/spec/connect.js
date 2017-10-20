@@ -536,7 +536,7 @@ describe('connect', function() {
             {
               source: 'MediaStreamTracks from getUserMedia()',
               async getTracks() {
-                const mediaStream = await getUserMedia({audio: true, video: true});
+                const mediaStream = await getUserMedia({audio: true, video: true, fake: true});
                 return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
               }
             }
@@ -557,7 +557,8 @@ describe('connect', function() {
         before(async () => {
           tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
 
-          [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
+          const name = randomName();
+          [ thisRoom, thoseRooms ] = await setup({name, tracks}, {tracks: []}, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
           await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
@@ -582,8 +583,15 @@ describe('connect', function() {
         });
 
         after(() => {
-          tracks.forEach(track => track.kind !== 'data' && track.stop());
-          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          if (tracks) {
+            tracks.forEach(track => track.kind !== 'data' && track.stop());
+          }
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room.disconnect());
+          }
         });
       });
     });
@@ -605,15 +613,16 @@ describe('connect', function() {
         let thisParticipants;
 
         before(async () => {
+          const name = randomName();
           const options = {
             audio: names.audio ? { name: names.audio } : true,
             video: names.video ? { name: names.video } : true,
-            name: randomName()
+            name
           };
           [ thisRoom, thoseRooms ] = await setup(options, {tracks: []}, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, 2)));
+          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, thisParticipant.tracks.size)));
         });
 
         ['audio', 'video'].forEach(kind => {
@@ -637,12 +646,18 @@ describe('connect', function() {
         });
 
         after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room.disconnect());
+          }
         });
       });
     });
 
-    describe('"trackPublicationFailed" event', () => {
+    // NOTE(mroberts): Waiting on a Group Rooms deploy.
+    describe.skip('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
@@ -660,7 +675,7 @@ describe('connect', function() {
             },
             {
               createLocalTracks() {
-                const name = '0'.repeat(130);
+                const name = '0'.repeat(129);
                 return Promise.all([
                   createLocalAudioTrack(),
                   createLocalVideoTrack({ name }),
