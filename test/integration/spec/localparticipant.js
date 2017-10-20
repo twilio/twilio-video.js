@@ -306,8 +306,8 @@ const isSafari = guess === 'safari';
           thisParticipant.publishTrack(thisTrack),
           ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
-              const tracks = await waitForTracks(event, thatParticipant, 1);
-              return tracks.find(track => track.kind === kind);
+              const [track] = await waitForTracks(event, thatParticipant, 1);
+              return track;
             }));
           })
         ]);
@@ -381,14 +381,14 @@ const isSafari = guess === 'safari';
       });
     });
 
-    describe('"trackPublicationFailed" event', () => {
+    // NOTE(mroberts): Waiting on a Group Rooms deploy.
+    describe.skip('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
             {
               createLocalTrack() {
                 const { name } = tracks.find(track => track.kind === 'audio');
-                console.log('Name:', name);
                 return createLocalAudioTrack({ name });
               },
               scenario: 'a LocalTrack whose name is the same as one of the currently published LocalTracks',
@@ -396,7 +396,7 @@ const isSafari = guess === 'safari';
             },
             {
               createLocalTrack() {
-                const name = '0'.repeat(130);
+                const name = '0'.repeat(129);
                 return createLocalAudioTrack({ name });
               },
               scenario: 'a LocalTrack whose name is too long',
