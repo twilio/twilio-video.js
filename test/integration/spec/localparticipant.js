@@ -245,11 +245,13 @@ const isSafari = guess === 'safari';
         const options = Object.assign({ name }, defaultOptions);
         const localTrackOptions = withName ? { name: localTrackNameByKind } : {};
 
+        console.log(`Creating Local${capitalize(kind)}Track`);
         thisTrack = await {
           audio: createLocalAudioTrack,
           video: createLocalVideoTrack,
           data: LocalDataTrack
         }[kind](localTrackOptions);
+        console.log(`Created Local${capitalize(kind)}Track`);
 
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
@@ -262,52 +264,71 @@ const isSafari = guess === 'safari';
           ? [thisTrack]
           : [];
         if (isFirefox && kind === 'data') {
+          console.log('Creating dummy LocalAudioTrack');
           dummyAudioTrack = await createLocalAudioTrack();
+          console.log('Created dummy LocalAudioTrack');
           tracks.push(dummyAudioTrack);
         }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
+        console.log('Connecting to Room (this)');
         thisRoom = await connect(thisToken, theseOptions);
+        console.log(`Connected to Room ${thisRoom.sid}`);
         thisParticipant = thisRoom.localParticipant;
+        console.log(`Waiting for ${thisParticipant.tracks.size} LocalTracks to publish`);
         await tracksPublished(thisParticipant, thisParticipant.tracks.size);
+        console.log(`${thisParticipant.tracks.size} LocalTracks published`);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
         const thoseOptions = Object.assign({ tracks: [] }, options);
+        console.log('Connecting to Room (those)');
         thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+        console.log(`Connected to Rooms ${Array.from(new Set(thoseRooms.map(thatRoom => thatRoom.sid))).join(' ')}`);
 
+        console.log('Waiting for Participants to connect');
         await Promise.all([thisRoom].concat(thoseRooms).map(room => {
           return participantsConnected(room, identities.length - 1);
         }));
+        console.log('Participants connected');
 
         thoseParticipants = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
         });
 
+        console.log(`Waiting for ${thisParticipant.tracks.size} RemoteTracks to be published`);
         await Promise.all(thoseParticipants.map(thatParticipant => {
           return tracksAdded(thatParticipant, thisParticipant.tracks.size);
         }));
+        console.log(`${thisParticipant.tracks.size} RemoteTracks published`);
 
         thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
           return [...thatParticipant.tracks.values()];
         });
 
         if (when === 'previously') {
+          console.log(`Unpublishing Local${capitalize(kind)}Track`);
           thisParticipant.unpublishTrack(thisTrack);
 
+          console.log(`Waiting until we only have ${thisParticipant.tracks.size} RemoteTracks`);
           await Promise.all(thoseParticipants.map(thatParticipant => {
             return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
           }));
+          console.log(`We only have ${thisParticipant.tracks.size} RemoteTracks`);
         }
 
+        console.log(`Publishing Local${capitalize(kind)}Track`);
         [thisLocalTrackPublication, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
-              const tracks = await waitForTracks(event, thatParticipant, 1);
-              return tracks.find(track => track.kind === kind);
+              console.log(`Participant ${thatParticipant.sid} is waiting for "${event}"`);
+              const [track] = await waitForTracks(event, thatParticipant, 1);
+              console.log(`Participant ${thatParticipant.sid} got "${event}"`);
+              console.log(tracks.map(track => track.sid).join(' '));
+              return track;
             }));
           })
         ]);
@@ -381,7 +402,8 @@ const isSafari = guess === 'safari';
       });
     });
 
-    describe('"trackPublicationFailed" event', () => {
+    // NOTE(mroberts): Waiting on a Group Rooms deploy.
+    describe.skip('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [

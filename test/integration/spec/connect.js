@@ -536,7 +536,7 @@ describe('connect', function() {
             {
               source: 'MediaStreamTracks from getUserMedia()',
               async getTracks() {
-                const mediaStream = await getUserMedia({audio: true, video: true});
+                const mediaStream = await getUserMedia({audio: true, video: true, fake: true});
                 return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
               }
             }
@@ -555,12 +555,22 @@ describe('connect', function() {
         let tracks;
 
         before(async () => {
+          console.log('Getting LocalTracks');
           tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
+          console.log('Got LocalTracks');
+          tracks.forEach(track => {
+            console.log(`- ${track.kind} ${track.id}`);
+          });
 
-          [ thisRoom, thoseRooms ] = await setup({name: randomName(), tracks}, {tracks: []}, 0);
+          const name = randomName();
+          console.log(`Connecting to Rooms (${name})`);
+          [ thisRoom, thoseRooms ] = await setup({name, tracks}, {tracks: []}, 0);
+          console.log(`Connected to Rooms ${Array.from(new Set([thisRoom].concat(thoseRooms).map(room => room.sid))).join(' ')}`);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
+          console.log(`Waiting for ${tracks.length} RemoteTracks to be added`);
           await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
+          console.log(`Got ${tracks.length} RemoteTracks`);
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
@@ -582,8 +592,15 @@ describe('connect', function() {
         });
 
         after(() => {
-          tracks.forEach(track => track.kind !== 'data' && track.stop());
-          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          if (tracks) {
+            tracks.forEach(track => track.kind !== 'data' && track.stop());
+          }
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room.disconnect());
+          }
         });
       });
     });
@@ -605,15 +622,20 @@ describe('connect', function() {
         let thisParticipants;
 
         before(async () => {
+          const name = randomName();
           const options = {
             audio: names.audio ? { name: names.audio } : true,
             video: names.video ? { name: names.video } : true,
-            name: randomName()
+            name
           };
+          console.log(`Connecting to Room (${name})`);
           [ thisRoom, thoseRooms ] = await setup(options, {tracks: []}, 0);
+          console.log(`Connected to Room (${thisRoom.sid})`);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, 2)));
+          console.log(`Waiting for ${thisParticipant.tracks.size}`);
+          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, thisParticipant.tracks.size)));
+          console.log(`Got ${thisParticipant.tracks.size}`);
         });
 
         ['audio', 'video'].forEach(kind => {
@@ -637,12 +659,18 @@ describe('connect', function() {
         });
 
         after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room.disconnect());
+          }
         });
       });
     });
 
-    describe('"trackPublicationFailed" event', () => {
+    // NOTE(mroberts): Waiting on a Group Rooms deploy.
+    describe.skip('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
