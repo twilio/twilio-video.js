@@ -38,14 +38,10 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
   return defaultOptions;
 }, {});
 
-const guess = guessBrowser();
-const isFirefox = guess === 'firefox';
-
-(navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe
-)('LocalTrackPublication', function() {
+describe('LocalTrackPublication', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
   describe('#unpublish', () => {
     combinationContext([
       [
@@ -61,7 +57,6 @@ const isFirefox = guess === 'firefox';
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -95,10 +90,6 @@ const isFirefox = guess === 'firefox';
         }
 
         const tracks = [thisTrack];
-        if (isFirefox) {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -160,9 +151,6 @@ const isFirefox = guess === 'firefox';
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
-        }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
