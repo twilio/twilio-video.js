@@ -221,6 +221,7 @@ const isSafari = guess === 'safari';
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
+      let dataChannelSendInterval;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -316,6 +317,10 @@ const isSafari = guess === 'safari';
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
+        }
+        if (dataChannelSendInterval) {
+          clearInterval(dataChannelSendInterval);
+          dataChannelSendInterval = null;
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
