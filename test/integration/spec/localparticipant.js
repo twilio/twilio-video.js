@@ -205,7 +205,6 @@ describe('LocalParticipant', function() {
       ]
     ], ([isEnabled, kind, withName, when]) => {
       let dataChannelSendInterval;
-      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -245,10 +244,6 @@ describe('LocalParticipant', function() {
         const tracks = when === 'previously'
           ? [thisTrack]
           : [];
-        if (isFirefox && kind === 'data') {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -309,9 +304,6 @@ describe('LocalParticipant', function() {
         if (dataChannelSendInterval) {
           clearInterval(dataChannelSendInterval);
           dataChannelSendInterval = null;
-        }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
@@ -453,7 +445,6 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -484,10 +475,6 @@ describe('LocalParticipant', function() {
         }
 
         const tracks = [thisTrack];
-        if (isFirefox && kind === 'data') {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -548,9 +535,6 @@ describe('LocalParticipant', function() {
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
-        }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
