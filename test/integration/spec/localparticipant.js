@@ -221,6 +221,7 @@ const isSafari = guess === 'safari';
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
+      let dataChannelSendInterval;
       let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
@@ -322,6 +323,10 @@ const isSafari = guess === 'safari';
         if (kind !== 'data') {
           thisTrack.stop();
         }
+        if (dataChannelSendInterval) {
+          clearInterval(dataChannelSendInterval);
+          dataChannelSendInterval = null;
+        }
         if (dummyAudioTrack) {
           dummyAudioTrack.stop();
         }
@@ -354,7 +359,15 @@ const isSafari = guess === 'safari';
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
           });
 
-          if (kind !== 'data') {
+          if (kind === 'data') {
+            it('should transmit any data sent through the LocalDataTrack to the Room to each RemoteDataTrack', async () => {
+              const thoseTracks = thoseTracksMap[event];
+              const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
+              dataChannelSendInterval = setInterval(() => thisTrack.send('foo'), 1000);
+              const data = await Promise.all(thoseTracksReceivedData);
+              data.forEach(item => assert.equal(item, 'foo'));
+            });
+          } else {
             it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
               const thoseTracks = thoseTracksMap[event];
               thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));

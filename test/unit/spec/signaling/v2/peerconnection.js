@@ -110,7 +110,7 @@ describe('PeerConnectionV2', () => {
 
           it('calls addDataChannel on the DataTrackSender with the resulting RTCDataChannel', () => {
             sinon.assert.calledOnce(dataTrackSender.addDataChannel);
-            sinon.assert.calledWith(dataTrackSender.addDataChannel, test.pc.dataChannels[0]);
+            sinon.assert.calledWith(dataTrackSender.addDataChannel, test.pc.dataChannels[1]);
           });
 
           it('returns undefined', () => {
@@ -512,13 +512,16 @@ describe('PeerConnectionV2', () => {
     describe('been added', () => {
       beforeEach(() => {
         test.pcv2.addDataTrackSender(dataTrackSender);
-
         result = test.pcv2.removeDataTrackSender(dataTrackSender);
       });
 
       it('calls removeDataChannel on the DataTrackSender with the underlying RTCDataChannel', () => {
         sinon.assert.calledOnce(dataTrackSender.removeDataChannel);
         sinon.assert.calledWith(dataTrackSender.removeDataChannel, test.pc.dataChannels[0]);
+      });
+
+      it('calls .close on the underlying RTCDataChannel', () => {
+        sinon.assert.calledOnce(test.pc.dataChannels[0].close);
       });
 
       it('returns undefined', () => {
@@ -530,13 +533,17 @@ describe('PeerConnectionV2', () => {
       beforeEach(() => {
         test.pcv2.addDataTrackSender(dataTrackSender);
         test.pcv2.removeDataTrackSender(dataTrackSender);
+        test.pc.dataChannels[0].close.reset();
         dataTrackSender.removeDataChannel.reset();
-
         result = test.pcv2.removeDataTrackSender(dataTrackSender);
       });
 
       it('does not call removeDataChannel on the DataTrackSender', () => {
         sinon.assert.notCalled(dataTrackSender.removeDataChannel);
+      });
+
+      it('does not call .close on the underlying RTCDataChannel', () => {
+        sinon.assert.notCalled(test.pc.dataChannels[0].close);
       });
 
       it('returns undefined', () => {
@@ -1630,6 +1637,7 @@ class MockPeerConnection extends EventEmitter {
 
   createDataChannel(label, options) {
     return this.dataChannels[this.dataChannelIndex++] = Object.assign({
+      close: sinon.spy(() => {}),
       label
     }, options);
   }
@@ -1880,6 +1888,7 @@ function makeDataTrackSender(id) {
 function makeDataChannel(id) {
   id = id || makeId();
   const dataChannel = new EventTarget();
+  dataChannel.close = sinon.spy(() => {});
   dataChannel.label = id;
   return dataChannel;
 }
