@@ -27,8 +27,6 @@ const {
   waitForTracks
 } = require('../../lib/util');
 
-const { isFirefox } = require('../../lib/guessbrowser');
-
 describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
@@ -48,7 +46,6 @@ describe('LocalTrackPublication', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -82,10 +79,6 @@ describe('LocalTrackPublication', function() {
         }
 
         const tracks = [thisTrack];
-        if (isFirefox) {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -147,9 +140,6 @@ describe('LocalTrackPublication', function() {
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
-        }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });

@@ -699,9 +699,6 @@ describe('connect', function() {
       const token = getToken(identity);
       dataTrack = new LocalDataTrack();
       tracks = [dataTrack];
-      if (isFirefox) {
-        tracks.push(await createLocalAudioTrack());
-      }
       const options = Object.assign({ tracks }, defaults);
       room = await connect(token, options);
     });
