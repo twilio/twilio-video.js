@@ -18,6 +18,19 @@ New Features
   the LocalParticipant with an informative error. Similarly, if publication
   succeeds, we will raise a "trackPublished" event with the resulting
   LocalTrackPublication.
+- Added a new top-level boolean property, `isSupported`, that indicates whether
+  or not the browser/environment/platform currently running twilio-video.js
+  contains the necessary APIs (for example, WebRTC) to participate in video
+  chats. Depending on how you use twilio-video.js, you can use one of the
+  methods below to access it:
+
+  ```js
+  // Option 1: Using `require`
+  const { isSupported } = require('twilio-video');
+
+  // Option 2: Using browser global
+  const { isSupported } = Twilio.Video;
+  ```
 
 1.5.1 (October 13, 2017)
 ========================
