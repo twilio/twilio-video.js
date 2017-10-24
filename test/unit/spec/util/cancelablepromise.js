@@ -1,8 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const { a } = require('../../../lib/util');
+
 const CancelablePromise = require('../../../../lib/util/cancelablepromise');
+
+const { a } = require('../../../lib/util');
 
 describe('CancelablePromise', () => {
   describe('constructor', () => {

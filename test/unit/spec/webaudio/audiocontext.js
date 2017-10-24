@@ -1,8 +1,9 @@
 'use strict';
 
 const assert = require('assert');
-const AudioContextFactory = require('../../../../lib/webaudio/audiocontext').AudioContextFactory;
 const sinon = require('sinon');
+
+const { AudioContextFactory } = require('../../../../lib/webaudio/audiocontext');
 
 describe('AudioContextFactory', () => {
   let audioContext;

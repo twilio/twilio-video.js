@@ -1,15 +1,17 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
-var inherits = require('util').inherits;
-var DataTrackSender = require('../../../lib/data/sender');
-var LocalParticipant = require('../../../lib/localparticipant');
-var LocalTrackPublicationSignaling = require('../../../lib/signaling/localtrackpublication');
-var sinon = require('sinon');
-var log = require('../../lib/fakelog');
-var { a, capitalize } = require('../../lib/util');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+const { inherits } = require('util');
+
+const DataTrackSender = require('../../../lib/data/sender');
+const LocalParticipant = require('../../../lib/localparticipant');
+const LocalTrackPublicationSignaling = require('../../../lib/signaling/localtrackpublication');
+
+const log = require('../../lib/fakelog');
+const { FakeMediaStreamTrack } = require('../../lib/fakemediastream');
+const { a, capitalize } = require('../../lib/util');
 
 const LocalAudioTrack = sinon.spy(function(mediaStreamTrack, options) {
   options = options || {};

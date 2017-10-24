@@ -1,8 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const { combinationContext } = require('../../lib/util');
+
 const EncodingParametersImpl = require('../../../lib/encodingparameters');
+
+const { combinationContext } = require('../../lib/util');
 
 describe('EncodingParametersImpl', () => {
   describe('constructor', () => {

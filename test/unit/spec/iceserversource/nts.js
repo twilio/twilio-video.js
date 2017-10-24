@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const EventEmitter = require('events').EventEmitter;
+const { EventEmitter } = require('events');
+
 const NTSIceServerSource = require('../../../../lib/iceserversource/nts');
-const util = require('../../../../lib/util');
+const { defer } = require('../../../../lib/util');
 const { createTwilioError } = require('../../../../lib/util/twilio-video-errors');
 
 const token = 'foo';
@@ -104,7 +105,7 @@ describe('NTSIceServerSource', () => {
       let nts;
 
       it('returns the default ICE servers', () => {
-        const options = { getConfiguration: () => util.defer().promise, timeout: 1 };
+        const options = { getConfiguration: () => defer().promise, timeout: 1 };
         nts = new NTSIceServerSource(token, options);
         return nts.start().then(iceServers => {
           assert.deepEqual([

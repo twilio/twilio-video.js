@@ -1,15 +1,16 @@
 'use strict';
 
-var assert = require('assert');
-var { makeEncodingParameters } = require('../../../../lib/util');
-var CancelablePromise = require('../../../../../lib/util/cancelablepromise');
-var createCancelableRoomSignalingPromise = require('../../../../../lib/signaling/v2/cancelableroomsignalingpromise');
-var EventEmitter = require('events').EventEmitter;
-var MockIceServerSource = require('../../../../lib/mockiceserversource');
-var { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
 
-var sinon = require('sinon');
-var util = require('../../../../../lib/util');
+const createCancelableRoomSignalingPromise = require('../../../../../lib/signaling/v2/cancelableroomsignalingpromise');
+const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
+const { defer } = require('../../../../../lib/util');
+const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
+
+const MockIceServerSource = require('../../../../lib/mockiceserversource');
+const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
   it('returns a CancelablePromise', () => {
@@ -376,7 +377,7 @@ function makeTest(options) {
   options.ua = options.ua || makeUA(options);
   options.tracks = options.tracks || [];
   options.localParticipant = options.localParticipant || makeLocalParticipantSignaling(options);
-  options.createAndOfferDeferred = util.defer();
+  options.createAndOfferDeferred = defer();
   options.PeerConnectionManager = options.PeerConnectionManager || makePeerConnectionManagerConstructor(options);
   options.room = options.room || {
     disconnect: sinon.spy(() => {})

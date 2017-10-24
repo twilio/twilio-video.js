@@ -1,7 +1,8 @@
 'use strict';
 
-var assert = require('assert');
-var IceBox = require('../../../../../lib/signaling/v2/icebox');
+const assert = require('assert');
+
+const IceBox = require('../../../../../lib/signaling/v2/icebox');
 
 describe('IceBox', () => {
   describe('constructor', () => {

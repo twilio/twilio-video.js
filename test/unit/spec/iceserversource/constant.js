@@ -1,8 +1,9 @@
 'use strict';
 
 const assert = require('assert');
+const { EventEmitter } = require('events');
+
 const ConstantIceServerSource = require('../../../../lib/iceserversource/constant');
-const EventEmitter = require('events').EventEmitter;
 
 describe('ConstantIceServerSource', () => {
   describe('constructor', () => {

@@ -1,15 +1,19 @@
 'use strict';
 
-var assert = require('assert');
-var constants = require('../../../../../lib/util/constants');
-var EventEmitter = require('events').EventEmitter;
-var sinon = require('sinon');
-var Transport = require('../../../../../lib/signaling/v2/transport');
-var TwilioError = require('../../../../../lib/util/twilioerror');
-var TwilioErrors = require('../../../../../lib/util/twilio-video-errors');
-var SignalingIncomingMessageInvalidError = TwilioErrors.SignalingIncomingMessageInvalidError;
-var SignalingConnectionTimeoutError = TwilioErrors.SignalingConnectionTimeoutError;
-var SignalingConnectionError = TwilioErrors.SignalingConnectionError;
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+
+const Transport = require('../../../../../lib/signaling/v2/transport');
+const { PUBLISH_MAX_ATTEMPTS } = require('../../../../../lib/util/constants');
+
+const {
+  SignalingConnectionError,
+  SignalingConnectionTimeoutError,
+  SignalingIncomingMessageInvalidError
+} = require('../../../../../lib/util/twilio-video-errors');
+
+const TwilioError = require('../../../../../lib/util/twilioerror');
 
 describe('Transport', () => {
   describe('constructor', () => {
@@ -481,7 +485,7 @@ describe('Transport', () => {
               sendRequest(type, request) {
                 sendRequestCallTimes.push(Date.now());
                 request.receiveResponse({ status_code: 500 });
-                if (sendRequestCallTimes.length === constants.PUBLISH_MAX_ATTEMPTS) {
+                if (sendRequestCallTimes.length === PUBLISH_MAX_ATTEMPTS) {
                   resolve();
                 }
               }

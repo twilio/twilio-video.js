@@ -1,7 +1,8 @@
 'use strict';
 
-var assert = require('assert');
-var RemoteTrackStats = require('../../../../lib/stats/remotetrackstats');
+const assert = require('assert');
+
+const RemoteTrackStats = require('../../../../lib/stats/remotetrackstats');
 
 describe('RemoteTrackStats', () => {
   describe('constructor', () => {

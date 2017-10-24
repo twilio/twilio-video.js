@@ -1,9 +1,11 @@
 'use strict';
 
 const assert = require('assert');
-const { combinationContext } = require('../../../../lib/util'); 
-const RecordingV2 = require('../../../../../lib/signaling/v2/recording');
 const sinon = require('sinon');
+
+const RecordingV2 = require('../../../../../lib/signaling/v2/recording');
+
+const { combinationContext } = require('../../../../lib/util'); 
 
 describe('RecordingV2', () => {
   // RecordingV2

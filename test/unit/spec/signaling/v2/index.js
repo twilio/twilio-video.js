@@ -1,11 +1,13 @@
 'use strict';
 
-var assert = require('assert');
-var { makeEncodingParameters } = require('../../../../lib/util');
-var EventEmitter = require('events').EventEmitter;
-var LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
-var SignalingV2 = require('../../../../../lib/signaling/v2');
-var sinon = require('sinon');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+
+const SignalingV2 = require('../../../../../lib/signaling/v2');
+const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
+
+const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('SignalingV2', () => {
   // SignalingV2

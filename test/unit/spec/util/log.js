@@ -1,11 +1,12 @@
 'use strict';
 
-var assert = require('assert');
-var sinon = require('sinon');
-var constants = require('../../../../lib/util/constants');
-var component = (name) => ({ toString: () => name });
+const assert = require('assert');
+const sinon = require('sinon');
 
-var Log = require('../../../../lib/util/log');
+const { DEFAULT_LOG_LEVEL } = require('../../../../lib/util/constants');
+const Log = require('../../../../lib/util/log');
+
+const component = (name) => ({ toString: () => name });
 
 describe('Log', function() {
   var log = Log.prototype.log;
@@ -72,12 +73,12 @@ describe('Log', function() {
 
     it('should set the default Log level if module specific level is not specified', () => {
       var log = new Log('foo', component('bar'), { baz: 'error' });
-      assert.equal(log.logLevel, Log.getLevelByName(constants.DEFAULT_LOG_LEVEL));
+      assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
     });
 
     it('should set the default Log level if logLevels object is not specified', () => {
       var log = new Log('foo', component('bar'));
-      assert.equal(log.logLevel, Log.getLevelByName(constants.DEFAULT_LOG_LEVEL));
+      assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
     });
   });
 

@@ -1,10 +1,11 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('util').inherits;
-var RoomV2 = require('../../../../../lib/signaling/v2/room');
-var sinon = require('sinon');
+const assert = require('assert');
+const { EventEmitter }  = require('events');
+const { inherits } = require('util');
+const sinon = require('sinon');
+
+const RoomV2 = require('../../../../../lib/signaling/v2/room');
 
 describe('RoomV2', () => {
   // RoomV2

@@ -1,7 +1,8 @@
 'use strict';
 
-var assert = require('assert');
-var TwilioError = require('../../../../lib/util/twilioerror');
+const assert = require('assert');
+
+const TwilioError = require('../../../../lib/util/twilioerror');
 
 describe('TwilioError', function() {
   describe('constructor', () => {

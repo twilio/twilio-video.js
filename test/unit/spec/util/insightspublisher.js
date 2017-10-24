@@ -1,11 +1,12 @@
 'use strict';
 
-const EventTarget = require('../../../../lib/eventtarget');
-const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 const assert = require('assert');
-const inherits = require('util').inherits;
+const { inherits } = require('util');
 const sinon = require('sinon');
-const util = require('../../../../lib/util');
+
+const EventTarget = require('../../../../lib/eventtarget');
+const { defer } = require('../../../../lib/util');
+const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 
 describe('InsightsPublisher', () => {
   describe('constructor', () => {
@@ -279,7 +280,7 @@ describe('InsightsPublisher', () => {
         var disconnectedError = null;
         var reconnectingEmitted = false;
         var reconnectAttemptsLeft;
-        const reconnectDeferreds = [ util.defer(), util.defer() ];
+        const reconnectDeferreds = [ defer(), defer() ];
         var reconnectedDeferredsIdx = 0;
         const timestamps = [];
 

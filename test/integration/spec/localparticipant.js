@@ -1,16 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const getToken = require('../../lib/token');
-const env = require('../../env');
-const { flatMap, guessBrowser } = require('../../../lib/util');
-const { getMediaSections } = require('../../../lib/util/sdp');
-const Track = require('../../../lib/media/track');
-const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
-const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
-const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
-const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
-const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
 const {
   connect,
@@ -19,6 +9,19 @@ const {
   createLocalVideoTrack,
   LocalDataTrack
 } = require('../../../lib');
+
+const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
+const Track = require('../../../lib/media/track');
+const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
+const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
+const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
+const { flatMap } = require('../../../lib/util');
+const { getMediaSections } = require('../../../lib/util/sdp');
+const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
+
+const defaults = require('../../lib/defaults');
+const { isFirefox, isSafari } = require('../../lib/guessbrowser');
+const getToken = require('../../lib/token');
 
 const {
   capitalize,
@@ -33,18 +36,6 @@ const {
   waitForTracks
 } = require('../../lib/util');
 
-const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
-  if (env[option] !== undefined) {
-    defaultOptions[option] = env[option];
-  }
-  return defaultOptions;
-}, {});
-
-const guess = guessBrowser();
-const isChrome = guess === 'chrome';
-const isFirefox = guess === 'firefox';
-const isSafari = guess === 'safari';
-
 describe('LocalParticipant', function() {
   this.timeout(60000);
 
@@ -55,7 +46,7 @@ describe('LocalParticipant', function() {
 
     const setup = async () => {
       const name = randomName();
-      const options = Object.assign({ name, tracks: [] }, defaultOptions);
+      const options = Object.assign({ name, tracks: [] }, defaults);
       const token = getToken(randomName());
       [ room, tracks ] = await Promise.all([
         connect(token, options),
@@ -127,7 +118,7 @@ describe('LocalParticipant', function() {
 
       before(async () => {
         const name = randomName();
-        const options = Object.assign({ name, tracks: [] }, defaultOptions);
+        const options = Object.assign({ name, tracks: [] }, defaults);
         const token = getToken(randomName());
 
         [ anotherRoom ] = await Promise.all([
@@ -236,7 +227,7 @@ describe('LocalParticipant', function() {
       before(async () => {
         const name = randomName();
         const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaultOptions);
+        const options = Object.assign({ name }, defaults);
         const localTrackOptions = withName ? { name: localTrackNameByKind } : {};
 
         thisTrack = await {
@@ -475,7 +466,7 @@ describe('LocalParticipant', function() {
       before(async () => {
         const name = randomName();
         const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaultOptions);
+        const options = Object.assign({ name }, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -628,13 +619,13 @@ describe('LocalParticipant', function() {
       const constraints = { video: true, fake: true };
 
       // Answerer
-      const thoseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
       thatRoom = await connect(getToken(randomName()), thoseOptions);
 
       [thisTrack1] = await createLocalTracks(constraints);
 
       // Offerer
-      const theseOptions = Object.assign({ name, tracks: [thisTrack1] }, defaultOptions);
+      const theseOptions = Object.assign({ name, tracks: [thisTrack1] }, defaults);
       thisRoom = await connect(getToken(randomName()), theseOptions);
       thisParticipant = thisRoom.localParticipant;
 
@@ -732,13 +723,13 @@ describe('LocalParticipant', function() {
       const constraints = { audio: true, video: true, fake: true };
 
       // Answerer
-      const thoseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
       thatRoom = await connect(getToken(randomName()), thoseOptions);
 
       [thisAudioTrack, thisVideoTrack] = await createLocalTracks(constraints);
 
       // Offerer
-      const theseOptions = Object.assign({ name, tracks: [] }, defaultOptions);
+      const theseOptions = Object.assign({ name, tracks: [] }, defaults);
       thisRoom = await connect(getToken(randomName()), theseOptions);
       thisParticipant = thisRoom.localParticipant;
 
@@ -837,11 +828,11 @@ describe('LocalParticipant', function() {
       let thoseRooms;
 
       before(async () => {
-        const options = Object.assign({name: randomName()}, initialEncodingParameters, defaultOptions);
+        const options = Object.assign({name: randomName()}, initialEncodingParameters, defaults);
         const token = getToken(randomName());
         thisRoom = await connect(token, options);
 
-        const thoseOptions = Object.assign({name: options.name}, defaultOptions);
+        const thoseOptions = Object.assign({name: options.name}, defaults);
         const thoseTokens = [randomName(), randomName()].map(getToken);
         thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 

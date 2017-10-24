@@ -1,8 +1,10 @@
 'use strict';
 
 const assert = require('assert');
+
 const LocalTrackPublicationV2 = require('../../../../../lib/signaling/v2/localtrackpublication');
 const { makeUUID } = require('../../../../../lib/util');
+
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 describe('LocalTrackPublicationV2', () => {

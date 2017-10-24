@@ -1,11 +1,13 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('util').inherits;
-var MediaTrack = require('../../../../../lib/media/track/mediatrack');
-var sinon = require('sinon');
-var log = require('../../../../lib/fakelog');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+const { inherits } = require('util');
+
+const MediaTrack = require('../../../../../lib/media/track/mediatrack');
+
+const log = require('../../../../lib/fakelog');
 
 describe('MediaTrack', function() {
   var _initialize;

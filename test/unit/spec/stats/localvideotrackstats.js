@@ -1,7 +1,8 @@
 'use strict';
 
-var assert = require('assert');
-var LocalVideoTrackStats = require('../../../../lib/stats/localvideotrackstats');
+const assert = require('assert');
+
+const LocalVideoTrackStats = require('../../../../lib/stats/localvideotrackstats');
 
 describe('LocalVideoTrackStats', () => {
   describe('constructor', () => {

@@ -1,8 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var RemoteTrackV2 = require('../../../../../lib/signaling/v2/remotetrack');
-var util = require('../../../../../lib/util');
+const assert = require('assert');
+
+const RemoteTrackV2 = require('../../../../../lib/signaling/v2/remotetrack');
+const { makeUUID } = require('../../../../../lib/util');
 
 describe('RemoteTrackV2', () => {
   // RemoteTrackV2
@@ -15,13 +16,13 @@ describe('RemoteTrackV2', () => {
         enabled: makeEnabled(),
         id: id,
         kind: makeKind(),
-        name: util.makeUUID(),
+        name: makeUUID(),
         sid: makeSid()
       })).id);
     });
 
     it('sets .name', () => {
-      var name = util.makeUUID();
+      var name = makeUUID();
       assert.equal(name, (new RemoteTrackV2({
         enabled: makeEnabled(),
         id: makeId(),
@@ -37,7 +38,7 @@ describe('RemoteTrackV2', () => {
         enabled: makeEnabled(),
         id: makeId(),
         kind: makeKind(),
-        name: util.makeUUID(),
+        name: makeUUID(),
         sid: sid
       })).sid);
     });
@@ -48,7 +49,7 @@ describe('RemoteTrackV2', () => {
           enabled: true,
           id: makeId(),
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         })).isEnabled);
       });
@@ -60,7 +61,7 @@ describe('RemoteTrackV2', () => {
           enabled: false,
           id: makeId(),
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         })).isEnabled);
       });
@@ -72,7 +73,7 @@ describe('RemoteTrackV2', () => {
           enabled: makeEnabled(),
           id: makeId(),
           kind: 'audio',
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         })).kind);
       });
@@ -84,7 +85,7 @@ describe('RemoteTrackV2', () => {
           enabled: makeEnabled(),
           id: makeId(),
           kind: 'video',
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         })).kind);
       });
@@ -99,7 +100,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -112,7 +113,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -126,7 +127,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -144,7 +145,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -157,7 +158,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -171,7 +172,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -191,7 +192,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -204,7 +205,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -218,7 +219,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -236,7 +237,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -249,7 +250,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -263,7 +264,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           };
           var track = new RemoteTrackV2(trackState);
@@ -287,7 +288,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: true,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         assert.equal(track, track.disable());
@@ -298,7 +299,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: true,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         track.disable();
@@ -310,7 +311,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: true,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         var isEnabled;
@@ -326,7 +327,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: false,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         assert.equal(track, track.disable());
@@ -337,7 +338,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: false,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         track.disable();
@@ -349,7 +350,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: false,
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         var updated = false;
@@ -368,7 +369,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(false));
@@ -379,7 +380,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable(false);
@@ -391,7 +392,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var isEnabled;
@@ -407,7 +408,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(false));
@@ -418,7 +419,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable(false);
@@ -430,7 +431,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var updated = false;
@@ -448,7 +449,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(true));
@@ -459,7 +460,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable(true);
@@ -471,7 +472,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var updated = false;
@@ -487,7 +488,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(true));
@@ -498,7 +499,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable(true);
@@ -510,7 +511,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var isEnabled;
@@ -528,7 +529,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable());
@@ -539,7 +540,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable();
@@ -551,7 +552,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: true,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var updated = false;
@@ -567,7 +568,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable());
@@ -578,7 +579,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           track.enable();
@@ -590,7 +591,7 @@ describe('RemoteTrackV2', () => {
             id: makeId(),
             enabled: false,
             kind: makeKind(),
-            name: util.makeUUID(),
+            name: makeUUID(),
             sid: makeSid()
           });
           var isEnabled;
@@ -609,7 +610,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         var mediaStreamTrack = {};
@@ -626,7 +627,7 @@ describe('RemoteTrackV2', () => {
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind(),
-          name: util.makeUUID(),
+          name: makeUUID(),
           sid: makeSid()
         });
         var mediaStreamTrack = {};
@@ -645,7 +646,7 @@ describe('RemoteTrackV2', () => {
         id: makeId(),
         enabled: makeEnabled(),
         kind: makeKind(),
-        name: util.makeUUID(),
+        name: makeUUID(),
         sid: makeSid()
       });
       var mediaStreamTrack = {};
@@ -659,7 +660,7 @@ function makeEnabled() {
 }
 
 function makeId() {
-  return util.makeUUID();
+  return makeUUID();
 }
 
 function makeKind() {
@@ -667,5 +668,5 @@ function makeKind() {
 }
 
 function makeSid() {
-  return util.makeUUID();
+  return makeUUID();
 }
