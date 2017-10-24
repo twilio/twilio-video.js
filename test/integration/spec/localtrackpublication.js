@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../lib/mockwebrtc')();
-}
-
 const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');
@@ -41,10 +37,7 @@ const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights']
 const guess = guessBrowser();
 const isFirefox = guess === 'firefox';
 
-(navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe
-)('LocalTrackPublication', function() {
+describe('LocalTrackPublication', function() {
   this.timeout(60000);
   describe('#unpublish', () => {
     combinationContext([

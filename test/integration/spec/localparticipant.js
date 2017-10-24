@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../lib/mockwebrtc')();
-}
-
 const assert = require('assert');
 const getToken = require('../../lib/token');
 const env = require('../../env');
@@ -49,10 +45,7 @@ const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 
-(navigator.userAgent === 'Node'
-  ? describe.skip
-  : describe
-)('LocalParticipant', function() {
+describe('LocalParticipant', function() {
   this.timeout(60000);
 
   describe('#publishTrack', () => {

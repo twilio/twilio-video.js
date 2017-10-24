@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../../lib/mockwebrtc')();
-}
-
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 const a = require('../../../lib/util').a;
 const assert = require('assert');

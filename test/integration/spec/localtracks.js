@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../lib/mockwebrtc')();
-}
-
 const assert = require('assert');
 const createLocalTracks = require('../../../lib/createlocaltrack');
 const { guessBrowser } = require('../../../lib/util');
@@ -17,10 +13,7 @@ const isSafari = guess === 'safari';
   const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
 
-  (navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe
-  )(description, function() {
+  describe(description, function() {
     this.timeout(10000);
 
     let localTrack = null;
