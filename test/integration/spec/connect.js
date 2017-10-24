@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../lib/mockwebrtc')();
-}
-
 const assert = require('assert');
 const { getUserMedia } = require('@twilio/webrtc');
 const connect = require('../../../lib/connect');
@@ -257,11 +253,7 @@ describe('connect', function() {
           return;
         }
 
-        // NOTE(mroberts): We don't actually raise Track events in Node, so skip these.
-        (navigator.userAgent === 'Node'
-          ? it.skip
-          : it
-        )('should eventually update each Participant\'s .tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
+        it('should eventually update each Participant\'s .tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
           await Promise.all(flatMap(rooms, ({ participants }) => {
             return [...participants.values()].map(participant => tracksAdded(participant, 2));
           }));
@@ -380,9 +372,7 @@ describe('connect', function() {
     });
   });
 
-  (navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe)('called with EncodingParameters', () => {
+  describe('called with EncodingParameters', () => {
     combinationContext([
       [
         [undefined, null, 20000],
@@ -444,9 +434,7 @@ describe('connect', function() {
     });
   });
 
-  (navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe)('called with preferred audio and video codecs', () => {
+  describe('called with preferred audio and video codecs', () => {
     let peerConnections;
     let thisRoom;
     let thoseRooms;
@@ -479,9 +467,7 @@ describe('connect', function() {
     });
   });
 
-  (navigator.userAgent === 'Node'
-    ? describe.skip
-    : describe)('when called with a fixed bitrate preferred audio codec', () => {
+  describe('when called with a fixed bitrate preferred audio codec', () => {
     let peerConnections;
     let thisRoom;
     let thoseRooms;
@@ -517,7 +503,7 @@ describe('connect', function() {
     });
   });
 
-  (navigator.userAgent === 'Node' ? describe.skip : describe)('Track names', () => {
+  describe('Track names', () => {
     describe('when called with pre-created Tracks', () => {
       combinationContext([
         [

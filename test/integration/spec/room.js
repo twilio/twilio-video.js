@@ -1,9 +1,5 @@
 'use strict';
 
-if (typeof window === 'undefined') {
-  require('../../lib/mockwebrtc')();
-}
-
 const assert = require('assert');
 const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
@@ -156,10 +152,8 @@ describe('Room', function() {
 
       await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));
 
-      if (navigator.userAgent !== 'Node') {
-        await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
-          tracksAdded(participant, thisParticipant.tracks.size)));
-      }
+      await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
+        tracksAdded(participant, thisParticipant.tracks.size)));
 
       const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
 
