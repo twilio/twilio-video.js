@@ -1,13 +1,15 @@
 'use strict';
 
-var assert = require('assert');
-var Room = require('../../../lib/room');
-var RoomSignaling = require('../../../lib/signaling/room');
-var ParticipantSignaling = require('../../../lib/signaling/participant');
-var RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
-var SignalingConnectionDisconnectedError = require('../../../lib/util/twilio-video-errors').SignalingConnectionDisconnectedError;
-var sinon = require('sinon');
-var log = require('../../lib/fakelog');
+const assert = require('assert');
+const sinon = require('sinon');
+
+const Room = require('../../../lib/room');
+const ParticipantSignaling = require('../../../lib/signaling/participant');
+const RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
+const RoomSignaling = require('../../../lib/signaling/room');
+const { SignalingConnectionDisconnectedError } = require('../../../lib/util/twilio-video-errors');
+
+const log = require('../../lib/fakelog');
 
 describe('Room', function() {
   var room;

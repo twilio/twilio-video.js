@@ -1,13 +1,15 @@
 'use strict';
 
-var assert = require('assert');
-var inherits = require('util').inherits;
-var EventEmitter = require('events').EventEmitter;
-var Track = require('../../../../../lib/media/track/mediatrack');
-var LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
-var LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
-var sinon = require('sinon');
-var log = require('../../../../lib/fakelog');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+const { inherits } = require('util');
+
+const Track = require('../../../../../lib/media/track/mediatrack');
+const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
+const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
+
+const log = require('../../../../lib/fakelog');
 
 [
   ['LocalAudioTrack', LocalAudioTrack],

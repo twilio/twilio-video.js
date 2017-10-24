@@ -1,13 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const createLocalTracks = require('../../../lib/createlocaltrack');
-const { guessBrowser } = require('../../../lib/util');
 
-const guess = guessBrowser();
-const isChrome = guess === 'chrome';
-const isFirefox = guess === 'firefox';
-const isSafari = guess === 'safari';
+const createLocalTracks = require('../../../lib/createlocaltrack');
+
+const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];

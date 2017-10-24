@@ -1,9 +1,12 @@
 'use strict';
 
-var assert = require('assert');
-var createLocalAudioTrack = require('../../../lib/createlocaltrack').audio;
-var createLocalVideoTrack = require('../../../lib/createlocaltrack').video;
-var sinon = require('sinon');
+const assert = require('assert');
+const sinon = require('sinon');
+
+const {
+  audio: createLocalAudioTrack,
+  video: createLocalVideoTrack
+} = require('../../../lib/createlocaltrack');
 
 [
   [ 'Audio', createLocalAudioTrack ],

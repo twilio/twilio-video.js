@@ -2,11 +2,12 @@
 
 const assert = require('assert');
 const EventEmitter = require('events');
-const EventTarget = require('../../../../../lib/eventtarget');
 const sinon = require('sinon');
 
+const EventTarget = require('../../../../../lib/eventtarget');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
+
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
 

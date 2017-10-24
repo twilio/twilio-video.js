@@ -1,8 +1,9 @@
 'use strict';
 
-var assert = require('assert');
-var StateMachine = require('../../../lib/statemachine');
-var util = require('../../../lib/util');
+const assert = require('assert');
+
+const StateMachine = require('../../../lib/statemachine');
+const { defer } = require('../../../lib/util');
 
 describe('StateMachine', function() {
   describe('constructor', function() {
@@ -90,7 +91,7 @@ describe('StateMachine', function() {
             var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             var key = sm.takeLockSync('lock');
             var i = 0;
-            var deferred = util.defer();
+            var deferred = defer();
 
             // The "stateChanged" event should fire before anyone waiting to
             // take the lock. Taking the lock from within the "stateChanged"
@@ -127,7 +128,7 @@ describe('StateMachine', function() {
             var sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             var key1 = sm.takeLockSync('lock1');
             var i = 0;
-            var deferred = util.defer();
+            var deferred = defer();
 
             // The "stateChanged" event should fire before anyone waiting to
             // take the lock. Taking the lock from within the "stateChanged"

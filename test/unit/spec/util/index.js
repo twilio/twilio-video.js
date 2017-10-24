@@ -1,18 +1,17 @@
 'use strict';
 
-var assert = require('assert');
-var constants = require('../../../../lib/util/constants');
-var EventEmitter = require('events').EventEmitter;
-var sinon = require('sinon');
-var util = require('../../../../lib/util');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
 
+const { makeUUID, promiseFromEvents } = require('../../../../lib/util');
 
 describe('util', function() {
   describe('makeUUID', function() {
     it('should generate a unique UUID', function() {
-      var uuid1 = util.makeUUID();
-      var uuid2 = util.makeUUID();
-      var uuid3 = util.makeUUID();
+      var uuid1 = makeUUID();
+      var uuid2 = makeUUID();
+      var uuid3 = makeUUID();
 
       assert.notEqual(uuid1, uuid2);
       assert.notEqual(uuid2, uuid3);
@@ -28,7 +27,7 @@ describe('util', function() {
     beforeEach(function() {
       emitter = new EventEmitter();
       spy = sinon.spy();
-      promise = util.promiseFromEvents(spy, emitter, 'foo', 'bar');
+      promise = promiseFromEvents(spy, emitter, 'foo', 'bar');
     });
 
     it('should call the function passed', function() {
@@ -46,7 +45,7 @@ describe('util', function() {
     });
 
     it('should not require a failure event', function(done) {
-      promise = util.promiseFromEvents(spy, emitter, 'foo');
+      promise = promiseFromEvents(spy, emitter, 'foo');
       promise.then(done);
       emitter.emit('foo');
     });

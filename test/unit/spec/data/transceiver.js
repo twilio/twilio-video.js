@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+
 const DataTrackTransceiver = require('../../../../lib/data/transceiver');
 const { makeUUID } = require('../../../../lib/util');
 

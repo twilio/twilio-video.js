@@ -1,14 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const getToken = require('../../lib/token');
-const env = require('../../env');
-const { flatMap, guessBrowser } = require('../../../lib/util');
-const Track = require('../../../lib/media/track');
-const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
-const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
-const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
-const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 
 const {
   connect,
@@ -16,6 +8,17 @@ const {
   createLocalVideoTrack,
   LocalDataTrack
 } = require('../../../lib');
+
+const Track = require('../../../lib/media/track');
+const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
+const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
+const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
+const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
+const { flatMap } = require('../../../lib/util');
+
+const defaults = require('../../lib/defaults');
+const { isFirefox } = require('../../lib/guessbrowser');
+const getToken = require('../../lib/token');
 
 const {
   capitalize,
@@ -26,16 +29,6 @@ const {
   tracksRemoved,
   waitForTracks
 } = require('../../lib/util');
-
-const defaultOptions = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((defaultOptions, option) => {
-  if (env[option] !== undefined) {
-    defaultOptions[option] = env[option];
-  }
-  return defaultOptions;
-}, {});
-
-const guess = guessBrowser();
-const isFirefox = guess === 'firefox';
 
 describe('LocalTrackPublication', function() {
   this.timeout(60000);
@@ -72,7 +65,7 @@ describe('LocalTrackPublication', function() {
         const identities = kind === 'data'
           ? [randomName(), randomName()]
           : [randomName(), randomName(), randomName()];
-        const options = Object.assign({name}, defaultOptions);
+        const options = Object.assign({name}, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,

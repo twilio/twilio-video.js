@@ -1,15 +1,19 @@
 'use strict';
 
-var assert = require('assert');
-var ECS = require('../../../lib/ecs');
-var request = require('../../../lib/request');
-var sinon = require('sinon');
-var twilio = require('twilio');
-var TwilioError = require('../../../lib/util/twilioerror');
-var AccessTokenInvalidError = require('../../../lib/util/twilio-video-errors').AccessTokenInvalidError;
-var ConfigurationAcquireFailedError = require('../../../lib/util/twilio-video-errors').ConfigurationAcquireFailedError;
+const assert = require('assert');
+const sinon = require('sinon');
+const twilio = require('twilio');
 
-var fakeToken = 'a.b.c';
+const ECS = require('../../../lib/ecs');
+const request = require('../../../lib/request');
+const TwilioError = require('../../../lib/util/twilioerror');
+
+const {
+  AccessTokenInvalidError,
+  ConfigurationAcquireFailedError
+} = require('../../../lib/util/twilio-video-errors');
+
+const fakeToken = 'a.b.c';
 
 describe('ECS', function() {
   describe('#getConfiguration', function() {

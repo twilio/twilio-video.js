@@ -1,13 +1,15 @@
 'use strict';
 
-var a = require('../../lib/util').a;
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var RemoteParticipant = require('../../../lib/remoteparticipant');
-var inherits = require('util').inherits;
-var sinon = require('sinon');
-var util = require('../../../lib/util');
-var log = require('../../lib/fakelog');
+const assert = require('assert');
+const { EventEmitter } = require('events');
+const sinon = require('sinon');
+const { inherits } = require('util');
+
+const RemoteParticipant = require('../../../lib/remoteparticipant');
+const { defer, makeUUID } = require('../../../lib/util');
+
+const { a } = require('../../lib/util');
+const log = require('../../lib/fakelog');
 
 describe('RemoteParticipant', function() {
   describe('constructor', () => {
@@ -278,7 +280,7 @@ describe('RemoteParticipant', function() {
         var trackMessageEvent;
         var test = makeTest({ tracks: [ track ] });
         test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
-        var data = util.makeUUID();
+        var data = makeUUID();
         track.emit('message', data, track);
         assert.equal(data, trackMessageEvent.data);
         assert.equal(track, trackMessageEvent.track);
@@ -335,7 +337,7 @@ describe('RemoteParticipant', function() {
         var test = makeTest({ tracks: [ track ] });
         test.signaling.emit('stateChanged', 'disconnected');
         test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
-        var data = util.makeUUID();
+        var data = makeUUID();
         track.emit('message', data, track);
         assert(!trackMessageEvent);
       });
@@ -404,7 +406,7 @@ describe('RemoteParticipant', function() {
         var trackMessageEvent;
         var test = makeTest({ tracks: [ track ], state: 'disconnected' });
         test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
-        var data = util.makeUUID();
+        var data = makeUUID();
         track.emit('message', data, track);
         assert(!trackMessageEvent);
       });
@@ -1018,7 +1020,7 @@ function makeSignaling(options) {
 }
 
 function makeId() {
-  return util.makeUUID();
+  return makeUUID();
 }
 
 function makeKind() {
@@ -1033,7 +1035,7 @@ function makeTrackSignaling(options) {
   track.name = options.name || track.id;
   track.mediaStreamTrackOrDataTrackTransceiver = { id: track.id, kind: track.kind };
   track.mediaStream = {};
-  track.getMediaStreamTrackOrDataTrackTransceiverDeferred = util.defer();
+  track.getMediaStreamTrackOrDataTrackTransceiverDeferred = defer();
   track.getMediaStreamTrackOrDataTrackTransceiverDeferred.resolve(track.mediaStreamTrackOrDataTrackTransceiver);
   track.getMediaStreamTrackOrDataTrackTransceiver = sinon.spy(() => track.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise);
   return track;

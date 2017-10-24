@@ -3,7 +3,7 @@
 const { AccessToken } = require('twilio');
 const credentials = require('../env');
 
-const defaultOptions = Object.assign({
+const defaults = Object.assign({
   grant: 'video',
   ttl: 60 * 1000
 }, credentials);
@@ -28,7 +28,7 @@ const defaultOptions = Object.assign({
  * @throws Error
  */
 function createToken(identity, options) {
-  options = Object.assign({}, defaultOptions, options);
+  options = Object.assign({}, defaults, options);
 
   const {
     accountSid,

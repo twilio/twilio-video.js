@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+
 const isSupported = require('../../../../lib/util/support');
 
 describe('isBrowserSupported', () => {

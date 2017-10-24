@@ -1,19 +1,14 @@
 'use strict';
 
 const assert = require('assert');
-const connect = require('../../../lib/connect');
-const getToken = require('../../lib/token');
-const { flatMap } = require('../../../lib/util');
-const env = require('../../env');
-const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
-const RemoteParticipant = require('../../../lib/remoteparticipant');
 
-const options = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((options, option) => {
-  if (env[option] !== undefined) {
-    options[option] = env[option];
-  }
-  return options;
-}, {});
+const connect = require('../../../lib/connect');
+const RemoteParticipant = require('../../../lib/remoteparticipant');
+const { flatMap } = require('../../../lib/util');
+
+const defaults = require('../../lib/defaults');
+const getToken = require('../../lib/token');
+const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
 
 describe('Room', function() {
   this.timeout(60000);
@@ -33,7 +28,7 @@ describe('Room', function() {
       const identities = [randomName(), randomName(), randomName()];
       const tokens = identities.map(getToken);
       const name = randomName();
-      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
+      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, defaults))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
 
       room = rooms[0];
@@ -102,7 +97,7 @@ describe('Room', function() {
     let thatParticipant;
 
     before(async () => {
-      thisRoom = await connect(getToken(randomName()), options);
+      thisRoom = await connect(getToken(randomName()), defaults);
     });
 
     after(() => {
@@ -114,7 +109,7 @@ describe('Room', function() {
 
     it('is raised whenever a RemoteParticipant connects to the Room', async () => {
       const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
-      thatRoom = await connect(getToken(randomName()), Object.assign({ name: thisRoom.name }, options));
+      thatRoom = await connect(getToken(randomName()), Object.assign({ name: thisRoom.name }, defaults));
       thisParticipant = await participantConnected;
       thatParticipant = thatRoom.localParticipant;
       assert(thisParticipant instanceof RemoteParticipant);
@@ -147,7 +142,7 @@ describe('Room', function() {
       const tokens = identities.map(getToken);
       const name = randomName();
 
-      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, options))));
+      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, defaults))));
       thisParticipant = thisRoom.localParticipant;
 
       await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));

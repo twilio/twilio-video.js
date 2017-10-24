@@ -1,15 +1,17 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
+
 const DataTrackSender = require('../../../../../lib/data/sender');
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
-const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
-const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
 const LocalDataTrack = require('../../../../../lib/media/track/localdatatrack');
 const LocalDataTrackPublication = require('../../../../../lib/media/track/localdatatrackpublication');
+const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
+const LocalVideoTrackPublication = require('../../../../../lib/media/track/localvideotrackpublication');
+
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const sinon = require('sinon');
 
 [
   ['LocalAudioTrackPublication', LocalAudioTrackPublication, LocalAudioTrack],

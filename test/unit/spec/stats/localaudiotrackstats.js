@@ -1,7 +1,8 @@
 'use strict';
 
-var assert = require('assert');
-var LocalAudioTrackStats = require('../../../../lib/stats/localaudiotrackstats');
+const assert = require('assert');
+
+const LocalAudioTrackStats = require('../../../../lib/stats/localaudiotrackstats');
 
 describe('LocalAudioTrackStats', () => {
   describe('constructor', () => {

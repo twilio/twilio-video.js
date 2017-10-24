@@ -1,17 +1,19 @@
 'use strict';
 
 const assert = require('assert');
-const connect = require('../../../lib/connect');
-const fakeGetUserMedia = require('../../lib/fakemediastream').fakeGetUserMedia;
-const FakeMediaStreamTrack = require('../../lib/fakemediastream').FakeMediaStreamTrack;
-const inherits = require('util').inherits;
-const MockIceServerSource = require('../../lib/mockiceserversource');
-const RoomSignaling = require('../../../lib/signaling/room');
-const Signaling = require('../../../lib/signaling');
+const { EventEmitter } = require('events');
 const sinon = require('sinon');
+const { inherits } = require('util');
+
+const connect = require('../../../lib/connect');
+const Signaling = require('../../../lib/signaling');
+const RoomSignaling = require('../../../lib/signaling/room');
+const { AccessTokenInvalidError } = require('../../../lib/util/twilio-video-errors');
+
+const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemediastream');
+const MockIceServerSource = require('../../lib/mockiceserversource');
+
 const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmLTE0NzUxOTAzNDgiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJhc2QiLCJydGMiOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTM2Y3NWUwZjE0ZTdjOGIyMDkzOGZjNTA5MmU4MmYyM2EifX0sImlhdCI6MTQ3NTE5MDM0OCwiZXhwIjoxNDc1MTkzOTQ4LCJpc3MiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmIiwic3ViIjoiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyJ9.N0UuZSblqb7MknNuiRkiEVVEdmztm5AdYIhQp7zU2PI';
-const AccessTokenInvalidError = require('../../../lib/util/twilio-video-errors').AccessTokenInvalidError;
-const EventEmitter = require('events').EventEmitter;
 
 describe('connect', () => {
   describe('called without ConnectOptions#tracks', () => {

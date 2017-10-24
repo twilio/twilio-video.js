@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
+
 const DataTrackSender = require('../../../../lib/data/sender');
 const { makeUUID } = require('../../../../lib/util');
 

@@ -1,9 +1,10 @@
 'use strict';
 
-var assert = require('assert');
-var RemoteParticipantV2 = require('../../../../../lib/signaling/v2/remoteparticipant');
-var sinon = require('sinon');
-var util = require('../../../../../lib/util');
+const assert = require('assert');
+const sinon = require('sinon');
+
+const RemoteParticipantV2 = require('../../../../../lib/signaling/v2/remoteparticipant');
+const { defer } = require('../../../../../lib/util');
 
 describe('RemoteParticipantV2', () => {
   // RemoteParticipantV2
@@ -969,7 +970,7 @@ function makeTest(options) {
   options.remoteTrackV2s = options.remoteTrackV2s || [];
 
   options.getMediaStreamTrackOrDataTrackTransceiverDeferred = options.getMediaStreamTrackOrDataTrackTransceiverDeferred
-    || util.defer();
+    || defer();
   options.getMediaStreamTrackOrDataTrackTransceiver = options.getMediaStreamTrackOrDataTrackTransceiver
     || sinon.spy(() => options.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise);
   options.RemoteTrackV2 = options.RemoteTrackV2 || makeRemoteTrackV2Constructor(options);

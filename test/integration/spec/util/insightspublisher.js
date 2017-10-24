@@ -1,15 +1,12 @@
 'use strict';
 
-const InsightsPublisher = require('../../../../lib/util/insightspublisher');
-const a = require('../../../lib/util').a;
 const assert = require('assert');
-const getToken = require('../../../lib/token');
-const { wsServerInsights } = require('../../../env');
 
-const options = {};
-if (wsServerInsights) {
-  options.gateway = wsServerInsights;
-}
+const InsightsPublisher = require('../../../../lib/util/insightspublisher');
+
+const defaults = require('../../../lib/defaults');
+const getToken = require('../../../lib/token');
+const { a } = require('../../../lib/util');
 
 const tokens = new Map([
   ['expired', getToken('foo', { ttl: 60 * -1000 })],
@@ -31,7 +28,7 @@ describe('InsightsPublisher', function() {
             '1.2.3',
             'prod',
             'us1',
-            options);
+            defaults);
         });
 
         const description = tokenType !== 'valid'
@@ -65,7 +62,7 @@ describe('InsightsPublisher', function() {
         '1.2.3',
         'prod',
         'us1',
-        options);
+        defaults);
 
       publisher.once('connected', () => publisher.disconnect());
       const error = await new Promise(resolve => publisher.once('disconnected', resolve));

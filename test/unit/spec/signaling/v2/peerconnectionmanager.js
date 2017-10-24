@@ -1,16 +1,18 @@
 'use strict';
 
 const assert = require('assert');
-const EventEmitter = require('events').EventEmitter;
-const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const inherits = require('util').inherits;
-const DataTrackSender = require('../../../../../lib/data/sender');
-const { makeEncodingParameters } = require('../../../../lib/util');
-const MockIceServerSource = require('../../../../lib/mockiceserversource');
-const { AudioContextFactory } = require('../../../../../lib/webaudio/audiocontext');
-const PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
+const { EventEmitter } = require('events');
 const sinon = require('sinon');
-const util = require('../../../../../lib/util');
+const { inherits } = require('util');
+
+const DataTrackSender = require('../../../../../lib/data/sender');
+const PeerConnectionManager = require('../../../../../lib/signaling/v2/peerconnectionmanager');
+const { defer } = require('../../../../../lib/util');
+const { AudioContextFactory } = require('../../../../../lib/webaudio/audiocontext');
+
+const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const MockIceServerSource = require('../../../../lib/mockiceserversource');
+const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
   describe('#close', () => {
@@ -79,7 +81,7 @@ describe('PeerConnectionManager', () => {
 
       it('after the PeerConnectionV2 has created an offer', () => {
         var peerConnectionV2 = new EventEmitter();
-        var deferred = util.defer();
+        var deferred = defer();
         peerConnectionV2.offer = () => deferred.promise;
         var test = makeTest({
           RTCPeerConnection: function() { return peerConnectionV2; }
