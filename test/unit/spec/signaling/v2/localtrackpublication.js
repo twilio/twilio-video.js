@@ -154,43 +154,6 @@ describe('LocalTrackPublicationV2', () => {
   // TrackSignaling
   // --------------
 
-  describe('#getSid', () => {
-    context('when called before #setSid', () => {
-      let localTrackPublicationV2;
-      let sid;
-
-      before(() => {
-        const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
-        sid = makeSid();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
-      });
-
-      it('should return a Promise that is resolved with the value passed to #setSid when it is eventually called', async () => {
-        const promise = localTrackPublicationV2.getSid();
-        localTrackPublicationV2.setSid(sid);
-        const _sid = await promise;
-        assert.equal(_sid, sid);
-      });
-    });
-
-    context('when called after #setSid', () => {
-      let localTrackPublicationV2;
-      let sid;
-
-      before(() => {
-        const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
-        sid = makeSid();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
-        localTrackPublicationV2.setSid(sid);
-      });
-
-      it('should return a Promise that is resolved with the value passed to #setSid', async () => {
-        const _sid = await localTrackPublicationV2.getSid();
-        assert.equal(_sid, sid);
-      });
-    });
-  });
-
   describe('#setSid', () => {
     let localTrackPublicationV2;
     let ret;
@@ -202,8 +165,6 @@ describe('LocalTrackPublicationV2', () => {
       sid = makeSid();
       localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
       updated = false;
-      // NOTE(mroberts): Suppress Node warnings.
-      localTrackPublicationV2.getSid().catch(() => {});
     });
 
     context('when .sid is null', () => {
@@ -226,13 +187,6 @@ describe('LocalTrackPublicationV2', () => {
 
       it('should emit "updated"', () => {
         assert(updated);
-      });
-
-      describe('#getSid', () => {
-        it('should resolve with the SID', async () => {
-          const _sid = await localTrackPublicationV2.getSid();
-          assert.equal(_sid, sid);
-        });
       });
     });
 
@@ -258,13 +212,6 @@ describe('LocalTrackPublicationV2', () => {
 
       it('should not emit "updated"', () => {
         assert(!updated);
-      });
-
-      describe('#getSid', () => {
-        it('should resolve with the original SID', async () => {
-          const _sid = await localTrackPublicationV2.getSid();
-          assert.equal(_sid, sid);
-        });
       });
     });
 
@@ -294,15 +241,6 @@ describe('LocalTrackPublicationV2', () => {
       it('should not emit "updated"', () => {
         assert(!updated);
       });
-
-      describe('#getSid', () => {
-        it('should reject with the error', async () => {
-          const _error = await localTrackPublicationV2.getSid().then(() => {
-            throw new Error('Unexpected resolution');
-          }, error => error);
-          assert.equal(_error, error);
-        });
-      });
     });
   });
 
@@ -319,8 +257,6 @@ describe('LocalTrackPublicationV2', () => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       error = new Error('Track publication failed');
       localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
-      // NOTE(mroberts): Suppress Node warnings.
-      localTrackPublicationV2.getSid().catch(() => {});
       updated = false;
     });
 
@@ -344,15 +280,6 @@ describe('LocalTrackPublicationV2', () => {
 
       it('should emit "updated"', () => {
         assert(updated);
-      });
-
-      describe('#getSid', () => {
-        it('should reject with the error', async () => {
-          const _error = await localTrackPublicationV2.getSid().then(() => {
-            throw new Error('Unexpected resolution');
-          }, error => error);
-          assert.equal(_error, error);
-        });
       });
     });
 
@@ -381,13 +308,6 @@ describe('LocalTrackPublicationV2', () => {
       it('should not emit "updated"', () => {
         assert(!updated);
       });
-
-      describe('#getSid', () => {
-        it('should resolve with the SID', async () => {
-          const _sid = await localTrackPublicationV2.getSid();
-          assert.equal(_sid, sid);
-        });
-      });
     });
 
     context('when .error is non-null', () => {
@@ -413,15 +333,6 @@ describe('LocalTrackPublicationV2', () => {
 
       it('should not emit "updated"', () => {
         assert(!updated);
-      });
-
-      describe('#getSid', () => {
-        it('should reject with the original error', async () => {
-          const _error = await localTrackPublicationV2.getSid().then(() => {
-            throw new Error('Unexpected resolution');
-          }, error => error);
-          assert.equal(_error, error);
-        });
       });
     });
   });

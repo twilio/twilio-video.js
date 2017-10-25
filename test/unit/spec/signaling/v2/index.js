@@ -46,77 +46,74 @@ describe('SignalingV2', () => {
 
   describe('#close, when the SignalingV2 .state is', () => {
     context('"closed"', () => {
-      it('returns a Promise that resolves to the SignalingV2', () => {
+      it('returns a Promise that resolves to the SignalingV2', async () => {
         const test = makeTest();
-        return test.signaling.close().then(signaling => {
-          assert.equal(test.signaling, signaling);
-        });
+        const signaling = await test.signaling.close();
+        assert.equal(test.signaling, signaling);
       });
 
-      it('does not transition', () => {
+      it('does not transition', async () => {
         const test = makeTest();
-        return test.signaling.close().then(() => {
-          assert.deepEqual(
-            [],
-            test.transitions);
-        });
+        await test.signaling.close();
+        assert.deepEqual(
+          [],
+          test.transitions);
       });
 
-      it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+      it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
         const test = makeTest();
-        return test.signaling.close().then(() => {
-          assert(!test.ua.transport.disconnect.calledOnce);
-        });
+        await test.signaling.close();
+        assert(!test.ua.transport.disconnect.calledOnce);
       });
     });
 
     context('"closing"', () => {
-      it('returns a Promise that resolves to the SignalingV2', () => {
+      it('returns a Promise that resolves to the SignalingV2', async () => {
         const test = makeTest();
-        const promise = test.when('closing', () => {
-          return test.signaling.close().then(signaling => {
-            assert.equal(test.signaling, signaling);
-          });
+        const promise = test.when('closing', async () => {
+          const signaling = await test.signaling.close();
+          assert.equal(test.signaling, signaling);
         });
-        test.signaling.open().then(() => test.signaling.close());
+        await test.signaling.open();
+        await test.signaling.close();
         return promise;
       });
 
-      it('does not transition after transitioning to state "closed"', () => {
+      it('does not transition after transitioning to state "closed"', async () => {
         const test = makeTest();
-        const promise = test.when('closing', () => {
+        const promise = test.when('closing', async () => {
           test.transitions = [];
-          return test.signaling.close().then(() => {
-            assert.deepEqual(
-              [
-                'closed'
-              ],
-              test.transitions);
-          });
+          await test.signaling.close();
+          assert.deepEqual(
+            [
+              'closed'
+            ],
+            test.transitions);
         });
-        test.signaling.open().then(() => test.signaling.close());
+        await test.signaling.open();
+        await test.signaling.close();
         return promise;
       });
 
-      it('does not call .close on the SIP.js UA again', () => {
+      it('does not call .close on the SIP.js UA again', async () => {
         const test = makeTest();
-        const promise = test.when('closing', () => {
-          return test.signaling.close().then(() => {
-            assert(test.ua.stop.calledOnce);
-          });
+        const promise = test.when('closing', async () => {
+          await test.signaling.close();
+          assert(test.ua.stop.calledOnce);
         });
-        test.signaling.open().then(() => test.signaling.close());
+        await test.signaling.open();
+        await test.signaling.close();
         return promise;
       });
 
-      it('does not call .disconnect on the SIP.js UA\'s .transport again', () => {
+      it('does not call .disconnect on the SIP.js UA\'s .transport again', async () => {
         const test = makeTest();
-        const promise = test.when('closing', () => {
-          return test.signaling.close().then(() => {
-            assert(test.ua.transport.disconnect.calledOnce);
-          });
+        const promise = test.when('closing', async () => {
+          await test.signaling.close();
+          assert(test.ua.transport.disconnect.calledOnce);
         });
-        test.signaling.open().then(() => test.signaling.close());
+        await test.signaling.open();
+        await test.signaling.close();
         return promise;
       });
     });
@@ -167,52 +164,64 @@ describe('SignalingV2', () => {
 
     context('"opening"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
-        it('returns a Promise that resolves to the SignalingV2', () => {
+        it('returns a Promise that resolves to the SignalingV2', async () => {
           const test = makeTest({ uaConnectSucceeds: false });
-          const promise = test.when('opening', () => {
-            return test.signaling.close().then(signaling => {
-              assert.equal(test.signaling, signaling);
-            });
+          const promise = test.when('opening', async () => {
+            const signaling = await test.signaling.close();
+            assert.equal(test.signaling, signaling);
           });
-          test.signaling.open().then(() => test.signaling.close());
+          try {
+            await test.signaling.open();
+          } catch (error) {
+            // Expected rejection
+          }
           return promise;
         });
 
-        it('does not transition after transitioning to "closed"', () => {
+        it('does not transition after transitioning to "closed"', async () => {
           const test = makeTest({ uaConnectSucceeds: false });
-          const promise = test.when('opening', () => {
+          const promise = test.when('opening', async () => {
             test.transitions = [];
-            return test.signaling.close().then(signaling => {
-              assert.deepEqual(
-                [
-                  'closed'
-                ],
-                test.transitions);
-            });
+            await test.signaling.close();
+            assert.deepEqual(
+              [
+                'closed'
+              ],
+              test.transitions);
           });
-          test.signaling.open().then(() => test.signaling.close());
+          try {
+            await test.signaling.open();
+          } catch (error) {
+            // Expected rejection
+          }
           return promise;
         });
 
-        it('does not call .close on the SIP.js UA', () => {
+        it('does not call .close on the SIP.js UA', async () => {
           const test = makeTest({ uaConnectSucceeds: false });
-          const promise = test.when('opening', () => {
-            return test.signaling.close().then(() => {
-              assert(!test.ua.stop.calledOnce);
-            });
+          const promise = test.when('opening', async () => {
+            await test.signaling.close();
+            assert(!test.ua.stop.calledOnce);
           });
-          test.signaling.open().then(() => test.signaling.close());
+          try {
+            await test.signaling.open();
+          } catch (error) {
+            // Expected rejection
+          }
           return promise;
         });
 
-        it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+        it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
           const test = makeTest({ uaConnectSucceeds: false });
-          const promise = test.when('opening', () => {
-            return test.signaling.close().then(() => {
-              assert(!test.ua.transport.disconnect.calledOnce);
-            });
+          const promise = test.when('opening', async () => {
+            await test.signaling.close();
+            assert(!test.ua.transport.disconnect.calledOnce);
           });
-          test.signaling.open().then(() => test.signaling.close());
+          try {
+            await test.signaling.open();
+          } catch (error) {
+            // Expected rejection
+          }
           return promise;
         });
       });
@@ -582,26 +591,35 @@ describe('SignalingV2', () => {
         });
 
         context('and the subsequent one fails', () => {
-          it('returns a Promise that rejects with an Error', () => {
+          it('returns a Promise that rejects with an Error', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.connect();
+              } catch (error) {
+                // Expected rejection
                 assert(error instanceof Error);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resoltuion');
           });
 
-          it('transitions through state "opening" to state "closed" after "closed"', () => {
+          it('transitions through state "opening" to state "closed" after "closed"', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
+            const promise = test.when('opening', async () => {
               test.transitions = [];
-              return test.signaling.connect().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+              try {
+                await test.signaling.connect();
+              } catch (error) {
+                // Expected rejection
                 assert.deepEqual(
                   [
                     'closed',
@@ -609,49 +627,80 @@ describe('SignalingV2', () => {
                     'closed'
                   ],
                   test.transitions);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('calls .start on the SIP.js UA again', () => {
+          it('calls .start on the SIP.js UA again', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.connect();
+              } catch (error) {
+                // Expected rejection
                 assert(test.ua.start.calledTwice);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .stop on the SIP.js UA', () => {
+          it('does not call .stop on the SIP.js UA', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.connect();
+              } catch(error) {
+                // Expected rejection
                 assert(!test.ua.stop.calledOnce);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+          it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.connect();
+              } catch (error) {
+                // Expected rejection
                 assert(!test.ua.transport.disconnect.calledOnce);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
         });
       });
@@ -1015,26 +1064,35 @@ describe('SignalingV2', () => {
         });
 
         context('and the subsequent one fails', () => {
-          it('returns a Promise that rejects with an Error', () => {
+          it('returns a Promise that rejects with an Error', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.open();
+              } catch (error) {
+                // Expected rejection
                 assert(error instanceof Error);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('transitions through state "opening" to state "closed" after "closed"', () => {
+          it('transitions through state "opening" to state "closed" after "closed"', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
+            const promise = test.when('opening', async () => {
               test.transitions = [];
-              return test.signaling.open().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+              try {
+                await test.signaling.open();
+              } catch (error) {
+                // Expected rejection
                 assert.deepEqual(
                   [
                     'closed',
@@ -1042,49 +1100,80 @@ describe('SignalingV2', () => {
                     'closed'
                   ],
                   test.transitions);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('calls .start on the SIP.js UA again', () => {
+          it('calls .start on the SIP.js UA again', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.open();
+              } catch (error) {
+                // Expected rejection
                 assert(test.ua.start.calledTwice);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .stop on the SIP.js UA', () => {
+          it('does not call .stop on the SIP.js UA', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.open();
+              } catch (error) {
+                // Expected rejection
                 assert(!test.ua.stop.calledOnce);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+          it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(() => {
-                throw new Error('Unexpected resolution');
-              }, error => {
+            const promise = test.when('opening', async () => {
+              try {
+                await test.signaling.open();
+              } catch (error) {
+                // Expected rejection
                 assert(!test.ua.transport.disconnect.calledOnce);
-              });
+                return;
+              }
+              throw new Error('Unexpected resolution');
             });
-            test.signaling.open();
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
         });
       });
