@@ -195,7 +195,7 @@ describe('connect', function() {
         });
 
         [ 'tracks', 'audioTracks', 'videoTracks' ].forEach(tracks => {
-          var trackPublications = `${tracks.slice(0, tracks.length - 1)}Publications`;
+          const trackPublications = `${tracks.slice(0, tracks.length - 1)}Publications`;
 
           it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .${trackPublications} Map with the corresponding ${capitalize(trackPublications)}`, () => {
             rooms.forEach(room => {
@@ -210,7 +210,7 @@ describe('connect', function() {
 
           it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(trackPublications)}' .trackSid to a unique Track SID`, () => {
             rooms.forEach(room => {
-              var publications = room.localParticipant[trackPublications];
+              const publications = room.localParticipant[trackPublications];
               publications.forEach(publication => assert(publication.trackSid.match(/^MT[a-f0-9]{32}$/)));
             });
           });

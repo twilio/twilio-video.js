@@ -1,7 +1,7 @@
 'use strict';
 
 function makeFakeLog() {
-  var fakeLog = {
+  const fakeLog = {
     debug: () => {},
     deprecated: () => {},
     info: () => {},
@@ -10,6 +10,7 @@ function makeFakeLog() {
   };
 
   fakeLog.createLog = () => fakeLog;
+
   return fakeLog;
 }
 

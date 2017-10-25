@@ -11,14 +11,10 @@ describe('createLocalTracks', () => {
   [
     [ 'when called with no constraints' ],
     [ 'when called with { audio: true, video: true }', { audio: true, video: true } ]
-  ].forEach(scenario => {
-    context(scenario[0], () => {
+  ].forEach(([description, extraOptions]) => {
+    context(description, () => {
       it('should resolve with a LocalAudioTrack and a LocalVideoTrack', () => {
-        var options = makeOptions();
-        if (scenario[1]) {
-          options = Object.assign(scenario[1], options);
-        }
-
+        const options = Object.assign(makeOptions(), extraOptions);
         return createLocalTracks(options).then(tracks => {
           assert.equal(tracks.length, 2);
           assert(tracks[0] instanceof options.LocalAudioTrack);
@@ -35,14 +31,10 @@ describe('createLocalTracks', () => {
   [
     [ 'when called with { audio: true }', { audio: true } ],
     [ 'when called with { audio: true, video: false }', { audio: true, video: false } ]
-  ].forEach(scenario => {
-    context(scenario[0], () => {
+  ].forEach(([description, extraOptions]) => {
+    context(description, () => {
       it('should resolve with a LocalAudioTrack', () => {
-        var options = makeOptions();
-        if (scenario[1]) {
-          options = Object.assign(scenario[1], options);
-        }
-
+        const options = Object.assign(makeOptions(), extraOptions);
         return createLocalTracks(options).then(tracks => {
           assert.equal(tracks.length, 1);
           assert(tracks[0] instanceof options.LocalAudioTrack);
@@ -56,14 +48,10 @@ describe('createLocalTracks', () => {
   [
     [ 'when called with { video: true }', { video: true } ],
     [ 'when called with { audio: false, video: true }', { audio: false, video: true } ]
-  ].forEach(scenario => {
-    context(scenario[0], () => {
+  ].forEach(([description, extraOptions]) => {
+    context(description, () => {
       it('should resolve with a LocalVideoTrack', () => {
-        var options = makeOptions();
-        if (scenario[1]) {
-          options = Object.assign(scenario[1], options);
-        }
-
+        const options = Object.assign(makeOptions(), extraOptions);
         return createLocalTracks(options).then(tracks => {
           assert.equal(tracks.length, 1);
           assert(tracks[0] instanceof options.LocalVideoTrack);
@@ -76,11 +64,10 @@ describe('createLocalTracks', () => {
 
   context('when called with { audio: false, video: false }', () => {
     it('should resolve with an empty array', () => {
-      var options = Object.assign({
+      const options = Object.assign({
         audio: false,
         video: false
       }, makeOptions());
-
       return createLocalTracks(options).then(tracks => {
         assert.equal(tracks.length, 0);
       });

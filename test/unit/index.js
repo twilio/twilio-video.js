@@ -5,8 +5,8 @@ if (typeof window === 'undefined') {
 }
 
 if (typeof document === 'undefined') {
-  var MockBrowser = require('mock-browser').mocks.MockBrowser;
-  var browser = new MockBrowser();
+  const { MockBrowser } = require('mock-browser').mocks;
+  const browser = new MockBrowser();
   global.document = browser.getDocument();
 }
 

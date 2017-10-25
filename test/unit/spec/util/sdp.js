@@ -23,7 +23,7 @@ describe('setBitrateParameters', () => {
         x => `when maxVideoBitrate is ${x ? 'not ' : ''}null`
       ]
     ], ([modifier, maxAudioBitrate, maxVideoBitrate]) => {
-      var sdp;
+      let sdp;
 
       beforeEach(() => {
         sdp = makeSdpWithTracks(modifier === 'TIAS' ? 'unified' : 'planb', {
@@ -70,7 +70,8 @@ describe('setBitrateParameters', () => {
     ], ([modifier, maxAudioBitrate, maxVideoBitrate]) => {
       const currentMaxAudioBitrate = 6000;
       const currentMaxVideoBitrate = 9000;
-      var sdp;
+
+      let sdp;
 
       beforeEach(() => {
         sdp = makeSdpWithTracks(modifier === 'TIAS' ? 'unified' : 'planb', {

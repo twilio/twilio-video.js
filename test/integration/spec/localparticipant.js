@@ -873,7 +873,8 @@ describe('LocalParticipant', function() {
             const modifier = isFirefox
               ? 'TIAS'
               : 'AS';
-            var maxBitrate = action === 'preserve'
+
+            let maxBitrate = action === 'preserve'
               ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
               : maxBitrates[kind];
 
@@ -886,6 +887,7 @@ describe('LocalParticipant', function() {
             const bLinePattern = maxBitrate
               ? new RegExp(`\r\nb=${modifier}:${maxBitrate}`)
               : /\r\nb=(AS|TIAS)/;
+
             assert(maxBitrate ? bLinePattern.test(section) : !bLinePattern.test(section));
           });
         });

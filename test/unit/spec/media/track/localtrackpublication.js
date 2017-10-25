@@ -67,9 +67,9 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     });
 
     describe('#unpublish', () => {
-      var localTrackPublication;
-      var ret;
-      var unpublish;
+      let localTrackPublication;
+      let ret;
+      let unpublish;
 
       before(() => {
         unpublish = sinon.spy();

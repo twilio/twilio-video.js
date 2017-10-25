@@ -6,7 +6,7 @@ const LocalTrackStats = require('../../../../lib/stats/localtrackstats');
 
 describe('LocalTrackStats', () => {
   describe('constructor', () => {
-    var stats = {
+    const stats = {
       trackId: 'abcd',
       timestamp: 12345,
       ssrc: 'foo',
@@ -16,7 +16,7 @@ describe('LocalTrackStats', () => {
     };
 
     it('should set bytesSent, packetsSent and roundTripTime properties', () => {
-      var trackStats = new LocalTrackStats(stats.trackId, stats);
+      const trackStats = new LocalTrackStats(stats.trackId, stats);
       assert.equal(trackStats.bytesSent, stats.bytesSent);
       assert.equal(trackStats.packetsSent, stats.packetsSent);
       assert.equal(trackStats.roundTripTime, stats.roundTripTime);
@@ -25,10 +25,10 @@ describe('LocalTrackStats', () => {
     ['bytesSent', 'packetsSent', 'roundTripTime'].forEach(statName => {
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
         it(`should set the ${statName} property to null`, () => {
-          var statValue = stats[statName];
+          const statValue = stats[statName];
           delete stats[statName];
 
-          var trackStats = new LocalTrackStats(stats.trackId, stats);
+          const trackStats = new LocalTrackStats(stats.trackId, stats);
           assert.equal(trackStats[statName], null);
 
           stats[statName] = statValue;

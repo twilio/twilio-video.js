@@ -33,7 +33,8 @@ describe('EncodingParametersImpl', () => {
         }
         return params;
       }, {});
-      var encodingParametersImpl;
+
+      let encodingParametersImpl;
 
       before(() => {
         encodingParametersImpl = withNew === 'with'
@@ -94,8 +95,8 @@ describe('EncodingParametersImpl', () => {
         return params;
       }, {});
 
-      var encodingParametersImpl;
-      var changedEventCount = 0;
+      let encodingParametersImpl;
+      let changedEventCount = 0;
 
       before(() => {
         encodingParametersImpl = new EncodingParametersImpl(encodingParameters);

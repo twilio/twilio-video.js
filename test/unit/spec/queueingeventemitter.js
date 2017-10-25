@@ -5,7 +5,7 @@ const assert = require('assert');
 const QueueingEventEmitter = require('../../../lib/queueingeventemitter');
 
 describe('QueueingEventEmitter', function() {
-  var ee;
+  let ee;
 
   beforeEach(function() {
     ee = new QueueingEventEmitter();
@@ -18,7 +18,7 @@ describe('QueueingEventEmitter', function() {
     });
 
     it('should emit an event immediately when a listener is present', function() {
-      var values = [];
+      const values = [];
       ee.on('event', function(value) {
         values.push(value);
       });
@@ -37,7 +37,7 @@ describe('QueueingEventEmitter', function() {
       ee.queue('event', 'foo');
       ee.queue('event', 'bar');
 
-      var values = [];
+      const values = [];
       ee.on('event', function(value) {
         values.push(value);
       });

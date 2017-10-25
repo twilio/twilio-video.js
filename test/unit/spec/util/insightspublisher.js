@@ -30,7 +30,7 @@ describe('InsightsPublisher', () => {
   });
 
   describe('#disconnect', () => {
-    var publisher;
+    let publisher;
 
     beforeEach(() => {
       publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
@@ -74,7 +74,7 @@ describe('InsightsPublisher', () => {
   });
 
   describe('#publish', () => {
-    var publisher;
+    let publisher;
 
     beforeEach(() => {
       publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
@@ -93,8 +93,8 @@ describe('InsightsPublisher', () => {
       [ 'CONNECTING', 'OPEN' ].forEach(readyState => {
         const contextDesc = `when the underlying WebSocket is ${readyState}`;
         context(contextDesc, () => {
-          var payload;
-          var ret;
+          let payload;
+          let ret;
 
           beforeEach(() => {
             payload = { baz: 1 };
@@ -129,8 +129,8 @@ describe('InsightsPublisher', () => {
     });
 
     context('when the ._session of the InsightsPublisher is not null', () => {
-      var payload;
-      var ret;
+      let payload;
+      let ret;
 
       beforeEach(() => {
         payload = { baz: 1 };
@@ -176,7 +176,7 @@ describe('InsightsPublisher', () => {
 
     context('when the WebSocket gateway is specified in the options', () => {
       it('should call the WebSocket constructor with the provided gateway', () => {
-        var wsUrl;
+        let wsUrl;
         const options = {
           gateway: 'somegateway',
           WebSocket: customizedWebSocket(FakeWebSocket, function(url) {
@@ -190,7 +190,7 @@ describe('InsightsPublisher', () => {
 
     context('when the WebSocket gateway is not specified in the options', () => {
       it('should call the WebSocket constructor with the gateway created from environment and realm', () => {
-        var wsUrl;
+        let wsUrl;
         const options = {
           WebSocket: customizedWebSocket(FakeWebSocket, function(url) {
             wsUrl = url;
@@ -224,8 +224,8 @@ describe('InsightsPublisher', () => {
     });
 
     context('when the underlying WebSocket emits a "message" event with a "connected" RSP message', () => {
-      var publisher;
-      var connectedEmitted = false;
+      let publisher;
+      let connectedEmitted;
 
       before(() => {
         publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
@@ -276,13 +276,14 @@ describe('InsightsPublisher', () => {
 
     context('when the underlying WebSocket emits a "message" event with an "error" message', () => {
       [ '> 0', '=== 0' ].forEach((scenario, i) => {
-        var publisher;
-        var disconnectedError = null;
-        var reconnectingEmitted = false;
-        var reconnectAttemptsLeft;
         const reconnectDeferreds = [ defer(), defer() ];
-        var reconnectedDeferredsIdx = 0;
         const timestamps = [];
+
+        let publisher;
+        let disconnectedError;
+        let reconnectingEmitted;
+        let reconnectAttemptsLeft;
+        let reconnectedDeferredsIdx = 0;
 
         context(`when the ._reconnectAttemptsLeft ${scenario}`, () => {
           before(() => {
