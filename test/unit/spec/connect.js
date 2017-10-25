@@ -214,40 +214,6 @@ describe('connect', () => {
       });
     });
   });
-
-  describe('when the LocalParticipant\'s initial LocalTracks fail to be published', () => {
-    it('should reject the CancelablePromise', () => {
-      it('sets shouldStopLocalTracks on the LocalParticipant', async () => {
-        const stream = await fakeGetUserMedia({audio: true, video: true});
-        const tracks = stream.getTracks().map(track => new FakeLocalTrack(track));
-        const createLocalTracks = () => Promise.resolve(tracks);
-
-        const mockSignaling = new Signaling();
-        mockSignaling.connect = () => () => new RoomSignaling();
-        function signaling() {
-          return mockSignaling;
-        }
-
-        function LocalParticipant() {
-        }
-
-        try {
-          const room = await connect(token, {
-            LocalParticipant,
-            createLocalTracks,
-            iceServers: [],
-            signaling
-          });
-        } catch (error) {
-          assert.equal(error, 'foo');
-          return;
-        }
-
-        throw(new Error('Unexpected resolution'));
-      });
-    });
-  });
-
 });
 
 function FakeLocalTrack(mediaStreamTrack, shouldNotCreateStop) {
