@@ -6,7 +6,7 @@ const TwilioError = require('../../../../lib/util/twilioerror');
 
 describe('TwilioError', function() {
   describe('constructor', () => {
-    var error;
+    let error;
 
     before(() => {
       error = new TwilioError(1234);
@@ -31,7 +31,7 @@ describe('TwilioError', function() {
 
     context('when message is provided', () => {
       it('should set the message property', () => {
-        var errorWithMsg = new TwilioError(1234, 'some error message');
+        const errorWithMsg = new TwilioError(1234, 'some error message');
         assert.equal(errorWithMsg.message, 'some error message');
       });
     });

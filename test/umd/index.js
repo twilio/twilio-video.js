@@ -1,9 +1,11 @@
 'use strict';
 
-var version = require('../../package.json').version;
-var phantom = require('phantom');
-var requirejs = require('requirejs');
-var publicVars = [
+const phantom = require('phantom');
+const requirejs = require('requirejs');
+
+const version = require('../../package.json').version;
+
+const publicVars = [
   'connect',
   'createLocalAudioTrack',
   'createLocalTracks',
@@ -18,8 +20,8 @@ describe('UMD', function() {
   this.timeout(5000);
 
   describe('RequireJS (browser)', function() {
-    var page;
-    var instance;
+    let page;
+    let instance;
 
     beforeEach(function() {
       return phantom.create([]).then(function(_instance) {

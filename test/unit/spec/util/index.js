@@ -9,9 +9,9 @@ const { makeUUID, promiseFromEvents } = require('../../../../lib/util');
 describe('util', function() {
   describe('makeUUID', function() {
     it('should generate a unique UUID', function() {
-      var uuid1 = makeUUID();
-      var uuid2 = makeUUID();
-      var uuid3 = makeUUID();
+      const uuid1 = makeUUID();
+      const uuid2 = makeUUID();
+      const uuid3 = makeUUID();
 
       assert.notEqual(uuid1, uuid2);
       assert.notEqual(uuid2, uuid3);
@@ -20,9 +20,9 @@ describe('util', function() {
   });
 
   describe('promiseFromEvents', function() {
-    var emitter;
-    var promise;
-    var spy;
+    let emitter;
+    let promise;
+    let spy;
 
     beforeEach(function() {
       emitter = new EventEmitter();

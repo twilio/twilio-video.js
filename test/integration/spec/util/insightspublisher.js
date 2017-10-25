@@ -19,7 +19,7 @@ describe('InsightsPublisher', function() {
 
   describe('connect', () => {
     ['expired', 'invalid', 'valid'].forEach(tokenType => {
-      var publisher;
+      let publisher;
 
       context(`when attempted with ${a(tokenType)} ${tokenType} token`, () => {
         before(() => {

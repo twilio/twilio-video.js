@@ -12,10 +12,11 @@ const { SignalingConnectionDisconnectedError } = require('../../../lib/util/twil
 const log = require('../../lib/fakelog');
 
 describe('Room', function() {
-  var room;
-  var options = { log: log };
-  var localParticipant = new ParticipantSignaling('PAXXX', 'client');
-  var signaling;
+  const options = { log: log };
+  const localParticipant = new ParticipantSignaling('PAXXX', 'client');
+
+  let room;
+  let signaling;
 
   beforeEach(function() {
     signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
@@ -34,7 +35,7 @@ describe('Room', function() {
     });
 
     it('should trigger "disconnect" event on the Room with the Room as the argument', () => {
-      var spy = sinon.spy();
+      const spy = sinon.spy();
       room.on('disconnected', spy);
       room.disconnect();
       assert.equal(spy.callCount, 1);
@@ -43,7 +44,7 @@ describe('Room', function() {
   });
 
   describe('RemoteParticipant events', function() {
-    var participants;
+    let participants;
 
     beforeEach(function() {
       [
@@ -57,7 +58,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackAdded', spy);
 
       participants['foo'].emit('trackAdded');
@@ -65,7 +66,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackDimensionsChanged', spy);
 
       participants['foo'].emit('trackDimensionsChanged');
@@ -73,7 +74,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackDisabled', spy);
 
       participants['foo'].emit('trackDisabled');
@@ -81,7 +82,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackEnabled', spy);
 
       participants['foo'].emit('trackEnabled');
@@ -89,7 +90,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackMessage', spy);
 
       participants['foo'].emit('trackMessage');
@@ -97,7 +98,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackRemoved', spy);
 
       participants['bar'].emit('trackRemoved');
@@ -105,7 +106,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackStarted', spy);
 
       participants['foo'].emit('trackStarted');
@@ -113,7 +114,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackSubscribed', spy);
 
       participants['foo'].emit('trackSubscribed');
@@ -121,7 +122,7 @@ describe('Room', function() {
     });
 
     it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', function() {
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackUnsubscribed', spy);
 
       participants['bar'].emit('trackUnsubscribed');
@@ -131,7 +132,7 @@ describe('Room', function() {
     it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', function() {
       participants['foo'].emit('disconnected');
 
-      var spy = new sinon.spy();
+      const spy = new sinon.spy();
       room.on('trackAdded', spy);
       room.on('trackDimensionsChanged', spy);
       room.on('trackDisabled', spy);
@@ -158,7 +159,7 @@ describe('Room', function() {
   describe('RoomSignaling state changed to "disconnected"', () => {
     context('when triggered due to unexpected connection loss', () => {
       it('should trigger the same event on the Room with itself and a SignalingConnectionDisconnectedError as the arguments', () => {
-        var spy = sinon.spy();
+        const spy = sinon.spy();
         room.on('disconnected', spy);
         signaling.preempt('disconnected', null, [new SignalingConnectionDisconnectedError()]);
         assert.equal(spy.callCount, 1);
@@ -174,7 +175,7 @@ describe('Room', function() {
         new RemoteParticipantSignaling('PA111', 'bar')
       ].forEach(signaling.connectParticipant.bind(signaling));
 
-      var participants = {};
+      const participants = {};
       room.participants.forEach(function(participant) {
         participant._unsubscribeTracks = sinon.spy();
         participants[participant.identity] = participant;

@@ -75,12 +75,12 @@ describe('RecordingV2', () => {
 });
 
 function testEnableOrDisable(method, argument, isEnabled) {
-  var expectedIsEnabled = typeof argument === 'boolean'
+  const expectedIsEnabled = typeof argument === 'boolean'
     ? argument
     : method === 'enable';
 
-  var runMethod;
-  var recording;
+  let runMethod;
+  let recording;
 
   beforeEach(() => {
     recording = new RecordingV2();
@@ -110,7 +110,7 @@ function testEnableOrDisable(method, argument, isEnabled) {
     });
 
     it('emits an "updated" event with .isEnabled set to ' + expectedIsEnabled, () => {
-      var actualIsEnabled;
+      let actualIsEnabled;
       recording.once('updated', () => actualIsEnabled = recording.isEnabled);
       runMethod();
       assert.equal(actualIsEnabled, expectedIsEnabled);
@@ -122,7 +122,7 @@ function testEnableOrDisable(method, argument, isEnabled) {
     });
 
     it('does not emit an "updated" event', () => {
-      var updated = false;
+      let updated;
       recording.once('updated', () => updated = true);
       runMethod();
       assert(!updated);
@@ -131,11 +131,12 @@ function testEnableOrDisable(method, argument, isEnabled) {
 }
 
 function testUpdate(revision, enabled, isEnabled) {
-  var recording;
-  var recordingState = {
+  const recordingState = {
     enabled: enabled,
     revision: revision
   };
+
+  let recording;
 
   beforeEach(() => {
     recording = new RecordingV2();
@@ -163,14 +164,14 @@ function testUpdate(revision, enabled, isEnabled) {
 
     if (enabled === isEnabled) {
       it('does not emit an "updated" event', () => {
-        var updated = false;
+        let updated;
         recording.once('updated', () => updated = true);
         recording.update(recordingState);
         assert(!updated);
       });
     } else {
       it('emits an "updated" event with .isEnabled set to ' + enabled, () => {
-        var actualIsEnabled;
+        let actualIsEnabled;
         recording.once('updated', () => actualIsEnabled = recording.isEnabled);
         recording.update(recordingState);
         assert.equal(actualIsEnabled, enabled);
@@ -188,7 +189,7 @@ function testUpdate(revision, enabled, isEnabled) {
     }
 
     it('does not emit an "updated" event', () => {
-      var updated = false;
+      let updated;
       recording.once('updated', () => updated = true);
       recording.update(recordingState);
       assert(!updated);

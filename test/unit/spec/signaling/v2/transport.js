@@ -17,7 +17,7 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 
 describe('Transport', () => {
   describe('constructor', () => {
-    var test;
+    let test;
 
     beforeEach(() => {
       test = makeTest();
@@ -67,7 +67,7 @@ describe('Transport', () => {
 
         context('the createMessage function, called when the Transport\'s .state is', () => {
           context('"connected", returns an RSP message that', () => {
-            var message;
+            let message;
 
             beforeEach(() => {
               test.connect();
@@ -92,7 +92,7 @@ describe('Transport', () => {
           });
 
           context('"connecting", returns an RSP message that', () => {
-            var message;
+            let message;
 
             beforeEach(() => {
               message = test.mediaHandler.createMessage();
@@ -116,7 +116,7 @@ describe('Transport', () => {
           });
 
           context('"disconnected", returns an RSP message that', () => {
-            var message;
+            let message;
 
             beforeEach(() => {
               test.transport.disconnect();
@@ -132,7 +132,7 @@ describe('Transport', () => {
           });
 
           context('"syncing", returns an RSP message that', () => {
-            var message;
+            let message;
 
             beforeEach(() => {
               test.connect();
@@ -162,8 +162,8 @@ describe('Transport', () => {
   });
 
   describe('#disconnect, called when the Transport\'s .state is', () => {
-    var test;
-    var ret;
+    let test;
+    let ret;
 
     context('"connected"', () => {
       beforeEach(() => {
@@ -331,12 +331,12 @@ describe('Transport', () => {
   });
 
   describe('#publish, called when the Transport\'s .state is', () => {
-    var test;
-    var ret;
+    let test;
+    let ret;
 
     // NOTE(mroberts): These are used to test .publish in the "connecting" and
     // "syncing" states below.
-    var extraPublishes = [
+    const extraPublishes = [
       {
         participant: {
           revision: 1,
@@ -394,7 +394,7 @@ describe('Transport', () => {
       },
     ];
 
-    var expectedPublish = {
+    const expectedPublish = {
       participant: {
         revision: 2,
         tracks: [
@@ -476,8 +476,9 @@ describe('Transport', () => {
       });
 
       context('when fails with a 5xx error', () => {
-        var test;
-        var sendRequestCallTimes = [];
+        const sendRequestCallTimes = [];
+
+        let test;
 
         beforeEach(() => {
           return new Promise(resolve => {
@@ -654,8 +655,8 @@ describe('Transport', () => {
   });
 
   describe('#publishEvent', () => {
-    var test;
-    var ret;
+    let test;
+    let ret;
 
     before(() => {
       test = makeTest();
@@ -673,8 +674,8 @@ describe('Transport', () => {
   });
 
   describe('#sync, called when the Transport\'s .state is', () => {
-    var test;
-    var ret;
+    let test;
+    let ret;
 
     context('"connected"', () => {
       beforeEach(() => {
@@ -767,7 +768,7 @@ describe('Transport', () => {
   });
 
   describe('the underlying SIP.js Session emits', () => {
-    var test;
+    let test;
 
     beforeEach(() => {
       test = makeTest();
@@ -775,7 +776,7 @@ describe('Transport', () => {
 
     context('an "accepted" event, and the Transport\'s .state is', () => {
       context('"connected", and the request contains an RSP message with type', () => {
-        var eventEmitted;
+        let eventEmitted;
 
         beforeEach(() => {
           test.connect();
@@ -843,12 +844,13 @@ describe('Transport', () => {
 
       context('"connecting", and the request contains an RSP message with type', () => {
         context('"connected"', () => {
-          var message = {
+          const message = {
             type: 'connected',
             foo: 'bar'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = null;
@@ -874,8 +876,8 @@ describe('Transport', () => {
         });
 
         context('"disconnected"', () => {
-          var connectedEvent;
-          var messageEvent;
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -901,8 +903,8 @@ describe('Transport', () => {
         });
 
         context('"error"', () => {
-          var connectedEvent;
-          var messageEvent;
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -928,7 +930,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response body', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -937,7 +939,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 12345);
             assert.equal(error.message, 'foo bar');
@@ -949,7 +951,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -958,7 +960,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 67890);
             assert.equal(error.message, 'bar baz');
@@ -970,7 +972,7 @@ describe('Transport', () => {
         });
 
         context('"error" with no code or message in either the body or the header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -979,7 +981,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with an unknown TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 0);
             assert.equal(error.message, 'Unknown error');
@@ -991,11 +993,12 @@ describe('Transport', () => {
         });
 
         context('"synced"', () => {
-          var message = {
+          const message = {
             type: 'synced'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1041,11 +1044,12 @@ describe('Transport', () => {
         });
 
         context('"update"', () => {
-          var message = {
+          const message = {
             type: 'update'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1092,8 +1096,8 @@ describe('Transport', () => {
       });
 
       context('"disconnected", and the request contains an RSP message with type', () => {
-        var connectedEvent;
-        var messageEvent;
+        let connectedEvent;
+        let messageEvent;
 
         beforeEach(() => {
           test.receiveRequest({ type: 'disconnected' });
@@ -1196,7 +1200,7 @@ describe('Transport', () => {
       });
 
       context('"syncing", and the request contains an RSP message with type', () => {
-        var eventEmitted;
+        let eventEmitted;
 
         beforeEach(() => {
           test.connect();
@@ -1265,7 +1269,7 @@ describe('Transport', () => {
     });
 
     context('a "failed" event, and the Transport\'s .state is', () => {
-      var evtPayloads = [
+      const evtPayloads = [
         [ ],
         [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
         [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
@@ -1273,8 +1277,9 @@ describe('Transport', () => {
         [ null, 'Request Timeout' ],
         [ null, 'Connection Error' ]
       ];
-      var evtPayloadsIdx = 0;
-      var eventEmitted;
+
+      let evtPayloadsIdx = 0;
+      let eventEmitted;
 
       function setupTest() {
         test.transitions = [];
@@ -1297,7 +1302,7 @@ describe('Transport', () => {
       });
 
       context('"connecting"', () => {
-        var disconnect;
+        let disconnect;
         beforeEach(() => {
           disconnect = test.transport.disconnect;
           if (evtPayloadsIdx > 0) {
@@ -1313,38 +1318,38 @@ describe('Transport', () => {
         });
 
         it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingIncomingMessageInvalidError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingIncomingMessageInvalidError();
           assert(error instanceof SignalingIncomingMessageInvalidError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error body', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 12345);
           assert.equal(error.message, 'foo bar');
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error header', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 67890);
           assert.equal(error.message, 'bar baz');
         });
 
         it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionTimeoutError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionTimeoutError();
           assert(error instanceof SignalingConnectionTimeoutError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionError();
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
@@ -1391,10 +1396,11 @@ describe('Transport', () => {
         });
 
         context('"connected"', () => {
-          var message = {
+          const message = {
             type: 'connected'
           };
-          var emittedEvent;
+
+          let emittedEvent;
 
           beforeEach(() => {
             emittedEvent = null;
@@ -1408,7 +1414,7 @@ describe('Transport', () => {
         });
 
         context('"disconnected"', () => {
-          var message = {
+          const message = {
             type: 'disconnected'
           };
 
@@ -1425,7 +1431,7 @@ describe('Transport', () => {
         });
 
         context('"error"', () => {
-          var message = {
+          const message = {
             type: 'error'
           };
 
@@ -1442,7 +1448,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response body', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1451,7 +1457,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 12345);
             assert.equal(error.message, 'foo bar');
@@ -1463,7 +1469,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1472,7 +1478,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 67890);
             assert.equal(error.message, 'bar baz');
@@ -1484,7 +1490,7 @@ describe('Transport', () => {
         });
 
         context('"error" with no code or message in either the body or the header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1493,7 +1499,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a unknown TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 0);
             assert.equal(error.message, 'Unknown error');
@@ -1505,10 +1511,11 @@ describe('Transport', () => {
         });
 
         context('"synced"', () => {
-          var message = {
+          const message = {
             type: 'synced'
           };
-          var emittedEvent;
+
+          let emittedEvent;
 
           beforeEach(() => {
             emittedEvent = null;
@@ -1522,10 +1529,11 @@ describe('Transport', () => {
         });
 
         context('"update"', () => {
-          var message = {
+          const message = {
             type: 'update'
           };
-          var emittedEvent;
+
+          let emittedEvent;
 
           beforeEach(() => {
             emittedEvent = null;
@@ -1541,11 +1549,12 @@ describe('Transport', () => {
 
       context('"connecting", and the request contains an RSP message with type', () => {
         context('"connected"', () => {
-          var message = {
+          const message = {
             type: 'connected'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = null;
@@ -1595,7 +1604,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response body', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1604,7 +1613,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 12345);
             assert.equal(error.message, 'foo bar');
@@ -1616,7 +1625,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1625,7 +1634,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 67890);
             assert.equal(error.message, 'bar baz');
@@ -1637,7 +1646,7 @@ describe('Transport', () => {
         });
 
         context('"error" with no code or message in either the body or the header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1646,7 +1655,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a unknown TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 0);
             assert.equal(error.message, 'Unknown error');
@@ -1658,11 +1667,12 @@ describe('Transport', () => {
         });
 
         context('"synced"', () => {
-          var message = {
+          const message = {
             type: 'synced'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1702,11 +1712,12 @@ describe('Transport', () => {
         });
 
         context('"update"', () => {
-          var message = {
+          const message = {
             type: 'update'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1747,7 +1758,7 @@ describe('Transport', () => {
       });
 
       context('"disconnected", and the request contains an RSP message with type', () => {
-        var eventEmitted;
+        let eventEmitted;
 
         beforeEach(() => {
           test.transport.disconnect();
@@ -1821,11 +1832,12 @@ describe('Transport', () => {
         });
 
         context('"connected"', () => {
-          var message = {
+          const message = {
             type: 'connected'
           };
-          var connectedEvent;
-          var messageEvents;
+
+          let connectedEvent;
+          let messageEvents;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1891,7 +1903,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response body', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1900,7 +1912,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 12345);
             assert.equal(error.message, 'foo bar');
@@ -1912,7 +1924,7 @@ describe('Transport', () => {
         });
 
         context('"error" with code and message in the response header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1921,7 +1933,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 67890);
             assert.equal(error.message, 'bar baz');
@@ -1933,7 +1945,7 @@ describe('Transport', () => {
         });
 
         context('"error" with no code or message in either the body or the header', () => {
-          var disconnect;
+          let disconnect;
 
           beforeEach(() => {
             disconnect = test.transport.disconnect;
@@ -1942,7 +1954,7 @@ describe('Transport', () => {
           });
 
           it('calls #disconnect() with a unknown TwilioError', () => {
-            var error = test.transport.disconnect.args[0][0];
+            const error = test.transport.disconnect.args[0][0];
             assert(error instanceof TwilioError);
             assert.equal(error.code, 0);
             assert.equal(error.message, 'Unknown error');
@@ -1954,11 +1966,12 @@ describe('Transport', () => {
         });
 
         context('"synced"', () => {
-          var message = {
+          const message = {
             type: 'synced'
           };
-          var connectedEvent;
-          var messageEvent;
+
+          let connectedEvent;
+          let messageEvent;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -1980,11 +1993,12 @@ describe('Transport', () => {
         });
 
         context('"update"', () => {
-          var message = {
+          const message = {
             type: 'update'
           };
-          var connectedEvent;
-          var messageEvents;
+
+          let connectedEvent;
+          let messageEvents;
 
           beforeEach(() => {
             connectedEvent = false;
@@ -2026,7 +2040,7 @@ describe('Transport', () => {
     });
 
     context('a "bye" event, and the Transport\'s .state is', () => {
-      var evtPayloads = [
+      const evtPayloads = [
         [ ],
         [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
         [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
@@ -2034,10 +2048,11 @@ describe('Transport', () => {
         [ null, 'Request Timeout' ],
         [ null, 'Connection Error' ]
       ];
-      var evtPayloadsIdx = 0;
+
+      let evtPayloadsIdx = 0;
 
       context('"connected"', () => {
-        var disconnect;
+        let disconnect;
 
         beforeEach(() => {
           disconnect = test.transport.disconnect;
@@ -2057,38 +2072,38 @@ describe('Transport', () => {
         });
 
         it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingIncomingMessageInvalidError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingIncomingMessageInvalidError();
           assert(error instanceof SignalingIncomingMessageInvalidError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error body', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 12345);
           assert.equal(error.message, 'foo bar');
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error header', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 67890);
           assert.equal(error.message, 'bar baz');
         });
 
         it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionTimeoutError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionTimeoutError();
           assert(error instanceof SignalingConnectionTimeoutError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionError();
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
@@ -2103,7 +2118,7 @@ describe('Transport', () => {
       });
 
       context('"connecting"', () => {
-        var disconnect;
+        let disconnect;
 
         beforeEach(() => {
           disconnect = test.transport.disconnect;
@@ -2120,38 +2135,38 @@ describe('Transport', () => {
         });
 
         it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingIncomingMessageInvalidError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingIncomingMessageInvalidError();
           assert(error instanceof SignalingIncomingMessageInvalidError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error body', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 12345);
           assert.equal(error.message, 'foo bar');
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error header', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 67890);
           assert.equal(error.message, 'bar baz');
         });
 
         it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionTimeoutError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionTimeoutError();
           assert(error instanceof SignalingConnectionTimeoutError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionError();
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
@@ -2182,7 +2197,7 @@ describe('Transport', () => {
       });
 
       context('"syncing"', () => {
-        var disconnect;
+        let disconnect;
 
         beforeEach(() => {
           disconnect = test.transport.disconnect;
@@ -2202,38 +2217,38 @@ describe('Transport', () => {
         });
 
         it('should call #disconnect() with SignalingIncomingMessageInvalidError when event payload has an error body with invalid JSON', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingIncomingMessageInvalidError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingIncomingMessageInvalidError();
           assert(error instanceof SignalingIncomingMessageInvalidError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error body', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 12345);
           assert.equal(error.message, 'foo bar');
         });
 
         it('should call #disconnect() with TwilioError when event payload has an error header', () => {
-          var error = test.transport.disconnect.args[0][0];
+          const error = test.transport.disconnect.args[0][0];
           assert(error instanceof TwilioError);
           assert.equal(error.code, 67890);
           assert.equal(error.message, 'bar baz');
         });
 
         it('should call #disconnect() with TwilioError when cause is "Request Timeout"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionTimeoutError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionTimeoutError();
           assert(error instanceof SignalingConnectionTimeoutError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
         });
 
         it('should call #disconnect() with TwilioError when cause is "Connection Error"', () => {
-          var error = test.transport.disconnect.args[0][0];
-          var expectedError = new SignalingConnectionError();
+          const error = test.transport.disconnect.args[0][0];
+          const expectedError = new SignalingConnectionError();
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
@@ -2304,7 +2319,7 @@ function makeAccessToken() {
 }
 
 function makeLocalParticipant(options) {
-  var localParticipant = {};
+  const localParticipant = {};
   localParticipant.getState = sinon.spy(() => options.localParticipantState);
   return localParticipant;
 }
@@ -2315,7 +2330,7 @@ function makePeerConnectionManager(options) {
 
 function makeSession(options) {
   options.sendRequest = options.sendRequest || (() => {});
-  var session = new EventEmitter();
+  const session = new EventEmitter();
   session.terminate = sinon.spy(() => {});
   session.sendReinvite = sinon.spy(() => {});
   session.sendRequest = sinon.spy(options.sendRequest);
@@ -2323,7 +2338,7 @@ function makeSession(options) {
 }
 
 function makeUA(options) {
-  var ua = {};
+  const ua = {};
   ua.invite = sinon.spy(() => options.session);
   ua.once = sinon.spy(() => {});
   ua.stop = sinon.spy(() => {});

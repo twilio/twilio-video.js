@@ -10,8 +10,8 @@ const MediaTrack = require('../../../../../lib/media/track/mediatrack');
 const log = require('../../../../lib/fakelog');
 
 describe('MediaTrack', function() {
-  var _initialize;
-  var track;
+  let _initialize;
+  let track;
 
   before(function() {
     _initialize = MediaTrack.prototype._initialize;
@@ -33,7 +33,7 @@ describe('MediaTrack', function() {
   });
 
   describe('_initialize', function() {
-    var dummyElement;
+    let dummyElement;
 
     before(function() {
       track = createMediaTrack('1', 'audio');
@@ -94,8 +94,8 @@ describe('MediaTrack', function() {
   });
 
   describe('attach', function() {
-    var element;
-    var returnVal;
+    let element;
+    let returnVal;
 
     context('when undefined is passed', function() {
       before(function() {
@@ -229,7 +229,7 @@ describe('MediaTrack', function() {
   });
 
   describe('_selectElement', function() {
-    var element;
+    let element;
     before(function() {
       track = createMediaTrack('1', 'audio');
 
@@ -269,7 +269,7 @@ describe('MediaTrack', function() {
 
   describe('detach', function() {
     context('when el is undefined', function() {
-      var attachedElements;
+      let attachedElements;
 
       before(function() {
         track = createMediaTrack('1', 'audio');
@@ -300,7 +300,7 @@ describe('MediaTrack', function() {
     });
 
     context('when el is null', function() {
-      var attachedElements;
+      let attachedElements;
 
       before(function() {
         track = createMediaTrack('1', 'audio');
@@ -331,7 +331,7 @@ describe('MediaTrack', function() {
     });
 
     context('when el is a string', function() {
-      var element;
+      let element;
 
       before(function() {
         track = createMediaTrack('1', 'audio');
@@ -359,7 +359,7 @@ describe('MediaTrack', function() {
     });
 
     context('when el is an element', function() {
-      var element;
+      let element;
 
       before(function() {
         track = createMediaTrack('1', 'audio');
@@ -405,8 +405,9 @@ describe('MediaTrack', function() {
   });
 
   describe('_detachElement', function() {
-    var returnVal;
-    var el1, el2;
+    let returnVal;
+    let el1;
+    let el2;
 
     before(function() {
       track = createMediaTrack('1', 'audio');
@@ -445,11 +446,11 @@ describe('MediaTrack', function() {
   });
 
   describe('_attach', () => {
-    var el;
-    var ret;
-    var track;
-    var mediaStream;
-    var MediaStream;
+    let el;
+    let ret;
+    let track;
+    let mediaStream;
+    let MediaStream;
 
     beforeEach(() => {
       MediaStream = sinon.spy(function () { mediaStream = this; });
@@ -545,7 +546,7 @@ describe('MediaTrack', function() {
  });
 
 function createMediaTrack(id, kind, options) {
-  var mediaStreamTrack = new MediaStreamTrack(id, kind);
+  const mediaStreamTrack = new MediaStreamTrack(id, kind);
   return new MediaTrack(mediaStreamTrack, Object.assign({ log: log }, options));
 }
 

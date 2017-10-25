@@ -6,7 +6,7 @@ const LocalVideoTrackStats = require('../../../../lib/stats/localvideotrackstats
 
 describe('LocalVideoTrackStats', () => {
   describe('constructor', () => {
-    var stats = {
+    const stats = {
       trackId: 'abcd',
       timestamp: 12345,
       ssrc: 'foo',
@@ -19,7 +19,7 @@ describe('LocalVideoTrackStats', () => {
     };
 
     it('should set the captureDimensions, dimensions, captureFrameRate and frameRate properties', () => {
-      var trackStats = new LocalVideoTrackStats(stats.trackId, stats);
+      const trackStats = new LocalVideoTrackStats(stats.trackId, stats);
       assert.deepEqual(trackStats.captureDimensions, {
         width: stats.frameWidthInput,
         height: stats.frameHeightInput
@@ -37,19 +37,16 @@ describe('LocalVideoTrackStats', () => {
       [['frameWidthSent', 'frameHeightSent'], 'dimensions'],
       [['frameRateInput'], 'captureFrameRate'],
       [['frameRateSent'], 'frameRate']
-    ].forEach(nulledStats => {
-      var statNames = nulledStats[0];
-      var prop = nulledStats[1];
-
+    ].forEach(([statNames, prop]) => {
       context(`when the StandardizedTrackStatsReport does not have ${statNames.join(', ')}`, () => {
         it(`should set the ${prop} property to null`, () => {
-          var statsValues = statNames.reduce((values, name) => {
+          const statsValues = statNames.reduce((values, name) => {
             values[name] = stats[name];
             delete stats[name];
             return values;
           }, {});
 
-          var trackStats = new LocalVideoTrackStats(stats.trackId, stats);
+          const trackStats = new LocalVideoTrackStats(stats.trackId, stats);
           assert.equal(trackStats[prop], null);
 
           statNames.forEach(name => stats[name] = statsValues[name]);

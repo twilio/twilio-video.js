@@ -127,9 +127,9 @@ describe('connect', () => {
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
 
-        var createLocalTracks;
-        var tracks;
-        var room;
+        let createLocalTracks;
+        let tracks;
+        let room;
 
         function LocalParticipant() {
         }

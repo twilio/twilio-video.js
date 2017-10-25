@@ -6,7 +6,7 @@ const RemoteAudioTrackStats = require('../../../../lib/stats/remoteaudiotracksta
 
 describe('RemoteAudioTrackStats', () => {
   describe('constructor', () => {
-    var stats = {
+    const stats = {
       trackId: 'abcd',
       timestamp: 12345,
       ssrc: 'foo',
@@ -15,13 +15,13 @@ describe('RemoteAudioTrackStats', () => {
     };
 
     it('should set the audioLevel and jitter properties', () => {
-      var trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
+      const trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
       assert.equal(trackStats.audioLevel, stats.audioOutputLevel);
       assert.equal(trackStats.jitter, stats.jitter);
     });
 
     [['audioLevel','audioOutputLevel'], 'jitter'].forEach(statName => {
-      var propName = typeof statName === 'string'
+      const propName = typeof statName === 'string'
         ? statName : statName[0];
 
       statName = typeof statName === 'string'
@@ -29,10 +29,10 @@ describe('RemoteAudioTrackStats', () => {
 
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
         it(`should set the ${propName} property to null`, () => {
-          var statValue = stats[statName];
+          const statValue = stats[statName];
           delete stats[statName];
 
-          var trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
+          const trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
           assert.equal(trackStats[propName], null);
 
           stats[statName] = statValue;

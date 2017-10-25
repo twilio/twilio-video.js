@@ -6,7 +6,7 @@ const TrackStats = require('../../../../lib/stats/trackstats');
 
 describe('TrackStats', () => {
   describe('constructor', () => {
-    var stats = {
+    const stats = {
       trackId: 'abcd',
       ssrc: 'foo',
       timestamp: 12345,
@@ -23,7 +23,7 @@ describe('TrackStats', () => {
     });
 
     it('should set trackId, ssrc, timestamp, packetsLost, and codec properties', () => {
-      var trackStats = new TrackStats(stats.trackId, stats);
+      const trackStats = new TrackStats(stats.trackId, stats);
       assert.equal(trackStats.trackId, stats.trackId);
       assert.equal(trackStats.ssrc, stats.ssrc);
       assert.equal(trackStats.timestamp, stats.timestamp);
@@ -32,7 +32,7 @@ describe('TrackStats', () => {
     });
 
     ['packetsLost', ['codec', 'codecName']].forEach(statName => {
-      var propName = typeof statName === 'string'
+      const propName = typeof statName === 'string'
         ? statName : statName[0];
 
       statName = typeof statName === 'string'
@@ -40,10 +40,10 @@ describe('TrackStats', () => {
 
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
         it(`should set the ${propName} property to null`, () => {
-          var statValue = stats[statName];
+          const statValue = stats[statName];
           delete stats[statName];
 
-          var trackStats = new TrackStats(stats.trackId, stats);
+          const trackStats = new TrackStats(stats.trackId, stats);
           assert.equal(trackStats[propName], null);
 
           stats[statName] = statValue;

@@ -14,19 +14,17 @@ const log = require('../../../../lib/fakelog');
 [
   ['LocalAudioTrack', LocalAudioTrack],
   ['LocalVideoTrack', LocalVideoTrack]
-].forEach(pair => {
-  var description = pair[0];
-  var LocalMediaTrack = pair[1];
-  var kind = {
+].forEach(([description, LocalMediaTrack]) => {
+  const kind = {
     LocalAudioTrack: 'audio',
     LocalVideoTrack: 'video'
   };
 
   describe(description, function() {
-    var track;
+    let track;
 
     describe('constructor', () => {
-      var mediaStreamTrack;
+      let mediaStreamTrack;
 
       before(() => {
         mediaStreamTrack = new MediaStreamTrack('foo', kind[description]);
@@ -128,8 +126,8 @@ const log = require('../../../../lib/fakelog');
 
     describe('#enable', () => {
       context('when called with the same boolean value as the underlying MediaStreamTrack\'s .enabled', () => {
-        var trackDisabledEmitted = false;
-        var trackEnabledEmitted = false;
+        let trackDisabledEmitted;
+        let trackEnabledEmitted;
 
         before(() => {
           track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
@@ -147,7 +145,7 @@ const log = require('../../../../lib/fakelog');
       [ true, false ].forEach(enabled => {
         context(`when .enable is called with ${enabled}`, () => {
           context(`and the underlying MediaStreamTrack's .enabled is ${!enabled}`, () => {
-            var eventEmitted = false;
+            let eventEmitted;
 
             before(() => {
               track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
@@ -169,7 +167,7 @@ const log = require('../../../../lib/fakelog');
     });
 
     describe('#stop', function() {
-      var dummyElement = {
+      const dummyElement = {
         oncanplay: null,
         videoWidth: 320,
         videoHeight: 240
@@ -181,12 +179,12 @@ const log = require('../../../../lib/fakelog');
       });
 
       it('should not change the value of isEnabled', (done) => {
-        var startedTimeout = setTimeout(
+        const startedTimeout = setTimeout(
           done.bind(null, new Error('track#started didn\'t fire')),
           1000
         );
         track.on('started', () => {
-          var isEnabled = track.isEnabled;
+          const isEnabled = track.isEnabled;
           clearTimeout(startedTimeout);
           track.stop();
           assert.equal(isEnabled, track.isEnabled);
@@ -199,8 +197,8 @@ const log = require('../../../../lib/fakelog');
 });
 
 function createLocalMediaTrack(LocalMediaTrack, id, kind, name) {
-  var mediaStreamTrack = new MediaStreamTrack(id, kind);
-  var options = name ? { log, name } : { log };
+  const mediaStreamTrack = new MediaStreamTrack(id, kind);
+  const options = name ? { log, name } : { log };
   return new LocalMediaTrack(mediaStreamTrack, options);
 }
 

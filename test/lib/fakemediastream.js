@@ -1,12 +1,14 @@
 'use strict';
 
-var inherits = require('util').inherits;
-var randomName = require('../lib/util').randomName;
-var EventTarget = require('../../lib/eventtarget');
+const inherits = require('util').inherits;
+
+const EventTarget = require('../../lib/eventtarget');
+
+const randomName = require('../lib/util').randomName;
 
 function FakeMediaStream() {
-  var audioTracks = [];
-  var videoTracks = [];
+  const audioTracks = [];
+  const videoTracks = [];
 
   EventTarget.call(this);
   Object.defineProperties(this, {
@@ -52,11 +54,11 @@ FakeMediaStream.prototype.addTrack =
 
 FakeMediaStream.prototype.removeTrack =
   function removeTrack(track) {
-    var tracks = [];
+    let tracks = [];
     if (['audio', 'video'].includes(track.kind)) {
       tracks = this[track.kind + 'Tracks'];
     }
-    var trackIdx = tracks.indexOf(track);
+    const trackIdx = tracks.indexOf(track);
     if (0 <= trackIdx) {
       tracks.splice(trackIdx, 1);
     }
@@ -96,7 +98,7 @@ FakeMediaStreamTrack.prototype.stop =
   };
 
 function fakeGetUserMedia(constraints) {
-  var fakeMediaStream = new FakeMediaStream();
+  const fakeMediaStream = new FakeMediaStream();
 
   if (constraints.audio) {
     fakeMediaStream.addTrack(new FakeMediaStreamTrack('audio'));

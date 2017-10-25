@@ -14,28 +14,28 @@ const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
   it('returns a CancelablePromise', () => {
-    var test = makeTest();
+    const test = makeTest();
     assert(test.cancelableRoomSignalingPromise instanceof CancelablePromise);
   });
 
   it('constructs a new PeerConnectionManager', () => {
-    var test = makeTest();
+    const test = makeTest();
     assert(test.peerConnectionManager);
   });
 
   it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
-    var test = makeTest();
+    const test = makeTest();
     assert(test.peerConnectionManager.setConfiguration.calledOnce);
   });
 
   it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
-    var track1 = {
+    const track1 = {
       mediaStreamTrackOrDataTrackTransceiver: {}
     };
-    var track2 = {
+    const track2 = {
       mediaStreamTrackOrDataTrackTransceiver: {}
     };
-    var test = makeTest({
+    const test = makeTest({
       tracks: [
         track1,
         track2
@@ -46,15 +46,15 @@ describe('createCancelableRoomSignalingPromise', () => {
   });
 
   it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
-    var test = makeTest();
+    const test = makeTest();
     assert(test.peerConnectionManager.createAndOffer.calledOnce);
   });
 
   context('when the CancelablePromise is canceled before .createAndOffer resolves', () => {
     it('the CancelablePromise rejects with a cancelation Error', () => {
-      var test = makeTest();
+      const test = makeTest();
       test.cancelableRoomSignalingPromise.cancel();
-      var promise = test.cancelableRoomSignalingPromise.then(() => {
+      const promise = test.cancelableRoomSignalingPromise.then(() => {
         throw new Error('Unexpected resolution');
       }, error => {
         assert.equal(
@@ -66,9 +66,9 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
 
     it('calls .close on the PeerConnectionManager', () => {
-      var test = makeTest();
+      const test = makeTest();
       test.cancelableRoomSignalingPromise.cancel();
-      var promise = test.cancelableRoomSignalingPromise.then(() => {
+      const promise = test.cancelableRoomSignalingPromise.then(() => {
         throw new Error('Unexpected resolution');
       }, error => {
         assert(test.peerConnectionManager.close.calledOnce);
@@ -79,7 +79,7 @@ describe('createCancelableRoomSignalingPromise', () => {
   });
 
   it('constructs a Transport', () => {
-    var test = makeTest();
+    const test = makeTest();
     test.createAndOfferDeferred.resolve();
     return test.createAndOfferDeferred.promise.then(() => {
       assert(test.transport);
@@ -90,7 +90,7 @@ describe('createCancelableRoomSignalingPromise', () => {
   context('when the Transport emits a "connected" event with an initial Room state', () => {
     context('and the CancelablePromise was canceled', () => {
       it('the CancelablePromise rejects with a cancelation error', () => {
-        var test = makeTest();
+        const test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
@@ -106,7 +106,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       });
 
       it('calls .disconnect on the Transport', () => {
-        var test = makeTest();
+        const test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
@@ -120,7 +120,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       });
 
       it('calls .close on the PeerConnectionManager', () => {
-        var test = makeTest();
+        const test = makeTest();
         test.createAndOfferDeferred.resolve();
         return test.createAndOfferDeferred.promise.then(() => {
           test.cancelableRoomSignalingPromise.cancel();
@@ -137,7 +137,7 @@ describe('createCancelableRoomSignalingPromise', () => {
     context('and the CancelablePromise was not canceled', () => {
       context('but the .participant property is missing', () => {
         it('the CancelablePromise rejects with an error', () => {
-          var test = makeTest();
+          const test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
             test.transport.emit('connected', {});
@@ -150,7 +150,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
 
         it('calls .disconnect on the Transport', () => {
-          var test = makeTest();
+          const test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
             test.transport.emit('connected', {});
@@ -163,7 +163,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
 
         it('calls .close on the PeerConnectionManager', () => {
-          var test = makeTest();
+          const test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
             test.transport.emit('connected', {});
@@ -178,11 +178,11 @@ describe('createCancelableRoomSignalingPromise', () => {
 
       context('and the .participant property is present', () => {
         it('constructs a new RoomV2', () => {
-          var test = makeTest();
+          const test = makeTest();
           test.createAndOfferDeferred.resolve();
           return test.createAndOfferDeferred.promise.then(() => {
-            var identity = makeIdentity();
-            var sid = makeParticipantSid();
+            const identity = makeIdentity();
+            const sid = makeParticipantSid();
             test.transport.emit('connected', {
               participant: {
                 sid: sid,
@@ -195,11 +195,11 @@ describe('createCancelableRoomSignalingPromise', () => {
 
         context('when the CancelablePromise has not been canceled', () => {
           it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
-            var test = makeTest();
+            const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
+              const identity = makeIdentity();
+              const sid = makeParticipantSid();
               test.transport.emit('connected', {
                 participant: {
                   sid: sid,
@@ -215,11 +215,11 @@ describe('createCancelableRoomSignalingPromise', () => {
 
         context('when the CancelablePromise has been canceled', () => {
           it('the CancelablePromise rejects with a cancelation error', () => {
-            var test = makeTest();
+            const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
+              const identity = makeIdentity();
+              const sid = makeParticipantSid();
               test.transport.emit('connected', {
                 participant: {
                   sid: sid,
@@ -238,11 +238,11 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
 
           it('calls .disconnect on the newly-constructed RoomV2', () => {
-            var test = makeTest();
+            const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
+              const identity = makeIdentity();
+              const sid = makeParticipantSid();
               test.transport.emit('connected', {
                 participant: {
                   sid: sid,
@@ -259,11 +259,11 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
 
           it('does not call .disconnect on the Transport', () => {
-            var test = makeTest();
+            const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
+              const identity = makeIdentity();
+              const sid = makeParticipantSid();
               test.transport.emit('connected', {
                 participant: {
                   sid: sid,
@@ -280,11 +280,11 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
 
           it('calls .close on the PeerConnectionManager', () => {
-            var test = makeTest();
+            const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
-              var identity = makeIdentity();
-              var sid = makeParticipantSid();
+              const identity = makeIdentity();
+              const sid = makeParticipantSid();
               test.transport.emit('connected', {
                 participant: {
                   sid: sid,
@@ -306,7 +306,7 @@ describe('createCancelableRoomSignalingPromise', () => {
 
   context('when the Transport emits a "stateChanged" event in state "failed"', () => {
     it('the CancelablePromise rejects with a SignalingConnectionDisconnectedError', () => {
-      var test = makeTest();
+      const test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
         test.transport.emit('stateChanged', 'disconnected');
@@ -320,7 +320,7 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
 
     it('does not call .disconnect on the Transport', () => {
-      var test = makeTest();
+      const test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
         test.transport.emit('stateChanged', 'disconnected');
@@ -333,7 +333,7 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
 
     it('calls .close on the PeerConnectionManager', () => {
-      var test = makeTest();
+      const test = makeTest();
       test.createAndOfferDeferred.resolve();
       return test.createAndOfferDeferred.promise.then(() => {
         test.transport.emit('stateChanged', 'disconnected');
@@ -348,8 +348,8 @@ describe('createCancelableRoomSignalingPromise', () => {
 });
 
 function makeParticipantSid() {
-  var sid = 'PA';
-  for (var i = 0; i < 32; i++) {
+  let sid = 'PA';
+  for (let i = 0; i < 32; i++) {
     sid += 'abcdef0123456789'.split('')[Math.floor(Math.random() * 16)];
   }
   return sid;
@@ -401,7 +401,7 @@ function makeTest(options) {
 
 function makePeerConnectionManagerConstructor(testOptions) {
   return function PeerConnectionManager(options) {
-    var peerConnectionManager = new EventEmitter();
+    const peerConnectionManager = new EventEmitter();
     peerConnectionManager.close = sinon.spy(() => {});
     peerConnectionManager.setConfiguration = sinon.spy(() => {});
     peerConnectionManager.setMediaStreamTracksAndDataTrackSenders = sinon.spy(() => {});
@@ -417,7 +417,7 @@ function makePeerConnectionManagerConstructor(testOptions) {
 }
 
 function makeLocalParticipantSignaling(options) {
-  var localParticipant = new EventEmitter();
+  const localParticipant = new EventEmitter();
   localParticipant.sid = null;
   localParticipant.identity = null;
   localParticipant.revision = 0;
@@ -434,7 +434,7 @@ function makeLocalParticipantSignaling(options) {
 
 function makeTransportConstructor(testOptions) {
   return function Transport(name, accessToken, localParticipant, peerConnectionManager, ua) {
-    var transport = new EventEmitter();
+    const transport = new EventEmitter();
     this.name = name;
     this.accessToken = accessToken;
     this.localParticipant = localParticipant;

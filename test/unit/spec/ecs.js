@@ -17,9 +17,10 @@ const fakeToken = 'a.b.c';
 
 describe('ECS', function() {
   describe('#getConfiguration', function() {
-    var requestPost = request.post;
+    let requestPost;
 
     beforeEach(function() {
+      requestPost = request.post;
       request.post = new sinon.spy(function(params) {
         return Promise.resolve('{"foo":"bar","a":123}');
       });

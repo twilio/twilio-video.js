@@ -15,27 +15,27 @@ describe('SignalingV2', () => {
 
   describe('constructor', () => {
     it('sets the .state to "closed"', () => {
-      var test = makeTest();
+      const test = makeTest();
       assert.equal(
         'closed',
         test.signaling.state);
     });
 
     it('constructs a new SIP.js UA', () => {
-      var test = makeTest();
+      const test = makeTest();
       assert(test.ua);
     });
 
     context('the newly-constructed SIP.js UA', () => {
       it('has extra Supported option tags "room-signaling" and "timer"', () => {
-        var test = makeTest();
-        var optionTags = new Set(test.UA.args[0][0].extraSupported);
+        const test = makeTest();
+        const optionTags = new Set(test.UA.args[0][0].extraSupported);
         assert(optionTags.has('room-signaling'));
         assert(optionTags.has('timer'));
       });
 
       it('allows unregistered option tags', () => {
-        var test = makeTest();
+        const test = makeTest();
         assert(test.UA.args[0][0].hackAllowUnregisteredOptionTags);
       });
     });
@@ -47,14 +47,14 @@ describe('SignalingV2', () => {
   describe('#close, when the SignalingV2 .state is', () => {
     context('"closed"', () => {
       it('returns a Promise that resolves to the SignalingV2', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.close().then(signaling => {
           assert.equal(test.signaling, signaling);
         });
       });
 
       it('does not transition', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.close().then(() => {
           assert.deepEqual(
             [],
@@ -63,7 +63,7 @@ describe('SignalingV2', () => {
       });
 
       it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.close().then(() => {
           assert(!test.ua.transport.disconnect.calledOnce);
         });
@@ -72,8 +72,8 @@ describe('SignalingV2', () => {
 
     context('"closing"', () => {
       it('returns a Promise that resolves to the SignalingV2', () => {
-        var test = makeTest();
-        var promise = test.when('closing', () => {
+        const test = makeTest();
+        const promise = test.when('closing', () => {
           return test.signaling.close().then(signaling => {
             assert.equal(test.signaling, signaling);
           });
@@ -83,8 +83,8 @@ describe('SignalingV2', () => {
       });
 
       it('does not transition after transitioning to state "closed"', () => {
-        var test = makeTest();
-        var promise = test.when('closing', () => {
+        const test = makeTest();
+        const promise = test.when('closing', () => {
           test.transitions = [];
           return test.signaling.close().then(() => {
             assert.deepEqual(
@@ -99,8 +99,8 @@ describe('SignalingV2', () => {
       });
 
       it('does not call .close on the SIP.js UA again', () => {
-        var test = makeTest();
-        var promise = test.when('closing', () => {
+        const test = makeTest();
+        const promise = test.when('closing', () => {
           return test.signaling.close().then(() => {
             assert(test.ua.stop.calledOnce);
           });
@@ -110,8 +110,8 @@ describe('SignalingV2', () => {
       });
 
       it('does not call .disconnect on the SIP.js UA\'s .transport again', () => {
-        var test = makeTest();
-        var promise = test.when('closing', () => {
+        const test = makeTest();
+        const promise = test.when('closing', () => {
           return test.signaling.close().then(() => {
             assert(test.ua.transport.disconnect.calledOnce);
           });
@@ -123,7 +123,7 @@ describe('SignalingV2', () => {
 
     context('"open"', () => {
       it('returns a Promise that resolves to the SignalingV2', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.close();
         }).then(signaling => {
@@ -132,7 +132,7 @@ describe('SignalingV2', () => {
       });
 
       it('transitions through state "closing" to state "closed"', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           test.transitions = [];
           return test.signaling.close();
@@ -147,7 +147,7 @@ describe('SignalingV2', () => {
       });
 
       it('calls .close on the SIP.js UA', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.close();
         }).then(() => {
@@ -156,7 +156,7 @@ describe('SignalingV2', () => {
       });
 
       it('calls .disconnect on the SIP.js UA\'s .transport', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.close();
         }).then(() => {
@@ -168,8 +168,8 @@ describe('SignalingV2', () => {
     context('"opening"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
         it('returns a Promise that resolves to the SignalingV2', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
-          var promise = test.when('opening', () => {
+          const test = makeTest({ uaConnectSucceeds: false });
+          const promise = test.when('opening', () => {
             return test.signaling.close().then(signaling => {
               assert.equal(test.signaling, signaling);
             });
@@ -179,8 +179,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not transition after transitioning to "closed"', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
-          var promise = test.when('opening', () => {
+          const test = makeTest({ uaConnectSucceeds: false });
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.close().then(signaling => {
               assert.deepEqual(
@@ -195,8 +195,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .close on the SIP.js UA', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
-          var promise = test.when('opening', () => {
+          const test = makeTest({ uaConnectSucceeds: false });
+          const promise = test.when('opening', () => {
             return test.signaling.close().then(() => {
               assert(!test.ua.stop.calledOnce);
             });
@@ -206,8 +206,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
-          var promise = test.when('opening', () => {
+          const test = makeTest({ uaConnectSucceeds: false });
+          const promise = test.when('opening', () => {
             return test.signaling.close().then(() => {
               assert(!test.ua.transport.disconnect.calledOnce);
             });
@@ -219,8 +219,8 @@ describe('SignalingV2', () => {
 
       context('and the call to .start on the SIP.js UA succeeds', () => {
         it('returns a Promise that resolves to the SignalingV2', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             return test.signaling.close().then(signaling => {
               assert.equal(test.signaling, signaling);
             });
@@ -230,8 +230,8 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "closing" to state "closed" after transitioning to "open"', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.close().then(() => {
               assert.deepEqual(
@@ -248,8 +248,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .stop on the SIP.js UA', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.close().then(() => {
               assert(test.ua.stop.calledOnce);
@@ -260,8 +260,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .disconnect on the SIP.js UA\'s .transport', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.close().then(() => {
               assert(test.ua.transport.disconnect.calledOnce);
@@ -278,7 +278,7 @@ describe('SignalingV2', () => {
     context('"closed"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
         it('returns a Promise that rejects with an Error', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.connect().then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
@@ -287,7 +287,7 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "closed"', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.connect().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -301,7 +301,7 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.connect().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -310,7 +310,7 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .stop on the SIP.js UA', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.connect().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -319,7 +319,7 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.connect().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -331,14 +331,14 @@ describe('SignalingV2', () => {
       context('and the call to .start on the SIP.js UA succeeds', () => {
         // TODO(mroberts): ...
         it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.connect().then(fun => {
             assert.equal(test.cancelableRoomSignalingPromise, fun());
           });
         });
 
         it('transitions through state "opening" to state "open"', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.connect().then(() => {
             assert.deepEqual(
               [
@@ -350,7 +350,7 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.connect().then(() => {
             assert(test.ua.start.calledOnce);
           });
@@ -361,8 +361,8 @@ describe('SignalingV2', () => {
     context('"closing"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
         it('returns a Promise that rejects with an Error', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
@@ -375,8 +375,8 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "closed" after "closed"', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             test.transitions = [];
             return test.signaling.connect().then(() => {
@@ -396,8 +396,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
@@ -410,8 +410,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .stop on the SIP.js UA again', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
@@ -424,8 +424,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .disconnect on the SIP.js UA\'s .transport again', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
@@ -440,8 +440,8 @@ describe('SignalingV2', () => {
 
       context('and the call to .start on the SIP.js UA succeeds', () => {
         it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             return test.signaling.connect().then(fun => {
               assert.equal(test.cancelableRoomSignalingPromise, fun());
             });
@@ -451,8 +451,8 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "open" after "closed"', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.transitions = [];
             return test.signaling.connect().then(() => {
               assert.deepEqual(
@@ -469,8 +469,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             return test.signaling.connect().then(() => {
               assert(test.ua.start.calledTwice);
             });
@@ -484,7 +484,7 @@ describe('SignalingV2', () => {
     context('"open"', () => {
       // TODO(mroberts):
       it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.connect();
         }).then(fun => {
@@ -493,7 +493,7 @@ describe('SignalingV2', () => {
       });
 
       it('does not transition', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           test.transitions = [];
           return test.signaling.connect();
@@ -505,7 +505,7 @@ describe('SignalingV2', () => {
       });
 
       it('does not call .start on the SIP.js UA', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.connect();
         }).then(() => {
@@ -519,8 +519,8 @@ describe('SignalingV2', () => {
         context('but the subsequent one succeeds', () => {
           // TODO(mroberts): ...
           it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(fun => {
                 assert.equal(test.cancelableRoomSignalingPromise, fun());
               });
@@ -530,8 +530,8 @@ describe('SignalingV2', () => {
           });
 
           it('transitions through state "opening" to state "open" after "closed"', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               test.transitions = [];
               return test.signaling.connect().then(signaling => {
                 assert.deepEqual(
@@ -548,8 +548,8 @@ describe('SignalingV2', () => {
           });
 
           it('calls .start on the SIP.js UA again', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(signaling => {
                 assert(test.ua.start.calledTwice);
               });
@@ -559,8 +559,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .stop on the SIP.js UA', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(signaling => {
                 assert(!test.ua.stop.calledOnce);
               });
@@ -570,8 +570,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(signaling => {
                 assert(!test.ua.transport.disconnect.calledOnce);
               });
@@ -583,8 +583,8 @@ describe('SignalingV2', () => {
 
         context('and the subsequent one fails', () => {
           it('returns a Promise that rejects with an Error', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -596,8 +596,8 @@ describe('SignalingV2', () => {
           });
 
           it('transitions through state "opening" to state "closed" after "closed"', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               test.transitions = [];
               return test.signaling.connect().then(() => {
                 throw new Error('Unexpected resolution');
@@ -616,8 +616,8 @@ describe('SignalingV2', () => {
           });
 
           it('calls .start on the SIP.js UA again', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -629,8 +629,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .stop on the SIP.js UA', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -642,8 +642,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.connect().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -659,8 +659,8 @@ describe('SignalingV2', () => {
       context('the initial call to .start on the SIP.js UA succeeds', () => {
         // TODO(mroberts):
         it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             return test.signaling.connect().then(fun => {
               assert.equal(test.cancelableRoomSignalingPromise, fun());
             });
@@ -670,8 +670,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not transition after "open"', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.connect().then(() => {
               assert.deepEqual(
@@ -686,8 +686,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .start on the SIP.js UA again', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             return test.signaling.connect().then(() => {
               assert(test.ua.start.calledOnce);
             });
@@ -701,9 +701,9 @@ describe('SignalingV2', () => {
 
   describe('#createLocalParticipantSignaling', () => {
     it('returns a new LocalParticipantV2', () => {
-      var test = makeTest();
-      var lp1 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
-      var lp2 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
+      const test = makeTest();
+      const lp1 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
+      const lp2 = test.signaling.createLocalParticipantSignaling(test.encodingParameters);
       assert(lp1 instanceof LocalParticipantV2);
       assert(lp2 instanceof LocalParticipantV2);
       assert(lp1 !== lp2);
@@ -714,7 +714,7 @@ describe('SignalingV2', () => {
     context('"closed"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
         it('returns a Promise that rejects with an Error', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.open().then(() => {
             throw new Error('Unexpected resolution');
           }, error => {
@@ -723,7 +723,7 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "closed"', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.open().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -737,7 +737,7 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.open().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -746,7 +746,7 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .stop on the SIP.js UA', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.open().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -755,7 +755,7 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-          var test = makeTest({ uaConnectSucceeds: false });
+          const test = makeTest({ uaConnectSucceeds: false });
           return test.signaling.open().then(() => {
             throw new Error('Unexpected resolution');
           }, () => {
@@ -766,14 +766,14 @@ describe('SignalingV2', () => {
 
       context('and the call to .start on the SIP.js UA succeeds', () => {
         it('returns a Promise that resolves to the SignalingV2', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.open().then(signaling => {
             assert.equal(test.signaling, signaling);
           });
         });
 
         it('transitions through state "opening" to state "open"', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.open().then(() => {
             assert.deepEqual(
               [
@@ -785,7 +785,7 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
+          const test = makeTest();
           return test.signaling.open().then(() => {
             assert(test.ua.start.calledOnce);
           });
@@ -796,8 +796,8 @@ describe('SignalingV2', () => {
     context('"closing"', () => {
       context('and the call to .start on the SIP.js UA fails', () => {
         it('returns a Promise that rejects with an Error', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
@@ -810,8 +810,8 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "closed" after "closed"', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             test.transitions = [];
             return test.signaling.open().then(() => {
@@ -831,8 +831,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
@@ -845,8 +845,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .stop on the SIP.js UA again', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
@@ -859,8 +859,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .disconnect on the SIP.js UA\'s .transport again', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
@@ -875,8 +875,8 @@ describe('SignalingV2', () => {
 
       context('and the call to .start on the SIP.js UA succeeds', () => {
         it('returns a Promise that resolves to the SignalingV2', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             return test.signaling.open().then(signaling => {
               assert.equal(test.signaling, signaling);
             });
@@ -886,8 +886,8 @@ describe('SignalingV2', () => {
         });
 
         it('transitions through state "opening" to state "open" after "closed"', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             test.transitions = [];
             return test.signaling.open().then(() => {
               assert.deepEqual(
@@ -904,8 +904,8 @@ describe('SignalingV2', () => {
         });
 
         it('calls .start on the SIP.js UA', () => {
-          var test = makeTest();
-          var promise = test.when('closing', () => {
+          const test = makeTest();
+          const promise = test.when('closing', () => {
             return test.signaling.open().then(() => {
               assert(test.ua.start.calledTwice);
             });
@@ -918,7 +918,7 @@ describe('SignalingV2', () => {
 
     context('"open"', () => {
       it('returns a Promise that resolves to the SignalingV2', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.open();
         }).then(signaling => {
@@ -927,7 +927,7 @@ describe('SignalingV2', () => {
       });
 
       it('does not transition', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           test.transitions = [];
           return test.signaling.open();
@@ -939,7 +939,7 @@ describe('SignalingV2', () => {
       });
 
       it('does not call .start on the SIP.js UA', () => {
-        var test = makeTest();
+        const test = makeTest();
         return test.signaling.open().then(() => {
           return test.signaling.open();
         }).then(() => {
@@ -952,8 +952,8 @@ describe('SignalingV2', () => {
       context('the initial call to .start on the SIP.js UA fails', () => {
         context('but the subsequent one succeeds', () => {
           it('returns a Promise that resolves to the SignalingV2', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(signaling => {
                 assert.equal(test.signaling, signaling);
               });
@@ -963,8 +963,8 @@ describe('SignalingV2', () => {
           });
 
           it('transitions through state "opening" to state "open" after "closed"', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               test.transitions = [];
               return test.signaling.open().then(signaling => {
                 assert.deepEqual(
@@ -981,8 +981,8 @@ describe('SignalingV2', () => {
           });
 
           it('calls .start on the SIP.js UA again', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(signaling => {
                 assert(test.ua.start.calledTwice);
               });
@@ -992,8 +992,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .stop on the SIP.js UA', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(signaling => {
                 assert(!test.ua.stop.calledOnce);
               });
@@ -1003,8 +1003,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(signaling => {
                 assert(!test.ua.transport.disconnect.calledOnce);
               });
@@ -1016,8 +1016,8 @@ describe('SignalingV2', () => {
 
         context('and the subsequent one fails', () => {
           it('returns a Promise that rejects with an Error', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -1029,8 +1029,8 @@ describe('SignalingV2', () => {
           });
 
           it('transitions through state "opening" to state "closed" after "closed"', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               test.transitions = [];
               return test.signaling.open().then(() => {
                 throw new Error('Unexpected resolution');
@@ -1049,8 +1049,8 @@ describe('SignalingV2', () => {
           });
 
           it('calls .start on the SIP.js UA again', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -1062,8 +1062,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .stop on the SIP.js UA', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -1075,8 +1075,8 @@ describe('SignalingV2', () => {
           });
 
           it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
-            var test = makeTest({ uaConnectSucceeds: false });
-            var promise = test.when('opening', () => {
+            const test = makeTest({ uaConnectSucceeds: false });
+            const promise = test.when('opening', () => {
               return test.signaling.open().then(() => {
                 throw new Error('Unexpected resolution');
               }, error => {
@@ -1091,8 +1091,8 @@ describe('SignalingV2', () => {
 
       context('the initial call to .start on the SIP.js UA succeeds', () => {
         it('returns a Promise that resolves to the SignalingV2', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             return test.signaling.open().then(signaling => {
               assert.equal(test.signaling, signaling);
             });
@@ -1102,8 +1102,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not transition after "open"', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             test.transitions = [];
             return test.signaling.open().then(() => {
               assert.deepEqual(
@@ -1118,8 +1118,8 @@ describe('SignalingV2', () => {
         });
 
         it('does not call .start on the SIP.js UA again', () => {
-          var test = makeTest();
-          var promise = test.when('opening', () => {
+          const test = makeTest();
+          const promise = test.when('opening', () => {
             return test.signaling.open().then(() => {
               assert(test.ua.start.calledOnce);
             });
@@ -1139,7 +1139,7 @@ function makeTest(options) {
   options.uaConnectSucceeds = 'uaConnectSucceeds' in options
     ? options.uaConnectSucceeds : true;
   options.UA = options.UA || sinon.spy(function UA() {
-    var ua = new EventEmitter();
+    const ua = new EventEmitter();
     ua.start = sinon.spy(() => {
       setImmediate(() => {
         if (options.uaConnectSucceeds) {

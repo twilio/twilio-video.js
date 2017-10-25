@@ -9,7 +9,7 @@ const Log = require('../../../../lib/util/log');
 const component = (name) => ({ toString: () => name });
 
 describe('Log', function() {
-  var log = Log.prototype.log;
+  const log = Log.prototype.log;
   beforeEach(function() {
     Log.prototype.log = sinon.spy(log);
   });
@@ -25,7 +25,7 @@ describe('Log', function() {
   });
 
   describe('new Log(component, logLevels)', function() {
-    var getLevelByName;
+    let getLevelByName;
 
     before(function() {
       getLevelByName = Log.getLevelByName;
@@ -37,8 +37,8 @@ describe('Log', function() {
     });
 
     it('should return an instance of Log', function() {
-      var log1 = new Log('foo', component('log1'));
-      var log2 = Log('bar', component('log2'));
+      const log1 = new Log('foo', component('log1'));
+      const log2 = Log('bar', component('log2'));
 
       assert(log1 instanceof Log);
       assert(log2 instanceof Log);
@@ -57,34 +57,34 @@ describe('Log', function() {
     });
 
     it('should set the name to component.toString()', () => {
-      var comp = component('bar');
-      var log = new Log('foo', comp);
+      const comp = component('bar');
+      const log = new Log('foo', comp);
       assert.equal(log.name, comp.toString());
     });
 
     it('should call getLevelByName with the passed logLevel', function() {
-      var log = new Log('foo', component('bar'), {
+      const log = new Log('foo', component('bar'), {
         foo: 'debug',
         bar: 'error'
       });
-      var level = log.logLevel;
+      const level = log.logLevel;
       assert(Log.getLevelByName.calledWith('debug'));
     });
 
     it('should set the default Log level if module specific level is not specified', () => {
-      var log = new Log('foo', component('bar'), { baz: 'error' });
+      const log = new Log('foo', component('bar'), { baz: 'error' });
       assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
     });
 
     it('should set the default Log level if logLevels object is not specified', () => {
-      var log = new Log('foo', component('bar'));
+      const log = new Log('foo', component('bar'));
       assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
     });
   });
 
   describe('#getLevelByName(name)', function() {
     it('should return the input if the input is a number', function() {
-      var level = Log.getLevelByName(3);
+      const level = Log.getLevelByName(3);
       assert.equal(level, 3);
     });
 
@@ -95,64 +95,63 @@ describe('Log', function() {
     });
 
     it('should return the corresponding constant if the input is a valid log level', function() {
-      var level = Log.getLevelByName('off');
+      const level = Log.getLevelByName('off');
       assert.equal(level, Log['OFF']);
     });
   });
 
   describe('#createLog(moduleName, component)', () => {
     it('should create a Log whose logLevels reference is the same as that of its parent', () => {
-      var logLevels = { foo: 'debug', bar: 'error' };
-      var parent = new Log('foo', component('parent'), logLevels);
-      var child = parent.createLog('bar', component('child'));
+      const logLevels = { foo: 'debug', bar: 'error' };
+      const parent = new Log('foo', component('parent'), logLevels);
+      const child = parent.createLog('bar', component('child'));
       assert.equal(child._logLevels, parent._logLevels);
     });
   });
 
   describe('#setLevels(levels)', () => {
     it('should set _logLevels to the new values', () => {
-      var log = new Log('foo', component('bar'), { foo: 'debug' });
+      const log = new Log('foo', component('bar'), { foo: 'debug' });
       log.setLevels({ foo: 'warn' });
       assert.deepEqual(log._logLevels, { foo: 'warn' });
       assert.equal(log.logLevel, Log.getLevelByName('warn'));
     });
 
     it('should update the log levels of the child Logs', () => {
-      var logLevels = { foo: 'debug', bar: 'error' };
-      var newLogLevels = { foo: 'debug', bar: 'warn' };
-      var parent = new Log('foo', component('parent'), logLevels);
-      var child = parent.createLog('bar', component('child'));
+      const logLevels = { foo: 'debug', bar: 'error' };
+      const newLogLevels = { foo: 'debug', bar: 'warn' };
+      const parent = new Log('foo', component('parent'), logLevels);
+      const child = parent.createLog('bar', component('child'));
       parent.setLevels(newLogLevels);
       assert.deepEqual(child._logLevels, newLogLevels);
       assert.equal(child.logLevel, Log.getLevelByName('warn'));
     });
 
     it('should not update #logLevel when some other module\'s level is updated in logLevels', () => {
-      var logLevels = { foo: 'error', bar: 'debug' };
-      var log = new Log('foo', component('bar'), logLevels);
-      var oldLevel = log.logLevel;
-      logLevels = Object.assign(logLevels, { bar: 'off' });
-      log.setLevels(logLevels);
+      const logLevels = { foo: 'error', bar: 'debug' };
+      const log = new Log('foo', component('bar'), logLevels);
+      const oldLevel = log.logLevel;
+      log.setLevels(Object.assign({}, logLevels, { bar: 'off' }));
       assert.equal(log.logLevel, oldLevel);
     });
   });
 
   describe('#log(logLevel, message)', function() {
     it('should throw an error if the logLevel passed is invalid', function() {
-      var log = Log('foo', component('bar'));
+      const log = Log('foo', component('bar'));
       assert.throws(log.log.bind(log, 999), error => {
         return error instanceof RangeError && /logLevel must be one of/.test(error.message);
       });
     });
 
     it('should call the log function if the logLevel is within the Logs verbosity', function() {
-      var log = Log('foo', component('bar'), { foo: 'warn' });
+      const log = Log('foo', component('bar'), { foo: 'warn' });
       log.log(Log.ERROR, 'foo');
       assert(Log._levels[Log.ERROR].logFn.called);
     });
 
     it('should not call the log function if the logLevel is outside of the Logs verbosity', function() {
-      var log = Log('foo', component('bar'), { foo: 'off' });
+      const log = Log('foo', component('bar'), { foo: 'off' });
       log.log(Log.WARN, 'foo');
       assert(!Log._levels[Log.WARN].logFn.called);
     });
@@ -160,7 +159,7 @@ describe('Log', function() {
 
   describe('#debug(messages)', function() {
     it('should call #log(Log.DEBUG, message)', function() {
-      var log = Log('foo', component('bar'), { foo: 'debug' });
+      const log = Log('foo', component('bar'), { foo: 'debug' });
       log.debug('baz');
       sinon.assert.calledWith(log.log, Log.DEBUG, ['baz']);
     });
@@ -169,7 +168,7 @@ describe('Log', function() {
   describe('#deprecated(deprecationWarning)', function() {
     context('the first time the deprecationWarning is passed', function() {
       it('should call #log(Log.WARN, message)', function() {
-        var log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = Log('foo', component('bar'), { foo: 'warn' });
         log.deprecated('baz');
         sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
       });
@@ -177,7 +176,7 @@ describe('Log', function() {
 
     context('subsequent times the deprecationWarning is passed', function() {
       it('should call #log(Log.WARN, message)', function() {
-        var log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = Log('foo', component('bar'), { foo: 'warn' });
         log.deprecated('baz');
         log.deprecated('baz');
         sinon.assert.calledOnce(log.log);
@@ -187,7 +186,7 @@ describe('Log', function() {
 
   describe('#info(messages)', function() {
     it('should call #log(Log.INFO, message)', function() {
-      var log = Log('foo', component('bar'), { foo: 'info' });
+      const log = Log('foo', component('bar'), { foo: 'info' });
       log.info('baz');
       sinon.assert.calledWith(log.log, Log.INFO, ['baz']);
     });
@@ -195,7 +194,7 @@ describe('Log', function() {
 
   describe('#warn(messages)', function() {
     it('should call #log(Log.WARN, message)', function() {
-      var log = Log('foo', component('bar'), { foo: 'warn' });
+      const log = Log('foo', component('bar'), { foo: 'warn' });
       log.warn('baz');
       sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
     });
@@ -204,7 +203,7 @@ describe('Log', function() {
   describe('#warnOnce(deprecationWarning)', function() {
     context('the first time the warning is passed', function() {
       it('should call #log(Log.WARN, message)', function() {
-        var log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = Log('foo', component('bar'), { foo: 'warn' });
         log.warnOnce('baz');
         sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
       });
@@ -212,7 +211,7 @@ describe('Log', function() {
 
     context('subsequent times the warning is passed', function() {
       it('should call #log(Log.WARN, message)', function() {
-        var log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = Log('foo', component('bar'), { foo: 'warn' });
         log.warnOnce('baz');
         log.warnOnce('baz');
         sinon.assert.calledOnce(log.log);
@@ -222,7 +221,7 @@ describe('Log', function() {
 
   describe('#error(messages)', function() {
     it('should call #log(Log.ERROR, message)', function() {
-      var log = Log('foo', component('bar'), { foo: 'error' });
+      const log = Log('foo', component('bar'), { foo: 'error' });
       log.error('baz');
       sinon.assert.calledWith(log.log, Log.ERROR, ['baz']);
     });
@@ -230,15 +229,15 @@ describe('Log', function() {
 
   describe('#throw(error, message)', function() {
     it('should throw an error and call #log(Log.ERROR, message)', function() {
-      var log = Log('foo', component('bar'), { foo: 'error' });
-      var error = new Error('baz');
+      const log = Log('foo', component('bar'), { foo: 'error' });
+      const error = new Error('baz');
       assert.throws(log.throw.bind(log, error));
       sinon.assert.calledWith(log.log, Log.ERROR, error);
     });
 
     it('should call the errors clone method if it exists', function() {
-      var log = Log('foo', component('bar'), { foo: 'error' });
-      var error = new Error('baz');
+      const log = Log('foo', component('bar'), { foo: 'error' });
+      const error = new Error('baz');
       error.clone = sinon.spy();
 
       try {

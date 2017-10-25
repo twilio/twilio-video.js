@@ -6,7 +6,7 @@ const RemoteTrackStats = require('../../../../lib/stats/remotetrackstats');
 
 describe('RemoteTrackStats', () => {
   describe('constructor', () => {
-    var stats = {
+    const stats = {
       trackId: 'abcd',
       timestamp: 12345,
       ssrc: 'foo',
@@ -15,7 +15,7 @@ describe('RemoteTrackStats', () => {
     };
 
     it('should set bytesReceived and packetsReceived properties', () => {
-      var trackStats = new RemoteTrackStats(stats.trackId, stats);
+      const trackStats = new RemoteTrackStats(stats.trackId, stats);
       assert.equal(trackStats.bytesReceived, stats.bytesReceived);
       assert.equal(trackStats.packetsReceived, stats.packetsReceived);
     });
@@ -23,10 +23,10 @@ describe('RemoteTrackStats', () => {
     ['bytesReceived', 'packetsReceived'].forEach(statName => {
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
         it(`should set the ${statName} property to null`, () => {
-          var statValue = stats[statName];
+          const statValue = stats[statName];
           delete stats[statName];
 
-          var trackStats = new RemoteTrackStats(stats.trackId, stats);
+          const trackStats = new RemoteTrackStats(stats.trackId, stats);
           assert.equal(trackStats[statName], null);
 
           stats[statName] = statValue;
