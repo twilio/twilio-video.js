@@ -4,12 +4,6 @@ if (typeof window === 'undefined') {
   require('../lib/mockwebrtc')();
 }
 
-if (typeof document === 'undefined') {
-  const { MockBrowser } = require('mock-browser').mocks;
-  const browser = new MockBrowser();
-  global.document = browser.getDocument();
-}
-
 if (typeof Array.prototype.includes !== 'function') {
   Array.prototype.includes = function includes(x) {
     return this.indexOf(x) > -1;

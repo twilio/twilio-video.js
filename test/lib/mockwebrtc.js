@@ -1,7 +1,6 @@
 'use strict';
 
 const { EventEmitter } = require('events');
-const { MockBrowser } = require('mock-browser').mocks;
 const { inherits } = require('util');
 const WebSocket = require('ws');
 
@@ -235,7 +234,6 @@ function mockWebRTC(_global) {
     protocol: 'https',
     host: 'bar'
   };
-  _global.document = new MockBrowser().getDocument();
   return _global;
 }
 
