@@ -8,6 +8,7 @@ const { inherits } = require('util');
 const MediaTrack = require('../../../../../lib/media/track/mediatrack');
 
 const log = require('../../../../lib/fakelog');
+const Document = require('../../../../lib/document');
 
 describe('MediaTrack', function() {
   let _initialize;
@@ -16,10 +17,14 @@ describe('MediaTrack', function() {
   before(function() {
     _initialize = MediaTrack.prototype._initialize;
     MediaTrack.prototype._initialize = sinon.spy();
+    global.document = global.document || new Document();
   });
 
   after(function() {
     MediaTrack.prototype._initialize = _initialize;
+    if (global.document instanceof Document) {
+      delete global.document;
+    }
   });
 
   describe('constructor', function() {
@@ -247,12 +252,6 @@ describe('MediaTrack', function() {
         assert.throws(function() {
           track._selectElement('.nonexistant');
         });
-      });
-    });
-
-    context('when passed a valid selector', function() {
-      it('should return the matched element', function() {
-        assert.equal(track._selectElement('.foo'), element);
       });
     });
   });
