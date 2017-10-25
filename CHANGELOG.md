@@ -14,7 +14,7 @@ New Features
   LocalParticipant. Previously, if you failed to publish a LocalTrack when
   connecting to a Room, there was no API to discover what went wrong. Now, if
   you fail to publish a LocalTrack at `connect`-time—for example, due to a codec
-  mismatch or an invalid Track name—we will raise a "trackPublicationError" on
+  mismatch or an invalid Track name—we will raise a "trackPublicationFailed" on
   the LocalParticipant with an informative error. Similarly, if publication
   succeeds, we will raise a "trackPublished" event with the resulting
   LocalTrackPublication.
