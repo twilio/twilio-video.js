@@ -4,7 +4,7 @@ const assert = require('assert');
 
 const TwilioError = require('../../../../lib/util/twilioerror');
 
-describe('TwilioError', function() {
+describe('TwilioError', () => {
   describe('constructor', () => {
     let error;
 

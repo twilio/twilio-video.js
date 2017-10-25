@@ -5,61 +5,62 @@ const assert = require('assert');
 const StateMachine = require('../../../lib/statemachine');
 const { defer } = require('../../../lib/util');
 
-describe('StateMachine', function() {
-  describe('constructor', function() {
-    it('sets .state to initialState', function() {
+describe('StateMachine', () => {
+  describe('constructor', () => {
+    it('sets .state to initialState', () => {
       assert.equal('foo', new StateMachine('foo', { foo: [] }).state);
     });
 
-    it('sets .isLocked to false', function() {
+    it('sets .isLocked to false', () => {
       assert.equal(false, new StateMachine('foo', { foo: [] }).isLocked);
     });
   });
 
-  describe('#bracket', function() {
-    context('when the Promise returned by the transition function rejects', function(done) {
-      it('releases the lock and rejects with the error', function(done) {
+  describe('#bracket', () => {
+    context('when the Promise returned by the transition function rejects', () => {
+      it('releases the lock and rejects with the error', async () => {
         const sm = new StateMachine('foo', { foo: [] });
-        sm.bracket('lock', function(key) {
-          sm.takeLockSync(key);  // reenter
-          throw new Error(':-)');
-        }).then(function() {
-          throw new Error('Unexpected resolution');
-        }, function(error) {
+        try {
+          await sm.bracket('lock', key => {
+            sm.takeLockSync(key);  // reenter
+            throw new Error(':-)');
+          });
+        } catch (error) {
+          // Expected rejection
           assert.equal(':-)', error.message);
           assert.equal(false, sm.isLocked);
-        }).then(done, done);
+          return;
+        }
+        throw new Error('Unexpected resolution');
       });
     });
 
-    context('when the Promise returned by the transition function resolves', function() {
-      it('releases the lock and resolves', function(done) {
+    context('when the Promise returned by the transition function resolves', () => {
+      it('releases the lock and resolves', async () => {
         const sm = new StateMachine('foo', { foo: [] });
-        sm.bracket('lock', function(key) {
+        await sm.bracket('lock', key => {
           sm.takeLockSync(key);  // reenter
-        }).then(function() {
-          assert.equal(false, sm.isLocked);
-        }).then(done, done);
+        });
+        assert.equal(false, sm.isLocked);
       });
     });
   });
 
-  describe('#hasLock', function() {
-    context('when locked', function() {
-      it('returns true if called with the key returned by #takeLock', function(done) {
+  describe('#hasLock', () => {
+    context('when locked', () => {
+      it('returns true if called with the key returned by #takeLock', async () => {
         const sm = new StateMachine('foo', { foo: [] });
-        sm.takeLock().then(function(key) {
-          assert(sm.hasLock(key));
-        }).then(done, done);
+        const key = await sm.takeLock();
+        assert(sm.hasLock(key));
       });
 
-      it('returns true if called with the key returned by #takeLockSync', function() {
+      it('returns true if called with the key returned by #takeLockSync', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = sm.takeLockSync('key');
         assert(sm.hasLock(key));
       });
 
-      it('returns false if called with another key', function() {
+      it('returns false if called with another key', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock1');
         sm.takeLockSync('lock2');
@@ -67,8 +68,8 @@ describe('StateMachine', function() {
       });
     });
 
-    context('when unlocked', function() {
-      it('returns false', function() {
+    context('when unlocked', () => {
+      it('returns false', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock');
         assert.equal(false, sm.hasLock(key));
@@ -76,18 +77,18 @@ describe('StateMachine', function() {
     });
   });
 
-  describe('#preempt', function() {
-    context('when the transition is invalid', function() {
-      it('throws an Error', function() {
+  describe('#preempt', () => {
+    context('when the transition is invalid', () => {
+      it('throws an Error', () => {
         const sm = new StateMachine('foo', { foo: [] });
         assert.throws(sm.preempt.bind(sm, 'bar'));
       });
     });
 
-    context('when the transition is valid', function() {
-      context('the StateMachine is locked', function() {
-        context('and a new lock is not requested', function() {
-          it('sets .state and releases the current lock', function(done) {
+    context('when the transition is valid', () => {
+      context('the StateMachine is locked', () => {
+        context('and a new lock is not requested', () => {
+          it('sets .state and releases the current lock', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             const key = sm.takeLockSync('lock');
             const deferred = defer();
@@ -97,35 +98,36 @@ describe('StateMachine', function() {
             // The "stateChanged" event should fire before anyone waiting to
             // take the lock. Taking the lock from within the "stateChanged"
             // callback should maintain FIFO order.
-            Promise.all([
-              new Promise(function(resolve) {
-                sm.once('stateChanged', function() {
-                  sm.takeLock().then(function() {
-                    deferred.resolve(i++);
-                  });
+            const promise = Promise.all([
+              new Promise(resolve => {
+                sm.once('stateChanged', async () => {
+                  const promise = sm.takeLock();
                   resolve(i++);
+                  await promise;
+                  deferred.resolve(i++);
                 });
               }),
-              sm.takeLock().then(function(key) {
+              sm.takeLock().then(key => {
                 sm.releaseLock(key);
                 return i++;
               }),
               deferred.promise
-            ]).then(function(order) {
-              assert.equal(0, order[0]);
-              assert.equal(2, order[1]);
-              assert.equal(3, order[2]);
-            }).then(done, done);
+            ]);
 
             sm.preempt('bar');
             assert.equal('bar', sm.state);
             assert.equal(false, sm.isLocked);
             i++;  // 1
+
+            const order = await promise;
+            assert.equal(0, order[0]);
+            assert.equal(2, order[1]);
+            assert.equal(3, order[2]);
           });
         });
 
-        context('and a new lock is requested', function() {
-          it('sets .state, releases the current lock, and takes a new lock', function(done) {
+        context('and a new lock is requested', () => {
+          it('sets .state, releases the current lock, and takes a new lock', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             const key1 = sm.takeLockSync('lock1');
             const deferred = defer();
@@ -135,86 +137,83 @@ describe('StateMachine', function() {
             // The "stateChanged" event should fire before anyone waiting to
             // take the lock. Taking the lock from within the "stateChanged"
             // callback should maintain FIFO order.
-            Promise.all([
-              new Promise(function(resolve) {
-                sm.once('stateChanged', function() {
-                  sm.takeLock().then(function() {
-                    deferred.resolve(i++);
-                  });
+            const promise = Promise.all([
+              new Promise(resolve => {
+                sm.once('stateChanged', async () => {
+                  const promise = sm.takeLock();
                   resolve(i++);
+                  await promise;
+                  deferred.resolve(i++);
                 });
               }),
-              sm.takeLock().then(function(key) {
+              sm.takeLock().then(key => {
                 sm.releaseLock(key);
                 return i++;
               }),
               deferred.promise
-            ]).then(function(order) {
-              assert.equal(0, order[0]);
-              assert.equal(2, order[1]);
-              assert.equal(3, order[2]);
-            }).then(done, done);
+            ])
 
             const key2 = sm.preempt('bar', 'lock2');
             assert.equal('bar', sm.state);
             assert(sm.hasLock(key2));
             i++;  // 1
             sm.releaseLock(key2);
+
+            const order = await promise;
+            assert.equal(0, order[0]);
+            assert.equal(2, order[1]);
+            assert.equal(3, order[2]);
           });
         });
       });
 
-      context('the StateMachine is unlocked', function() {
-        context('and a new lock is not requested', function() {
-          it('sets .state', function(done) {
+      context('the StateMachine is unlocked', () => {
+        context('and a new lock is not requested', () => {
+          it('sets .state', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function(bar, baz) {
-              try {
-                assert.equal('bar', sm.state);
-                assert.equal('baz', baz);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
+            const promise = new Promise(resolve => {
+              sm.once('stateChanged', (bar, baz) => resolve([bar, baz]));
             });
+
             sm.preempt('bar', null, ['baz']);
             assert.equal('bar', sm.state);
+
+            const [bar, baz] = await promise;
+            assert.equal('bar', sm.state);
+            assert.equal('baz', baz);
           });
         });
 
-        context('and a new lock is requested', function() {
-          it('sets .state and takes a new lock', function(done) {
+        context('and a new lock is requested', () => {
+          it('sets .state and takes a new lock', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function(bar, baz) {
-              try {
-                assert.equal('bar', sm.state);
-                assert.equal('baz', baz);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
+            const promise = new Promise(resolve => {
+              sm.once('stateChanged', (bar, baz) => resolve([bar, baz]));
             });
+
             const key = sm.preempt('bar', 'lock', ['baz']);
             assert.equal('bar', sm.state);
             assert(sm.hasLock(key));
+
+            const [bar, baz] = await promise;
+            assert.equal('bar', sm.state);
+            assert.equal('baz', baz);
           });
         });
       });
     });
   });
 
-  describe('#releaseLock', function() {
-    context('when locked', function() {
-      it('throws an Error if the wrong key is provided', function() {
+  describe('#releaseLock', () => {
+    context('when locked', () => {
+      it('throws an Error if the wrong key is provided', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock1');
         sm.takeLockSync('lock2');
         assert.throws(sm.releaseLock.bind(sm, key));
       });
 
-      it('sets .isLocked to false if the key is provided', function() {
+      it('sets .isLocked to false if the key is provided', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock');
         assert.equal(false, sm.hasLock(key));
@@ -222,8 +221,8 @@ describe('StateMachine', function() {
       });
     });
 
-    context('when unlocked', function() {
-      it('throws an Error', function() {
+    context('when unlocked', () => {
+      it('throws an Error', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock');
         assert.throws(sm.releaseLock.bind(sm, key));
@@ -231,92 +230,95 @@ describe('StateMachine', function() {
     });
   });
 
-  describe('#takeLock', function() {
-    context('when locked', function() {
-      context('and called with a string', function() {
-        it('returns a Promise that resolves to a key once the current lock is released', function(done) {
+  describe('#takeLock', () => {
+    context('when locked', () => {
+      context('and called with a string', () => {
+        it('returns a Promise that resolves to a key once the current lock is released', async () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key1 = sm.takeLockSync('lock1');
-          let key2;
-          sm.takeLock().then(function(key) {
-            key2 = key;
-            assert(sm.hasLock(key2));
-            assert(sm.isLocked);
-          }).then(done, done);
+          const promise = sm.takeLock();
+
           sm.releaseLock(key1);
-          assert.equal(null, key2);
+
+          const key2 = await promise;
+          assert(sm.hasLock(key2));
+          assert(sm.isLocked);
         });
       });
 
-      context('and called with the key for the lock', function() {
-        it('reenters the lock and returns a Promise that resolves to the same key', function(done) {
+      context('and called with the key for the lock', () => {
+        it('reenters the lock and returns a Promise that resolves to the same key', async () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = sm.takeLockSync('lock');
-          sm.takeLock(key).then(function(_key) {
-            assert.equal(key, _key);
-          }).then(done, done);
+          const _key = await sm.takeLock(key);
+          assert.equal(_key, key);
         });
       });
 
-      context('and called with the key for a different lock', function() {
-        it('returns a Promise that rejects with an Error', function(done) {
+      context('and called with the key for a different lock', () => {
+        it('returns a Promise that rejects with an Error', async () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = takeAndReleaseLockSync(sm, 'lock1');
           sm.takeLockSync('lock2');
-          sm.takeLock(key).then(function(key) {
-            throw new Error('Unexpected resolution');
-          }, function(error) {
+          try {
+            await sm.takeLock(key);
+          } catch (error) {
+            // Expected rejection
             assert(error instanceof Error);
-          }).then(done, done);
+            return;
+          }
+          throw new Error('Unexpected resolution');
         });
       });
     });
 
-    context('when unlocked', function() {
-      context('and called with a string', function() {
-        it('returns a Promise that resolves to a key', function(done) {
+    context('when unlocked', () => {
+      context('and called with a string', () => {
+        it('returns a Promise that resolves to a key', async () => {
           const sm = new StateMachine('foo', { foo: [] });
-          sm.takeLock().then(function(key) {
-            assert(sm.hasLock(key));
-            assert(sm.isLocked);
-          }).then(done, done);
+          const key = await sm.takeLock();
+          assert(sm.hasLock(key));
+          assert(sm.isLocked);
         });
       });
 
-      context('and called with a key', function() {
-        it('returns a Promise that rejects with an Error', function(done) {
+      context('and called with a key', () => {
+        it('returns a Promise that rejects with an Error', async () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = takeAndReleaseLockSync(sm, 'lock');
-          sm.takeLock(key).then(function(key) {
-            throw new Error('Unexpected resolution');
-          }, function(error) {
+          try {
+            await sm.takeLock(key);
+          } catch (error) {
+            // Expected rejection
             assert(error instanceof Error);
-          }).then(done, done);
+            return;
+          }
+          throw new Error('Unexpected resolution');
         });
       });
     });
   });
 
-  describe('#takeLockSync', function() {
-    context('when locked', function() {
-      context('and called with a string', function() {
-        it('throws an Error', function() {
+  describe('#takeLockSync', () => {
+    context('when locked', () => {
+      context('and called with a string', () => {
+        it('throws an Error', () => {
           const sm = new StateMachine('foo', { foo: [] });
           sm.takeLockSync('lock1');
           assert.throws(sm.takeLockSync.bind(sm, 'lock2'));
         });
       });
 
-      context('and called with the key for the lock', function() {
-        it('reenters the lock', function() {
+      context('and called with the key for the lock', () => {
+        it('reenters the lock', () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = sm.takeLockSync('lock');
           assert.equal(key, sm.takeLockSync(key));
         });
       });
 
-      context('and called with the key for a different lock', function() {
-        it('throws an Error', function() {
+      context('and called with the key for a different lock', () => {
+        it('throws an Error', () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = takeAndReleaseLockSync(sm, 'lock1');
           sm.takeLockSync('lock2');
@@ -325,9 +327,9 @@ describe('StateMachine', function() {
       });
     });
 
-    context('when unlocked', function() {
-      context('and called with a string', function() {
-        it('returns a key', function() {
+    context('when unlocked', () => {
+      context('and called with a string', () => {
+        it('returns a key', () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = sm.takeLockSync('lock');
           assert(sm.hasLock(key));
@@ -335,8 +337,8 @@ describe('StateMachine', function() {
         });
       });
 
-      context('and called with a key', function() {
-        it('throws an Error', function() {
+      context('and called with a key', () => {
+        it('throws an Error', () => {
           const sm = new StateMachine('foo', { foo: [] });
           const key = takeAndReleaseLockSync(sm, 'lock');
           assert.throws(sm.takeLockSync.bind(sm, key));
@@ -345,136 +347,124 @@ describe('StateMachine', function() {
     });
   });
 
-  describe('#transition', function() {
-    context('when locked', function() {
-      it('throws an Error if the key is not provided', function() {
+  describe('#transition', () => {
+    context('when locked', () => {
+      it('throws an Error if the key is not provided', () => {
         const sm = new StateMachine('foo', { foo: [] });
         sm.takeLockSync('lock');
         assert.throws(sm.transition.bind(sm, 'bar'));
       });
 
-      it('throws an Error if the wrong key is provided', function() {
+      it('throws an Error if the wrong key is provided', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock1');
         sm.takeLockSync('lock2');
         assert.throws(sm.transition.bind(sm, 'bar', key));
       });
 
-      it('throws an Error if the key is provided but the transition is invalid', function() {
+      it('throws an Error if the key is provided but the transition is invalid', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = sm.takeLockSync('lock');
         assert.throws(sm.transition.bind(sm, 'bar', key));
       });
 
-      it('sets .state to the new state if the key is provided and the transition is valid', function() {
+      it('sets .state to the new state if the key is provided and the transition is valid', () => {
         const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
         const key = sm.takeLockSync('lock');
         sm.transition('bar', key);
         assert.equal('bar', sm.state);
       });
 
-      describe('when the key is provided and the transition is valid', function() {
-        describe('and no payload is provided', function() {
-          it('emits the "stateChanged" event', function(done) {
+      describe('when the key is provided and the transition is valid', () => {
+        describe('and no payload is provided', () => {
+          it('emits the "stateChanged" event', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             const key = sm.takeLockSync('lock');
-            sm.once('stateChanged', function() {
-              try {
-                assert.equal('bar', sm.state);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
-            });
+            const promise = new Promise(resolve => sm.once('stateChanged', resolve));
+
             sm.transition('bar', key);
+
+            await promise;
+            assert.equal('bar', sm.state);
           });
         });
 
-        describe('and a payload is provided', function() {
-          it('emits the "stateChanged" event with the extra payload', function(done) {
+        describe('and a payload is provided', () => {
+          it('emits the "stateChanged" event with the extra payload', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             const key = sm.takeLockSync('lock');
-            sm.once('stateChanged', function(bar, baz, qux) {
-              try {
-                assert.equal('bar', bar);
-                assert.equal('baz', baz);
-                assert.equal('qux', qux);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
+            const promise = new Promise(resolve => {
+              sm.once('stateChanged', (bar, baz, qux) => resolve([bar, baz, qux]));
             });
+
             sm.transition('bar', key, ['baz', 'qux']);
+
+            const [bar, baz, qux] = await promise;
+            assert.equal('bar', bar);
+            assert.equal('baz', baz);
+            assert.equal('qux', qux);
           });
         });
       });
     });
 
-    context('when unlocked', function() {
-      it('throws an Error if a key is provided', function() {
+    context('when unlocked', () => {
+      it('throws an Error if a key is provided', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const key = takeAndReleaseLockSync(sm, 'lock');
         assert.throws(sm.transition.bind(sm, 'bar', key));
       });
 
-      it('throws an Error if the transition is invalid', function() {
+      it('throws an Error if the transition is invalid', () => {
         const sm = new StateMachine('foo', { foo: [] });
         assert.throws(sm.transition.bind(sm, 'bar'));
       });
 
-      describe('when the transition is valid', function() {
-        describe('and no payload is provided', function() {
-          it('sets .state to the new state', function() {
+      describe('when the transition is valid', () => {
+        describe('and no payload is provided', () => {
+          it('sets .state to the new state', () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             sm.transition('bar');
             assert.equal('bar', sm.state);
           });
 
-          it('emits the "stateChanged" event', function(done) {
+          it('emits the "stateChanged" event', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function() {
-              try {
-                assert.equal('bar', sm.state);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
-            });
+            const promise = new Promise(resolve => sm.once('stateChanged', resolve));
+
             sm.transition('bar');
+
+            await promise;
+            assert.equal('bar', sm.state);
           });
         });
 
-        describe('and a payload is provided', function() {
-          it('sets .state to the new state', function() {
+        describe('and a payload is provided', () => {
+          it('sets .state to the new state', () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             sm.transition('bar', null, ['baz', 'qux']);
             assert.equal('bar', sm.state);
           });
 
-          it('emits the "stateChanged" event with the extra payload', function(done) {
+          it('emits the "stateChanged" event with the extra payload', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            sm.once('stateChanged', function(bar, baz, qux) {
-              try {
-                assert.equal('bar', bar);
-                assert.equal('baz', baz);
-                assert.equal('qux', qux);
-              } catch (error) {
-                done(error);
-                return;
-              }
-              done();
+            const promise = new Promise(resolve => {
+              sm.once('stateChanged', (bar, baz, qux) => resolve([bar, baz, qux]));
             });
+
             sm.transition('bar', null, ['baz', 'qux']);
+
+            const [bar, baz, qux] = await promise;
+            assert.equal('bar', bar);
+            assert.equal('baz', baz);
+            assert.equal('qux', qux);
           });
         });
       });
     });
   });
 
-  describe('#when', function() {
+  describe('#when', () => {
     describe('when the state matches the current state', () => {
       it('returns a Promise that resolves to the StateMachine', () => {
         const sm = new StateMachine('foo', { foo: [] });

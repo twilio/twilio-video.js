@@ -20,7 +20,7 @@ const log = require('../../../../lib/fakelog');
     LocalVideoTrack: 'video'
   };
 
-  describe(description, function() {
+  describe(description, () => {
     let track;
 
     describe('constructor', () => {
@@ -88,26 +88,17 @@ const log = require('../../../../lib/fakelog');
 
     describe('"trackStopped" event', () => {
       context('when the MediaStreamTrack emits onended event', () => {
-        it('should emit LocalMediaTrack#stopped, passing the instance of LocalMediaTrack', () => {
+        it('should emit LocalMediaTrack#stopped, passing the instance of LocalMediaTrack', async () => {
           track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
 
-          const stoppedEvent = new Promise((resolve, reject) => {
-            track.on('stopped', function(_track) {
-              try {
-                assert.equal(track, _track);
-              } catch (error) {
-                reject(error);
-                return;
-              }
-              resolve();
-            });
-          });
+          const stoppedEvent = new Promise(resolve => track.once('stopped', resolve));
 
           assert(track.mediaStreamTrack.readyState !== 'ended');
 
           track.mediaStreamTrack.emit('ended');
 
-          return stoppedEvent;
+          const _track = await stoppedEvent;
+          assert.equal(track, _track);
         });
       });
     });
@@ -166,14 +157,14 @@ const log = require('../../../../lib/fakelog');
       });
     });
 
-    describe('#stop', function() {
+    describe('#stop', () => {
       const dummyElement = {
         oncanplay: null,
         videoWidth: 320,
         videoHeight: 240
       };
 
-      before(function() {
+      before(() => {
         track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
         track._createElement = sinon.spy(() => dummyElement);
       });

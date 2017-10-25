@@ -784,7 +784,7 @@ function makePeerConnectionV2Constructor(testOptions) {
 }
 
 function getTracks(mediaStreams) {
-  return mediaStreams.reduce(function(mediaStreamTracks, mediaStream) {
+  return mediaStreams.reduce((mediaStreamTracks, mediaStream) => {
     return mediaStreamTracks.concat(mediaStream.getTracks());
   }, []);
 }
