@@ -11,7 +11,7 @@ const { defer, makeUUID } = require('../../../lib/util');
 const { a } = require('../../lib/util');
 const log = require('../../lib/fakelog');
 
-describe('RemoteParticipant', function() {
+describe('RemoteParticipant', () => {
   describe('constructor', () => {
     it('sets .identity to the RemoteParticipantSignaling\'s .identity', () => {
       const test = makeTest();

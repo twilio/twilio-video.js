@@ -28,7 +28,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     ? new LocalTrack({ DataTrackSender })
     : new LocalTrack(mediaStreamTrack);
 
-  describe(description, function() {
+  describe(description, () => {
     describe('constructor', () => {
       context('when called without the "options" argument', () => {
         [

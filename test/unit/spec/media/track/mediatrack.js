@@ -10,55 +10,55 @@ const MediaTrack = require('../../../../../lib/media/track/mediatrack');
 const log = require('../../../../lib/fakelog');
 const Document = require('../../../../lib/document');
 
-describe('MediaTrack', function() {
+describe('MediaTrack', () => {
   let _initialize;
   let track;
 
-  before(function() {
+  before(() => {
     _initialize = MediaTrack.prototype._initialize;
     MediaTrack.prototype._initialize = sinon.spy();
     global.document = global.document || new Document();
   });
 
-  after(function() {
+  after(() => {
     MediaTrack.prototype._initialize = _initialize;
     if (global.document instanceof Document) {
       delete global.document;
     }
   });
 
-  describe('constructor', function() {
-    before(function() {
+  describe('constructor', () => {
+    before(() => {
       track = createMediaTrack('1', 'audio');
     });
 
-    it('should call ._initialize', function() {
+    it('should call ._initialize', () => {
       assert.equal(track._initialize.callCount, 1);
     });
   });
 
-  describe('_initialize', function() {
+  describe('_initialize', () => {
     let dummyElement;
 
-    before(function() {
+    before(() => {
       track = createMediaTrack('1', 'audio');
       track._attach = sinon.spy();
       track._detachElement = sinon.spy();
       track._attachments.delete = sinon.spy();
 
       dummyElement = { oncanplay: 'bar' };
-      track._createElement = sinon.spy(function() {
+      track._createElement = sinon.spy(() => {
         return dummyElement;
       });
 
       _initialize.call(track);
     });
 
-    it('should call ._createElement', function() {
+    it('should call ._createElement', () => {
       assert.equal(track._createElement.callCount, 1);
     });
 
-    it('should call ._attach with the created element', function() {
+    it('should call ._attach with the created element', () => {
       assert(track._attach.calledWith(dummyElement));
     });
 
@@ -66,176 +66,178 @@ describe('MediaTrack', function() {
       assert(track._attachments.delete.calledWith(dummyElement));
     });
 
-    it('should set el.oncanplay to a function', function() {
+    it('should set el.oncanplay to a function', () => {
       assert.equal(typeof dummyElement.oncanplay, 'function');
     });
 
-    it('should set el.muted to true', function() {
+    it('should set el.muted to true', () => {
       assert.equal(dummyElement.muted, true);
     });
 
-    context('when the dummy element emits oncanplay event', function() {
-      it('should emit MediaTrack#started, passing the instance of MediaTrack', function(done) {
+    context('when the dummy element emits oncanplay event', () => {
+      it('should emit MediaTrack#started, passing the instance of MediaTrack', async () => {
         _initialize.call(track);
-        track.on('started', function(_track) {
-          done(track !== _track && new Error('Did not return the instance of MediaTrack'));
-        });
+
+        const trackPromise = new Promise(resolve => track.on('started', resolve));
 
         dummyElement.oncanplay();
+
+        const _track = await trackPromise;
+        assert.equal(track, _track);
       });
 
-      it('should call ._detachElement with the passed element', function() {
+      it('should call ._detachElement with the passed element', () => {
         assert(track._detachElement.calledWith(dummyElement));
       });
 
-      it('should set .isStarted to true', function() {
+      it('should set .isStarted to true', () => {
         assert(track.isStarted);
       });
 
-      it('should set the element\'s oncanplay to null', function() {
+      it('should set the element\'s oncanplay to null', () => {
         assert.equal(dummyElement.oncanplay, null);
       });
     });
   });
 
-  describe('attach', function() {
+  describe('attach', () => {
     let element;
     let returnVal;
 
-    context('when undefined is passed', function() {
-      before(function() {
+    context('when undefined is passed', () => {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
-        track._createElement = sinon.spy(function() {
+        track._createElement = sinon.spy(() => {
           return element;
         });
         track._selectElement = sinon.spy();
-        track._attach = sinon.spy(function() {
+        track._attach = sinon.spy(() => {
           return element;
         });
 
         returnVal = track.attach();
       });
 
-      it('should call _createElement', function() {
+      it('should call _createElement', () => {
         assert.equal(track._createElement.callCount, 1);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _attach with the created element', function() {
+      it('should call _attach with the created element', () => {
         assert(track._attach.calledWith(element));
       });
 
-      it('should return the result of _attach', function() {
+      it('should return the result of _attach', () => {
         assert(returnVal, element);
       });
     });
 
-    context('when null is passed', function() {
-      before(function() {
+    context('when null is passed', () => {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
-        track._createElement = sinon.spy(function() {
+        track._createElement = sinon.spy(() => {
           return element;
         });
         track._selectElement = sinon.spy();
-        track._attach = sinon.spy(function() {
+        track._attach = sinon.spy(() => {
           return element;
         });
 
         returnVal = track.attach(null);
       });
 
-      it('should call _createElement', function() {
+      it('should call _createElement', () => {
         assert.equal(track._createElement.callCount, 1);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _attach with the created element', function() {
+      it('should call _attach with the created element', () => {
         assert(track._attach.calledWith(element));
       });
 
-      it('should return the result of _attach', function() {
+      it('should return the result of _attach', () => {
         assert(returnVal, element);
       });
     });
 
-    context('when a string is passed', function() {
-      before(function() {
+    context('when a string is passed', () => {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
-        track._selectElement = sinon.spy(function() {
+        track._selectElement = sinon.spy(() => {
           return element;
         });
-        track._attach = sinon.spy(function() {
+        track._attach = sinon.spy(() => {
           return element;
         });
 
         returnVal = track.attach('.selector');
       });
 
-      it('should not call _createElement', function() {
+      it('should not call _createElement', () => {
         assert.equal(track._createElement.callCount, 0);
       });
 
-      it('should call _selectElement with the specified selector', function() {
+      it('should call _selectElement with the specified selector', () => {
         assert(track._selectElement.calledWith('.selector'));
         assert.equal(track._selectElement.callCount, 1);
       });
 
-      it('should call _attach with the selected element', function() {
+      it('should call _attach with the selected element', () => {
         assert(track._attach.calledWith(element));
       });
 
-      it('should return the result of _attach', function() {
+      it('should return the result of _attach', () => {
         assert(returnVal, element);
       });
     });
 
-    context('when an element is passed', function() {
-      before(function() {
+    context('when an element is passed', () => {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
         track._selectElement = sinon.spy();
-        track._attach = sinon.spy(function() {
+        track._attach = sinon.spy(() => {
           return element;
         });
         returnVal = track.attach(element);
       });
 
-      it('should not call _createElement', function() {
+      it('should not call _createElement', () => {
         assert.equal(track._createElement.callCount, 0);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _attach with the passed element', function() {
+      it('should call _attach with the passed element', () => {
         assert(track._attach.calledWith(element));
       });
 
-      it('should return the result of _attach', function() {
+      it('should return the result of _attach', () => {
         assert(returnVal, element);
       });
     });
   });
 
-  describe('_selectElement', function() {
+  describe('_selectElement', () => {
     let element;
-    before(function() {
+    before(() => {
       track = createMediaTrack('1', 'audio');
 
       element = document.createElement('audio');
@@ -243,149 +245,149 @@ describe('MediaTrack', function() {
       document.body.appendChild(element);
     });
 
-    after(function() {
+    after(() => {
       element.parentNode.removeChild(element);
     });
 
-    context('when passed an invalid selector', function() {
-      it('should throw an exception', function() {
-        assert.throws(function() {
+    context('when passed an invalid selector', () => {
+      it('should throw an exception', () => {
+        assert.throws(() => {
           track._selectElement('.nonexistant');
         });
       });
     });
   });
 
-  describe('_createElement', function() {
-    before(function() {
+  describe('_createElement', () => {
+    before(() => {
       track = createMediaTrack('1', 'video');
     });
 
-    it('should return an element with the tagName of .kind', function() {
+    it('should return an element with the tagName of .kind', () => {
       assert.equal(track._createElement().tagName.toLowerCase(), 'video');
     });
   });
 
-  describe('detach', function() {
-    context('when el is undefined', function() {
+  describe('detach', () => {
+    context('when el is undefined', () => {
       let attachedElements;
 
-      before(function() {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
         ];
 
-        track._getAllAttachedElements = sinon.spy(function() {
+        track._getAllAttachedElements = sinon.spy(() => {
           return attachedElements;
         });
         track._selectElement = sinon.spy();
-        track._detachElements = sinon.spy(function(els) { return els; });
+        track._detachElements = sinon.spy(els => els);
         track.detach();
       });
 
-      it('should call _getAllAttachedElements', function() {
+      it('should call _getAllAttachedElements', () => {
         assert.equal(track._getAllAttachedElements.callCount, 1);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _detach with the attached elements', function() {
+      it('should call _detach with the attached elements', () => {
         assert(track._detachElements.calledWith(attachedElements));
       });
     });
 
-    context('when el is null', function() {
+    context('when el is null', () => {
       let attachedElements;
 
-      before(function() {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
         ];
 
-        track._getAllAttachedElements = sinon.spy(function() {
+        track._getAllAttachedElements = sinon.spy(() => {
           return attachedElements;
         });
         track._selectElement = sinon.spy();
-        track._detachElements = sinon.spy(function(els) { return els; });
+        track._detachElements = sinon.spy(els => els);
         track.detach(null);
       });
 
-      it('should call _getAllAttachedElements', function() {
+      it('should call _getAllAttachedElements', () => {
         assert.equal(track._getAllAttachedElements.callCount, 1);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _detach with the attached elements', function() {
+      it('should call _detach with the attached elements', () => {
         assert(track._detachElements.calledWith(attachedElements));
       });
     });
 
-    context('when el is a string', function() {
+    context('when el is a string', () => {
       let element;
 
-      before(function() {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
-        track._selectElement = sinon.spy(function() {
+        track._selectElement = sinon.spy(() => {
           return element;
         });
-        track._detachElements = sinon.spy(function(els) { return els; });
+        track._detachElements = sinon.spy(els => els);
         track.detach('.foo');
       });
 
-      it('should not call _getAllAttachedElements', function() {
+      it('should not call _getAllAttachedElements', () => {
         assert.equal(track._getAllAttachedElements.callCount, 0);
       });
 
-      it('should call _selectElement', function() {
+      it('should call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 1);
       });
 
-      it('should call _detach with the attached element', function() {
+      it('should call _detach with the attached element', () => {
         assert(track._detachElements.calledWith([element]));
       });
     });
 
-    context('when el is an element', function() {
+    context('when el is an element', () => {
       let element;
 
-      before(function() {
+      before(() => {
         track = createMediaTrack('1', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
         track._selectElement = sinon.spy();
-        track._detachElements = sinon.spy(function(els) { return els; });
+        track._detachElements = sinon.spy(els => els);
         track.detach(element);
       });
 
-      it('should not call _getAllAttachedElements', function() {
+      it('should not call _getAllAttachedElements', () => {
         assert.equal(track._getAllAttachedElements.callCount, 0);
       });
 
-      it('should not call _selectElement', function() {
+      it('should not call _selectElement', () => {
         assert.equal(track._selectElement.callCount, 0);
       });
 
-      it('should call _detach with the specified element', function() {
+      it('should call _detach with the specified element', () => {
         assert(track._detachElements.calledWith([element]));
       });
     });
   });
 
-  describe('_getAllAttachedElements', function() {
-    it('should return an array with all elements in ._attachments', function() {
+  describe('_getAllAttachedElements', () => {
+    it('should return an array with all elements in ._attachments', () => {
       track = createMediaTrack('1', 'audio');
       track._attachments.add('foo');
       track._attachments.add('bar');
@@ -394,8 +396,8 @@ describe('MediaTrack', function() {
     });
   });
 
-  describe('_detachElements', function() {
-    it('should run _detachElement for each element passed', function() {
+  describe('_detachElements', () => {
+    it('should run _detachElement for each element passed', () => {
       track = createMediaTrack('1', 'audio');
       track._detachElement = sinon.spy();
       track._detachElements(['foo', 'bar']);
@@ -403,12 +405,12 @@ describe('MediaTrack', function() {
     });
   });
 
-  describe('_detachElement', function() {
+  describe('_detachElement', () => {
     let returnVal;
     let el1;
     let el2;
 
-    before(function() {
+    before(() => {
       track = createMediaTrack('1', 'audio');
       el1 = document.createElement('audio');
       el1.srcObject = new MediaStream();
@@ -418,27 +420,27 @@ describe('MediaTrack', function() {
       returnVal = track._detachElement(el1);
     });
 
-    context('when the element is attached', function() {
-      it('should remove the MediaTrack\'s MediaStreamTrack from the element\'s .srcObject MediaStream', function() {
+    context('when the element is attached', () => {
+      it('should remove the MediaTrack\'s MediaStreamTrack from the element\'s .srcObject MediaStream', () => {
         assert.deepEqual(el1.srcObject.getTracks(), []);
       });
 
-      it('should return the passed element', function() {
+      it('should return the passed element', () => {
         assert.equal(returnVal, el1);
       });
 
-      it('should remove the element from ._attachments', function() {
+      it('should remove the element from ._attachments', () => {
         assert(!track._attachments.has(el1));
       });
     });
 
-    context('when the element is not attached', function() {
-      before(function() {
+    context('when the element is not attached', () => {
+      before(() => {
         el2 = document.createElement('audio');
         returnVal = track._detachElement(el2);
       });
 
-      it('should return the passed element', function() {
+      it('should return the passed element', () => {
         assert.equal(returnVal, el2);
       });
     });

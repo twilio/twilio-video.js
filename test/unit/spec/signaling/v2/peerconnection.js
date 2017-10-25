@@ -19,7 +19,7 @@ describe('PeerConnectionV2', () => {
       test = makeTest();
     });
 
-    it('sets .id', function() {
+    it('sets .id', () => {
       assert.equal(test.pcv2.id, test.id);
     });
   });

@@ -168,7 +168,7 @@ describe('InsightsPublisher', () => {
   describe('connect/reconnect', () => {
     it('should throw when the WebSocket constructor throws', () => {
       assert.throws(() => new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-        WebSocket: customizedWebSocket(FakeWebSocket, function() {
+        WebSocket: customizedWebSocket(FakeWebSocket, () => {
           throw new Error('test');
         })
       }));
@@ -179,7 +179,7 @@ describe('InsightsPublisher', () => {
         let wsUrl;
         const options = {
           gateway: 'somegateway',
-          WebSocket: customizedWebSocket(FakeWebSocket, function(url) {
+          WebSocket: customizedWebSocket(FakeWebSocket, url => {
             wsUrl = url;
           })
         };
@@ -192,7 +192,7 @@ describe('InsightsPublisher', () => {
       it('should call the WebSocket constructor with the gateway created from environment and realm', () => {
         let wsUrl;
         const options = {
-          WebSocket: customizedWebSocket(FakeWebSocket, function(url) {
+          WebSocket: customizedWebSocket(FakeWebSocket, url => {
             wsUrl = url;
           })
         };
@@ -291,7 +291,7 @@ describe('InsightsPublisher', () => {
               maxReconnectAttempts: 10,
               reconnectIntervalMs: 100,
               userAgent: 'baz',
-              WebSocket: customizedWebSocket(FakeWebSocket, function() {
+              WebSocket: customizedWebSocket(FakeWebSocket, () => {
                 reconnectDeferreds[reconnectedDeferredsIdx++].resolve();
                 timestamps.push(Date.now());
               })

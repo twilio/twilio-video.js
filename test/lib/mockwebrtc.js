@@ -53,9 +53,7 @@ const navigator = {
 
 function getUserMedia(constraints, successCallback, errorCallback) {
   const mediaStream = new MediaStream();
-  setTimeout(function() {
-    return successCallback(mediaStream);
-  });
+  setTimeout(() => successCallback(mediaStream));
 }
 
 navigator.webkitGetUserMedia = getUserMedia;
@@ -68,7 +66,7 @@ function RTCDataChannel(label) {
   this.readyState = 'connecting';
   this.bufferedAmount = 0;
   this.binaryType = 'blob';
-  setTimeout(function() {
+  setTimeout(() => {
     this.readyState = 'open';
     if (this.onopen) {
       this.onopen();

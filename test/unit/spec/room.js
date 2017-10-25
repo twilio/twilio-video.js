@@ -11,26 +11,26 @@ const { SignalingConnectionDisconnectedError } = require('../../../lib/util/twil
 
 const log = require('../../lib/fakelog');
 
-describe('Room', function() {
+describe('Room', () => {
   const options = { log: log };
   const localParticipant = new ParticipantSignaling('PAXXX', 'client');
 
   let room;
   let signaling;
 
-  beforeEach(function() {
+  beforeEach(() => {
     signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
     room = new Room(localParticipant, signaling, options);
   });
 
-  describe('new Room(signaling)', function() {
-    it('should return an instance when called as a function', function() {
+  describe('new Room(signaling)', () => {
+    it('should return an instance when called as a function', () => {
       assert(Room(localParticipant, signaling, options) instanceof Room);
     });
   });
 
-  describe('#disconnect()', function() {
-    it('should return the Room', function() {
+  describe('#disconnect()', () => {
+    it('should return the Room', () => {
       assert.equal(room, room.disconnect());
     });
 
@@ -43,21 +43,21 @@ describe('Room', function() {
     });
   });
 
-  describe('RemoteParticipant events', function() {
+  describe('RemoteParticipant events', () => {
     let participants;
 
-    beforeEach(function() {
+    beforeEach(() => {
       [
         new RemoteParticipantSignaling('PA000', 'foo'),
         new RemoteParticipantSignaling('PA111', 'bar')
       ].forEach(signaling.connectParticipant.bind(signaling));
       participants = { };
-      room.participants.forEach(function(participant) {
+      room.participants.forEach(participant => {
         participants[participant.identity] = participant;
       });
     });
 
-    it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackAdded', spy);
 
@@ -65,7 +65,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackDimensionsChanged', spy);
 
@@ -73,7 +73,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackDisabled', spy);
 
@@ -81,7 +81,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackEnabled', spy);
 
@@ -89,7 +89,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackMessage', spy);
 
@@ -97,7 +97,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackRemoved', spy);
 
@@ -105,7 +105,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackStarted', spy);
 
@@ -113,7 +113,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackSubscribed', spy);
 
@@ -121,7 +121,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', function() {
+    it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', () => {
       const spy = new sinon.spy();
       room.on('trackUnsubscribed', spy);
 
@@ -129,7 +129,7 @@ describe('Room', function() {
       assert.equal(spy.callCount, 1);
     });
 
-    it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', function() {
+    it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', () => {
       participants['foo'].emit('disconnected');
 
       const spy = new sinon.spy();
@@ -176,7 +176,7 @@ describe('Room', function() {
       ].forEach(signaling.connectParticipant.bind(signaling));
 
       const participants = {};
-      room.participants.forEach(function(participant) {
+      room.participants.forEach(participant => {
         participant._unsubscribeTracks = sinon.spy();
         participants[participant.identity] = participant;
       });
