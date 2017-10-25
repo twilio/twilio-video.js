@@ -950,9 +950,6 @@ function makeTest(options) {
 function makeTrackSignaling(id, sid, getSidError) {
   const signaling = {};
   signaling.id = id;
-  signaling.getSid = sinon.spy(() => getSidError
-    ? Promise.reject(getSidError)
-    : Promise.resolve(sid));
   signaling.publishFailed = sinon.spy(() => {});
   return signaling;
 }
