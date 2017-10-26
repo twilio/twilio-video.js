@@ -1,11 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const sinon = require('sinon');
 
 const RecordingV2 = require('../../../../../lib/signaling/v2/recording');
 
-const { combinationContext } = require('../../../../lib/util'); 
+const { combinationContext } = require('../../../../lib/util');
 
 describe('RecordingV2', () => {
   // RecordingV2
@@ -111,7 +110,7 @@ function testEnableOrDisable(method, argument, isEnabled) {
 
     it('emits an "updated" event with .isEnabled set to ' + expectedIsEnabled, () => {
       let actualIsEnabled;
-      recording.once('updated', () => actualIsEnabled = recording.isEnabled);
+      recording.once('updated', () => { actualIsEnabled = recording.isEnabled; });
       runMethod();
       assert.equal(actualIsEnabled, expectedIsEnabled);
     });
@@ -123,7 +122,7 @@ function testEnableOrDisable(method, argument, isEnabled) {
 
     it('does not emit an "updated" event', () => {
       let updated;
-      recording.once('updated', () => updated = true);
+      recording.once('updated', () => { updated = true; });
       runMethod();
       assert(!updated);
     });
@@ -165,14 +164,14 @@ function testUpdate(revision, enabled, isEnabled) {
     if (enabled === isEnabled) {
       it('does not emit an "updated" event', () => {
         let updated;
-        recording.once('updated', () => updated = true);
+        recording.once('updated', () => { updated = true; });
         recording.update(recordingState);
         assert(!updated);
       });
     } else {
       it('emits an "updated" event with .isEnabled set to ' + enabled, () => {
         let actualIsEnabled;
-        recording.once('updated', () => actualIsEnabled = recording.isEnabled);
+        recording.once('updated', () => { actualIsEnabled = recording.isEnabled; });
         recording.update(recordingState);
         assert.equal(actualIsEnabled, enabled);
       });
@@ -190,7 +189,7 @@ function testUpdate(revision, enabled, isEnabled) {
 
     it('does not emit an "updated" event', () => {
       let updated;
-      recording.once('updated', () => updated = true);
+      recording.once('updated', () => { updated = true; });
       recording.update(recordingState);
       assert(!updated);
     });

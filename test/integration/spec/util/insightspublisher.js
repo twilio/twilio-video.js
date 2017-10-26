@@ -11,10 +11,11 @@ const { a } = require('../../../lib/util');
 const tokens = new Map([
   ['expired', getToken('foo', { ttl: 60 * -1000 })],
   ['invalid', 'foo'],
-  ['valid', getToken('foo') ]
+  ['valid', getToken('foo')]
 ]);
 
 describe('InsightsPublisher', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
 
   describe('connect', () => {

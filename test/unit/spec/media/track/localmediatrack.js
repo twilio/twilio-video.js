@@ -5,7 +5,6 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 const { inherits } = require('util');
 
-const Track = require('../../../../../lib/media/track/mediatrack');
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
 
@@ -34,13 +33,14 @@ const log = require('../../../../lib/fakelog');
         [
           [
             'when called without the "new" keyword',
+            // eslint-disable-next-line new-cap
             () => LocalMediaTrack(mediaStreamTrack)
           ],
           [
             'when called with the "new" keyword',
             () => new LocalMediaTrack(mediaStreamTrack)
           ]
-        ].forEach(([ scenario, createLocalMediaTrack ]) => {
+        ].forEach(([scenario, createLocalMediaTrack]) => {
           context(scenario, () => {
             it('should not throw', () => {
               assert.doesNotThrow(createLocalMediaTrack);
@@ -123,8 +123,8 @@ const log = require('../../../../lib/fakelog');
         before(() => {
           track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
           track.mediaStreamTrack.enabled = Math.random() > 0.5;
-          track.on('disabled', () => trackDisabledEmitted = true);
-          track.on('enabled', () => trackEnabledEmitted = true);
+          track.on('disabled', () => { trackDisabledEmitted = true; });
+          track.on('enabled', () => { trackEnabledEmitted = true; });
         });
 
         it('should not emit the "disabled" or "enabled" events', () => {
@@ -133,7 +133,7 @@ const log = require('../../../../lib/fakelog');
         });
       });
 
-      [ true, false ].forEach(enabled => {
+      [true, false].forEach(enabled => {
         context(`when .enable is called with ${enabled}`, () => {
           context(`and the underlying MediaStreamTrack's .enabled is ${!enabled}`, () => {
             let eventEmitted;
@@ -141,7 +141,7 @@ const log = require('../../../../lib/fakelog');
             before(() => {
               track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
               track.mediaStreamTrack.enabled = !enabled;
-              track.on(enabled ? 'enabled' : 'disabled', () => eventEmitted = true);
+              track.on(enabled ? 'enabled' : 'disabled', () => { eventEmitted = true; });
               track.enable(enabled);
             });
 
@@ -211,5 +211,5 @@ MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.remo
 
 MediaStreamTrack.prototype.stop = function stop() {
   // Simulating the browser-native MediaStreamTrack's 'ended' event
-  this.emit('ended', {type: 'ended'});
+  this.emit('ended', { type: 'ended' });
 };

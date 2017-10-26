@@ -149,6 +149,7 @@ describe('IceBox', () => {
         it('does not update .ufrag', () => {
           const test = makeTest({ ufrag: 'foo' });
           const iceState = test.state().setCandidates('foo', 1);
+          test.iceBox.update(iceState);
 
           assert.equal('foo', test.iceBox.ufrag);
         });
@@ -172,6 +173,7 @@ describe('IceBox', () => {
           const iceState2 = test.state().setCandidates('foo', 2);
 
           test.iceBox.update(iceState1);
+          test.iceBox.update(iceState2);
 
           assert.equal('foo', test.iceBox.ufrag);
         });
@@ -220,6 +222,7 @@ describe('IceBox', () => {
           const iceState2 = test.state().setCandidates('foo', 2);
 
           test.iceBox.update(iceState2);
+          test.iceBox.update(iceState1);
 
           assert.equal('foo', test.iceBox.ufrag);
         });
@@ -244,6 +247,8 @@ describe('IceBox', () => {
           const test = makeTest({ ufrag: 'foo' });
           const iceState = test.state().setCandidates('bar', 1);
 
+          test.iceBox.update(iceState);
+
           assert.equal('foo', test.iceBox.ufrag);
         });
 
@@ -264,6 +269,7 @@ describe('IceBox', () => {
           const iceState2 = test.state().setCandidates('bar', 2);
 
           test.iceBox.update(iceState1);
+          test.iceBox.update(iceState2);
 
           assert.equal('foo', test.iceBox.ufrag);
         });
@@ -310,6 +316,7 @@ describe('IceBox', () => {
           const iceState2 = test.state().setCandidates('bar', 2);
 
           test.iceBox.update(iceState2);
+          test.iceBox.update(iceState1);
 
           assert.equal('foo', test.iceBox.ufrag);
         });

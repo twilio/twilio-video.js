@@ -390,7 +390,7 @@ describe('SignalingV2', () => {
             test.transitions = [];
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert.deepEqual(
                 [
                   'closed',
@@ -410,7 +410,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.ua.start.calledTwice);
             });
           });
@@ -424,7 +424,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(!test.ua.stop.calledTwice);
             });
           });
@@ -438,7 +438,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.connect().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(!test.ua.transport.disconnect.calledTwice);
             });
           });
@@ -527,66 +527,91 @@ describe('SignalingV2', () => {
       context('the initial call to .start on the SIP.js UA fails', () => {
         context('but the subsequent one succeeds', () => {
           // TODO(mroberts): ...
-          it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', () => {
+          it('returns a Promise that resolves to a function that returns a CancelablePromise<RoomV2>', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(fun => {
-                assert.equal(test.cancelableRoomSignalingPromise, fun());
-              });
+            const promise = test.when('opening', async () => {
+              const fun = await test.signaling.connect();
+              assert.equal(test.cancelableRoomSignalingPromise, fun());
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('transitions through state "opening" to state "open" after "closed"', () => {
+          it('transitions through state "opening" to state "open" after "closed"', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
+            const promise = test.when('opening', async () => {
               test.transitions = [];
-              return test.signaling.connect().then(signaling => {
-                assert.deepEqual(
-                  [
-                    'closed',
-                    'opening',
-                    'open'
-                  ],
-                  test.transitions);
-              });
+              await test.signaling.connect();
+              assert.deepEqual(
+                [
+                  'closed',
+                  'opening',
+                  'open'
+                ],
+                test.transitions);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('calls .start on the SIP.js UA again', () => {
+          it('calls .start on the SIP.js UA again', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(signaling => {
-                assert(test.ua.start.calledTwice);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.connect();
+              assert(test.ua.start.calledTwice);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .stop on the SIP.js UA', () => {
+          it('does not call .stop on the SIP.js UA', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(signaling => {
-                assert(!test.ua.stop.calledOnce);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.connect();
+              assert(!test.ua.stop.calledOnce);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+          it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.connect().then(signaling => {
-                assert(!test.ua.transport.disconnect.calledOnce);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.connect();
+              assert(!test.ua.transport.disconnect.calledOnce);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
         });
 
@@ -666,7 +691,7 @@ describe('SignalingV2', () => {
             const promise = test.when('opening', async () => {
               try {
                 await test.signaling.connect();
-              } catch(error) {
+              } catch (error) {
                 // Expected rejection
                 assert(!test.ua.stop.calledOnce);
                 return;
@@ -865,7 +890,7 @@ describe('SignalingV2', () => {
             test.transitions = [];
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert.deepEqual(
                 [
                   'closed',
@@ -885,7 +910,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.ua.start.calledTwice);
             });
           });
@@ -899,7 +924,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(!test.ua.stop.calledTwice);
             });
           });
@@ -913,7 +938,7 @@ describe('SignalingV2', () => {
             test.uaConnectSucceeds = false;
             return test.signaling.open().then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(!test.ua.transport.disconnect.calledTwice);
             });
           });
@@ -1000,66 +1025,91 @@ describe('SignalingV2', () => {
     context('"opening"', () => {
       context('the initial call to .start on the SIP.js UA fails', () => {
         context('but the subsequent one succeeds', () => {
-          it('returns a Promise that resolves to the SignalingV2', () => {
+          it('returns a Promise that resolves to the SignalingV2', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(signaling => {
-                assert.equal(test.signaling, signaling);
-              });
+            const promise = test.when('opening', async () => {
+              const signaling = await test.signaling.open();
+              assert.equal(test.signaling, signaling);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('transitions through state "opening" to state "open" after "closed"', () => {
+          it('transitions through state "opening" to state "open" after "closed"', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
+            const promise = test.when('opening', async () => {
               test.transitions = [];
-              return test.signaling.open().then(signaling => {
-                assert.deepEqual(
-                  [
-                    'closed',
-                    'opening',
-                    'open'
-                  ],
-                  test.transitions);
-              });
+              await test.signaling.open();
+              assert.deepEqual(
+                [
+                  'closed',
+                  'opening',
+                  'open'
+                ],
+                test.transitions);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('calls .start on the SIP.js UA again', () => {
+          it('calls .start on the SIP.js UA again', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(signaling => {
-                assert(test.ua.start.calledTwice);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.open();
+              assert(test.ua.start.calledTwice);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .stop on the SIP.js UA', () => {
+          it('does not call .stop on the SIP.js UA', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(signaling => {
-                assert(!test.ua.stop.calledOnce);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.open();
+              assert(!test.ua.stop.calledOnce);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
 
-          it('does not call .disconnect on the SIP.js UA\'s .transport', () => {
+          it('does not call .disconnect on the SIP.js UA\'s .transport', async () => {
             const test = makeTest({ uaConnectSucceeds: false });
-            const promise = test.when('opening', () => {
-              return test.signaling.open().then(signaling => {
-                assert(!test.ua.transport.disconnect.calledOnce);
-              });
+            const promise = test.when('opening', async () => {
+              await test.signaling.open();
+              assert(!test.ua.transport.disconnect.calledOnce);
             });
-            test.signaling.open().catch(() => test.uaConnectSucceeds = true);
-            return promise;
+            try {
+              await test.signaling.open();
+            } catch (error) {
+              // Expected rejection
+              test.uaConnectSucceeds = true;
+              return promise;
+            }
+            throw new Error('Unexpected resolution');
           });
         });
 

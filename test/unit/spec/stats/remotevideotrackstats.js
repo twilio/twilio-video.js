@@ -39,7 +39,7 @@ describe('RemoteVideoTrackStats', () => {
           const trackStats = new RemoteVideoTrackStats(stats.trackId, stats);
           assert.equal(trackStats[prop], null);
 
-          statNames.forEach(name => stats[name] = statsValues[name]);
+          statNames.forEach(name => { stats[name] = statsValues[name]; });
         });
       });
     });

@@ -62,7 +62,7 @@ describe('MediaTrack', () => {
       assert(track._attach.calledWith(dummyElement));
     });
 
-    it ('should call .delete with the created element on the ._attachments Set', () => {
+    it('should call .delete with the created element on the ._attachments Set', () => {
       assert(track._attachments.delete.calledWith(dummyElement));
     });
 
@@ -454,12 +454,15 @@ describe('MediaTrack', () => {
     let MediaStream;
 
     beforeEach(() => {
-      MediaStream = sinon.spy(function () { mediaStream = this; });
+      MediaStream = sinon.spy(function MediaStream() {
+        // eslint-disable-next-line consistent-this
+        mediaStream = this;
+      });
       MediaStream.prototype.addTrack = sinon.spy();
       MediaStream.prototype.getAudioTracks = sinon.spy(() => [track.mediaStreamTrack]);
       MediaStream.prototype.removeTrack = sinon.spy();
       el = document.createElement('audio');
-      track = createMediaTrack(1, 'audio', {MediaStream: MediaStream});
+      track = createMediaTrack(1, 'audio', { MediaStream: MediaStream });
     });
 
     context('when the .srcObject of the HTMLMediaElement is not a MediaStream', () => {

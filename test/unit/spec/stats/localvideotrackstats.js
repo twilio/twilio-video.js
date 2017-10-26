@@ -49,7 +49,7 @@ describe('LocalVideoTrackStats', () => {
           const trackStats = new LocalVideoTrackStats(stats.trackId, stats);
           assert.equal(trackStats[prop], null);
 
-          statNames.forEach(name => stats[name] = statsValues[name]);
+          statNames.forEach(name => { stats[name] = statsValues[name]; });
         });
       });
     });

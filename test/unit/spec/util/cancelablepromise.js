@@ -171,7 +171,7 @@ describe('CancelablePromise', () => {
             cancelablePromise.catch(() => {});
           });
         }
-      }); 
+      });
     });
   });
 
@@ -333,7 +333,7 @@ describe('CancelablePromise', () => {
             cancelablePromise.catch(() => {});
           });
         }
-      }); 
+      });
     });
   });
 });

@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const { EventEmitter } = require('events');
-const sinon = require('sinon');
 
 const DataTrackReceiver = require('../../../../../lib/data/receiver');
 const EventTarget = require('../../../../../lib/eventtarget');
@@ -11,8 +10,6 @@ const { makeUUID } = require('../../../../../lib/util');
 
 describe('RemoteDataTrack', () => {
   let dataTrackReceiver;
-  let trackSignaling;
-  let dataTrack;
 
   beforeEach(() => {
     dataTrackReceiver = new DataTrackReceiver(makeDataChannel());
@@ -83,7 +80,7 @@ describe('RemoteDataTrack', () => {
 
         it('re-emits the "message" event from the underlying DataTrackReceiver', () => {
           let actualData;
-          dataTrack.on('message', data => actualData = data);
+          dataTrack.on('message', data => { actualData = data; });
           dataTrackReceiver.emit('message', expectedData);
           assert.equal(actualData, expectedData);
         });

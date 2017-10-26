@@ -11,7 +11,9 @@ const token = 'foo';
 const iceServers = [];
 const config = {
   video: {
+    // eslint-disable-next-line camelcase
     network_traversal_service: {
+      // eslint-disable-next-line camelcase
       ice_servers: iceServers,
       ttl: 1
     }
@@ -110,7 +112,7 @@ describe('NTSIceServerSource', () => {
         return nts.start().then(iceServers => {
           assert.deepEqual([
             {
-              "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+              urls: 'stun:global.stun.twilio.com:3478?transport=udp'
             }
           ], iceServers);
         });
@@ -130,7 +132,7 @@ describe('NTSIceServerSource', () => {
         return nts.start().then(iceServers => {
           assert.deepEqual([
             {
-              "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+              urls: 'stun:global.stun.twilio.com:3478?transport=udp'
             }
           ], iceServers);
         });
@@ -156,7 +158,7 @@ describe('NTSIceServerSource', () => {
         it('returns the default ICE servers', async () => {
           assert.deepEqual([
             {
-              "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+              urls: 'stun:global.stun.twilio.com:3478?transport=udp'
             }
           ], iceServers);
         });
@@ -184,7 +186,7 @@ describe('NTSIceServerSource', () => {
         it('returns the default ICE servers', async () => {
           assert.deepEqual([
             {
-              "urls": "stun:global.stun.twilio.com:3478?transport=udp"
+              urls: 'stun:global.stun.twilio.com:3478?transport=udp'
             }
           ], iceServers);
         });

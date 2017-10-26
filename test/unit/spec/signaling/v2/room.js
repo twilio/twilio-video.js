@@ -61,32 +61,34 @@ describe('RoomV2', () => {
 
     it('should periodically call .publishEvent on the underlying Transport', async () => {
       const test = makeTest({ statsPublishIntervalMs: 50 });
-      const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+      function wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
       const expectedArgs = [
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [ { bar: 'baz' } ],
-            localAudioTrackStats: [ { zee: 'foo' } ],
-            localVideoTrackStats: [ { foo: 'bar' } ],
+            audioTrackStats: [{ bar: 'baz' }],
+            localAudioTrackStats: [{ zee: 'foo' }],
+            localVideoTrackStats: [{ foo: 'bar' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'foo',
             roomSid: test.sid,
-            videoTrackStats: [ { baz: 'zee' } ]
+            videoTrackStats: [{ baz: 'zee' }]
           }
         ],
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [ { xyz: 'uvw' } ],
-            localAudioTrackStats: [ { abc: 'def' } ],
-            localVideoTrackStats: [ { ghi: 'jkl' } ],
+            audioTrackStats: [{ xyz: 'uvw' }],
+            localAudioTrackStats: [{ abc: 'def' }],
+            localVideoTrackStats: [{ ghi: 'jkl' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'bar',
             roomSid: test.sid,
-            videoTrackStats: [ { pqr: 'mno' } ]
+            videoTrackStats: [{ pqr: 'mno' }]
           }
         ]
       ];
@@ -146,6 +148,7 @@ describe('RoomV2', () => {
     context('.peer_connections', () => {
       it('calls .update with the .peer_connections on the PeerConnectionManager', () => {
         const test = makeTest({
+          // eslint-disable-next-line camelcase
           peer_connections: { fizz: 'buzz' }
         });
         assert.deepEqual(
@@ -226,8 +229,8 @@ describe('RoomV2', () => {
             { sid: makeSid() }
           ]
         });
-        const participantConnected = false;
-        test.room.once('participantConnected', () => participantConnected = true);
+        let participantConnected = false;
+        test.room.once('participantConnected', () => { participantConnected = true; });
         test.room.connectParticipant(test.participantV2s[0]);
         assert(!participantConnected);
       });
@@ -258,7 +261,7 @@ describe('RoomV2', () => {
         const participant = new RemoteParticipantV2({ sid: makeSid() });
         const test = makeTest();
         let participantConnected;
-        test.room.once('participantConnected', participant => participantConnected = participant);
+        test.room.once('participantConnected', participant => { participantConnected = participant; });
         test.room.connectParticipant(participant);
         assert.equal(
           participant,
@@ -287,7 +290,7 @@ describe('RoomV2', () => {
       it('emits the "stateChanged" event with the new state "disconnected"', () => {
         const test = makeTest();
         let newState;
-        test.room.once('stateChanged', state => newState = state);
+        test.room.once('stateChanged', state => { newState = state; });
         test.room.disconnect();
         assert.equal(
           'disconnected',
@@ -342,7 +345,7 @@ describe('RoomV2', () => {
           ]
         });
         let participantDisconnected;
-        test.room.once('participantDisconnected', () => participantDisconnected = true);
+        test.room.once('participantDisconnected', () => { participantDisconnected = true; });
         test.room.disconnect();
         assert(!participantDisconnected);
       });
@@ -350,7 +353,9 @@ describe('RoomV2', () => {
       it('should stop the periodic calls to .publishEvent on the underlying Transport', async () => {
         let publishEventCallCount;
         const test = makeTest({ statsPublishIntervalMs: 50 });
-        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+        function wait(ms) {
+          return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
         await wait(175);
         publishEventCallCount = test.transport.publishEvent.callCount;
@@ -383,7 +388,7 @@ describe('RoomV2', () => {
         const test = makeTest();
         test.room.disconnect();
         let stateChanged;
-        test.room.once('stateChanged', () => stateChanged = true);
+        test.room.once('stateChanged', () => { stateChanged = true; });
         test.room.disconnect();
         assert(!stateChanged);
       });
@@ -434,7 +439,7 @@ describe('RoomV2', () => {
         });
         test.room.disconnect();
         let participantDisconnected;
-        test.room.once('participantDisconnected', () => participantDisconnected = true);
+        test.room.once('participantDisconnected', () => { participantDisconnected = true; });
         test.room.disconnect();
         assert(!participantDisconnected);
       });
@@ -460,7 +465,7 @@ describe('RoomV2', () => {
           ]
         });
         let participantDisconnected;
-        test.room.once('participantDisconnected', participant => participantDisconnected = participant);
+        test.room.once('participantDisconnected', participant => { participantDisconnected = participant; });
         test.participantV2s[0].emit('stateChanged', 'disconnected');
         assert.equal(
           test.participantV2s[0],
@@ -473,7 +478,7 @@ describe('RoomV2', () => {
     context('multiple Track events in the same tick', () => {
       context('two "trackAdded" events', () => {
         it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-          const tracks = [ makeTrack(), makeTrack() ];
+          const tracks = [makeTrack(), makeTrack()];
           const test = makeTest({ tracks });
           tracks.forEach(track => test.localParticipant.emit('trackAdded', track));
           await new Promise(resolve => setTimeout(resolve));
@@ -486,26 +491,26 @@ describe('RoomV2', () => {
 
     context('"trackAdded" event followed by "trackRemoved" event', () => {
       it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-        const [ track, addedTrack, removedTrack ] = [ makeTrack(), makeTrack(), makeTrack() ];
-        const test = makeTest({ tracks: [ track, addedTrack ] });
+        const [track, addedTrack, removedTrack] = [makeTrack(), makeTrack(), makeTrack()];
+        const test = makeTest({ tracks: [track, addedTrack] });
         test.localParticipant.emit('trackAdded', addedTrack);
         test.localParticipant.emit('trackRemoved', removedTrack);
         await new Promise(resolve => setTimeout(resolve));
         sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
-        assert.deepEqual([ track.mediaStreamTrackOrDataTrackTransceiver, addedTrack.mediaStreamTrackOrDataTrackTransceiver ],
+        assert.deepEqual([track.mediaStreamTrackOrDataTrackTransceiver, addedTrack.mediaStreamTrackOrDataTrackTransceiver],
           test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
     });
 
     context('two "trackRemoved" events', () => {
       it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-        const [ track, removedTrack1, removedTrack2 ] = [ makeTrack(), makeTrack(), makeTrack() ];
-        const test = makeTest({ tracks: [ track ] });
+        const [track, removedTrack1, removedTrack2] = [makeTrack(), makeTrack(), makeTrack()];
+        const test = makeTest({ tracks: [track] });
         test.localParticipant.emit('trackRemoved', removedTrack1);
         test.localParticipant.emit('trackRemoved', removedTrack2);
         await new Promise(resolve => setTimeout(resolve));
         sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
-        assert.deepEqual([ track.mediaStreamTrackOrDataTrackTransceiver ],
+        assert.deepEqual([track.mediaStreamTrackOrDataTrackTransceiver],
           test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
       });
     });
@@ -662,6 +667,7 @@ describe('RoomV2', () => {
             participant: {
               revision: 0
             },
+            // eslint-disable-next-line camelcase
             peer_connections: [
               { fizz: 'buzz' }
             ]
@@ -679,6 +685,7 @@ describe('RoomV2', () => {
             participant: {
               revision: 0
             },
+            // eslint-disable-next-line camelcase
             peer_connections: [
               { fizz: 'buzz' }
             ]
@@ -764,7 +771,7 @@ describe('RoomV2', () => {
             // First usage
             let promise = test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
             test.peerConnectionManager.emit('trackAdded', mediaStreamTrack1);
-            return promise.then(pair => {
+            return promise.then(() => {
 
               // Second usage
               promise = test.participantV2s[0].getMediaStreamTrackOrDataTrackTransceiver(id);
@@ -786,6 +793,7 @@ describe('RoomV2', () => {
         test.transport.emit('message', {
           name: makeName(),
           participants: [],
+          // eslint-disable-next-line camelcase
           peer_connections: []
         });
         assert.equal(
@@ -799,6 +807,7 @@ describe('RoomV2', () => {
         const test = makeTest();
         test.transport.emit('message', {
           participants: [],
+          // eslint-disable-next-line camelcase
           peer_connections: [],
           sid: makeSid()
         });
@@ -844,6 +853,7 @@ describe('RoomV2', () => {
               participants: [
                 { sid: sid }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert.equal(
@@ -858,6 +868,7 @@ describe('RoomV2', () => {
               participants: [
                 { sid: sid }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert.equal(
@@ -869,11 +880,12 @@ describe('RoomV2', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             let participantConnected;
-            test.room.once('participantConnected', participant => participantConnected = participant);
+            test.room.once('participantConnected', participant => { participantConnected = participant; });
             test.transport.emit('message', {
               participants: [
                 { sid: sid }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert.equal(
@@ -888,6 +900,7 @@ describe('RoomV2', () => {
               participants: [
                 { sid: sid, fizz: 'buzz' }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert.deepEqual(
@@ -904,6 +917,7 @@ describe('RoomV2', () => {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert.equal(
@@ -918,6 +932,7 @@ describe('RoomV2', () => {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert(!test.room.participants.has(sid));
@@ -927,11 +942,12 @@ describe('RoomV2', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             let participantConnected;
-            test.room.once('participantConnected', () => participantConnected = true);
+            test.room.once('participantConnected', () => { participantConnected = true; });
             test.transport.emit('message', {
               participants: [
                 { sid: sid, state: 'disconnected' }
               ],
+              // eslint-disable-next-line camelcase
               peer_connections: []
             });
             assert(!participantConnected);
@@ -951,6 +967,7 @@ describe('RoomV2', () => {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert.deepEqual(
@@ -972,6 +989,7 @@ describe('RoomV2', () => {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert.equal(
@@ -991,6 +1009,7 @@ describe('RoomV2', () => {
             participants: [
               { sid: sid, fizz: 'buzz' }
             ],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert(!test.participantV2s[0].update.calledTwice);
@@ -1007,6 +1026,7 @@ describe('RoomV2', () => {
           });
           test.transport.emit('message', {
             participants: [],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert(!test.participantV2s[0].disconnect.calledOnce);
@@ -1021,6 +1041,7 @@ describe('RoomV2', () => {
           });
           test.transport.emit('message', {
             participants: [],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert.equal(
@@ -1036,9 +1057,10 @@ describe('RoomV2', () => {
             ]
           });
           let participantDisconnected;
-          test.room.once('participantDisconnected', () => participantDisconnected = true);
+          test.room.once('participantDisconnected', () => { participantDisconnected = true; });
           test.transport.emit('message', {
             participants: [],
+            // eslint-disable-next-line camelcase
             peer_connections: []
           });
           assert(!participantDisconnected);
@@ -1051,6 +1073,7 @@ describe('RoomV2', () => {
         const test = makeTest();
         test.transport.emit('message', {
           participants: [],
+          // eslint-disable-next-line camelcase
           peer_connections: { fizz: 'buzz' }
         });
         assert.deepEqual(
@@ -1089,10 +1112,6 @@ function makeParticipantSid() {
   return sid;
 }
 
-function makeRevision() {
-  return Math.floor(Math.random() * 101);
-}
-
 function makeTest(options) {
   options = options || {};
 
@@ -1107,7 +1126,7 @@ function makeTest(options) {
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.transport = options.transport || makeTransport(options);
 
-  options.room = options.room || makeRoomV2(options);
+  const room = options.room = options.room || makeRoomV2(options);
 
   options.state = function state() {
     return new RoomStateBuilder(room);
@@ -1142,16 +1161,16 @@ function makeRoomV2(options) {
   return new RoomV2(options.localParticipant, options, options.transport, options.peerConnectionManager, options);
 }
 
-function makeTransport(options) {
+function makeTransport() {
   const transport = new EventEmitter();
   transport.disconnect = sinon.spy(() => {});
   transport.publish = sinon.spy(() => {});
   transport.publishEvent = sinon.spy(() => {});
   transport.sync = sinon.spy(() => {});
   return transport;
-};
+}
 
-function makePeerConnectionManager(options) {
+function makePeerConnectionManager() {
   const peerConnectionManager = new EventEmitter();
   peerConnectionManager.close = sinon.spy(() => {});
   peerConnectionManager.dequeue = sinon.spy(() => {});
@@ -1159,17 +1178,17 @@ function makePeerConnectionManager(options) {
   peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = sinon.spy(() => []);
 
   peerConnectionManager.getStats = () => Promise.resolve([{
-    localAudioTrackStats: [ { zee: 'foo' } ],
-    localVideoTrackStats: [ { foo: 'bar' } ],
+    localAudioTrackStats: [{ zee: 'foo' }],
+    localVideoTrackStats: [{ foo: 'bar' }],
     peerConnectionId: 'foo',
-    remoteAudioTrackStats: [ { bar: 'baz' } ],
-    remoteVideoTrackStats: [ { baz: 'zee' } ]
+    remoteAudioTrackStats: [{ bar: 'baz' }],
+    remoteVideoTrackStats: [{ baz: 'zee' }]
   }, {
-    localAudioTrackStats: [ { abc: 'def' } ],
-    localVideoTrackStats: [ { ghi: 'jkl' } ],
+    localAudioTrackStats: [{ abc: 'def' }],
+    localVideoTrackStats: [{ ghi: 'jkl' }],
     peerConnectionId: 'bar',
-    remoteAudioTrackStats: [ { xyz: 'uvw' } ],
-    remoteVideoTrackStats: [ { pqr: 'mno' } ]
+    remoteAudioTrackStats: [{ xyz: 'uvw' }],
+    remoteVideoTrackStats: [{ pqr: 'mno' }]
   }]);
 
   peerConnectionManager.update = sinon.spy(() => {});
@@ -1180,6 +1199,7 @@ function RoomStateBuilder(room) {
   this.name = room.name;
   this.sid = room.sid;
   this.participants = [];
+  // eslint-disable-next-line camelcase
   this.peer_connections = [];
 }
 

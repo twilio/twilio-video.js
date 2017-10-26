@@ -136,7 +136,7 @@ describe('DataTrackSender', () => {
 
     describe('calls send on the added RTCDataChannels, and, if any of those calls to send throws', () => {
       it('continues calling send on the remaining RTCDataChannels', () => {
-        dataChannel1.send = sinon.spy(() => { throw new Error() });
+        dataChannel1.send = sinon.spy(() => { throw new Error(); });
         dataTrackSender.send(data);
         [dataChannel1, dataChannel2, dataChannel3].forEach(dataChannel => {
           sinon.assert.calledOnce(dataChannel.send);

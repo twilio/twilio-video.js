@@ -12,7 +12,7 @@ describe('LocalTrackPublicationV2', () => {
   // ------------
 
   describe('constructor', () => {
-    [ true, false ].forEach(shouldUseNew => {
+    [true, false].forEach(shouldUseNew => {
       context(`when called with${shouldUseNew ? '' : 'out'} "new"`, () => {
         let localTrackPublicationV2;
         let mediaStreamTrack;
@@ -24,6 +24,7 @@ describe('LocalTrackPublicationV2', () => {
           name = makeUUID();
           localTrackPublicationV2 = shouldUseNew
             ? new LocalTrackPublicationV2(mediaStreamTrack, name)
+            // eslint-disable-next-line new-cap
             : LocalTrackPublicationV2(mediaStreamTrack, name);
         });
 
@@ -44,10 +45,10 @@ describe('LocalTrackPublicationV2', () => {
         });
 
         [
-          [ 'id', 'id' ],
-          [ 'kind', 'kind' ],
-          [ 'isEnabled', 'enabled' ]
-        ].forEach(([ ltProp, mstProp ]) => {
+          ['id', 'id'],
+          ['kind', 'kind'],
+          ['isEnabled', 'enabled']
+        ].forEach(([ltProp, mstProp]) => {
           it(`should set .${ltProp} to MediaStreamTrack's ${mstProp}`, () => {
             assert.equal(localTrackPublicationV2[ltProp], mediaStreamTrack[mstProp]);
           });
@@ -69,11 +70,11 @@ describe('LocalTrackPublicationV2', () => {
 
       context('should return an object whose', () => {
         [
-          [ 'id', 'id' ],
-          [ 'kind', 'kind' ],
-          [ 'enabled', 'isEnabled' ],
-          [ 'name', 'name' ]
-        ].forEach(([ stateProp, ltProp ]) => {
+          ['id', 'id'],
+          ['kind', 'kind'],
+          ['enabled', 'isEnabled'],
+          ['name', 'name']
+        ].forEach(([stateProp, ltProp]) => {
           it(`.${stateProp} is equal to the LocalTrackPublicationV2's ${ltProp}`, () => {
             assert.equal(state[stateProp], localTrackPublicationV2[ltProp]);
           });
@@ -94,7 +95,7 @@ describe('LocalTrackPublicationV2', () => {
           payload = { state: 'ready', sid: makeSid() };
           localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
           updated = false;
-          localTrackPublicationV2.once('updated', () => updated = true);
+          localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
         });
 
@@ -127,7 +128,7 @@ describe('LocalTrackPublicationV2', () => {
           payload = { state: 'failed', error: { code: 1, message: 'foo' } };
           localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
           updated = false;
-          localTrackPublicationV2.once('updated', () => updated = true);
+          localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
         });
 
@@ -169,7 +170,7 @@ describe('LocalTrackPublicationV2', () => {
 
     context('when .sid is null', () => {
       beforeEach(() => {
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.setSid(sid);
       });
 
@@ -194,7 +195,7 @@ describe('LocalTrackPublicationV2', () => {
       beforeEach(() => {
         localTrackPublicationV2.setSid(sid);
         const newSid = makeSid();
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.setSid(newSid);
       });
 
@@ -222,7 +223,7 @@ describe('LocalTrackPublicationV2', () => {
         error = new Error('Track publication failed');
         localTrackPublicationV2.publishFailed(error);
         sid = makeSid();
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.setSid(sid);
       });
 
@@ -262,7 +263,7 @@ describe('LocalTrackPublicationV2', () => {
 
     context('when .sid is null', () => {
       beforeEach(() => {
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.publishFailed(error);
       });
 
@@ -289,7 +290,7 @@ describe('LocalTrackPublicationV2', () => {
       beforeEach(() => {
         sid = makeSid();
         localTrackPublicationV2.setSid(sid);
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.publishFailed(error);
       });
 
@@ -315,7 +316,7 @@ describe('LocalTrackPublicationV2', () => {
         error = new Error('Track publication failed');
         localTrackPublicationV2.publishFailed(error);
         const newError = new Error('New error');
-        localTrackPublicationV2.once('updated', () => updated = true);
+        localTrackPublicationV2.once('updated', () => { updated = true; });
         ret = localTrackPublicationV2.publishFailed(newError);
       });
 

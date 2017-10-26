@@ -82,13 +82,15 @@ describe('setBitrateParameters', () => {
       });
 
       ['audio', 'video'].forEach(kind => {
-        const getMaxBitrate = (maxAudioBitrate, maxVideoBitrate) => kind === 'audio'
-          ? modifier === 'TIAS'
-            ? maxAudioBitrate
-            : maxAudioBitrate && Math.round((maxAudioBitrate + 16000) / 950)
-          : modifier === 'TIAS'
-            ? maxVideoBitrate
-            : maxVideoBitrate &&  Math.round((maxVideoBitrate + 16000) / 950);
+        function getMaxBitrate(maxAudioBitrate, maxVideoBitrate) {
+          return kind === 'audio'
+            ? modifier === 'TIAS'
+              ? maxAudioBitrate
+              : maxAudioBitrate && Math.round((maxAudioBitrate + 16000) / 950)
+            : modifier === 'TIAS'
+              ? maxVideoBitrate
+              : maxVideoBitrate &&  Math.round((maxVideoBitrate + 16000) / 950);
+        }
 
         const currentMaxBitrate = getMaxBitrate(currentMaxAudioBitrate, currentMaxVideoBitrate);
         const maxBitrate = getMaxBitrate(maxAudioBitrate, maxVideoBitrate);
@@ -113,11 +115,11 @@ describe('setCodecPreferences', () => {
     ],
     [
       ['', 'PCMA,G722'],
-      x => `when preferredAudioCodecs is ${x ? 'not ': ''}empty`
+      x => `when preferredAudioCodecs is ${x ? 'not ' : ''}empty`
     ],
     [
       ['', 'H264,VP9'],
-      x => `when preferredVideoCodecs is ${x ? 'not ': ''}empty`
+      x => `when preferredVideoCodecs is ${x ? 'not ' : ''}empty`
     ]
   ], ([sdpType, preferredAudioCodecs, preferredVideoCodecs]) => {
     preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',') : [];

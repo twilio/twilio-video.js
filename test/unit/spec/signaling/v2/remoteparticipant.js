@@ -142,7 +142,7 @@ describe('RemoteParticipantV2', () => {
           const test = makeTest();
           const participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           let track;
-          test.participant.once('trackAdded', _track => track = _track);
+          test.participant.once('trackAdded', _track => { track = _track; });
           test.participant.update(participantState);
           assert.equal(
             test.remoteTrackV2s[0],
@@ -184,7 +184,7 @@ describe('RemoteParticipantV2', () => {
       context('which includes a trackState matching an existing RemoteTrackV2', () => {
         it('calls update with the trackState on the existing RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision + 1).setTrack({ id: id, fizz: 'buzz' });
           test.participant.update(participantState);
           assert.deepEqual(
@@ -196,7 +196,7 @@ describe('RemoteParticipantV2', () => {
       context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
         it('deletes the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision + 1);
           test.participant.update(participantState);
           assert(!test.participant.tracks.has(id));
@@ -204,10 +204,10 @@ describe('RemoteParticipantV2', () => {
 
         it('emits the "trackRemoved" event with the RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision + 1);
           let track;
-          test.participant.once('trackRemoved', _track => track = _track);
+          test.participant.once('trackRemoved', _track => { track = _track; });
           test.participant.update(participantState);
           assert.equal(
             test.remoteTrackV2s[0],
@@ -230,7 +230,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision + 1).setState('connected');
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -252,7 +252,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision + 1).setState('connected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -274,7 +274,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision + 1).setState('disconnected');
             let newState;
-            test.participant.once('stateChanged', state => newState = state);
+            test.participant.once('stateChanged', state => { newState = state; });
             test.participant.update(participantState);
             assert.equal(
               'disconnected',
@@ -298,7 +298,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision + 1).setState('disconnected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -365,7 +365,7 @@ describe('RemoteParticipantV2', () => {
       context('which includes a trackState matching an existing RemoteTrackV2', () => {
         it('does not call update with the trackState on the existing RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision).setTrack({ id: id });
           test.participant.update(participantState);
           assert(!test.remoteTrackV2s[0].update.calledTwice);
@@ -375,7 +375,7 @@ describe('RemoteParticipantV2', () => {
       context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
         it('does not delete the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision);
           test.participant.update(participantState);
           assert.equal(
@@ -385,10 +385,10 @@ describe('RemoteParticipantV2', () => {
 
         it('does not emit the "trackRemoved" event with the RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision);
           let trackRemoved;
-          test.participant.once('trackRemoved', () => trackRemoved = false);
+          test.participant.once('trackRemoved', () => { trackRemoved = false; });
           test.participant.update(participantState);
           assert(!trackRemoved);
         });
@@ -409,7 +409,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision).setState('connected');
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -431,7 +431,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision).setState('connected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -453,7 +453,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision).setState('disconnected');
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -475,7 +475,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision).setState('disconnected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -543,7 +543,7 @@ describe('RemoteParticipantV2', () => {
       context('which includes a trackState matching an existing RemoteTrackV2', () => {
         it('does not call update with the trackState on the existing RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision - 1).setTrack({ id: id });
           test.participant.update(participantState);
           assert(!test.remoteTrackV2s[0].update.calledTwice);
@@ -553,7 +553,7 @@ describe('RemoteParticipantV2', () => {
       context('which no longer includes a trackState matching an existing RemoteTrackV2', () => {
         it('does not delete the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision - 1);
           test.participant.update(participantState);
           assert.equal(
@@ -563,10 +563,10 @@ describe('RemoteParticipantV2', () => {
 
         it('does not emit the "trackRemoved" event with the RemoteTrackV2', () => {
           const id = makeId();
-          const test = makeTest({ tracks: [ { id: id } ] });
+          const test = makeTest({ tracks: [{ id: id }] });
           const participantState = test.state(test.revision - 1);
           let trackRemoved;
-          test.participant.once('trackRemoved', () => trackRemoved = false);
+          test.participant.once('trackRemoved', () => { trackRemoved = false; });
           test.participant.update(participantState);
           assert(!trackRemoved);
         });
@@ -587,7 +587,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision - 1).setState('connected');
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -609,7 +609,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision - 1).setState('connected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -631,7 +631,7 @@ describe('RemoteParticipantV2', () => {
             const test = makeTest();
             const participantState = test.state(test.revision - 1).setState('disconnected');
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -653,7 +653,7 @@ describe('RemoteParticipantV2', () => {
             const participantState = test.state(test.revision - 1).setState('disconnected');
             test.participant.disconnect();
             let stateChanged;
-            test.participant.once('stateChanged', () => stateChanged = true);
+            test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
             assert(!stateChanged);
           });
@@ -713,7 +713,7 @@ describe('RemoteParticipantV2', () => {
       const test = makeTest();
       const track = new RemoteTrackV2({ id: makeId() });
       let trackAdded;
-      test.participant.once('trackAdded', track => trackAdded = track);
+      test.participant.once('trackAdded', track => { trackAdded = track; });
       test.participant.addTrack(track);
       assert.equal(
         track,
@@ -781,7 +781,7 @@ describe('RemoteParticipantV2', () => {
       it('does not emit the "stateChanged" event', () => {
         const test = makeTest();
         let stateChanged;
-        test.participant.once('stateChanged', () => stateChanged = true);
+        test.participant.once('stateChanged', () => { stateChanged = true; });
         test.participant.connect(makeSid(), makeIdentity());
         assert(!stateChanged);
       });
@@ -827,7 +827,7 @@ describe('RemoteParticipantV2', () => {
         const test = makeTest();
         test.participant.disconnect();
         let stateChanged;
-        test.participant.once('stateChanged', () => stateChanged = true);
+        test.participant.once('stateChanged', () => { stateChanged = true; });
         test.participant.connect(makeSid(), makeIdentity());
         assert(!stateChanged);
       });
@@ -854,7 +854,7 @@ describe('RemoteParticipantV2', () => {
       it('emits the "stateChanged" event with the new state "disconnected"', () => {
         const test = makeTest();
         let newState;
-        test.participant.once('stateChanged', state => newState = state);
+        test.participant.once('stateChanged', state => { newState = state; });
         test.participant.disconnect();
         assert.equal(
           'disconnected',
@@ -884,7 +884,7 @@ describe('RemoteParticipantV2', () => {
         const test = makeTest();
         test.participant.disconnect();
         let stateChanged;
-        test.participant.once('stateChanged', () => stateChanged = true);
+        test.participant.once('stateChanged', () => { stateChanged = true; });
         test.participant.disconnect();
         assert(!stateChanged);
       });
@@ -894,22 +894,22 @@ describe('RemoteParticipantV2', () => {
   describe('#removeTrack', () => {
     context('when the RemoteTrackV2 to remove was previously added', () => {
       it('returns true', () => {
-        const test = makeTest({ tracks: [ { id: makeId() } ] });
+        const test = makeTest({ tracks: [{ id: makeId() }] });
         assert.equal(
           true,
           test.participant.removeTrack(test.remoteTrackV2s[0]));
       });
 
       it('deletes the RemoteTrackV2 from the RemoteParticipantV2\'s .tracks Map', () => {
-        const test = makeTest({ tracks: [ { id: makeId() } ] });
+        const test = makeTest({ tracks: [{ id: makeId() }] });
         test.participant.removeTrack(test.remoteTrackV2s[0]);
         assert(!test.participant.tracks.has(test.remoteTrackV2s[0].id));
       });
 
       it('emits the "trackRemoved" event with the RemoteTrackV2', () => {
-        const test = makeTest({ tracks: [ { id: makeId() } ] });
+        const test = makeTest({ tracks: [{ id: makeId() }] });
         let trackRemoved;
-        test.participant.once('trackRemoved', track => trackRemoved = track);
+        test.participant.once('trackRemoved', track => { trackRemoved = track; });
         test.participant.removeTrack(test.remoteTrackV2s[0]);
         assert.equal(
           test.remoteTrackV2s[0],
@@ -932,7 +932,7 @@ describe('RemoteParticipantV2', () => {
         const track = new RemoteTrackV2({ id: makeId() });
         const test = makeTest();
         let trackRemoved;
-        test.participant.once('trackRemoved', () => trackRemoved = true);
+        test.participant.once('trackRemoved', () => { trackRemoved = true; });
         test.participant.removeTrack(track);
         assert(!trackRemoved);
       });
@@ -944,7 +944,7 @@ function makeId() {
   return Math.floor(Math.random() * 1000 + 0.5);
 }
 
-function makeIdentity(length) {
+function makeIdentity() {
   return Math.random().toString(36).slice(2);
 }
 
