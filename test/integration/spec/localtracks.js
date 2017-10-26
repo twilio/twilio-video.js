@@ -4,13 +4,12 @@ const assert = require('assert');
 
 const createLocalTracks = require('../../../lib/createlocaltrack');
 
-const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
-
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
 
   describe(description, function() {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(10000);
 
     let localTrack = null;

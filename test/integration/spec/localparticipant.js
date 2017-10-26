@@ -11,7 +11,6 @@ const {
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
-const Track = require('../../../lib/media/track');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
 const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
@@ -27,7 +26,6 @@ const {
   capitalize,
   combinationContext,
   participantsConnected,
-  pairs,
   randomName,
   tracksAdded,
   tracksPublished,
@@ -37,6 +35,7 @@ const {
 } = require('../../lib/util');
 
 describe('LocalParticipant', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
   describe('#publishTrack', () => {
@@ -44,20 +43,20 @@ describe('LocalParticipant', function() {
     let room;
     let tracks;
 
-    const setup = async () => {
+    async function setup() {
       const name = randomName();
       const options = Object.assign({ name, tracks: [] }, defaults);
       const token = getToken(randomName());
-      [ room, tracks ] = await Promise.all([
+      [room, tracks] = await Promise.all([
         connect(token, options),
         createLocalTracks()
       ]);
       tracks.push(new LocalDataTrack());
-    };
+    }
 
     [
       [
-        `when three LocalTracks (audio, video, and data) are published sequentially`,
+        'when three LocalTracks (audio, video, and data) are published sequentially',
         async () => {
           trackPublications = [
             await room.localParticipant.publishTrack(tracks[0]),
@@ -67,14 +66,14 @@ describe('LocalParticipant', function() {
         }
       ],
       [
-        `when three LocalTracks (audio, video, and date) are published together`,
+        'when three LocalTracks (audio, video, and date) are published together',
         async () => {
           trackPublications = await Promise.all(tracks.map(track => {
             return room.localParticipant.publishTrack(track);
           }));
         }
       ]
-    ].forEach(([ ctx, publish ]) => {
+    ].forEach(([ctx, publish]) => {
       context(ctx, () => {
         before(async () => {
           await setup();
@@ -121,7 +120,7 @@ describe('LocalParticipant', function() {
         const options = Object.assign({ name, tracks: [] }, defaults);
         const token = getToken(randomName());
 
-        [ anotherRoom ] = await Promise.all([
+        [anotherRoom] = await Promise.all([
           connect(token, options),
           setup()
         ]);
@@ -289,7 +288,7 @@ describe('LocalParticipant', function() {
 
         [thisLocalTrackPublication, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
-          ...[ 'trackAdded', 'trackSubscribed' ].map(event => {
+          ...['trackAdded', 'trackSubscribed'].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
               const [track] = await waitForTracks(event, thatParticipant, 1);
               return track;
@@ -317,7 +316,7 @@ describe('LocalParticipant', function() {
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
 
-      [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
+      ['trackAdded', 'trackSubscribed'].forEach(event => {
         it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
           const thoseTracks = thoseTracksMap[event];
           thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
@@ -403,6 +402,8 @@ describe('LocalParticipant', function() {
           ({ scenario }) => `called with ${scenario}`
         ]
       ], ([{ createLocalTrack, scenario, TwilioError }]) => {
+        void scenario;
+
         let track;
         let trackPublicationFailed;
 
@@ -435,7 +436,7 @@ describe('LocalParticipant', function() {
       });
     });
   });
-  
+
   describe('#unpublishTrack', () => {
     combinationContext([
       [
@@ -557,7 +558,7 @@ describe('LocalParticipant', function() {
         await thoseUnsubscribed;
       });
 
-      [ 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
+      ['trackRemoved', 'trackUnsubscribed'].forEach(event => {
         it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
           const thoseTracks = thoseTracksMap[event];
           thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
@@ -585,7 +586,7 @@ describe('LocalParticipant', function() {
             });
           }
 
-          it(`should set each RemoteTrack's .isSubscribed to false`, () => {
+          it('should set each RemoteTrack\'s .isSubscribed to false', () => {
             const thoseTracks = thoseTracksMap[event];
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isSubscribed, false));
           });
@@ -672,10 +673,10 @@ describe('LocalParticipant', function() {
       thatRoom.disconnect();
     });
 
-    [ 'trackUnsubscribed', 'trackRemoved' ].forEach(event => {
+    ['trackUnsubscribed', 'trackRemoved'].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksUnpublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid)
+        assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
         assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
         if (!isFirefox && !isSafari) {
@@ -684,10 +685,10 @@ describe('LocalParticipant', function() {
       });
     });
 
-    [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
+    ['trackAdded', 'trackSubscribed'].forEach(event => {
       it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksPublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid)
+        assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid);
         assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
         assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
@@ -742,14 +743,16 @@ describe('LocalParticipant', function() {
 
       let thoseTracksAdded;
       let thoseTracksSubscribed;
-      [ thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
+      [thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
         thisParticipant.publishTrack(thisAudioTrack),
         thisParticipant.publishTrack(thisVideoTrack),
         waitForTracks('trackAdded', thatParticipant, 2),
         waitForTracks('trackSubscribed', thatParticipant, 2)
       ]);
 
-      const findTrack = (tracks, kind) => tracks.find(track => track.kind === kind);
+      function findTrack(tracks, kind) {
+        return tracks.find(track => track.kind === kind);
+      }
 
       thoseAudioTracks = {
         trackAdded: findTrack(thoseTracksAdded, 'audio'),
@@ -768,7 +771,7 @@ describe('LocalParticipant', function() {
       thatRoom.disconnect();
     });
 
-    [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
+    ['trackAdded', 'trackSubscribed'].forEach(event => {
       it(`should eventually raise a "${event}" event for each published LocalTracks`, () => {
         const thatAudioTrack = thoseAudioTracks[event];
         assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.trackSid);
@@ -785,8 +788,8 @@ describe('LocalParticipant', function() {
     });
 
     it('should eventually raise a "trackStarted" event for each published LocalTrack', async () => {
-      const thatAudioTrack = thoseAudioTracks['trackAdded'];
-      const thatVideoTrack = thoseVideoTracks['trackAdded'];
+      const thatAudioTrack = thoseAudioTracks.trackAdded;
+      const thatVideoTrack = thoseVideoTracks.trackAdded;
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
@@ -828,11 +831,11 @@ describe('LocalParticipant', function() {
       let thoseRooms;
 
       before(async () => {
-        const options = Object.assign({name: randomName()}, initialEncodingParameters, defaults);
+        const options = Object.assign({ name: randomName() }, initialEncodingParameters, defaults);
         const token = getToken(randomName());
         thisRoom = await connect(token, options);
 
-        const thoseOptions = Object.assign({name: options.name}, defaults);
+        const thoseOptions = Object.assign({ name: options.name }, defaults);
         const thoseTokens = [randomName(), randomName()].map(getToken);
         thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
@@ -842,16 +845,18 @@ describe('LocalParticipant', function() {
         peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
         thisRoom.localParticipant.setParameters(encodingParameters);
 
-        const getRemoteDescription = pc => Object.keys(encodingParameters).length > 0
-          ? new Promise(resolve => {
-            const pcSetRemoteDescription = pc.setRemoteDescription;
-            pc.setRemoteDescription = function setRemoteDescription(description) {
-              resolve(description);
-              pc.setRemoteDescription = pcSetRemoteDescription;
-              return pcSetRemoteDescription.call(this, description);
-            };
-          })
-          : Promise.resolve(pc.remoteDescription);
+        function getRemoteDescription(pc) {
+          return Object.keys(encodingParameters).length > 0
+            ? new Promise(resolve => {
+              const pcSetRemoteDescription = pc.setRemoteDescription;
+              pc.setRemoteDescription = function setRemoteDescription(description) {
+                resolve(description);
+                pc.setRemoteDescription = pcSetRemoteDescription;
+                return pcSetRemoteDescription.call(this, description);
+              };
+            })
+            : Promise.resolve(pc.remoteDescription);
+        }
 
         remoteDescriptions = await Promise.all(peerConnections.map(getRemoteDescription));
       });

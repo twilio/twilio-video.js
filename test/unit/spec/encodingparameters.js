@@ -39,6 +39,7 @@ describe('EncodingParametersImpl', () => {
       before(() => {
         encodingParametersImpl = withNew === 'with'
           ? new EncodingParametersImpl(encodingParmeters)
+          // eslint-disable-next-line new-cap
           : EncodingParametersImpl(encodingParmeters);
       });
 

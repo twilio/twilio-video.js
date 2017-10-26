@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
-const twilio = require('twilio');
 
 const ECS = require('../../../lib/ecs');
 const request = require('../../../lib/request');
@@ -21,7 +20,7 @@ describe('ECS', () => {
 
     beforeEach(() => {
       requestPost = request.post;
-      request.post = new sinon.spy(async params => '{"foo":"bar","a":123}');
+      request.post = sinon.spy(async () => '{"foo":"bar","a":123}');
     });
 
     afterEach(() => {
@@ -69,11 +68,13 @@ describe('ECS', () => {
 
       context('when request() rejects the returned promise with an error code and message', () => {
         it('should throw the appropriate TwilioError if present', () => {
+          // eslint-disable-next-line no-throw-literal
           request.post = async () => { throw '{"code": 20101, "message": "Invalid Access Token"}'; };
           return testGetConfigurationError(AccessTokenInvalidError, 20101, 'Invalid Access Token');
         });
 
         it('should throw a generic TwilioError if there is no constructor for the given error code', () => {
+          // eslint-disable-next-line no-throw-literal
           request.post = async () => { throw '{"code": 12345, "message": "Generic error"}'; };
           return testGetConfigurationError(TwilioError, 12345, 'Generic error');
         });
@@ -81,13 +82,15 @@ describe('ECS', () => {
 
       context('when request() rejects the returned promise without an error code or message', () => {
         it('should throw a generic TwilioError with error code 0 and message "Unknown error"', () => {
-          request.post = async () => { throw '{"abc": 123, "def": "xyz"}' };
+          // eslint-disable-next-line no-throw-literal
+          request.post = async () => { throw '{"abc": 123, "def": "xyz"}'; };
           return testGetConfigurationError(TwilioError, 0, 'Unknown error');
         });
       });
 
       context('when request() rejects the returned promise invalid JSON', () => {
         it('should throw a ConfigurationAcquireFailedError', () => {
+          // eslint-disable-next-line no-throw-literal
           request.post = async () => { throw '{"code": 123, "message" "xyz"}'; };
           return testGetConfigurationError(ConfigurationAcquireFailedError, 53500, 'Unable to acquire configuration');
         });

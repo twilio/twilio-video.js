@@ -23,6 +23,7 @@ function runFrameworkTest(options) {
   const timeout = options.timeout;
 
   describe(name, function() {
+    // eslint-disable-next-line no-invalid-this
     this.timeout(timeout);
 
     let server;
@@ -33,6 +34,7 @@ function runFrameworkTest(options) {
       server = spawn(start.command, start.args, {
         cwd: path,
         detached: true,
+        // eslint-disable-next-line no-process-env
         env: Object.assign({}, start.env, process.env),
         stdio: 'inherit'
       });
