@@ -29,6 +29,11 @@ function waitForServer(host, port, timeout, delay) {
   return new Promise((resolve, reject) => {
     let timedout = false;
 
+    const timer = setTimeout(() => {
+      timedout = true;
+      reject(new Error(`Timeout of ${timeout} exceeded`));
+    }, timeout);
+
     function sendOptionsRequest() {
       return new Promise((resolve, reject) => {
         http.request({
@@ -41,15 +46,10 @@ function waitForServer(host, port, timeout, delay) {
         resolve();
       }, () => {
         if (!timedout) {
-          return wait(delay).then(sendOptionsRequest);
+          wait(delay).then(sendOptionsRequest);
         }
       });
     }
-
-    const timer = setTimeout(() => {
-      timedout = true;
-      reject(new Error(`Timeout of ${timeout} exceeded`));
-    }, timeout);
 
     sendOptionsRequest();
   });

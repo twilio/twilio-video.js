@@ -25,6 +25,7 @@ describe('Room', () => {
 
   describe('new Room(signaling)', () => {
     it('should return an instance when called as a function', () => {
+      // eslint-disable-next-line new-cap
       assert(Room(localParticipant, signaling, options) instanceof Room);
     });
   });
@@ -58,81 +59,81 @@ describe('Room', () => {
     });
 
     it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackAdded', spy);
 
-      participants['foo'].emit('trackAdded');
+      participants.foo.emit('trackAdded');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackDimensionsChanged', spy);
 
-      participants['foo'].emit('trackDimensionsChanged');
+      participants.foo.emit('trackDimensionsChanged');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackDisabled', spy);
 
-      participants['foo'].emit('trackDisabled');
+      participants.foo.emit('trackDisabled');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackEnabled', spy);
 
-      participants['foo'].emit('trackEnabled');
+      participants.foo.emit('trackEnabled');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackMessage', spy);
 
-      participants['foo'].emit('trackMessage');
+      participants.foo.emit('trackMessage');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackRemoved', spy);
 
-      participants['bar'].emit('trackRemoved');
+      participants.bar.emit('trackRemoved');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackStarted', spy);
 
-      participants['foo'].emit('trackStarted');
+      participants.foo.emit('trackStarted');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackSubscribed', spy);
 
-      participants['foo'].emit('trackSubscribed');
+      participants.foo.emit('trackSubscribed');
       assert.equal(spy.callCount, 1);
     });
 
     it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', () => {
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackUnsubscribed', spy);
 
-      participants['bar'].emit('trackUnsubscribed');
+      participants.bar.emit('trackUnsubscribed');
       assert.equal(spy.callCount, 1);
     });
 
     it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', () => {
-      participants['foo'].emit('disconnected');
+      participants.foo.emit('disconnected');
 
-      const spy = new sinon.spy();
+      const spy = sinon.spy();
       room.on('trackAdded', spy);
       room.on('trackDimensionsChanged', spy);
       room.on('trackDisabled', spy);
@@ -143,15 +144,15 @@ describe('Room', () => {
       room.on('trackSubscribed', spy);
       room.on('trackUnsubscribed', spy);
 
-      participants['foo'].emit('trackAdded');
-      participants['foo'].emit('trackDimensionsChanged');
-      participants['foo'].emit('trackDisabled');
-      participants['foo'].emit('trackEnabled');
-      participants['foo'].emit('trackMessage');
-      participants['foo'].emit('trackRemoved');
-      participants['foo'].emit('trackStarted');
-      participants['foo'].emit('trackSubscribed');
-      participants['foo'].emit('trackUnsubscribed');
+      participants.foo.emit('trackAdded');
+      participants.foo.emit('trackDimensionsChanged');
+      participants.foo.emit('trackDisabled');
+      participants.foo.emit('trackEnabled');
+      participants.foo.emit('trackMessage');
+      participants.foo.emit('trackRemoved');
+      participants.foo.emit('trackStarted');
+      participants.foo.emit('trackSubscribed');
+      participants.foo.emit('trackUnsubscribed');
       assert.equal(spy.callCount, 0);
     });
   });
@@ -181,8 +182,8 @@ describe('Room', () => {
         participants[participant.identity] = participant;
       });
       signaling.preempt('disconnected');
-      sinon.assert.calledOnce(participants['foo']._unsubscribeTracks);
-      sinon.assert.calledOnce(participants['bar']._unsubscribeTracks);
+      sinon.assert.calledOnce(participants.foo._unsubscribeTracks);
+      sinon.assert.calledOnce(participants.bar._unsubscribeTracks);
     });
   });
 });

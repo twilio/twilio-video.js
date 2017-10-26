@@ -9,15 +9,12 @@ const {
   LocalDataTrack
 } = require('../../../lib');
 
-const Track = require('../../../lib/media/track');
-const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
 const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
-const { isFirefox } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
 
 const {
@@ -31,7 +28,9 @@ const {
 } = require('../../lib/util');
 
 describe('LocalTrackPublication', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
   describe('#unpublish', () => {
     combinationContext([
       [
@@ -65,7 +64,7 @@ describe('LocalTrackPublication', function() {
         const identities = kind === 'data'
           ? [randomName(), randomName()]
           : [randomName(), randomName(), randomName()];
-        const options = Object.assign({name}, defaults);
+        const options = Object.assign({ name }, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -88,13 +87,13 @@ describe('LocalTrackPublication', function() {
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
-        const theseOptions = Object.assign({tracks}, options);
+        const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
-        const thoseOptions = Object.assign({tracks: []}, options);
+        const thoseOptions = Object.assign({ tracks: [] }, options);
         thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
 
         await Promise.all([thisRoom].concat(thoseRooms).map(room => {
@@ -185,7 +184,7 @@ describe('LocalTrackPublication', function() {
             });
           }
 
-          it(`should set each RemoteTrack's .isSubscribed to false`, () => {
+          it('should set each RemoteTrack\'s .isSubscribed to false', () => {
             const thoseTracks = thoseTracksMap[event];
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isSubscribed, false));
           });

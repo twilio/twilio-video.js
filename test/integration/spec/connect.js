@@ -7,9 +7,7 @@ const sinon = require('sinon');
 const connect = require('../../../lib/connect');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
-const LocalAudioTrack = require('../../../lib/media/track/localaudiotrack');
 const LocalDataTrack = require('../../../lib/media/track/localdatatrack');
-const LocalVideoTrack = require('../../../lib/media/track/localvideotrack');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
@@ -23,6 +21,7 @@ const getToken = require('../../lib/token');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
 
 describe('connect', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
   [
@@ -175,11 +174,11 @@ describe('connect', function() {
         rooms.forEach(room => assert.equal(room.name, withName ? name : room.sid));
       });
 
-      it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .state to "connected"`, () => {
+      it(`should set ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .state to "connected"`, () => {
         rooms.forEach(room => assert.equal(room.localParticipant.state, 'connected'));
       });
 
-      it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's .sid to a ${n === 1 ? '' : 'unique '}Participant SID`, () => {
+      it(`should set ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .sid to a ${n === 1 ? '' : 'unique '}Participant SID`, () => {
         const sids = new Set(rooms.map(room => room.localParticipant.sid));
         assert.equal(sids.size, n);
         sids.forEach(sid => assert(sid.match(/^PA[a-f0-9]{32}$/)));
@@ -194,7 +193,7 @@ describe('connect', function() {
           rooms.forEach(room => assert.deepEqual(Array.from(room.localParticipant.tracks.values()), tracks));
         });
 
-        [ 'tracks', 'audioTracks', 'videoTracks' ].forEach(tracks => {
+        ['tracks', 'audioTracks', 'videoTracks'].forEach(tracks => {
           const trackPublications = `${tracks.slice(0, tracks.length - 1)}Publications`;
 
           it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .${trackPublications} Map with the corresponding ${capitalize(trackPublications)}`, () => {
@@ -208,7 +207,7 @@ describe('connect', function() {
             });
           });
 
-          it(`should set ${n === 1 ? 'the' : 'each'} Room\'s LocalParticipant's ${capitalize(trackPublications)}' .trackSid to a unique Track SID`, () => {
+          it(`should set ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's ${capitalize(trackPublications)}' .trackSid to a unique Track SID`, () => {
             rooms.forEach(room => {
               const publications = room.localParticipant[trackPublications];
               publications.forEach(publication => assert(publication.trackSid.match(/^MT[a-f0-9]{32}$/)));
@@ -324,7 +323,7 @@ describe('connect', function() {
     });
   });
 
-  [ true, false ].forEach(insights => {
+  [true, false].forEach(insights => {
     describe(`called with isInsightsEnabled = ${insights}`, () => {
       let InsightsPublisher;
       let NullInsightsPublisher;
@@ -499,7 +498,7 @@ describe('connect', function() {
     describe('when called with pre-created Tracks', () => {
       combinationContext([
         [
-          [{audio: 'foo', video: 'bar', data: 'baz'}, null],
+          [{ audio: 'foo', video: 'bar', data: 'baz' }, null],
           x => `when called with${x ? '' : 'out'} Track names`
         ],
         [
@@ -507,21 +506,21 @@ describe('connect', function() {
             {
               source: 'createLocalTracks',
               async getTracks(names) {
-                const options = names && {audio: {name: names.audio}, video: {name: names.video}};
+                const options = names && { audio: { name: names.audio }, video: { name: names.video } };
                 return await (options ? createLocalTracks(options) : createLocalTracks());
               }
             },
             {
               source: 'MediaStreamTracks from getUserMedia()',
               async getTracks() {
-                const mediaStream = await getUserMedia({audio: true, video: true, fake: true});
+                const mediaStream = await getUserMedia({ audio: true, video: true, fake: true });
                 return mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
               }
             }
           ],
           ({ source }) => `when Tracks are pre-created using ${source}`
         ]
-      ], ([ names, { source, getTracks } ]) => {
+      ], ([names, { source, getTracks }]) => {
         if (source === 'MediaStreamTracks from getUserMedia()' && !!names) {
           return;
         }
@@ -533,10 +532,10 @@ describe('connect', function() {
         let tracks;
 
         before(async () => {
-          tracks = [...await getTracks(names), names ? new LocalDataTrack({name: names.data}) : new LocalDataTrack()];
+          tracks = [...await getTracks(names), names ? new LocalDataTrack({ name: names.data }) : new LocalDataTrack()];
 
           const name = randomName();
-          [ thisRoom, thoseRooms ] = await setup({name, tracks}, {tracks: []}, 0);
+          [thisRoom, thoseRooms] = await setup({ name, tracks }, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
           await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
@@ -577,14 +576,14 @@ describe('connect', function() {
     describe('when called with constraints', () => {
       combinationContext([
         [
-          [{}, {audio: 'foo'}, {video: 'bar'}, {audio: 'foo', video: 'bar'}],
+          [{}, { audio: 'foo' }, { video: 'bar' }, { audio: 'foo', video: 'bar' }],
           x => [
-            () => `when called without Track names`,
+            () => 'when called without Track names',
             () => `when called with only ${x.audio ? 'an audio' : 'a video'} Track name`,
-            () => `when called with both audio and video Track names`
+            () => 'when called with both audio and video Track names'
           ][Object.keys(x).length]()
         ]
-      ], ([ names ]) => {
+      ], ([names]) => {
         let thisRoom;
         let thoseRooms;
         let thisParticipant;
@@ -597,7 +596,7 @@ describe('connect', function() {
             video: names.video ? { name: names.video } : true,
             name
           };
-          [ thisRoom, thoseRooms ] = await setup(options, {tracks: []}, 0);
+          [thisRoom, thoseRooms] = await setup(options, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
           await Promise.all(thisParticipants.map(participant => tracksAdded(participant, thisParticipant.tracks.size)));
@@ -667,6 +666,8 @@ describe('connect', function() {
           ({ scenario }) => `called with ${scenario}`
         ]
       ], ([{ createLocalTracks, scenario, TwilioError }]) => {
+        void scenario;
+
         let room;
         let tracks;
         let trackPublicationFailed;
@@ -736,14 +737,14 @@ function getCodecPayloadTypes(mediaSection) {
 }
 
 async function setup(testOptions, otherOptions, nTracks, alone) {
-  const options = Object.assign({name: randomName()}, testOptions, defaults);
+  const options = Object.assign({ name: randomName() }, testOptions, defaults);
   const token = getToken(randomName());
   const thisRoom = await connect(token, options);
   if (alone) {
     return [thisRoom];
   }
 
-  const thoseOptions = Object.assign({name: options.name}, otherOptions || {}, defaults);
+  const thoseOptions = Object.assign({ name: options.name }, otherOptions || {}, defaults);
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 

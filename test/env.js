@@ -1,6 +1,7 @@
 'use strict';
 
 // NOTE(mroberts): We need to do this for envify.
+/* eslint no-process-env:0 */
 const processEnv = {
   ACCOUNT_SID: process.env.ACCOUNT_SID,
   API_KEY_SID: process.env.API_KEY_SID,
@@ -16,7 +17,7 @@ const processEnv = {
 const env = [
   ['ACCOUNT_SID',               'accountSid'],
   ['API_KEY_SID',               'apiKeySid'],
-  ['API_KEY_SECRET'   ,         'apiKeySecret'],
+  ['API_KEY_SECRET',            'apiKeySecret'],
   ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
   ['ECS_SERVER',                'ecsServer'],
   ['WS_SERVER',                 'wsServer'],

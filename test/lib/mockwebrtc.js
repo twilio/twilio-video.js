@@ -32,7 +32,7 @@ MediaStream.prototype.getAudioTracks = function getAudioTracks() {
   return Array.from(this._tracks).filter(track => track.kind === 'audio');
 };
 
-MediaStream.prototype.getTrackById = function getTrackById(trackid) {
+MediaStream.prototype.getTrackById = function getTrackById() {
   return null;
 };
 
@@ -51,7 +51,7 @@ const navigator = {
   userAgent: 'Node'
 };
 
-function getUserMedia(constraints, successCallback, errorCallback) {
+function getUserMedia(constraints, successCallback) {
   const mediaStream = new MediaStream();
   setTimeout(() => successCallback(mediaStream));
 }
@@ -76,7 +76,7 @@ function RTCDataChannel(label) {
 
 RTCDataChannel.id = 0;
 
-RTCDataChannel.prototype.send = function send(message) {
+RTCDataChannel.prototype.send = function send() {
 };
 
 RTCDataChannel.prototype.close = function close() {
@@ -88,7 +88,7 @@ RTCDataChannel.prototype.close = function close() {
 
 const DUMMY_SDP = 'v=0\r\no=- 4676571761825475727 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE audio\r\na=msid-semantic: WMS EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\nm=audio 1 RTP/SAVPF 111 103 104 0 8 106 105 13 126\r\nc=IN IP4 0.0.0.0\r\na=rtcp:1 IN IP4 0.0.0.0\r\na=ice-ufrag:YDUcqfaDo8TP7sAf\r\na=ice-pwd:6pBfcQxQqfHcUN90IcETG9ag\r\na=ice-options:google-ice\r\na=fingerprint:sha-256 C9:98:D1:85:C6:79:AF:26:76:80:28:B5:19:B3:65:DA:D6:E8:BC:29:6A:48:59:8C:13:06:6C:3B:D3:EE:86:01\r\na=setup:actpass\r\na=mid:audio\r\na=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\na=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:111 opus/48000/2\r\na=fmtp:111 minptime=10\r\na=rtpmap:103 ISAC/16000\r\na=rtpmap:104 ISAC/32000\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:106 CN/32000\r\na=rtpmap:105 CN/16000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:126 telephone-event/8000\r\na=maxptime:60\r\na=ssrc:489352021 cname:aDhWDndkoIsLM2YP\r\na=ssrc:489352021 msid:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq fabea357-f6cf-4967-aa7c-800bedf06927\r\na=ssrc:489352021 mslabel:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\na=ssrc:489352021 label:fabea357-f6cf-4967-aa7c-800bedf06927\r\n';
 
-function RTCPeerConnection(configuration, constraints) {
+function RTCPeerConnection() {
   EventEmitter.call(this);
   this.iceConnectionState = 'completed';
   this.iceGatheringState = 'complete';
@@ -134,7 +134,7 @@ RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription
   });
 };
 
-RTCPeerConnection.prototype.updateIce = function updateIce(configuration, constraints) {
+RTCPeerConnection.prototype.updateIce = function updateIce() {
 };
 
 RTCPeerConnection.prototype.addIceCandidate = function addIceCandidate() {
@@ -164,7 +164,7 @@ RTCPeerConnection.prototype.removeStream = function removeStream() {
 RTCPeerConnection.prototype.close = function close() {
 };
 
-RTCPeerConnection.prototype.createDataChannel = function createDataChannel(label, dataChannelDict) {
+RTCPeerConnection.prototype.createDataChannel = function createDataChannel(label) {
   return new RTCDataChannel(label);
 };
 
@@ -203,11 +203,11 @@ function attachMediaStream() {
 function URL() {
 }
 
-function createObjectURL(blob) {
+function createObjectURL() {
   return new URL();
 }
 
-function revokeObjectURL(blob) {
+function revokeObjectURL() {
 }
 
 URL.createObjectURL = createObjectURL;
@@ -217,7 +217,7 @@ URL.revokeObjectURL = revokeObjectURL;
 function mockWebRTC(_global) {
   _global = _global || global;
   const _window = _global.window = _global;
-  _window.addEventListener = function addEventListener(){};
+  _window.addEventListener = function addEventListener() {};
   _global.Event = Event;
   _global.WebSocket = WebSocket;
   _global.navigator = navigator;

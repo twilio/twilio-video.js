@@ -9,8 +9,8 @@ const {
 } = require('../../../lib/createlocaltrack');
 
 [
-  [ 'Audio', createLocalAudioTrack ],
-  [ 'Video', createLocalVideoTrack ]
+  ['Audio', createLocalAudioTrack],
+  ['Video', createLocalVideoTrack]
 ].forEach(([kind, createLocalTrack]) => {
   describe(`createLocal${kind}Track`, () => {
     context('when called with no constraints', () => {

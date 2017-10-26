@@ -9,8 +9,8 @@ const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemedias
 
 describe('createLocalTracks', () => {
   [
-    [ 'when called with no constraints' ],
-    [ 'when called with { audio: true, video: true }', { audio: true, video: true } ]
+    ['when called with no constraints'],
+    ['when called with { audio: true, video: true }', { audio: true, video: true }]
   ].forEach(([description, extraOptions]) => {
     context(description, () => {
       it('should resolve with a LocalAudioTrack and a LocalVideoTrack', () => {
@@ -29,8 +29,8 @@ describe('createLocalTracks', () => {
   });
 
   [
-    [ 'when called with { audio: true }', { audio: true } ],
-    [ 'when called with { audio: true, video: false }', { audio: true, video: false } ]
+    ['when called with { audio: true }', { audio: true }],
+    ['when called with { audio: true, video: false }', { audio: true, video: false }]
   ].forEach(([description, extraOptions]) => {
     context(description, () => {
       it('should resolve with a LocalAudioTrack', () => {
@@ -46,8 +46,8 @@ describe('createLocalTracks', () => {
   });
 
   [
-    [ 'when called with { video: true }', { video: true } ],
-    [ 'when called with { audio: false, video: true }', { audio: false, video: true } ]
+    ['when called with { video: true }', { video: true }],
+    ['when called with { audio: false, video: true }', { audio: false, video: true }]
   ].forEach(([description, extraOptions]) => {
     context(description, () => {
       it('should resolve with a LocalVideoTrack', () => {
@@ -81,7 +81,7 @@ describe('createLocalTracks', () => {
         video: { name: 'bar' }
       }, makeOptions());
       const localTracks = await createLocalTracks(options);
-      assert.deepEqual(localTracks.map(track => track.name), [ 'foo', 'bar' ]);
+      assert.deepEqual(localTracks.map(track => track.name), ['foo', 'bar']);
     });
   });
 });
@@ -89,14 +89,14 @@ describe('createLocalTracks', () => {
 function makeOptions() {
   return {
     getUserMedia: fakeGetUserMedia,
-    LocalAudioTrack: sinon.spy(function(mediaStreamTrack, options) {
+    LocalAudioTrack: sinon.spy(function LocalAudioTrack(mediaStreamTrack, options) {
       options = options || {};
       this.id = mediaStreamTrack.id;
       this.kind = mediaStreamTrack.kind;
       this.mediaStreamTrack = mediaStreamTrack;
       this.name = options.name || mediaStreamTrack.id;
     }),
-    LocalVideoTrack: sinon.spy(function(mediaStreamTrack, options) {
+    LocalVideoTrack: sinon.spy(function LocalVideoTrack(mediaStreamTrack, options) {
       options = options || {};
       this.id = mediaStreamTrack.id;
       this.kind = mediaStreamTrack.kind;

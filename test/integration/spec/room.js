@@ -11,6 +11,7 @@ const getToken = require('../../lib/token');
 const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
 
 describe('Room', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
   describe('disconnect', () => {

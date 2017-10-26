@@ -17,7 +17,9 @@ function buildWebDriverForChrome() {
     .addArguments('use-fake-device-for-media-stream')
     .addArguments('use-fake-ui-for-media-stream');
 
+  // eslint-disable-next-line no-process-env
   if (process.env.CHROME_BIN) {
+    // eslint-disable-next-line no-process-env
     chromeOptions.setChromeBinaryPath(process.env.CHROME_BIN);
   }
 
@@ -39,7 +41,9 @@ function buildWebDriverForFirefox() {
 
   const firefoxOptions = new firefox.Options().setProfile(firefoxProfile);
 
+  // eslint-disable-next-line no-process-env
   if (process.env.FIREFOX_BIN) {
+    // eslint-disable-next-line no-process-env
     firefoxOptions.setBinary(process.env.FIREFOX_BIN);
   }
 

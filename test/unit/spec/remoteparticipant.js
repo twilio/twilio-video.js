@@ -47,7 +47,7 @@ describe('RemoteParticipant', () => {
         dataTrack.id = 'dataTrack';
         dataTrack.kind = 'data';
 
-        test = makeTest({ tracks: [ audioTrack, videoTrack, dataTrack ] });
+        test = makeTest({ tracks: [audioTrack, videoTrack, dataTrack] });
       });
 
       it('should set .tracks to a Map of RemoteTrack ID => RemoteTrack', () => {
@@ -109,9 +109,9 @@ describe('RemoteParticipant', () => {
   });
 
   [
-    [ '_addTrack', 'add' , 'to' ],
-    [ '_removeTrack', 'remove', 'from' ]
-  ].forEach(([ method, action, toOrFrom ]) => {
+    ['_addTrack', 'add', 'to'],
+    ['_removeTrack', 'remove', 'from']
+  ].forEach(([method, action, toOrFrom]) => {
     describe(`#${method}`, () => {
       let newTrack;
       let newTrackSignaling;
@@ -128,7 +128,7 @@ describe('RemoteParticipant', () => {
         test = makeTest();
       });
 
-      [ 'Audio', 'Video', 'Data' ].forEach(kind => {
+      ['Audio', 'Video', 'Data'].forEach(kind => {
         context(`when ${a(kind)} Remote${kind}Track with the same .id exists in .tracks`, () => {
           before(() => {
             trackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
@@ -141,7 +141,7 @@ describe('RemoteParticipant', () => {
             trackUnsubscribed = null;
             tracksOnceTrackUnsubscribed = null;
             tracksOnceUnsubscribed = null;
-            [ 'trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
+            ['trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed'].forEach(event => {
               test.participant.once(event, track => {
                 participantEvents[event] = track;
                 if (event === 'trackUnsubscribed') {
@@ -173,7 +173,7 @@ describe('RemoteParticipant', () => {
           });
 
           if (method === '_addTrack') {
-            [ 'trackAdded', 'trackSubscribed' ].forEach(event => {
+            ['trackAdded', 'trackSubscribed'].forEach(event => {
               it(`should not emit "${event}"`, () => {
                 assert(!participantEvents[event]);
               });
@@ -193,8 +193,8 @@ describe('RemoteParticipant', () => {
 
             it('should emit "trackRemoved" after "trackUnsubscribed"', () => {
               const events = Object.keys(participantEvents);
-              assert(participantEvents['trackRemoved']);
-              assert(participantEvents['trackUnsubscribed']);
+              assert(participantEvents.trackRemoved);
+              assert(participantEvents.trackUnsubscribed);
               assert(events.indexOf('trackUnsubscribed') < events.indexOf('trackRemoved'));
             });
           }
@@ -205,8 +205,8 @@ describe('RemoteParticipant', () => {
             newTrackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
             newTrack = new test[`Remote${kind}Track`](newTrackSignaling.mediaStreamTrackOrDataTrackTransceiver, newTrackSignaling);
             participantEvents = {};
-            [ 'trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
-              test.participant.once(event, track => participantEvents[event] = track);
+            ['trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed'].forEach(event => {
+              test.participant.once(event, track => { participantEvents[event] = track; });
             });
             ret = test.participant[method](newTrack);
           });
@@ -230,12 +230,12 @@ describe('RemoteParticipant', () => {
           if (method === '_addTrack') {
             it('should emit "trackSubscribed" after "trackAdded"', () => {
               const events = Object.keys(participantEvents);
-              assert(participantEvents['trackSubscribed']);
-              assert(participantEvents['trackAdded']);
+              assert(participantEvents.trackSubscribed);
+              assert(participantEvents.trackAdded);
               assert(events.indexOf('trackAdded') < events.indexOf('trackSubscribed'));
             });
           } else {
-            [ 'trackRemoved', 'trackUnsubscribed' ].forEach(event => {
+            ['trackRemoved', 'trackUnsubscribed'].forEach(event => {
               it(`should not emit "${event}"`, () => {
                 assert(!participantEvents[event]);
               });
@@ -251,8 +251,8 @@ describe('RemoteParticipant', () => {
       it('re-emits "dimensionsChanged" events', () => {
         const track = new EventEmitter();
         let trackDimensionsChanged;
-        const test = makeTest({ tracks: [ track ] });
-        test.participant.once('trackDimensionsChanged', track => trackDimensionsChanged = track);
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackDimensionsChanged', track => { trackDimensionsChanged = track; });
         track.emit('dimensionsChanged', track);
         assert.equal(track, trackDimensionsChanged);
       });
@@ -260,8 +260,8 @@ describe('RemoteParticipant', () => {
       it('re-emits "disabled" events', () => {
         const track = new EventEmitter();
         let trackDisabled;
-        const test = makeTest({ tracks: [ track ] });
-        test.participant.once('trackDisabled', track => trackDisabled = track);
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
         track.emit('disabled', track);
         assert.equal(track, trackDisabled);
       });
@@ -269,8 +269,8 @@ describe('RemoteParticipant', () => {
       it('re-emits "enabled" events', () => {
         const track = new EventEmitter();
         let trackEnabled;
-        const test = makeTest({ tracks: [ track ] });
-        test.participant.once('trackEnabled', track => trackEnabled = track);
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
         track.emit('enabled', track);
         assert.equal(track, trackEnabled);
       });
@@ -278,8 +278,8 @@ describe('RemoteParticipant', () => {
       it('re-emits "message" events', () => {
         const track = new EventEmitter();
         let trackMessageEvent;
-        const test = makeTest({ tracks: [ track ] });
-        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackMessage', (data, track) => { trackMessageEvent = { data, track }; });
         const data = makeUUID();
         track.emit('message', data, track);
         assert.equal(data, trackMessageEvent.data);
@@ -289,8 +289,8 @@ describe('RemoteParticipant', () => {
       it('re-emits "started" events', () => {
         const track = new EventEmitter();
         let trackStarted;
-        const test = makeTest({ tracks: [ track ] });
-        test.participant.once('trackStarted', track => trackStarted = track);
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert.equal(track, trackStarted);
       });
@@ -301,9 +301,9 @@ describe('RemoteParticipant', () => {
         const track = new EventEmitter();
         track._unsubscribe = sinon.spy();
         let trackDimensionsChanged;
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackDimensionsChanged', track => trackDimensionsChanged = track);
+        test.participant.once('trackDimensionsChanged', track => { trackDimensionsChanged = track; });
         track.emit('dimensionsChanged', track);
         assert(!trackDimensionsChanged);
       });
@@ -312,9 +312,9 @@ describe('RemoteParticipant', () => {
         const track = new EventEmitter();
          track._unsubscribe = sinon.spy();
         let trackDisabled;
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackDisabled', track => trackDisabled = track);
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
         track.emit('disabled', track);
         assert(!trackDisabled);
       });
@@ -323,9 +323,9 @@ describe('RemoteParticipant', () => {
         const track = new EventEmitter();
          track._unsubscribe = sinon.spy();
         let trackEnabled;
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackEnabled', track => trackEnabled = track);
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
         track.emit('enabled', track);
         assert(!trackEnabled);
       });
@@ -334,9 +334,9 @@ describe('RemoteParticipant', () => {
         const track = new EventEmitter();
          track._unsubscribe = sinon.spy();
         let trackMessageEvent;
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        test.participant.once('trackMessage', (data, track) => { trackMessageEvent = { data, track }; });
         const data = makeUUID();
         track.emit('message', data, track);
         assert(!trackMessageEvent);
@@ -346,9 +346,9 @@ describe('RemoteParticipant', () => {
         const track = new EventEmitter();
         track._unsubscribe = sinon.spy();
         let trackStarted;
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackStarted', track => trackStarted = track);
+        test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
       });
@@ -356,7 +356,7 @@ describe('RemoteParticipant', () => {
       it('should call ._unsubscribe on all the Participant\'s RemoteTracks', () => {
         const track = new EventEmitter();
         track._unsubscribe = sinon.spy();
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         test.signaling.emit('stateChanged', 'disconnected');
         sinon.assert.calledOnce( track._unsubscribe);
       });
@@ -364,7 +364,7 @@ describe('RemoteParticipant', () => {
       it('should emit "trackUnsubscribed" events for all the Participant\'s RemoteTracks', () => {
         const track = new EventEmitter();
         track._unsubscribe = sinon.spy();
-        const test = makeTest({ tracks: [ track ] });
+        const test = makeTest({ tracks: [track] });
         const unsubscribed = [];
         test.participant.on('trackUnsubscribed', track => unsubscribed.push(track));
         test.signaling.emit('stateChanged', 'disconnected');
@@ -377,8 +377,8 @@ describe('RemoteParticipant', () => {
       it('does not re-emit "dimensionsChanged" events', () => {
         const track = new EventEmitter();
         let trackDimensionsChanged;
-        const test = makeTest({ tracks: [ track ], state: 'disconnected' });
-        test.participant.once('trackDimensionsChanged', track => trackDimensionsChanged = track);
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackDimensionsChanged', track => { trackDimensionsChanged = track; });
         track.emit('dimensionsChanged', track);
         assert(!trackDimensionsChanged);
       });
@@ -386,8 +386,8 @@ describe('RemoteParticipant', () => {
       it('does not re-emit "disabled" events', () => {
         const track = new EventEmitter();
         let trackDisabled;
-        const test = makeTest({ tracks: [ track ], state: 'disconnected' });
-        test.participant.once('trackDisabled', track => trackDisabled = track);
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
         track.emit('disabled', track);
         assert(!trackDisabled);
       });
@@ -395,8 +395,8 @@ describe('RemoteParticipant', () => {
       it('does not re-emit "enabled" events', () => {
         const track = new EventEmitter();
         let trackEnabled;
-        const test = makeTest({ tracks: [ track ], state: 'disconnected' });
-        test.participant.once('trackEnabled', track => trackEnabled = track);
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
         track.emit('enabled', track);
         assert(!trackEnabled);
       });
@@ -404,8 +404,8 @@ describe('RemoteParticipant', () => {
       it('does not re-emit "message" events', () => {
         const track = new EventEmitter();
         let trackMessageEvent;
-        const test = makeTest({ tracks: [ track ], state: 'disconnected' });
-        test.participant.once('trackMessage', (data, track) => trackMessageEvent = { data, track });
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackMessage', (data, track) => { trackMessageEvent = { data, track }; });
         const data = makeUUID();
         track.emit('message', data, track);
         assert(!trackMessageEvent);
@@ -414,8 +414,8 @@ describe('RemoteParticipant', () => {
       it('does not re-emit "started" events', () => {
         const track = new EventEmitter();
         let trackStarted;
-        const test = makeTest({ tracks: [ track ], state: 'disconnected' });
-        test.participant.once('trackStarted', track => trackStarted = track);
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
       });
@@ -428,7 +428,7 @@ describe('RemoteParticipant', () => {
         it('re-emits the "disconnected" state event', () => {
           const test = makeTest();
           let disconnected;
-          test.participant.once('disconnected', participant => disconnected = participant);
+          test.participant.once('disconnected', participant => { disconnected = participant; });
           test.signaling.emit('stateChanged', 'disconnected');
           assert.equal(test.participant, disconnected);
         });
@@ -439,7 +439,7 @@ describe('RemoteParticipant', () => {
           const test = makeTest();
           let disconnected;
           test.signaling.emit('stateChanged', 'disconnected');
-          test.participant.once('disconnected', () => disconnected = true);
+          test.participant.once('disconnected', () => { disconnected = true; });
           test.signaling.emit('stateChanged', 'disconnected');
           assert(!disconnected);
         });
@@ -449,7 +449,7 @@ describe('RemoteParticipant', () => {
         it('re-emits the "disconnected" state event', () => {
           const test = makeTest({ state: 'disconnected' });
           let disconnected;
-          test.participant.once('disconnected', () => disconnected = true);
+          test.participant.once('disconnected', () => { disconnected = true; });
           test.signaling.emit('stateChanged', 'disconnected');
           assert(!disconnected);
         });
@@ -531,14 +531,20 @@ describe('RemoteParticipant', () => {
             const subscribed = [];
 
             const trackEventsPromise = new Promise(resolve => {
-              const shouldResolve = () => tracks.length + subscribed.length === 4;
+              function shouldResolve() {
+                return tracks.length + subscribed.length === 4;
+              }
               test.participant.on('trackAdded', track => {
                 tracks.push(track);
-                shouldResolve() && resolve();
+                if (shouldResolve()) {
+                  resolve();
+                }
               });
               test.participant.on('trackSubscribed', track => {
                 subscribed.push(track);
-                shouldResolve() && resolve();
+                if (shouldResolve()) {
+                  resolve();
+                }
               });
             });
 
@@ -659,14 +665,20 @@ describe('RemoteParticipant', () => {
             const unsubscribed = [];
 
             const trackEventsPromise = new Promise(resolve => {
-              const shouldResolve = () => tracks.length + unsubscribed.length === 4;
+              function shouldResolve() {
+                return tracks.length + unsubscribed.length === 4;
+              }
               test.participant.on('trackRemoved', track => {
                 tracks.push(track);
-                shouldResolve() && resolve();
+                if (shouldResolve()) {
+                  resolve();
+                }
               });
               test.participant.on('trackUnsubscribed', track => {
                 unsubscribed.push(track);
-                shouldResolve() && resolve();
+                if (shouldResolve()) {
+                  resolve();
+                }
               });
             });
 
@@ -957,7 +969,7 @@ function makeTest(options) {
   options.sid = options.sid || makeSid();
   options.state = options.state || 'connected';
   options.tracks = options.tracks || [];
-  
+
   if (typeof options.trackSignalings === 'number') {
     const trackSignalings = [];
     for (let i = 0; i < options.trackSignalings; i++) {

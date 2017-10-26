@@ -90,8 +90,9 @@ describe('StateMachine', () => {
         context('and a new lock is not requested', () => {
           it('sets .state and releases the current lock', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            const key = sm.takeLockSync('lock');
             const deferred = defer();
+
+            sm.takeLockSync('lock');
 
             let i = 0;
 
@@ -129,8 +130,9 @@ describe('StateMachine', () => {
         context('and a new lock is requested', () => {
           it('sets .state, releases the current lock, and takes a new lock', async () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
-            const key1 = sm.takeLockSync('lock1');
             const deferred = defer();
+
+            sm.takeLockSync('lock1');
 
             let i = 0;
 
@@ -151,7 +153,7 @@ describe('StateMachine', () => {
                 return i++;
               }),
               deferred.promise
-            ])
+            ]);
 
             const key2 = sm.preempt('bar', 'lock2');
             assert.equal('bar', sm.state);
@@ -178,7 +180,7 @@ describe('StateMachine', () => {
             sm.preempt('bar', null, ['baz']);
             assert.equal('bar', sm.state);
 
-            const [bar, baz] = await promise;
+            const [, baz] = await promise;
             assert.equal('bar', sm.state);
             assert.equal('baz', baz);
           });
@@ -195,7 +197,7 @@ describe('StateMachine', () => {
             assert.equal('bar', sm.state);
             assert(sm.hasLock(key));
 
-            const [bar, baz] = await promise;
+            const [, baz] = await promise;
             assert.equal('bar', sm.state);
             assert.equal('baz', baz);
           });
@@ -474,7 +476,7 @@ describe('StateMachine', () => {
       it('should delete the Promise from the ._whenDeferreds Set', () => {
         const sm = new StateMachine('foo', { foo: [] });
         const whenDeferredsSize = sm._whenDeferreds.size;
-        return sm.when('foo').then(_sm => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+        return sm.when('foo').then(() => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
       });
     });
 
@@ -492,7 +494,7 @@ describe('StateMachine', () => {
           const whenDeferredsSize = sm._whenDeferreds.size;
           return sm.when('bar').then(
             () => { throw new Error('Unexpected resolution'); },
-            error => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+            () => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
         });
       });
 
@@ -508,7 +510,7 @@ describe('StateMachine', () => {
           it('should delete the Promise from the ._whenDeferreds Set', () => {
             const sm = new StateMachine('foo', { foo: ['bar'], bar: [] });
             const whenDeferredsSize = sm._whenDeferreds.size;
-            const promise = sm.when('bar').then(_sm => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+            const promise = sm.when('bar').then(() => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
             sm.transition('bar');
             return promise;
           });
@@ -529,7 +531,7 @@ describe('StateMachine', () => {
             const whenDeferredsSize = sm._whenDeferreds.size;
             const promise = sm.when('baz').then(
               () => { throw new Error('Unexpected resolution'); },
-              error => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
+              () => assert.equal(sm._whenDeferreds.size, whenDeferredsSize));
             sm.transition('bar');
             return promise;
           });
