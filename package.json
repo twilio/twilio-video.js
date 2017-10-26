@@ -59,7 +59,7 @@
   "license": "BSD-3-Clause",
   "main": "./lib/index.js",
   "scripts": {
-    "lint": "eslint ./lib ./test/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/**/*.js ./test/unit/**/*.js",
+    "lint": "eslint ./lib ./test/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/**",
     "test:unit": "mocha ./test/unit/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration:travis": "node ./scripts/integration.js",

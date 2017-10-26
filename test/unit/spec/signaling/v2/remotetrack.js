@@ -133,7 +133,7 @@ describe('RemoteTrackV2', () => {
           const track = new RemoteTrackV2(trackState);
           trackState.enabled = false;
           let isEnabled;
-          track.once('updated', () => isEnabled = track.isEnabled);
+          track.once('updated', () => { isEnabled = track.isEnabled; });
           track.update(trackState);
           assert.equal(false, isEnabled);
         });
@@ -178,7 +178,7 @@ describe('RemoteTrackV2', () => {
           const track = new RemoteTrackV2(trackState);
           trackState.enabled = false;
           let updated;
-          track.once('updated', () => updated = true);
+          track.once('updated', () => { updated = true; });
           track.update(trackState);
           assert(!updated);
         });
@@ -225,7 +225,7 @@ describe('RemoteTrackV2', () => {
           const track = new RemoteTrackV2(trackState);
           trackState.enabled = true;
           let updated;
-          track.once('updated', () => updated = true);
+          track.once('updated', () => { updated = true; });
           track.update(trackState);
           assert(!updated);
         });
@@ -270,7 +270,7 @@ describe('RemoteTrackV2', () => {
           const track = new RemoteTrackV2(trackState);
           trackState.enabled = true;
           let isEnabled;
-          track.once('updated', () => isEnabled = track.isEnabled);
+          track.once('updated', () => { isEnabled = track.isEnabled; });
           track.update(trackState);
           assert(isEnabled);
         });
@@ -315,7 +315,7 @@ describe('RemoteTrackV2', () => {
           sid: makeSid()
         });
         let isEnabled;
-        track.once('updated', () => isEnabled = track.isEnabled);
+        track.once('updated', () => { isEnabled = track.isEnabled; });
         track.disable();
         assert.equal(false, isEnabled);
       });
@@ -354,7 +354,7 @@ describe('RemoteTrackV2', () => {
           sid: makeSid()
         });
         let updated;
-        track.once('updated', () => updated = true);
+        track.once('updated', () => { updated = true; });
         track.disable();
         assert(!updated);
       });
@@ -396,7 +396,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let isEnabled;
-          track.once('updated', () => isEnabled = track.isEnabled);
+          track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable(false);
           assert.equal(false, isEnabled);
         });
@@ -435,7 +435,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let updated;
-          track.once('updated', () => updated = true);
+          track.once('updated', () => { updated = true; });
           track.enable(false);
           assert(!updated);
         });
@@ -476,7 +476,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let updated;
-          track.once('updated', () => updated = true);
+          track.once('updated', () => { updated = true; });
           track.enable(true);
           assert(!updated);
         });
@@ -515,7 +515,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let isEnabled;
-          track.once('updated', () => isEnabled = track.isEnabled);
+          track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable(true);
           assert(isEnabled);
         });
@@ -556,7 +556,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let updated;
-          track.once('updated', () => updated = true);
+          track.once('updated', () => { updated = true; });
           track.enable();
           assert(!updated);
         });
@@ -595,7 +595,7 @@ describe('RemoteTrackV2', () => {
             sid: makeSid()
           });
           let isEnabled;
-          track.once('updated', () => isEnabled = track.isEnabled);
+          track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable();
           assert(isEnabled);
         });

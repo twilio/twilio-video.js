@@ -18,7 +18,6 @@ describe('PeerConnectionManager', () => {
   describe('#close', () => {
     it('returns the PeerConnectionManager', () => {
       const test = makeTest();
-      const mediaStream = makeMediaStream();
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
@@ -35,11 +34,10 @@ describe('PeerConnectionManager', () => {
       await test.iceServerSource.start();
       test.peerConnectionManager.close();
       assert(test.iceServerSource.stop.calledOnce);
-    })
+    });
 
     it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', () => {
       const test = makeTest();
-      const mediaStream = makeMediaStream();
       return test.peerConnectionManager.createAndOffer().then(() => {
         return test.peerConnectionManager.update([
           { id: '123' }
@@ -212,7 +210,7 @@ describe('PeerConnectionManager', () => {
   });
 
   describe('#setMediaStreamTracksAndDataTrackSenders', () => {
-    [ true, false ].forEach(isAudioContextSupported => {
+    [true, false].forEach(isAudioContextSupported => {
       context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
         it('returns the PeerConnectionManager', () => {
           const test = makeTest({ isAudioContextSupported });
@@ -534,7 +532,7 @@ describe('PeerConnectionManager', () => {
         });
       });
 
-      [ true, false ].forEach(isAudioContextSupported => {
+      [true, false].forEach(isAudioContextSupported => {
         context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
           it(`calls addMediaStream with the ._localMediaStream containing any previously-added MediaStreamTracks ${isAudioContextSupported ? ' and the dummy audio MediaStreamTrack' : ''} on the new PeerConnectionV2`, () => {
             const test = makeTest({ isAudioContextSupported });
@@ -736,7 +734,7 @@ function makeAudioContextFactory(testOptions) {
   function AudioContext() {
     this.close = sinon.spy(() => {});
     this.createMediaStreamDestination = sinon.spy(() => {
-      const getAudioTracks = sinon.spy(() => [ new FakeMediaStreamTrack('audio') ]);
+      const getAudioTracks = sinon.spy(() => [new FakeMediaStreamTrack('audio')]);
       return { stream: { getAudioTracks } };
     });
   }
@@ -745,7 +743,7 @@ function makeAudioContextFactory(testOptions) {
 }
 
 function makePeerConnectionV2Constructor(testOptions) {
-  return function PeerConnectionV2(id, encodingParameters, options) {
+  return function PeerConnectionV2(id) {
     const peerConnectionV2 = new EventEmitter();
 
     peerConnectionV2.configuration = {

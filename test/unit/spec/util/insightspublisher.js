@@ -21,6 +21,7 @@ describe('InsightsPublisher', () => {
 
     context('when called without the "new" keyword', () => {
       it('should return an instance of InsightsPublisher', () => {
+        // eslint-disable-next-line new-cap
         const publisher = InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
           WebSocket: FakeWebSocket
         });
@@ -38,7 +39,7 @@ describe('InsightsPublisher', () => {
       });
     });
 
-    [ 'CLOSING', 'CLOSED' ].forEach(readyState => {
+    ['CLOSING', 'CLOSED'].forEach(readyState => {
       context(`when the underlying WebSocket is ${readyState}`, () => {
         it('should return false', () => {
           publisher._ws.readyState = FakeWebSocket[readyState];
@@ -47,7 +48,7 @@ describe('InsightsPublisher', () => {
       });
     });
 
-    [ 'CONNECTING', 'OPEN' ].forEach(readyState => {
+    ['CONNECTING', 'OPEN'].forEach(readyState => {
       context(`when the underlying WebSocket is ${readyState}`, () => {
         beforeEach(() => {
           publisher._ws.readyState = FakeWebSocket[readyState];
@@ -90,7 +91,7 @@ describe('InsightsPublisher', () => {
     });
 
     context('when the ._session of the InsightsPublisher is null', () => {
-      [ 'CONNECTING', 'OPEN' ].forEach(readyState => {
+      ['CONNECTING', 'OPEN'].forEach(readyState => {
         const contextDesc = `when the underlying WebSocket is ${readyState}`;
         context(contextDesc, () => {
           let payload;
@@ -183,7 +184,7 @@ describe('InsightsPublisher', () => {
             wsUrl = url;
           })
         };
-        const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
         assert.equal(wsUrl, 'somegateway');
       });
     });
@@ -196,7 +197,7 @@ describe('InsightsPublisher', () => {
             wsUrl = url;
           })
         };
-        const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
         assert.equal(wsUrl, 'wss://sdkgw.baz-zee.twilio.com/v1/VideoEvents');
       });
     });
@@ -233,7 +234,7 @@ describe('InsightsPublisher', () => {
           WebSocket: FakeWebSocket
         });
 
-        publisher.once('connected', () => connectedEmitted = true);
+        publisher.once('connected', () => { connectedEmitted = true; });
         publisher._eventQueue.push({ foo: 1 });
         publisher._eventQueue.push({ bar: 'baz' });
         publisher._reconnectAttemptsLeft = 1;
@@ -275,8 +276,8 @@ describe('InsightsPublisher', () => {
     });
 
     context('when the underlying WebSocket emits a "message" event with an "error" message', () => {
-      [ '> 0', '=== 0' ].forEach((scenario, i) => {
-        const reconnectDeferreds = [ defer(), defer() ];
+      ['> 0', '=== 0'].forEach((scenario, i) => {
+        const reconnectDeferreds = [defer(), defer()];
         const timestamps = [];
 
         let publisher;
@@ -297,8 +298,8 @@ describe('InsightsPublisher', () => {
               })
             });
 
-            publisher.once('disconnected', error => disconnectedError = error);
-            publisher.once('reconnecting', () => reconnectingEmitted = true);
+            publisher.once('disconnected', error => { disconnectedError = error; });
+            publisher.once('reconnecting', () => { reconnectingEmitted = true; });
             publisher._reconnectAttemptsLeft = i === 1 ? 0 : 10;
             reconnectAttemptsLeft = publisher._reconnectAttemptsLeft;
             publisher._ws.readyState = FakeWebSocket.OPEN;
@@ -357,12 +358,12 @@ function FakeWebSocket(arg) {
 
 inherits(FakeWebSocket, EventTarget);
 
-[ 'CONNECTING', 'OPEN', 'CLOSING', 'CLOSED' ].forEach((readyState, i) => {
+['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach((readyState, i) => {
   FakeWebSocket[readyState] = i;
 });
 
 function customizedWebSocket(ctor, init) {
   const customized = ctor.bind(null, init);
-  Object.keys(ctor).forEach(key => customized[key] = ctor[key]);
+  Object.keys(ctor).forEach(key => { customized[key] = ctor[key]; });
   return customized;
 }

@@ -9,24 +9,26 @@ const { EventEmitter } = require('events');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 [
-  [ 'audio', RemoteAudioTrack ],
-  [ 'video', RemoteVideoTrack ]
-].forEach(([ kind, RemoteTrack ]) => {
+  ['audio', RemoteAudioTrack],
+  ['video', RemoteVideoTrack]
+].forEach(([kind, RemoteTrack]) => {
   let name = `Remote${capitalize(kind)}Track`;
   describe(`${name}`, () => {
     describe('constructor', () => {
-      [ () => null, () => ({ log }) ].forEach(getOptions => {
+      [() => null, () => ({ log })].forEach(getOptions => {
         context(`when called with${getOptions() ? '' : 'out'} the options object`, () => {
-          [ true, false ].forEach(shouldUseNew => {
+          [true, false].forEach(shouldUseNew => {
             context(`when called with${shouldUseNew ? '' : 'out'} the new keyword`, () => {
               let track;
 
-              const makeTrack = () => {
+              function makeTrack() {
                 const mediaStreamTrack = new FakeMediaStreamTrack(kind);
                 const signaling = makeSignaling(randomBoolean(), randomBoolean(), randomName());
-                return shouldUseNew ? new RemoteTrack(mediaStreamTrack, signaling, getOptions())
+                return shouldUseNew
+                  ? new RemoteTrack(mediaStreamTrack, signaling, getOptions())
+                  // eslint-disable-next-line new-cap
                   : RemoteTrack(mediaStreamTrack, signaling, getOptions());
-              };
+              }
 
               before(() => {
                 track = makeTrack();
@@ -40,7 +42,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
                 assert(track instanceof RemoteTrack);
               });
 
-              [ 'isEnabled', 'isSubscribed', 'name', 'sid' ].forEach(prop => {
+              ['isEnabled', 'isSubscribed', 'name', 'sid'].forEach(prop => {
                 it(`should set the .${prop} property to the RemoteTrackSignaling's .${prop}`, () => {
                   assert.equal(track[prop], track._signaling[prop]);
                 });
@@ -52,7 +54,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     });
 
     describe('#_unsubscribe', () => {
-      [ true, false ].forEach(isSubscribed => {
+      [true, false].forEach(isSubscribed => {
         context(`when .isSubscribed is ${isSubscribed}`, () => {
           let track;
           let unsubscribed;
@@ -61,7 +63,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             const mediaStreamTrack = new FakeMediaStreamTrack(kind);
             const signaling = makeSignaling(randomBoolean(), isSubscribed, randomName());
             track = new RemoteTrack(mediaStreamTrack, signaling);
-            track.once('unsubscribed', track => unsubscribed = track);
+            track.once('unsubscribed', track => { unsubscribed = track; });
             track._unsubscribe();
           });
 

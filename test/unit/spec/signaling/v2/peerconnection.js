@@ -6,7 +6,7 @@ const sinon = require('sinon');
 
 const EventTarget = require('../../../../../lib/eventtarget');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
-const { MediaClientLocalDescFailedError, MediaClientRemoteDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
+const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
@@ -61,7 +61,7 @@ describe('PeerConnectionV2', () => {
 
         describe('if that call fails,', () => {
           beforeEach(() => {
-            test.pc.createDataChannel = () => { throw new Error() };
+            test.pc.createDataChannel = () => { throw new Error(); };
             result = test.pcv2.addDataTrackSender(dataTrackSender);
           });
 
@@ -121,7 +121,7 @@ describe('PeerConnectionV2', () => {
 
         describe('if that call fails,', () => {
           beforeEach(() => {
-            test.pc.createDataChannel = () => { throw new Error() };
+            test.pc.createDataChannel = () => { throw new Error(); };
             result = test.pcv2.addDataTrackSender(dataTrackSender);
           });
 
@@ -168,6 +168,7 @@ describe('PeerConnectionV2', () => {
           switch (signalingState) {
             case 'closed':
               test.pcv2.close();
+              break;
             case 'stable':
               break;
             case 'have-local-offer':
@@ -268,7 +269,7 @@ describe('PeerConnectionV2', () => {
     [
       [
         'before setting a local description',
-        test => {},
+        () => {},
         () => null
       ],
       [
@@ -285,7 +286,7 @@ describe('PeerConnectionV2', () => {
         'after setting a local description by calling #update with an answer description',
         async test => {
           await test.pcv2.offer();
-          await test.pcv2.update(test.state().setDescription(makeAnswer(), 1))
+          await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
         },
         test => test.state().setDescription(test.offers[0], 1)
       ],
@@ -342,7 +343,7 @@ describe('PeerConnectionV2', () => {
       return itShouldCreateOffer();
 
       async function setup() {
-        test = makeTest({ offers: [makeOffer({session:1}), makeOffer({session:2}), makeOffer({session:3})] });
+        test = makeTest({ offers: [makeOffer({ session: 1 }), makeOffer({ session: 2 }), makeOffer({ session: 3 })] });
         descriptions = [];
         rev = 0;
 
@@ -374,7 +375,7 @@ describe('PeerConnectionV2', () => {
 
       function itShouldCreateOffer() {
         const expectedOfferIndex = {
-          stable: {
+          'stable': {
             true: 0,
             false: 1
           },
@@ -441,8 +442,6 @@ describe('PeerConnectionV2', () => {
         });
 
         context('then, once the initial answer is received', () => {
-          let answer;
-
           beforeEach(async () => {
             const answer = makeAnswer();
             const answerDescription = test.state().setDescription(answer, 1);
@@ -458,13 +457,11 @@ describe('PeerConnectionV2', () => {
     // `beforeEach` call (or move it out).
     ['createOffer', 'setLocalDescription'].forEach(errorScenario => {
       let test;
-      let description;
-      let result;
 
       beforeEach(async () => {
         test = makeTest({ offers: 2 });
 
-        [description, result] = await Promise.all([
+        await Promise.all([
           new Promise(resolve => test.pcv2.once('description', resolve)),
           test.pcv2.offer()
         ]);
@@ -712,22 +709,26 @@ describe('PeerConnectionV2', () => {
         // NOTE(mroberts): Construct the requested Description.
         desc = null;
         switch (type) {
-          case 'offer':
+          case 'offer': {
             const offer = makeOffer({ ufrag });
             desc = test.state().setDescription(offer, rev);
             break;
-          case 'answer':
+          }
+          case 'answer': {
             const answer = makeAnswer({ ufrag });
             desc = test.state().setDescription(answer, rev);
             break;
-          case 'create-offer':
+          }
+          case 'create-offer': {
             const createOffer = makeCreateOffer();
             desc = test.state().setDescription(createOffer, rev);
             break;
-          default: // 'close'
+          }
+          default: { // 'close'
             const close = makeClose();
             desc = test.state().setDescription(close, rev);
             break;
+          }
         }
 
         // NOTE(mroberts): Setup spies and capture "description" events.
@@ -852,8 +853,6 @@ describe('PeerConnectionV2', () => {
         itDoesNothing();
 
         context('then, once the initial answer is received', () => {
-          let answer;
-
           beforeEach(async () => {
             const answer = makeAnswer();
             const answerDescription = test.state().setDescription(answer, 1);
@@ -1029,8 +1028,6 @@ describe('PeerConnectionV2', () => {
         itDoesNothing();
 
         context('then, once the initial answer is received', () => {
-          let answer;
-
           beforeEach(async () => {
             const answer = makeAnswer();
             const answerDescription = test.state().setDescription(answer, 1);
@@ -1415,7 +1412,7 @@ describe('PeerConnectionV2', () => {
         const test = makeTest();
         const channel = makeDataChannel();
         let trackAdded;
-        test.pcv2.once('trackAdded', _trackAdded => trackAdded = _trackAdded);
+        test.pcv2.once('trackAdded', _trackAdded => { trackAdded = _trackAdded; });
         test.pc.dispatchEvent({ type: 'datachannel', channel });
         assert.equal(trackAdded.id, channel.label);
       });
@@ -1454,82 +1451,6 @@ describe('PeerConnectionV2', () => {
  * @property {PeerConnectionV2} pcv2
  * @property {function(): PeerConnectionStateBuilder} state
  */
-
-/**
- * Make a {@link Test}. This function extends any options object you pass it.
- * @param {TestOptions} [options]
- * @returns {Test}
- */
-function makeTest(options) {
-  options = options || {};
-  options.id = options.id || makeId();
-  options.pc = options.pc || makePeerConnection(options);
-  options.pcv2 = makePeerConnectionV2(options);
-
-  const id = options.id;
-  options.state = function state() {
-    return new PeerConnectionStateBuilder(id);
-  };
-
-  return options;
-}
-
-/**
- * @interface MockPeerConnectionOptions
- * @property {number|Array<RTCSessionDescriptionInit|Description>} [offers=0] -
- *   provide a number to seed the {@link MockPeerConnection} with exactly that
- *   number of offers; otherwise, you can provide RTCSessionDescriptionInit or
- *   {@link Description} instances directly
- * @property {number|Array<RTCSessionDescriptionInit|Description>} [answers=0] -
- *   number of answers; otherwise, you can provide RTCSessionDescriptionInit or
- *   {@link Description} instances directly
- * @property {string} [errorScenario] - one of "createOffer", "createAnswer",
- *   "setLocalDescription", or "setRemoteDescription"; set to cause one of
- *   these methods to fail
- */
-
-/**
- * Make a {@link MockPeerConnection}. This function extends any options object
- * you pass it.
- * @param {MockPeerConnectionOptions} [options]
- * @returns {MockPeerConnectionOptions}
- */
-function makePeerConnection(options) {
-  options = options || {};
-  options.offers = options.offers || [];
-  options.answers = options.answers || [];
-
-  if (typeof options.offers === 'number') {
-    const offers = [];
-    for (let i = 0; i < options.offers; i++) {
-      offers.push(makeOffer());
-    }
-    options.offers = offers;
-  }
-
-  if (typeof options.answers === 'number') {
-    const answers = [];
-    for (let i = 0; i < options.answers; i++) {
-      answers.push(makeAnswer());
-    }
-    options.answers = answers;
-  }
-
-  options.offers = options.offers.map(description =>
-    description instanceof Description
-      ? description
-      : new Description(description));
-
-  options.answers = options.answers.map(description =>
-    description instanceof Description
-      ? description
-      : new Description(description));
-
-  return new MockPeerConnection(
-    options.offers,
-    options.answers,
-    options.errorScenario);
-}
 
 /**
  * @extends RTCPeerConnection
@@ -1637,10 +1558,11 @@ class MockPeerConnection extends EventEmitter {
   }
 
   createDataChannel(label, options) {
-    return this.dataChannels[this.dataChannelIndex++] = Object.assign({
+    const dataChannel = this.dataChannels[this.dataChannelIndex++] = Object.assign({
       close: sinon.spy(() => {}),
       label
     }, options);
+    return dataChannel;
   }
 
   close() {
@@ -1771,6 +1693,25 @@ class PeerConnectionStateBuilder {
 }
 
 /**
+ * Make a {@link Test}. This function extends any options object you pass it.
+ * @param {TestOptions} [options]
+ * @returns {Test}
+ */
+function makeTest(options) {
+  options = options || {};
+  options.id = options.id || makeId();
+  options.pc = options.pc || makePeerConnection(options);
+  options.pcv2 = makePeerConnectionV2(options);
+
+  const id = options.id;
+  options.state = function state() {
+    return new PeerConnectionStateBuilder(id);
+  };
+
+  return options;
+}
+
+/**
  * @extends RTCSessionDescription
  */
 class Description {
@@ -1891,5 +1832,63 @@ function makeDataChannel(id) {
   const dataChannel = new EventTarget();
   dataChannel.close = sinon.spy(() => {});
   dataChannel.label = id;
+  dataChannel.close = sinon.spy(() => {});
   return dataChannel;
+}
+
+/**
+ * @interface MockPeerConnectionOptions
+ * @property {number|Array<RTCSessionDescriptionInit|Description>} [offers=0] -
+ *   provide a number to seed the {@link MockPeerConnection} with exactly that
+ *   number of offers; otherwise, you can provide RTCSessionDescriptionInit or
+ *   {@link Description} instances directly
+ * @property {number|Array<RTCSessionDescriptionInit|Description>} [answers=0] -
+ *   number of answers; otherwise, you can provide RTCSessionDescriptionInit or
+ *   {@link Description} instances directly
+ * @property {string} [errorScenario] - one of "createOffer", "createAnswer",
+ *   "setLocalDescription", or "setRemoteDescription"; set to cause one of
+ *   these methods to fail
+ */
+
+/**
+ * Make a {@link MockPeerConnection}. This function extends any options object
+ * you pass it.
+ * @param {MockPeerConnectionOptions} [options]
+ * @returns {MockPeerConnectionOptions}
+ */
+function makePeerConnection(options) {
+  options = options || {};
+  options.offers = options.offers || [];
+  options.answers = options.answers || [];
+
+  if (typeof options.offers === 'number') {
+    const offers = [];
+    for (let i = 0; i < options.offers; i++) {
+      offers.push(makeOffer());
+    }
+    options.offers = offers;
+  }
+
+  if (typeof options.answers === 'number') {
+    const answers = [];
+    for (let i = 0; i < options.answers; i++) {
+      answers.push(makeAnswer());
+    }
+    options.answers = answers;
+  }
+
+  options.offers = options.offers.map(description =>
+    description instanceof Description
+      ? description
+      : new Description(description));
+
+  options.answers = options.answers.map(description =>
+    description instanceof Description
+      ? description
+      : new Description(description));
+
+  return new MockPeerConnection(
+    options.offers,
+    options.answers,
+    options.errorScenario);
 }

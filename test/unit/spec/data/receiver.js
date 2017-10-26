@@ -46,7 +46,7 @@ describe('DataTrackReceiver', () => {
 
     it('the DataTrackReceiver emits a "message" event', () => {
       let actualData;
-      dataTrackReceiver.once('message', data => actualData = data);
+      dataTrackReceiver.once('message', data => { actualData = data; });
       dataChannel.dispatchEvent({ type: 'message', data });
       assert.equal(actualData, data);
     });

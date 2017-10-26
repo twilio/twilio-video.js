@@ -342,6 +342,7 @@ describe('Transport', () => {
           revision: 1,
           tracks: []
         },
+        // eslint-disable-next-line camelcase
         peer_connections: [
           {
             id: 'a',
@@ -366,6 +367,7 @@ describe('Transport', () => {
             { fizz: 'buzz' }
           ]
         },
+        // eslint-disable-next-line camelcase
         peer_connections: [
           {
             id: 'a',
@@ -401,6 +403,7 @@ describe('Transport', () => {
           { fizz: 'buzz' }
         ]
       },
+      // eslint-disable-next-line camelcase
       peer_connections: [
         {
           id: 'a',
@@ -485,13 +488,14 @@ describe('Transport', () => {
             test = makeTest({
               sendRequest(type, request) {
                 sendRequestCallTimes.push(Date.now());
+                // eslint-disable-next-line camelcase
                 request.receiveResponse({ status_code: 500 });
                 if (sendRequestCallTimes.length === PUBLISH_MAX_ATTEMPTS) {
                   resolve();
                 }
               }
             });
-            sendRequestCallTimes = [];
+            sendRequestCallTimes.splice(0);
             test.connect();
             test.transport.publish({ foo: 'bar' });
           });
@@ -781,8 +785,8 @@ describe('Transport', () => {
         beforeEach(() => {
           test.connect();
           eventEmitted = false;
-          test.transport.once('connected', () => eventEmitted = true);
-          test.transport.once('message', () => eventEmitted = true);
+          test.transport.once('connected', () => { eventEmitted = true; });
+          test.transport.once('message', () => { eventEmitted = true; });
           test.transitions = [];
         });
 
@@ -855,8 +859,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = null;
             messageEvent = false;
-            test.transport.once('connected', message => connectedEvent = message);
-            test.transport.once('message', () => messageEvent = true);
+            test.transport.once('connected', message => { connectedEvent = message; });
+            test.transport.once('message', () => { messageEvent = true; });
             test.accepted(message);
           });
 
@@ -882,8 +886,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = false;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', () => messageEvent = true);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', () => { messageEvent = true; });
             test.accepted({ type: 'disconnected' });
           });
 
@@ -909,8 +913,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = false;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', () => messageEvent = true);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', () => { messageEvent = true; });
             test.accepted({ type: 'error' });
           });
 
@@ -1003,8 +1007,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = null;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', message => messageEvent = message);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', message => { messageEvent = message; });
             test.accepted(message);
           });
 
@@ -1054,8 +1058,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = null;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', message => messageEvent = message);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', message => { messageEvent = message; });
             test.accepted(message);
           });
 
@@ -1104,8 +1108,8 @@ describe('Transport', () => {
           test.transitions = [];
           connectedEvent = false;
           messageEvent = false;
-          test.transport.once('connected', () => connectedEvent = true);
-          test.transport.once('message', () => messageEvent = true);
+          test.transport.once('connected', () => { connectedEvent = true; });
+          test.transport.once('message', () => { messageEvent = true; });
         });
 
         context('"connected"', () => {
@@ -1207,8 +1211,8 @@ describe('Transport', () => {
           test.transport.sync();
           test.transitions = [];
           eventEmitted = false;
-          test.transport.once('connected', () => eventEmitted = true);
-          test.transport.once('message', () => eventEmitted = true);
+          test.transport.once('connected', () => { eventEmitted = true; });
+          test.transport.once('message', () => { eventEmitted = true; });
         });
 
         context('"connected"', () => {
@@ -1270,12 +1274,12 @@ describe('Transport', () => {
 
     context('a "failed" event, and the Transport\'s .state is', () => {
       const evtPayloads = [
-        [ ],
-        [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
-        [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
-        [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
-        [ null, 'Request Timeout' ],
-        [ null, 'Connection Error' ]
+        [],
+        [{ body: '{ "type": "error", "code": 12345 "message": "foo bar" }' }],
+        [{ body: '{ "type": "error", "code": 12345, "message": "foo bar" }' }],
+        [{ headers: { 'X-Twilio-Error': [{ raw: '67890 bar baz' }] } }],
+        [null, 'Request Timeout'],
+        [null, 'Connection Error']
       ];
 
       let evtPayloadsIdx = 0;
@@ -1284,8 +1288,8 @@ describe('Transport', () => {
       function setupTest() {
         test.transitions = [];
         eventEmitted = false;
-        test.transport.once('connected', () => eventEmitted = true);
-        test.transport.once('message', () => eventEmitted = true);
+        test.transport.once('connected', () => { eventEmitted = true; });
+        test.transport.once('message', () => { eventEmitted = true; });
         test.session.emit.apply(test.session, ['failed'].concat(evtPayloads[evtPayloadsIdx]));
       }
 
@@ -1356,7 +1360,7 @@ describe('Transport', () => {
         });
 
         afterEach(() => {
-          if(evtPayloadsIdx > 0) {
+          if (evtPayloadsIdx > 0) {
             test.transport.disconnect = disconnect;
           }
           evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
@@ -1404,7 +1408,7 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('message', message => emittedEvent = message);
+            test.transport.once('message', message => { emittedEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -1519,7 +1523,7 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('message', message => emittedEvent = message);
+            test.transport.once('message', message => { emittedEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -1537,7 +1541,7 @@ describe('Transport', () => {
 
           beforeEach(() => {
             emittedEvent = null;
-            test.transport.once('message', message => emittedEvent = message);
+            test.transport.once('message', message => { emittedEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -1559,8 +1563,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = null;
             messageEvent = false;
-            test.transport.once('connected', message => connectedEvent = message);
-            test.transport.once('message', () => messageEvent = true);
+            test.transport.once('connected', message => { connectedEvent = message; });
+            test.transport.once('message', () => { messageEvent = true; });
             test.receiveRequest(message);
           });
 
@@ -1677,8 +1681,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = false;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', message => messageEvent = message);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', message => { messageEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -1722,8 +1726,8 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvent = false;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', message => messageEvent = message);
+            test.transport.once('connected', () => { connectedEvent = true; });
+            test.transport.once('message', message => { messageEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -1764,8 +1768,8 @@ describe('Transport', () => {
           test.transport.disconnect();
           test.transitions = [];
           eventEmitted = false;
-          test.transport.once('connected', () => eventEmitted = true);
-          test.transport.once('message', () => eventEmitted = true);
+          test.transport.once('connected', () => { eventEmitted = true; });
+          test.transport.once('message', () => { eventEmitted = true; });
         });
 
         context('"connected"', () => {
@@ -1842,7 +1846,7 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvents = [];
-            test.transport.once('connected', () => connectedEvent = true);
+            test.transport.once('connected', () => { connectedEvent = true; });
             test.transport.on('message', message => messageEvents.push(message));
             test.receiveRequest(message);
           });
@@ -1970,14 +1974,11 @@ describe('Transport', () => {
             type: 'synced'
           };
 
-          let connectedEvent;
           let messageEvent;
 
           beforeEach(() => {
-            connectedEvent = false;
             messageEvent = false;
-            test.transport.once('connected', () => connectedEvent = true);
-            test.transport.once('message', message => messageEvent = message);
+            test.transport.once('message', message => { messageEvent = message; });
             test.receiveRequest(message);
           });
 
@@ -2003,7 +2004,7 @@ describe('Transport', () => {
           beforeEach(() => {
             connectedEvent = false;
             messageEvents = [];
-            test.transport.once('connected', () => connectedEvent = true);
+            test.transport.once('connected', () => { connectedEvent = true; });
             test.transport.on('message', message => messageEvents.push(message));
             test.receiveRequest(message);
           });
@@ -2041,12 +2042,12 @@ describe('Transport', () => {
 
     context('a "bye" event, and the Transport\'s .state is', () => {
       const evtPayloads = [
-        [ ],
-        [ { body: '{ "type": "error", "code": 12345 "message": "foo bar" }' } ],
-        [ { body: '{ "type": "error", "code": 12345, "message": "foo bar" }' } ],
-        [ { headers: { 'X-Twilio-Error': [ { raw: '67890 bar baz' } ] } } ],
-        [ null, 'Request Timeout' ],
-        [ null, 'Connection Error' ]
+        [],
+        [{ body: '{ "type": "error", "code": 12345 "message": "foo bar" }' }],
+        [{ body: '{ "type": "error", "code": 12345, "message": "foo bar" }' }],
+        [{ headers: { 'X-Twilio-Error': [{ raw: '67890 bar baz' }] } }],
+        [null, 'Request Timeout'],
+        [null, 'Connection Error']
       ];
 
       let evtPayloadsIdx = 0;
@@ -2173,7 +2174,7 @@ describe('Transport', () => {
         });
 
         afterEach(() => {
-          if(evtPayloadsIdx > 0) {
+          if (evtPayloadsIdx > 0) {
             test.transport.disconnect = disconnect;
           }
           evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
@@ -2255,7 +2256,7 @@ describe('Transport', () => {
         });
 
         afterEach(() => {
-          if(evtPayloadsIdx > 0) {
+          if (evtPayloadsIdx > 0) {
             test.transport.disconnect = disconnect;
           }
           evtPayloadsIdx = (evtPayloadsIdx + 1) % evtPayloads.length;
@@ -2295,7 +2296,7 @@ function makeTest(options) {
   });
   options.receiveRequest = (message, type, headers) => {
     headers = Object.keys(headers || {}).reduce((headers_, name) => {
-      headers_[name] = [ { raw: headers[name] } ];
+      headers_[name] = [{ raw: headers[name] }];
       return headers_;
     }, {});
     options.session.emit(type || 'info', {
@@ -2324,7 +2325,7 @@ function makeLocalParticipant(options) {
   return localParticipant;
 }
 
-function makePeerConnectionManager(options) {
+function makePeerConnectionManager() {
   return {};
 }
 

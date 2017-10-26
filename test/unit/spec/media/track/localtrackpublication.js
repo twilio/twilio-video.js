@@ -17,7 +17,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   ['LocalAudioTrackPublication', LocalAudioTrackPublication, LocalAudioTrack],
   ['LocalVideoTrackPublication', LocalVideoTrackPublication, LocalVideoTrack],
   ['LocalDataTrackPublication', LocalDataTrackPublication, LocalDataTrack]
-].forEach(([ description, LocalTrackPublication, LocalTrack ]) => {
+].forEach(([description, LocalTrackPublication, LocalTrack]) => {
   const kind = {
     LocalAudioTrackPublication: 'audio',
     LocalVideoTrackPublication: 'video',
@@ -34,13 +34,14 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         [
           [
             'when called without the "new" keyword',
+            // eslint-disable-next-line new-cap
             () => LocalTrackPublication('foo', localTrack, () => {})
           ],
           [
             'when called with the "new" keyword',
             () => new LocalTrackPublication('bar', localTrack, () => {})
           ]
-        ].forEach(([ scenario, createLocalTrackPublication ]) => {
+        ].forEach(([scenario, createLocalTrackPublication]) => {
           context(scenario, () => {
             it('should not throw', () => {
               assert.doesNotThrow(createLocalTrackPublication);
@@ -58,7 +59,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         ['track', localTrack],
         ['trackName', localTrack.name],
         ['trackSid', 'foo']
-      ].forEach(([ prop, expectedValue ]) => {
+      ].forEach(([prop, expectedValue]) => {
         it(`should populate the .${prop} property`, () => {
           const localTrackPublication = new LocalTrackPublication('foo', localTrack, () => {});
           assert.equal(localTrackPublication[prop], expectedValue);

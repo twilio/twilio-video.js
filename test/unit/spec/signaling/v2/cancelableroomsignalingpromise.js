@@ -70,7 +70,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       test.cancelableRoomSignalingPromise.cancel();
       const promise = test.cancelableRoomSignalingPromise.then(() => {
         throw new Error('Unexpected resolution');
-      }, error => {
+      }, () => {
         assert(test.peerConnectionManager.close.calledOnce);
       });
       test.createAndOfferDeferred.resolve();
@@ -113,7 +113,7 @@ describe('createCancelableRoomSignalingPromise', () => {
           test.transport.emit('connected');
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
-          }, error => {
+          }, () => {
             assert(test.transport.disconnect.calledOnce);
           });
         });
@@ -127,7 +127,7 @@ describe('createCancelableRoomSignalingPromise', () => {
           test.transport.emit('connected');
           return test.cancelableRoomSignalingPromise.then(() => {
             throw new Error('Unexpected resolution');
-          }, error => {
+          }, () => {
             assert(test.peerConnectionManager.close.calledOnce);
           });
         });
@@ -143,7 +143,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             test.transport.emit('connected', {});
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               // Do nothing.
             });
           });
@@ -156,7 +156,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             test.transport.emit('connected', {});
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.transport.disconnect.calledOnce);
             });
           });
@@ -169,7 +169,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             test.transport.emit('connected', {});
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.peerConnectionManager.close.calledOnce);
             });
           });
@@ -253,7 +253,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             });
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.room.disconnect.calledOnce);
             });
           });
@@ -274,7 +274,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             });
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(!test.transport.disconnect.calledTwice);
             });
           });
@@ -295,7 +295,7 @@ describe('createCancelableRoomSignalingPromise', () => {
             });
             return test.cancelableRoomSignalingPromise.then(() => {
               throw new Error('Unexpected resolution');
-            }, error => {
+            }, () => {
               assert(test.peerConnectionManager.close.calledOnce);
             });
           });
@@ -326,7 +326,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         test.transport.emit('stateChanged', 'disconnected');
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
-        }, error => {
+        }, () => {
           assert(!test.transport.disconnect.calledOnce);
         });
       });
@@ -339,7 +339,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         test.transport.emit('stateChanged', 'disconnected');
         return test.cancelableRoomSignalingPromise.then(() => {
           throw new Error('Unexpected resolution');
-        }, error => {
+        }, () => {
           assert(test.peerConnectionManager.close.calledOnce);
         });
       });
@@ -355,19 +355,15 @@ function makeParticipantSid() {
   return sid;
 }
 
-function makeName() {
-  return Math.random().toString(36).slice(2);
-}
-
 function makeIdentity() {
   return Math.random().toString(36).slice(2);
 }
 
-function makeToken(options) {
+function makeToken() {
   return 'fake-token';
 }
 
-function makeUA(options) {
+function makeUA() {
   return {};
 }
 
@@ -400,7 +396,7 @@ function makeTest(options) {
 }
 
 function makePeerConnectionManagerConstructor(testOptions) {
-  return function PeerConnectionManager(options) {
+  return function PeerConnectionManager() {
     const peerConnectionManager = new EventEmitter();
     peerConnectionManager.close = sinon.spy(() => {});
     peerConnectionManager.setConfiguration = sinon.spy(() => {});
@@ -413,7 +409,7 @@ function makePeerConnectionManagerConstructor(testOptions) {
     });
     testOptions.peerConnectionManager = peerConnectionManager;
     return peerConnectionManager;
-  }
+  };
 }
 
 function makeLocalParticipantSignaling(options) {
