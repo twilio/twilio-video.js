@@ -52,7 +52,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       reporters: ['spec'],
       port: 9876,
       colors: true,
-      logLevel: config.LOG_DEBUG,
       autoWatch: true,
       browsers,
       singleRun: true,
