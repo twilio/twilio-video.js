@@ -2,13 +2,26 @@
 
 const assert = require('assert');
 
-const connect = require('../../../lib/connect');
+const {
+  connect,
+  createLocalTracks,
+  LocalDataTrack
+} = require('../../../lib');
+
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
-const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
+
+const {
+  participantsConnected,
+  randomName,
+  trackStarted,
+  tracksAdded,
+  tracksPublished,
+  waitForTracks
+} = require('../../lib/util');
 
 describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
@@ -82,7 +95,110 @@ describe('Room', function() {
   });
 
   describe('getStats', () => {
-    it.skip('TODO', () => {});
+    let localDataTrack;
+    let localMediaTracks;
+    let localTrackPublications;
+    let localTracks;
+    let remoteTracks;
+    let reports;
+    let rooms;
+
+    before(async () => {
+      // 1. Get LocalTracks.
+      localMediaTracks = await createLocalTracks();
+      localDataTrack = new LocalDataTrack();
+      localTracks = localMediaTracks.concat(localDataTrack);
+      localTrackPublications = [null, null, null];
+
+      const name = randomName();
+      rooms = await Promise.all(localTracks.map(async (localTrack, i) => {
+        // 2. Connect to Room with specified LocalTrack.
+        const identity = randomName();
+        const token = getToken(identity);
+        const room = await connect(token, Object.assign({
+          name,
+          tracks: [localTrack]
+        }, defaults));
+
+        // 3. Wait for the LocalTrack to be published.
+        await tracksPublished(room.localParticipant, 1, localTrack.kind);
+        const localTrackPublication = [...room.localParticipant.trackPublications.values()].find(localTrackPublication => {
+          return localTrackPublication.track === localTrack;
+        });
+        localTrackPublications[i] = localTrackPublication;
+
+        // 4. Wait for RemoteParticipants to connect.
+        await participantsConnected(room, 2);
+        const remoteParticipants = [...room.participants.values()];
+
+        // 5. Wait for RemoteTracks to be published.
+        await Promise.all(remoteParticipants.map(participant => tracksAdded(participant, 1)));
+        const remoteTracksBySid = flatMap(remoteParticipants,
+          remoteParticipant => [...remoteParticipant.tracks.values()])
+          .reduce((remoteTracksBySid, remoteTrack) => remoteTracksBySid.set(remoteTrack.sid, remoteTrack), new Map());
+        remoteTracks = localTrackPublications
+          .map(localTrackPublication => remoteTracksBySid.get(localTrackPublication.trackSid))
+          .filter(remoteTrack => remoteTrack);
+
+        // 6. Wait for RemoteMediaTracks to be started.
+        const remoteMediaTracks = remoteTracks.filter(remoteTrack => remoteTrack.kind !== 'data');
+        await Promise.all(remoteMediaTracks.map(remoteMediaTrack => trackStarted(remoteMediaTrack)));
+
+        return room;
+      }));
+
+      // 7. Get StatsReports.
+      reports = await Promise.all(rooms.map(room => room.getStats()));
+    });
+
+    it('includes the expected LocalAudioTrackStats and LocalVideoTrackStats', () => {
+      reports.forEach((reports, i) => {
+        // 1. Skip over LocalDataTracks.
+        const localTrackPublication = localTrackPublications[i];
+        if (localTrackPublication.kind === 'data') {
+          return;
+        }
+        reports.forEach(report => {
+          // 2. Ensure that, if we connected with a LocalAudioTrack, we only
+          //    have an entry for localAudioTrackStats (and similarly for
+          //    video).
+          const theseLocalTrackStats = localTrackPublication.kind === 'audio'
+            ? report.localAudioTrackStats
+            : report.localVideoTrackStats;
+          const thoseLocalTrackStats = localTrackPublication.kind === 'audio'
+            ? report.localVideoTrackStats
+            : report.localAudioTrackStats;
+          assert.equal(theseLocalTrackStats.length, 1);
+          assert.equal(thoseLocalTrackStats.length, 0);
+          assert.equal(theseLocalTrackStats[0].trackId, localTracks[i].id);
+        });
+      });
+    });
+
+    it('includes the expected RemoteAudioTrackStats and RemoteVideoTrackStats', () => {
+      reports.forEach((reports, i) => {
+        const localTrackPublication = localTrackPublications[i];
+        remoteTracks.forEach(remoteTrack => {
+          // 1. Skip over RemoteDataTracks and any RemoteTrack we may be publishing.
+          if (remoteTrack.kind === 'data' || remoteTrack.sid === localTrackPublication.trackSid) {
+            return;
+          }
+          // 2. Ensure that, if we are subscribed to a LocalAudioTrack, we only
+          //    have an entry for remoteAudioTrackStats (and similarly for
+          //    video).
+          const remoteTrackStats = remoteTrack.kind === 'audio'
+            ? flatMap(reports, report => report.remoteAudioTrackStats)
+            : flatMap(reports, report => report.remoteVideoTrackStats);
+          const remoteTrackIds = new Set(remoteTrackStats.map(remoteTrackStat => remoteTrackStat.trackId));
+          assert.equal(remoteTrackIds.size, 1);
+        });
+      });
+    });
+
+    after(() => {
+      localMediaTracks.forEach(localMediaTrack => localMediaTrack.stop());
+      rooms.forEach(room => room.disconnect());
+    });
   });
 
   describe('"disconnected" event', () => {
