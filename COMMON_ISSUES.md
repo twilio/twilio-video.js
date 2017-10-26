@@ -61,50 +61,6 @@ LocalTracks will fail.
 Firefox
 -------
 
-### VideoTrack shows black frames or RemoteDataTrack doesn't receive messages
-
-This issue can occur when connecting to a Peer-to-peer or Group Room with a
-Firefox-based Participant who is not sharing audio. WebRTC implementations like
-Chrome, Safari, and Twilio's media server expect to bundle on the first media
-section in an SDP, which is typically an audio media section; however, Firefox,
-when it sees that audio is not being sent or received, rejects its audio media
-section and attempts to bundle on a subsequent media section. The result is a
-broken ICE transport and the inability to send or receive video or data. There's
-a Chrome issue (see [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=6280))
-describing this scenario, as well as a [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1300863)
-tracking the work to stop rejecting the audio media section. There has also been
-[some discussion on the public-webrtc@w3.org mailing list](https://lists.w3.org/Archives/Public/public-webrtc/2017Aug/0076.html)
-discussing just what a WebRTC implementation should do.
-
-In the meantime, the suggested workaround is to always share audio from
-Firefox-based Participants when connecting to a Peer-to-peer Room. If you do not
-intend to playback the audio, you can `disable` the Track before connecting.
-For example, using the microphone:
-
-```js
-const audioTrack = await Twilio.Video.createLocalAudioTrack();
-audioTrack.disable();
-```
-
-If you do not want to request microphone access, you can go further and create a
-"dummy" Track using the [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API):
-
-```js
-const audioContext = typeof AudioContext !== 'undefined'
-  ? new AudioContext()
-  : new webkitAudioContext()
-const node = audioContext.createMediaStreamDestination()
-const stream = node.stream
-const dummyTrack = stream.getAudioTracks()[0]
-const audioTrack = new Twilio.Video.LocalAudioTrack(dummyTrack);
-```
-
-Then, pass the `audioTrack` to `connect`:
-
-```js
-const room = await Twilio.Video.connect(token, { tracks: [audioTrack] });
-```
-
 ### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
 
 Firefox has not yet implemented getter's for RTCDataChannel's
