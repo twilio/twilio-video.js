@@ -14,6 +14,11 @@ const tokens = new Map([
   ['valid', getToken('foo')]
 ]);
 
+const options = Object.assign({}, defaults);
+if (defaults.wsServerInsights) {
+  options.gateway = defaults.wsServerInsights;
+}
+
 describe('InsightsPublisher', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
@@ -29,7 +34,7 @@ describe('InsightsPublisher', function() {
             '1.2.3',
             'prod',
             'us1',
-            defaults);
+            options);
         });
 
         const description = tokenType !== 'valid'
@@ -63,7 +68,7 @@ describe('InsightsPublisher', function() {
         '1.2.3',
         'prod',
         'us1',
-        defaults);
+        options);
 
       publisher.once('connected', () => publisher.disconnect());
       const error = await new Promise(resolve => publisher.once('disconnected', resolve));
