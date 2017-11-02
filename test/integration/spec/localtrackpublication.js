@@ -27,6 +27,8 @@ const {
   waitForTracks
 } = require('../../lib/util');
 
+const { isFirefox } = require('../../lib/guessbrowser');
+
 describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
