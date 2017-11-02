@@ -125,8 +125,13 @@ describe('Room', function() {
         const localTrackPublication = [...room.localParticipant.trackPublications.values()].find(localTrackPublication => {
           return localTrackPublication.track === localTrack;
         });
+        assert(localTrackPublication);
         localTrackPublications[i] = localTrackPublication;
 
+        return room;
+      }));
+
+      await Promise.all(rooms.map(async room => {
         // 4. Wait for RemoteParticipants to connect.
         await participantsConnected(room, 2);
         const remoteParticipants = [...room.participants.values()];
@@ -136,6 +141,10 @@ describe('Room', function() {
         const remoteTracksBySid = flatMap(remoteParticipants,
           remoteParticipant => [...remoteParticipant.tracks.values()])
           .reduce((remoteTracksBySid, remoteTrack) => remoteTracksBySid.set(remoteTrack.sid, remoteTrack), new Map());
+
+        // NOTE(mroberts): By this point, localTrackPublications should include
+        // the expected LocalTrackPublications. We had an issue before, where,
+        // due to timing, it might not be populated.
         remoteTracks = localTrackPublications
           .map(localTrackPublication => remoteTracksBySid.get(localTrackPublication.trackSid))
           .filter(remoteTrack => remoteTrack);
