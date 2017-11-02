@@ -119,8 +119,8 @@ describe('RoomV2', () => {
         var sid2 = makeParticipantSid();
         var test = makeTest({
           participants: [
-            { sid: sid1 },
-            { sid: sid2 }
+            { sid: sid1, tracks: [] },
+            { sid: sid2, tracks: [] }
           ]
         });
         assert.equal(sid1, test.participantV2s[0].sid);
@@ -132,8 +132,8 @@ describe('RoomV2', () => {
         var sid2 = makeParticipantSid();
         var test = makeTest({
           participants: [
-            { sid: sid1 },
-            { sid: sid2 }
+            { sid: sid1, tracks: [] },
+            { sid: sid2, tracks: [] }
           ]
         });
         assert.equal(
@@ -149,15 +149,15 @@ describe('RoomV2', () => {
         var sid2 = makeParticipantSid();
         var test = makeTest({
           participants: [
-            { sid: sid1, foo: 'bar' },
-            { sid: sid2, baz: 'qux' }
+            { sid: sid1, foo: 'bar', tracks: [] },
+            { sid: sid2, baz: 'qux', tracks: [] }
           ]
         });
         assert.deepEqual(
-          { sid: sid1, foo: 'bar' },
+          { sid: sid1, foo: 'bar', tracks: [] },
           test.participantV2s[0].update.args[0][0]);
         assert.deepEqual(
-          { sid: sid2, baz: 'qux' },
+          { sid: sid2, baz: 'qux', tracks: [] },
           test.participantV2s[1].update.args[0][0]);
       });
     });
@@ -198,7 +198,7 @@ describe('RoomV2', () => {
 
           var test = makeTest({
             participants: [
-              { sid: makeSid() }
+              { sid: makeSid(), tracks: [] }
             ],
             peerConnectionManager: peerConnectionManager
           });
@@ -219,7 +219,7 @@ describe('RoomV2', () => {
       it('returns false', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] }
           ]
         });
         assert.equal(
@@ -230,7 +230,7 @@ describe('RoomV2', () => {
       it('the ParticipantV2 remains in the RoomV2\'s .participants Map', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.connectParticipant(test.participantV2s[0]);
@@ -242,7 +242,7 @@ describe('RoomV2', () => {
       it('does not emit the "participantConnected" event', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] }
           ]
         });
         var participantConnected = false;
@@ -403,8 +403,8 @@ describe('RoomV2', () => {
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.disconnect();
@@ -416,8 +416,8 @@ describe('RoomV2', () => {
       it('does not remove any ParticipantV2\'s from the RoomV2\'s .participants Map', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.disconnect();
@@ -431,8 +431,8 @@ describe('RoomV2', () => {
       it('does not emit any "participantDisconnected" events', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         var participantDisconnected = false;
@@ -492,8 +492,8 @@ describe('RoomV2', () => {
       it('does not call .disconnect on any connected ParticipantV2\'s', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.disconnect();
@@ -506,8 +506,8 @@ describe('RoomV2', () => {
       it('does not remove any ParticipantV2\'s from the RoomV2\'s .participants Map', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.disconnect();
@@ -522,8 +522,8 @@ describe('RoomV2', () => {
       it('does not emit any "participantDisconnected" events', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() },
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] },
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.room.disconnect();
@@ -540,7 +540,7 @@ describe('RoomV2', () => {
       it('removes the ParticipantV2 from the RoomV2\'s .participants Map', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] }
           ]
         });
         test.participantV2s[0].emit('stateChanged', 'disconnected');
@@ -550,7 +550,7 @@ describe('RoomV2', () => {
       it('emits the "participantDisconnected" event with the ParticipantV2', () => {
         var test = makeTest({
           participants: [
-            { sid: makeSid() }
+            { sid: makeSid(), tracks: [] }
           ]
         });
         var participantDisconnected;
@@ -787,7 +787,7 @@ describe('RoomV2', () => {
           it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
-                { sid: makeSid() }
+                { sid: makeSid(), tracks: [] }
               ]
             });
             var id = makeId();
@@ -803,7 +803,7 @@ describe('RoomV2', () => {
           it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
-                { sid: makeSid() }
+                { sid: makeSid(), tracks: [] }
               ]
             });
             var id = makeId();
@@ -822,7 +822,7 @@ describe('RoomV2', () => {
           it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
-                { sid: makeSid() }
+                { sid: makeSid(), tracks: [] }
               ]
             });
 
@@ -847,7 +847,7 @@ describe('RoomV2', () => {
           it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack', () => {
             var test = makeTest({
               participants: [
-                { sid: makeSid() }
+                { sid: makeSid(), tracks: [] }
               ]
             });
 
@@ -936,7 +936,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             test.transport.emit('message', {
               participants: [
-                { sid: sid }
+                { sid: sid, tracks: [] }
               ],
               peer_connections: []
             });
@@ -950,7 +950,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             test.transport.emit('message', {
               participants: [
-                { sid: sid }
+                { sid: sid, tracks: [] }
               ],
               peer_connections: []
             });
@@ -966,7 +966,7 @@ describe('RoomV2', () => {
             test.room.once('participantConnected', participant => participantConnected = participant);
             test.transport.emit('message', {
               participants: [
-                { sid: sid }
+                { sid: sid, tracks: [] }
               ],
               peer_connections: []
             });
@@ -980,12 +980,12 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             test.transport.emit('message', {
               participants: [
-                { sid: sid, fizz: 'buzz' }
+                { sid: sid, fizz: 'buzz', tracks: [] }
               ],
               peer_connections: []
             });
             assert.deepEqual(
-              { sid: sid, fizz: 'buzz' },
+              { sid: sid, fizz: 'buzz', tracks: [] },
               test.participantV2s[0].update.args[0][0]);
           });
         });
@@ -996,7 +996,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             test.transport.emit('message', {
               participants: [
-                { sid: sid, state: 'disconnected' }
+                { sid: sid, state: 'disconnected', tracks: [] }
               ],
               peer_connections: []
             });
@@ -1010,7 +1010,7 @@ describe('RoomV2', () => {
             var sid = makeParticipantSid();
             test.transport.emit('message', {
               participants: [
-                { sid: sid, state: 'disconnected' }
+                { sid: sid, state: 'disconnected', tracks: [] }
               ],
               peer_connections: []
             });
@@ -1024,7 +1024,7 @@ describe('RoomV2', () => {
             test.room.once('participantConnected', () => participantConnected = true);
             test.transport.emit('message', {
               participants: [
-                { sid: sid, state: 'disconnected' }
+                { sid: sid, state: 'disconnected', tracks: [] }
               ],
               peer_connections: []
             });
@@ -1038,17 +1038,17 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           test.transport.emit('message', {
             participants: [
-              { sid: sid, fizz: 'buzz' }
+              { sid: sid, fizz: 'buzz', tracks: [] }
             ],
             peer_connections: []
           });
           assert.deepEqual(
-            { sid: sid, fizz: 'buzz' },
+            { sid: sid, fizz: 'buzz', tracks: [] },
             test.participantV2s[0].update.args[1][0]);
         });
       });
@@ -1058,13 +1058,13 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
           test.transport.emit('message', {
             participants: [
-              { sid: sid, fizz: 'buzz' }
+              { sid: sid, fizz: 'buzz', tracks: [] }
             ],
             peer_connections: []
           });
@@ -1077,13 +1077,13 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           test.participantV2s[0].emit('stateChanged', 'disconnected');
           test.transport.emit('message', {
             participants: [
-              { sid: sid, fizz: 'buzz' }
+              { sid: sid, fizz: 'buzz', tracks: [] }
             ],
             peer_connections: []
           });
@@ -1096,7 +1096,7 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           test.transport.emit('message', {
@@ -1110,7 +1110,7 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           test.transport.emit('message', {
@@ -1126,7 +1126,7 @@ describe('RoomV2', () => {
           var sid = makeParticipantSid();
           var test = makeTest({
             participants: [
-              { sid: sid }
+              { sid: sid, tracks: [] }
             ]
           });
           var participantDisconnected = false;
