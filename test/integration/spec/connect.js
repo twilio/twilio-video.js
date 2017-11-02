@@ -633,8 +633,7 @@ describe('connect', function() {
       });
     });
 
-    // NOTE(mroberts): Waiting on a Group Rooms deploy.
-    describe.skip('"trackPublicationFailed" event', () => {
+    describe('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
