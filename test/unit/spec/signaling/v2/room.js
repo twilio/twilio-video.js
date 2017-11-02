@@ -1,10 +1,13 @@
 'use strict';
 
-var assert = require('assert');
-var EventEmitter = require('events').EventEmitter;
-var inherits = require('util').inherits;
-var RoomV2 = require('../../../../../lib/signaling/v2/room');
-var sinon = require('sinon');
+const assert = require('assert');
+const { EventEmitter }  = require('events');
+const { inherits } = require('util');
+const sinon = require('sinon');
+
+const { flatMap } = require('../../../../../lib/util');
+
+const RoomV2 = require('../../../../../lib/signaling/v2/room');
 
 describe('RoomV2', () => {
   // RoomV2
@@ -41,10 +44,10 @@ describe('RoomV2', () => {
 
     describe('.localParticipant', () => {
       it('should call .update on the LocalParticipant with the `published` payload before calling `connect`', () => {
-        const localParticipant = makeLocalParticipant({ tracks: [] });
+        const localParticipant = makeLocalParticipant({ localTracks: [] });
         const methods = [];
         const participant = { sid: 'foo', identity: 'bar' };
-        const published = {};
+        const published = { revision: 1, tracks: [] };
         localParticipant.update = sinon.spy(() => methods.push('update'));
         localParticipant.connect = sinon.spy(() => methods.push('connect'));
         makeTest({
@@ -59,33 +62,50 @@ describe('RoomV2', () => {
     });
 
     it('should periodically call .publishEvent on the underlying Transport', async () => {
-      var test = makeTest({ statsPublishIntervalMs: 50 });
-      var wait = ms => new Promise(resolve => setTimeout(resolve, ms));
-      var expectedArgs = [
+      const test = makeTest({
+        localTracks: [
+          { id: '1', kind: 'audio' },
+          { id: '2', kind: 'video' },
+        ],
+        statsPublishIntervalMs: 50
+      });
+      test.room._update({
+        published: {
+          revision: 1,
+          tracks: [
+            { id: '1', sid: 'MT1' },
+            { id: '2', sid: 'MT2' }
+          ]
+        }
+      });
+      function wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+      const expectedArgs = [
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [ { bar: 'baz' } ],
-            localAudioTrackStats: [ { zee: 'foo' } ],
-            localVideoTrackStats: [ { foo: 'bar' } ],
+            audioTrackStats: [],
+            localAudioTrackStats: [{ trackId: '1' }],
+            localVideoTrackStats: [{ trackId: '2' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'foo',
             roomSid: test.sid,
-            videoTrackStats: [ { baz: 'zee' } ]
+            videoTrackStats: []
           }
         ],
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [ { xyz: 'uvw' } ],
-            localAudioTrackStats: [ { abc: 'def' } ],
-            localVideoTrackStats: [ { ghi: 'jkl' } ],
+            audioTrackStats: [],
+            localAudioTrackStats: [{ trackId: '1' }],
+            localVideoTrackStats: [{ trackId: '2' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'bar',
             roomSid: test.sid,
-            videoTrackStats: [ { pqr: 'mno' } ]
+            videoTrackStats: []
           }
         ]
       ];
@@ -171,9 +191,9 @@ describe('RoomV2', () => {
 
       context('before the getMediaStreamTrackOrDataTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
         it('calling getMediaStreamTrackOrDataTrackTransceiver resolves to the MediaStreamTrack and MediaStream', () => {
-          var id = makeId();
-          var mediaStreamTrack = { id: id };
-          var peerConnectionManager = makePeerConnectionManager();
+          const id = makeId();
+          const mediaStreamTrack = { id: id };
+          const peerConnectionManager = makePeerConnectionManager([], []);
           peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = () => [mediaStreamTrack];
 
           var test = makeTest({
@@ -263,6 +283,81 @@ describe('RoomV2', () => {
           participant,
           participantConnected);
       });
+    });
+  });
+
+  describe('#getStats', () => {
+    it('only returns results for published Local- or Remote-Tracks', async () => {
+      const test = makeTest({
+        localTracks: [
+          { id: '1', kind: 'audio' },
+          { id: '2', kind: 'video' }
+        ]
+      });
+      test.room._update({
+        published: {
+          revision: 1,
+          tracks: [
+            { id: '1', sid: 'MT1' },
+            { id: '2', sid: 'MT2' }
+          ]
+        },
+        subscribed: {
+          revision: 1,
+          tracks: [
+            { id: '3', sid: 'MT3' },
+            { id: '4', sid: 'MT4' }
+          ]
+        },
+        participants: [
+          {
+            identity: 'alice',
+            sid: 'PA1',
+            state: 'connected',
+            tracks: [
+              { id: '3', kind: 'audio', sid: 'MT3' }
+            ]
+          },
+          {
+            identity: 'bob',
+            sid: 'PA2',
+            state: 'connected',
+            tracks: [
+              { id: '4', kind: 'video', sid: 'MT4' }
+            ]
+          }
+        ]
+      });
+
+      const reports = await test.room.getStats();
+      const localAudioTrackStats = [
+        { trackId: '1' }
+      ];
+      const localVideoTrackStats = [
+        { trackId: '2' }
+      ];
+      const remoteAudioTrackStats = [
+        { trackId: '3' }
+      ];
+      const remoteVideoTrackStats = [
+        { trackId: '4' }
+      ];
+      assert.deepEqual(reports, [
+        {
+          localAudioTrackStats,
+          localVideoTrackStats,
+          peerConnectionId: 'foo',
+          remoteAudioTrackStats,
+          remoteVideoTrackStats
+        },
+        {
+          localAudioTrackStats,
+          localVideoTrackStats,
+          peerConnectionId: 'bar',
+          remoteAudioTrackStats,
+          remoteVideoTrackStats
+        }
+      ]);
     });
   });
 
@@ -472,12 +567,12 @@ describe('RoomV2', () => {
     context('multiple Track events in the same tick', () => {
       context('two "trackAdded" events', () => {
         it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-          const tracks = [ makeTrack(), makeTrack() ];
-          const test = makeTest({ tracks });
-          tracks.forEach(track => test.localParticipant.emit('trackAdded', track));
+          const localTracks = [makeTrack(), makeTrack()];
+          const test = makeTest({ localTracks });
+          localTracks.forEach(track => test.localParticipant.emit('trackAdded', track));
           await new Promise(resolve => setTimeout(resolve));
           sinon.assert.callCount(test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders, 1);
-          assert.deepEqual(tracks.map(track => track.mediaStreamTrackOrDataTrackTransceiver),
+          assert.deepEqual(localTracks.map(track => track.mediaStreamTrackOrDataTrackTransceiver),
             test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
         });
       });
@@ -485,8 +580,8 @@ describe('RoomV2', () => {
 
     context('"trackAdded" event followed by "trackRemoved" event', () => {
       it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-        const [ track, addedTrack, removedTrack ] = [ makeTrack(), makeTrack(), makeTrack() ];
-        const test = makeTest({ tracks: [ track, addedTrack ] });
+        const [track, addedTrack, removedTrack] = [makeTrack(), makeTrack(), makeTrack()];
+        const test = makeTest({ localTracks: [track, addedTrack] });
         test.localParticipant.emit('trackAdded', addedTrack);
         test.localParticipant.emit('trackRemoved', removedTrack);
         await new Promise(resolve => setTimeout(resolve));
@@ -498,8 +593,8 @@ describe('RoomV2', () => {
 
     context('two "trackRemoved" events', () => {
       it('should call .setMediaStreamTracksAndDataTrackSenders once on the underlying PeerConnectionManager with the corresponding MediaStreamTracks', async () => {
-        const [ track, removedTrack1, removedTrack2 ] = [ makeTrack(), makeTrack(), makeTrack() ];
-        const test = makeTest({ tracks: [ track ] });
+        const [track, removedTrack1, removedTrack2] = [makeTrack(), makeTrack(), makeTrack()];
+        const test = makeTest({ localTracks: [track] });
         test.localParticipant.emit('trackRemoved', removedTrack1);
         test.localParticipant.emit('trackRemoved', removedTrack2);
         await new Promise(resolve => setTimeout(resolve));
@@ -511,9 +606,9 @@ describe('RoomV2', () => {
 
     context('"trackAdded" event', () => {
       it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreamTracks on the PeerConnectionManager', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -522,9 +617,9 @@ describe('RoomV2', () => {
       });
 
       it('calls .update on the LocalParticipantSignaling', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -532,9 +627,9 @@ describe('RoomV2', () => {
       });
 
       it('calls .publish on the Transport with the LocalparticipantSignaling state', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -550,9 +645,9 @@ describe('RoomV2', () => {
 
     context('"trackRemoved" event', () => {
       it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s LocalTrackSignalings\' MediaStreams on the PeerConnectionManager', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -562,9 +657,9 @@ describe('RoomV2', () => {
       });
 
       it('calls .update on the LocalParticipantSignaling', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -572,9 +667,9 @@ describe('RoomV2', () => {
       });
 
       it('calls .publish on the Transport with the LocalParticipantSignaling state', async () => {
-        var track = makeTrack();
-        var test = makeTest({
-          tracks: [track]
+        const track = makeTrack();
+        const test = makeTest({
+          localTracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
         await new Promise(resolve => setTimeout(resolve));
@@ -591,9 +686,9 @@ describe('RoomV2', () => {
     context('when an added TrackV2 emits an "updated" event in a new state', () => {
       context('with .isEnabled set to false', () => {
         it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
+          const track = makeTrack();
+          const test = makeTest({
+            localTracks: [track]
           });
           track.disable();
           assert.deepEqual(
@@ -608,9 +703,9 @@ describe('RoomV2', () => {
 
       context('with .isEnabled set to true', () => {
         it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
+          const track = makeTrack();
+          const test = makeTest({
+            localTracks: [track]
           });
           track.enable();
           assert.deepEqual(
@@ -627,9 +722,9 @@ describe('RoomV2', () => {
     context('when a removed TrackV2 emits an "updated" event in a new state', () => {
       context('with .isEnabled set to false"', () => {
         it('does not call .publish on the Transport', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
+          const track = makeTrack();
+          const test = makeTest({
+            localTracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
           track.disable();
@@ -639,9 +734,9 @@ describe('RoomV2', () => {
 
       context('with .isEnabled set to true', () => {
         it('does not call .publish on the Transport', () => {
-          var track = makeTrack();
-          var test = makeTest({
-            tracks: [track]
+          const track = makeTrack();
+          const test = makeTest({
+            localTracks: [track]
           });
           test.localParticipant.emit('trackRemoved', track);
           track.enable();
@@ -814,7 +909,7 @@ describe('RoomV2', () => {
         var test = makeTest();
         var track = makeTrack({ id });
 
-        test.room.localParticipant.tracks.push(track);
+        test.room.localParticipant.tracks.set(track.id, track);
         test.transport.emit('message', {
           participant: {
             sid: 'bar',
@@ -1101,12 +1196,20 @@ function makeTest(options) {
   options.participantV2s = options.participantV2s || [];
 
   options.RemoteParticipantV2 = options.RemoteParticipantV2 || makeRemoteParticipantV2Constructor(options);
-  options.tracks = options.tracks || [];
+  options.localTracks = (options.localTracks || []).map(track => {
+    const eventEmitter = new EventEmitter();
+    return Object.assign(eventEmitter, track);
+  });
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
-  options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
+
+  // NOTE(mroberts): The following is a little janky; we should improve this
+  // test as we look to add Track SIDs to the stats.
+  // eslint-disable-next-line no-use-before-define
+  options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(() => room);
+
   options.transport = options.transport || makeTransport(options);
 
-  options.room = options.room || makeRoomV2(options);
+  const room = options.room = options.room || makeRoomV2(options);
 
   options.state = function state() {
     return new RoomStateBuilder(room);
@@ -1121,6 +1224,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
 
   function RemoteParticipantV2(initialState, getMediaStreamTrackOrDataTrackTransceiver) {
     EventEmitter.call(this);
+    this.tracks = (initialState.tracks || []).reduce((tracks, track) => tracks.set(track.sid, track), new Map());
     this.state = initialState.state || 'connected';
     this.sid = initialState.sid;
     this.getMediaStreamTrackOrDataTrackTransceiver = getMediaStreamTrackOrDataTrackTransceiver;
@@ -1150,26 +1254,61 @@ function makeTransport(options) {
   return transport;
 };
 
-function makePeerConnectionManager(options) {
-  var peerConnectionManager = new EventEmitter();
+function makePeerConnectionManager(getRoom) {
+  const peerConnectionManager = new EventEmitter();
   peerConnectionManager.close = sinon.spy(() => {});
   peerConnectionManager.dequeue = sinon.spy(() => {});
   peerConnectionManager.setMediaStreamTracksAndDataTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = sinon.spy(() => []);
 
-  peerConnectionManager.getStats = () => Promise.resolve([{
-    localAudioTrackStats: [ { zee: 'foo' } ],
-    localVideoTrackStats: [ { foo: 'bar' } ],
-    peerConnectionId: 'foo',
-    remoteAudioTrackStats: [ { bar: 'baz' } ],
-    remoteVideoTrackStats: [ { baz: 'zee' } ]
-  }, {
-    localAudioTrackStats: [ { abc: 'def' } ],
-    localVideoTrackStats: [ { ghi: 'jkl' } ],
-    peerConnectionId: 'bar',
-    remoteAudioTrackStats: [ { xyz: 'uvw' } ],
-    remoteVideoTrackStats: [ { pqr: 'mno' } ]
-  }]);
+  peerConnectionManager.getStats = async () => {
+    const room = getRoom();
+
+    // NOTE(mroberts): We're going to add bogus stats entries to represent stats
+    // for unannounced Tracks.
+
+    const localTracks = [...room.localParticipant.tracks.values()];
+    const localAudioTrackStats = localTracks
+      .filter(track => track.kind === 'audio')
+      .map(track => ({ trackId: track.id }))
+      .concat([
+        { trackId: 'bogus1', kind: 'audio' }
+      ]);
+    const localVideoTrackStats = localTracks
+      .filter(track => track.kind === 'video')
+      .map(track => ({ trackId: track.id }))
+      .concat([
+        { trackId: 'bogus2', kind: 'video' }
+      ]);
+
+    const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
+    const remoteAudioTrackStats = remoteTracks
+      .filter(track => track.kind === 'audio')
+      .map(track => ({ trackId: track.id }))
+      .concat([
+        { trackId: 'bogus3', kind: 'audio' }
+      ]);
+    const remoteVideoTrackStats = remoteTracks
+      .filter(track => track.kind === 'video')
+      .map(track => ({ trackId: track.id }))
+      .concat([
+        { trackId: 'bogus4', kind: 'video' }
+      ]);
+
+    return [{
+      localAudioTrackStats,
+      localVideoTrackStats,
+      peerConnectionId: 'foo',
+      remoteAudioTrackStats,
+      remoteVideoTrackStats
+    }, {
+      localAudioTrackStats,
+      localVideoTrackStats,
+      peerConnectionId: 'bar',
+      remoteAudioTrackStats,
+      remoteVideoTrackStats
+    }];
+  };
 
   peerConnectionManager.update = sinon.spy(() => {});
   return peerConnectionManager;
@@ -1222,7 +1361,7 @@ function makeLocalParticipant(options) {
   localParticipant.connect = () => {};
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
-      const localTrackV2 = localParticipant.tracks.find(track => track.id === localTrackState.id);
+      const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);
       if (localTrackV2) {
         localTrackV2.sid = localTrackState.sid;
       }
@@ -1230,7 +1369,7 @@ function makeLocalParticipant(options) {
   });
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);
-  localParticipant.tracks = options.tracks;
+  localParticipant.tracks = options.localTracks.reduce((tracks, track) => tracks.set(track.id, track), new Map());
   localParticipant.disconnect = sinon.spy(() => {});
   return localParticipant;
 }
