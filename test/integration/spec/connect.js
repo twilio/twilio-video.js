@@ -744,7 +744,9 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
-  await participantsConnected(thisRoom, thoseRooms.length);
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
   const thoseParticipants = [...thisRoom.participants.values()];
   await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
