@@ -1,3 +1,33 @@
+1.7.0 (in progress)
+===================
+
+New Features
+------------
+
+- Added VP8 simulcast support for Chrome. VP8 simulcast can be enabled in Chrome
+  using the `preferredVideoCodecs` property in ConnectOptions. For example,
+
+  ```js
+  connect(token, {
+    preferredVideoCodecs: [
+      { codec: 'VP8', simulcast: true }
+    ]
+  });
+  ```
+
+  We recommend you only enable this setting in Group Rooms.
+
+Bug Fixes
+---------
+
+- Fixed a bug where, if you published a LocalDataTrack, unpublished it, and then
+  published it again, you would be unable to `send` data over it again.
+  (JSDK-1580)
+- We've worked around a long-standing issue with Firefox's RTCIceTransport
+  behavior that required you to always add a LocalAudioTrack. You should now be
+  able to connect to Rooms with, for example, only a LocalVideoTrack, only a
+  LocalDataTrack, or no LocalTracks at all.
+
 1.6.0 (October 24, 2017)
 ========================
 
