@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const { inherits } = require('util');
 
 const connect = require('../../../lib/connect');
+const { DEFAULT_LOG_LEVEL, WS_SERVER } = require('../../../lib/util/constants');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -15,6 +16,38 @@ const MockIceServerSource = require('../../lib/mockiceserversource');
 const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmLTE0NzUxOTAzNDgiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJhc2QiLCJydGMiOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTM2Y3NWUwZjE0ZTdjOGIyMDkzOGZjNTA5MmU4MmYyM2EifX0sImlhdCI6MTQ3NTE5MDM0OCwiZXhwIjoxNDc1MTkzOTQ4LCJpc3MiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmIiwic3ViIjoiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyJ9.N0UuZSblqb7MknNuiRkiEVVEdmztm5AdYIhQp7zU2PI';
 
 describe('connect', () => {
+  describe('called with options that is not an object', () => {
+    it('should return a rejected CancelablePromise', async () => {
+      const invalidOptions = [1, 'foo', false, ['bar']];
+      const failedConnectAttempts = invalidOptions.map(options => connect(token, options).then(() => {
+        throw new Error('Unexpected resolution');
+      }, error => error));
+      const connectErrors = await Promise.all(failedConnectAttempts);
+      assert.equal(connectErrors.length, invalidOptions.length);
+      connectErrors.forEach(error => assert(error instanceof TypeError));
+    });
+  });
+
+  describe('called with options with one or more keys explicitly set to undefined', () => {
+    it('should set those keys to their default values', async () => {
+      const mockSignaling = new Signaling();
+      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+      const signaling = sinon.spy(() => mockSignaling);
+
+      connect(token, {
+        iceServers: [],
+        logLevel: undefined,
+        signaling,
+        wsServer: undefined
+      });
+
+      const options = signaling.args[0][1];
+      assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
+      /* eslint new-cap:0 */
+      assert.equal(options.wsServer, WS_SERVER(options.environment, options.realm));
+    });
+  });
+
   describe('called without ConnectOptions#tracks', () => {
     it('automatically acquires LocalTracks', () => {
       const createLocalTracks = sinon.spy();
