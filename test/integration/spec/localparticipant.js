@@ -66,7 +66,7 @@ describe('LocalParticipant', function() {
         }
       ],
       [
-        'when three LocalTracks (audio, video, and date) are published together',
+        'when three LocalTracks (audio, video, and data) are published together',
         async () => {
           trackPublications = await Promise.all(tracks.map(track => {
             return room.localParticipant.publishTrack(track);
