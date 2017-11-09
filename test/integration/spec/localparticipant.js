@@ -204,7 +204,6 @@ describe('LocalParticipant', function() {
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
-      let dataChannelSendInterval;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -301,10 +300,6 @@ describe('LocalParticipant', function() {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        if (dataChannelSendInterval) {
-          clearInterval(dataChannelSendInterval);
-          dataChannelSendInterval = null;
-        }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
 
@@ -335,13 +330,16 @@ describe('LocalParticipant', function() {
           });
 
           if (kind === 'data') {
-            // TODO(mroberts): Awaiting a server deploy. Uncomment me once fixed.
-            it.skip('should transmit any data sent through the LocalDataTrack to the Room to each RemoteDataTrack', async () => {
-              const thoseTracks = thoseTracksMap[event];
-              const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
-              dataChannelSendInterval = setInterval(() => thisTrack.send('foo'), 1000);
-              const data = await Promise.all(thoseTracksReceivedData);
-              data.forEach(item => assert.equal(item, 'foo'));
+            ['string', 'arraybuffer'].forEach(dataType => {
+              it(`should transmit any ${dataType} data sent through the LocalDataTrack to the Room to each RemoteDataTrack`, async () => {
+                const data = dataType === 'string' ? 'foo' : new Uint32Array([1, 2, 3]);
+                const thoseTracks = thoseTracksMap[event];
+                const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
+                const dataChannelSendInterval = setInterval(() => thisTrack.send(dataType === 'string' ? data : data.buffer), 1000);
+                const receivedData = await Promise.all(thoseTracksReceivedData);
+                clearInterval(dataChannelSendInterval);
+                receivedData.forEach(item => dataType === 'string' ? assert.equal(item, data) : assert.deepEqual(new Uint32Array(item), data));
+              });
             });
           } else {
             it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
