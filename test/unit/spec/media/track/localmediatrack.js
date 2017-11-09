@@ -74,6 +74,14 @@ const log = require('../../../../lib/fakelog');
     });
 
     describe('.name', () => {
+      context('when .name is not a string', () => {
+        it('should set .name to the stringified version of the property', () => {
+          const notAString = { foo: 'bar' };
+          track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description], notAString);
+          assert.equal(track.name, String(notAString));
+        });
+      });
+
       [true, false].forEach(isNamePresentInOptions => {
         context(`when .name is ${isNamePresentInOptions ? '' : 'not '}present in LocalTrackOptions`, () => {
           it(`should set .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'MediaStreamTrack\'s ID'}`, () => {
