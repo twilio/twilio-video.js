@@ -27,6 +27,11 @@ Bug Fixes
   behavior that required you to always add a LocalAudioTrack. You should now be
   able to connect to Rooms with, for example, only a LocalVideoTrack, only a
   LocalDataTrack, or no LocalTracks at all.
+- Binary RemoteDataTrack messages received in Firefox arrived as Blobs instead
+  of ArrayBuffers (as in Chrome and Safari). We now set the underlying
+  RTCDataChannel's `binaryType` to "arraybuffer" in order to ensure consistent
+  behavior across browsers. (JSDK-1627)
+- We always stringify `name`s passed via LocalTrackOptions now. (JSDK-1565)
 
 1.6.0 (October 24, 2017)
 ========================
