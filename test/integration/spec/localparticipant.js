@@ -349,8 +349,7 @@ describe('LocalParticipant', function() {
           }
 
           if (when === 'previously') {
-            // FIXME(mroberts): JSDK-1601
-            (kind === 'data' ? it.skip : it)('the RemoteTrack should be a new RemoteTrack instance', () => {
+            it('the RemoteTrack should be a new RemoteTrack instance', () => {
               const thoseTracks = thoseTracksMap[event];
               assert.equal(thoseTracksBefore.length, thoseTracks.length);
               thoseTracksBefore.forEach((thatTrackBefore, i) => {
