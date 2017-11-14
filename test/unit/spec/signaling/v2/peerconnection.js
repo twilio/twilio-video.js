@@ -7,8 +7,7 @@ const sinon = require('sinon');
 const EventTarget = require('../../../../../lib/eventtarget');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
-
-const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
@@ -140,7 +139,11 @@ describe('PeerConnectionV2', () => {
 
     beforeEach(() => {
       test = makeTest();
-      stream = {};
+      stream = {
+        getTracks() {
+          return [{ id: 1 }, { id: 2 }];
+        }
+      };
       result = test.pcv2.addMediaStream(stream);
     });
 
@@ -148,8 +151,8 @@ describe('PeerConnectionV2', () => {
       assert.equal(result);
     });
 
-    it('calls addStream on the underlying RTCPeerConnection', () => {
-      assert.deepEqual(test.pc.getLocalStreams(), [stream]);
+    it('calls addTrack on the underlying RTCPeerConnection', () => {
+      assert.deepEqual(test.pc.getSenders().map(sender => sender.track), stream.getTracks());
     });
   });
 
@@ -252,15 +255,11 @@ describe('PeerConnectionV2', () => {
   describe('#getRemoteMediaStreamTracksAndDataTrackReceivers', () => {
     it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
       const test = makeTest();
-      const remoteStream = new FakeMediaStream();
       const remoteTracks = [
         new FakeMediaStreamTrack('audio'),
         new FakeMediaStreamTrack('video')
       ];
-
-      remoteStream.addTrack(remoteTracks[0]);
-      remoteStream.addTrack(remoteTracks[1]);
-      test.pc.getRemoteStreams = () => [remoteStream];
+      test.pc.getReceivers = () => remoteTracks.map(track => ({ track }));
       assert.deepEqual(test.pcv2.getRemoteMediaStreamTracksAndDataTrackReceivers(), remoteTracks);
     });
   });
@@ -557,7 +556,11 @@ describe('PeerConnectionV2', () => {
 
     beforeEach(() => {
       test = makeTest();
-      mediaStream = {};
+      mediaStream = {
+        getTracks() {
+          return [{ id: 1 }, { id: 2 }];
+        }
+      };
       test.pcv2.addMediaStream(mediaStream);
       result = test.pcv2.removeMediaStream(mediaStream);
     });
@@ -566,8 +569,8 @@ describe('PeerConnectionV2', () => {
       assert.equal(result);
     });
 
-    it('calls removeStream on the underlying RTCPeerConnection', () => {
-      assert.deepEqual(test.pc.getLocalStreams(), []);
+    it('calls removeTrack on the underlying RTCPeerConnection', () => {
+      assert.deepEqual(test.pc.getSenders().map(sender => sender.track), []);
     });
   });
 
@@ -1472,8 +1475,8 @@ class MockPeerConnection extends EventEmitter {
   constructor(offers, answers, errorScenario) {
     super();
 
-    this.localStreams = [];
-    this.remoteStreams = [];
+    this.senders = [];
+    this.receivers = [];
 
     this.offerIndex = 0;
     this.answerIndex = 0;
@@ -1570,23 +1573,25 @@ class MockPeerConnection extends EventEmitter {
     this.emit('signalingstatechange');
   }
 
-  addStream(stream) {
-    this.localStreams.push(stream);
+  addTrack(track) {
+    const sender = { track };
+    this.senders.push(sender);
+    return sender;
   }
 
-  removeStream(stream) {
-    const i = this.localStreams.indexOf(stream);
+  removeTrack(sender) {
+    const i = this.senders.indexOf(sender);
     if (i > -1) {
-      this.localStreams.splice(i);
+      this.senders.splice(i);
     }
   }
 
-  getLocalStreams() {
-    return this.localStreams;
+  getSenders() {
+    return this.senders;
   }
 
-  getRemoteStreams() {
-    return this.remoteStreams;
+  getReceivers() {
+    return this.receivers;
   }
 
   addIceCandidate() {
