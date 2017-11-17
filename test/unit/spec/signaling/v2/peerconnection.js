@@ -556,11 +556,8 @@ describe('PeerConnectionV2', () => {
 
     beforeEach(() => {
       test = makeTest();
-      mediaStream = {
-        getTracks() {
-          return [{ id: 1 }, { id: 2 }];
-        }
-      };
+      const tracks = [{ id: 1 }, { id: 2 }];
+      mediaStream = { getTracks() { return tracks; } };
       test.pcv2.addMediaStream(mediaStream);
       result = test.pcv2.removeMediaStream(mediaStream);
     });
