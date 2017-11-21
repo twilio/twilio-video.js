@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const { inherits } = require('util');
 
 const MediaTrack = require('../../../../../lib/media/track/mediatrack');
+const MediaTrackTransceiver = require('../../../../../lib/media/track/transceiver');
 
 const log = require('../../../../lib/fakelog');
 const Document = require('../../../../lib/document');
@@ -551,7 +552,8 @@ describe('MediaTrack', () => {
 
 function createMediaTrack(id, kind, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);
-  return new MediaTrack(mediaStreamTrack, Object.assign({ log: log }, options));
+  const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
+  return new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
 }
 
 function MediaStreamTrack(id, kind) {
