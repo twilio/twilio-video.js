@@ -16,17 +16,13 @@ const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
   describe('#close', () => {
-    it('returns the PeerConnectionManager', () => {
+    it('returns the PeerConnectionManager', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        assert.equal(
-          test.peerConnectionManager,
-          test.peerConnectionManager.close());
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+      assert.equal(test.peerConnectionManager, test.peerConnectionManager.close());
     });
 
     it('calls stop on the IceServerSource', async () => {
@@ -36,23 +32,22 @@ describe('PeerConnectionManager', () => {
       assert(test.iceServerSource.stop.calledOnce);
     });
 
-    it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+    it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionManager.close();
-        assert(test.peerConnectionV2s[0].close.calledOnce);
-        assert(test.peerConnectionV2s[1].close.calledOnce);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      test.peerConnectionManager.close();
+      sinon.assert.calledOnce(test.peerConnectionV2s[0].close);
+      sinon.assert.calledOnce(test.peerConnectionV2s[1].close);
     });
 
     context('when AudioContext is supported', () => {
       it('should call .stop on its underlying dummy audio MediaStreamTrack', async () => {
         const test = makeTest({ isAudioContextSupported: true });
-        const dummyTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
+        const dummyTrack = test.peerConnectionManager._dummyAudioTrackSender.track;
         const promise = new Promise(resolve => dummyTrack.addEventListener('ended', resolve));
         test.peerConnectionManager.close();
         await promise;
@@ -70,11 +65,10 @@ describe('PeerConnectionManager', () => {
 
   describe('#createAndOffer', () => {
     context('returns a Promise that resolves', () => {
-      it('to the PeerConnectionManager', () => {
+      it('to the PeerConnectionManager', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.createAndOffer().then(peerConnectionManager => {
-          assert.equal(test.peerConnectionManager, peerConnectionManager);
-        });
+        const peerConnectionManager = await test.peerConnectionManager.createAndOffer();
+        assert.equal(test.peerConnectionManager, peerConnectionManager);
       });
 
       it('after the PeerConnectionV2 has created an offer', () => {
@@ -96,281 +90,231 @@ describe('PeerConnectionManager', () => {
       });
     });
 
-    it('constructs a new PeerConnectionV2 using the most recent configuration passed to #setConfiguration', () => {
+    it('constructs a new PeerConnectionV2 using the most recent configuration passed to #setConfiguration', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        test.peerConnectionManager.setConfiguration({ baz: 'qux' });
-      }).then(() => {
-        assert.deepEqual(
-          { baz: 'qux' },
-          test.peerConnectionV2s[0].configuration);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      test.peerConnectionManager.setConfiguration({ baz: 'qux' });
+      assert.deepEqual({ baz: 'qux' }, test.peerConnectionV2s[0].configuration);
     });
 
-    it('calls addMediaStream with the ._localMediaStream containing the previously-added MediaStreamTracks on the new PeerConnectionV2', () => {
+    it('calls addMediaTrackSender with previously-added MediaTrackSenders on the new PeerConnectionV2', async () => {
       const test = makeTest();
       const mediaStream = makeMediaStream();
-      test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(mediaStream.getTracks());
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        assert.equal(
-          test.peerConnectionManager._localMediaStream,
-          test.peerConnectionV2s[0].addMediaStream.args[0][0]);
-        assert.deepEqual(
-          test.peerConnectionManager._localMediaStream.getTracks(),
-          mediaStream.getTracks()
-        );
-      });
+      test.peerConnectionManager.setTrackSenders(mediaStream.getTracks().map(makeTrackSender));
+      await test.peerConnectionManager.createAndOffer();
+
+      assert.deepEqual(test.peerConnectionManager._localMediaStream.getTracks(),
+        test.peerConnectionV2s[0].addMediaTrackSender.args.map(([trackSender]) => trackSender.track));
+
+      assert.deepEqual(test.peerConnectionManager._localMediaStream.getTracks(), mediaStream.getTracks());
     });
 
-    it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', () => {
+    it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', async () => {
       const test = makeTest();
       const dataTrackSender1 = new DataTrackSender(null, null, true);
       const dataTrackSender2 = new DataTrackSender(null, null, true);
 
       // NOTE(mroberts): First we'll add two DataTrackSenders.
-      test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders([dataTrackSender1, dataTrackSender2]);
+      test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
 
       // NOTE(mroberts): Then we'll remove one.
-      test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders([dataTrackSender2]);
+      test.peerConnectionManager.setTrackSenders([dataTrackSender2]);
 
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        // NOTE(mroberts): Finally we'll ensure only the DataTrackSender that remains is added.
-        sinon.assert.calledOnce(test.peerConnectionV2s[0].addDataTrackSender);
-        sinon.assert.calledWith(test.peerConnectionV2s[0].addDataTrackSender, dataTrackSender2);
-      });
+      await test.peerConnectionManager.createAndOffer();
+
+      // NOTE(mroberts): Finally we'll ensure only the DataTrackSender that remains is added.
+      sinon.assert.calledOnce(test.peerConnectionV2s[0].addDataTrackSender);
+      sinon.assert.calledWith(test.peerConnectionV2s[0].addDataTrackSender, dataTrackSender2);
     });
   });
 
-  describe('#getRemoteMediaStreamTracksAndDataTrackReceivers', () => {
-    it('returns the concatenated results of calling getRemoteMediaStreamTracksAndDataTrackReceivers on any PeerConnectionV2s create with #createAndOffer or #update', () => {
+  describe('#getTrackReceivers', () => {
+    it('returns the concatenated results of calling getTrackReceivers on any PeerConnectionV2s create with #createAndOffer or #update', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        const mediaStream1 = makeMediaStream({ audio: 1 });
-        const mediaStream2 = makeMediaStream({ audio: 1, video: 1 });
-        test.peerConnectionV2s[0].getRemoteMediaStreamTracksAndDataTrackReceivers = () => mediaStream1.getTracks();
-        test.peerConnectionV2s[1].getRemoteMediaStreamTracksAndDataTrackReceivers = () => mediaStream2.getTracks();
-        assert.deepEqual(getTracks([mediaStream1, mediaStream2]),
-          test.peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers());
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      const mediaStream1 = makeMediaStream({ audio: 1 });
+      const mediaStream2 = makeMediaStream({ audio: 1, video: 1 });
+      test.peerConnectionV2s[0].getTrackReceivers = () => mediaStream1.getTracks();
+      test.peerConnectionV2s[1].getTrackReceivers = () => mediaStream2.getTracks();
+      assert.deepEqual(getTracks([mediaStream1, mediaStream2]), test.peerConnectionManager.getTrackReceivers());
     });
   });
 
   describe('#getStates', () => {
-    it('returns the non-null results of calling getState on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+    it('returns the non-null results of calling getState on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionV2s[0].getState = () => null;
-        assert.deepEqual(
-          [
-            { id: '123', fizz: 'buzz' }
-          ],
-          test.peerConnectionManager.getStates());
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      test.peerConnectionV2s[0].getState = () => null;
+      assert.deepEqual([{ id: '123', fizz: 'buzz' }], test.peerConnectionManager.getStates());
     });
   });
 
   describe('#setConfiguration', () => {
-    it('returns the PeerConnectionManager', () => {
+    it('returns the PeerConnectionManager', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        assert.equal(
-          test.peerConnectionManager,
-          test.peerConnectionManager.setConfiguration({ foo: 'bar' }));
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+      assert.equal(test.peerConnectionManager, test.peerConnectionManager.setConfiguration({ foo: 'bar' }));
     });
 
-    it('calls setConfiguration on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+    it('calls setConfiguration on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        test.peerConnectionManager.setConfiguration({ foo: 'bar' });
-        assert.deepEqual(
-          { foo: 'bar' },
-          test.peerConnectionV2s[0].setConfiguration.args[0][0]);
-        assert.deepEqual(
-          { foo: 'bar' },
-          test.peerConnectionV2s[1].setConfiguration.args[0][0]);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      test.peerConnectionManager.setConfiguration({ foo: 'bar' });
+      assert.deepEqual({ foo: 'bar' }, test.peerConnectionV2s[0].setConfiguration.args[0][0]);
+      assert.deepEqual({ foo: 'bar' }, test.peerConnectionV2s[1].setConfiguration.args[0][0]);
     });
   });
 
-  describe('#setMediaStreamTracksAndDataTrackSenders', () => {
+  describe('#setTrackSenders', () => {
     [true, false].forEach(isAudioContextSupported => {
       context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
-        it('returns the PeerConnectionManager', () => {
+        it('returns the PeerConnectionManager', async () => {
           const test = makeTest({ isAudioContextSupported });
           const mediaStream1 = makeMediaStream();
           const mediaStream2 = makeMediaStream();
           const mediaStream3 = makeMediaStream();
-          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-            getTracks([mediaStream1, mediaStream2]));
-          return test.peerConnectionManager.createAndOffer().then(() => {
-            return test.peerConnectionManager.update([
-              { id: '123' }
-            ]);
-          }).then(() => {
-            assert.equal(
-              test.peerConnectionManager,
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                getTracks([mediaStream2, mediaStream3])));
-          });
+          const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+          const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
+          const trackSenders3 = mediaStream3.getTracks().map(makeTrackSender);
+
+          test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+          await test.peerConnectionManager.createAndOffer();
+          await test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+
+          assert.equal(test.peerConnectionManager,
+            test.peerConnectionManager.setTrackSenders([...trackSenders2, ...trackSenders3]));
         });
 
-        context('when called with the same MediaStreamTracks as the last time', () => {
-          it('should not call addMediaStream on the underlying PeerConnectionV2s', () => {
+        context('when called with the same MediaTrackSenders as the last time', () => {
+          it('should not call addMediaTrackSender on the underlying PeerConnectionV2s', async () => {
             const test = makeTest({ isAudioContextSupported });
             const mediaStream1 = makeMediaStream({ audio: 1 });
             const mediaStream2 = makeMediaStream({ video: 1 });
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              getTracks([mediaStream1, mediaStream2]));
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].addMediaStream.reset();
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                getTracks([mediaStream2, mediaStream1]));
-              sinon.assert.notCalled(test.peerConnectionV2s[0].addMediaStream);
-            });
+            const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+            const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
+
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
+
+            test.peerConnectionV2s[0].addMediaTrackSender.reset();
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+            sinon.assert.notCalled(test.peerConnectionV2s[0].addMediaTrackSender);
           });
         });
 
         context('when called with the same DataTrackSenders as the last time', () => {
-          it('should not call addDataTrackSender or removeDataTrackSender on the underlying PeerConnectionV2s', () => {
+          it('should not call addDataTrackSender or removeDataTrackSender on the underlying PeerConnectionV2s', async () => {
             const test = makeTest({ isAudioContextSupported });
             const dataTrackSender1 = new DataTrackSender(null, null, true);
             const dataTrackSender2 = new DataTrackSender(null, null, true);
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              [dataTrackSender1, dataTrackSender2]);
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].addDataTrackSender.reset();
-              test.peerConnectionV2s[0].removeDataTrackSender.reset();
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                [dataTrackSender1, dataTrackSender2]);
-              sinon.assert.notCalled(test.peerConnectionV2s[0].addDataTrackSender);
-              sinon.assert.notCalled(test.peerConnectionV2s[0].removeDataTrackSender);
-            });
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
+
+            test.peerConnectionV2s[0].addDataTrackSender.reset();
+            test.peerConnectionV2s[0].removeDataTrackSender.reset();
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+            sinon.assert.notCalled(test.peerConnectionV2s[0].addDataTrackSender);
+            sinon.assert.notCalled(test.peerConnectionV2s[0].removeDataTrackSender);
           });
         });
 
-        it('calls addMediaStream with the ._localMediaStream containing the remaining MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        it('calls addMediaTrackSender for the new MediaTrackSenders and removeMediaTrackSender for the removed MediaTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
           const test = makeTest({ isAudioContextSupported });
           const mediaStream1 = makeMediaStream({ audio: 1 });
           const mediaStream2 = makeMediaStream({ video: 1 });
           const mediaStream3 = makeMediaStream({ video: 1 });
-          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-            getTracks([mediaStream1, mediaStream2]));
-          return test.peerConnectionManager.createAndOffer().then(() => {
-            return test.peerConnectionManager.update([
-              { id: '123' }
-            ]);
-          }).then(() => {
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              getTracks([mediaStream2, mediaStream3]));
+          const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+          const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
+          const trackSenders3 = mediaStream3.getTracks().map(makeTrackSender);
 
-            const addedMediaStreams = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.addMediaStream.args[1][0]);
-            const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
+          test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+          await test.peerConnectionManager.createAndOffer();
+          await test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
 
-            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-              addedMediaStreams[0].getTracks().filter(track => dummyAudioTrack !== track));
+          test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.addMediaTrackSender.reset());
+          test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.addMediaTrackSender.reset());
+          test.peerConnectionManager.setTrackSenders([...trackSenders2, ...trackSenders3]);
 
-            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-              addedMediaStreams[1].getTracks().filter(track => dummyAudioTrack !== track));
+          const addMediaTrackSenderArgs = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.addMediaTrackSender.args.map(([sender]) => sender.track));
+          const removeMediaTrackSenderArgs = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.removeMediaTrackSender.args.map(([sender]) => sender.track));
+          const dummyAudioTrack = (test.peerConnectionManager._dummyAudioTrackSender || { track: null }).track;
+
+          addMediaTrackSenderArgs.forEach(addedMediaTracks => {
+            assert.deepEqual(addedMediaTracks.filter(track => dummyAudioTrack !== track), mediaStream3.getTracks());
+          });
+          removeMediaTrackSenderArgs.forEach(removedMediaTracks => {
+            assert.deepEqual(removedMediaTracks.filter(track => dummyAudioTrack !== track), mediaStream1.getTracks());
           });
         });
 
-        it('calls addMediaStream with the ._localMediaStream containing the new MediaStreamTracks on any PeerConnectionV2s created with #createAndOffer or #update', () => {
-          const test = makeTest({ isAudioContextSupported });
-          const mediaStream1 = makeMediaStream({ video: 1 });
-          const mediaStream2 = makeMediaStream({ audio: 1 });
-          const mediaStream3 = makeMediaStream({ audio: 1 });
-          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-            getTracks([mediaStream1, mediaStream2]));
-          return test.peerConnectionManager.createAndOffer().then(() => {
-            return test.peerConnectionManager.update([
-              { id: '123' }
-            ]);
-          }).then(() => {
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              getTracks([mediaStream2, mediaStream3]));
-
-            const addedMediaStreams = test.peerConnectionV2s.map(peerConnectionV2 => peerConnectionV2.addMediaStream.args[1][0]);
-            const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
-
-            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-              addedMediaStreams[0].getTracks().filter(track => dummyAudioTrack !== track));
-
-            assert.deepEqual(getTracks([mediaStream2, mediaStream3]),
-              addedMediaStreams[1].getTracks().filter(track => dummyAudioTrack !== track));
-          });
-        });
-
-        it('calls removeDataTrackSender with the removed DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        it('calls removeDataTrackSender with the removed DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
           const test = makeTest({ isAudioContextSupported });
           const dataTrackSender1 = new DataTrackSender(null, null, true);
           const dataTrackSender2 = new DataTrackSender(null, null, true);
           const dataTrackSender3 = new DataTrackSender(null, null, true);
-          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-            [dataTrackSender1, dataTrackSender2]);
-          return test.peerConnectionManager.createAndOffer().then(() => {
-            return test.peerConnectionManager.update([
-              { id: '123' }
-            ]);
-          }).then(() => {
-            test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.removeDataTrackSender.reset());
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              [dataTrackSender2, dataTrackSender3]);
-            test.peerConnectionV2s.forEach(peerConnectionV2 => {
-              sinon.assert.calledOnce(peerConnectionV2.removeDataTrackSender);
-              sinon.assert.calledWith(peerConnectionV2.removeDataTrackSender, dataTrackSender1);
-            });
+          test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+
+          await test.peerConnectionManager.createAndOffer();
+          await test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+
+          test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.removeDataTrackSender.reset());
+          test.peerConnectionManager.setTrackSenders([dataTrackSender2, dataTrackSender3]);
+          test.peerConnectionV2s.forEach(peerConnectionV2 => {
+            sinon.assert.calledOnce(peerConnectionV2.removeDataTrackSender);
+            sinon.assert.calledWith(peerConnectionV2.removeDataTrackSender, dataTrackSender1);
           });
         });
 
-        it('calls addDataTrackSender with the added DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        it('calls addDataTrackSender with the added DataTrackSenders on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
           const test = makeTest({ isAudioContextSupported });
           const dataTrackSender1 = new DataTrackSender(null, null, true);
           const dataTrackSender2 = new DataTrackSender(null, null, true);
           const dataTrackSender3 = new DataTrackSender(null, null, true);
-          test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-            [dataTrackSender1, dataTrackSender2]);
-          return test.peerConnectionManager.createAndOffer().then(() => {
-            return test.peerConnectionManager.update([
-              { id: '123' }
-            ]);
-          }).then(() => {
-            test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.addDataTrackSender.reset());
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              [dataTrackSender2, dataTrackSender3]);
-            test.peerConnectionV2s.forEach(peerConnectionV2 => {
-              sinon.assert.calledOnce(peerConnectionV2.addDataTrackSender);
-              sinon.assert.calledWith(peerConnectionV2.addDataTrackSender, dataTrackSender3);
-            });
+          test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+
+          await test.peerConnectionManager.createAndOffer();
+          await test.peerConnectionManager.update([
+            { id: '123' }
+          ]);
+
+          test.peerConnectionV2s.forEach(peerConnectionV2 => peerConnectionV2.addDataTrackSender.reset());
+          test.peerConnectionManager.setTrackSenders([dataTrackSender2, dataTrackSender3]);
+          test.peerConnectionV2s.forEach(peerConnectionV2 => {
+            sinon.assert.calledOnce(peerConnectionV2.addDataTrackSender);
+            sinon.assert.calledWith(peerConnectionV2.addDataTrackSender, dataTrackSender3);
           });
         });
 
-        context('when the MediaStreamTracks changed', () => {
-          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        context('when the MediaTrackSenders changed', () => {
+          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
             const test = makeTest({ isAudioContextSupported });
 
             const audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
@@ -389,23 +333,23 @@ describe('PeerConnectionManager', () => {
               audio: [audioTrack2, audioTrack3]
             });
 
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              getTracks([mediaStream1, mediaStream2]));
 
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+            const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
+            const trackSenders3 = mediaStream3.getTracks().map(makeTrackSender);
 
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                getTracks([mediaStream2, mediaStream3]));
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
 
-              assert(test.peerConnectionV2s[0].offer.calledOnce);
-              assert(test.peerConnectionV2s[1].offer.calledOnce);
-            });
+            test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionManager.setTrackSenders([...trackSenders2, ...trackSenders3]);
+
+            sinon.assert.calledOnce(test.peerConnectionV2s[0].offer);
+            sinon.assert.calledOnce(test.peerConnectionV2s[1].offer);
           });
         });
 
@@ -413,35 +357,32 @@ describe('PeerConnectionManager', () => {
         // m=application section has not yet been negotiated. We should optimize
         // this in the future.
         context('when the DataTrackSenders changed', () => {
-          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
             const test = makeTest({ isAudioContextSupported });
 
             const dataTrackSender1 = new DataTrackSender(null, null, true);
             const dataTrackSender2 = new DataTrackSender(null, null, true);
             const dataTrackSender3 = new DataTrackSender(null, null, true);
 
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              [dataTrackSender1, dataTrackSender2]);
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
 
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
 
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                [dataTrackSender2, dataTrackSender3]);
+            test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
 
-              assert(test.peerConnectionV2s[0].offer.calledOnce);
-              assert(test.peerConnectionV2s[1].offer.calledOnce);
-            });
+            test.peerConnectionManager.setTrackSenders([dataTrackSender2, dataTrackSender3]);
+
+            assert(test.peerConnectionV2s[0].offer.calledOnce);
+            assert(test.peerConnectionV2s[1].offer.calledOnce);
           });
         });
 
-        context('when the MediaStreamTracks did not change', () => {
-          it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+        context('when the MediaTrackSenders did not change', () => {
+          it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
             const test = makeTest({ isAudioContextSupported });
 
             const audioTrack1 = makeMediaStreamTrack({ kind: 'audio' });
@@ -455,54 +396,46 @@ describe('PeerConnectionManager', () => {
               audio: [audioTrack1, audioTrack2]
             });
 
-            const mediaStream3 = makeMediaStream({
-              audio: [audioTrack1]
-            });
 
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              getTracks([mediaStream1, mediaStream2]));
+            const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+            const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
 
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
 
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                getTracks([mediaStream2, mediaStream3]));
+            test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
 
-              assert(!test.peerConnectionV2s[0].offer.calledOnce);
-              assert(!test.peerConnectionV2s[1].offer.calledOnce);
-            });
+            sinon.assert.notCalled(test.peerConnectionV2s[0].offer);
+            sinon.assert.notCalled(test.peerConnectionV2s[1].offer);
           });
         });
 
         context('when the DataTrackSenders did not change', () => {
-          it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', () => {
+          it('does not call offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
             const test = makeTest({ isAudioContextSupported });
 
             const dataTrackSender1 = new DataTrackSender(null, null, true);
             const dataTrackSender2 = new DataTrackSender(null, null, true);
 
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-              [dataTrackSender1, dataTrackSender2]);
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
 
-            return test.peerConnectionManager.createAndOffer().then(() => {
-              return test.peerConnectionManager.update([
-                { id: '123' }
-              ]);
-            }).then(() => {
-              test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
-              test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([
+              { id: '123' }
+            ]);
 
-              test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(
-                [dataTrackSender1, dataTrackSender2]);
+            test.peerConnectionV2s[0].offer = sinon.spy(() => Promise.resolve());
+            test.peerConnectionV2s[1].offer = sinon.spy(() => Promise.resolve());
 
-              assert(!test.peerConnectionV2s[0].offer.calledOnce);
-              assert(!test.peerConnectionV2s[1].offer.calledOnce);
-            });
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+
+            assert(!test.peerConnectionV2s[0].offer.calledOnce);
+            assert(!test.peerConnectionV2s[1].offer.calledOnce);
           });
         });
       });
@@ -511,199 +444,184 @@ describe('PeerConnectionManager', () => {
 
   describe('#update', () => {
     context('when called with an array of PeerConnection states containing a new PeerConnection ID', () => {
-      it('returns a Promise for the PeerConnectionManager', () => {
+      it('returns a Promise for the PeerConnectionManager', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.update([
+        const peerConnectionManager = await test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }
-        ]).then(peerConnectionManager => {
-          assert.equal(test.peerConnectionManager, peerConnectionManager);
-        });
+        ]);
+        assert.equal(test.peerConnectionManager, peerConnectionManager);
       });
 
-      it('constructs a new PeerConnectionV2 with the new PeerConnection ID using the most recent configuration passed to #setConfiguration', () => {
+      it('constructs a new PeerConnectionV2 with the new PeerConnection ID using the most recent configuration passed to #setConfiguration', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.update([
+        await test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }
-        ]).then(() => {
-          assert.equal('123', test.peerConnectionV2s[0].id);
-          assert.deepEqual(
-            { iceServers: [] },
-            test.peerConnectionV2s[0].configuration);
-        });
+        ]);
+
+        assert.equal('123', test.peerConnectionV2s[0].id);
+        assert.deepEqual({ iceServers: [] }, test.peerConnectionV2s[0].configuration);
       });
 
       [true, false].forEach(isAudioContextSupported => {
         context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
-          it(`calls addMediaStream with the ._localMediaStream containing any previously-added MediaStreamTracks ${isAudioContextSupported ? ' and the dummy audio MediaStreamTrack' : ''} on the new PeerConnectionV2`, () => {
+          it(`calls addMediaTrackSender for the MediaTrackSenders containing any previously-added MediaStreamTracks ${isAudioContextSupported ? ' and the dummy audio MediaTrackSender' : ''} on the new PeerConnectionV2`, async () => {
             const test = makeTest({ isAudioContextSupported });
             const mediaStream = makeMediaStream();
-            test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders(mediaStream.getTracks());
-            return test.peerConnectionManager.update([
+            const trackSenders = mediaStream.getTracks().map(makeTrackSender);
+
+            test.peerConnectionManager.setTrackSenders(trackSenders);
+            await test.peerConnectionManager.update([
               { id: '123', fizz: 'buzz' }
-            ]).then(() => {
-              const addedMediaStream = test.peerConnectionV2s[0].addMediaStream.args[0][0];
-              const dummyAudioTrack = test.peerConnectionManager._dummyAudioMediaStreamTrack;
-              assert.deepEqual(mediaStream.getTracks(),
-                addedMediaStream.getTracks().filter(track => dummyAudioTrack !== track));
-            });
+            ]);
+
+            const addedMediaTracks = test.peerConnectionV2s[0].addMediaTrackSender.args.map(([sender]) => sender.track);
+            const dummyAudioTrack = (test.peerConnectionManager._dummyAudioTrackSender || { track: null }).track;
+            assert.deepEqual(addedMediaTracks.filter(track => dummyAudioTrack !== track), mediaStream.getTracks());
           });
         });
       });
 
-      it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', () => {
+      it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', async () => {
         const test = makeTest();
         const dataTrackSender = new DataTrackSender(null, null, true);
-        test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders([dataTrackSender]);
-        return test.peerConnectionManager.update([
+
+        test.peerConnectionManager.setTrackSenders([dataTrackSender]);
+        await test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }
-        ]).then(() => {
-          sinon.assert.calledOnce(test.peerConnectionV2s[0].addDataTrackSender);
-          sinon.assert.calledWith(test.peerConnectionV2s[0].addDataTrackSender, dataTrackSender);
-        });
+        ]);
+
+        sinon.assert.calledOnce(test.peerConnectionV2s[0].addDataTrackSender);
+        sinon.assert.calledWith(test.peerConnectionV2s[0].addDataTrackSender, dataTrackSender);
       });
 
-      it('passes the PeerConnection states to the new PeerConnectionV2\'s #update method', () => {
+      it('passes the PeerConnection states to the new PeerConnectionV2\'s #update method', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.update([
+        await test.peerConnectionManager.update([
           { id: '123', fizz: 'buzz' }
-        ]).then(() => {
-          assert.deepEqual(
-            { id: '123', fizz: 'buzz' },
-            test.peerConnectionV2s[0].update.args[0][0]);
-        });
+        ]);
+
+        assert.deepEqual(
+          { id: '123', fizz: 'buzz' },
+          test.peerConnectionV2s[0].update.args[0][0]);
       });
     });
 
     context('when called with an array of PeerConnection states containing known PeerConnection IDs', () => {
-      it('returns a Promise for the PeerConnectionManager', () => {
+      it('returns a Promise for the PeerConnectionManager', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          const peerConnectionState = {
-            id: test.peerConnectionV2s[0].id,
-            fizz: 'buzz'
-          };
-          return test.peerConnectionManager.update([peerConnectionState]);
-        }).then(peerConnectionManager => {
-          assert.equal(test.peerConnectionManager, peerConnectionManager);
-        });
+        await test.peerConnectionManager.createAndOffer();
+
+        const peerConnectionState = {
+          id: test.peerConnectionV2s[0].id,
+          fizz: 'buzz'
+        };
+
+        const peerConnectionManager = await test.peerConnectionManager.update([peerConnectionState]);
+        assert.equal(test.peerConnectionManager, peerConnectionManager);
+
       });
 
-      it('passes the PeerConnection states to the corresponding PeerConnectionV2\'s #update method', () => {
+      it('passes the PeerConnection states to the corresponding PeerConnectionV2\'s #update method', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          const peerConnectionState = {
+        await test.peerConnectionManager.createAndOffer();
+
+        const peerConnectionState = {
+          id: test.peerConnectionV2s[0].id,
+          fizz: 'buzz'
+        };
+
+        await test.peerConnectionManager.update([peerConnectionState]);
+        assert.deepEqual(
+          {
             id: test.peerConnectionV2s[0].id,
             fizz: 'buzz'
-          };
-          return test.peerConnectionManager.update([peerConnectionState]);
-        }).then(() => {
-          assert.deepEqual(
-            {
-              id: test.peerConnectionV2s[0].id,
-              fizz: 'buzz'
-            },
-            test.peerConnectionV2s[0].update.args[0][0]);
-        });
+          },
+          test.peerConnectionV2s[0].update.args[0][0]);
       });
     });
 
     context('when it is called more than once for the same id', () => {
-      it('should result in the PeerConnection having only one listener for \'stateChanged\'', () => {
+      it('should result in the PeerConnection having only one listener for \'stateChanged\'', async () => {
         const test = makeTest();
-        return test.peerConnectionManager.createAndOffer().then(() => {
-          const peerConnectionState = {
-            id: test.peerConnectionV2s[0].id,
-            fizz: 'buzz'
-          };
-          return test.peerConnectionManager.update([peerConnectionState]);
-        }).then(() => {
-          const peerConnectionState = {
-            id: test.peerConnectionV2s[0].id,
-            fizz: 'jazz'
-          };
-          return test.peerConnectionManager.update([peerConnectionState]);
-        }).then(() => {
-          assert.equal(test.peerConnectionV2s[0].listenerCount('stateChanged'), 1);
-        });
+        await test.peerConnectionManager.createAndOffer();
+
+        let peerConnectionState = {
+          id: test.peerConnectionV2s[0].id,
+          fizz: 'buzz'
+        };
+        await test.peerConnectionManager.update([peerConnectionState]);
+
+        peerConnectionState = {
+          id: test.peerConnectionV2s[0].id,
+          fizz: 'jazz'
+        };
+        await test.peerConnectionManager.update([peerConnectionState]);
+
+        assert.equal(test.peerConnectionV2s[0].listenerCount('stateChanged'), 1);
       });
     });
   });
 
   describe('"candidates" event', () => {
-    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        const promise1 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
-        test.peerConnectionV2s[0].emit('candidates', { foo: 'bar' });
-        return promise1;
-      }).then(result1 => {
-        const promise2 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
-        test.peerConnectionV2s[1].emit('candidates', { baz: 'qux' });
-        return Promise.all([result1, promise2]);
-      }).then(results => {
-        assert.deepEqual(
-          { foo: 'bar' },
-          results[0]);
-        assert.deepEqual(
-          { baz: 'qux' },
-          results[1]);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      const promise1 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
+      test.peerConnectionV2s[0].emit('candidates', { foo: 'bar' });
+      const result1 = await promise1;
+
+      const promise2 = new Promise(resolve => test.peerConnectionManager.once('candidates', resolve));
+      test.peerConnectionV2s[1].emit('candidates', { baz: 'qux' });
+      const results = await Promise.all([result1, promise2]);
+
+      assert.deepEqual({ foo: 'bar' }, results[0]);
+      assert.deepEqual({ baz: 'qux' }, results[1]);
     });
   });
 
   describe('"description" event', () => {
-    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        const promise1 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
-        test.peerConnectionV2s[0].emit('description', { foo: 'bar' });
-        return promise1;
-      }).then(result1 => {
-        const promise2 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
-        test.peerConnectionV2s[1].emit('description', { baz: 'qux' });
-        return Promise.all([result1, promise2]);
-      }).then(results => {
-        assert.deepEqual(
-          { foo: 'bar' },
-          results[0]);
-        assert.deepEqual(
-          { baz: 'qux' },
-          results[1]);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      const promise1 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
+      test.peerConnectionV2s[0].emit('description', { foo: 'bar' });
+      const result1 = await promise1;
+
+      const promise2 = new Promise(resolve => test.peerConnectionManager.once('description', resolve));
+      test.peerConnectionV2s[1].emit('description', { baz: 'qux' });
+      const results = await Promise.all([result1, promise2]);
+
+      assert.deepEqual({ foo: 'bar' }, results[0]);
+      assert.deepEqual({ baz: 'qux' }, results[1]);
     });
   });
 
   describe('"trackAdded" event', () => {
-    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', () => {
+    it('is emitted whenever a PeerConnectionV2 created with #createAndOffer or #update emits it', async () => {
       const test = makeTest();
-      return test.peerConnectionManager.createAndOffer().then(() => {
-        return test.peerConnectionManager.update([
-          { id: '123' }
-        ]);
-      }).then(() => {
-        const promise1 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
-        test.peerConnectionV2s[0].emit('trackAdded', { foo: 'bar' });
-        return promise1;
-      }).then(result1 => {
-        const promise2 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
-        test.peerConnectionV2s[1].emit('trackAdded', { baz: 'qux' });
-        return Promise.all([result1, promise2]);
-      }).then(results => {
-        assert.deepEqual(
-          { foo: 'bar' },
-          results[0]);
-        assert.deepEqual(
-          { baz: 'qux' },
-          results[1]);
-      });
+      await test.peerConnectionManager.createAndOffer();
+      await test.peerConnectionManager.update([
+        { id: '123' }
+      ]);
+
+      const promise1 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
+      test.peerConnectionV2s[0].emit('trackAdded', { foo: 'bar' });
+      const result1 = await promise1;
+
+      const promise2 = new Promise(resolve => test.peerConnectionManager.once('trackAdded', resolve));
+      test.peerConnectionV2s[1].emit('trackAdded', { baz: 'qux' });
+      const results = await Promise.all([result1, promise2]);
+
+      assert.deepEqual({ foo: 'bar' }, results[0]);
+      assert.deepEqual({ baz: 'qux' }, results[1]);
     });
   });
 });
@@ -754,7 +672,7 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     peerConnectionV2.addDataTrackSender = sinon.spy();
 
-    peerConnectionV2.addMediaStream = sinon.spy();
+    peerConnectionV2.addMediaTrackSender = sinon.spy();
 
     peerConnectionV2.close = sinon.spy();
 
@@ -767,7 +685,7 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     peerConnectionV2.removeDataTrackSender = sinon.spy();
 
-    peerConnectionV2.removeMediaStream = sinon.spy();
+    peerConnectionV2.removeMediaTrackSender = sinon.spy();
 
     peerConnectionV2.setConfiguration = sinon.spy(configuration => {
       peerConnectionV2.configuration = configuration;
@@ -834,6 +752,11 @@ function makeMediaStream(options) {
   mediaStream.getTracks = () => options.audio.concat(options.video);
 
   return mediaStream;
+}
+
+function makeTrackSender(track) {
+  const { id, kind } = track;
+  return { id, kind, track };
 }
 
 function MediaStreamTrack(options) {
