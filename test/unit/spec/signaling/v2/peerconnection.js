@@ -132,27 +132,47 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#addMediaStream', () => {
+  describe('#addMediaTrackSender, called with a MediaTrackSender that has', () => {
     let test;
     let stream;
     let result;
 
-    beforeEach(() => {
-      test = makeTest();
-      stream = {
-        getTracks() {
-          return [{ id: 1 }, { id: 2 }];
+    [
+      ['never been added', () => {}],
+      ['been added', (test, trackSender, stream) => {
+        test.pcv2.addMediaTrackSender(trackSender, stream);
+      }],
+      ['been removed', (test, trackSender, stream) => {
+        test.pcv2.addMediaTrackSender(trackSender, stream);
+        test.pcv2.removeMediaTrackSender(trackSender);
+      }]
+    ].forEach(([scenario, setup]) => {
+      context(scenario, () => {
+        beforeEach(() => {
+          test = makeTest();
+          const tracks = [{ id: 1 }];
+          stream = { getTracks() { return tracks; } };
+          const trackSender = makeMediaTrackSender(tracks[0]);
+          setup(test, trackSender, stream);
+          test.pc.addTrack = sinon.spy(() => {});
+          result = test.pcv2.addMediaTrackSender(trackSender, stream);
+        });
+
+        it('returns undefined', () => {
+          assert.equal(result);
+        });
+
+        if (scenario === 'been added') {
+          it('does not call addTrack on the underlying RTCPeerConnection', () => {
+            sinon.assert.notCalled(test.pc.addTrack);
+          });
+          return;
         }
-      };
-      result = test.pcv2.addMediaStream(stream);
-    });
 
-    it('returns undefined', () => {
-      assert.equal(result);
-    });
-
-    it('calls addTrack on the underlying RTCPeerConnection', () => {
-      assert.deepEqual(test.pc.getSenders().map(sender => sender.track), stream.getTracks());
+        it('calls addTrack on the underlying RTCPeerConnection', () => {
+          sinon.assert.calledWith(test.pc.addTrack, stream.getTracks()[0]);
+        });
+      });
     });
   });
 
@@ -233,34 +253,33 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#getDataTrackReceivers', () => {
-    it('returns DataTrackReceivers for any RTCDataChannels raised by the underlying RTCPeerConnection that have yet to be closed', () => {
+  describe('#getTrackReceivers', () => {
+    it('returns DataTrackReceivers and MediaTrackReceivers for any RTCDataChannels and MediaStreamTracks raised by the underlying RTCPeerConnection that have yet to be closed/ended', () => {
       const test = makeTest();
       const dataChannel1 = makeDataChannel();
       const dataChannel2 = makeDataChannel();
       const dataChannel3 = makeDataChannel();
+      const mediaTrack1 = new FakeMediaStreamTrack('audio');
+      const mediaTrack2 = new FakeMediaStreamTrack('video');
+
+      function getTrackIdOrChannelLabel({ id, label }) {
+        return id || label;
+      }
+
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel1 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel3 });
-      assert.deepEqual(
-        test.pcv2.getDataTrackReceivers().map(dataTrackReceiver => dataTrackReceiver.id),
-        [dataChannel1, dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
-      dataChannel1.dispatchEvent({ type: 'close' });
-      assert.deepEqual(
-        test.pcv2.getDataTrackReceivers().map(dataTrackReceiver => dataTrackReceiver.id),
-        [dataChannel2, dataChannel3].map(dataChannel => dataChannel.label));
-    });
-  });
+      test.pc.dispatchEvent({ type: 'track', track: mediaTrack1 });
+      test.pc.dispatchEvent({ type: 'track', track: mediaTrack2 });
 
-  describe('#getRemoteMediaStreamTracksAndDataTrackReceivers', () => {
-    it('returns the remote MediaStreamTracks of the underlying RTCPeerConnection', () => {
-      const test = makeTest();
-      const remoteTracks = [
-        new FakeMediaStreamTrack('audio'),
-        new FakeMediaStreamTrack('video')
-      ];
-      test.pc.getReceivers = () => remoteTracks.map(track => ({ track }));
-      assert.deepEqual(test.pcv2.getRemoteMediaStreamTracksAndDataTrackReceivers(), remoteTracks);
+      assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
+       [dataChannel1, dataChannel2, dataChannel3, mediaTrack1, mediaTrack2].map(getTrackIdOrChannelLabel));
+
+      dataChannel1.dispatchEvent({ type: 'close' });
+      mediaTrack1.dispatchEvent({ type: 'ended' });
+
+      assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
+        [dataChannel2, dataChannel3, mediaTrack2].map(getTrackIdOrChannelLabel));
     });
   });
 
@@ -549,25 +568,47 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('#removeMediaStream', () => {
+  describe('#removeMediaTrackSender', () => {
     let test;
-    let mediaStream;
+    let stream;
     let result;
 
-    beforeEach(() => {
-      test = makeTest();
-      const tracks = [{ id: 1 }, { id: 2 }];
-      mediaStream = { getTracks() { return tracks; } };
-      test.pcv2.addMediaStream(mediaStream);
-      result = test.pcv2.removeMediaStream(mediaStream);
-    });
+    [
+      ['never been added', () => {}],
+      ['been added', (test, trackSender, stream) => {
+        test.pcv2.addMediaTrackSender(trackSender, stream);
+      }],
+      ['been removed', (test, trackSender, stream) => {
+        test.pcv2.addMediaTrackSender(trackSender, stream);
+        test.pcv2.removeMediaTrackSender(trackSender);
+      }]
+    ].forEach(([scenario, setup]) => {
+      context(scenario, () => {
+        beforeEach(() => {
+          test = makeTest();
+          const tracks = [{ id: 1 }];
+          stream = { getTracks() { return tracks; } };
+          const trackSender = makeMediaTrackSender(tracks[0]);
+          setup(test, trackSender, stream);
+          test.pc.removeTrack = sinon.spy(() => {});
+          result = test.pcv2.removeMediaTrackSender(trackSender);
+        });
 
-    it('returns undefined', () => {
-      assert.equal(result);
-    });
+        it('returns undefined', () => {
+          assert.equal(result);
+        });
 
-    it('calls removeTrack on the underlying RTCPeerConnection', () => {
-      assert.deepEqual(test.pc.getSenders().map(sender => sender.track), []);
+        if (scenario === 'been added') {
+          it('calls removeTrack on the underlying RTCPeerConnection', () => {
+            assert.equal(test.pc.removeTrack.args[0][0].track, stream.getTracks()[0]);
+          });
+          return;
+        }
+
+        it('does not call removeTrack on the underlying RTCPeerConnection', () => {
+          sinon.assert.notCalled(test.pc.removeTrack);
+        });
+      });
     });
   });
 
@@ -1373,7 +1414,7 @@ describe('PeerConnectionV2', () => {
     context('when "track" events are supported by the underlying RTCPeerConnection', () => {
       let test;
       let mediaStreamTrack;
-      let track;
+      let trackReceiver;
 
       beforeEach(async () => {
         const pc = makePeerConnection();
@@ -1388,7 +1429,7 @@ describe('PeerConnectionV2', () => {
           RTCPeerConnection: RTCPeerConnection
         });
 
-        mediaStreamTrack = { id: '456' };
+        mediaStreamTrack = { id: '456', addEventListener: sinon.spy(() => {}) };
         const mediaStream = { id: 'abc' };
 
         const trackPromise = new Promise(resolve => test.pcv2.once('trackAdded', resolve));
@@ -1399,11 +1440,11 @@ describe('PeerConnectionV2', () => {
           streams: [mediaStream]
         });
 
-        track = await trackPromise;
+        trackReceiver = await trackPromise;
       });
 
-      it('emits the "trackAdded" event directly from the underlying RTCPeerConnection\'s "track" event handler', () => {
-        assert.equal(mediaStreamTrack, track);
+      it('emits the "trackAdded" event with a MediaTrackReceiver', () => {
+        assert.equal(trackReceiver.track, mediaStreamTrack);
       });
     });
 
@@ -1602,6 +1643,15 @@ class MockPeerConnection extends EventEmitter {
  */
 function makeId() {
   return Math.floor(Math.random() * 100 + 0.5);
+}
+
+/**
+ * Make a random MediaStreamTrack kind.
+ * @returns {string} - 'audio'|'video'
+ */
+function makeMediaKind() {
+  const rand = Math.floor(Math.random() + 0.5);
+  return rand < 0.5 ? 'audio' : 'video';
 }
 
 /**
@@ -1826,6 +1876,18 @@ function makeDataTrackSender(id) {
     id,
     addDataChannel: sinon.spy(() => {}),
     removeDataChannel: sinon.spy(() => {})
+  };
+}
+
+function makeMediaTrackSender(track) {
+  const id = track.id || makeId();
+  const kind = track.kind || makeMediaKind();
+  return {
+    id,
+    kind,
+    track,
+    addSender: sinon.spy(() => {}),
+    removeSender: sinon.spy(() => {})
   };
 }
 
