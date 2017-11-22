@@ -62,7 +62,7 @@ describe('RemoteParticipantV2', () => {
           test.participant.tracks.get(id2));
       });
 
-      it('calls getMediaStreamTrackOrDataTrackTransceiver with the newly-constructed RemoteTrackV2s\' IDs', () => {
+      it('calls getTrackTransceiver with the newly-constructed RemoteTrackV2s\' IDs', () => {
         const id1 = makeId();
         const id2 = makeId();
         const test = makeTest({
@@ -71,11 +71,11 @@ describe('RemoteParticipantV2', () => {
             { id: id2 }
           ]
         });
-        assert.equal(id1, test.getMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
-        assert.equal(id2, test.getMediaStreamTrackOrDataTrackTransceiver.args[1][0]);
+        assert.equal(id1, test.getTrackTransceiver.args[0][0]);
+        assert.equal(id2, test.getTrackTransceiver.args[1][0]);
       });
 
-      it('calls setMediaStreamTrackOrDataTrackTransceiver on the newly-constructed RemoteTrackV2s with the results of calling getMediaStreamTrackOrDataTrackTransceiver', () => {
+      it('calls setTrackTransceiver on the newly-constructed RemoteTrackV2s with the results of calling getTrackTransceiver', () => {
         const id1 = makeId();
         const id2 = makeId();
         const test = makeTest({
@@ -84,17 +84,17 @@ describe('RemoteParticipantV2', () => {
             { id: id2 }
           ]
         });
-        // NOTE(mroberts): Really we should provide mediaStreamTrack1 and
-        // mediaStreamTrack2, etc., but it is a pain to setup.
-        const mediaStreamTrack = {};
-        test.getMediaStreamTrackOrDataTrackTransceiverDeferred.resolve(mediaStreamTrack);
-        return test.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise.then(() => {
+        // NOTE(mroberts): Really we should provide mediaTrackReceiver1 and
+        // mediaTrackReceiver2, etc., but it is a pain to setup.
+        const mediaTrackReceiver = {};
+        test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
+        return test.getTrackTransceiverDeferred.promise.then(() => {
           assert.equal(
-            mediaStreamTrack,
-            test.remoteTrackV2s[0].setMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+            mediaTrackReceiver,
+            test.remoteTrackV2s[0].setTrackTransceiver.args[0][0]);
           assert.equal(
-            mediaStreamTrack,
-            test.remoteTrackV2s[1].setMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+            mediaTrackReceiver,
+            test.remoteTrackV2s[1].setTrackTransceiver.args[0][0]);
         });
       });
     });
@@ -149,24 +149,24 @@ describe('RemoteParticipantV2', () => {
             track);
         });
 
-        it('calls getMediaStreamTrackOrDataTrackTransceiver with the newly-constructed RemoteTrackV2\'s ID', () => {
+        it('calls getTrackTransceiver with the newly-constructed RemoteTrackV2\'s ID', () => {
           const test = makeTest();
           const id = makeId();
           const participantState = test.state(test.revision + 1).setTrack({ id: id });
           test.participant.update(participantState);
-          assert.equal(id, test.getMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+          assert.equal(id, test.getTrackTransceiver.args[0][0]);
         });
 
-        it('calls setMediaStreamTrackOrDataTrackTransceiver on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrackOrDataTrackTransceiver', () => {
+        it('calls setTrackTransceiver on the newly-constructed RemoteTrackV2 with the result of calling getTrackTransceiver', () => {
           const test = makeTest();
           const participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          const mediaStreamTrack = {};
-          test.getMediaStreamTrackOrDataTrackTransceiverDeferred.resolve(mediaStreamTrack);
-          return test.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise.then(() => {
+          const mediaTrackReceiver = {};
+          test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
+          return test.getTrackTransceiverDeferred.promise.then(() => {
             assert.equal(
-              mediaStreamTrack,
-              test.remoteTrackV2s[0].setMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+              mediaTrackReceiver,
+              test.remoteTrackV2s[0].setTrackTransceiver.args[0][0]);
           });
         });
 
@@ -354,11 +354,11 @@ describe('RemoteParticipantV2', () => {
           assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrackOrDataTrackTransceiver with a newly-constructed RemoteTrackV2\'s ID', () => {
+        it('does not call getTrackTransceiver with a newly-constructed RemoteTrackV2\'s ID', () => {
           const test = makeTest();
           const participantState = test.state(test.revision).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert(!test.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!test.getTrackTransceiver.calledOnce);
         });
       });
 
@@ -532,11 +532,11 @@ describe('RemoteParticipantV2', () => {
           assert.equal(0, test.remoteTrackV2s.length);
         });
 
-        it('does not call getMediaStreamTrackOrDataTrackTransceiver with a newly-constructed RemoteTrackV2\'s ID', () => {
+        it('does not call getTrackTransceiver with a newly-constructed RemoteTrackV2\'s ID', () => {
           const test = makeTest();
           const participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
           test.participant.update(participantState);
-          assert(!test.getMediaStreamTrackOrDataTrackTransceiver.calledOnce);
+          assert(!test.getTrackTransceiver.calledOnce);
         });
       });
 
@@ -720,27 +720,27 @@ describe('RemoteParticipantV2', () => {
         trackAdded);
     });
 
-    it('calls getMediaStreamTrackOrDataTrackTransceiver with the newly-constructed RemoteTrackV2\'s ID', () => {
+    it('calls getTrackTransceiver with the newly-constructed RemoteTrackV2\'s ID', () => {
       const RemoteTrackV2 = makeRemoteTrackV2Constructor();
       const test = makeTest();
       const id = makeId();
       const track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
-      assert.equal(id, test.getMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+      assert.equal(id, test.getTrackTransceiver.args[0][0]);
     });
 
-    it('calls setMediaStreamTrackOrDataTrackTransceiver on the newly-constructed RemoteTrackV2 with the result of calling getMediaStreamTrackOrDataTrackTransceiver', () => {
+    it('calls setTrackTransceiver on the newly-constructed RemoteTrackV2 with the result of calling getTrackTransceiver', () => {
       const RemoteTrackV2 = makeRemoteTrackV2Constructor();
       const test = makeTest();
       const id = makeId();
       const track = new RemoteTrackV2({ id: id });
       test.participant.addTrack(track);
-      const mediaStreamTrack = {};
-      test.getMediaStreamTrackOrDataTrackTransceiverDeferred.resolve(mediaStreamTrack);
-      return test.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise.then(() => {
+      const mediaTrackReceiver = {};
+      test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
+      return test.getTrackTransceiverDeferred.promise.then(() => {
         assert.equal(
-          mediaStreamTrack,
-          track.setMediaStreamTrackOrDataTrackTransceiver.args[0][0]);
+          mediaTrackReceiver,
+          track.setTrackTransceiver.args[0][0]);
       });
     });
   });
@@ -969,10 +969,10 @@ function makeTest(options) {
   options.tracks = options.tracks || [];
   options.remoteTrackV2s = options.remoteTrackV2s || [];
 
-  options.getMediaStreamTrackOrDataTrackTransceiverDeferred = options.getMediaStreamTrackOrDataTrackTransceiverDeferred
+  options.getTrackTransceiverDeferred = options.getTrackTransceiverDeferred
     || defer();
-  options.getMediaStreamTrackOrDataTrackTransceiver = options.getMediaStreamTrackOrDataTrackTransceiver
-    || sinon.spy(() => options.getMediaStreamTrackOrDataTrackTransceiverDeferred.promise);
+  options.getTrackTransceiver = options.getTrackTransceiver
+    || sinon.spy(() => options.getTrackTransceiverDeferred.promise);
   options.RemoteTrackV2 = options.RemoteTrackV2 || makeRemoteTrackV2Constructor(options);
 
   options.participant = options.participant || makeRemoteParticipantV2(options);
@@ -1018,7 +1018,7 @@ RemoteParticipantStateBuilder.prototype.setTracks = function setTracks(tracks) {
 };
 
 function makeRemoteParticipantV2(options) {
-  return new RemoteParticipantV2(options, options.getMediaStreamTrackOrDataTrackTransceiver, options);
+  return new RemoteParticipantV2(options, options.getTrackTransceiver, options);
 }
 
 function makeRemoteTrackV2Constructor(testOptions) {
@@ -1026,7 +1026,7 @@ function makeRemoteTrackV2Constructor(testOptions) {
   testOptions.remoteTrackV2s = testOptions.remoteTrackV2s || [];
   return function RemoteTrackV2(trackState) {
     this.id = trackState.id;
-    this.setMediaStreamTrackOrDataTrackTransceiver = sinon.spy(() => {});
+    this.setTrackTransceiver = sinon.spy(() => {});
     this.update = sinon.spy(() => this);
     testOptions.remoteTrackV2s.push(this);
   };
