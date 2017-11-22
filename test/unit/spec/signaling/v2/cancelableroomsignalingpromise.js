@@ -28,12 +28,12 @@ describe('createCancelableRoomSignalingPromise', () => {
     assert(test.peerConnectionManager.setConfiguration.calledOnce);
   });
 
-  it('calls .setMediaStreamTracksAndDataTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
+  it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
     const track1 = {
-      mediaStreamTrackOrDataTrackTransceiver: {}
+      trackTransceiver: {}
     };
     const track2 = {
-      mediaStreamTrackOrDataTrackTransceiver: {}
+      trackTransceiver: {}
     };
     const test = makeTest({
       tracks: [
@@ -41,8 +41,8 @@ describe('createCancelableRoomSignalingPromise', () => {
         track2
       ]
     });
-    assert.deepEqual([track1.mediaStreamTrackOrDataTrackTransceiver, track2.mediaStreamTrackOrDataTrackTransceiver],
-      test.peerConnectionManager.setMediaStreamTracksAndDataTrackSenders.args[0][0]);
+    assert.deepEqual([track1.trackTransceiver, track2.trackTransceiver],
+      test.peerConnectionManager.setTrackSenders.args[0][0]);
   });
 
   it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
@@ -400,8 +400,8 @@ function makePeerConnectionManagerConstructor(testOptions) {
     const peerConnectionManager = new EventEmitter();
     peerConnectionManager.close = sinon.spy(() => {});
     peerConnectionManager.setConfiguration = sinon.spy(() => {});
-    peerConnectionManager.setMediaStreamTracksAndDataTrackSenders = sinon.spy(() => {});
-    peerConnectionManager.getRemoteMediaStreamTracksAndDataTrackReceivers = sinon.spy(() => []);
+    peerConnectionManager.setTrackSenders = sinon.spy(() => {});
+    peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
     peerConnectionManager.update = sinon.spy(() => {});
     peerConnectionManager.dequeue = sinon.spy(() => {});
     peerConnectionManager.createAndOffer = sinon.spy(() => {
