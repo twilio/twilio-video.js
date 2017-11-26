@@ -139,11 +139,11 @@ describe('PeerConnectionV2', () => {
 
     [
       ['never been added', () => {}],
-      ['been added', (test, trackSender, stream) => {
-        test.pcv2.addMediaTrackSender(trackSender, stream);
+      ['been added', (test, trackSender) => {
+        test.pcv2.addMediaTrackSender(trackSender);
       }],
-      ['been removed', (test, trackSender, stream) => {
-        test.pcv2.addMediaTrackSender(trackSender, stream);
+      ['been removed', (test, trackSender) => {
+        test.pcv2.addMediaTrackSender(trackSender);
         test.pcv2.removeMediaTrackSender(trackSender);
       }]
     ].forEach(([scenario, setup]) => {
@@ -153,9 +153,9 @@ describe('PeerConnectionV2', () => {
           const tracks = [{ id: 1 }];
           stream = { getTracks() { return tracks; } };
           const trackSender = makeMediaTrackSender(tracks[0]);
-          setup(test, trackSender, stream);
+          setup(test, trackSender);
           test.pc.addTrack = sinon.spy(() => {});
-          result = test.pcv2.addMediaTrackSender(trackSender, stream);
+          result = test.pcv2.addMediaTrackSender(trackSender);
         });
 
         it('returns undefined', () => {
@@ -575,11 +575,11 @@ describe('PeerConnectionV2', () => {
 
     [
       ['never been added', () => {}],
-      ['been added', (test, trackSender, stream) => {
-        test.pcv2.addMediaTrackSender(trackSender, stream);
+      ['been added', (test, trackSender) => {
+        test.pcv2.addMediaTrackSender(trackSender);
       }],
-      ['been removed', (test, trackSender, stream) => {
-        test.pcv2.addMediaTrackSender(trackSender, stream);
+      ['been removed', (test, trackSender) => {
+        test.pcv2.addMediaTrackSender(trackSender);
         test.pcv2.removeMediaTrackSender(trackSender);
       }]
     ].forEach(([scenario, setup]) => {

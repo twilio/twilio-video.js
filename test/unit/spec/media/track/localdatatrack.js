@@ -97,7 +97,7 @@ describe('LocalDataTrack', () => {
           options[option] = value;
         }
         track = new LocalDataTrack(options);
-        sender = track._dataTrackSender;
+        sender = track._trackSender;
       });
 
       if (isPresent) {

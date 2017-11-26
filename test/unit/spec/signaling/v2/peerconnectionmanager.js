@@ -102,11 +102,7 @@ describe('PeerConnectionManager', () => {
       const mediaStream = makeMediaStream();
       test.peerConnectionManager.setTrackSenders(mediaStream.getTracks().map(makeTrackSender));
       await test.peerConnectionManager.createAndOffer();
-
-      assert.deepEqual(test.peerConnectionManager._localMediaStream.getTracks(),
-        test.peerConnectionV2s[0].addMediaTrackSender.args.map(([trackSender]) => trackSender.track));
-
-      assert.deepEqual(test.peerConnectionManager._localMediaStream.getTracks(), mediaStream.getTracks());
+      assert.deepEqual(mediaStream.getTracks(), test.peerConnectionV2s[0].addMediaTrackSender.args.map(([trackSender]) => trackSender.track));
     });
 
     it('calls addDataTrackSender with the previously-added DataTrackSenders on the new PeerConnectionV2', async () => {

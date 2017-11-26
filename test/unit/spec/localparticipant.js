@@ -22,7 +22,7 @@ const LocalAudioTrack = sinon.spy(function LocalAudioTrack(mediaStreamTrack, opt
     this.kind = mediaStreamTrack.kind;
     this.mediaStreamTrack = mediaStreamTrack;
     this.name = options.name || mediaStreamTrack.id;
-    this._mediaTrackSender = new MediaTrackSender(this.mediaStreamTrack);
+    this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
   }
   this.stop = sinon.spy();
 });
@@ -36,7 +36,7 @@ const LocalVideoTrack = sinon.spy(function LocalVideoTrack(mediaStreamTrack, opt
     this.kind = mediaStreamTrack.kind;
     this.mediaStreamTrack = mediaStreamTrack;
     this.name = options.name || mediaStreamTrack.id;
-    this._mediaTrackSender = new MediaTrackSender(this.mediaStreamTrack);
+    this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
   }
   this.stop = sinon.spy();
 });
@@ -49,7 +49,7 @@ const LocalDataTrack = sinon.spy(function LocalDataTrack(dataTrackSender, option
     this.id = dataTrackSender.id;
     this.kind = 'data';
     this.name = options.name || dataTrackSender.id;
-    this._dataTrackSender = dataTrackSender;
+    this._trackSender = dataTrackSender;
   }
 });
 inherits(LocalDataTrack, EventEmitter);
@@ -520,7 +520,7 @@ describe('LocalParticipant', () => {
 
               track = new test[`Local${capitalize(kind)}Track`](
                 (localTrack instanceof FakeMediaStreamTrack || localTrack instanceof DataTrackSender)
-                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._dataTrackSender));
+                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._trackSender));
 
               test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
               test.participant.tracks.set(localTrack.id, track);
@@ -563,7 +563,7 @@ describe('LocalParticipant', () => {
 
               track = new test[`Local${capitalize(kind)}Track`](
                 (localTrack instanceof FakeMediaStreamTrack || localTrack instanceof DataTrackSender)
-                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._dataTrackSender));
+                  ? localTrack : (localTrack.mediaStreamTrack || localTrack._trackSender));
 
               trackSignaling = makeTrackSignaling(localTrack.id, 'foo');
               test.signaling.tracks.set(localTrack.id, trackSignaling);
@@ -619,9 +619,9 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } }, name: 'baz' };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
           test.participant.emit('trackAdded', track);
-          assert.equal(track._mediaTrackSender, test.signaling.addTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
       });
@@ -629,9 +629,9 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connected"', () => {
         it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } }, name: 'baz' };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
           test.participant.emit('trackAdded', track);
-          assert.equal(track._mediaTrackSender, test.signaling.addTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
       });
@@ -639,7 +639,7 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
@@ -649,7 +649,7 @@ describe('LocalParticipant', () => {
         it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackAdded', track);
           assert(!test.signaling.addTrack.calledOnce);
         });
@@ -662,7 +662,7 @@ describe('LocalParticipant', () => {
           context(`when the LocalParticipant .state is "${state}"`, () => {
             it(`should call .${trackMethod} on the LocalTrack's LocalTrackPublicationSignaling`, () => {
               const test = makeTest({ state });
-              const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+              const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
               const trackSignaling = { id: 'foo', [trackMethod]: sinon.spy() };
               test.signaling.tracks = { get: () => trackSignaling };
               test.participant.emit(`track${capitalize(trackMethod)}d`, track);
@@ -675,7 +675,7 @@ describe('LocalParticipant', () => {
           context(`when the LocalParticipant .state ${action} "disconnected"`, () => {
             it(`should not call .${trackMethod} on the LocalTrack's LocalTrackPublicationSignaling`, () => {
               const test = makeTest({ state: action === 'is' ? 'disconnected' : 'connected' });
-              const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+              const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
               const trackSignaling = { id: 'foo', [trackMethod]: sinon.spy() };
 
               test.signaling.tracks = { get: () => trackSignaling };
@@ -695,25 +695,25 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackRemoved', track);
-          assert.equal(track._mediaTrackSender, test.signaling.removeTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "connected"', () => {
         it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackRemoved', track);
-          assert.equal(track._mediaTrackSender, test.signaling.removeTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
         });
       });
 
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
@@ -723,7 +723,7 @@ describe('LocalParticipant', () => {
         it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
           test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _mediaTrackSender: { track: { enabled: true } } };
+          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
           test.participant.emit('trackRemoved', track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
@@ -735,7 +735,7 @@ describe('LocalParticipant', () => {
         context('and a LocalTrack emits "stopped"', () => {
           it('emits "trackStopped"', () => {
             const track = new EventEmitter();
-            track._mediaTrackSender = { track: { enabled: true } };
+            track._trackSender = { track: { enabled: true } };
             let trackStopped;
             const test = makeTest({ tracks: [track] });
             test.participant.once('trackStopped', track => { trackStopped = track; });
@@ -749,7 +749,7 @@ describe('LocalParticipant', () => {
         context('and a LocalTrack emits "stopped"', () => {
           it('does not emit "trackStopped"', () => {
             const track = new EventEmitter();
-            track._mediaTrackSender = { track: { enabled: true } };
+            track._trackSender = { track: { enabled: true } };
             let trackStopped;
             const test = makeTest({ tracks: [track] });
             test.signaling.emit('stateChanged', 'disconnected');
@@ -779,13 +779,13 @@ describe('LocalParticipant', () => {
         it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const track = new EventEmitter();
           track.id = 'foo';
-          track._mediaTrackSender = { track: { enabled: true } };
+          track._trackSender = { track: { enabled: true } };
           track.name = 'baz';
           const test = makeTest({
             state: 'connecting',
             tracks: [track]
           });
-          assert.equal(track._mediaTrackSender, test.signaling.addTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
       });
@@ -794,13 +794,13 @@ describe('LocalParticipant', () => {
         it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const track = new EventEmitter();
           track.id = 'foo';
-          track._mediaTrackSender = { track: { enabled: true } };
+          track._trackSender = { track: { enabled: true } };
           track.name = 'baz';
           const test = makeTest({
             state: 'connected',
             tracks: [track]
           });
-          assert.equal(track._mediaTrackSender, test.signaling.addTrack.args[0][0]);
+          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
       });
@@ -809,7 +809,7 @@ describe('LocalParticipant', () => {
         it('does not call .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const track = new EventEmitter();
           track.id = 'foo';
-          track._mediaTrackSender = { track: { enabled: true } };
+          track._trackSender = { track: { enabled: true } };
           const test = makeTest({
             state: 'disconnected',
             tracks: [track]
