@@ -18,7 +18,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     }, {});
 
     let browsers = {
-      chrome: ['ChromeWebRTC', 'ChromeWebRTC_1_0'],
+      chrome: ['ChromeWebRTC'],
+      chrome_webrtc_1_0: ['ChromeWebRTC_1_0'],
       firefox: ['FirefoxWebRTC'],
       safari: ['SafariTechPreview']
     };
