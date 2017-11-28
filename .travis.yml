@@ -24,6 +24,12 @@ matrix:
       env: BROWSER=chrome BVER=stable TOPOLOGY=SFU
 
     - os: linux
+      env: BROWSER=chrome_webrtc_1_0 BVER=stable TOPOLOGY=P2P
+
+    - os: linux
+      env: BROWSER=chrome_webrtc_1_0 BVER=stable TOPOLOGY=SFU
+
+    - os: linux
       env: BROWSER=chrome BVER=beta TOPOLOGY=P2P
 
     - os: linux
