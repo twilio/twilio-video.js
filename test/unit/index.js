@@ -57,6 +57,7 @@ require('./spec/util/index');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/sdp');
+require('./spec/util/sdp/issue8329');
 require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');

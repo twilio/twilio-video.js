@@ -1,3 +1,15 @@
+1.6.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Added a workaround for WebRTC
+  [Issue 8329](https://bugs.chromium.org/p/webrtc/issues/detail?id=8329). This
+  issue caused Track failures in Chrome whenever participating in Rooms from a
+  device that supported duplicate codecs (for example, H.264 at two different
+  profile levels). (JSDK-1645)
+
 1.6.0 (October 24, 2017)
 ========================
 

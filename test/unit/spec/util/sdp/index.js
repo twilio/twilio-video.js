@@ -1,9 +1,11 @@
 'use strict';
 
 const assert = require('assert');
-const { combinationContext } = require('../../../lib/util');
-const { makeSdpWithTracks } = require('../../../lib/mocksdp');
-const { setBitrateParameters, setCodecPreferences } = require('../../../../lib/util/sdp');
+
+const { setBitrateParameters, setCodecPreferences } = require('../../../../../lib/util/sdp');
+
+const { combinationContext } = require('../../../../lib/util');
+const { makeSdpWithTracks } = require('../../../../lib/mocksdp');
 
 describe('setBitrateParameters', () => {
   context('when there is no existing b= line in the SDP', () => {
