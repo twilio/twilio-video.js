@@ -2,11 +2,11 @@
 
 const assert = require('assert');
 
-const { flatMap } = require('../../../../lib/util');
-const { setBitrateParameters, setCodecPreferences, setSimulcast } = require('../../../../lib/util/sdp');
+const { flatMap } = require('../../../../../lib/util');
+const { setBitrateParameters, setCodecPreferences, setSimulcast } = require('../../../../../lib/util/sdp');
 
-const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../lib/mocksdp');
-const { combinationContext } = require('../../../lib/util');
+const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../../lib/mocksdp');
+const { combinationContext } = require('../../../../lib/util');
 
 describe('setBitrateParameters', () => {
   context('when there is no existing b= line in the SDP', () => {
