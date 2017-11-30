@@ -16,24 +16,26 @@ describe('LocalTrackPublicationV2', () => {
       context(`when called with${shouldUseNew ? '' : 'out'} "new"`, () => {
         let localTrackPublicationV2;
         let mediaStreamTrack;
+        let mediaTrackSender;
         let name;
 
         before(() => {
           mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
           mediaStreamTrack.enabled = makeEnabled();
+          mediaTrackSender = makeTrackSender(mediaStreamTrack);
           name = makeUUID();
           localTrackPublicationV2 = shouldUseNew
-            ? new LocalTrackPublicationV2(mediaStreamTrack, name)
+            ? new LocalTrackPublicationV2(mediaTrackSender, name)
             // eslint-disable-next-line new-cap
-            : LocalTrackPublicationV2(mediaStreamTrack, name);
+            : LocalTrackPublicationV2(mediaTrackSender, name);
         });
 
         it('should return a LocalTrackPublicationV2', () => {
           assert(localTrackPublicationV2 instanceof LocalTrackPublicationV2);
         });
 
-        it('should set .mediaStreamTrack', () => {
-          assert.equal(localTrackPublicationV2.mediaStreamTrackOrDataTrackTransceiver, mediaStreamTrack);
+        it('should set .trackTransceiver', () => {
+          assert.equal(localTrackPublicationV2.trackTransceiver, mediaTrackSender);
         });
 
         it('should set .sid to null', () => {
@@ -64,7 +66,7 @@ describe('LocalTrackPublicationV2', () => {
       before(() => {
         mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         mediaStreamTrack.enabled = makeEnabled();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
+        localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID());
         state = localTrackPublicationV2.getState();
       });
 
@@ -93,7 +95,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'ready', sid: makeSid() };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()));
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -126,7 +128,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'failed', error: { code: 1, message: 'foo' } };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(new FakeMediaStreamTrack());
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()));
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -164,7 +166,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       sid = makeSid();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack, makeUUID());
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID());
       updated = false;
     });
 
@@ -257,7 +259,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       error = new Error('Track publication failed');
-      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaStreamTrack);
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack));
       updated = false;
     });
 
@@ -350,4 +352,13 @@ function makeKind() {
 
 function makeSid() {
   return makeUUID();
+}
+
+function makeTrackSender(mediaStreamTrack) {
+  const { id, kind } = mediaStreamTrack;
+  return {
+    id,
+    kind,
+    track: mediaStreamTrack
+  };
 }

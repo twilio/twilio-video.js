@@ -603,9 +603,9 @@ describe('RemoteTrackV2', () => {
     });
   });
 
-  describe('#getMediaStreamTrackOrDataTrackTransceiver', () => {
-    context('called after setMediaStreamTrackOrDataTrackTransceiver', () => {
-      it('returns a Promise that resolves to the MediaStreamTrack passed to setMediaStreamTrackOrDataTrackTransceiver', () => {
+  describe('#getTrackTransceiver', () => {
+    context('called after setTrackTransceiver', () => {
+      it('returns a Promise that resolves to the MediaTrackReceiver passed to setTrackTransceiver', () => {
         const track = new RemoteTrackV2({
           id: makeId(),
           enabled: makeEnabled(),
@@ -613,16 +613,16 @@ describe('RemoteTrackV2', () => {
           name: makeUUID(),
           sid: makeSid()
         });
-        const mediaStreamTrack = {};
-        track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack);
-        return track.getMediaStreamTrackOrDataTrackTransceiver().then(track => {
-          assert.equal(mediaStreamTrack, track);
+        const mediaTrackReceiver = {};
+        track.setTrackTransceiver(mediaTrackReceiver);
+        return track.getTrackTransceiver().then(trackReceiver => {
+          assert.equal(mediaTrackReceiver, trackReceiver);
         });
       });
     });
 
-    context('called before setMediaStreamTrackOrDataTrackTransceiver', () => {
-      it('returns a Promise that resolves to the MediaStreamTrack eventually passed to setMediaStreamTrackOrDataTrackTransceiver', () => {
+    context('called before setTrackTransceiver', () => {
+      it('returns a Promise that resolves to the MediaTrackReceiver eventually passed to setTrackTransceiver', () => {
         const track = new RemoteTrackV2({
           id: makeId(),
           enabled: makeEnabled(),
@@ -630,17 +630,17 @@ describe('RemoteTrackV2', () => {
           name: makeUUID(),
           sid: makeSid()
         });
-        const mediaStreamTrack = {};
-        const promise = track.getMediaStreamTrackOrDataTrackTransceiver().then(track => {
-          assert.equal(mediaStreamTrack, track);
+        const mediaTrackReceiver = {};
+        const promise = track.getTrackTransceiver().then(trackReceiver => {
+          assert.equal(mediaTrackReceiver, trackReceiver);
         });
-        track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack);
+        track.setTrackTransceiver(mediaTrackReceiver);
         return promise;
       });
     });
   });
 
-  describe('#setMediaStreamTrackOrDataTrackTransceiver', () => {
+  describe('#setTrackTransceiver', () => {
     it('returns the RemoteTrackV2', () => {
       const track = new RemoteTrackV2({
         id: makeId(),
@@ -649,8 +649,8 @@ describe('RemoteTrackV2', () => {
         name: makeUUID(),
         sid: makeSid()
       });
-      const mediaStreamTrack = {};
-      assert.equal(track, track.setMediaStreamTrackOrDataTrackTransceiver(mediaStreamTrack));
+      const mediaTrackReceiver = {};
+      assert.equal(track, track.setTrackTransceiver(mediaTrackReceiver));
     });
   });
 });

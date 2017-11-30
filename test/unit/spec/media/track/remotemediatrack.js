@@ -3,6 +3,7 @@
 const assert = require('assert');
 const log = require('../../../../lib/fakelog');
 const { capitalize, randomBoolean, randomName } = require('../../../../lib/util');
+const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
 const RemoteAudioTrack = require('../../../../../lib/media/track/remoteaudiotrack');
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { EventEmitter } = require('events');
@@ -23,11 +24,12 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
               function makeTrack() {
                 const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+                const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
                 const signaling = makeSignaling(randomBoolean(), randomBoolean(), randomName());
                 return shouldUseNew
-                  ? new RemoteTrack(mediaStreamTrack, signaling, getOptions())
+                  ? new RemoteTrack(mediaTrackReceiver, signaling, getOptions())
                   // eslint-disable-next-line new-cap
-                  : RemoteTrack(mediaStreamTrack, signaling, getOptions());
+                  : RemoteTrack(mediaTrackReceiver, signaling, getOptions());
               }
 
               before(() => {
@@ -61,8 +63,9 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+            const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
             const signaling = makeSignaling(randomBoolean(), isSubscribed, randomName());
-            track = new RemoteTrack(mediaStreamTrack, signaling);
+            track = new RemoteTrack(mediaTrackReceiver, signaling);
             track.once('unsubscribed', track => { unsubscribed = track; });
             track._unsubscribe();
           });

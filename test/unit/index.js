@@ -14,6 +14,7 @@ require('./spec/room');
 require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
+require('./spec/transceiver');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');
@@ -26,8 +27,11 @@ require('./spec/media/track/mediatrack');
 require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localtrackpublication');
+require('./spec/media/track/receiver');
 require('./spec/media/track/remotedatatrack');
 require('./spec/media/track/remotemediatrack');
+require('./spec/media/track/sender');
+require('./spec/media/track/transceiver');
 
 require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
@@ -45,6 +49,8 @@ require('./spec/util');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/sdp');
+require('./spec/util/trackmatcher/mid');
+require('./spec/util/trackmatcher/ordered');
 require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');
