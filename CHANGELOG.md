@@ -22,6 +22,7 @@ Bug Fixes
   device that supported duplicate codecs (for example, H.264 at two different
   profile levels). (JSDK-1645)
 - Fixed some code that could lead to a renegotiation loop in Firefox.
+- Fixed a memory leak in an internal class, PeerConnectionV2.
 
 1.6.0 (October 24, 2017)
 ========================
