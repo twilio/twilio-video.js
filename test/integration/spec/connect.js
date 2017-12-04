@@ -743,6 +743,12 @@ describe('connect', function() {
 function createCodecMap(mediaSection) {
   return getCodecPayloadTypes(mediaSection).reduce((codecMap, payloadType) => {
     const rtpmapPattern = new RegExp('a=rtpmap:' + payloadType + ' ([^/]+)');
+    const matches = mediaSection.match(rtpmapPattern);
+    if (!matches) {
+      const message = `Failed to find an a=rtpmap attribute for payload type ${payloadType}; media section was\n${mediaSection}`;
+      console.error(message);
+      throw new Error(message);
+    }
     const codecName = mediaSection.match(rtpmapPattern)[1].toLowerCase();
     const payloadTypes = codecMap.get(codecName) || [];
     codecMap.set(codecName, payloadTypes.concat(payloadType));
