@@ -11,7 +11,7 @@ const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('
 const createLocalTracks = require('../../../lib/createlocaltracks');
 const getToken = require('../../lib/token');
 const { guessBrowser } = require('../../../lib/util');
-const { getMediaSections } = require('../../../lib/util/sdp');
+const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../lib/util/sdp');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
 const env = require('../../env');
@@ -465,11 +465,11 @@ describe('connect', function() {
         assert(pc.remoteDescription.sdp);
         return getMediaSections(pc.remoteDescription.sdp);
       }).forEach(section => {
-        const codecMap = createCodecMap(section);
+        const codecMap = createCodecMapForMediaSection(section);
         const expectedPayloadTypes = /m=audio/.test(section)
           ? flatMap(testOptions.preferredAudioCodecs, codecName => codecMap.get(codecName.toLowerCase()) || [])
           : flatMap(testOptions.preferredVideoCodecs, codecName => codecMap.get(codecName.toLowerCase()) || []);
-        const actualPayloadTypes = getCodecPayloadTypes(section);
+        const actualPayloadTypes = getPayloadTypes(section);
         expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
       });
     });
@@ -500,8 +500,8 @@ describe('connect', function() {
         assert(pc.remoteDescription.sdp);
         return getMediaSections(pc.remoteDescription.sdp, 'audio');
       }).forEach(section => {
-        const codecMap = createCodecMap(section);
-        const payloadTypes = getCodecPayloadTypes(section);
+        const codecMap = createCodecMapForMediaSection(section);
+        const payloadTypes = getPayloadTypes(section);
         const fixedBitratePayloadTypes = new Set([
           ...(codecMap.get('pcma') || []),
           ...(codecMap.get('pcmu') || [])
@@ -721,9 +721,6 @@ describe('connect', function() {
       const token = getToken(identity);
       dataTrack = new LocalDataTrack();
       tracks = [dataTrack];
-      if (isFirefox) {
-        tracks.push(await createLocalAudioTrack());
-      }
       const options = Object.assign({ tracks }, defaultOptions);
       room = await connect(token, options);
     });
@@ -743,18 +740,8 @@ describe('connect', function() {
   });
 });
 
-function createCodecMap(mediaSection) {
-  return getCodecPayloadTypes(mediaSection).reduce((codecMap, payloadType) => {
-    const rtpmapPattern = new RegExp('a=rtpmap:' + payloadType + ' ([^/]+)');
-    const codecName = mediaSection.match(rtpmapPattern)[1].toLowerCase();
-    const payloadTypes = codecMap.get(codecName) || [];
-    codecMap.set(codecName, payloadTypes.concat(payloadType));
-    return codecMap;
-  }, new Map());
-}
-
-function getCodecPayloadTypes(mediaSection) {
-  return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
+function getPayloadTypes(mediaSection) {
+  return [...createPtToCodecName(mediaSection).keys()];
 }
 
 async function setup(testOptions, otherOptions, nTracks, alone) {
@@ -769,7 +756,9 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
-  await participantsConnected(thisRoom, thoseRooms.length);
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
   const thoseParticipants = [...thisRoom.participants.values()];
   await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);

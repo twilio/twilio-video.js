@@ -221,7 +221,7 @@ const isSafari = guess === 'safari';
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
-      let dummyAudioTrack;
+      let dataChannelSendInterval;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -261,10 +261,6 @@ const isSafari = guess === 'safari';
         const tracks = when === 'previously'
           ? [thisTrack]
           : [];
-        if (isFirefox && kind === 'data') {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -322,8 +318,9 @@ const isSafari = guess === 'safari';
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
+        if (dataChannelSendInterval) {
+          clearInterval(dataChannelSendInterval);
+          dataChannelSendInterval = null;
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
@@ -454,7 +451,6 @@ const isSafari = guess === 'safari';
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      let dummyAudioTrack;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -485,10 +481,6 @@ const isSafari = guess === 'safari';
         }
 
         const tracks = [thisTrack];
-        if (isFirefox && kind === 'data') {
-          dummyAudioTrack = await createLocalAudioTrack();
-          tracks.push(dummyAudioTrack);
-        }
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -549,9 +541,6 @@ const isSafari = guess === 'safari';
       after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
-        }
-        if (dummyAudioTrack) {
-          dummyAudioTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
       });
