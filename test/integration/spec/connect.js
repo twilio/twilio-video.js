@@ -11,7 +11,7 @@ const LocalDataTrack = require('../../../lib/media/track/localdatatrack');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { getMediaSections } = require('../../../lib/util/sdp');
+const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../lib/util/sdp');
 const TwilioError = require('../../../lib/util/twilioerror');
 const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
@@ -452,11 +452,11 @@ describe('connect', function() {
           assert(pc.remoteDescription.sdp);
           return getMediaSections(pc.remoteDescription.sdp);
         }).forEach(section => {
-          const codecMap = createCodecMap(section);
+          const codecMap = createCodecMapForMediaSection(section);
           const expectedPayloadTypes = /m=audio/.test(section)
             ? flatMap(testOptions.preferredAudioCodecs, codec => codecMap.get(codec.toLowerCase()) || [])
             : flatMap(testOptions.preferredVideoCodecs, codec => codecMap.get((codec.codec || codec).toLowerCase()) || []);
-          const actualPayloadTypes = getCodecPayloadTypes(section);
+          const actualPayloadTypes = getPayloadTypes(section);
           expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
         });
       });
@@ -486,8 +486,8 @@ describe('connect', function() {
         assert(pc.remoteDescription.sdp);
         return getMediaSections(pc.remoteDescription.sdp, 'audio');
       }).forEach(section => {
-        const codecMap = createCodecMap(section);
-        const payloadTypes = getCodecPayloadTypes(section);
+        const codecMap = createCodecMapForMediaSection(section);
+        const payloadTypes = getPayloadTypes(section);
         const fixedBitratePayloadTypes = new Set([
           ...(codecMap.get('pcma') || []),
           ...(codecMap.get('pcmu') || [])
@@ -765,18 +765,8 @@ describe('connect', function() {
   });
 });
 
-function createCodecMap(mediaSection) {
-  return getCodecPayloadTypes(mediaSection).reduce((codecMap, payloadType) => {
-    const rtpmapPattern = new RegExp('a=rtpmap:' + payloadType + ' ([^/]+)');
-    const codecName = mediaSection.match(rtpmapPattern)[1].toLowerCase();
-    const payloadTypes = codecMap.get(codecName) || [];
-    codecMap.set(codecName, payloadTypes.concat(payloadType));
-    return codecMap;
-  }, new Map());
-}
-
-function getCodecPayloadTypes(mediaSection) {
-  return mediaSection.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
+function getPayloadTypes(mediaSection) {
+  return [...createPtToCodecName(mediaSection).keys()];
 }
 
 async function setup(testOptions, otherOptions, nTracks, alone) {
