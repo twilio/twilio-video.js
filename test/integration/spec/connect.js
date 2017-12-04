@@ -721,7 +721,7 @@ describe('connect', function() {
       const token = getToken(identity);
       dataTrack = new LocalDataTrack();
       tracks = [dataTrack];
-      const options = Object.assign({ tracks }, defaults);
+      const options = Object.assign({ tracks }, defaultOptions);
       room = await connect(token, options);
     });
 

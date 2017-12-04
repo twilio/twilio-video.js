@@ -5,11 +5,11 @@ if (typeof window === 'undefined') {
 }
 
 const assert = require('assert');
-const connect = require('../../../lib/connect');
+const { LocalDataTrack, connect, createLocalTracks } = require('../../../lib');
 const getToken = require('../../lib/token');
 const { flatMap } = require('../../../lib/util');
 const env = require('../../env');
-const { participantsConnected, randomName, tracksAdded, waitForTracks } = require('../../lib/util');
+const { participantsConnected, randomName, tracksAdded, tracksPublished, trackStarted, waitForTracks } = require('../../lib/util');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 
 const options = ['ecsServer', 'logLevel', 'wsServer', 'wsServerInsights'].reduce((options, option) => {
@@ -113,7 +113,7 @@ describe('Room', function() {
         const room = await connect(token, Object.assign({
           name,
           tracks: [localTrack]
-        }, defaults));
+        }, options));
 
         // 3. Wait for the LocalTrack to be published.
         await tracksPublished(room.localParticipant, 1, localTrack.kind);
