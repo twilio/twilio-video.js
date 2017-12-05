@@ -18,6 +18,18 @@ env:
 matrix:
   include:
     - os: linux
+      env: BROWSER=chrome BVER=stable TOPOLOGY=P2P
+
+    - os: linux
+      env: BROWSER=chrome BVER=stable TOPOLOGY=SFU
+
+    - os: linux
+      env: BROWSER=chrome BVER=beta TOPOLOGY=P2P
+
+    - os: linux
+      env: BROWSER=chrome BVER=beta TOPOLOGY=SFU
+
+    - os: linux
       env: BROWSER=firefox BVER=stable TOPOLOGY=P2P
 
     - os: linux
