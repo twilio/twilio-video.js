@@ -32,6 +32,7 @@ Bug Fixes
   RTCDataChannel's `binaryType` to "arraybuffer" in order to ensure consistent
   behavior across browsers. (JSDK-1627)
 - We always stringify `name`s passed via LocalTrackOptions now. (JSDK-1565)
+- Fixed some code that could lead to a renegotiation loop in Firefox.
 
 1.6.0 (October 24, 2017)
 ========================
