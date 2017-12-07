@@ -12,6 +12,7 @@ Bug Fixes
   of ArrayBuffers (as in Chrome and Safari). We now set the underlying
   RTCDataChannel's `binaryType` to "arraybuffer" in order to ensure consistent
   behavior across browsers. (JSDK-1627)
+- We always stringify `name`s passed via LocalTrackOptions now. (JSDK-1565)
 - Added a workaround for WebRTC
   [Issue 8329](https://bugs.chromium.org/p/webrtc/issues/detail?id=8329). This
   issue caused Track failures in Chrome whenever participating in Rooms from a
