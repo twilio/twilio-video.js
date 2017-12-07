@@ -1227,17 +1227,14 @@ describe('PeerConnectionV2', () => {
         beforeEach(async () => {
           test = makeTest({
             offers: 1,
-            answers: 1
+            answers: [makeAnswer({ application: !lacks })]
           });
           descriptions = [];
 
           const dataTrackSender = makeDataTrackSender();
           test.pcv2.addDataTrackSender(dataTrackSender);
 
-          const offer = makeOffer();
-          if (!lacks) {
-            offer.sdp += 'm=application foo bar baz\r\na=sendrecv\r\n';
-          }
+          const offer = makeOffer({ application: !lacks });
           desc = test.state().setDescription(offer, 1);
 
           test.pcv2.on('description', description => descriptions.push(description));
@@ -1806,6 +1803,9 @@ function makeDescription(type, options) {
       type === 'pranswer') {
     const session = 'session' in options ? options.session : Number.parseInt(Math.random() * 1000);
     description.sdp = 'o=- ' + session + '\r\n';
+    if (options.application) {
+      description.sdp += 'm=application foo bar baz\r\na=sendrecv\r\n';
+    }
     if (options.ufrag) {
       description.sdp += 'a=ice-ufrag:' + options.ufrag + '\r\n';
     }
