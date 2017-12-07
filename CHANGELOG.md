@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where, if you published a LocalDataTrack, unpublished it, and then
+  published it again, you would be unable to `send` data over it again.
+  (JSDK-1580)
 - We've worked around a long-standing issue with Firefox's RTCIceTransport
   behavior that required you to always add a LocalAudioTrack. You should now be
   able to connect to Rooms with, for example, only a LocalVideoTrack, only a
