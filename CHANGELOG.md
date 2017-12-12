@@ -17,6 +17,9 @@ New Features
 
   We recommend you only enable this setting in Group Rooms.
 
+1.6.1 (December 12, 2017)
+=========================
+
 Bug Fixes
 ---------
 
@@ -32,7 +35,13 @@ Bug Fixes
   RTCDataChannel's `binaryType` to "arraybuffer" in order to ensure consistent
   behavior across browsers. (JSDK-1627)
 - We always stringify `name`s passed via LocalTrackOptions now. (JSDK-1565)
+- Added a workaround for WebRTC
+  [Issue 8329](https://bugs.chromium.org/p/webrtc/issues/detail?id=8329). This
+  issue caused Track failures in Chrome whenever participating in Rooms from a
+  device that supported duplicate codecs (for example, H.264 at two different
+  profile levels). (JSDK-1645)
 - Fixed some code that could lead to a renegotiation loop in Firefox.
+- Fixed a memory leak in an internal class, PeerConnectionV2.
 
 1.6.0 (October 24, 2017)
 ========================
