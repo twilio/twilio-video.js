@@ -17,6 +17,11 @@ New Features
 
   We recommend you only enable this setting in Group Rooms.
 
+Bug Fixes
+---------
+
+- Fixed a memory leak in an internal dependency, SIP.js.
+
 1.6.1 (December 12, 2017)
 =========================
 

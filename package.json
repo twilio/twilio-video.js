@@ -92,7 +92,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/sip.js": "^0.7.6",
+    "@twilio/sip.js": "twilio/SIP.js#0.7.7-rc1",
     "@twilio/webrtc": "https://github.com/twilio/twilio-webrtc.js.git#2.0.0-rc1",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
