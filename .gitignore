@@ -4,6 +4,7 @@ browsers
 coverage
 dist
 node_modules
+test/lib/sdkdriver/lib
 npm-debug.log
 package-lock.json
 test.json

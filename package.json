@@ -22,6 +22,7 @@
     "url": "https://github.com/twilio/twilio-video.js.git"
   },
   "devDependencies": {
+    "@types/ws": "^3.2.1",
     "browserify": "^14.3.0",
     "cheerio": "^0.22.0",
     "chromedriver": "2.28.0",
@@ -47,7 +48,9 @@
     "selenium-webdriver": "3.3.0",
     "sinon": "^4.0.1",
     "travis-multirunner": "^4.0.0",
+    "ts-node": "^4.0.1",
     "twilio": "^2.11.1",
+    "typescript": "^2.6.2",
     "uglify-js": "^2.8.22",
     "vinyl-fs": "^2.4.4",
     "vinyl-source-stream": "^1.1.0",
