@@ -11,7 +11,8 @@
     "strictNullChecks": true,
     "noImplicitThis": true,
     "suppressImplicitAnyIndexErrors": true,
-    "outDir": "lib"
+    "outDir": "lib",
+    "rootDir": "src"
   },
   "include": [
     "src/**/*"
