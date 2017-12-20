@@ -1,10 +1,12 @@
+import { EventEmitter } from 'events';
+
 /**
  * A {@link Transport} represents an interface for communicating
  * between the mocha.js process that drives a cross-browser test
  * and the process in which the test is running.
  * @interface
  */
-interface Transport {
+interface Transport extends EventEmitter {
   close(): void;
   open(): Promise<void>;
   send(data: any): void;

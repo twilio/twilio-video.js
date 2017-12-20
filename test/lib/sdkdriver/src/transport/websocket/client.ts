@@ -1,6 +1,6 @@
-import Transport from '../';
 import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
+import Transport from '../';
 
 /**
  * WebSocket client {@link Transport}.

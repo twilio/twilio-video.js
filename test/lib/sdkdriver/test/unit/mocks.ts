@@ -46,3 +46,12 @@ WebSocket.Server = sinon.spy(function MockWebSocketServer(opts: any) {
 });
 
 inherits(WebSocket.Server, EventEmitter);
+
+export const Transport: any = sinon.spy(function MockTransport() {
+  EventEmitter.call(this);
+  this.close = sinon.spy(() => {});
+  this.open = sinon.spy(() => Promise.resolve());
+  this.send = sinon.spy(() => {});
+});
+
+inherits(Transport, EventEmitter);
