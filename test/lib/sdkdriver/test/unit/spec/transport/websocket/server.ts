@@ -4,12 +4,14 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 
 describe('WSServerTransport', () => {
+  const mockWebServer: any = { port: 2000 };
+
   describe('constructor', () => {
     let transport: WSServerTransport;
 
     it('should create an underlying WebSocket server with the given port', () => {
-      transport = new WSServerTransport(2000, { WebSocket });
-      sinon.assert.calledWith(WebSocket.Server, { port: 2000 });
+      transport = new WSServerTransport(mockWebServer, { WebSocket });
+      sinon.assert.calledWith(WebSocket.Server, { server: mockWebServer });
     });
   });
 
@@ -20,7 +22,7 @@ describe('WSServerTransport', () => {
     let wsServer: WebSocket.Server;
 
     before(async () => {
-      transport = new WSServerTransport(2000, { WebSocket });
+      transport = new WSServerTransport(mockWebServer, { WebSocket });
       const openPromise: Promise<void> = transport.open();
       wsConnection = new WebSocket('foo');
       wsServer = transport._wsServer;
@@ -47,7 +49,7 @@ describe('WSServerTransport', () => {
     let transport: WSServerTransport;
 
     beforeEach(() => {
-      transport = new WSServerTransport(2000, { WebSocket });
+      transport = new WSServerTransport(mockWebServer, { WebSocket });
     });
 
     it('should return a Promise', () => {
@@ -112,7 +114,7 @@ describe('WSServerTransport', () => {
 
         it(`should ${action} the given data`, async () => {
           const data: any = { bar: 'baz' };
-          const transport: WSServerTransport = new WSServerTransport(2000, { WebSocket });
+          const transport: WSServerTransport = new WSServerTransport(mockWebServer, { WebSocket });
           const openPromise: Promise<void> = transport.open();
           const wsConnection: WebSocket = new WebSocket('foo');
           const wsServer: WebSocket.Server = transport._wsServer;
@@ -134,7 +136,7 @@ describe('WSServerTransport', () => {
   describe('"message" event', () => {
     context('when the underlying WebSocket receives a message', () => {
       it('should emit a "message" event with the received JSON data on the WSServerTransport', async () => {
-        const transport: WSServerTransport = new WSServerTransport(2000, { WebSocket });
+        const transport: WSServerTransport = new WSServerTransport(mockWebServer, { WebSocket });
         const openPromise: Promise<void> = transport.open();
         const wsConnection: WebSocket = new WebSocket('foo');
         const wsServer: WebSocket.Server = transport._wsServer;

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { Server as HTTPServer } from 'http';
 import * as WebSocket from 'ws';
 import Transport from '../';
 
@@ -16,11 +17,12 @@ export default class WSServerTransport extends EventEmitter implements Transport
 
   /**
    * Constructor.
-   * @param {number} wsPort - The WebSocket server port.
+   * @param {HTTP.Server} webServer - The HTTP server shared by the
+   *   underlying WebSocket.Server
    * @param {TestDriver} testDriver - The {@link TestDriver} that connects
    *   to the {@link WSServerTransport}
    */
-  constructor(wsPort: number, deps: any = {}) {
+  constructor(webServer: HTTPServer, deps: any = {}) {
     super();
     this._deps = {
       WebSocket,
@@ -28,7 +30,7 @@ export default class WSServerTransport extends EventEmitter implements Transport
     };
     this._sendBuffer = [];
     this._wsConnection = null;
-    this._wsServer = new this._deps.WebSocket.Server({ port: wsPort });
+    this._wsServer = new this._deps.WebSocket.Server({ server: webServer });
   }
 
   /**
