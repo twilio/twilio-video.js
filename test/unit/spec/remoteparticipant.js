@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const { inherits } = require('util');
 
 const RemoteParticipant = require('../../../lib/remoteparticipant');
+const RemoteTrackPublication = require('../../../lib/media/track/remotetrackpublication');
 const { defer, makeUUID } = require('../../../lib/util');
 
 const { a } = require('../../lib/util');
@@ -653,6 +654,143 @@ describe('RemoteParticipant', () => {
       });
     });
 
+    context('"trackSubscriptionFailed" event', () => {
+      context('when the RemoteParticipant .state begins in "connected"', () => {
+        context('and a RemoteTrackSignaling fails to subscribe', () => {
+          it('does not add the RemoteTrack or add it to .tracks', () => {
+            const test = makeTest();
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            audioTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(audioTrack.sid));
+
+            videoTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(videoTrack.sid));
+
+            dataTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(dataTrack.sid));
+          });
+
+          it('emits a "trackSubscriptionFailed" event with the RemoteTrackSignaling\'s error', () => {
+            const test = makeTest();
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            testTrackSubscriptionFailed(test.participant, audioTrack);
+            testTrackSubscriptionFailed(test.participant, videoTrack);
+            testTrackSubscriptionFailed(test.participant, dataTrack);
+          });
+        });
+      });
+
+      context('when the RemoteParticipant .state transitions to "disconnected"', () => {
+        context('and a RemoteTrackPublication fails to subscribe', () => {
+          it('does not add the RemoteTrack or add it to .tracks', () => {
+            const test = makeTest();
+            test.signaling.emit('stateChanged', 'disconnected');
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            audioTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(audioTrack.sid));
+
+            videoTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(videoTrack.sid));
+
+            dataTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(dataTrack.sid));
+          });
+
+          it('does not emit a "trackSubscriptionFailed" event', () => {
+            const test = makeTest();
+            test.signaling.emit('stateChanged', 'disconnected');
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            let trackSubscriptionFailed = false;
+            test.participant.once('trackSubscriptionFailed', () => { trackSubscriptionFailed = true; });
+
+            audioTrack.subscribeFailed(new Error());
+            videoTrack.subscribeFailed(new Error());
+            dataTrack.subscribeFailed(new Error());
+
+            assert(!trackSubscriptionFailed);
+          });
+        });
+      });
+
+      context('when the RemoteParticipant .state begins in "disconnected"', () => {
+        context('and a RemoteTrackPublication fails to subscribe', () => {
+          it('does not add the RemoteTrack or add it to .tracks', () => {
+            const test = makeTest({ state: 'disconnected' });
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            audioTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(audioTrack.sid));
+
+            videoTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(videoTrack.sid));
+
+            dataTrack.subscribeFailed(new Error());
+            assert(!test.participant.tracks.has(dataTrack.sid));
+          });
+
+          it('does not emit a "trackSubscriptionFailed" event', () => {
+            const test = makeTest({ state: 'disconnected' });
+
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            let trackSubscriptionFailed = false;
+            test.participant.once('trackSubscriptionFailed', () => { trackSubscriptionFailed = true; });
+
+            audioTrack.subscribeFailed(new Error());
+            videoTrack.subscribeFailed(new Error());
+            dataTrack.subscribeFailed(new Error());
+
+            assert(!trackSubscriptionFailed);
+          });
+        });
+      });
+    });
+
     context('"trackRemoved" event', () => {
       context('when the RemoteParticipant .state begins in "connected"', () => {
         context('and a RemoteTrack with an .id matching that of the RemoteTrackSignaling exists in the RemoteParticipant\'s RemoteTrack collections', () => {
@@ -1045,10 +1183,30 @@ function makeTrackSignaling(options) {
   track.id = options.id || makeId();
   track.kind = options.kind || makeKind();
   track.name = options.name || track.id;
+  track.subscribeFailed = error => {
+    track.error = error;
+    track.emit('updated');
+  };
   track.trackTransceiver = { id: track.id, kind: track.kind };
   track.mediaStream = {};
   track.getTrackTransceiverDeferred = defer();
   track.getTrackTransceiverDeferred.resolve(track.trackTransceiver);
   track.getTrackTransceiver = sinon.spy(() => track.getTrackTransceiverDeferred.promise);
   return track;
+}
+
+function testTrackSubscriptionFailed(participant, track) {
+  let actualError;
+  let trackPublication;
+  participant.once('trackSubscriptionFailed', (error, _trackPublication) => {
+    actualError = error;
+    trackPublication = _trackPublication;
+  });
+  const expectedError = new Error();
+  track.subscribeFailed(expectedError);
+  assert.equal(actualError, expectedError);
+  assert(trackPublication instanceof RemoteTrackPublication);
+  assert.equal(trackPublication.kind, track.kind);
+  assert.equal(trackPublication.trackName, track.name);
+  assert.equal(trackPublication.trackSid, track.sid);
 }

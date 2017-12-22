@@ -122,6 +122,14 @@ describe('Room', () => {
       assert.equal(spy.callCount, 1);
     });
 
+    it('should re-emit RemoteParticipants trackSubscriptionFailed event for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('trackSubscriptionFailed', spy);
+
+      participants.bar.emit('trackSubscriptionFailed');
+      assert.equal(spy.callCount, 1);
+    });
+
     it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackUnsubscribed', spy);
@@ -142,6 +150,7 @@ describe('Room', () => {
       room.on('trackRemoved', spy);
       room.on('trackStarted', spy);
       room.on('trackSubscribed', spy);
+      room.on('trackSubscriptionFailed', spy);
       room.on('trackUnsubscribed', spy);
 
       participants.foo.emit('trackAdded');
@@ -152,6 +161,7 @@ describe('Room', () => {
       participants.foo.emit('trackRemoved');
       participants.foo.emit('trackStarted');
       participants.foo.emit('trackSubscribed');
+      participants.foo.emit('trackSubscriptionFailed');
       participants.foo.emit('trackUnsubscribed');
       assert.equal(spy.callCount, 0);
     });

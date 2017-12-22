@@ -1173,6 +1173,9 @@ describe('RoomV2', () => {
           test.peerConnectionManager.update.args[0][0]);
       });
     });
+
+    context('.subscribed', () => {
+    });
   });
 });
 

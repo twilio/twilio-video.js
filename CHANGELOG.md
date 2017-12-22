@@ -17,6 +17,32 @@ New Features
 
   We recommend you only enable this setting in Group Rooms.
 
+- By default, when you connect to a Group Room, you subscribe to all
+  RemoteParticipants' Tracks. However, sometimes your device may lack the codec
+  required to decode a particular Track. For example, an H.264-only Safari
+  Participant would be unable to decode a VP8 VideoTrack. In these cases, we now
+  raise a new event, "trackSubscriptionFailed", on the RemoteParticipant who
+  published the Track you could not subscribe to. For example, the following
+  code
+
+  ```js
+  room.participants.forEach(handleParticipant);
+  room.on('participantConnected', handleParticipant);
+
+  function handleParticipant(participant) {
+    participant.on('trackSubscriptionFailed', (error, trackPublication) =>
+      console.warn('Failed to subscribe to RemoteTrack %s with name "%s": %s',
+        trackPublication.trackSid, trackPublication.trackName, error.message)));
+  }
+  ```
+
+  will log something like
+
+  > Failed to subscribe to RemoteTrack MTxxx with name "123": No codec supported
+
+  to the console. twilio-video.js will also log these warnings by default.
+  Please refer to the API docs for more information.
+
 Bug Fixes
 ---------
 
