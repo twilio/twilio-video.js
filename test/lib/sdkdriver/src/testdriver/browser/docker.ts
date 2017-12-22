@@ -50,7 +50,9 @@ export default class DockerBrowserDriver extends BrowserDriver {
    * @returns {void}
    */
   stopBrowser(): void {
-    this._docker.kill();
-    this._docker = null;
+    if (this._docker) {
+      this._docker.kill();
+      this._docker = null;
+    }
   }
 }

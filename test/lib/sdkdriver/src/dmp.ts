@@ -7,7 +7,7 @@ import Transport from './transport';
  *   the incoming request message along with a method for sending a
  *   response.
  */
-class DMPRequest {
+export class DMPRequest {
   private readonly _id: number;
   private readonly _transport: Transport;
   public readonly data: any;
