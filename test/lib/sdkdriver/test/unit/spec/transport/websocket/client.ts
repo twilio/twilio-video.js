@@ -12,7 +12,7 @@ describe('WSClientTransport', () => {
     before(async () => {
       transport = new WSClientTransport('foo', { WebSocket });
       const openPromise: Promise<void> = transport.open();
-      wsClient = transport._wsClient;
+      wsClient = WebSocket.client;
       wsClient.readyState = WebSocket.OPEN;
       wsClient.dispatchEvent({ type: 'open' });
       await openPromise;
@@ -20,7 +20,7 @@ describe('WSClientTransport', () => {
       transport.close();
     });
 
-    it('should call .close on the underlying WebSocket', async () => {
+    it('should call .close on the underlying WebSocket', () => {
       sinon.assert.calledOnce(wsClient.close);
     });
 
@@ -54,11 +54,11 @@ describe('WSClientTransport', () => {
         let wsClient: any;
 
         beforeEach(() => {
-          transport._sendBuffer.push('foo');
-          transport._sendBuffer.push('bar');
           promise = transport.open();
+          transport.send('foo');
+          transport.send('bar');
 
-          wsClient = transport._wsClient;
+          wsClient = WebSocket.client;
           wsClient.readyState = WebSocket[readyState];
 
           const wsEvent = {
@@ -72,8 +72,8 @@ describe('WSClientTransport', () => {
           it('should send any buffered messages', async () => {
             await promise;
             sinon.assert.callCount(wsClient.send, 2);
-            sinon.assert.calledWith(wsClient.send, 'foo');
-            sinon.assert.calledWith(wsClient.send, 'bar');
+            sinon.assert.calledWith(wsClient.send, '"foo"');
+            sinon.assert.calledWith(wsClient.send, '"bar"');
           });
 
           it('should resolve the returned Promise', () => {
@@ -119,7 +119,7 @@ describe('WSClientTransport', () => {
           const data: any = { bar: 'baz' };
           const transport: WSClientTransport = new WSClientTransport('foo', { WebSocket });
           const openPromise: Promise<void> = transport.open();
-          const wsClient: WebSocket = transport._wsClient;
+          const wsClient: WebSocket = WebSocket.client;
 
           if (wsState === 'OPEN') {
             wsClient.readyState = WebSocket.OPEN;
@@ -141,7 +141,7 @@ describe('WSClientTransport', () => {
       it('should emit a "message" event with the received JSON data on the WSClientTransport', async () => {
         const transport: WSClientTransport = new WSClientTransport('foo', { WebSocket });
         const openPromise: Promise<void> = transport.open();
-        const wsClient: WebSocket = transport._wsClient;
+        const wsClient: WebSocket = WebSocket.client;
 
         wsClient.readyState = WebSocket.OPEN;
         wsClient.dispatchEvent({ type: 'open' });

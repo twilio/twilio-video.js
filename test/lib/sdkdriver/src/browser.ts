@@ -9,13 +9,11 @@ function getUrlParams(): Map<string, string> {
   }, new Map());
 }
 
-function loadSdk(url: string): Promise<void> {
+async function loadScript(url: string): Promise<void> {
   const script: any = document.createElement('script');
   script.src = url;
   document.body.appendChild(script);
-  return new Promise(resolve => {
-    script.onload = () => resolve();
-  }).then(() => {});
+  await new Promise(resolve => script.onload = () => resolve());
 }
 
 (async () => {
@@ -25,7 +23,7 @@ function loadSdk(url: string): Promise<void> {
   const transport: WSClientTransport = new WSClientTransport(wsUrl);
 
   await transport.open();
-  await loadSdk(sdkUrl);
+  await loadScript(sdkUrl);
 
   const dmp: DMP = new DMP(transport);
   dmp.sendEvent({ sdkVersion: window['Twilio']['Video']['version'] });

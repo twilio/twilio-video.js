@@ -5,7 +5,6 @@ import Transport from '../';
 
 /**
  * WebSocket server {@link Transport}.
- * @class
  * @fires Transport#close
  * @fires Transport#message
  */
@@ -19,8 +18,6 @@ export default class WSServerTransport extends EventEmitter implements Transport
    * Constructor.
    * @param {HTTP.Server} webServer - The HTTP server shared by the
    *   underlying WebSocket.Server
-   * @param {TestDriver} testDriver - The {@link TestDriver} that connects
-   *   to the {@link WSServerTransport}
    */
   constructor(webServer: HTTPServer, deps: any = {}) {
     super();
@@ -30,7 +27,10 @@ export default class WSServerTransport extends EventEmitter implements Transport
     };
     this._sendBuffer = [];
     this._wsConnection = null;
-    this._wsServer = new this._deps.WebSocket.Server({ server: webServer });
+
+    const { WebSocket: { Server: WSServer } } = this._deps;
+    this._wsServer = new WSServer({ server: webServer });
+    this.setMaxListeners(Infinity);
   }
 
   /**
@@ -39,19 +39,10 @@ export default class WSServerTransport extends EventEmitter implements Transport
    */
   close(): void {
     if (this._wsConnection) {
-      try {
-        this._wsConnection.close();
-      } catch (e) {
-        // Do nothing.
-      }
+      this._wsConnection.close();
       this._wsConnection = null;
     }
-
-    try {
-      this._wsServer.close();
-    } catch (e) {
-      // Do nothing.
-    }
+    this._wsServer.close();
   }
 
   /**

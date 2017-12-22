@@ -3,7 +3,6 @@ import Transport from './transport';
 
 /**
  * DMP Request.
- * @class
  * @classdesc A {@link DMPRequest} contains the data associated with
  *   the incoming request message along with a method for sending a
  *   response.
@@ -39,7 +38,6 @@ class DMPRequest {
 
 /**
  * Driver Messaging Protocol (DMP).
- * @class
  * @classdesc A {@link DMP} exchanges DMP messages with its counterpart;
  *   It can be instantiated in the mocha.js process that drives the test
  *   process as well as in the test process

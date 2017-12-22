@@ -13,9 +13,13 @@ export const WebSocket: any = sinon.spy(function MockWebSocket(url: string) {
   this.send = sinon.spy(() => {});
   this.terminate = sinon.spy(() => {});
   this.readyState = WebSocket.CONNECTING;
+  WebSocket.client = this;
 });
 
 inherits(WebSocket, EventTarget);
+
+WebSocket.client = null;
+WebSocket.server = null;
 
 WebSocket.CONNECTING = 0;
 WebSocket.OPEN = 1;
@@ -43,6 +47,7 @@ WebSocket.prototype.emit = function emit(event: string, ...args: any[]): void {
 WebSocket.Server = sinon.spy(function MockWebSocketServer(opts: any) {
   EventEmitter.call(this);
   this.close = sinon.spy(() => {});
+  WebSocket.server = this;
 });
 
 inherits(WebSocket.Server, EventEmitter);

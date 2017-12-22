@@ -4,7 +4,6 @@ import Transport from '../';
 
 /**
  * WebSocket client {@link Transport}.
- * @class
  * @fires Transport#close
  * @fires Transport#message
  */
@@ -27,6 +26,7 @@ export default class WSClientTransport extends EventEmitter implements Transport
     this._sendBuffer = [];
     this._wsClient = null;
     this._wsUrl = wsUrl;
+    this.setMaxListeners(Infinity);
   }
 
   /**
@@ -34,15 +34,10 @@ export default class WSClientTransport extends EventEmitter implements Transport
    * @returns {void}
    */
   close(): void {
-    if (!this._wsClient) {
-      return;
-    }
-    try {
+    if (this._wsClient) {
       this._wsClient.close();
-    } catch (e) {
-      // Do nothing.
+      this._wsClient = null;
     }
-    this._wsClient = null;
   }
 
   /**
@@ -51,15 +46,10 @@ export default class WSClientTransport extends EventEmitter implements Transport
    */
   open(): Promise<void> {
     const { WebSocket } = this._deps;
-    if (!this._wsClient) {
-      this._wsClient = new WebSocket(this._wsUrl);
-    }
-    const wsClient: WebSocket = this._wsClient as WebSocket;
+    const wsClient: WebSocket = this._wsClient || new WebSocket(this._wsUrl);
+    this._wsClient = wsClient;
 
-    if (wsClient.readyState === WebSocket.OPEN) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
+    return wsClient.readyState === WebSocket.OPEN ? Promise.resolve() : new Promise((resolve, reject) => {
       const onopenfailed: (event: any) => void = event => {
         const { code, reason: message } = event;
         wsClient.removeEventListener('close', onopenfailed);
@@ -83,18 +73,17 @@ export default class WSClientTransport extends EventEmitter implements Transport
    * @returns {void}
    */
   send(data: any): void {
-    if (!this._wsClient) {
-      return;
+    if (this._wsClient) {
+      const { WebSocket: { CONNECTING, OPEN } } = this._deps;
+      const wsClient: WebSocket = this._wsClient;
+      const { readyState } = wsClient;
+
+      const sendOrEnqueue: (data: any) => void = {
+        [CONNECTING]: (data: any) => this._sendBuffer.push(JSON.stringify(data)),
+        [OPEN]: (data: any) => wsClient.send(JSON.stringify(data))
+      }[readyState];
+
+      sendOrEnqueue(data);
     }
-    const { WebSocket: { CONNECTING, OPEN } } = this._deps;
-    const wsClient: WebSocket = this._wsClient as WebSocket;
-    const { readyState } = wsClient;
-
-    const sendOrEnqueue: (data: any) => void = {
-      [CONNECTING]: (data: any) => this._sendBuffer.push(JSON.stringify(data)),
-      [OPEN]: (data: any) => wsClient.send(JSON.stringify(data))
-    }[readyState];
-
-    sendOrEnqueue(data);
   }
 }

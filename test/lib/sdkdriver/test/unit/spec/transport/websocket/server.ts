@@ -25,7 +25,7 @@ describe('WSServerTransport', () => {
       transport = new WSServerTransport(mockWebServer, { WebSocket });
       const openPromise: Promise<void> = transport.open();
       wsConnection = new WebSocket('foo');
-      wsServer = transport._wsServer;
+      wsServer = WebSocket.server;
       wsServer.emit('connection', wsConnection);
       await openPromise;
       closeEventPromise = new Promise(resolve => transport.on('close', resolve));
@@ -64,11 +64,11 @@ describe('WSServerTransport', () => {
         let wsServer: WebSocket.Server;
 
         beforeEach(async () => {
-          transport._sendBuffer.push('foo');
-          transport._sendBuffer.push('bar');
           promise = transport.open();
+          transport.send('foo');
+          transport.send('bar');
           wsConnection = new WebSocket('foo');
-          wsServer = transport._wsServer;
+          wsServer = WebSocket.server;
           if (didOpenSucceed) {
             wsServer.emit('connection', wsConnection);
           } else {
@@ -80,8 +80,8 @@ describe('WSServerTransport', () => {
           it('should send any buffered messages', async () => {
             await promise;
             sinon.assert.callCount(wsConnection.send, 2);
-            sinon.assert.calledWith(wsConnection.send, 'foo');
-            sinon.assert.calledWith(wsConnection.send, 'bar');
+            sinon.assert.calledWith(wsConnection.send, '"foo"');
+            sinon.assert.calledWith(wsConnection.send, '"bar"');
           });
 
           it('should resolve the returned Promise', () => {
@@ -117,7 +117,7 @@ describe('WSServerTransport', () => {
           const transport: WSServerTransport = new WSServerTransport(mockWebServer, { WebSocket });
           const openPromise: Promise<void> = transport.open();
           const wsConnection: WebSocket = new WebSocket('foo');
-          const wsServer: WebSocket.Server = transport._wsServer;
+          const wsServer: WebSocket.Server = WebSocket.server;
 
           if (state === 'open') {
             wsServer.emit('connection', wsConnection);
@@ -139,7 +139,7 @@ describe('WSServerTransport', () => {
         const transport: WSServerTransport = new WSServerTransport(mockWebServer, { WebSocket });
         const openPromise: Promise<void> = transport.open();
         const wsConnection: WebSocket = new WebSocket('foo');
-        const wsServer: WebSocket.Server = transport._wsServer;
+        const wsServer: WebSocket.Server = WebSocket.server;
 
         wsServer.emit('connection', wsConnection);
         await openPromise;
