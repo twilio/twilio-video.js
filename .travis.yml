@@ -70,6 +70,8 @@ matrix:
     - env: BROWSER=firefox BVER=stable TOPOLOGY=SFU
     - env: BROWSER=firefox BVER=beta TOPOLOGY=P2P
     - env: BROWSER=firefox BVER=beta TOPOLOGY=SFU
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=P2P
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=SFU
     - env: BROWSER=safari BVER=unstable TOPOLOGY=P2P
     - env: BROWSER=safari BVER=unstable TOPOLOGY=SFU
 
