@@ -45,8 +45,8 @@ export class DMPRequest {
  * @fires DMP#request
  */
 export default class DMP extends EventEmitter {
-  private readonly _transport: Transport;
   private _requestId: number;
+  protected readonly _transport: Transport;
 
   /**
    * Constructor.

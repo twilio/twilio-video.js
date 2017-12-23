@@ -5,7 +5,7 @@ coverage
 dist
 node_modules
 test/lib/sdkdriver/lib
-test/lib/sdkdriver/browser/index.js
+test/lib/sdkdriver/test/integration/browser/index.js
 npm-debug.log
 package-lock.json
 test.json

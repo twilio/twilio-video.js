@@ -31,10 +31,11 @@ export function createWebDriver(browser: 'chrome' | 'firefox'): WebDriver {
 
 /**
  * Create an express web server that serves the SDK setup code.
+ * @param {string} rootPath - Root folder of the web server
  * @returns {HTTPServer}
  */
-export function createWebServer(): HTTPServer {
+export function createWebServer(rootPath: string): HTTPServer {
   const app: express.Application = express();
-  app.use(express.static(join(__dirname, '..', '..', 'browser')));
+  app.use(express.static(rootPath));
   return createServer(app);
 }

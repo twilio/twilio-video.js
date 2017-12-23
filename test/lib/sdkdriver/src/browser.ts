@@ -16,22 +16,17 @@ async function loadScript(url: string): Promise<void> {
   await new Promise(resolve => script.onload = () => resolve());
 }
 
-(async () => {
+/**
+ * Initialize the browser's {@link DMP} client.
+ * @returns {Promise<DMP>}
+ */
+export async function init(): Promise<DMP> {
   const urlParams: Map<string, string> = getUrlParams();
   const sdkUrl: string = urlParams.get('sdkUrl') as string;
   const wsUrl: string = urlParams.get('wsUrl') as string;
   const transport: WSClientTransport = new WSClientTransport(wsUrl);
 
-  await transport.open();
   await loadScript(sdkUrl);
-
-  const dmp: DMP = new DMP(transport);
-  dmp.sendEvent({ sdkVersion: window['Twilio']['Video']['version'] });
-
-  dmp.on('request', (request: any) => {
-    const { data: { ping } } = request;
-    if (ping) {
-      request.sendResponse({ pong: ping });
-    }
-  });
-})();
+  await transport.open();
+  return new DMP(transport);
+}

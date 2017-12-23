@@ -13,13 +13,15 @@ export default class DockerBrowserDriver extends BrowserDriver {
   /**
    * Constructor.
    * @param {"chrome" | "firefox"} browser
+   * @param {string} webServerRoot - Root folder of the web server
    * @param {string} sdkUrl
    */
-  constructor(browser: 'chrome' | 'firefox', sdkUrl: string) {
+  constructor(browser: 'chrome' | 'firefox', webServerRoot: string, sdkUrl: string) {
     super({
       browser,
       host: process.env.DOCKER_HOST_IP || 'localhost',
-      params: { sdkUrl }
+      params: { sdkUrl },
+      webServerRoot
     });
     this._docker = null;
   }

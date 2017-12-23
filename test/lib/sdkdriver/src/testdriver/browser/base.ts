@@ -7,6 +7,7 @@ interface BrowserDriverOptions {
   browser: 'chrome' | 'firefox';
   host: string;
   params?: any;
+  webServerRoot: string;
 }
 
 /**
@@ -29,7 +30,7 @@ abstract class BrowserDriver extends EventEmitter implements TestDriver {
   constructor(options: BrowserDriverOptions) {
     super();
     this._options = options;
-    this._webServer = createWebServer();
+    this._webServer = createWebServer(options.webServerRoot);
   }
 
   /**
