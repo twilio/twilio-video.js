@@ -4,6 +4,8 @@ browsers
 coverage
 dist
 node_modules
+test/crossbrowser/lib
+test/crossbrowser/src/browser/index.js
 test/lib/sdkdriver/lib
 test/lib/sdkdriver/test/integration/browser/index.js
 npm-debug.log
