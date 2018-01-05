@@ -2,6 +2,11 @@ import { join } from 'path';
 import SDKDriver from '../../../lib/sdkdriver/src';
 import BrowserDriver from '../../../lib/sdkdriver/src/testdriver/browser';
 import WSServerTransport from '../../../lib/sdkdriver/src/transport/websocket/server';
+import RoomDriver from './room';
+
+export interface TwilioError extends Error {
+  code: number;
+}
 
 interface VideoDriverOptions {
   browser: 'chrome' | 'firefox';
@@ -16,6 +21,7 @@ interface VideoDriverOptions {
  */
 export default class VideoDriver {
   private readonly _options: VideoDriverOptions;
+  private _createSdkDriver: Promise<SDKDriver> | null;
   private _sdkDriver: SDKDriver | null;
 
   /**
@@ -43,6 +49,7 @@ export default class VideoDriver {
       realm: 'prod',
       ...options
     };
+    this._createSdkDriver = null;
     this._sdkDriver = null;
   }
 
@@ -52,20 +59,30 @@ export default class VideoDriver {
    * @param {string} kind
    * @param {LocalDataTrackOptions|CreateLocalTrackOptions} options
    * @returns {Promise<LocalDataTrackDriver|LocalMediaTrackDriver>}
-   * @private
    */
   private async _createLocalTrack(kind: string, options: any): Promise<any> {
     this._sdkDriver = this._sdkDriver || await createSdkDriver(this._options);
 
-    const response: any = await this._sdkDriver.sendRequest({
+    const { error, result } = await this._sdkDriver.sendRequest({
       api: `createLocalTrack`,
       args: [kind, options]
     });
 
-    if (response.error) {
-      throw response.error;
+    if (error) {
+      throw error;
     }
-    return response.result;
+    return result;
+  }
+
+  /**
+   * Ensure only one {@link SDKDriver} is created when any of
+   *   the public methods are called multiple times.
+   * @private
+   * @returns {Promise<SDKDriver>}
+   */
+  private async _getSdkDriver(): Promise<SDKDriver> {
+    this._createSdkDriver = this._createSdkDriver || createSdkDriver(this._options);
+    return await this._createSdkDriver;
   }
 
   /**
@@ -75,7 +92,10 @@ export default class VideoDriver {
   close(): void {
     if (this._sdkDriver) {
       this._sdkDriver.close();
+    } else if (this._createSdkDriver) {
+      this._createSdkDriver.then((sdkDriver: SDKDriver) => sdkDriver.close());
     }
+    this._createSdkDriver = null;
     this._sdkDriver = null;
   }
 
@@ -85,18 +105,20 @@ export default class VideoDriver {
    * @param {ConnectOptions} options
    * @returns {Promise<RoomDriver>}
    */
-  async connect(token: string, options: any): Promise<any> {
-    this._sdkDriver = this._sdkDriver || await createSdkDriver(this._options);
+  async connect(token: string, options: any): Promise<RoomDriver> {
+    this._sdkDriver = this._sdkDriver || await this._getSdkDriver();
 
-    const response: any = await this._sdkDriver.sendRequest({
+    const { error, result } = await this._sdkDriver.sendRequest({
       api: 'connect',
       args: [token, options]
     });
 
-    if (response.error) {
-      throw response.error;
+    if (error) {
+      const err: TwilioError = new Error(error.message) as TwilioError;
+      err.code = error.code;
+      throw err;
     }
-    return response.result;
+    return new RoomDriver(this._sdkDriver, result);
   }
 
   /**
@@ -123,17 +145,17 @@ export default class VideoDriver {
    * @returns {Promise<Array<LocalMediaTrackDriver>>}
    */
   async createLocalTracks(options: any): Promise<any> {
-    this._sdkDriver = this._sdkDriver || await createSdkDriver(this._options);
+    this._sdkDriver = this._sdkDriver || await this._getSdkDriver();
 
-    const response: any = await this._sdkDriver.sendRequest({
+    const { error, result } = await this._sdkDriver.sendRequest({
       api: 'createLocalTracks',
       args: [options]
     });
 
-    if (response.error) {
-      throw response.error;
+    if (error) {
+      throw error;
     }
-    return response.result;
+    return result;
   }
 
   /**
