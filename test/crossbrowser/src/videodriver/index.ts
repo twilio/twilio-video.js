@@ -80,9 +80,9 @@ export default class VideoDriver {
    * @private
    * @returns {Promise<SDKDriver>}
    */
-  private async _getSdkDriver(): Promise<SDKDriver> {
+  private _getSdkDriver(): Promise<SDKDriver> {
     this._createSdkDriver = this._createSdkDriver || createSdkDriver(this._options);
-    return await this._createSdkDriver;
+    return this._createSdkDriver;
   }
 
   /**

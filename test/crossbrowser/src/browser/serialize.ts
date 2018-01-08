@@ -49,6 +49,45 @@ function serializeMediaTrack(mediaTrack: any): any {
 }
 
 /**
+ * Serialize a {@link RemoteDataTrack}.
+ * @param {RemoteDataTrack} remoteDataTrack
+ * @returns {object}
+ */
+function serializeRemoteDataTrack(remoteDataTrack: any): any {
+  const {
+    isSubscribed,
+    maxPacketLifetime,
+    maxRetransmits,
+    ordered,
+    reliable,
+    sid
+  } = remoteDataTrack;
+
+  return {
+    isSubscribed,
+    maxPacketLifetime,
+    maxRetransmits,
+    ordered,
+    reliable,
+    sid,
+    ...serializeTrack(remoteDataTrack)
+  };
+}
+
+/**
+ * Serialize a {@link RemoteMediaTrack}.
+ * @param {RemoteMediaTrack} remoteMediaTrack
+ * @returns {object}
+ */
+function serializeRemoteMediaTrack(remoteMediaTrack: any): any {
+  return {
+    isSubscribed: remoteMediaTrack.isSubscribed,
+    sid: remoteMediaTrack.sid,
+    ...serializeMediaTrack(remoteMediaTrack)
+  };
+}
+
+/**
  * Serialize a {@link Track}.
  * @private
  * @param {@link Track} track
@@ -73,6 +112,19 @@ export function serializeLocalTrack(localTrack: any): any {
     data: serializeLocalDataTrack,
     video: serializeLocalMediaTrack
   }[localTrack.kind](localTrack);
+}
+
+/**
+ * Serialize a {@link RemoteTrack}.
+ * @param {RemoteTrack} remoteTrack
+ * @returns {object}
+ */
+export function serializeRemoteTrack(remoteTrack: any): any {
+  return {
+    audio: serializeRemoteMediaTrack,
+    data: serializeRemoteDataTrack,
+    video: serializeRemoteMediaTrack
+  }[remoteTrack.kind](remoteTrack);
 }
 
 /**
@@ -114,16 +166,17 @@ export function serializeLocalParticipant(localParticipant: any): any {
     dataTrackPublications: Array.from(dataTrackPublications.values()).map(serializeLocalTrackPublication),
     trackPublications: Array.from(trackPublications.values()).map(serializeLocalTrackPublication),
     videoTrackPublications: Array.from(videoTrackPublications.values()).map(serializeLocalTrackPublication),
-    ...serializeParticipant(localParticipant)
+    ...serializeParticipant(localParticipant, serializeLocalTrack)
   };
 }
 
 /**
  * Serialize a {@link Participant}.
  * @param {Participant} participant
+ * @param {(track: any) => any} [serializeTrack=serializeRemoteTrack]
  * @returns {object}
  */
-export function serializeParticipant(participant: any): any {
+export function serializeParticipant(participant: any, serializeTrack = serializeRemoteTrack): any {
   const {
     audioTracks,
     dataTracks,
@@ -135,13 +188,13 @@ export function serializeParticipant(participant: any): any {
   } = participant;
 
   return {
-    audioTracks: Array.from(audioTracks.values()).map(serializeLocalTrack),
-    dataTracks: Array.from(dataTracks.values()).map(serializeLocalTrack),
+    audioTracks: Array.from(audioTracks.values()).map(serializeTrack),
+    dataTracks: Array.from(dataTracks.values()).map(serializeTrack),
     identity,
     sid,
     state,
-    tracks: Array.from(tracks.values()).map(serializeLocalTrack),
-    videoTracks: Array.from(videoTracks.values()).map(serializeLocalTrack)
+    tracks: Array.from(tracks.values()).map(serializeTrack),
+    videoTracks: Array.from(videoTracks.values()).map(serializeTrack)
   };
 }
 
@@ -164,7 +217,7 @@ export function serializeRoom(room: any): any {
     isRecording,
     localParticipant: serializeLocalParticipant(localParticipant),
     name,
-    participants: Array.from(participants.values()).map(serializeParticipant),
+    participants: Array.from(participants.values()).map((participant: any) => serializeParticipant(participant)),
     sid,
     state
   };

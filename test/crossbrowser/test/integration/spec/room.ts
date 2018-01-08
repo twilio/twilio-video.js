@@ -1,5 +1,6 @@
 import * as assert from 'assert';
 import VideoDriver from '../../../src/videodriver';
+import ParticipantDriver from '../../../src/videodriver/participant';
 import RoomDriver from '../../../src/videodriver/room';
 const defaults = require('../../../../lib/defaults');
 const getToken = require('../../../../lib/token');
@@ -50,10 +51,9 @@ describe('RoomDriver', function() {
 
         before(async () => {
           const constraints: Array<any> = [{ audio: true }, { video: true }];
-          const tokens: Array<string> = [getToken(randomName()), getToken(randomName())];
+          const tokens: Array<string> = [randomName(), randomName()].map(getToken);
 
           name = randomName();
-          roomDrivers = [];
           videoDriver = new VideoDriver({ browser, realm, version });
 
           roomDrivers = await(Promise.all(tokens.map((token, i) => {
@@ -131,36 +131,103 @@ describe('RoomDriver', function() {
         x => `when the second Participant is in ${x}`
       ]
     ], ([ event, ...browsers ]) => {
+      let participantDriver: ParticipantDriver;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
-      let serializedParticipant: any;
 
       before(async () => {
         const identities: Array<string> = browsers.map((browser, i) => `${browser}${i}`);
         const name: string = randomName();
+        const tokens: Array<string> = identities.map(getToken);
 
         roomDrivers = [];
         videoDrivers = browsers.map(browser => new VideoDriver({ browser, realm, version }));
-        roomDrivers.push(await videoDrivers[0].connect(getToken(identities[0]), { ...defaults, name }));
+        roomDrivers.push(await videoDrivers[0].connect(tokens[0], { ...defaults, name }));
 
-        const participantEvent: Promise<any> = new Promise(resolve => {
+        const participantEvent: Promise<ParticipantDriver> = new Promise(resolve => {
           roomDrivers[0].once(event, resolve);
         });
 
-        roomDrivers.push(await videoDrivers[1].connect(getToken(identities[1]), { ...defaults, name }));
+        roomDrivers.push(await videoDrivers[1].connect(tokens[1], { ...defaults, name }));
         if (event === 'participantDisconnected') {
           roomDrivers[1].disconnect();
         }
-        serializedParticipant = await participantEvent;
+        participantDriver = await participantEvent;
       });
 
-      it(`should emit "${event}" on the first Participant with a serialized second Participant`, () => {
-        assert.equal(serializedParticipant.identity, roomDrivers[1].localParticipant.identity);
-        assert.equal(serializedParticipant.sid, roomDrivers[1].localParticipant.sid);
+      it(`should emit "${event}" on the first Participant with a ParticipantDriver for the second Participant`, () => {
+        assert(participantDriver instanceof ParticipantDriver);
+        assert.equal(participantDriver.identity, roomDrivers[1].localParticipant.identity);
+        assert.equal(participantDriver.sid, roomDrivers[1].localParticipant.sid);
 
         assert(event === 'participantConnected'
-          ? roomDrivers[0].participants.has(serializedParticipant.sid)
-          : !roomDrivers[0].participants.has(serializedParticipant.sid));
+          ? roomDrivers[0].participants.has(participantDriver.sid)
+          : !roomDrivers[0].participants.has(participantDriver.sid));
+      });
+
+      after(() => {
+        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        videoDrivers.forEach(videoDriver => videoDriver.close());
+      });
+    });
+
+    combinationContext([
+      [
+        ['trackAdded', 'trackSubscribed'],
+        x => `"${x}"`
+      ],
+      [
+        ['chrome', 'firefox'],
+        x => `when the first Participant is in ${x}`
+      ],
+      [
+        ['chrome', 'firefox'],
+        x => `when the second Participant is in ${x}`
+      ]
+    ], ([ event, ...browsers ]) => {
+      let roomDrivers: Array<RoomDriver>;
+      let tracksAndParticipants: Array<[any, ParticipantDriver]>;
+      let videoDrivers: Array<VideoDriver>;
+
+      before(async () => {
+        const identities: Array<string> = browsers.map((browser, i) => `${browser}${i}`);
+        const name: string = randomName();
+        const tokens: Array<string> = identities.map(getToken);
+
+        roomDrivers = [];
+        videoDrivers = browsers.map(browser => new VideoDriver({ browser, realm, version }));
+        roomDrivers.push(await videoDrivers[0].connect(tokens[0], { ...defaults, name }));
+
+        const trackEvents: Promise<Array<[any, ParticipantDriver]>> = new Promise(resolve => {
+          roomDrivers[0].on(event, (track: any, participantDriver: ParticipantDriver) => {
+            if (participantDriver.tracks.size === 2) {
+              resolve(Array.from(participantDriver.tracks.values()).map((track: any) => [track, participantDriver]));
+            }
+          });
+        });
+
+        roomDrivers.push(await videoDrivers[1].connect(tokens[1], { ...defaults, name }));
+        tracksAndParticipants = await trackEvents;
+      });
+
+      it(`should emit "${event}" events on the first Participant with serialized RemoteTracks and ParticipantDriver for`
+         + ` the second Participant`, () => {
+        const { localParticipant: { identity, sid, trackPublications, tracks } } = roomDrivers[1];
+        assert.equal(tracksAndParticipants.length, 2);
+
+        tracksAndParticipants.forEach(([ serializedRemoteTrack, participantDriver ]) => {
+          const track: any = tracks.find(track => serializedRemoteTrack.id === track.id);
+          const publication: string = trackPublications.find(publication => track.id === publication.track.id);
+
+          ['id, kind', 'name'].forEach(prop => assert.equal(serializedRemoteTrack[prop], track[prop]));
+          assert.equal(serializedRemoteTrack.sid, publication.trackSid);
+
+          assert(participantDriver instanceof ParticipantDriver);
+          assert.equal(participantDriver.identity, identity);
+          assert.equal(participantDriver.sid, sid);
+          assert(participantDriver.tracks.has(serializedRemoteTrack.id));
+          assert(participantDriver[`${serializedRemoteTrack.kind}Tracks`].has(serializedRemoteTrack.id));
+        });
       });
 
       after(() => {

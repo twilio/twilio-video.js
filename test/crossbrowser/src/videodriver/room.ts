@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 import SDKDriver from '../../../lib/sdkdriver/src';
+import ParticipantDriver, { ParticipantSID } from './participant';
+const { difference } = require('../../../../lib/util');
 
 /**
  * A {@link RoomSID} is a 34-character string starting with "RM"
@@ -17,7 +19,7 @@ type RoomSID = string;
  * @extends EventEmitter
  * @property {object} localParticipant
  * @property {string} name
- * @property {Map<ParticipantSID, object>} participants
+ * @property {Map<ParticipantSID, ParticipantDriver>} participants
  * @property {RoomSID} sid
  * @property {string} state
  * @fires RoomDriver#disconnected
@@ -38,7 +40,7 @@ export default class RoomDriver extends EventEmitter {
   private readonly _sdkDriver: SDKDriver;
   localParticipant: any;
   name: string;
-  participants: Map<string, any>;
+  participants: Map<ParticipantSID, ParticipantDriver>;
   sid: RoomSID;
   state: string;
 
@@ -49,12 +51,16 @@ export default class RoomDriver extends EventEmitter {
    */
   constructor(sdkDriver: SDKDriver, serializedRoom: any) {
     super();
+    this.participants = new Map();
     this._instanceId = serializedRoom._instanceId;
     this._sdkDriver = sdkDriver;
     this._update(serializedRoom);
 
     sdkDriver.on('event', (data: any) => {
       const { type, source, args } = data;
+      if (source._instanceId !== this._instanceId) {
+        return;
+      }
       switch (type) {
         case 'disconnected':
           this._reemitDisconnected(source, args);
@@ -71,6 +77,18 @@ export default class RoomDriver extends EventEmitter {
         case 'recordingStopped':
           this._reemitRecordingStopped(source);
           break;
+        case 'trackAdded':
+          this._reemitTrackAdded(source, args);
+          break;
+        case 'trackRemoved':
+          this._reemitTrackRemoved(source, args);
+          break;
+        case 'trackSubscribed':
+          this._reemitTrackSubscribed(source, args);
+          break;
+        case 'trackUnsubscribed':
+          this._reemitTrackUnsubscribed(source, args);
+          break;
       }
     });
   }
@@ -83,9 +101,6 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitDisconnected(source: any, args: any): void {
-    if (source._instanceId !== this._instanceId) {
-      return;
-    }
     this._update(source);
 
     const [, serializedError] = args;
@@ -105,13 +120,9 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitParticipantConnected(source: any, args: any): void {
-    if (source._instanceId !== this._instanceId) {
-      return;
-    }
     this._update(source);
-
     const serializedParticipant: any = args[0];
-    this.emit('participantConnected', serializedParticipant);
+    this.emit('participantConnected', this.participants.get(serializedParticipant.sid));
   }
 
   /**
@@ -122,13 +133,10 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitParticipantDisconnected(source: any, args: any): void {
-    if (source._instanceId !== this._instanceId) {
-      return;
-    }
-    this._update(source);
-
     const serializedParticipant: any = args[0];
-    this.emit('participantDisconnected', serializedParticipant);
+    const participant: ParticipantDriver = this.participants.get(serializedParticipant.sid) as ParticipantDriver;
+    this._update(source);
+    this.emit('participantDisconnected', participant);
   }
 
   /**
@@ -138,9 +146,6 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitRecordingStarted(source: any): void {
-    if (source._instanceId !== this._instanceId) {
-      return;
-    }
     this._update(source);
     this.emit('recordingStarted');
   }
@@ -152,11 +157,60 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitRecordingStopped(source: any): void {
-    if (source._instanceId !== this._instanceId) {
-      return;
-    }
     this._update(source);
     this.emit('recordingStopped');
+  }
+
+  /**
+   * Re-emit the "trackAdded" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {*} args
+   * @returns {void}
+   */
+  private _reemitTrackAdded(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    this.emit('trackAdded', serializedTrack, this.participants.get(serializedParticipant.sid));
+  }
+
+  /**
+   * Re-emit the "trackRemoved" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {*} args
+   * @returns {void}
+   */
+  private _reemitTrackRemoved(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    this.emit('trackRemoved', serializedTrack, this.participants.get(serializedParticipant.sid));
+  }
+
+  /**
+   * Re-emit the "trackSubscribed" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {*} args
+   * @returns {void}
+   */
+  private _reemitTrackSubscribed(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    this.emit('trackSubscribed', serializedTrack, this.participants.get(serializedParticipant.sid));
+  }
+
+  /**
+   * Re-emit the "trackUnsubscribed" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {*} args
+   * @returns {void}
+   */
+  private _reemitTrackUnsubscribed(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    this.emit('trackUnsubscribed', serializedTrack, this.participants.get(serializedParticipant.sid));
   }
 
   /**
@@ -165,12 +219,30 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _update(serializedRoom: any): void {
-    const { participants } = serializedRoom;
     this.localParticipant = serializedRoom.localParticipant;
     this.name = serializedRoom.name;
-    this.participants = new Map(participants.map((participant: any) => [participant.sid, participant]));
     this.sid = serializedRoom.sid;
     this.state = serializedRoom.state;
+
+    const participants: Map<ParticipantSID, any> = new Map(serializedRoom.participants.map((participant: any) => [
+      participant.sid,
+      participant
+    ]));
+
+    const participantsToAdd: Set<ParticipantSID> = difference(
+      Array.from(participants.keys()),
+      Array.from(this.participants.keys()));
+
+    const participantsToRemove: Set<ParticipantSID> = difference(
+      Array.from(this.participants.keys()),
+      Array.from(participants.keys()));
+
+    participantsToAdd.forEach((sid: ParticipantSID) => {
+      this.participants.set(sid, new ParticipantDriver(this._sdkDriver, participants.get(sid)));
+    });
+    participantsToRemove.forEach((sid: ParticipantSID) => {
+      this.participants.delete(sid);
+    });
   }
 
   /**
@@ -258,6 +330,18 @@ export default class RoomDriver extends EventEmitter {
  * @param {TrackDriver} track
  * @param {ParticipantDriver} participant
  * @event RoomDriver#trackStarted
+ */
+
+/**
+ * @param {TrackDriver} track
+ * @param {ParticipantDriver} participant
+ * @event RoomDriver#trackAdded
+ */
+
+/**
+ * @param {TrackDriver} track
+ * @param {ParticipantDriver} participant
+ * @event RoomDriver#trackRemoved
  */
 
 /**
