@@ -1,4 +1,5 @@
 import {
+  serializeLocalParticipant,
   serializeLocalTrack,
   serializeLocalTrackPublication,
   serializeRoom
@@ -150,6 +151,12 @@ export async function getStats(target: number): Promise<any> {
   }
 }
 
+/**
+ * Publish a {@link LocalTrack} to a {@link Room}.
+ * @param {string} target - {@link LocalParticipant} SID
+ * @param {Array<*>} args
+ * @returns {Promise<object>}
+ */
 export async function publishTrack(target: string, args: any): Promise<any> {
   const localParticipants: Map<string, any> = new Map();
   rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
@@ -189,7 +196,93 @@ export async function publishTrack(target: string, args: any): Promise<any> {
   };
 }
 
-export function unpublishTrack(target: any, args: any): any {
+/**
+ * Publish {@link LocalTrack}s to a {@link Room}.
+ * @param {string} target - {@link LocalParticipant} SID
+ * @param {Array<*>} args
+ * @returns {Promise<object>}
+ */
+export async function publishTracks(target: string, args: any): Promise<any> {
+  const localParticipants: Map<string, any> = new Map();
+  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
+
+  const localParticipant: any = localParticipants.get(target);
+  if (!localParticipant) {
+    return {
+      error: {
+        message: 'Participant not found'
+      }
+    };
+  }
+
+  const localTracksToPublish: any = args[0].map((trackId: string) => localTracks.get(trackId));
+  if (localTracksToPublish.some((localTrack: any) => !localTrack)) {
+    return {
+      error: {
+        message: 'Some LocalTracks not found'
+      }
+    };
+  }
+
+  let localTrackPublications: any;
+  try {
+    localTrackPublications = await localParticipant.publishTracks(localTracksToPublish);
+  } catch (e) {
+    return {
+      error: {
+        code: e.code,
+        message: e.message
+      }
+    };
+  }
+
+  return {
+    result: localTrackPublications.map(serializeLocalTrackPublication)
+  };
+}
+
+/**
+ * Set the {@link LocalParticipant}'s {@link EncodingParameters}.
+ * @param {string} target - {@link LocalParticipant} SID
+ * @param {Array<*>} args
+ * @returns {object}
+ */
+export function setParameters(target: string, args: any): any {
+  const localParticipants: Map<string, any> = new Map();
+  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
+
+  const localParticipant: any = localParticipants.get(target);
+  if (!localParticipant) {
+    return {
+      error: {
+        message: 'Participant not found'
+      }
+    };
+  }
+
+  const encodingParameters: any = args[0];
+  try {
+    localParticipant.setParameters(encodingParameters);
+  } catch (e) {
+    return {
+      error: {
+        message: e.message
+      }
+    };
+  }
+
+  return {
+    result: serializeLocalParticipant(localParticipant)
+  };
+}
+
+/**
+ * Unpublish a {@link LocalTrack} from a {@link Room}.
+ * @param {string} target - {@link LocalParticipant} SID
+ * @param {Array<*>} args
+ * @returns {object}
+ */
+export function unpublishTrack(target: string, args: any): any {
   const localParticipants: Map<string, any> = new Map();
   rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
 
@@ -211,8 +304,62 @@ export function unpublishTrack(target: any, args: any): any {
     };
   }
 
-  let localTrackPublication: any = localParticipant.unpublishTrack(localTrack);
+  let localTrackPublication: any;
+  try {
+    localTrackPublication = localParticipant.unpublishTrack(localTrack);
+  } catch (e) {
+    return {
+      error: {
+        message: e.message
+      }
+    };
+  }
+
   return {
     result: serializeLocalTrackPublication(localTrackPublication)
+  };
+}
+
+/**
+ * Unpublish {@link LocalTrack}s from a {@link Room}.
+ * @param {string} target - {@link LocalParticipant} SID
+ * @param {Array<*>} args
+ * @returns {Array<object>}
+ */
+export function unpublishTracks(target: string, args: any): any {
+  const localParticipants: Map<string, any> = new Map();
+  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
+
+  const localParticipant: any = localParticipants.get(target);
+  if (!localParticipant) {
+    return {
+      error: {
+        message: 'Participant not found'
+      }
+    };
+  }
+
+  const localTracksToUnpublish: any = args[0].map((trackId: string) => localTracks.get(trackId));
+  if (localTracksToUnpublish.some((localTrack: any) => !localTrack)) {
+    return {
+      error: {
+        message: 'Some LocalTracks not found'
+      }
+    };
+  }
+
+  let localTrackPublications: any;
+  try {
+    localTrackPublications = localParticipant.unpublishTracks(localTracksToUnpublish);
+  } catch (e) {
+    return {
+      error: {
+        message: e.message
+      }
+    };
+  }
+
+  return {
+    result: localTrackPublications.map(serializeLocalTrackPublication)
   };
 }

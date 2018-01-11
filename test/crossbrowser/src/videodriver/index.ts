@@ -183,5 +183,5 @@ async function createSdkDriver(options: VideoDriverOptions): Promise<SDKDriver> 
   const webServerRoot: string = join(__dirname, '..', 'browser');
   const browserDriver: any = new BrowserDriver(browser, webServerRoot, [sdkUrl]);
   const transport: WSServerTransport = new WSServerTransport(browserDriver.webServer);
-  return await SDKDriver.create(transport, browserDriver);
+  return SDKDriver.create(transport, browserDriver);
 }

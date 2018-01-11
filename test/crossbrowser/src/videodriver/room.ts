@@ -99,7 +99,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "disconnected" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitDisconnected(source: any, args: any): void {
@@ -118,7 +118,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "participantConnected" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitParticipantConnected(source: any, args: any): void {
@@ -131,7 +131,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "participantConnected" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitParticipantDisconnected(source: any, args: any): void {
@@ -167,7 +167,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "trackAdded" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackAdded(source: any, args: any): void {
@@ -180,7 +180,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "trackRemoved" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackRemoved(source: any, args: any): void {
@@ -193,7 +193,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "trackSubscribed" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackSubscribed(source: any, args: any): void {
@@ -206,7 +206,7 @@ export default class RoomDriver extends EventEmitter {
    * Re-emit the "trackUnsubscribed" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackUnsubscribed(source: any, args: any): void {

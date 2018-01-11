@@ -8,7 +8,10 @@ import {
   disconnect,
   getStats,
   publishTrack,
-  unpublishTrack
+  publishTracks,
+  setParameters,
+  unpublishTrack,
+  unpublishTracks
 } from './api';
 
 import { sendRoomEvents } from './events';
@@ -36,18 +39,18 @@ import { sendRoomEvents } from './events';
       case 'publishTrack':
         request.sendResponse(await publishTrack(target, args));
         break;
-      case 'unpublishTrack':
-        request.sendResponse(unpublishTrack(target, args));
-        break;
-      /*case 'publishTracks':
+      case 'publishTracks':
         request.sendResponse(await publishTracks(target, args));
         break;
       case 'setParameters':
         request.sendResponse(setParameters(target, args));
         break;
+      case 'unpublishTrack':
+        request.sendResponse(unpublishTrack(target, args));
+        break;
       case 'unpublishTracks':
-        request.sendResponse(await unpublishTracks(target, args));
-        break;*/
+        request.sendResponse(unpublishTracks(target, args));
+        break;
     }
   });
 })();

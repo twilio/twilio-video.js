@@ -15,13 +15,13 @@ export type ParticipantSID = string;
  *   corresponding {@link Participant}'s methods in the browser and reemits
  *   the {@link Participant}'s events.
  * @extends EventEmitter
- * @property {Map<TrackSID, object>} audioTracks
- * @property {Map<TrackSID, object>} dataTracks
+ * @property {Map<TrackID, object>} audioTracks
+ * @property {Map<TrackID, object>} dataTracks
  * @property {string} identity
  * @property {ParticipantSID} sid
  * @property {string} state
- * @property {Map<TrackSID, object>} tracks
- * @property {Map<TrackSID, object>} videoTracks
+ * @property {Map<TrackID, object>} tracks
+ * @property {Map<TrackID, object>} videoTracks
  * @fires ParticipantDriver#disconnected
  * @fires ParticipantDriver#trackAdded
  * @fires ParticipantDriver#trackRemoved
@@ -63,7 +63,7 @@ export default class ParticipantDriver extends EventEmitter {
    * Re-emit the "trackAdded" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackAdded(source: any, args: any): void {
@@ -76,7 +76,7 @@ export default class ParticipantDriver extends EventEmitter {
    * Re-emit the "trackRemoved" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackRemoved(source: any, args: any): void {
@@ -89,7 +89,7 @@ export default class ParticipantDriver extends EventEmitter {
    * Re-emit the "trackSubscribed" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackSubscribed(source: any, args: any): void {
@@ -102,7 +102,7 @@ export default class ParticipantDriver extends EventEmitter {
    * Re-emit the "trackUnsubscribed" event from the browser.
    * @private
    * @param {object} source
-   * @param {*} args
+   * @param {Array<*>} args
    * @returns {void}
    */
   private _reemitTrackUnsubscribed(source: any, args: any): void {
@@ -111,6 +111,12 @@ export default class ParticipantDriver extends EventEmitter {
     this.emit('trackUnsubscribed', serializedTrack);
   }
 
+  /**
+   * Re-emit {@link Participant}'s events from the browser.
+   * @private
+   * @param {object} data
+   * @returns {void}
+   */
   protected _reemitEvents(data: any) {
     const { type, source, args } = data;
     if (source.sid !== this.sid) {
@@ -137,6 +143,7 @@ export default class ParticipantDriver extends EventEmitter {
 
   /**
    * Update the {@link ParticipantDriver}'s properties.
+   * @protected
    * @param {object} serializedParticipant
    * @returns {void}
    */

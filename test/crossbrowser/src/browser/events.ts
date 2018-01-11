@@ -9,7 +9,20 @@ import {
   serializeRoom
 } from './serialize';
 
+/**
+ * Send {@link LocalParticipant} events to the {@link SDKDriver}.
+ * @param {DMP} dmp
+ * @param {LocalParticipant} localParticipant
+ */
 function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
+  localParticipant.on('trackAdded', (track: any) => {
+    dmp.sendEvent({
+      args: [serializeLocalTrack(track)],
+      source: serializeLocalParticipant(localParticipant),
+      type: 'localTrackAdded'
+    });
+  });
+
   localParticipant.on('trackPublicationFailed', (error: any, localTrack: any) => {
     const { code, message } = error;
     dmp.sendEvent({
@@ -24,6 +37,14 @@ function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
       args: [serializeLocalTrackPublication(publication)],
       source: serializeLocalParticipant(localParticipant),
       type: 'trackPublished'
+    });
+  });
+
+  localParticipant.on('trackRemoved', (track: any) => {
+    dmp.sendEvent({
+      args: [serializeLocalTrack(track)],
+      source: serializeLocalParticipant(localParticipant),
+      type: 'localTrackRemoved'
     });
   });
 }
