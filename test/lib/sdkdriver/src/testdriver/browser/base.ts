@@ -47,6 +47,7 @@ abstract class BrowserDriver extends EventEmitter implements TestDriver {
    */
   close(): void {
     this.stopBrowser();
+    this.stopWebServer();
     this.emit('close');
   }
 
@@ -54,7 +55,9 @@ abstract class BrowserDriver extends EventEmitter implements TestDriver {
    * Open the {@link BrowserDriver}.
    * @returns {Promise<void>}
    */
-  open(): Promise<void> {
+  async open(): Promise<void> {
+    await this.startWebServer();
+
     const { host, params } = this._options;
     const { port } = this._webServer.address();
 
@@ -64,7 +67,7 @@ abstract class BrowserDriver extends EventEmitter implements TestDriver {
     };
 
     const serializedParams: any = Object.keys(extendedParams).map(key => {
-      return `${encodeURIComponent(key)}=${encodeURIComponent(extendedParams[key])}`;
+      return `${encodeURIComponent(key)}=${encodeURIComponent(JSON.stringify(extendedParams[key]))}`;
     }).join('&');
 
     return this.startBrowser(`http://${host}:${port}/?${serializedParams}`);

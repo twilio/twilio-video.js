@@ -15,13 +15,13 @@ export default class SeleniumBrowserDriver extends BrowserDriver {
    * Constructor.
    * @param {"chrome" | "firefox"} browser
    * @param {string} webServerRoot - Root folder of the web server
-   * @param {string} sdkUrl
+   * @param {Array<string>} scripts - Scripts to be loaded in the browser
    */
-  constructor(browser: 'chrome' | 'firefox', webServerRoot: string, sdkUrl: string) {
+  constructor(browser: 'chrome' | 'firefox', webServerRoot: string, scripts: Array<string>) {
     super({
       browser,
       host: 'localhost',
-      params: { sdkUrl },
+      params: { scripts },
       webServerRoot
     });
     this._webDriver = createWebDriver(browser);

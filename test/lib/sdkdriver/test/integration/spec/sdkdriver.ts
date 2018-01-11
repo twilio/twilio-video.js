@@ -17,8 +17,7 @@ describe('SDKDriver', function() {
 
         before(async () => {
           const webServerRoot: string = join(__dirname, '..', 'browser');
-          browserDriver = new BrowserDriver(browser, webServerRoot, sdkUrl);
-          await browserDriver.startWebServer();
+          browserDriver = new BrowserDriver(browser, webServerRoot, [sdkUrl]);
         });
 
         context('should create the WSServerTransport', () => {
@@ -44,10 +43,6 @@ describe('SDKDriver', function() {
               sdkDriver.close();
             });
           });
-        });
-
-        after(() => {
-          browserDriver.stopWebServer();
         });
       });
     });
