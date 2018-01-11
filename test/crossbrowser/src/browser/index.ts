@@ -6,7 +6,9 @@ import {
   createLocalTrack,
   createLocalTracks,
   disconnect,
-  getStats
+  getStats,
+  publishTrack,
+  unpublishTrack
 } from './api';
 
 import { sendRoomEvents } from './events';
@@ -31,6 +33,21 @@ import { sendRoomEvents } from './events';
       case 'getStats':
         request.sendResponse(await getStats(target));
         break;
+      case 'publishTrack':
+        request.sendResponse(await publishTrack(target, args));
+        break;
+      case 'unpublishTrack':
+        request.sendResponse(unpublishTrack(target, args));
+        break;
+      /*case 'publishTracks':
+        request.sendResponse(await publishTracks(target, args));
+        break;
+      case 'setParameters':
+        request.sendResponse(setParameters(target, args));
+        break;
+      case 'unpublishTracks':
+        request.sendResponse(await unpublishTracks(target, args));
+        break;*/
     }
   });
 })();

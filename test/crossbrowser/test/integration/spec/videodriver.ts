@@ -7,7 +7,7 @@ const { capitalize, combinationContext, randomName } = require('../../../../lib/
 
 const { REALM, VERSION } = process.env;
 const realm: string = REALM || 'prod';
-const version: string = VERSION || '1.6.1';
+const version: string = VERSION;
 
 describe('VideoDriver', function() {
   this.timeout(60000);

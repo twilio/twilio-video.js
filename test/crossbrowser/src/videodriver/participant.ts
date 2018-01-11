@@ -45,30 +45,7 @@ export default class ParticipantDriver extends EventEmitter {
   constructor(sdkDriver: SDKDriver, serializedParticipant: any) {
     super();
     this._update(serializedParticipant);
-
-    sdkDriver.on('event', (data: any) => {
-      const { type, source, args } = data;
-      if (source.sid !== this.sid) {
-        return;
-      }
-      switch (type) {
-        case 'disconnected':
-          this._reemitDisconnected(source);
-          break;
-        case 'trackAdded':
-          this._reemitTrackAdded(source, args);
-          break;
-        case 'trackRemoved':
-          this._reemitTrackRemoved(source, args);
-          break;
-        case 'trackSubscribed':
-          this._reemitTrackSubscribed(source, args);
-          break;
-        case 'trackUnsubscribed':
-          this._reemitTrackUnsubscribed(source, args);
-          break;
-      }
-    });
+    sdkDriver.on('event', (data: any) => this._reemitEvents(data));
   }
 
   /**
@@ -134,12 +111,36 @@ export default class ParticipantDriver extends EventEmitter {
     this.emit('trackUnsubscribed', serializedTrack);
   }
 
+  protected _reemitEvents(data: any) {
+    const { type, source, args } = data;
+    if (source.sid !== this.sid) {
+      return;
+    }
+    switch (type) {
+      case 'disconnected':
+        this._reemitDisconnected(source);
+        break;
+      case 'trackAdded':
+        this._reemitTrackAdded(source, args);
+        break;
+      case 'trackRemoved':
+        this._reemitTrackRemoved(source, args);
+        break;
+      case 'trackSubscribed':
+        this._reemitTrackSubscribed(source, args);
+        break;
+      case 'trackUnsubscribed':
+        this._reemitTrackUnsubscribed(source, args);
+        break;
+    }
+  }
+
   /**
    * Update the {@link ParticipantDriver}'s properties.
    * @param {object} serializedParticipant
    * @returns {void}
    */
-  private _update(serializedParticipant: any): void {
+  protected _update(serializedParticipant: any): void {
     const {
       audioTracks,
       dataTracks,

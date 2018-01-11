@@ -1,5 +1,6 @@
 import {
   serializeLocalTrack,
+  serializeLocalTrackPublication,
   serializeRoom
 } from './serialize';
 
@@ -147,4 +148,71 @@ export async function getStats(target: number): Promise<any> {
       }
     };
   }
+}
+
+export async function publishTrack(target: string, args: any): Promise<any> {
+  const localParticipants: Map<string, any> = new Map();
+  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
+
+  const localParticipant: any = localParticipants.get(target);
+  if (!localParticipant) {
+    return {
+      error: {
+        message: 'Participant not found'
+      }
+    };
+  }
+
+  const localTrack: any = localTracks.get(args[0]);
+  if (!localTrack) {
+    return {
+      error: {
+        message: 'LocalTrack not found'
+      }
+    };
+  }
+
+  let localTrackPublication: any;
+  try {
+    localTrackPublication = await localParticipant.publishTrack(localTrack);
+  } catch (e) {
+    return {
+      error: {
+        code: e.code,
+        message: e.message
+      }
+    };
+  }
+
+  return {
+    result: serializeLocalTrackPublication(localTrackPublication)
+  };
+}
+
+export function unpublishTrack(target: any, args: any): any {
+  const localParticipants: Map<string, any> = new Map();
+  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
+
+  const localParticipant: any = localParticipants.get(target);
+  if (!localParticipant) {
+    return {
+      error: {
+        message: 'Participant not found'
+      }
+    };
+  }
+
+  const localTrack: any = localTracks.get(args[0]);
+  if (!localTrack) {
+    return {
+      error: {
+        message: 'LocalTrack not found'
+      }
+    };
+  }
+
+  let localTrackPublication: any = localParticipant.unpublishTrack(localTrack);
+  return {
+    result: serializeLocalTrackPublication(localTrackPublication)
+  };
 }

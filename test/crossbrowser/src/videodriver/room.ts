@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import SDKDriver from '../../../lib/sdkdriver/src';
+import LocalParticipantDriver from './localparticipant';
 import ParticipantDriver, { ParticipantSID } from './participant';
 const { difference } = require('../../../../lib/util');
 
@@ -17,7 +18,7 @@ type RoomSID = string;
  *   corresponding {@link Room}'s methods in the browser and reemits
  *   the {@link Room}'s events.
  * @extends EventEmitter
- * @property {object} localParticipant
+ * @property {LocalParticipantDriver} localParticipant
  * @property {string} name
  * @property {Map<ParticipantSID, ParticipantDriver>} participants
  * @property {RoomSID} sid
@@ -38,7 +39,7 @@ type RoomSID = string;
 export default class RoomDriver extends EventEmitter {
   private readonly _instanceId: number;
   private readonly _sdkDriver: SDKDriver;
-  localParticipant: any;
+  localParticipant: LocalParticipantDriver;
   name: string;
   participants: Map<ParticipantSID, ParticipantDriver>;
   sid: RoomSID;
@@ -51,6 +52,7 @@ export default class RoomDriver extends EventEmitter {
    */
   constructor(sdkDriver: SDKDriver, serializedRoom: any) {
     super();
+    this.localParticipant = new LocalParticipantDriver(sdkDriver, serializedRoom.localParticipant);
     this.participants = new Map();
     this._instanceId = serializedRoom._instanceId;
     this._sdkDriver = sdkDriver;
@@ -219,7 +221,6 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _update(serializedRoom: any): void {
-    this.localParticipant = serializedRoom.localParticipant;
     this.name = serializedRoom.name;
     this.sid = serializedRoom.sid;
     this.state = serializedRoom.state;

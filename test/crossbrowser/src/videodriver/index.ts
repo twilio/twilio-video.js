@@ -36,7 +36,10 @@ export default class VideoDriver {
       prod: 'media',
       stage: 'stage'
     }[options.realm];
-    return `//${subdomain}.twiliocdn.com/sdk/js/video/releases/${options.version}/twilio-video.js`;
+    const versionPath: string = options.version
+      ? `releases/${options.version}`
+      : 'v1';
+    return `//${subdomain}.twiliocdn.com/sdk/js/video/${versionPath}/twilio-video.js`;
   }
 
   /**

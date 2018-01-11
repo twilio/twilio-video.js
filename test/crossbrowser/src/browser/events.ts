@@ -1,10 +1,32 @@
 import DMP from '../../../lib/sdkdriver/src/dmp';
 
 import {
+  serializeLocalParticipant,
+  serializeLocalTrack,
+  serializeLocalTrackPublication,
   serializeParticipant,
   serializeRemoteTrack,
   serializeRoom
 } from './serialize';
+
+function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
+  localParticipant.on('trackPublicationFailed', (error: any, localTrack: any) => {
+    const { code, message } = error;
+    dmp.sendEvent({
+      args: [{ code, message }, serializeLocalTrack(localTrack)],
+      source: serializeLocalParticipant(localParticipant),
+      type: 'trackPublicationFailed'
+    });
+  });
+
+  localParticipant.on('trackPublished', (publication: any) => {
+    dmp.sendEvent({
+      args: [serializeLocalTrackPublication(publication)],
+      source: serializeLocalParticipant(localParticipant),
+      type: 'trackPublished'
+    });
+  });
+}
 
 /**
  * Send {@link RemoteParticipant} events to the {@link SDKDriver}.
@@ -47,7 +69,7 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
     dmp.sendEvent({
       args: [serializeRemoteTrack(track)],
       source: serializeParticipant(participant),
-      type: 'trackSubscribed'
+      type: 'trackUnsubscribed'
     });
   });
 }
@@ -63,6 +85,7 @@ export function sendRoomEvents(dmp: DMP, instanceId: number, room: any): void {
   room.participants.forEach((participant: any) => {
     sendParticipantEvents(dmp, participant);
   });
+  sendLocalParticipantEvents(dmp, room.localParticipant);
 
   room.on('disconnected', (room: any, error: any) => {
     const serializedError: any = error ? {
@@ -173,7 +196,7 @@ export function sendRoomEvents(dmp: DMP, instanceId: number, room: any): void {
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
       source: serializedRoom,
-      type: 'trackSubscribed'
+      type: 'trackUnsubscribed'
     });
   });
 }

@@ -8,7 +8,7 @@ const { combinationContext, randomName } = require('../../../../lib/util');
 
 const { REALM, VERSION } = process.env;
 const realm: string = REALM || 'prod';
-const version: string = VERSION || '1.6.1';
+const version: string = VERSION;
 
 describe('RoomDriver', function() {
   this.timeout(60000);
@@ -81,12 +81,12 @@ describe('RoomDriver', function() {
           }] = stats[0];
 
           assert.equal(localAudioTrackStats.length, 1);
-          assert.equal(localAudioTrackStats[0].trackId, audioTracks[0].id);
+          assert.equal(localAudioTrackStats[0].trackId, Array.from(audioTracks.values())[0].id);
           assert.equal(localVideoTrackStats.length, 0);
 
           assert.equal(remoteAudioTrackStats.length, 0);
           assert.equal(remoteVideoTrackStats.length, 1);
-          assert.equal(remoteVideoTrackStats[0].trackId, videoTracks[0].id);
+          assert.equal(remoteVideoTrackStats[0].trackId, Array.from(videoTracks.values())[0].id);
         });
 
         it('should resolve with WebRTC stats for the appropriate Tracks for the second Participant', () => {
@@ -101,10 +101,10 @@ describe('RoomDriver', function() {
 
           assert.equal(localAudioTrackStats.length, 0);
           assert.equal(localVideoTrackStats.length, 1);
-          assert.equal(localVideoTrackStats[0].trackId, videoTracks[0].id);
+          assert.equal(localVideoTrackStats[0].trackId, Array.from(videoTracks.values())[0].id);
 
           assert.equal(remoteAudioTrackStats.length, 1);
-          assert.equal(remoteAudioTrackStats[0].trackId, audioTracks[0].id);
+          assert.equal(remoteAudioTrackStats[0].trackId, Array.from(audioTracks.values())[0].id);
           assert.equal(remoteVideoTrackStats.length, 0);
         });
 
@@ -136,7 +136,7 @@ describe('RoomDriver', function() {
       let videoDrivers: Array<VideoDriver>;
 
       before(async () => {
-        const identities: Array<string> = browsers.map((browser, i) => `${browser}${i}`);
+        const identities: Array<string> = browsers.map(randomName);
         const name: string = randomName();
         const tokens: Array<string> = identities.map(getToken);
 
@@ -173,7 +173,7 @@ describe('RoomDriver', function() {
 
     combinationContext([
       [
-        ['trackAdded', 'trackSubscribed'],
+        ['trackAdded', 'trackRemoved', 'trackSubscribed', 'trackUnsubscribed'],
         x => `"${x}"`
       ],
       [
@@ -185,48 +185,71 @@ describe('RoomDriver', function() {
         x => `when the second Participant is in ${x}`
       ]
     ], ([ event, ...browsers ]) => {
+      const shouldRemoveTracks = /^track(Removed|Unsubscribed)$/.test(event);
       let roomDrivers: Array<RoomDriver>;
-      let tracksAndParticipants: Array<[any, ParticipantDriver]>;
+      const serializedLocalTracks: Array<any>;
+      let serializedTracks: Array<any>;
       let videoDrivers: Array<VideoDriver>;
 
       before(async () => {
-        const identities: Array<string> = browsers.map((browser, i) => `${browser}${i}`);
+        const identities: Array<string> = browsers.map(randomName);
         const name: string = randomName();
         const tokens: Array<string> = identities.map(getToken);
 
-        roomDrivers = [];
         videoDrivers = browsers.map(browser => new VideoDriver({ browser, realm, version }));
-        roomDrivers.push(await videoDrivers[0].connect(tokens[0], { ...defaults, name }));
+        roomDrivers = await Promise.all(tokens.map((token, i) => videoDrivers[i].connect(token, {
+          ...defaults,
+          name
+        })));
 
-        const trackEvents: Promise<Array<[any, ParticipantDriver]>> = new Promise(resolve => {
-          roomDrivers[0].on(event, (track: any, participantDriver: ParticipantDriver) => {
-            if (participantDriver.tracks.size === 2) {
-              resolve(Array.from(participantDriver.tracks.values()).map((track: any) => [track, participantDriver]));
-            }
+        const { participants } = roomDrivers[0];
+        while (participants.size < browsers.length - 1) {
+          await new Promise(resolve => roomDrivers[0].once('participantConnected', resolve));
+        }
+
+        const participantDriver: ParticipantDriver = Array.from(participants.values())[0];
+        while (participantDriver.tracks.size < roomDrivers[1].localParticipant.tracks.size) {
+          await new Promise(resolve => roomDrivers[0].once(shouldRemoveTracks ? 'trackSubscribed' : event, resolve));
+        }
+
+        const { localParticipant } = roomDrivers[1];
+        serializedLocalTracks = Array.from(localParticipant.tracks.values());
+
+        if (shouldRemoveTracks) {
+          serializedTracks = [];
+
+          for (let track of serializedLocalTracks) {
+            const trackEvent: Promise<any> = new Promise(resolve => roomDrivers[0].once(event, resolve));
+            await localParticipant.unpublishTrack(track);
+            serializedTracks.push(await trackEvent);
+          };
+
+          return;
+        }
+
+        serializedTracks = Array.from(participantDriver.tracks.values());
+      });
+
+      it(`should emit "${event}" events on the first ParticipantDriver with serialized RemoteTracks`, () => {
+        assert.equal(serializedTracks.length, serializedLocalTracks.length);
+
+        serializedTracks.forEach((track, i) => {
+          ['id, kind', 'name'].forEach(prop => {
+            assert.equal(track[prop], serializedTracks[i][prop]);
           });
         });
 
-        roomDrivers.push(await videoDrivers[1].connect(tokens[1], { ...defaults, name }));
-        tracksAndParticipants = await trackEvents;
-      });
+        if (shouldRemoveTracks) {
+          return;
+        }
+        const { localParticipant: { trackPublications } } = roomDrivers[1];
 
-      it(`should emit "${event}" events on the first Participant with serialized RemoteTracks and ParticipantDriver for`
-         + ` the second Participant`, () => {
-        const { localParticipant: { identity, sid, trackPublications, tracks } } = roomDrivers[1];
-        assert.equal(tracksAndParticipants.length, 2);
-
-        tracksAndParticipants.forEach(([ serializedRemoteTrack, participantDriver ]) => {
-          const track: any = tracks.find(track => serializedRemoteTrack.id === track.id);
-          const publication: string = trackPublications.find(publication => track.id === publication.track.id);
-
-          ['id, kind', 'name'].forEach(prop => assert.equal(serializedRemoteTrack[prop], track[prop]));
-          assert.equal(serializedRemoteTrack.sid, publication.trackSid);
-
-          assert(participantDriver instanceof ParticipantDriver);
-          assert.equal(participantDriver.identity, identity);
-          assert.equal(participantDriver.sid, sid);
-          assert(participantDriver.tracks.has(serializedRemoteTrack.id));
-          assert(participantDriver[`${serializedRemoteTrack.kind}Tracks`].has(serializedRemoteTrack.id));
+        serializedTracks.forEach(track => {
+          const participantDriver: ParticipantDriver = Array.from(roomDrivers[0].participants.values())[0];
+          const publication: string = trackPublications.get(track.sid);
+          assert.equal(track.sid, publication.trackSid);
+          assert(participantDriver.tracks.has(track.id));
+          assert(participantDriver[`${track.kind}Tracks`].has(track.id));
         });
       });
 
