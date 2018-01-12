@@ -9,7 +9,7 @@ import BrowserDriver from './base';
  *   browser process where the cross-browser test is running.
  */
 export default class SeleniumBrowserDriver extends BrowserDriver {
-  private readonly _webDriver: WebDriver;
+  private _webDriver: WebDriver | null;
 
   /**
    * Constructor.
@@ -24,7 +24,7 @@ export default class SeleniumBrowserDriver extends BrowserDriver {
       params: { scripts },
       webServerRoot
     });
-    this._webDriver = createWebDriver(browser);
+    this._webDriver = null;
   }
 
   /**
@@ -33,6 +33,8 @@ export default class SeleniumBrowserDriver extends BrowserDriver {
    * @returns {Promise<void>}
    */
   async startBrowser(url: string): Promise<void> {
+    const { _options: { browser } } = this;
+    this._webDriver = this._webDriver || createWebDriver(browser);
     await this._webDriver.get(url);
     return;
   }
@@ -42,6 +44,13 @@ export default class SeleniumBrowserDriver extends BrowserDriver {
    * @returns {void}
    */
   stopBrowser(): void {
-    this._webDriver.quit();
+    if (this._webDriver) {
+      this._webDriver.quit().then(() => {
+        // Do nothing.
+      }, () => {
+        // Do nothing.
+      });
+    }
+    this._webDriver = null;
   }
 }

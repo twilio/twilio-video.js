@@ -1,4 +1,10 @@
 import {
+  add,
+  lookup,
+  remove
+} from './resources';
+
+import {
   serializeLocalParticipant,
   serializeLocalTrack,
   serializeLocalTrackPublication,
@@ -7,18 +13,13 @@ import {
 
 declare const Twilio: any;
 
-const localTracks: Map<string, any> = new Map();
-const rooms: Map<number, any> = new Map();
-
-let connectAttempt = 0;
-
 /**
  * Connect to a {@link Room}.
  * @param {Array<*>} args
- * @param {(instanceId: number, room: Room) => void} sendRoomEvents
+ * @param {(room: Room) => void} sendRoomEvents
  * @returns {Promise<object>}
  */
-export async function connect(args: any, sendRoomEvents: (instanceId: number, room: any) => void): Promise<any> {
+export async function connect(args: any, sendRoomEvents: (room: any) => void): Promise<any> {
   const [ token, options ] = args;
   let room: any;
 
@@ -33,15 +34,19 @@ export async function connect(args: any, sendRoomEvents: (instanceId: number, ro
     };
   }
 
-  sendRoomEvents(connectAttempt, room);
-  room.localParticipant.tracks.forEach((track: any) => localTracks.set(track.id, track));
-  rooms.set(connectAttempt, room);
+  add(room);
+  add(room.localParticipant);
+  room.localParticipant.tracks.forEach(add);
+  room.localParticipant.trackPublications.forEach(add);
+
+  room.participants.forEach((participant: any) => {
+    add(participant);
+    participant.tracks.forEach(add);
+  });
+  sendRoomEvents(room);
 
   return {
-    result: {
-      _instanceId: connectAttempt++,
-      ...serializeRoom(room)
-    }
+    result: serializeRoom(room)
   };
 }
 
@@ -68,7 +73,8 @@ export async function createLocalTrack(args: any): Promise<any> {
       }
     };
   }
-  localTracks.set(localTrack.id, localTrack);
+  add(localTrack);
+
   return {
     result: serializeLocalTrack(localTrack)
   };
@@ -81,10 +87,10 @@ export async function createLocalTrack(args: any): Promise<any> {
  */
 export async function createLocalTracks(args: any): Promise<any> {
   const [ options ] = args;
-  let localTracksArray: any;
+  let localTracks: Array<any>;
 
   try {
-    localTracksArray = await Twilio.Video.createLocalTracks(options);
+    localTracks = await Twilio.Video.createLocalTracks(options);
   } catch (e) {
     return {
       error: {
@@ -92,19 +98,20 @@ export async function createLocalTracks(args: any): Promise<any> {
       }
     };
   }
-  localTracksArray.forEach((track: any) => localTracks.set(track.id, track));
+  localTracks.forEach(add);
+
   return {
-    result: localTracksArray.map((track: any) => serializeLocalTrack(track))
+    result: localTracks.map(serializeLocalTrack)
   };
 }
 
 /**
  * Disconnect from a {@link Room}.
- * @param {number} target - Instance ID of the {@link Room}
+ * @param {string} target - Resource ID of the {@link Room}
  * @returns {object}
  */
-export function disconnect(target: number): any {
-  const room: any = rooms.get(target);
+export function disconnect(target: string): any {
+  const room: any = lookup(target);
   if (!room) {
     return {
       error: {
@@ -113,23 +120,21 @@ export function disconnect(target: number): any {
     };
   }
   room.disconnect();
-  rooms.delete(target);
+  const serializedRoom = serializeRoom(room);
+  remove(room);
 
   return {
-    result: {
-      _instanceId: target,
-      ...serializeRoom(room)
-    }
+    result: serializedRoom
   };
 }
 
 /**
  * Get {@link Room} stats.
- * @param {number} target - Instance ID of the {@link Room}.
+ * @param {string} target - Resource ID of the {@link Room}.
  * @returns {Promise<object>}
  */
-export async function getStats(target: number): Promise<any> {
-  const room: any = rooms.get(target);
+export async function getStats(target: string): Promise<any> {
+  const room: any = lookup(target);
   if (!room) {
     return {
       error: {
@@ -153,15 +158,12 @@ export async function getStats(target: number): Promise<any> {
 
 /**
  * Publish a {@link LocalTrack} to a {@link Room}.
- * @param {string} target - {@link LocalParticipant} SID
+ * @param {string} target - {@link LocalParticipant} resource ID
  * @param {Array<*>} args
  * @returns {Promise<object>}
  */
 export async function publishTrack(target: string, args: any): Promise<any> {
-  const localParticipants: Map<string, any> = new Map();
-  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
-
-  const localParticipant: any = localParticipants.get(target);
+  const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
       error: {
@@ -170,7 +172,7 @@ export async function publishTrack(target: string, args: any): Promise<any> {
     };
   }
 
-  const localTrack: any = localTracks.get(args[0]);
+  const localTrack: any = lookup(args[0]);
   if (!localTrack) {
     return {
       error: {
@@ -190,6 +192,7 @@ export async function publishTrack(target: string, args: any): Promise<any> {
       }
     };
   }
+  add(localTrackPublication);
 
   return {
     result: serializeLocalTrackPublication(localTrackPublication)
@@ -203,10 +206,7 @@ export async function publishTrack(target: string, args: any): Promise<any> {
  * @returns {Promise<object>}
  */
 export async function publishTracks(target: string, args: any): Promise<any> {
-  const localParticipants: Map<string, any> = new Map();
-  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
-
-  const localParticipant: any = localParticipants.get(target);
+  const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
       error: {
@@ -215,7 +215,7 @@ export async function publishTracks(target: string, args: any): Promise<any> {
     };
   }
 
-  const localTracksToPublish: any = args[0].map((trackId: string) => localTracks.get(trackId));
+  const localTracksToPublish: any = args[0].map(lookup);
   if (localTracksToPublish.some((localTrack: any) => !localTrack)) {
     return {
       error: {
@@ -235,6 +235,7 @@ export async function publishTracks(target: string, args: any): Promise<any> {
       }
     };
   }
+  localTrackPublications.forEach(add);
 
   return {
     result: localTrackPublications.map(serializeLocalTrackPublication)
@@ -248,10 +249,7 @@ export async function publishTracks(target: string, args: any): Promise<any> {
  * @returns {object}
  */
 export function setParameters(target: string, args: any): any {
-  const localParticipants: Map<string, any> = new Map();
-  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
-
-  const localParticipant: any = localParticipants.get(target);
+  const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
       error: {
@@ -283,10 +281,7 @@ export function setParameters(target: string, args: any): any {
  * @returns {object}
  */
 export function unpublishTrack(target: string, args: any): any {
-  const localParticipants: Map<string, any> = new Map();
-  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
-
-  const localParticipant: any = localParticipants.get(target);
+  const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
       error: {
@@ -295,7 +290,7 @@ export function unpublishTrack(target: string, args: any): any {
     };
   }
 
-  const localTrack: any = localTracks.get(args[0]);
+  const localTrack: any = lookup(args[0]);
   if (!localTrack) {
     return {
       error: {
@@ -314,9 +309,11 @@ export function unpublishTrack(target: string, args: any): any {
       }
     };
   }
+  const serializedPublication = serializeLocalTrackPublication(localTrackPublication);
+  remove(localTrackPublication);
 
   return {
-    result: serializeLocalTrackPublication(localTrackPublication)
+    result: serializedPublication
   };
 }
 
@@ -327,10 +324,7 @@ export function unpublishTrack(target: string, args: any): any {
  * @returns {Array<object>}
  */
 export function unpublishTracks(target: string, args: any): any {
-  const localParticipants: Map<string, any> = new Map();
-  rooms.forEach((room: any) => localParticipants.set(room.localParticipant.sid, room.localParticipant));
-
-  const localParticipant: any = localParticipants.get(target);
+  const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
       error: {
@@ -339,7 +333,7 @@ export function unpublishTracks(target: string, args: any): any {
     };
   }
 
-  const localTracksToUnpublish: any = args[0].map((trackId: string) => localTracks.get(trackId));
+  const localTracksToUnpublish: any = args[0].map(lookup);
   if (localTracksToUnpublish.some((localTrack: any) => !localTrack)) {
     return {
       error: {
@@ -358,8 +352,10 @@ export function unpublishTracks(target: string, args: any): any {
       }
     };
   }
+  const serializedPublications = localTrackPublications.map(serializeLocalTrackPublication);
+  localTrackPublications.forEach(remove);
 
   return {
-    result: localTrackPublications.map(serializeLocalTrackPublication)
+    result: serializedPublications
   };
 }

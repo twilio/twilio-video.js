@@ -177,7 +177,7 @@ export default class VideoDriver {
  * @param {VideoDriverOptions} options
  * @returns {Promise<SDKDriver>}
  */
-async function createSdkDriver(options: VideoDriverOptions): Promise<SDKDriver> {
+function createSdkDriver(options: VideoDriverOptions): Promise<SDKDriver> {
   const { browser } = options;
   const sdkUrl: string = VideoDriver.sdkUrl(options);
   const webServerRoot: string = join(__dirname, '..', 'browser');

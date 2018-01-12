@@ -148,8 +148,12 @@ describe('ParticipantDriver', function() {
       });
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });

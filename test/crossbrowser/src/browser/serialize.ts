@@ -1,3 +1,5 @@
+import { reverseLookup } from './resources';
+
 /**
  * Serialize a {@link LocalDataTrack}.
  * @private
@@ -95,6 +97,7 @@ function serializeRemoteMediaTrack(remoteMediaTrack: any): any {
  */
 function serializeTrack(track: any): any {
   return {
+    _resourceId: reverseLookup(track),
     id: track.id,
     kind: track.kind,
     name: track.name
@@ -141,6 +144,7 @@ export function serializeLocalTrackPublication(localTrackPublication: any): any 
   } = localTrackPublication;
 
   return {
+    _resourceId: reverseLookup(localTrackPublication),
     kind,
     track: serializeLocalTrack(track),
     trackName,
@@ -188,6 +192,7 @@ export function serializeParticipant(participant: any, serializeTrack = serializ
   } = participant;
 
   return {
+    _resourceId: reverseLookup(participant),
     audioTracks: Array.from(audioTracks.values()).map(serializeTrack),
     dataTracks: Array.from(dataTracks.values()).map(serializeTrack),
     identity,
@@ -214,6 +219,7 @@ export function serializeRoom(room: any): any {
   } = room;
 
   return {
+    _resourceId: reverseLookup(room),
     isRecording,
     localParticipant: serializeLocalParticipant(localParticipant),
     name,

@@ -37,7 +37,7 @@ type RoomSID = string;
  * @fires RoomDriver#trackUnsubscribed
  */
 export default class RoomDriver extends EventEmitter {
-  private readonly _instanceId: number;
+  private readonly _resourceId: string;
   private readonly _sdkDriver: SDKDriver;
   localParticipant: LocalParticipantDriver;
   name: string;
@@ -54,13 +54,13 @@ export default class RoomDriver extends EventEmitter {
     super();
     this.localParticipant = new LocalParticipantDriver(sdkDriver, serializedRoom.localParticipant);
     this.participants = new Map();
-    this._instanceId = serializedRoom._instanceId;
+    this._resourceId = serializedRoom._resourceId;
     this._sdkDriver = sdkDriver;
     this._update(serializedRoom);
 
     sdkDriver.on('event', (data: any) => {
       const { type, source, args } = data;
-      if (source._instanceId !== this._instanceId) {
+      if (source._resourceId !== this._resourceId) {
         return;
       }
       switch (type) {
@@ -253,7 +253,7 @@ export default class RoomDriver extends EventEmitter {
   disconnect(): void {
     this._sdkDriver.sendRequest({
       api: 'disconnect',
-      target: this._instanceId
+      target: this._resourceId
     }).then(() => {
       // Do nothing.
     }, () => {
@@ -268,7 +268,7 @@ export default class RoomDriver extends EventEmitter {
   async getStats(): Promise<Array<any>> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'getStats',
-      target: this._instanceId
+      target: this._resourceId
     });
 
     if (error) {

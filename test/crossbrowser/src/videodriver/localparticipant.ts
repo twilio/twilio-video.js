@@ -67,7 +67,7 @@ export default class LocalParticipantDriver extends ParticipantDriver {
    */
   protected _reemitEvents(data: any) {
     const { type, source, args } = data;
-    if (source.sid !== this.sid) {
+    if (source._resourceId !== this._resourceId) {
       return;
     }
     switch (type) {
@@ -125,8 +125,8 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   async publishTrack(localTrack: any): Promise<any> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'publishTrack',
-      args: [localTrack.id],
-      target: this.sid
+      args: [localTrack._resourceId],
+      target: this._resourceId
     });
 
     if (error) {
@@ -145,8 +145,8 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   async publishTracks(localTracks: Array<any>): Promise<Array<any>> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'publishTracks',
-      args: [localTracks.map((track: any) => track.id)],
-      target: this.sid
+      args: [localTracks.map((track: any) => track._resourceId)],
+      target: this._resourceId
     });
 
     if (error) {
@@ -161,7 +161,7 @@ export default class LocalParticipantDriver extends ParticipantDriver {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'setParameters',
       args: [encodingParameters],
-      target: this.sid
+      target: this._resourceId
     });
 
     if (error) {
@@ -178,8 +178,8 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   async unpublishTrack(localTrack: any): Promise<any> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'unpublishTrack',
-      args: [localTrack.id],
-      target: this.sid
+      args: [localTrack._resourceId],
+      target: this._resourceId
     });
 
     if (error) {
@@ -196,8 +196,8 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   async unpublishTracks(localTracks: Array<any>): Promise<Array<any>> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'unpublishTracks',
-      args: [localTracks.map((track: any) => track.id)],
-      target: this.sid
+      args: [localTracks.map((track: any) => track._resourceId)],
+      target: this._resourceId
     });
 
     if (error) {

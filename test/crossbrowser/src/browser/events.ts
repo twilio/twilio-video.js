@@ -1,6 +1,11 @@
 import DMP from '../../../lib/sdkdriver/src/dmp';
 
 import {
+  add,
+  remove
+} from './resources';
+
+import {
   serializeLocalParticipant,
   serializeLocalTrack,
   serializeLocalTrackPublication,
@@ -23,16 +28,17 @@ function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
     });
   });
 
-  localParticipant.on('trackPublicationFailed', (error: any, localTrack: any) => {
+  localParticipant.on('trackPublicationFailed', (error: any, track: any) => {
     const { code, message } = error;
     dmp.sendEvent({
-      args: [{ code, message }, serializeLocalTrack(localTrack)],
+      args: [{ code, message }, serializeLocalTrack(track)],
       source: serializeLocalParticipant(localParticipant),
       type: 'trackPublicationFailed'
     });
   });
 
   localParticipant.on('trackPublished', (publication: any) => {
+    add(publication);
     dmp.sendEvent({
       args: [serializeLocalTrackPublication(publication)],
       source: serializeLocalParticipant(localParticipant),
@@ -60,9 +66,11 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'disconnected'
     });
+    remove(participant);
   });
 
   participant.on('trackAdded', (track: any) => {
+    add(track);
     dmp.sendEvent({
       args: [serializeRemoteTrack(track)],
       source: serializeParticipant(participant),
@@ -76,9 +84,11 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'trackRemoved'
     });
+    remove(track);
   });
 
   participant.on('trackSubscribed', (track: any) => {
+    add(track);
     dmp.sendEvent({
       args: [serializeRemoteTrack(track)],
       source: serializeParticipant(participant),
@@ -92,68 +102,58 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'trackUnsubscribed'
     });
+    remove(track);
   });
 }
 
 /**
  * Send {@link Room} events to the {@link SDKDriver}.
  * @param {DMP} dmp
- * @param {number} instanceId
  * @param {Room} room
  * @returns {void}
  */
-export function sendRoomEvents(dmp: DMP, instanceId: number, room: any): void {
+export function sendRoomEvents(dmp: DMP, room: any): void {
   room.participants.forEach((participant: any) => {
     sendParticipantEvents(dmp, participant);
   });
   sendLocalParticipantEvents(dmp, room.localParticipant);
 
   room.on('disconnected', (room: any, error: any) => {
-    const serializedError: any = error ? {
+    const serializedError = error ? {
       code: error.code,
       message: error.message
     } : null;
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
+    const serializedRoom = serializeRoom(room);
+
     dmp.sendEvent({
       args: [serializedRoom, serializedError],
       source: serializedRoom,
       type: 'disconnected'
     });
+    remove(room);
   });
 
   room.on('participantConnected', (participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
+    add(participant);
     sendParticipantEvents(dmp, participant);
     dmp.sendEvent({
       args: [serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'participantConnected'
     });
   });
 
   room.on('participantDisconnected', (participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
     dmp.sendEvent({
       args: [serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'participantDisconnected'
     });
+    remove(participant);
   });
 
   room.on('recordingStarted', () => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
+    const serializedRoom = serializeRoom(room);
     dmp.sendEvent({
       args: [serializedRoom],
       source: serializedRoom,
@@ -162,10 +162,7 @@ export function sendRoomEvents(dmp: DMP, instanceId: number, room: any): void {
   });
 
   room.on('recordingStopped', () => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
+    const serializedRoom = serializeRoom(room);
     dmp.sendEvent({
       args: [serializedRoom],
       source: serializedRoom,
@@ -174,49 +171,33 @@ export function sendRoomEvents(dmp: DMP, instanceId: number, room: any): void {
   });
 
   room.on('trackAdded', (track: any, participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'trackAdded'
     });
   });
 
   room.on('trackRemoved', (track: any, participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'trackRemoved'
     });
   });
 
   room.on('trackSubscribed', (track: any, participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'trackSubscribed'
     });
   });
 
   room.on('trackUnsubscribed', (track: any, participant: any) => {
-    const serializedRoom: any = {
-      _instanceId: instanceId,
-      ...serializeRoom(room)
-    };
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
-      source: serializedRoom,
+      source: serializeRoom(room),
       type: 'trackUnsubscribed'
     });
   });

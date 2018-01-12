@@ -29,6 +29,7 @@ export type ParticipantSID = string;
  * @fires ParticipantDriver#trackUnsubscribed
  */
 export default class ParticipantDriver extends EventEmitter {
+  protected readonly _resourceId: string;
   audioTracks: Map<string, any>;
   dataTracks: Map<string, any>;
   identity: string;
@@ -44,6 +45,7 @@ export default class ParticipantDriver extends EventEmitter {
    */
   constructor(sdkDriver: SDKDriver, serializedParticipant: any) {
     super();
+    this._resourceId = serializedParticipant._resourceId;
     this._update(serializedParticipant);
     sdkDriver.on('event', (data: any) => this._reemitEvents(data));
   }
@@ -119,7 +121,7 @@ export default class ParticipantDriver extends EventEmitter {
    */
   protected _reemitEvents(data: any) {
     const { type, source, args } = data;
-    if (source.sid !== this.sid) {
+    if (source._resourceId !== this._resourceId) {
       return;
     }
     switch (type) {

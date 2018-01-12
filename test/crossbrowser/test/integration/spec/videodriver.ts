@@ -55,7 +55,12 @@ describe('VideoDriver', function() {
       });
 
       after(() => {
-        videoDriver.close();
+        if (roomDriver) {
+          roomDriver.disconnect();
+        }
+        if (videoDriver) {
+          videoDriver.close();
+        }
       });
     });
   });
@@ -82,7 +87,9 @@ describe('VideoDriver', function() {
           });
 
           after(() => {
-            videoDriver.close();
+            if (videoDriver) {
+              videoDriver.close();
+            }
           });
         });
       });
@@ -112,7 +119,9 @@ describe('VideoDriver', function() {
         });
 
         after(() => {
-          videoDriver.close();
+          if (videoDriver) {
+            videoDriver.close();
+          }
         });
       });
     });

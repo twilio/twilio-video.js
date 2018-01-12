@@ -141,8 +141,12 @@ describe('LocalParticipantDriver', function() {
       }
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });
@@ -299,8 +303,12 @@ describe('LocalParticipantDriver', function() {
       }
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });
@@ -341,8 +349,12 @@ describe('LocalParticipantDriver', function() {
       });
 
       after(() => {
-        roomDriver.disconnect();
-        videoDriver.close();
+        if (roomDriver) {
+          roomDriver.disconnect();
+        }
+        if (videoDriver) {
+          videoDriver.close();
+        }
       });
     });
   });
@@ -443,8 +455,12 @@ describe('LocalParticipantDriver', function() {
       }
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });
@@ -561,8 +577,12 @@ describe('LocalParticipantDriver', function() {
       }
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });

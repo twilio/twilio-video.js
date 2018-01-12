@@ -35,7 +35,9 @@ describe('RoomDriver', function() {
         });
 
         after(() => {
-          videoDriver.close();
+          if (videoDriver) {
+            videoDriver.close();
+          }
         });
       });
     });
@@ -56,13 +58,13 @@ describe('RoomDriver', function() {
           name = randomName();
           videoDriver = new VideoDriver({ browser, realm, version });
 
-          roomDrivers = await(Promise.all(tokens.map((token, i) => {
+          roomDrivers = await Promise.all(tokens.map((token, i) => {
             return videoDriver.connect(token, {
               ...defaults,
               ...constraints[i],
               name
             });
-          })));
+          }));
 
           // Wait for a second for WebRTC stats to be generated.
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -109,8 +111,12 @@ describe('RoomDriver', function() {
         });
 
         after(() => {
-          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-          videoDriver.close();
+          if (roomDrivers) {
+            roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+          }
+          if (videoDriver) {
+            videoDriver.close();
+          }
         });
       });
     });
@@ -166,8 +172,12 @@ describe('RoomDriver', function() {
       });
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
 
@@ -254,8 +264,12 @@ describe('RoomDriver', function() {
       });
 
       after(() => {
-        roomDrivers.forEach(roomDriver => roomDriver.disconnect());
-        videoDrivers.forEach(videoDriver => videoDriver.close());
+        if (roomDrivers) {
+          roomDrivers.forEach(roomDriver => roomDriver.disconnect());
+        }
+        if (videoDrivers) {
+          videoDrivers.forEach(videoDriver => videoDriver.close());
+        }
       });
     });
   });
