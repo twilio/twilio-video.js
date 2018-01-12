@@ -37,13 +37,11 @@ function createResourceId(): string {
  */
 export function add(resource: any): void {
   const { lookup, reverseLookup } = resources;
-  if (reverseLookup.has(resource)) {
-    return;
+  if (!reverseLookup.has(resource)) {
+    const resourceId = createResourceId();
+    lookup.set(resourceId, resource);
+    reverseLookup.set(resource, resourceId);
   }
-
-  const resourceId = createResourceId();
-  lookup.set(resourceId, resource);
-  reverseLookup.set(resource, resourceId);
 }
 
 /**
@@ -63,13 +61,11 @@ export function lookup(resourceId: ResourceID): any {
  */
 export function remove(resource: any): void {
   const { lookup, reverseLookup } = resources;
-  if (!reverseLookup.has(resource)) {
-    return;
+  const resourceId: ResourceID | undefined = reverseLookup.get(resource);
+  if (resourceId) {
+    reverseLookup.delete(resource);
+    lookup.delete(resourceId);
   }
-
-  const resourceId = reverseLookup.get(resource);
-  reverseLookup.delete(resource);
-  lookup.delete(resourceId);
 }
 
 /**

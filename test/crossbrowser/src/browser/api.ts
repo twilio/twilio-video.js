@@ -1,4 +1,5 @@
 import {
+  ResourceID,
   add,
   lookup,
   remove
@@ -107,10 +108,10 @@ export async function createLocalTracks(args: any): Promise<any> {
 
 /**
  * Disconnect from a {@link Room}.
- * @param {string} target - Resource ID of the {@link Room}
+ * @param {ResourceID} target - Resource ID of the {@link Room}
  * @returns {object}
  */
-export function disconnect(target: string): any {
+export function disconnect(target: ResourceID): any {
   const room: any = lookup(target);
   if (!room) {
     return {
@@ -130,10 +131,10 @@ export function disconnect(target: string): any {
 
 /**
  * Get {@link Room} stats.
- * @param {string} target - Resource ID of the {@link Room}.
+ * @param {ResourceID} target - Resource ID of the {@link Room}.
  * @returns {Promise<object>}
  */
-export async function getStats(target: string): Promise<any> {
+export async function getStats(target: ResourceID): Promise<any> {
   const room: any = lookup(target);
   if (!room) {
     return {
@@ -158,11 +159,11 @@ export async function getStats(target: string): Promise<any> {
 
 /**
  * Publish a {@link LocalTrack} to a {@link Room}.
- * @param {string} target - {@link LocalParticipant} resource ID
+ * @param {ResourceID} target - {@link LocalParticipant} resource ID
  * @param {Array<*>} args
  * @returns {Promise<object>}
  */
-export async function publishTrack(target: string, args: any): Promise<any> {
+export async function publishTrack(target: ResourceID, args: any): Promise<any> {
   const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
@@ -201,11 +202,11 @@ export async function publishTrack(target: string, args: any): Promise<any> {
 
 /**
  * Publish {@link LocalTrack}s to a {@link Room}.
- * @param {string} target - {@link LocalParticipant} SID
+ * @param {ResourceID} target - {@link LocalParticipant} SID
  * @param {Array<*>} args
  * @returns {Promise<object>}
  */
-export async function publishTracks(target: string, args: any): Promise<any> {
+export async function publishTracks(target: ResourceID, args: any): Promise<any> {
   const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
@@ -244,11 +245,11 @@ export async function publishTracks(target: string, args: any): Promise<any> {
 
 /**
  * Set the {@link LocalParticipant}'s {@link EncodingParameters}.
- * @param {string} target - {@link LocalParticipant} SID
+ * @param {ResourceID} target - {@link LocalParticipant} SID
  * @param {Array<*>} args
  * @returns {object}
  */
-export function setParameters(target: string, args: any): any {
+export function setParameters(target: ResourceID, args: any): any {
   const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
@@ -276,11 +277,11 @@ export function setParameters(target: string, args: any): any {
 
 /**
  * Unpublish a {@link LocalTrack} from a {@link Room}.
- * @param {string} target - {@link LocalParticipant} SID
+ * @param {ResourceID} target - {@link LocalParticipant} SID
  * @param {Array<*>} args
  * @returns {object}
  */
-export function unpublishTrack(target: string, args: any): any {
+export function unpublishTrack(target: ResourceID, args: any): any {
   const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
@@ -319,11 +320,11 @@ export function unpublishTrack(target: string, args: any): any {
 
 /**
  * Unpublish {@link LocalTrack}s from a {@link Room}.
- * @param {string} target - {@link LocalParticipant} SID
+ * @param {ResourceID} target - {@link LocalParticipant} SID
  * @param {Array<*>} args
  * @returns {Array<object>}
  */
-export function unpublishTracks(target: string, args: any): any {
+export function unpublishTracks(target: ResourceID, args: any): any {
   const localParticipant: any = lookup(target);
   if (!localParticipant) {
     return {
