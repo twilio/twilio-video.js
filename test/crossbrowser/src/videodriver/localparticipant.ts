@@ -1,25 +1,32 @@
 import SDKDriver from '../../../lib/sdkdriver/src';
+import LocalDataTrackDriver from './localdatatrack';
+import LocalMediaTrackDriver from './localmediatrack';
+import LocalTrackPublicationDriver from './localtrackpublication';
 import ParticipantDriver from './participant';
+import TrackDriver, { TrackSID } from './track';
+const { difference } = require('../../../../lib/util');
+
+type LocalTrackDriver = LocalDataTrackDriver | LocalMediaTrackDriver;
 
 /**
  * {@link LocalParticipant} driver.
  * @classdesc A {@link LocalParticipantDriver} manages the execution of
  *   the corresponding {@link LocalParticipant}'s methods in the browser
- *   and reemits the {@link LocalParticipant}'s events.
+ *   and re-emits its events.
  * @extends ParticipantDriver
- * @property {Map<TrackSID, object>} audioTrackPublications
- * @property {Map<TrackSID, object>} dataTrackPublications
- * @property {Map<TrackSID, object>} trackPublications
- * @property {Map<TrackSID, object>} videoTrackPublications
+ * @property {Map<TrackSID, LocalTrackPublicationDriver>} audioTrackPublications
+ * @property {Map<TrackSID, LocalTrackPublicationDriver>} dataTrackPublications
+ * @property {Map<TrackSID, LocalTrackPublicationDriver>} trackPublications
+ * @property {Map<TrackSID, LocalTrackPublicationDriver>} videoTrackPublications
  * @fires LocalParticipantDriver#trackPublicationFailed
  * @fires LocalParticipantDriver#trackPublished
  */
 export default class LocalParticipantDriver extends ParticipantDriver {
-  private readonly _sdkDriver: SDKDriver;
-  audioTrackPublications: Map<string, any>;
-  dataTrackPublications: Map<string, any>;
-  trackPublications: Map<string, any>;
-  videoTrackPublications: Map<string, any>;
+  private _removedTrackPublications: Map<TrackSID, LocalTrackPublicationDriver>;
+  audioTrackPublications: Map<TrackSID, LocalTrackPublicationDriver>;
+  dataTrackPublications: Map<TrackSID, LocalTrackPublicationDriver>;
+  trackPublications: Map<TrackSID, LocalTrackPublicationDriver>;
+  videoTrackPublications: Map<TrackSID, LocalTrackPublicationDriver>;
 
   /**
    * Constructor.
@@ -27,8 +34,20 @@ export default class LocalParticipantDriver extends ParticipantDriver {
    * @param {object} serializedLocalParticipant
    */
   constructor(sdkDriver: SDKDriver, serializedLocalParticipant: any) {
-    super(sdkDriver, serializedLocalParticipant);
-    this._sdkDriver = sdkDriver;
+    super(sdkDriver, serializedLocalParticipant, LocalDataTrackDriver, LocalMediaTrackDriver);
+  }
+
+  private _getOrCreateLocalTrackPublication(serializedLocalTrackPublication: any): LocalTrackPublicationDriver {
+    const { track, trackSid } = serializedLocalTrackPublication;
+    const localTrack: LocalTrackDriver = this.tracks.get(track.id) as LocalTrackDriver;
+    let localTrackPublication: LocalTrackPublicationDriver | undefined = this.trackPublications.get(trackSid);
+
+    if (!localTrackPublication) {
+      localTrackPublication = new LocalTrackPublicationDriver(this._sdkDriver, serializedLocalTrackPublication, localTrack);
+      this.trackPublications.set(trackSid, localTrackPublication);
+      this[`${track.kind}TrackPublications`].set(trackSid, localTrackPublication);
+    }
+    return localTrackPublication;
   }
 
   /**
@@ -41,9 +60,10 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   private _reemitTrackPublicationFailed(source: any, args: any): void {
     this._update(source);
     const [ serializedError, serializedLocalTrack ] = args;
+    const localTrack: TrackDriver | undefined = this._removedTracks.get(serializedLocalTrack.id);
     const error: any = new Error(serializedError.message);
     error.code = serializedError.code;
-    this.emit('trackPublicationFailed', error, serializedLocalTrack);
+    this.emit('trackPublicationFailed', error, localTrack);
   }
 
   /**
@@ -56,7 +76,61 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   private _reemitTrackPublished(source: any, args: any): void {
     this._update(source);
     const serializedLocalTrackPublication: any = args[0];
-    this.emit('trackPublished', serializedLocalTrackPublication);
+    this.emit('trackPublished', this._getOrCreateLocalTrackPublication(serializedLocalTrackPublication));
+  }
+
+  private _removeOrGetRemovedLocalTrackPublication(trackSid: TrackSID): LocalTrackPublicationDriver {
+    let localTrackPublication: LocalTrackPublicationDriver | undefined =  this._removedTrackPublications.get(trackSid);
+    if (localTrackPublication) {
+      return localTrackPublication;
+    }
+    localTrackPublication = this.trackPublications.get(trackSid);
+
+    if (localTrackPublication) {
+      this.trackPublications.delete(trackSid);
+      this[`${localTrackPublication.track.kind}TrackPublications`].delete(trackSid);
+      this._removedTrackPublications.set(trackSid, localTrackPublication);
+    }
+    return localTrackPublication as LocalTrackPublicationDriver;
+  }
+
+  /**
+   * Update the {@link LocalParticipantDriver}'s properties.
+   * @protected
+   * @param {object} serializedLocalParticipant
+   * @returns {void}
+   */
+  protected _update(serializedLocalParticipant: any): void {
+    super._update(serializedLocalParticipant);
+
+    this.audioTrackPublications = this.audioTrackPublications || new Map();
+    this.dataTrackPublications = this.dataTrackPublications || new Map();
+    this.trackPublications = this.trackPublications || new Map();
+    this.videoTrackPublications = this.videoTrackPublications || new Map();
+    this._removedTrackPublications = this._removedTrackPublications || new Map();
+
+    const { trackPublications } = serializedLocalParticipant;
+    const localTrackPublications: Map<TrackSID, any> = new Map(trackPublications.map((serializedLocalTrackPublication: any) => [
+      serializedLocalTrackPublication.trackSid,
+      serializedLocalTrackPublication
+    ]));
+
+    const localTrackPublicationsToAdd: Set<TrackSID> = difference(
+      Array.from(localTrackPublications.keys()),
+      Array.from(this.trackPublications.keys()));
+
+    const localTrackPublicationsToRemove: Set<TrackSID> = difference(
+      Array.from(this.trackPublications.keys()),
+      Array.from(localTrackPublications.keys()));
+
+    localTrackPublicationsToAdd.forEach((trackSid: TrackSID) => {
+      const serializedLocalTrackPublication: any = localTrackPublications.get(trackSid);
+      this._getOrCreateLocalTrackPublication(serializedLocalTrackPublication);
+    });
+
+    localTrackPublicationsToRemove.forEach((trackSid: TrackSID) => {
+      this._removeOrGetRemovedLocalTrackPublication(trackSid);
+    });
   }
 
   /**
@@ -65,7 +139,7 @@ export default class LocalParticipantDriver extends ParticipantDriver {
    * @param {object} data
    * @returns {void}
    */
-  protected _reemitEvents(data: any) {
+  protected _reemitEvents(data: any): void {
     const { type, source, args } = data;
     if (source._resourceId !== this._resourceId) {
       return;
@@ -85,67 +159,41 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   }
 
   /**
-   * Update the {@link LocalParticipantDriver}'s properties.
-   * @protected
-   * @param {object} serializedParticipant
-   * @returns {void}
-   */
-  protected _update(source: any): void {
-    super._update(source);
-    const {
-      audioTrackPublications,
-      dataTrackPublications,
-      trackPublications,
-      videoTrackPublications
-    } = source;
-
-    this.audioTrackPublications = new Map(audioTrackPublications.map((publication: any) => [
-      publication.trackSid,
-      publication
-    ]));
-    this.dataTrackPublications = new Map(dataTrackPublications.map((publication: any) => [
-      publication.trackSid,
-      publication
-    ]));
-    this.trackPublications = new Map(trackPublications.map((publication: any) => [
-      publication.trackSid,
-      publication
-    ]));
-    this.videoTrackPublications = new Map(videoTrackPublications.map((publication: any) => [
-      publication.trackSid,
-      publication
-    ]));
-  }
-
-  /**
    * Publish a {@link LocalTrack} to the {@link Room} in the browser.
-   * @param {object} localTrack
-   * @returns {Promise<object>}
+   * @param {LocalTrackDriver} localTrack
+   * @returns {Promise<LocalTrackPublicationDriver>}
    */
-  async publishTrack(localTrack: any): Promise<any> {
+  async publishTrack(localTrack: LocalTrackDriver): Promise<LocalTrackPublicationDriver> {
+    this._pendingTracks.set(localTrack.id, localTrack);
+
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'publishTrack',
-      args: [localTrack._resourceId],
+      args: [localTrack.resourceId],
       target: this._resourceId
     });
 
     if (error) {
+      this._pendingTracks.delete(localTrack.id);
       const err: any = new Error(error.message);
       err.code = error.code;
       throw err;
     }
-    return result;
+    return this._getOrCreateLocalTrackPublication(result);
   }
 
   /**
    * Publish {@link LocalTrack}s to the {@link Room} in the browser.
-   * @param {Array<object>} localTrack
-   * @returns {Promise<Array<object>>}
+   * @param {Array<LocalTrackDriver>} localTrack
+   * @returns {Promise<Array<LocalTrackPublicationDriver>>}
    */
-  async publishTracks(localTracks: Array<any>): Promise<Array<any>> {
+  async publishTracks(localTracks: Array<LocalTrackDriver>): Promise<Array<LocalTrackPublicationDriver>> {
+    localTracks.forEach((localTrack: LocalTrackDriver) => {
+      this._pendingTracks.set(localTrack.id, localTrack);
+    });
+
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'publishTracks',
-      args: [localTracks.map((track: any) => track._resourceId)],
+      args: [localTracks.map((localTrack: LocalTrackDriver) => localTrack.resourceId)],
       target: this._resourceId
     });
 
@@ -154,7 +202,10 @@ export default class LocalParticipantDriver extends ParticipantDriver {
       err.code = error.code;
       throw err;
     }
-    return result;
+
+    return result.map((serializedLocalTrackPublication: any) => {
+      return this._getOrCreateLocalTrackPublication(serializedLocalTrackPublication);
+    });
   }
 
   async setParameters(encodingParameters: any): Promise<void> {
@@ -172,38 +223,41 @@ export default class LocalParticipantDriver extends ParticipantDriver {
 
   /**
    * Unpublish a {@link LocalTrack} from the {@link Room} in the browser.
-   * @param {object} localTrack
-   * @returns {Promise<object>}
+   * @param {LocalTrackDriver} localTrack
+   * @returns {Promise<LocalTrackPublicationDriver>}
    */
-  async unpublishTrack(localTrack: any): Promise<any> {
+  async unpublishTrack(localTrack: LocalTrackDriver): Promise<LocalTrackPublicationDriver> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'unpublishTrack',
-      args: [localTrack._resourceId],
+      args: [localTrack.resourceId],
       target: this._resourceId
     });
 
     if (error) {
       throw new Error(error.message);
     }
-    return result;
+    return this._removeOrGetRemovedLocalTrackPublication(result.trackSid);
   }
 
   /**
    * Unpublish {@link LocalTrack}s from the {@link Room} in the browser.
-   * @param {Array<object>} localTrack
-   * @returns {Promise<Array<object>>}
+   * @param {Array<LocalTrackDriver>} localTracks
+   * @returns {Promise<Array<LocalTrackPublicationDriver>>}
    */
-  async unpublishTracks(localTracks: Array<any>): Promise<Array<any>> {
+  async unpublishTracks(localTracks: Array<LocalTrackDriver>): Promise<Array<LocalTrackPublicationDriver>> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'unpublishTracks',
-      args: [localTracks.map((track: any) => track._resourceId)],
+      args: [localTracks.map((track: any) => track.resourceId)],
       target: this._resourceId
     });
 
     if (error) {
       throw new Error(error.message);
     }
-    return result;
+
+    return result.map((serializedLocalTrackPublication: any) => {
+      return this._removeOrGetRemovedLocalTrackPublication(serializedLocalTrackPublication.trackSid);
+    });
   }
 }
 

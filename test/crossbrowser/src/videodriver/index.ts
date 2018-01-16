@@ -2,13 +2,28 @@ import { join } from 'path';
 import SDKDriver from '../../../lib/sdkdriver/src';
 import BrowserDriver from '../../../lib/sdkdriver/src/testdriver/browser';
 import WSServerTransport from '../../../lib/sdkdriver/src/transport/websocket/server';
+import LocalDataTrackDriver from './localdatatrack';
+import LocalMediaTrackDriver from './localmediatrack';
 import RoomDriver from './room';
 
+/**
+ * Twilio Error.
+ * @interface
+ * @property {number} code
+ * @property {string} message
+ */
 export interface TwilioError extends Error {
   code: number;
 }
 
-interface VideoDriverOptions {
+/**
+ * {@link VideoDriver} options.
+ * @interface
+ * @property {'chrome' | 'firefox'} browser
+ * @property {'dev' | 'prod' | 'stage'} realm
+ * @property {string} version
+ */
+export interface VideoDriverOptions {
   browser: 'chrome' | 'firefox';
   realm: 'dev' | 'prod' | 'stage';
   version: string;
@@ -63,18 +78,21 @@ export default class VideoDriver {
    * @param {LocalDataTrackOptions|CreateLocalTrackOptions} options
    * @returns {Promise<LocalDataTrackDriver|LocalMediaTrackDriver>}
    */
-  private async _createLocalTrack(kind: string, options: any): Promise<any> {
+  private async _createLocalTrack(kind: string, options: any): Promise<LocalDataTrackDriver|LocalMediaTrackDriver> {
     this._sdkDriver = this._sdkDriver || await createSdkDriver(this._options);
 
     const { error, result } = await this._sdkDriver.sendRequest({
-      api: `createLocalTrack`,
+      api: 'createLocalTrack',
       args: [kind, options]
     });
 
     if (error) {
-      throw error;
+      throw new Error(error.message);
     }
-    return result;
+
+    return result.kind === 'data'
+      ? new LocalDataTrackDriver(this._sdkDriver, result)
+      : new LocalMediaTrackDriver(this._sdkDriver, result);
   }
 
   /**
@@ -129,8 +147,8 @@ export default class VideoDriver {
    * @param {CreateLocalTrackOptions} options
    * @returns {Promise<LocalMediaTrackDriver>}
    */
-  createLocalAudioTrack(options: any): Promise<any> {
-    return this._createLocalTrack('audio', options);
+  createLocalAudioTrack(options: any): Promise<LocalMediaTrackDriver> {
+    return this._createLocalTrack('audio', options) as Promise<LocalMediaTrackDriver>;
   }
 
   /**
@@ -138,8 +156,8 @@ export default class VideoDriver {
    * @param {LocalDataTrackOptions} options
    * @returns {Promise<LocalDataTrackDriver>}
    */
-  createLocalDataTrack(options: any): Promise<any> {
-    return this._createLocalTrack('data', options);
+  createLocalDataTrack(options: any): Promise<LocalDataTrackDriver> {
+    return this._createLocalTrack('data', options) as Promise<LocalDataTrackDriver>;
   }
 
   /**
@@ -147,7 +165,7 @@ export default class VideoDriver {
    * @param {CreateLocalTracksOptions} options
    * @returns {Promise<Array<LocalMediaTrackDriver>>}
    */
-  async createLocalTracks(options: any): Promise<any> {
+  async createLocalTracks(options: any): Promise<Array<LocalMediaTrackDriver>> {
     this._sdkDriver = this._sdkDriver || await this._getSdkDriver();
 
     const { error, result } = await this._sdkDriver.sendRequest({
@@ -156,9 +174,13 @@ export default class VideoDriver {
     });
 
     if (error) {
-      throw error;
+      throw new Error(error.message);
     }
-    return result;
+
+    const sdkDriver: SDKDriver = this._sdkDriver;
+    return result.map((serializedLocalMediaTrack: any) => {
+      return new LocalMediaTrackDriver(sdkDriver, serializedLocalMediaTrack);
+    });
   }
 
   /**
@@ -166,8 +188,8 @@ export default class VideoDriver {
    * @param {CreateLocalTrackOptions} options
    * @returns {Promise<LocalMediaTrackDriver>}
    */
-  createLocalVideoTrack(options: any): Promise<any> {
-    return this._createLocalTrack('video', options);
+  createLocalVideoTrack(options: any): Promise<LocalMediaTrackDriver> {
+    return this._createLocalTrack('video', options) as Promise<LocalMediaTrackDriver>;
   }
 }
 

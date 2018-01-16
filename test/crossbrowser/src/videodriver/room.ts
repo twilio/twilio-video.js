@@ -1,7 +1,8 @@
 import { EventEmitter } from 'events';
 import SDKDriver from '../../../lib/sdkdriver/src';
 import LocalParticipantDriver from './localparticipant';
-import ParticipantDriver, { ParticipantSID } from './participant';
+import { ParticipantSID } from './participant';
+import RemoteParticipantDriver from './remoteparticipant';
 const { difference } = require('../../../../lib/util');
 
 /**
@@ -15,12 +16,12 @@ type RoomSID = string;
 /**
  * {@link Room} driver.
  * @classdesc A {@link RoomDriver} manages the execution of the
- *   corresponding {@link Room}'s methods in the browser and reemits
- *   the {@link Room}'s events.
+ *   corresponding {@link Room}'s methods in the browser and
+ *   re-emits itsevents.
  * @extends EventEmitter
  * @property {LocalParticipantDriver} localParticipant
  * @property {string} name
- * @property {Map<ParticipantSID, ParticipantDriver>} participants
+ * @property {Map<ParticipantSID, RemoteParticipantDriver>} participants
  * @property {RoomSID} sid
  * @property {string} state
  * @fires RoomDriver#disconnected
@@ -28,7 +29,6 @@ type RoomSID = string;
  * @fires RoomDriver#participantDisconnected
  * @fires RoomDriver#recordingStarted
  * @fires RoomDriver#recordingStopped
- * @fires RoomDriver#trackDimensionsChanged
  * @fires RoomDriver#trackDisabled
  * @fires RoomDriver#trackEnabled
  * @fires RoomDriver#trackMessage
@@ -39,10 +39,10 @@ type RoomSID = string;
 export default class RoomDriver extends EventEmitter {
   private readonly _resourceId: string;
   private readonly _sdkDriver: SDKDriver;
-  localParticipant: LocalParticipantDriver;
-  name: string;
-  participants: Map<ParticipantSID, ParticipantDriver>;
-  sid: RoomSID;
+  readonly localParticipant: LocalParticipantDriver;
+  readonly name: string;
+  readonly participants: Map<ParticipantSID, RemoteParticipantDriver>;
+  readonly sid: RoomSID;
   state: string;
 
   /**
@@ -53,7 +53,9 @@ export default class RoomDriver extends EventEmitter {
   constructor(sdkDriver: SDKDriver, serializedRoom: any) {
     super();
     this.localParticipant = new LocalParticipantDriver(sdkDriver, serializedRoom.localParticipant);
+    this.name = serializedRoom.name;
     this.participants = new Map();
+    this.sid = serializedRoom.sid;
     this._resourceId = serializedRoom._resourceId;
     this._sdkDriver = sdkDriver;
     this._update(serializedRoom);
@@ -136,7 +138,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitParticipantDisconnected(source: any, args: any): void {
     const serializedParticipant: any = args[0];
-    const participant: ParticipantDriver = this.participants.get(serializedParticipant.sid) as ParticipantDriver;
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     this._update(source);
     this.emit('participantDisconnected', participant);
   }
@@ -173,7 +175,10 @@ export default class RoomDriver extends EventEmitter {
   private _reemitTrackAdded(source: any, args: any): void {
     this._update(source);
     const [ serializedTrack, serializedParticipant ] = args;
-    this.emit('trackAdded', serializedTrack, this.participants.get(serializedParticipant.sid));
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackAdded', participant.tracks.get(serializedTrack.id), participant);
+    }
   }
 
   /**
@@ -184,9 +189,12 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitTrackRemoved(source: any, args: any): void {
-    this._update(source);
     const [ serializedTrack, serializedParticipant ] = args;
-    this.emit('trackRemoved', serializedTrack, this.participants.get(serializedParticipant.sid));
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    this._update(source);
+    if (participant) {
+      this.emit('trackRemoved', participant.getRemovedTrack(serializedTrack.id), participant);
+    }
   }
 
   /**
@@ -199,7 +207,10 @@ export default class RoomDriver extends EventEmitter {
   private _reemitTrackSubscribed(source: any, args: any): void {
     this._update(source);
     const [ serializedTrack, serializedParticipant ] = args;
-    this.emit('trackSubscribed', serializedTrack, this.participants.get(serializedParticipant.sid));
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackSubscribed', participant.tracks.get(serializedTrack.id), participant);
+    }
   }
 
   /**
@@ -210,9 +221,12 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _reemitTrackUnsubscribed(source: any, args: any): void {
-    this._update(source);
     const [ serializedTrack, serializedParticipant ] = args;
-    this.emit('trackUnsubscribed', serializedTrack, this.participants.get(serializedParticipant.sid));
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    this._update(source);
+    if (participant) {
+      this.emit('trackUnsubscribed', participant.getRemovedTrack(serializedTrack.id), participant);
+    }
   }
 
   /**
@@ -221,26 +235,27 @@ export default class RoomDriver extends EventEmitter {
    * @returns {void}
    */
   private _update(serializedRoom: any): void {
-    this.name = serializedRoom.name;
-    this.sid = serializedRoom.sid;
-    this.state = serializedRoom.state;
+    const { participants, state } = serializedRoom;
 
-    const participants: Map<ParticipantSID, any> = new Map(serializedRoom.participants.map((participant: any) => [
-      participant.sid,
-      participant
+    this.state = state;
+
+    const serializedParticipants: Map<ParticipantSID, any> = new Map(participants.map((serializedParticipant: any) => [
+      serializedParticipant.sid,
+      serializedParticipant
     ]));
 
     const participantsToAdd: Set<ParticipantSID> = difference(
-      Array.from(participants.keys()),
+      Array.from(serializedParticipants.keys()),
       Array.from(this.participants.keys()));
 
     const participantsToRemove: Set<ParticipantSID> = difference(
       Array.from(this.participants.keys()),
-      Array.from(participants.keys()));
+      Array.from(serializedParticipants.keys()));
 
     participantsToAdd.forEach((sid: ParticipantSID) => {
-      this.participants.set(sid, new ParticipantDriver(this._sdkDriver, participants.get(sid)));
+      this.participants.set(sid, new RemoteParticipantDriver(this._sdkDriver, serializedParticipants.get(sid)));
     });
+
     participantsToRemove.forEach((sid: ParticipantSID) => {
       this.participants.delete(sid);
     });
@@ -285,12 +300,12 @@ export default class RoomDriver extends EventEmitter {
  */
 
 /**
- * @param {ParticipantDriver} participant
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#participantConnected
  */
 
 /**
- * @param {ParticipantDriver} participant
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#participantDisconnected
  */
 
@@ -303,56 +318,50 @@ export default class RoomDriver extends EventEmitter {
  */
 
 /**
- * @param {VideoTrackDriver} track
- * @param {ParticipantDriver} participant
- * @event RoomDriver#trackDimensionsChanged
- */
-
-/**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackDisabled
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackEnabled
  */
 
 /**
  * @param {string|ArrayBuffer} data
- * @param {VideoTrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteDataTrackDriver} track
+ * @param {RemotreParticipantDriver} participant
  * @event RoomDriver#trackMessage
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackStarted
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackAdded
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackRemoved
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackSubscribed
  */
 
 /**
- * @param {TrackDriver} track
- * @param {ParticipantDriver} participant
+ * @param {RemoteMediaTrackDriver} track
+ * @param {RemoteParticipantDriver} participant
  * @event RoomDriver#trackUnsubscribed
  */

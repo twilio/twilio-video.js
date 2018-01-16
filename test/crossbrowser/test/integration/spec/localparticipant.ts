@@ -1,9 +1,13 @@
 import * as assert from 'assert';
 import VideoDriver from '../../../src/videodriver';
 import LocalParticipantDriver from '../../../src/videodriver/localparticipant';
-import ParticipantDriver from '../../../src/videodriver/participant';
+import LocalDataTrackDriver from '../../../src/videodriver/localdatatrack';
+import LocalMediaTrackDriver from '../../../src/videodriver/localmediatrack';
+import LocalTrackPublicationDriver from '../../../src/videodriver/localtrackpublication';
+import RemoteDataTrackDriver from '../../../src/videodriver/remotedatatrack';
+import RemoteMediaTrackDriver from '../../../src/videodriver/remotemediatrack';
+import RemoteParticipantDriver from '../../../src/videodriver/remoteparticipant';
 import RoomDriver from '../../../src/videodriver/room';
-import {describe} from "selenium-webdriver/testing";
 const defaults = require('../../../../lib/defaults');
 const getToken = require('../../../../lib/token');
 const { combinationContext, randomName } = require('../../../../lib/util');
@@ -31,9 +35,9 @@ describe('LocalParticipantDriver', function() {
       ]
     ], ([ shouldPublishSucceed, ...browsers ]) => {
       let error: any;
-      let localTrack: any;
-      let localTrackPublication: any;
-      let remoteTrack: any;
+      let localTrack: LocalDataTrackDriver | LocalMediaTrackDriver;
+      let localTrackPublication: LocalTrackPublicationDriver;
+      let remoteTrack: RemoteDataTrackDriver | RemoteMediaTrackDriver;
       let roomDrivers: Array<RoomDriver>;
       let trackEventData: any;
       let videoDrivers: Array<VideoDriver>;
@@ -64,7 +68,7 @@ describe('LocalParticipantDriver', function() {
           ? new Promise(resolve => localParticipant.once('trackPublished', resolve))
           : new Promise(resolve => localParticipant.once('trackPublicationFailed', (error, localTrack) => resolve([error, localTrack])));
 
-        const participant: ParticipantDriver = Array.from(roomDrivers[1].participants.values())[0];
+        const participant: RemoteParticipantDriver = Array.from(roomDrivers[1].participants.values())[0];
 
         const remoteTrackEvent: Promise<any> = shouldPublishSucceed
           ? new Promise(resolve => participant.once('trackSubscribed', resolve))
@@ -83,35 +87,36 @@ describe('LocalParticipantDriver', function() {
       });
 
       if (shouldPublishSucceed) {
-        it('should resolve the returned Promise with a serialized LocalTrackPublication', () => {
-          assert.equal(localTrackPublication.kind, localTrack.kind);
+        it('should resolve the returned Promise with a LocalTrackPublicationDriver', () => {
+          assert(localTrackPublication instanceof LocalTrackPublicationDriver);
           assert.equal(localTrackPublication.trackName, localTrack.name);
-          assert.equal(typeof localTrackPublication.trackSid, 'string');
           assert(/^MT[a-z0-9]{32}/.test(localTrackPublication.trackSid));
-          ['id', 'kind', 'name'].forEach(prop => {
-            assert.equal(localTrackPublication.track[prop], localTrack[prop]);
-          });
+          assert.equal(localTrackPublication.track, localTrack);
         });
 
-        it('should include the serialized LocalTrack in the appropriate collections', () => {
+        it('should include the LocalTrackDriver in the appropriate collections', () => {
           const { id, kind } = localTrack;
           const { localParticipant: { tracks, [`${kind}Tracks`]: kindTracks } } = roomDrivers[0];
           assert(tracks.has(id));
           assert(kindTracks.has(id));
         });
 
-        it('should include the serialized LocalTrackPublication in the appropriate collections', () => {
+        it('should include the LocalTrackPublicationDriver in the appropriate collections', () => {
           const { track: { kind } } = localTrackPublication;
           const { localParticipant: { trackPublications, [`${kind}TrackPublications`]: kindTrackPublications } } = roomDrivers[0];
-          assert.deepEqual(localTrackPublication, trackPublications.get(localTrackPublication.trackSid));
-          assert.deepEqual(localTrackPublication, kindTrackPublications.get(localTrackPublication.trackSid));
+          assert.equal(localTrackPublication, trackPublications.get(localTrackPublication.trackSid));
+          assert.equal(localTrackPublication, kindTrackPublications.get(localTrackPublication.trackSid));
         });
 
-        it('should emit a "trackPublished" event on the LocalParticipantDriver with a serialized LocalTrackPublication', () => {
-          assert.deepEqual(trackEventData, localTrackPublication);
+        it('should emit a "trackPublished" event on the LocalParticipantDriver with a LocalTrackPublicationDriver', () => {
+          assert.equal(trackEventData, localTrackPublication);
         });
 
-        it('should emit a "trackSubscribed" event on the ParticipantDriver with a serialized RemoteTrack', () => {
+        it('should emit a "trackSubscribed" event on the ParticipantDriver with a RemoteTrackDriver', () => {
+          assert(remoteTrack.kind === 'data'
+            ? remoteTrack instanceof RemoteDataTrackDriver
+            : remoteTrack instanceof RemoteMediaTrackDriver);
+
           const { track, trackSid } = localTrackPublication;
           assert.equal(remoteTrack.sid, trackSid);
           ['id', 'kind', 'name'].forEach(prop => {
@@ -126,16 +131,12 @@ describe('LocalParticipantDriver', function() {
         });
 
         it('should emit a "trackPublicationFailed" event on the LocalParticipantDriver with a TwilioError and the '
-          + 'serialized LocalTrack', () => {
-          const [ error, track ] = trackEventData;
-
-          ['id', 'kind', 'name'].forEach(prop => {
-            assert.equal(track[prop], localTrack[prop]);
-          });
-
+          + 'LocalTrackDriver', () => {
+          const [ _error, _localTrack ] = trackEventData;
+          assert.equal(_localTrack, localTrack);
           assert(error instanceof Error);
           ['code', 'message'].forEach(prop => {
-            assert(error[prop], error[prop]);
+            assert(_error[prop], error[prop]);
           });
         });
       }
@@ -167,9 +168,9 @@ describe('LocalParticipantDriver', function() {
       ]
     ], ([ shouldPublishSucceed, ...browsers ]) => {
       let error: any;
-      let localTracks: any;
-      let localTrackPublications: any;
-      let remoteTracks: any;
+      let localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
+      let localTrackPublications: Array<LocalTrackPublicationDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
       let roomDrivers: Array<RoomDriver>;
       let trackEventData: any;
       let videoDrivers: Array<VideoDriver>;
@@ -232,20 +233,21 @@ describe('LocalParticipantDriver', function() {
       });
 
       if (shouldPublishSucceed) {
-        it('should resolve the returned Promise with an array of serialized LocalTrackPublications', () => {
+        it('should resolve the returned Promise with an array of LocalTrackPublicationDrivers', () => {
           localTrackPublications.forEach(localTrackPublication => {
-            const localTrack: any = localTracks.find(track => track.id === localTrackPublication.track.id);
-            assert.equal(localTrackPublication.kind, localTrack.kind);
+            assert(localTrackPublication instanceof LocalTrackPublicationDriver);
+
+            const localTrack: LocalDataTrackDriver | LocalMediaTrackDriver =
+              localTracks.find(track => track.id === localTrackPublication.track.id);
+
             assert.equal(localTrackPublication.trackName, localTrack.name);
-            assert.equal(typeof localTrackPublication.trackSid, 'string');
             assert(/^MT[a-z0-9]{32}/.test(localTrackPublication.trackSid));
-            ['id', 'kind', 'name'].forEach(prop => {
-              assert.equal(localTrackPublication.track[prop], localTrack[prop]);
-            });
+            assert.equal(localTrackPublication.track, localTrack);
+
           });
         });
 
-        it('should include the serialized LocalTracks in the appropriate collections', () => {
+        it('should include the LocalTrackDrivers in the appropriate collections', () => {
           localTracks.forEach(localTrack => {
             const { id, kind } = localTrack;
             const { localParticipant: { tracks, [`${kind}Tracks`]: kindTracks } } = roomDrivers[0];
@@ -254,28 +256,36 @@ describe('LocalParticipantDriver', function() {
           });
         });
 
-        it('should include the serialized LocalTrackPublications in the appropriate collections', () => {
+        it('should include the LocalTrackPublicationDrivers in the appropriate collections', () => {
           localTrackPublications.forEach(localTrackPublication => {
             const { track: { kind } } = localTrackPublication;
             const { localParticipant: { trackPublications, [`${kind}TrackPublications`]: kindTrackPublications } } = roomDrivers[0];
-            assert.deepEqual(localTrackPublication, trackPublications.get(localTrackPublication.trackSid));
-            assert.deepEqual(localTrackPublication, kindTrackPublications.get(localTrackPublication.trackSid));
+            assert.equal(localTrackPublication, trackPublications.get(localTrackPublication.trackSid));
+            assert.equal(localTrackPublication, kindTrackPublications.get(localTrackPublication.trackSid));
           });
         });
 
-        it('should emit "trackPublished" events on the LocalParticipantDriver with the serialized LocalTrackPublications', () => {
-          trackEventData.forEach(publication => {
-            const _publication: any = localTrackPublications.find(_publication => _publication.trackSid === publication.trackSid);
-            assert.deepEqual(publication, _publication);
+        it('should emit "trackPublished" events on the LocalParticipantDriver with the LocalTrackPublicationDrivers', () => {
+          trackEventData.forEach(localTrackPublication => {
+            const { track: { kind } } = localTrackPublication;
+            const { localParticipant: { trackPublications, [`${kind}TrackPublications`]: kindTrackPublications } } = roomDrivers[0];
+            assert.equal(localTrackPublication, trackPublications.get(localTrackPublication.trackSid));
+            assert.equal(localTrackPublication, kindTrackPublications.get(localTrackPublication.trackSid));
           });
         });
 
-        it('should emit "trackSubscribed" events on the ParticipantDriver with the serialized RemoteTracks', () => {
+        it('should emit "trackSubscribed" events on the ParticipantDriver with the RemoteTrackDrivers', () => {
           remoteTracks.forEach(remoteTrack => {
-            const publication = localTrackPublications.find(publication => publication.trackSid === remoteTrack.sid);
-            assert(publication);
+            assert(remoteTrack.kind === 'data'
+              ? remoteTrack instanceof RemoteDataTrackDriver
+              : remoteTrack instanceof RemoteMediaTrackDriver);
+
+            const { localParticipant: { trackPublications } } = roomDrivers[0];
+            const { track } = trackPublications.get(remoteTrack.sid);
+
+            assert.equal(track);
             ['id', 'kind', 'name'].forEach(prop => {
-              assert.equal(remoteTrack[prop], publication.track[prop]);
+              assert.equal(remoteTrack[prop], track[prop]);
             });
           });
         });
@@ -286,18 +296,13 @@ describe('LocalParticipantDriver', function() {
           assert.equal(typeof error.message, 'string');
         });
 
-        it('should emit a "trackPublicationFailed" event on the LocalParticipantDriver with a TwilioError and the '
-          + 'serialized LocalTrack', () => {
-          const [ error, localTrack ] = trackEventData;
-          const _localTrack = localTracks.find(track => track.kind === 'audio');
-
-          ['id', 'kind', 'name'].forEach(prop => {
-            assert.equal(localTrack[prop], _localTrack[prop]);
-          });
-
+        it('should emit a "trackPublicationFailed" event on the LocalParticipantDriver with a TwilioError and the LocalTrackDriver', () => {
+          const [ _error, _localTrack ] = trackEventData;
+          const localTrack = localTracks.find(track => track.kind === 'audio');
+          assert.equal(_localTrack, localTrack);
           assert(error instanceof Error);
           ['code', 'message'].forEach(prop => {
-            assert(error[prop], error[prop]);
+            assert(_error[prop], error[prop]);
           });
         });
       }
@@ -375,9 +380,9 @@ describe('LocalParticipantDriver', function() {
       ]
     ], ([ shouldUnpublishSucceed, ...browsers ]) => {
       let error: any;
-      let localTrack: any;
-      let localTrackPublication: any;
-      let remoteTrack: any;
+      let localTrack: LocalDataTrackDriver | LocalMediaTrackDriver;
+      let localTrackPublication: LocalTrackPublicationDriver;
+      let remoteTrack: RemoteDataTrackDriver | RemoteMediaTrackDriver;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
 
@@ -417,32 +422,34 @@ describe('LocalParticipantDriver', function() {
       });
 
       if (shouldUnpublishSucceed) {
-        it('should resolve the returned Promise with a serialized LocalTrackPublication', () => {
-          assert.equal(localTrackPublication.kind, localTrack.kind);
+        it('should resolve the returned Promise with the removed LocalTrackPublicationDriver', () => {
+          assert(localTrackPublication instanceof LocalTrackPublicationDriver);
           assert.equal(localTrackPublication.trackName, localTrack.name);
-          assert.equal(typeof localTrackPublication.trackSid, 'string');
           assert(/^MT[a-z0-9]{32}/.test(localTrackPublication.trackSid));
-          ['id', 'kind', 'name'].forEach(prop => {
-            assert.equal(localTrackPublication.track[prop], localTrack[prop]);
-          });
+          assert.equal(localTrackPublication.track, localTrack);
         });
 
-        it('should remove the serialized LocalTrackPublication from the appropriate collections', () => {
+        it('should remove the LocalTrackPublicationDriver from the appropriate collections', () => {
           const { track: { kind } } = localTrackPublication;
           const { localParticipant: { trackPublications, [`${kind}TrackPublications`]: kindTrackPublications } } = roomDrivers[0];
           assert(!trackPublications.has(localTrackPublication.trackSid));
           assert(!kindTrackPublications.has(localTrackPublication.trackSid));
         });
 
-        it('should remove the serialized LocalTrack from the appropriate collections', () => {
+        it('should remove the LocalTrackDriver from the appropriate collections', () => {
           const { id, kind } = localTrack;
           const { localParticipant: { tracks, [`${kind}Tracks`]: kindTracks } } = roomDrivers[0];
           assert(!tracks.has(id));
           assert(!kindTracks.has(id));
         });
 
-        it('should emit a "trackUnsubscribed" event on the ParticipantDriver with a serialized LocalTrack', () => {
+        it('should emit a "trackUnsubscribed" event on the ParticipantDriver with a RemoteTrackDriver', () => {
           const { track, trackSid } = localTrackPublication;
+
+          assert(remoteTrack.kind === 'data'
+            ? remoteTrack instanceof RemoteDataTrackDriver
+            : remoteTrack instanceof RemoteMediaTrackDriver);
+
           assert.equal(remoteTrack.sid, trackSid);
           ['id', 'kind', 'name'].forEach(prop => {
             assert.equal(remoteTrack[prop], track[prop]);
@@ -481,9 +488,9 @@ describe('LocalParticipantDriver', function() {
       ]
     ], ([ shouldUnpublishSucceed, ...browsers ]) => {
       let error: any;
-      let localTracks: any;
-      let localTrackPublications: any;
-      let remoteTracks: any;
+      let localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
+      let localTrackPublications: Array<LocalTrackPublicationDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
 
@@ -530,20 +537,17 @@ describe('LocalParticipantDriver', function() {
       });
 
       if (shouldUnpublishSucceed) {
-        it('should resolve the returned Promise with an array of serialized LocalTrackPublications', () => {
+        it('should resolve the returned Promise with an array of LocalTrackPublicationDrivers', () => {
           localTrackPublications.forEach(localTrackPublication => {
             const localTrack: any = localTracks.find(track => track.id === localTrackPublication.track.id);
-            assert.equal(localTrackPublication.kind, localTrack.kind);
+            assert(localTrackPublication instanceof LocalTrackPublicationDriver);
             assert.equal(localTrackPublication.trackName, localTrack.name);
-            assert.equal(typeof localTrackPublication.trackSid, 'string');
             assert(/^MT[a-z0-9]{32}/.test(localTrackPublication.trackSid));
-            ['id', 'kind', 'name'].forEach(prop => {
-              assert.equal(localTrackPublication.track[prop], localTrack[prop]);
-            });
+            assert.equal(localTrackPublication.track, localTrack);
           });
         });
 
-        it('should remove the serialized LocalTrackPublications from the appropriate collections', () => {
+        it('should remove the LocalTrackPublicationDrivers from the appropriate collections', () => {
           localTrackPublications.forEach(localTrackPublication => {
             const { track: { kind } } = localTrackPublication;
             const { localParticipant: { trackPublications, [`${kind}TrackPublications`]: kindTrackPublications } } = roomDrivers[0];
@@ -552,7 +556,7 @@ describe('LocalParticipantDriver', function() {
           });
         });
 
-        it('should remove the serialized LocalTracks from the appropriate collections', () => {
+        it('should remove the LocalTrackDrivers from the appropriate collections', () => {
           localTracks.forEach(localTrack => {
             const { id, kind } = localTrack;
             const { localParticipant: { tracks, [`${kind}Tracks`]: kindTracks } } = roomDrivers[0];
@@ -561,10 +565,15 @@ describe('LocalParticipantDriver', function() {
           });
         });
 
-        it('should emit "trackUnsubscribed" events on the ParticipantDriver with the serialized LocalTracks', () => {
+        it('should emit "trackUnsubscribed" events on the ParticipantDriver with the RemoteTrackDrivers', () => {
           remoteTracks.forEach(remoteTrack => {
             const localTrackPublication: any = localTrackPublications.find(publication => publication.trackSid === remoteTrack.sid);
             assert(localTrackPublication);
+
+            assert(remoteTrack.kind === 'data'
+              ? remoteTrack instanceof RemoteDataTrackDriver
+              : remoteTrack instanceof RemoteMediaTrackDriver);
+
             ['id', 'kind', 'name'].forEach(prop => {
               assert.equal(remoteTrack[prop], localTrackPublication.track[prop]);
             });

@@ -1,5 +1,7 @@
 import * as assert from 'assert';
 import VideoDriver, { TwilioError } from '../../../src/videodriver';
+import LocalDataTrackDriver from '../../../src/videodriver/localdatatrack';
+import LocalMediaTrackDriver from '../../../src/videodriver/localmediatrack';
 import RoomDriver from '../../../src/videodriver/room';
 const defaults = require('../../../../lib/defaults');
 const getToken = require('../../../../lib/token');
@@ -70,20 +72,23 @@ describe('VideoDriver', function() {
       ['chrome', 'firefox'].forEach(browser => {
         context(browser, () => {
           let name: string;
-          let serializedLocalTrack: any;
+          let localTrack: LocalDataTrackDriver | LocalMediaTrackDriver;
           let videoDriver: VideoDriver;
 
           before(async () => {
             name = randomName();
             videoDriver = new VideoDriver({ browser, realm, version });
-            serializedLocalTrack = await videoDriver[`createLocal${capitalize(kind)}Track`]({ name });
+            localTrack = await videoDriver[`createLocal${capitalize(kind)}Track`]({ name });
           });
 
-          it(`should return a serialized Local${capitalize(kind)}Track`, () => {
-            assert(serializedLocalTrack);
-            assert.equal(typeof serializedLocalTrack.id, 'string');
-            assert.equal(serializedLocalTrack.kind, kind);
-            assert.equal(serializedLocalTrack.name, name);
+          it(`should return a Local${kind === 'data' ? 'Data' : 'Media'}TrackDriver`, () => {
+            assert(kind === 'data'
+              ? localTrack instanceof LocalDataTrackDriver
+              : localTrack instanceof LocalMediaTrackDriver);
+
+            assert.equal(typeof localTrack.id, 'string');
+            assert.equal(localTrack.kind, kind);
+            assert.equal(localTrack.name, name);
           });
 
           after(() => {
@@ -100,18 +105,19 @@ describe('VideoDriver', function() {
     ['chrome', 'firefox'].forEach(browser => {
       context(browser, () => {
         let options: any;
-        let serializedLocalTracks: any;
+        let localTracks: Array<LocalMediaTrackDriver>;
         let videoDriver: VideoDriver;
 
         before(async () => {
           options = { audio: { name: randomName() }, video: { name: randomName() } };
           videoDriver = new VideoDriver({ browser, realm, version });
-          serializedLocalTracks = await videoDriver.createLocalTracks(options);
+          localTracks = await videoDriver.createLocalTracks(options);
         });
 
-        it(`should return an array of serialized LocalMediaTracks`, () => {
-          assert(serializedLocalTracks);
-          serializedLocalTracks.forEach(track => {
+        it(`should return an array of LocalMediaTrackDrivers`, () => {
+          assert(localTracks);
+          localTracks.forEach(track => {
+            assert(track instanceof LocalMediaTrackDriver);
             assert.equal(typeof track.id, 'string');
             assert(/^audio|video$/.test(track.kind));
             assert.equal(track.name, options[track.kind].name);

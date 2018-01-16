@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 import SDKDriver from '../../../lib/sdkdriver/src';
+import TrackDriver, { TrackID, TrackKind } from './track';
+const { difference } = require('../../../../lib/util');
 
 /**
  * A {@link ParticipantSID} is a 34-character string starting with "PA"
@@ -12,53 +14,58 @@ export type ParticipantSID = string;
 /**
  * {@link Participant} driver.
  * @classdesc A {@link ParticipantDriver} manages the execution of the
- *   corresponding {@link Participant}'s methods in the browser and reemits
- *   the {@link Participant}'s events.
+ *   corresponding {@link Participant}'s methods in the browser and
+ *   re-emits its events.
  * @extends EventEmitter
- * @property {Map<TrackID, object>} audioTracks
- * @property {Map<TrackID, object>} dataTracks
+ * @property {Map<TrackID, TrackDriver>} audioTracks
+ * @property {Map<TrackID, TrackDriver>} dataTracks
  * @property {string} identity
  * @property {ParticipantSID} sid
  * @property {string} state
- * @property {Map<TrackID, object>} tracks
- * @property {Map<TrackID, object>} videoTracks
- * @fires ParticipantDriver#disconnected
+ * @property {Map<TrackID, TrackDriver>} tracks
+ * @property {Map<TrackID, TrackDriver>} videoTracks
  * @fires ParticipantDriver#trackAdded
  * @fires ParticipantDriver#trackRemoved
- * @fires ParticipantDriver#trackSubscribed
- * @fires ParticipantDriver#trackUnsubscribed
  */
 export default class ParticipantDriver extends EventEmitter {
+  protected readonly _pendingTracks: Map<TrackID, TrackDriver>;
+  protected readonly _removedTracks: Map<TrackID, TrackDriver>;
   protected readonly _resourceId: string;
-  audioTracks: Map<string, any>;
-  dataTracks: Map<string, any>;
+  protected readonly _sdkDriver: SDKDriver;
+  private readonly _DataTrackDriver: typeof TrackDriver;
+  private readonly _MediaTrackDriver: typeof TrackDriver;
+  readonly audioTracks: Map<TrackID, TrackDriver>;
+  readonly dataTracks: Map<TrackID, TrackDriver>;
+  readonly tracks: Map<TrackID, TrackDriver>;
+  readonly videoTracks: Map<TrackID, TrackDriver>;
   identity: string;
   sid: ParticipantSID;
   state: string;
-  tracks: Map<string, any>;
-  videoTracks: Map<string, any>;
 
   /**
    * Constructor.
    * @param {SDKDriver} sdkDriver
    * @param {object} serializedParticipant
+   * @param {typeof TrackDriver} DataTrackDriver
+   * @param {typeof TrackDriver} MediaTrackDriver
    */
-  constructor(sdkDriver: SDKDriver, serializedParticipant: any) {
+  constructor(sdkDriver: SDKDriver,
+              serializedParticipant: any,
+              DataTrackDriver: typeof TrackDriver,
+              MediaTrackDriver: typeof TrackDriver) {
     super();
+    this.audioTracks = new Map();
+    this.dataTracks = new Map();
+    this.tracks = new Map();
+    this.videoTracks = new Map();
+    this._pendingTracks = new Map();
+    this._removedTracks = new Map();
     this._resourceId = serializedParticipant._resourceId;
+    this._sdkDriver = sdkDriver;
+    this._DataTrackDriver = DataTrackDriver;
+    this._MediaTrackDriver = MediaTrackDriver;
     this._update(serializedParticipant);
     sdkDriver.on('event', (data: any) => this._reemitEvents(data));
-  }
-
-  /**
-   * Re-emit the "disconnected" event from the browser.
-   * @private
-   * @param {object} source
-   * @returns {void}
-   */
-  private _reemitDisconnected(source: any): void {
-    this._update(source);
-    this.emit('disconnected', this);
   }
 
   /**
@@ -68,10 +75,10 @@ export default class ParticipantDriver extends EventEmitter {
    * @param {Array<*>} args
    * @returns {void}
    */
-  private _reemitTrackAdded(source: any, args: any): void {
+  protected _reemitTrackAdded(source: any, args: any): void {
     this._update(source);
     const serializedTrack: any = args[0];
-    this.emit('trackAdded', serializedTrack);
+    this.emit('trackAdded', this.tracks.get(serializedTrack.id));
   }
 
   /**
@@ -81,36 +88,11 @@ export default class ParticipantDriver extends EventEmitter {
    * @param {Array<*>} args
    * @returns {void}
    */
-  private _reemitTrackRemoved(source: any, args: any): void {
+  protected _reemitTrackRemoved(source: any, args: any): void {
     this._update(source);
     const serializedTrack: any = args[0];
-    this.emit('trackRemoved', serializedTrack);
-  }
-
-  /**
-   * Re-emit the "trackSubscribed" event from the browser.
-   * @private
-   * @param {object} source
-   * @param {Array<*>} args
-   * @returns {void}
-   */
-  private _reemitTrackSubscribed(source: any, args: any): void {
-    this._update(source);
-    const serializedTrack: any = args[0];
-    this.emit('trackSubscribed', serializedTrack);
-  }
-
-  /**
-   * Re-emit the "trackUnsubscribed" event from the browser.
-   * @private
-   * @param {object} source
-   * @param {Array<*>} args
-   * @returns {void}
-   */
-  private _reemitTrackUnsubscribed(source: any, args: any): void {
-    this._update(source);
-    const serializedTrack: any = args[0];
-    this.emit('trackUnsubscribed', serializedTrack);
+    const track: TrackDriver | undefined = this._removedTracks.get(serializedTrack.id);
+    this.emit('trackRemoved', track);
   }
 
   /**
@@ -119,26 +101,17 @@ export default class ParticipantDriver extends EventEmitter {
    * @param {object} data
    * @returns {void}
    */
-  protected _reemitEvents(data: any) {
+  protected _reemitEvents(data: any): void {
     const { type, source, args } = data;
     if (source._resourceId !== this._resourceId) {
       return;
     }
     switch (type) {
-      case 'disconnected':
-        this._reemitDisconnected(source);
-        break;
       case 'trackAdded':
         this._reemitTrackAdded(source, args);
         break;
       case 'trackRemoved':
         this._reemitTrackRemoved(source, args);
-        break;
-      case 'trackSubscribed':
-        this._reemitTrackSubscribed(source, args);
-        break;
-      case 'trackUnsubscribed':
-        this._reemitTrackUnsubscribed(source, args);
         break;
     }
   }
@@ -151,56 +124,68 @@ export default class ParticipantDriver extends EventEmitter {
    */
   protected _update(serializedParticipant: any): void {
     const {
-      audioTracks,
-      dataTracks,
       identity,
       sid,
       state,
-      tracks,
-      videoTracks
+      tracks
     } = serializedParticipant;
 
-    this.audioTracks = new Map(audioTracks.map((track: any) => [track.id, track]));
-    this.dataTracks = new Map(dataTracks.map((track: any) => [track.id, track]));
     this.identity = identity;
     this.sid = sid;
     this.state = state;
-    this.tracks = new Map(tracks.map((track: any) => [track.id, track]));
-    this.videoTracks = new Map(videoTracks.map((track: any) => [track.id, track]));
+
+    const TrackDriver = {
+      audio: this._MediaTrackDriver,
+      data: this._DataTrackDriver,
+      video: this._MediaTrackDriver
+    };
+
+    const serializedTracks: Map<TrackID, any> = new Map(tracks.map((serializedTrack: any) => [
+      serializedTrack.id,
+      serializedTrack
+    ]));
+
+    const tracksToAdd: Set<TrackID> = difference(
+      Array.from(serializedTracks.keys()),
+      Array.from(this.tracks.keys()));
+
+    const tracksToRemove: Set<TrackID> = difference(
+      Array.from(this.tracks.keys()),
+      Array.from(serializedTracks.keys()));
+
+    tracksToAdd.forEach((trackId: TrackID) => {
+      const serializedTrack: any = serializedTracks.get(trackId);
+      const kind: TrackKind = serializedTrack.kind;
+
+      const track: TrackDriver = this._pendingTracks.get(trackId)
+        || new TrackDriver[kind](this._sdkDriver, serializedTrack);
+
+      this.tracks.set(trackId, track);
+      this[`${kind}Tracks`].set(trackId, track);
+      this._pendingTracks.delete(trackId);
+    });
+
+    tracksToRemove.forEach((trackId: TrackID) => {
+      const track: TrackDriver | undefined = this.tracks.get(trackId);
+      if (track) {
+        this.tracks.delete(trackId);
+        this[`${track.kind}Tracks`].delete(trackId);
+        this._removedTracks.set(track.id, track);
+      }
+    });
+  }
+
+  getRemovedTrack(id: TrackID): TrackDriver | undefined {
+    return this._removedTracks.get(id);
   }
 }
 
 /**
- * @param {ParticipantDriver} participant
- * @event ParticipantDriver#disconnected
- */
-
-/**
- * @param {VideoTrackDriver} track
- * @event ParticipantDriver#trackDimensionsChanged
+ * @param {TrackDriver} track
+ * @event ParticipantDriver#trackAdded
  */
 
 /**
  * @param {TrackDriver} track
- * @event ParticipantDriver#trackDisabled
- */
-
-/**
- * @param {TrackDriver} track
- * @event ParticipantDriver#trackEnabled
- */
-
-/**
- * @param {TrackDriver} track
- * @event ParticipantDriver#trackStarted
- */
-
-/**
- * @param {TrackDriver} track
- * @event ParticipantDriver#trackSubscribed
- */
-
-/**
- * @param {TrackDriver} track
- * @event ParticipantDriver#trackUnsubscribed
+ * @event ParticipantDriver#trackRemoved
  */
