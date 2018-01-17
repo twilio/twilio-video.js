@@ -37,6 +37,12 @@ export default class LocalParticipantDriver extends ParticipantDriver {
     super(sdkDriver, serializedLocalParticipant, LocalDataTrackDriver, LocalMediaTrackDriver);
   }
 
+  /**
+   * Get or create a {@link LocalTrackPublicationDriver}.
+   * @private
+   * @param {object} serializedLocalTrackPublication
+   * @returns {LocalTrackPublicationDriver}
+   */
   private _getOrCreateLocalTrackPublication(serializedLocalTrackPublication: any): LocalTrackPublicationDriver {
     const { track, trackSid } = serializedLocalTrackPublication;
     const localTrack: LocalTrackDriver = this.tracks.get(track.id) as LocalTrackDriver;
@@ -79,6 +85,34 @@ export default class LocalParticipantDriver extends ParticipantDriver {
     this.emit('trackPublished', this._getOrCreateLocalTrackPublication(serializedLocalTrackPublication));
   }
 
+  /**
+   * Re-emit {@link LocalParticipant}'s events from the browser.
+   * @private
+   * @param {object} data
+   * @returns {void}
+   */
+  protected _reemitEvents(data: any): void {
+    const { type, source, args } = data;
+    if (source._resourceId !== this._resourceId) {
+      return;
+    }
+    super._reemitEvents(data);
+    switch (type) {
+      case 'trackPublicationFailed':
+        this._reemitTrackPublicationFailed(source, args);
+        break;
+      case 'trackPublished':
+        this._reemitTrackPublished(source, args);
+        break;
+    }
+  }
+
+  /**
+   * Remove or get an already removed {@link LocalTrackPublicationDriver}.
+   * @private
+   * @param {TrackSID} trackSid
+   * @returns {LocalTrackPublicationDriver}
+   */
   private _removeOrGetRemovedLocalTrackPublication(trackSid: TrackSID): LocalTrackPublicationDriver {
     let localTrackPublication: LocalTrackPublicationDriver | undefined =  this._removedTrackPublications.get(trackSid);
     if (localTrackPublication) {
@@ -131,31 +165,6 @@ export default class LocalParticipantDriver extends ParticipantDriver {
     localTrackPublicationsToRemove.forEach((trackSid: TrackSID) => {
       this._removeOrGetRemovedLocalTrackPublication(trackSid);
     });
-  }
-
-  /**
-   * Re-emit {@link LocalParticipant}'s events from the browser.
-   * @private
-   * @param {object} data
-   * @returns {void}
-   */
-  protected _reemitEvents(data: any): void {
-    const { type, source, args } = data;
-    if (source._resourceId !== this._resourceId) {
-      return;
-    }
-    switch (type) {
-      case 'localTrackAdded':
-      case 'localTrackRemoved':
-        this._update(source);
-        break;
-      case 'trackPublicationFailed':
-        this._reemitTrackPublicationFailed(source, args);
-        break;
-      case 'trackPublished':
-        this._reemitTrackPublished(source, args);
-        break;
-    }
   }
 
   /**

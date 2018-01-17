@@ -42,10 +42,10 @@ export default class LocalDataTrackDriver extends TrackDriver {
 
   /**
    * Send a message using the {@link LocalDataTrack} in the browser.
-   * @param {*} data
+   * @param {string} data
    * @returns {void}
    */
-  send(data: any): void {
+  send(data: string): void {
     this._sdkDriver.sendRequest({
       args: [data],
       api: 'send',

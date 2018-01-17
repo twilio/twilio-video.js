@@ -34,16 +34,6 @@ export async function connect(args: any, sendRoomEvents: (room: any) => void): P
       }
     };
   }
-
-  add(room);
-  add(room.localParticipant);
-  room.localParticipant.tracks.forEach(add);
-  room.localParticipant.trackPublications.forEach(add);
-
-  room.participants.forEach((participant: any) => {
-    add(participant);
-    participant.tracks.forEach(add);
-  });
   sendRoomEvents(room);
 
   return {
@@ -56,7 +46,7 @@ export async function connect(args: any, sendRoomEvents: (room: any) => void): P
  * @param {Array<*>} args
  * @returns {Promise<object>}
  */
-export async function createLocalTrack(args: any): Promise<any> {
+export async function createLocalTrack(args: any, sendLocalTrackEvents: (track: any) => void): Promise<any> {
   const [ kind, options ] = args;
   const createLocalTrack: (options: any) => Promise<any> = {
     audio: (options: any) => Twilio.Video.createLocalAudioTrack(options),
@@ -74,7 +64,7 @@ export async function createLocalTrack(args: any): Promise<any> {
       }
     };
   }
-  add(localTrack);
+  sendLocalTrackEvents(localTrack);
 
   return {
     result: serializeLocalTrack(localTrack)
@@ -86,7 +76,7 @@ export async function createLocalTrack(args: any): Promise<any> {
  * @param {Array<*>} args
  * @returns {Promise<object>}
  */
-export async function createLocalTracks(args: any): Promise<any> {
+export async function createLocalTracks(args: any, sendLocalTrackEvents: (track: any) => void): Promise<any> {
   const [ options ] = args;
   let localTracks: Array<any>;
 
@@ -99,10 +89,26 @@ export async function createLocalTracks(args: any): Promise<any> {
       }
     };
   }
-  localTracks.forEach(add);
+  localTracks.forEach(sendLocalTrackEvents);
 
   return {
     result: localTracks.map(serializeLocalTrack)
+  };
+}
+
+export function disable(target: ResourceID): any {
+  const localMediaTrack: any = lookup(target);
+  if (!localMediaTrack) {
+    return {
+      error: {
+        message: 'LocalMediaTrack not found'
+      }
+    };
+  }
+
+  localMediaTrack.disable();
+  return {
+    result: serializeLocalTrack(localMediaTrack)
   };
 }
 
@@ -121,11 +127,26 @@ export function disconnect(target: ResourceID): any {
     };
   }
   room.disconnect();
-  const serializedRoom = serializeRoom(room);
-  remove(room);
 
   return {
-    result: serializedRoom
+    result: serializeRoom(room)
+  };
+}
+
+export function enable(target: ResourceID, args: any): any {
+  const localMediaTrack: any = lookup(target);
+  if (!localMediaTrack) {
+    return {
+      error: {
+        message: 'LocalMediaTrack not found'
+      }
+    };
+  }
+
+  const enabled: boolean | undefined = args[0];
+  localMediaTrack.enable(enabled);
+  return {
+    result: serializeLocalTrack(localMediaTrack)
   };
 }
 
@@ -168,7 +189,7 @@ export async function publishTrack(target: ResourceID, args: any): Promise<any> 
   if (!localParticipant) {
     return {
       error: {
-        message: 'Participant not found'
+        message: 'LocalParticipant not found'
       }
     };
   }
@@ -211,7 +232,7 @@ export async function publishTracks(target: ResourceID, args: any): Promise<any>
   if (!localParticipant) {
     return {
       error: {
-        message: 'Participant not found'
+        message: 'LocalParticipant not found'
       }
     };
   }
@@ -243,6 +264,24 @@ export async function publishTracks(target: ResourceID, args: any): Promise<any>
   };
 }
 
+export function send(target: ResourceID, args: any): any {
+  const localDataTrack: any = lookup(target);
+  if (!localDataTrack) {
+    return {
+      error: {
+        message: 'LocalDataTrack not found'
+      }
+    };
+  }
+
+  const data: string = args[0];
+  localDataTrack.send(data);
+
+  return {
+    result: serializeLocalTrack(localDataTrack)
+  };
+}
+
 /**
  * Set the {@link LocalParticipant}'s {@link EncodingParameters}.
  * @param {ResourceID} target - {@link LocalParticipant} SID
@@ -254,7 +293,7 @@ export function setParameters(target: ResourceID, args: any): any {
   if (!localParticipant) {
     return {
       error: {
-        message: 'Participant not found'
+        message: 'LocalParticipant not found'
       }
     };
   }
@@ -275,6 +314,42 @@ export function setParameters(target: ResourceID, args: any): any {
   };
 }
 
+export function stop(target: ResourceID): any {
+  const localMediaTrack: any = lookup(target);
+  if (!localMediaTrack) {
+    return {
+      error: {
+        message: 'LocalMediaTrack not found'
+      }
+    };
+  }
+
+  localMediaTrack.stop();
+  return {
+    result: serializeLocalTrack(localMediaTrack)
+  };
+}
+
+export function unpublish(target: ResourceID): any {
+  const localTrackPublication: any = lookup(target);
+  if (!localTrackPublication) {
+    return {
+      error: {
+        message: 'LocalTrackPublication not found'
+      }
+    };
+  }
+
+  localTrackPublication.unpublish();
+  remove(localTrackPublication);
+
+  return {
+    result: serializeLocalTrackPublication(localTrackPublication)
+  };
+}
+
+
+
 /**
  * Unpublish a {@link LocalTrack} from a {@link Room}.
  * @param {ResourceID} target - {@link LocalParticipant} SID
@@ -286,7 +361,7 @@ export function unpublishTrack(target: ResourceID, args: any): any {
   if (!localParticipant) {
     return {
       error: {
-        message: 'Participant not found'
+        message: 'LocalParticipant not found'
       }
     };
   }
@@ -329,7 +404,7 @@ export function unpublishTracks(target: ResourceID, args: any): any {
   if (!localParticipant) {
     return {
       error: {
-        message: 'Participant not found'
+        message: 'LocalParticipant not found'
       }
     };
   }

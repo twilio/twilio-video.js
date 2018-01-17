@@ -14,17 +14,73 @@ import {
   serializeRoom
 } from './serialize';
 
+function sendMediaTrackEvents(dmp: DMP, mediaTrack: any, serializeMediaTrack: (mediaTrack: any) => any): void {
+  ['disabled', 'enabled', 'started'].forEach((event: string) => {
+    mediaTrack.on(event, () => {
+      dmp.sendEvent({
+        source: serializeMediaTrack(mediaTrack),
+        type: event
+      });
+    });
+  });
+}
+
+function sendLocalMediaTrackEvents(dmp: DMP, localMediaTrack: any): void {
+  sendMediaTrackEvents(dmp, localMediaTrack, serializeLocalTrack);
+  localMediaTrack.on('stopped', () => {
+    dmp.sendEvent({
+      source: serializeLocalTrack(localMediaTrack),
+      type: 'stopped'
+    });
+  });
+}
+
+function sendRemoteDataTrackEvents(dmp: DMP, remoteDataTrack: any): void {
+  remoteDataTrack.on('message', (data: string) => {
+    dmp.sendEvent({
+      args: [data],
+      source: serializeRemoteTrack(remoteDataTrack),
+      type: 'message'
+    });
+  });
+}
+
+function sendRemoteTrackEvents(dmp: DMP, remoteTrack: any): void {
+  add(remoteTrack);
+
+  if (remoteTrack.kind === 'data') {
+    sendRemoteDataTrackEvents(dmp, remoteTrack);
+  } else {
+    sendMediaTrackEvents(dmp, remoteTrack, serializeRemoteTrack);
+  }
+
+  remoteTrack.on('unsubscribed', () => {
+    dmp.sendEvent({
+      source: serializeRemoteTrack(remoteTrack),
+      type: 'unsubscribed'
+    });
+    remove(remoteTrack);
+  });
+}
+
 /**
  * Send {@link LocalParticipant} events to the {@link SDKDriver}.
  * @param {DMP} dmp
  * @param {LocalParticipant} localParticipant
  */
 function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
+  add(localParticipant);
+
+  localParticipant.tracks.forEach((track: any) => {
+    sendLocalTrackEvents(dmp, track);
+  });
+
   localParticipant.on('trackAdded', (track: any) => {
+    sendLocalTrackEvents(dmp, track);
     dmp.sendEvent({
       args: [serializeLocalTrack(track)],
       source: serializeLocalParticipant(localParticipant),
-      type: 'localTrackAdded'
+      type: 'trackAdded'
     });
   });
 
@@ -50,7 +106,7 @@ function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
     dmp.sendEvent({
       args: [serializeLocalTrack(track)],
       source: serializeLocalParticipant(localParticipant),
-      type: 'localTrackRemoved'
+      type: 'trackRemoved'
     });
   });
 }
@@ -61,20 +117,51 @@ function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
  * @param {RemoteParticipant} participant
  */
 function sendParticipantEvents(dmp: DMP, participant: any): void {
+  add(participant);
+
+  participant.tracks.forEach((track: any) => {
+    sendRemoteTrackEvents(dmp, track);
+  });
+
   participant.on('disconnected', () => {
     dmp.sendEvent({
       source: serializeParticipant(participant),
       type: 'disconnected'
     });
+    participant.tracks.forEach(remove);
     remove(participant);
   });
 
   participant.on('trackAdded', (track: any) => {
-    add(track);
+    sendRemoteTrackEvents(dmp, track);
     dmp.sendEvent({
       args: [serializeRemoteTrack(track)],
       source: serializeParticipant(participant),
       type: 'trackAdded'
+    });
+  });
+
+  participant.on('trackDisabled', (track: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track)],
+      source: serializeParticipant(participant),
+      type: 'trackDisabled'
+    });
+  });
+
+  participant.on('trackEnabled', (track: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track)],
+      source: serializeParticipant(participant),
+      type: 'trackEnabled'
+    });
+  });
+
+  participant.on('trackMessage', (data: string, track: any) => {
+    dmp.sendEvent({
+      args: [data, serializeRemoteTrack(track)],
+      source: serializeParticipant(participant),
+      type: 'trackMessage'
     });
   });
 
@@ -84,11 +171,17 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'trackRemoved'
     });
-    remove(track);
+  });
+
+  participant.on('trackStarted', (track: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track)],
+      source: serializeParticipant(participant),
+      type: 'trackStarted'
+    });
   });
 
   participant.on('trackSubscribed', (track: any) => {
-    add(track);
     dmp.sendEvent({
       args: [serializeRemoteTrack(track)],
       source: serializeParticipant(participant),
@@ -102,8 +195,14 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'trackUnsubscribed'
     });
-    remove(track);
   });
+}
+
+export function sendLocalTrackEvents(dmp: DMP, localTrack: any): void {
+  add(localTrack);
+  if (localTrack.kind !== 'data') {
+    sendLocalMediaTrackEvents(dmp, localTrack);
+  }
 }
 
 /**
@@ -113,10 +212,12 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
  * @returns {void}
  */
 export function sendRoomEvents(dmp: DMP, room: any): void {
+  add(room);
+  sendLocalParticipantEvents(dmp, room.localParticipant);
+
   room.participants.forEach((participant: any) => {
     sendParticipantEvents(dmp, participant);
   });
-  sendLocalParticipantEvents(dmp, room.localParticipant);
 
   room.on('disconnected', (room: any, error: any) => {
     const serializedError = error ? {
@@ -130,11 +231,18 @@ export function sendRoomEvents(dmp: DMP, room: any): void {
       source: serializedRoom,
       type: 'disconnected'
     });
+
+    room.participants.forEach((participant: any) => {
+      participant.tracks.forEach(remove);
+      remove(participant);
+    });
+
+    room.localParticipant.tracks.forEach(remove);
+    remove(room.localParticipant);
     remove(room);
   });
 
   room.on('participantConnected', (participant: any) => {
-    add(participant);
     sendParticipantEvents(dmp, participant);
     dmp.sendEvent({
       args: [serializeParticipant(participant)],
@@ -149,7 +257,6 @@ export function sendRoomEvents(dmp: DMP, room: any): void {
       source: serializeRoom(room),
       type: 'participantDisconnected'
     });
-    remove(participant);
   });
 
   room.on('recordingStarted', () => {
@@ -178,11 +285,43 @@ export function sendRoomEvents(dmp: DMP, room: any): void {
     });
   });
 
+  room.on('trackDisabled', (track: any, participant: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track), serializeParticipant(participant)],
+      source: serializeRoom(room),
+      type: 'trackDisabled'
+    });
+  });
+
+  room.on('trackEnabled', (track: any, participant: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track), serializeParticipant(participant)],
+      source: serializeRoom(room),
+      type: 'trackEnabled'
+    });
+  });
+
+  room.on('trackMessage', (data: string, track: any, participant: any) => {
+    dmp.sendEvent({
+      args: [data, serializeRemoteTrack(track), serializeParticipant(participant)],
+      source: serializeRoom(room),
+      type: 'trackMessage'
+    });
+  });
+
   room.on('trackRemoved', (track: any, participant: any) => {
     dmp.sendEvent({
       args: [serializeRemoteTrack(track), serializeParticipant(participant)],
       source: serializeRoom(room),
       type: 'trackRemoved'
+    });
+  });
+
+  room.on('trackStarted', (track: any, participant: any) => {
+    dmp.sendEvent({
+      args: [serializeRemoteTrack(track), serializeParticipant(participant)],
+      source: serializeRoom(room),
+      type: 'trackStarted'
     });
   });
 

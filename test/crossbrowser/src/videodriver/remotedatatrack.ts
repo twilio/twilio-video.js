@@ -61,7 +61,7 @@ export default class RemoteDataTrackDriver extends TrackDriver {
 }
 
 /**
- * @param {*} data
+ * @param {string} data
  * @event RemoteDataTrackDriver#message
  */
 

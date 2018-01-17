@@ -12,7 +12,7 @@ const getToken = require('../../../../lib/token');
 const { combinationContext, randomName } = require('../../../../lib/util');
 
 const { REALM, VERSION } = process.env;
-const realm: string = REALM || 'prod';
+const realm: string = REALM;
 const version: string = VERSION;
 
 describe('RoomDriver', function() {

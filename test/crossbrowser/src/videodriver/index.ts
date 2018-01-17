@@ -50,7 +50,7 @@ export default class VideoDriver {
       dev: 'dev',
       prod: 'media',
       stage: 'stage'
-    }[options.realm];
+    }[options.realm || 'prod'];
     const versionPath: string = options.version
       ? `releases/${options.version}`
       : 'v1';

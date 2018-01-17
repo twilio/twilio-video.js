@@ -175,6 +175,11 @@ export default class ParticipantDriver extends EventEmitter {
     });
   }
 
+  /**
+   * Get a removed {@link TrackDriver}.
+   * @param {TrackID} id
+   * @returns {?TrackDriver}
+   */
   getRemovedTrack(id: TrackID): TrackDriver | undefined {
     return this._removedTracks.get(id);
   }

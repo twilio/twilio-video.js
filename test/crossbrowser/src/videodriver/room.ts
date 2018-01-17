@@ -84,8 +84,20 @@ export default class RoomDriver extends EventEmitter {
         case 'trackAdded':
           this._reemitTrackAdded(source, args);
           break;
+        case 'trackDisabled':
+          this._reemitTrackDisabled(source, args);
+          break;
+        case 'trackEnabled':
+          this._reemitTrackEnabled(source, args);
+          break;
+        case 'trackMessage':
+          this._reemitTrackMessage(source, args);
+          break;
         case 'trackRemoved':
           this._reemitTrackRemoved(source, args);
+          break;
+        case 'trackStarted':
+          this._reemitTrackStarted(source, args);
           break;
         case 'trackSubscribed':
           this._reemitTrackSubscribed(source, args);
@@ -181,6 +193,33 @@ export default class RoomDriver extends EventEmitter {
     }
   }
 
+  private _reemitTrackDisabled(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackDisabled', participant.tracks.get(serializedTrack.id), participant);
+    }
+  }
+
+  private _reemitTrackEnabled(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackEnabled', participant.tracks.get(serializedTrack.id), participant);
+    }
+  }
+
+  private _reemitTrackMessage(source: any, args: any): void {
+    this._update(source);
+    const [ data, serializedTrack, serializedParticipant ] = args;
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackMessage', data, participant.tracks.get(serializedTrack.id), participant);
+    }
+  }
+
   /**
    * Re-emit the "trackRemoved" event from the browser.
    * @private
@@ -194,6 +233,15 @@ export default class RoomDriver extends EventEmitter {
     this._update(source);
     if (participant) {
       this.emit('trackRemoved', participant.getRemovedTrack(serializedTrack.id), participant);
+    }
+  }
+
+  private _reemitTrackStarted(source: any, args: any): void {
+    this._update(source);
+    const [ serializedTrack, serializedParticipant ] = args;
+    const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
+    if (participant) {
+      this.emit('trackStarted', participant.tracks.get(serializedTrack.id), participant);
     }
   }
 
@@ -330,7 +378,7 @@ export default class RoomDriver extends EventEmitter {
  */
 
 /**
- * @param {string|ArrayBuffer} data
+ * @param {string} data
  * @param {RemoteDataTrackDriver} track
  * @param {RemotreParticipantDriver} participant
  * @event RoomDriver#trackMessage

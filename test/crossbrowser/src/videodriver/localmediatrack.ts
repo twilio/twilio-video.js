@@ -38,34 +38,53 @@ export default class LocalMediaTrackDriver extends MediaTrackDriver {
 
   /**
    * Disable the {@link LocalMediaTrack} in the browser.
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  disable(): void {
-    this._sdkDriver.sendRequest({
+  async disable(): Promise<void> {
+    const { error, result } = await this._sdkDriver.sendRequest({
       api: 'disable',
       target: this._resourceId
-    }).then(() => {
-      // Do nothing.
-    }, () => {
-      // Do nothing.
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    this._update(result);
   }
 
   /**
    * Enable (or disable) the {@link LocalMediaTrack} in the browser.
    * @param {?boolean} enabled
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  enable(enabled?: boolean): void {
-    this._sdkDriver.sendRequest({
+  async enable(enabled?: boolean): Promise<void> {
+    const { error, result } = await this._sdkDriver.sendRequest({
       api: 'enable',
       args: [enabled],
       target: this._resourceId
-    }).then(() => {
-      // Do nothing.
-    }, () => {
-      // Do nothing.
     });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    this._update(result);
+  }
+
+  /**
+   * Stop the {@link LocalMediaTrack} in the browser.
+   * @param {?boolean} enabled
+   * @returns {Promise<void>}
+   */
+  async stop(): Promise<void> {
+    const { error, result } = await this._sdkDriver.sendRequest({
+      api: 'stop',
+      target: this._resourceId
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+    this._update(result);
   }
 }
 

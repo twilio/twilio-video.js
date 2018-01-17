@@ -13,6 +13,7 @@ import TrackDriver from './track';
  * @fires RemoteParticipantDriver#disconnected
  * @fires RemoteParticipantDriver#trackDisabled
  * @fires RemoteParticipantDriver#trackEnabled
+ * @fires RemoteParticipantDriver#trackMessage
  * @fires RemoteParticipantDriver#trackStarted
  * @fires RemoteParticipantDriver#trackSubscribed
  * @fires RemoteParticipantDriver#trackUnsubscribed
@@ -36,6 +37,30 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
   private _reemitDisconnected(source: any): void {
     this._update(source);
     this.emit('disconnected', this);
+  }
+
+  private _reemitTrackDisabled(source: any, args: any): void {
+    this._update(source);
+    const serializedRemoteTrack: any = args[0];
+    this.emit('trackDisabled', this.tracks.get(serializedRemoteTrack.id));
+  }
+
+  private _reemitTrackEnabled(source: any, args: any): void {
+    this._update(source);
+    const serializedRemoteTrack: any = args[0];
+    this.emit('trackEnabled', this.tracks.get(serializedRemoteTrack.id));
+  }
+
+  private _reemitTrackMessage(source: any, args: any): void {
+    this._update(source);
+    const [ data, serializedRemoteTrack ] = args;
+    this.emit('trackMessage', data, this.tracks.get(serializedRemoteTrack.id));
+  }
+
+  private _reemitTrackStarted(source: any, args: any): void {
+    this._update(source);
+    const serializedRemoteTrack: any = args[0];
+    this.emit('trackStarted', this.tracks.get(serializedRemoteTrack.id));
   }
 
   /**
@@ -81,6 +106,18 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
       case 'disconnected':
         this._reemitDisconnected(source);
         break;
+      case 'trackDisabled':
+        this._reemitTrackDisabled(source, args);
+        break;
+      case 'trackEnabled':
+        this._reemitTrackEnabled(source, args);
+        break;
+      case 'trackMessage':
+        this._reemitTrackMessage(source, args);
+        break;
+      case 'trackStarted':
+        this._reemitTrackStarted(source, args);
+        break;
       case 'trackSubscribed':
         this._reemitTrackSubscribed(source, args);
         break;
@@ -104,6 +141,12 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
 /**
  * @param {RemoteMediaTrackDriver} track
  * @event RemoteParticipantDriver#trackEnabled
+ */
+
+/**
+ * @param {string} data
+ * @param {RemoteMediaTrackDriver} track
+ * @event RemoteParticipantDriver#trackMessage
  */
 
 /**

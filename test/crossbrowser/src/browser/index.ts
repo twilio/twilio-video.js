@@ -5,16 +5,24 @@ import {
   connect,
   createLocalTrack,
   createLocalTracks,
+  disable,
   disconnect,
+  enable,
   getStats,
   publishTrack,
   publishTracks,
+  send,
   setParameters,
+  stop,
+  unpublish,
   unpublishTrack,
   unpublishTracks
 } from './api';
 
-import { sendRoomEvents } from './events';
+import {
+  sendLocalTrackEvents,
+  sendRoomEvents
+} from './events';
 
 (async () => {
   const dmp: DMP = await init();
@@ -25,13 +33,19 @@ import { sendRoomEvents } from './events';
         request.sendResponse(await connect(args, sendRoomEvents.bind(null, dmp)));
         break;
       case 'createLocalTrack':
-        request.sendResponse(await createLocalTrack(args));
+        request.sendResponse(await createLocalTrack(args, sendLocalTrackEvents.bind(null, dmp)));
         break;
       case 'createLocalTracks':
-        request.sendResponse(await createLocalTracks(args));
+        request.sendResponse(await createLocalTracks(args, sendLocalTrackEvents.bind(null, dmp)));
+        break;
+      case 'disable':
+        request.sendResponse(disable(target));
         break;
       case 'disconnect':
         request.sendResponse(disconnect(target));
+        break;
+      case 'enable':
+        request.sendResponse(enable(target, args));
         break;
       case 'getStats':
         request.sendResponse(await getStats(target));
@@ -42,8 +56,17 @@ import { sendRoomEvents } from './events';
       case 'publishTracks':
         request.sendResponse(await publishTracks(target, args));
         break;
+      case 'send':
+        request.sendResponse(send(target, args));
+        break;
       case 'setParameters':
         request.sendResponse(setParameters(target, args));
+        break;
+      case 'stop':
+        request.sendResponse(stop(target));
+        break;
+      case 'unpublish':
+        request.sendResponse(unpublish(target));
         break;
       case 'unpublishTrack':
         request.sendResponse(unpublishTrack(target, args));
