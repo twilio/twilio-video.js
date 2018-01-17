@@ -11,7 +11,8 @@ import { TrackSID } from './track';
  * @property {TrackSID} sid
  * @property {boolean} isSubscribed
  * @fires RemoteMediaTrackDriver#unsubscribed
- */export default class RemoteMediaTrackDriver extends MediaTrackDriver {
+ */
+export default class RemoteMediaTrackDriver extends MediaTrackDriver {
   readonly sid: TrackSID;
   isSubscribed: boolean;
 

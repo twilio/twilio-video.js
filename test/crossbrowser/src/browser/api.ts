@@ -96,6 +96,11 @@ export async function createLocalTracks(args: any, sendLocalTrackEvents: (track:
   };
 }
 
+/**
+ * Disable a {@link LocalMediaTrack}.
+ * @param {ResourceID} target
+ * @returns {object}
+ */
 export function disable(target: ResourceID): any {
   const localMediaTrack: any = lookup(target);
   if (!localMediaTrack) {
@@ -133,6 +138,12 @@ export function disconnect(target: ResourceID): any {
   };
 }
 
+/**
+ * Enable a {@link LocalMediaTrack}.
+ * @param {ResourceID} target
+ * @param {Array<*>} args
+ * @returns {object}
+ */
 export function enable(target: ResourceID, args: any): any {
   const localMediaTrack: any = lookup(target);
   if (!localMediaTrack) {
@@ -145,6 +156,7 @@ export function enable(target: ResourceID, args: any): any {
 
   const enabled: boolean | undefined = args[0];
   localMediaTrack.enable(enabled);
+
   return {
     result: serializeLocalTrack(localMediaTrack)
   };
@@ -264,6 +276,12 @@ export async function publishTracks(target: ResourceID, args: any): Promise<any>
   };
 }
 
+/**
+ * Send a message using a {@link LocalDataTrack}.
+ * @param {ResourceID} target
+ * @param {Array<*>} args
+ * @returns {object}
+ */
 export function send(target: ResourceID, args: any): any {
   const localDataTrack: any = lookup(target);
   if (!localDataTrack) {
@@ -314,6 +332,11 @@ export function setParameters(target: ResourceID, args: any): any {
   };
 }
 
+/**
+ * Stop a {@link LocalMediaTrack}.
+ * @param {ResourceID} target
+ * @returns {object}
+ */
 export function stop(target: ResourceID): any {
   const localMediaTrack: any = lookup(target);
   if (!localMediaTrack) {

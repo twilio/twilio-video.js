@@ -39,24 +39,52 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
     this.emit('disconnected', this);
   }
 
+  /**
+   * Re-emit the "trackDisabled" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {Array<*>} args
+   * @returns {void}
+   */
   private _reemitTrackDisabled(source: any, args: any): void {
     this._update(source);
     const serializedRemoteTrack: any = args[0];
     this.emit('trackDisabled', this.tracks.get(serializedRemoteTrack.id));
   }
 
+  /**
+   * Re-emit the "trackEnabled" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {Array<*>} args
+   * @returns {void}
+   */
   private _reemitTrackEnabled(source: any, args: any): void {
     this._update(source);
     const serializedRemoteTrack: any = args[0];
     this.emit('trackEnabled', this.tracks.get(serializedRemoteTrack.id));
   }
 
+  /**
+   * Re-emit the "trackMessage" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {Array<*>} args
+   * @returns {void}
+   */
   private _reemitTrackMessage(source: any, args: any): void {
     this._update(source);
     const [ data, serializedRemoteTrack ] = args;
     this.emit('trackMessage', data, this.tracks.get(serializedRemoteTrack.id));
   }
 
+  /**
+   * Re-emit the "trackStarted" event from the browser.
+   * @private
+   * @param {object} source
+   * @param {Array<*>} args
+   * @returns {void}
+   */
   private _reemitTrackStarted(source: any, args: any): void {
     this._update(source);
     const serializedRemoteTrack: any = args[0];
@@ -86,7 +114,7 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
   private _reemitTrackUnsubscribed(source: any, args: any): void {
     this._update(source);
     const serializedRemoteTrack: any = args[0];
-    const remoteTrack: TrackDriver | undefined = this._removedTracks.get(serializedRemoteTrack.id);
+    const remoteTrack: TrackDriver | undefined = this._removeOrGetRemovedTrack(serializedRemoteTrack.id);
     this.emit('trackUnsubscribed', remoteTrack);
   }
 

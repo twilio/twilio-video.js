@@ -14,6 +14,13 @@ import {
   serializeRoom
 } from './serialize';
 
+/**
+ * Send {@link MediaTrack} events to the {@link SDKDriver}.
+ * @param {DMP} dmp
+ * @param {MediaTrack} mediaTrack
+ * @param {(mediaTrack: any) => any} serializeMediaTrack
+ * @returns {void}
+ */
 function sendMediaTrackEvents(dmp: DMP, mediaTrack: any, serializeMediaTrack: (mediaTrack: any) => any): void {
   ['disabled', 'enabled', 'started'].forEach((event: string) => {
     mediaTrack.on(event, () => {
@@ -25,6 +32,12 @@ function sendMediaTrackEvents(dmp: DMP, mediaTrack: any, serializeMediaTrack: (m
   });
 }
 
+/**
+ * Send {@link LocalMediaTrack} events to the {@link SDKDriver}
+ * @param {DMP} dmp
+ * @param {LocalMediaTrack} localMediaTrack
+ * @returns {void}
+ */
 function sendLocalMediaTrackEvents(dmp: DMP, localMediaTrack: any): void {
   sendMediaTrackEvents(dmp, localMediaTrack, serializeLocalTrack);
   localMediaTrack.on('stopped', () => {
@@ -35,6 +48,12 @@ function sendLocalMediaTrackEvents(dmp: DMP, localMediaTrack: any): void {
   });
 }
 
+/**
+ * Send {@link RemoteDataTrack} events to the {@link SDKDriver}.
+ * @param {DMP} dmp
+ * @param {RemoteDataTrack} remoteDataTrack
+ * @returns {void}
+ */
 function sendRemoteDataTrackEvents(dmp: DMP, remoteDataTrack: any): void {
   remoteDataTrack.on('message', (data: string) => {
     dmp.sendEvent({
@@ -45,6 +64,12 @@ function sendRemoteDataTrackEvents(dmp: DMP, remoteDataTrack: any): void {
   });
 }
 
+/**
+ * Send {@link RemoteTrack} events to the {@link SDKDriver}.
+ * @param {DMP} dmp
+ * @param {RemoteTrack} remoteTrack
+ * @returns {void}
+ */
 function sendRemoteTrackEvents(dmp: DMP, remoteTrack: any): void {
   add(remoteTrack);
 
@@ -59,7 +84,6 @@ function sendRemoteTrackEvents(dmp: DMP, remoteTrack: any): void {
       source: serializeRemoteTrack(remoteTrack),
       type: 'unsubscribed'
     });
-    remove(remoteTrack);
   });
 }
 
@@ -67,6 +91,7 @@ function sendRemoteTrackEvents(dmp: DMP, remoteTrack: any): void {
  * Send {@link LocalParticipant} events to the {@link SDKDriver}.
  * @param {DMP} dmp
  * @param {LocalParticipant} localParticipant
+ * @returns {void}
  */
 function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
   add(localParticipant);
@@ -115,6 +140,7 @@ function sendLocalParticipantEvents(dmp: DMP, localParticipant: any): void {
  * Send {@link RemoteParticipant} events to the {@link SDKDriver}.
  * @param {DMP} dmp
  * @param {RemoteParticipant} participant
+ * @returns {void}
  */
 function sendParticipantEvents(dmp: DMP, participant: any): void {
   add(participant);
@@ -128,8 +154,6 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
       source: serializeParticipant(participant),
       type: 'disconnected'
     });
-    participant.tracks.forEach(remove);
-    remove(participant);
   });
 
   participant.on('trackAdded', (track: any) => {
@@ -198,6 +222,12 @@ function sendParticipantEvents(dmp: DMP, participant: any): void {
   });
 }
 
+/**
+ * Send {@link LocalTrack} events to the {@link SDKDriver}.
+ * @param {DMP} dmp
+ * @param {LocalTrack} localTrack
+ * @returns {void}
+ */
 export function sendLocalTrackEvents(dmp: DMP, localTrack: any): void {
   add(localTrack);
   if (localTrack.kind !== 'data') {
@@ -257,6 +287,8 @@ export function sendRoomEvents(dmp: DMP, room: any): void {
       source: serializeRoom(room),
       type: 'participantDisconnected'
     });
+    participant.tracks.forEach(remove);
+    remove(participant);
   });
 
   room.on('recordingStarted', () => {
@@ -315,6 +347,7 @@ export function sendRoomEvents(dmp: DMP, room: any): void {
       source: serializeRoom(room),
       type: 'trackRemoved'
     });
+    remove(track);
   });
 
   room.on('trackStarted', (track: any, participant: any) => {

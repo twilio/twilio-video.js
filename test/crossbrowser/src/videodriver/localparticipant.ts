@@ -66,7 +66,7 @@ export default class LocalParticipantDriver extends ParticipantDriver {
   private _reemitTrackPublicationFailed(source: any, args: any): void {
     this._update(source);
     const [ serializedError, serializedLocalTrack ] = args;
-    const localTrack: TrackDriver | undefined = this._removedTracks.get(serializedLocalTrack.id);
+    const localTrack: TrackDriver = this._removeOrGetRemovedTrack(serializedLocalTrack.id);
     const error: any = new Error(serializedError.message);
     error.code = serializedError.code;
     this.emit('trackPublicationFailed', error, localTrack);
@@ -217,6 +217,12 @@ export default class LocalParticipantDriver extends ParticipantDriver {
     });
   }
 
+  /**
+   * Set {@link EncodingParameters} to the {@link LocalParticipant}
+   * in the browser.
+   * @param {?EncodingParameters} encodingParameters
+   * @returns {Promise<void>}
+   */
   async setParameters(encodingParameters: any): Promise<void> {
     const { error, result } = await this._sdkDriver.sendRequest({
       api: 'setParameters',

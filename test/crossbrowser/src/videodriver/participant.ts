@@ -29,9 +29,9 @@ export type ParticipantSID = string;
  */
 export default class ParticipantDriver extends EventEmitter {
   protected readonly _pendingTracks: Map<TrackID, TrackDriver>;
-  protected readonly _removedTracks: Map<TrackID, TrackDriver>;
   protected readonly _resourceId: string;
   protected readonly _sdkDriver: SDKDriver;
+  private readonly _removedTracks: Map<TrackID, TrackDriver>;
   private readonly _DataTrackDriver: typeof TrackDriver;
   private readonly _MediaTrackDriver: typeof TrackDriver;
   readonly audioTracks: Map<TrackID, TrackDriver>;
@@ -91,8 +91,7 @@ export default class ParticipantDriver extends EventEmitter {
   protected _reemitTrackRemoved(source: any, args: any): void {
     this._update(source);
     const serializedTrack: any = args[0];
-    const track: TrackDriver | undefined = this._removedTracks.get(serializedTrack.id);
-    this.emit('trackRemoved', track);
+    this.emit('trackRemoved', this._removeOrGetRemovedTrack(serializedTrack.id));
   }
 
   /**
@@ -114,6 +113,22 @@ export default class ParticipantDriver extends EventEmitter {
         this._reemitTrackRemoved(source, args);
         break;
     }
+  }
+
+  /**
+   * Remove or get an already removed {@link TrackDriver}.
+   * @protected
+   * @param {TrackID} id
+   * @returns {TrackDriver}
+   */
+  protected _removeOrGetRemovedTrack(id: TrackID): TrackDriver {
+    const track: TrackDriver | undefined = this.tracks.get(id);
+    if (track) {
+      this.tracks.delete(id);
+      this[`${track.kind}Tracks`].delete(id);
+      this._removedTracks.set(id, track);
+    }
+    return this._removedTracks.get(id) as TrackDriver;
   }
 
   /**
@@ -166,12 +181,7 @@ export default class ParticipantDriver extends EventEmitter {
     });
 
     tracksToRemove.forEach((trackId: TrackID) => {
-      const track: TrackDriver | undefined = this.tracks.get(trackId);
-      if (track) {
-        this.tracks.delete(trackId);
-        this[`${track.kind}Tracks`].delete(trackId);
-        this._removedTracks.set(track.id, track);
-      }
+      this._removeOrGetRemovedTrack(trackId);
     });
   }
 
@@ -181,7 +191,7 @@ export default class ParticipantDriver extends EventEmitter {
    * @returns {?TrackDriver}
    */
   getRemovedTrack(id: TrackID): TrackDriver | undefined {
-    return this._removedTracks.get(id);
+    return this._removeOrGetRemovedTrack(id);
   }
 }
 
