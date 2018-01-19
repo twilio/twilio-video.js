@@ -83,7 +83,9 @@ export default class WSClientTransport extends EventEmitter implements Transport
         [OPEN]: (data: any) => wsClient.send(JSON.stringify(data))
       }[readyState];
 
-      sendOrEnqueue(data);
+      if (sendOrEnqueue) {
+        sendOrEnqueue(data);
+      }
     }
   }
 }

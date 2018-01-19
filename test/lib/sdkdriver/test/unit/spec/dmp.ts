@@ -6,11 +6,23 @@ import * as sinon from 'sinon';
 
 describe('DMP', () => {
   describe('#close', () => {
-    it('should call .close on the underlying Transport', () => {
-      const transport: any = new Transport();
-      const dmp: DMP = new DMP(transport);
+    let transport: any;
+    let dmp: DMP;
+    let waitForClose: Promise<void>;
+
+    before(() => {
+      transport = new Transport();
+      dmp = new DMP(transport);
+      waitForClose = new Promise(resolve => dmp.once('close', resolve));
       dmp.close();
+    });
+
+    it('should call .close on the underlying Transport', () => {
       sinon.assert.calledOnce(transport.close);
+    });
+
+    it('should emit "close" on the DMP', () => {
+      return waitForClose;
     });
   });
 

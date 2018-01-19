@@ -41,6 +41,8 @@ export class DMPRequest {
  * @classdesc A {@link DMP} exchanges DMP messages with its counterpart;
  *   It can be instantiated in the mocha.js process that drives the test
  *   process as well as in the test process
+ * @extends EventEmitter
+ * @fires DMP#close
  * @fires DMP#event
  * @fires DMP#request
  */
@@ -71,6 +73,7 @@ export default class DMP extends EventEmitter {
           break;
       }
     });
+    this._transport.once('close', () => this.emit('close'));
   }
 
   /**
@@ -116,6 +119,11 @@ export default class DMP extends EventEmitter {
     });
   }
 }
+
+/**
+ * The {@link DMP}'s {@link Transport was closed.
+ * @event DMP#close
+ */
 
 /**
  * The {@link DMP} received an "event".
