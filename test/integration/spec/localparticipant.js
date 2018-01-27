@@ -230,7 +230,7 @@ describe('LocalParticipant', function() {
         thisTrack = await {
           audio: createLocalAudioTrack,
           video: createLocalVideoTrack,
-          data: LocalDataTrack
+          data() { return new LocalDataTrack(); }
         }[kind](localTrackOptions);
 
         // TODO(mroberts): Really this test needs to be refactored so that only
@@ -461,7 +461,7 @@ describe('LocalParticipant', function() {
         thisTrack = await {
           audio: createLocalAudioTrack,
           video: createLocalVideoTrack,
-          data: LocalDataTrack
+          data() { return new LocalDataTrack(); }
         }[kind]();
 
         // TODO(mroberts): Really this test needs to be refactored so that only

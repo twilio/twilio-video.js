@@ -231,7 +231,7 @@ async function tracksAdded(participant, n) {
  */
 async function tracksPublished(participant, n, kind) {
   const trackPublications = kind
-    ? participant[kind + 'TrackPublications']
+    ? participant[`${kind}TrackPublications`]
     : participant.trackPublications;
   while (trackPublications.size < n) {
     await new Promise(resolve => {

@@ -1,101 +1,93 @@
 'use strict';
 
-const inherits = require('util').inherits;
-
 const EventTarget = require('../../lib/eventtarget');
 
 const randomName = require('../lib/util').randomName;
 
-function FakeMediaStream() {
-  const audioTracks = [];
-  const videoTracks = [];
+class FakeMediaStream extends EventTarget {
+  constructor() {
+    const audioTracks = [];
+    const videoTracks = [];
 
-  EventTarget.call(this);
-  Object.defineProperties(this, {
-    audioTracks: {
-      value: audioTracks
-    },
-    videoTracks: {
-      value: videoTracks
-    },
-    id: {
-      value: randomName(),
-      enumerable: true
-    }
-  });
-}
+    super();
+    Object.defineProperties(this, {
+      audioTracks: {
+        value: audioTracks
+      },
+      videoTracks: {
+        value: videoTracks
+      },
+      id: {
+        value: randomName(),
+        enumerable: true
+      }
+    });
+  }
 
-inherits(FakeMediaStream, EventTarget);
-
-FakeMediaStream.prototype.getAudioTracks =
-  function getAudioTracks() {
+  getAudioTracks() {
     return this.audioTracks;
-  };
+  }
 
-FakeMediaStream.prototype.getVideoTracks =
-  function getVideoTracks() {
+  getVideoTracks() {
     return this.videoTracks;
-  };
+  }
 
-FakeMediaStream.prototype.getTracks =
-  function getTracks() {
+  getTracks() {
     return this.audioTracks.concat(this.videoTracks);
-  };
+  }
 
-FakeMediaStream.prototype.addTrack =
-  function addTrack(track) {
+  addTrack(track) {
     if ('audio' === track.kind) {
       this.audioTracks.push(track);
     }
     else if ('video' === track.kind) {
       this.videoTracks.push(track);
     }
-  };
+  }
 
-FakeMediaStream.prototype.removeTrack =
-  function removeTrack(track) {
+  removeTrack(track) {
     let tracks = [];
     if (['audio', 'video'].includes(track.kind)) {
-      tracks = this[track.kind + 'Tracks'];
+      tracks = this[`${track.kind}Tracks`];
     }
     const trackIdx = tracks.indexOf(track);
     if (0 <= trackIdx) {
       tracks.splice(trackIdx, 1);
     }
-  };
-
-function FakeMediaStreamTrack(kind) {
-  EventTarget.call(this);
-  Object.defineProperties(this, {
-    id: {
-      value: randomName(),
-      enumerable: true
-    },
-    kind: {
-      value: kind,
-      enumerable: true
-    },
-    label: {
-      value: randomName(),
-      enumerable: true
-    },
-    enabled: {
-      value: true,
-      writable: true,
-      enumerable: true
-    }
-  });
+  }
 }
 
-inherits(FakeMediaStreamTrack, EventTarget);
+class FakeMediaStreamTrack extends EventTarget {
+  constructor(kind) {
+    super();
+    Object.defineProperties(this, {
+      id: {
+        value: randomName(),
+        enumerable: true
+      },
+      kind: {
+        value: kind,
+        enumerable: true
+      },
+      label: {
+        value: randomName(),
+        enumerable: true
+      },
+      enabled: {
+        value: true,
+        writable: true,
+        enumerable: true
+      }
+    });
+  }
 
-FakeMediaStreamTrack.prototype.stop =
-  function stop() {
+  stop() {
     this.dispatchEvent({
       type: 'ended',
       target: this
     });
-  };
+  }
+}
 
 function fakeGetUserMedia(constraints) {
   const fakeMediaStream = new FakeMediaStream();

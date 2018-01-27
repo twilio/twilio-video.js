@@ -10,10 +10,6 @@ describe('EncodingParametersImpl', () => {
   describe('constructor', () => {
     combinationContext([
       [
-        ['with', 'without'],
-        x => `when called ${x} the new keyword`
-      ],
-      [
         [undefined, null, 5000],
         x => `when maxAudioBitrate is ${typeof x === 'undefined'
           ? 'absent' : x === null ? 'null' : 'present'}`
@@ -23,7 +19,7 @@ describe('EncodingParametersImpl', () => {
         x => `when maxVideoBitrate is ${typeof x === 'undefined'
           ? 'absent' : x === null ? 'null' : 'present'}`
       ]
-    ], ([withNew, maxAudioBitrate, maxVideoBitrate]) => {
+    ], ([maxAudioBitrate, maxVideoBitrate]) => {
       const encodingParmeters = [
         ['maxAudioBitrate', maxAudioBitrate],
         ['maxVideoBitrate', maxVideoBitrate]
@@ -37,10 +33,7 @@ describe('EncodingParametersImpl', () => {
       let encodingParametersImpl;
 
       before(() => {
-        encodingParametersImpl = withNew === 'with'
-          ? new EncodingParametersImpl(encodingParmeters)
-          // eslint-disable-next-line new-cap
-          : EncodingParametersImpl(encodingParmeters);
+        encodingParametersImpl = new EncodingParametersImpl(encodingParmeters);
       });
 
       it('should return an EncodingParametersImpl instance', () => {

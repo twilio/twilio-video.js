@@ -30,26 +30,8 @@ const log = require('../../../../lib/fakelog');
       });
 
       context('when called without the "options" argument', () => {
-        [
-          [
-            'when called without the "new" keyword',
-            // eslint-disable-next-line new-cap
-            () => LocalMediaTrack(mediaStreamTrack)
-          ],
-          [
-            'when called with the "new" keyword',
-            () => new LocalMediaTrack(mediaStreamTrack)
-          ]
-        ].forEach(([scenario, createLocalMediaTrack]) => {
-          context(scenario, () => {
-            it('should not throw', () => {
-              assert.doesNotThrow(createLocalMediaTrack);
-            });
-
-            it(`should return an instance of ${description}`, () => {
-              assert(createLocalMediaTrack() instanceof LocalMediaTrack);
-            });
-          });
+        it(`should return an instance of ${description}`, () => {
+          assert(new LocalMediaTrack(mediaStreamTrack) instanceof LocalMediaTrack);
         });
       });
     });

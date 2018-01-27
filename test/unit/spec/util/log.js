@@ -43,22 +43,18 @@ describe('Log', () => {
     });
 
     it('should return an instance of Log', () => {
-      const log1 = new Log('foo', component('log1'));
-      // eslint-disable-next-line new-cap
-      const log2 = Log('bar', component('log2'));
-
-      assert(log1 instanceof Log);
-      assert(log2 instanceof Log);
+      const log = new Log('foo', component('log'));
+      assert(log instanceof Log);
     });
 
     it('should throw an error if module name is not a string', () => {
-      assert.throws(Log.bind(null, {}, component('foo')), error => {
+      assert.throws(() => new Log({}, component('foo')), error => {
         return error instanceof TypeError && error.message === 'moduleName must be a string';
       });
     });
 
     it('should throw an error if component is not specified', () => {
-      assert.throws(Log.bind(null, 'foo'), error => {
+      assert.throws(() => new Log('foo'), error => {
         return error instanceof TypeError && error.message === 'component must be specified';
       });
     });
@@ -146,7 +142,7 @@ describe('Log', () => {
   describe('#log(logLevel, message)', () => {
     it('should throw an error if the logLevel passed is invalid', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'));
+      const log = new Log('foo', component('bar'));
       assert.throws(log.log.bind(log, 999), error => {
         return error instanceof RangeError && /logLevel must be one of/.test(error.message);
       });
@@ -154,14 +150,14 @@ describe('Log', () => {
 
     it('should call the log function if the logLevel is within the Logs verbosity', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'warn' });
+      const log = new Log('foo', component('bar'), { foo: 'warn' });
       log.log(Log.ERROR, 'foo');
       assert(Log._levels[Log.ERROR].logFn.called);
     });
 
     it('should not call the log function if the logLevel is outside of the Logs verbosity', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'off' });
+      const log = new Log('foo', component('bar'), { foo: 'off' });
       log.log(Log.WARN, 'foo');
       assert(!Log._levels[Log.WARN].logFn.called);
     });
@@ -170,7 +166,7 @@ describe('Log', () => {
   describe('#debug(messages)', () => {
     it('should call #log(Log.DEBUG, message)', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'debug' });
+      const log = new Log('foo', component('bar'), { foo: 'debug' });
       log.debug('baz');
       sinon.assert.calledWith(log.log, Log.DEBUG, ['baz']);
     });
@@ -180,7 +176,7 @@ describe('Log', () => {
     context('the first time the deprecationWarning is passed', () => {
       it('should call #log(Log.WARN, message)', () => {
         // eslint-disable-next-line new-cap
-        const log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = new Log('foo', component('bar'), { foo: 'warn' });
         log.deprecated('baz');
         sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
       });
@@ -189,7 +185,7 @@ describe('Log', () => {
     context('subsequent times the deprecationWarning is passed', () => {
       it('should call #log(Log.WARN, message)', () => {
         // eslint-disable-next-line new-cap
-        const log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = new Log('foo', component('bar'), { foo: 'warn' });
         log.deprecated('baz');
         log.deprecated('baz');
         sinon.assert.calledOnce(log.log);
@@ -200,7 +196,7 @@ describe('Log', () => {
   describe('#info(messages)', () => {
     it('should call #log(Log.INFO, message)', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'info' });
+      const log = new Log('foo', component('bar'), { foo: 'info' });
       log.info('baz');
       sinon.assert.calledWith(log.log, Log.INFO, ['baz']);
     });
@@ -209,7 +205,7 @@ describe('Log', () => {
   describe('#warn(messages)', () => {
     it('should call #log(Log.WARN, message)', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'warn' });
+      const log = new Log('foo', component('bar'), { foo: 'warn' });
       log.warn('baz');
       sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
     });
@@ -219,7 +215,7 @@ describe('Log', () => {
     context('the first time the warning is passed', () => {
       it('should call #log(Log.WARN, message)', () => {
         // eslint-disable-next-line new-cap
-        const log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = new Log('foo', component('bar'), { foo: 'warn' });
         log.warnOnce('baz');
         sinon.assert.calledWith(log.log, Log.WARN, ['baz']);
       });
@@ -228,7 +224,7 @@ describe('Log', () => {
     context('subsequent times the warning is passed', () => {
       it('should call #log(Log.WARN, message)', () => {
         // eslint-disable-next-line new-cap
-        const log = Log('foo', component('bar'), { foo: 'warn' });
+        const log = new Log('foo', component('bar'), { foo: 'warn' });
         log.warnOnce('baz');
         log.warnOnce('baz');
         sinon.assert.calledOnce(log.log);
@@ -239,7 +235,7 @@ describe('Log', () => {
   describe('#error(messages)', () => {
     it('should call #log(Log.ERROR, message)', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'error' });
+      const log = new Log('foo', component('bar'), { foo: 'error' });
       log.error('baz');
       sinon.assert.calledWith(log.log, Log.ERROR, ['baz']);
     });
@@ -248,7 +244,7 @@ describe('Log', () => {
   describe('#throw(error, message)', () => {
     it('should throw an error and call #log(Log.ERROR, message)', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'error' });
+      const log = new Log('foo', component('bar'), { foo: 'error' });
       const error = new Error('baz');
       assert.throws(log.throw.bind(log, error));
       sinon.assert.calledWith(log.log, Log.ERROR, error);
@@ -256,7 +252,7 @@ describe('Log', () => {
 
     it('should call the errors clone method if it exists', () => {
       // eslint-disable-next-line new-cap
-      const log = Log('foo', component('bar'), { foo: 'error' });
+      const log = new Log('foo', component('bar'), { foo: 'error' });
       const error = new Error('baz');
       error.clone = sinon.spy();
 
