@@ -1,3 +1,11 @@
+1.8.0 (in progress)
+===================
+
+New Features
+------------
+
+- Added support for TURN over TLS on port 443.
+
 1.7.0 (January 9, 2018)
 =======================
 
