@@ -1,7 +1,6 @@
 'use strict';
 
 const { EventEmitter } = require('events');
-const { inherits } = require('util');
 const WebSocket = require('ws');
 
 const util = require('../../lib/util');
@@ -10,42 +9,44 @@ function Event(type) {
   this.type = type;
 }
 
-function MediaStream() {
-  this.ended = false;
-  this.id = util.makeUUID();
-  this._tracks = new Set();
+class MediaStream {
+  constructor() {
+    this.ended = false;
+    this.id = util.makeUUID();
+    this._tracks = new Set();
+  }
+
+  addTrack(track) {
+    this._tracks.add(track);
+  }
+
+  clone() {
+    return new MediaStream();
+  }
+
+  getTracks() {
+    return Array.from(this._tracks);
+  }
+
+  getAudioTracks() {
+    return Array.from(this._tracks).filter(track => track.kind === 'audio');
+  }
+
+  getTrackById() {
+    return null;
+  }
+
+  getVideoTracks() {
+    return Array.from(this._tracks).filter(track => track.kind === 'video');
+  }
+
+  removeTrack(track) {
+    this._tracks.delete(track);
+  }
+
+  stop() {
+  }
 }
-
-MediaStream.prototype.addTrack = function addTrack(track) {
-  this._tracks.add(track);
-};
-
-MediaStream.prototype.clone = function clone() {
-  return new MediaStream();
-};
-
-MediaStream.prototype.getTracks = function getTracks() {
-  return Array.from(this._tracks);
-};
-
-MediaStream.prototype.getAudioTracks = function getAudioTracks() {
-  return Array.from(this._tracks).filter(track => track.kind === 'audio');
-};
-
-MediaStream.prototype.getTrackById = function getTrackById() {
-  return null;
-};
-
-MediaStream.prototype.getVideoTracks = function getVideoTracks() {
-  return Array.from(this._tracks).filter(track => track.kind === 'video');
-};
-
-MediaStream.prototype.removeTrack = function removeTrack(track) {
-  this._tracks.delete(track);
-};
-
-MediaStream.prototype.stop = function stop() {
-};
 
 const navigator = {
   userAgent: 'Node'
@@ -58,144 +59,152 @@ function getUserMedia(constraints, successCallback) {
 
 navigator.webkitGetUserMedia = getUserMedia;
 
-function RTCDataChannel(label) {
-  this.label = label;
-  this.order = true;
-  this.prototcol = '';
-  this.id = RTCDataChannel.id++;
-  this.readyState = 'connecting';
-  this.bufferedAmount = 0;
-  this.binaryType = 'blob';
-  setTimeout(() => {
-    this.readyState = 'open';
-    if (this.onopen) {
-      this.onopen();
+class RTCDataChannel {
+  constructor(label) {
+    this.label = label;
+    this.order = true;
+    this.prototcol = '';
+    this.id = RTCDataChannel.id++;
+    this.readyState = 'connecting';
+    this.bufferedAmount = 0;
+    this.binaryType = 'blob';
+    setTimeout(() => {
+      this.readyState = 'open';
+      if (this.onopen) {
+        this.onopen();
+      }
+    });
+  }
+
+  send() {
+  }
+
+  close() {
+    this.readyState = 'closed';
+    if (this.onclose) {
+      this.onclose();
     }
-  });
+  }
 }
 
 RTCDataChannel.id = 0;
 
-RTCDataChannel.prototype.send = function send() {
-};
-
-RTCDataChannel.prototype.close = function close() {
-  this.readyState = 'closed';
-  if (this.onclose) {
-    this.onclose();
-  }
-};
-
 const DUMMY_SDP = 'v=0\r\no=- 4676571761825475727 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE audio\r\na=msid-semantic: WMS EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\nm=audio 1 RTP/SAVPF 111 103 104 0 8 106 105 13 126\r\nc=IN IP4 0.0.0.0\r\na=rtcp:1 IN IP4 0.0.0.0\r\na=ice-ufrag:YDUcqfaDo8TP7sAf\r\na=ice-pwd:6pBfcQxQqfHcUN90IcETG9ag\r\na=ice-options:google-ice\r\na=fingerprint:sha-256 C9:98:D1:85:C6:79:AF:26:76:80:28:B5:19:B3:65:DA:D6:E8:BC:29:6A:48:59:8C:13:06:6C:3B:D3:EE:86:01\r\na=setup:actpass\r\na=mid:audio\r\na=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\na=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r\na=sendrecv\r\na=rtcp-mux\r\na=rtpmap:111 opus/48000/2\r\na=fmtp:111 minptime=10\r\na=rtpmap:103 ISAC/16000\r\na=rtpmap:104 ISAC/32000\r\na=rtpmap:0 PCMU/8000\r\na=rtpmap:8 PCMA/8000\r\na=rtpmap:106 CN/32000\r\na=rtpmap:105 CN/16000\r\na=rtpmap:13 CN/8000\r\na=rtpmap:126 telephone-event/8000\r\na=maxptime:60\r\na=ssrc:489352021 cname:aDhWDndkoIsLM2YP\r\na=ssrc:489352021 msid:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq fabea357-f6cf-4967-aa7c-800bedf06927\r\na=ssrc:489352021 mslabel:EMeI3G202R6Q6h3SNWynn4aSHT8JbeeYozwq\r\na=ssrc:489352021 label:fabea357-f6cf-4967-aa7c-800bedf06927\r\n';
 
-function RTCPeerConnection() {
-  EventEmitter.call(this);
-  this.iceConnectionState = 'completed';
-  this.iceGatheringState = 'complete';
-  this.localDescription = null;
-  this.peerIdentity = null;
-  this.remoteDescription = null;
-  this.signalingState = 'stable';
+class RTCSessionDescription {
+  constructor(init) {
+    init = init || {};
+    this.type = init.type || 'offer';
+    this.sdp = init.sdp || DUMMY_SDP;
+  }
+
+  toJSON() {
+    return {
+      type: this.type,
+      sdp: this.sdp
+    };
+  }
 }
 
-inherits(RTCPeerConnection, EventEmitter);
+class RTCPeerConnection extends EventEmitter {
+  constructor() {
+    super();
+    this.iceConnectionState = 'completed';
+    this.iceGatheringState = 'complete';
+    this.localDescription = null;
+    this.peerIdentity = null;
+    this.remoteDescription = null;
+    this.signalingState = 'stable';
+  }
 
-RTCPeerConnection.prototype.addEventListener = RTCPeerConnection.prototype.addListener;
+  createOffer() {
+    return Promise.resolve(new RTCSessionDescription({ type: 'offer', sdp: DUMMY_SDP }));
+  }
 
-RTCPeerConnection.prototype.createOffer = function createOffer() {
-  return Promise.resolve(new RTCSessionDescription({ type: 'offer', sdp: DUMMY_SDP }));
-};
+  createAnswer() {
+    return Promise.resolve(new RTCSessionDescription({ type: 'answer', sdp: DUMMY_SDP }));
+  }
 
-RTCPeerConnection.prototype.createAnswer = function createAnswer() {
-  return Promise.resolve(new RTCSessionDescription({ type: 'answer', sdp: DUMMY_SDP }));
-};
-
-RTCPeerConnection.prototype.removeEventListener = RTCPeerConnection.prototype.removeListener;
-
-RTCPeerConnection.prototype.setLocalDescription = function setLocalDescription(description) {
-  return new Promise(resolve => {
-    this.localDescription = new RTCSessionDescription(description);
-    setTimeout(() => {
-      resolve();
-      if (this.onicecandidate) {
-        this.onicecandidate({ candidate: null });
-        this.emit('icecandidate', { candidate: null });
-      }
+  setLocalDescription(description) {
+    return new Promise(resolve => {
+      this.localDescription = new RTCSessionDescription(description);
+      setTimeout(() => {
+        resolve();
+        if (this.onicecandidate) {
+          this.onicecandidate({ candidate: null });
+          this.emit('icecandidate', { candidate: null });
+        }
+      });
     });
-  });
-};
+  }
 
-RTCPeerConnection.prototype.setRemoteDescription = function setRemoteDescription(description) {
-  return new Promise(resolve => {
-    this.remoteDescription = new RTCSessionDescription(description);
-    setTimeout(() => {
-      resolve();
+  setRemoteDescription(description) {
+    return new Promise(resolve => {
+      this.remoteDescription = new RTCSessionDescription(description);
+      setTimeout(() => {
+        resolve();
+      });
     });
-  });
-};
+  }
 
-RTCPeerConnection.prototype.updateIce = function updateIce() {
-};
+  updateIce() {
+  }
 
-RTCPeerConnection.prototype.addIceCandidate = function addIceCandidate() {
-  return Promise.resolve();
-};
+  addIceCandidate() {
+    return Promise.resolve();
+  }
 
-RTCPeerConnection.prototype.getConfiguration = function getConfiguration() {
-};
+  getConfiguration() {
+  }
 
-RTCPeerConnection.prototype.getLocalStreams = function getLocalStreams() {
-  return [];
-};
+  getLocalStreams() {
+    return [];
+  }
 
-RTCPeerConnection.prototype.getRemoteStreams = function getRemoteStreams() {
-  return [];
-};
+  getRemoteStreams() {
+    return [];
+  }
 
-RTCPeerConnection.prototype.getStreamById = function getStreamById() {
-};
+  getStreamById() {
+  }
 
-RTCPeerConnection.prototype.addStream = function addStream() {
-};
+  addStream() {
+  }
 
-RTCPeerConnection.prototype.removeStream = function removeStream() {
-};
+  removeStream() {
+  }
 
-RTCPeerConnection.prototype.close = function close() {
-};
+  close() {
+  }
 
-RTCPeerConnection.prototype.createDataChannel = function createDataChannel(label) {
-  return new RTCDataChannel(label);
-};
+  createDataChannel(label) {
+    return new RTCDataChannel(label);
+  }
 
-RTCPeerConnection.prototype.createDTMFSender = function createDTMFSender() {
-};
+  createDTMFSender() {
+  }
 
-RTCPeerConnection.prototype.getState = function getState() {
-};
+  getState() {
+  }
 
-RTCPeerConnection.prototype.setIdentityProvider = function setIdentityProvider() {
-};
+  setIdentityProvider() {
+  }
 
-RTCPeerConnection.prototype.getIdentityAssertion = function getIdentityAssertion() {
-};
+  getIdentityAssertion() {
+  }
 
-RTCPeerConnection.prototype.getStats = function getStats() {
-  return Promise.resolve([]);
-};
+  getStats() {
+    return Promise.resolve([]);
+  }
 
-function RTCSessionDescription(init) {
-  init = init || {};
-  this.type = init.type || 'offer';
-  this.sdp = init.sdp || DUMMY_SDP;
+  addEventListener() {
+    return this.addListener(...arguments);
+  }
+
+  removeEventListener() {
+    return this.removeListener(...arguments);
+  }
 }
-
-RTCSessionDescription.prototype.toJSON = function toJSON() {
-  return {
-    type: this.type,
-    sdp: this.sdp
-  };
-};
 
 function attachMediaStream() {
 }

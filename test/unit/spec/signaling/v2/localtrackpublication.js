@@ -12,49 +12,42 @@ describe('LocalTrackPublicationV2', () => {
   // ------------
 
   describe('constructor', () => {
-    [true, false].forEach(shouldUseNew => {
-      context(`when called with${shouldUseNew ? '' : 'out'} "new"`, () => {
-        let localTrackPublicationV2;
-        let mediaStreamTrack;
-        let mediaTrackSender;
-        let name;
+    let localTrackPublicationV2;
+    let mediaStreamTrack;
+    let mediaTrackSender;
+    let name;
 
-        before(() => {
-          mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
-          mediaStreamTrack.enabled = makeEnabled();
-          mediaTrackSender = makeTrackSender(mediaStreamTrack);
-          name = makeUUID();
-          localTrackPublicationV2 = shouldUseNew
-            ? new LocalTrackPublicationV2(mediaTrackSender, name)
-            // eslint-disable-next-line new-cap
-            : LocalTrackPublicationV2(mediaTrackSender, name);
-        });
+    before(() => {
+      mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
+      mediaStreamTrack.enabled = makeEnabled();
+      mediaTrackSender = makeTrackSender(mediaStreamTrack);
+      name = makeUUID();
+      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, name);
+    });
 
-        it('should return a LocalTrackPublicationV2', () => {
-          assert(localTrackPublicationV2 instanceof LocalTrackPublicationV2);
-        });
+    it('should return a LocalTrackPublicationV2', () => {
+      assert(localTrackPublicationV2 instanceof LocalTrackPublicationV2);
+    });
 
-        it('should set .trackTransceiver', () => {
-          assert.equal(localTrackPublicationV2.trackTransceiver, mediaTrackSender);
-        });
+    it('should set .trackTransceiver', () => {
+      assert.equal(localTrackPublicationV2.trackTransceiver, mediaTrackSender);
+    });
 
-        it('should set .sid to null', () => {
-          assert.equal(localTrackPublicationV2.sid, null);
-        });
+    it('should set .sid to null', () => {
+      assert.equal(localTrackPublicationV2.sid, null);
+    });
 
-        it('should set the .name property', () => {
-          assert.equal(localTrackPublicationV2.name, name);
-        });
+    it('should set the .name property', () => {
+      assert.equal(localTrackPublicationV2.name, name);
+    });
 
-        [
-          ['id', 'id'],
-          ['kind', 'kind'],
-          ['isEnabled', 'enabled']
-        ].forEach(([ltProp, mstProp]) => {
-          it(`should set .${ltProp} to MediaStreamTrack's ${mstProp}`, () => {
-            assert.equal(localTrackPublicationV2[ltProp], mediaStreamTrack[mstProp]);
-          });
-        });
+    [
+      ['id', 'id'],
+      ['kind', 'kind'],
+      ['isEnabled', 'enabled']
+    ].forEach(([ltProp, mstProp]) => {
+      it(`should set .${ltProp} to MediaStreamTrack's ${mstProp}`, () => {
+        assert.equal(localTrackPublicationV2[ltProp], mediaStreamTrack[mstProp]);
       });
     });
 

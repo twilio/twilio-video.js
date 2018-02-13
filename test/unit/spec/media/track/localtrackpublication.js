@@ -31,26 +31,8 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   describe(description, () => {
     describe('constructor', () => {
       context('when called without the "options" argument', () => {
-        [
-          [
-            'when called without the "new" keyword',
-            // eslint-disable-next-line new-cap
-            () => LocalTrackPublication('foo', localTrack, () => {})
-          ],
-          [
-            'when called with the "new" keyword',
-            () => new LocalTrackPublication('bar', localTrack, () => {})
-          ]
-        ].forEach(([scenario, createLocalTrackPublication]) => {
-          context(scenario, () => {
-            it('should not throw', () => {
-              assert.doesNotThrow(createLocalTrackPublication);
-            });
-
-            it(`should return an instance of ${description}`, () => {
-              assert(createLocalTrackPublication() instanceof LocalTrackPublication);
-            });
-          });
+        it(`should return an instance of ${description}`, () => {
+          assert(new LocalTrackPublication('foo', localTrack, () => {}) instanceof LocalTrackPublication);
         });
       });
 

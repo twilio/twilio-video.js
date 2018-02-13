@@ -8,38 +8,33 @@ describe('MediaTrackSender', () => {
   let sender;
 
   describe('constructor', () => {
-    [true, false].forEach(shouldUseNewKwd => {
-      context(`when called with${shouldUseNewKwd ? '' : 'out'} the "new" keyword`, () => {
-        before(() => {
-          // eslint-disable-next-line new-cap
-          sender = shouldUseNewKwd ? new MediaTrackSender(mediaStreamTrack) : MediaTrackSender(mediaStreamTrack);
-        });
+    before(() => {
+      sender = new MediaTrackSender(mediaStreamTrack);
+    });
 
-        it('should return a MediaTrackSender', () => {
-          assert(sender instanceof MediaTrackSender);
-        });
+    it('should return a MediaTrackSender', () => {
+      assert(sender instanceof MediaTrackSender);
+    });
 
-        ['id', 'kind', 'readyState'].forEach(prop => {
-          it(`should set the .${prop} to the MediaStreamTrack's .${prop}`, () => {
-            assert.equal(sender[prop], mediaStreamTrack[prop]);
-          });
-        });
+    ['id', 'kind', 'readyState'].forEach(prop => {
+      it(`should set the .${prop} to the MediaStreamTrack's .${prop}`, () => {
+        assert.equal(sender[prop], mediaStreamTrack[prop]);
+      });
+    });
 
-        it('should set the .track property', () => {
-          assert.equal(sender.track, mediaStreamTrack);
-        });
+    it('should set the .track property', () => {
+      assert.equal(sender.track, mediaStreamTrack);
+    });
 
-        context('when the MediaStreamTrack\'s .readyState changes', () => {
-          const newReadyState = 'ended';
+    context('when the MediaStreamTrack\'s .readyState changes', () => {
+      const newReadyState = 'ended';
 
-          before(() => {
-            mediaStreamTrack.readyState = newReadyState;
-          });
+      before(() => {
+        mediaStreamTrack.readyState = newReadyState;
+      });
 
-          it('should update the MediaTrackTransceiver\'s .readyState', () => {
-            assert.equal(sender.readyState, newReadyState);
-          });
-        });
+      it('should update the MediaTrackTransceiver\'s .readyState', () => {
+        assert.equal(sender.readyState, newReadyState);
       });
     });
   });

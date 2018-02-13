@@ -23,13 +23,6 @@ describe('Room', () => {
     room = new Room(localParticipant, signaling, options);
   });
 
-  describe('new Room(signaling)', () => {
-    it('should return an instance when called as a function', () => {
-      // eslint-disable-next-line new-cap
-      assert(Room(localParticipant, signaling, options) instanceof Room);
-    });
-  });
-
   describe('#disconnect()', () => {
     it('should return the Room', () => {
       assert.equal(room, room.disconnect());

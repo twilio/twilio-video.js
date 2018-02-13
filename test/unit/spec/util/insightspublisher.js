@@ -1,28 +1,35 @@
 'use strict';
 
 const assert = require('assert');
-const { inherits } = require('util');
 const sinon = require('sinon');
 
 const EventTarget = require('../../../../lib/eventtarget');
 const { defer } = require('../../../../lib/util');
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 
+class FakeWebSocket extends EventTarget {
+  constructor(arg) {
+    super();
+
+    this.readyState = FakeWebSocket.OPEN;
+    this.close = sinon.spy(() => {});
+    this.send = sinon.spy(() => {});
+
+    if (typeof arg === 'function') {
+      arg.apply(this, [].slice.call(arguments, 1));
+    }
+  }
+}
+
+['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach((readyState, i) => {
+  FakeWebSocket[readyState] = i;
+});
+
 describe('InsightsPublisher', () => {
   describe('constructor', () => {
     context('when called with the "new" keyword', () => {
       it('should return an instance of InsightsPublisher', () => {
         const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-          WebSocket: FakeWebSocket
-        });
-        assert(publisher instanceof InsightsPublisher);
-      });
-    });
-
-    context('when called without the "new" keyword', () => {
-      it('should return an instance of InsightsPublisher', () => {
-        // eslint-disable-next-line new-cap
-        const publisher = InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
           WebSocket: FakeWebSocket
         });
         assert(publisher instanceof InsightsPublisher);
@@ -342,24 +349,6 @@ describe('InsightsPublisher', () => {
       });
     });
   });
-});
-
-function FakeWebSocket(arg) {
-  EventTarget.call(this);
-
-  this.readyState = FakeWebSocket.OPEN;
-  this.close = sinon.spy(() => {});
-  this.send = sinon.spy(() => {});
-
-  if (typeof arg === 'function') {
-    arg.apply(this, [].slice.call(arguments, 1));
-  }
-}
-
-inherits(FakeWebSocket, EventTarget);
-
-['CONNECTING', 'OPEN', 'CLOSING', 'CLOSED'].forEach((readyState, i) => {
-  FakeWebSocket[readyState] = i;
 });
 
 function customizedWebSocket(ctor, init) {

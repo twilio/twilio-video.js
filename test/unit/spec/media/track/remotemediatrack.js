@@ -18,37 +18,30 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     describe('constructor', () => {
       [() => null, () => ({ log })].forEach(getOptions => {
         context(`when called with${getOptions() ? '' : 'out'} the options object`, () => {
-          [true, false].forEach(shouldUseNew => {
-            context(`when called with${shouldUseNew ? '' : 'out'} the new keyword`, () => {
-              let track;
+          let track;
 
-              function makeTrack() {
-                const mediaStreamTrack = new FakeMediaStreamTrack(kind);
-                const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
-                const signaling = makeSignaling(randomBoolean(), randomBoolean(), randomName());
-                return shouldUseNew
-                  ? new RemoteTrack(mediaTrackReceiver, signaling, getOptions())
-                  // eslint-disable-next-line new-cap
-                  : RemoteTrack(mediaTrackReceiver, signaling, getOptions());
-              }
+          function makeTrack() {
+            const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+            const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
+            const signaling = makeSignaling(randomBoolean(), randomBoolean(), randomName());
+            return new RemoteTrack(mediaTrackReceiver, signaling, getOptions());
+          }
 
-              before(() => {
-                track = makeTrack();
-              });
+          before(() => {
+            track = makeTrack();
+          });
 
-              it('shouldn\'t throw', () => {
-                assert.doesNotThrow(makeTrack);
-              });
+          it('shouldn\'t throw', () => {
+            assert.doesNotThrow(makeTrack);
+          });
 
-              it(`should return an instance of ${name}`, () => {
-                assert(track instanceof RemoteTrack);
-              });
+          it(`should return an instance of ${name}`, () => {
+            assert(track instanceof RemoteTrack);
+          });
 
-              ['isEnabled', 'isSubscribed', 'name', 'sid'].forEach(prop => {
-                it(`should set the .${prop} property to the RemoteTrackSignaling's .${prop}`, () => {
-                  assert.equal(track[prop], track._signaling[prop]);
-                });
-              });
+          ['isEnabled', 'isSubscribed', 'name', 'sid'].forEach(prop => {
+            it(`should set the .${prop} property to the RemoteTrackSignaling's .${prop}`, () => {
+              assert.equal(track[prop], track._signaling[prop]);
             });
           });
         });
