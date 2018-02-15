@@ -619,22 +619,14 @@ describe('RoomV2', () => {
           test.peerConnectionManager.setTrackSenders.args[0][0]);
       });
 
-      it('calls .update on the LocalParticipantSignaling', async () => {
-        const track = makeTrack();
-        const test = makeTest({
-          localTracks: [track]
-        });
-        test.localParticipant.emit('trackAdded', track);
-        await new Promise(resolve => setTimeout(resolve));
-        assert(test.localParticipant.incrementRevision.calledOnce);
-      });
-
       it('calls .publish on the Transport with the LocalparticipantSignaling state', async () => {
         const track = makeTrack();
         const test = makeTest({
           localTracks: [track]
         });
         test.localParticipant.emit('trackAdded', track);
+        test.localParticipant.revision++;
+        test.localParticipant.emit('updated');
         await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
           {
@@ -659,22 +651,14 @@ describe('RoomV2', () => {
           test.peerConnectionManager.setTrackSenders.args[0][0]);
       });
 
-      it('calls .update on the LocalParticipantSignaling', async () => {
-        const track = makeTrack();
-        const test = makeTest({
-          localTracks: [track]
-        });
-        test.localParticipant.emit('trackRemoved', track);
-        await new Promise(resolve => setTimeout(resolve));
-        assert(test.localParticipant.incrementRevision.calledOnce);
-      });
-
       it('calls .publish on the Transport with the LocalParticipantSignaling state', async () => {
         const track = makeTrack();
         const test = makeTest({
           localTracks: [track]
         });
         test.localParticipant.emit('trackRemoved', track);
+        test.localParticipant.revision++;
+        test.localParticipant.emit('updated', track);
         await new Promise(resolve => setTimeout(resolve));
         assert.deepEqual(
           {
@@ -683,42 +667,6 @@ describe('RoomV2', () => {
             }
           },
           test.transport.publish.args[0][0]);
-      });
-    });
-
-    context('when an added TrackV2 emits an "updated" event in a new state', () => {
-      context('with .isEnabled set to false', () => {
-        it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
-          const track = makeTrack();
-          const test = makeTest({
-            localTracks: [track]
-          });
-          track.disable();
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 1
-              }
-            },
-            test.transport.publish.args[0][0]);
-        });
-      });
-
-      context('with .isEnabled set to true', () => {
-        it('calls .publish on the Transport with the LocalParticipantSignaling state', () => {
-          const track = makeTrack();
-          const test = makeTest({
-            localTracks: [track]
-          });
-          track.enable();
-          assert.deepEqual(
-            {
-              participant: {
-                revision: 1
-              }
-            },
-            test.transport.publish.args[0][0]);
-        });
       });
     });
 
