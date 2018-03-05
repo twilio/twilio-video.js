@@ -1,3 +1,14 @@
+1.8.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where, if the WebSocket connection to Twilio was disconnected (for
+  example, due to losing internet connectivity), Room would emit a
+  "disconnected" event without an error. Now, Room will emit a
+  SignalingConnectionDisconnectedError.
+
 1.8.0 (February 9, 2018)
 ========================
 

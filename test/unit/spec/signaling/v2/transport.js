@@ -8,6 +8,7 @@ const Transport = require('../../../../../lib/signaling/v2/transport');
 const { PUBLISH_MAX_ATTEMPTS } = require('../../../../../lib/util/constants');
 
 const {
+  SignalingConnectionDisconnectedError,
   SignalingConnectionError,
   SignalingConnectionTimeoutError,
   SignalingIncomingMessageInvalidError
@@ -2264,6 +2265,44 @@ describe('Transport', () => {
       });
     });
   });
+
+  describe('the underlying SIP.js UA emits', () => {
+    describe('"disconnected", and the Transport\'s .state is', () => {
+      let test;
+
+      beforeEach(() => {
+        test = makeTest();
+        test.connect();
+      });
+
+      describe('"connected"', () => {
+        it('emits "disconnected" with a SignalingConnectionDisconnectedError', () => {
+          let state;
+          let error;
+          test.transport.once('stateChanged', (_state, _error) => {
+            state = _state;
+            error = _error;
+          });
+          test.ua.emit('disconnected');
+          assert.equal(state, 'disconnected');
+          assert(error instanceof SignalingConnectionDisconnectedError);
+        });
+      });
+
+      describe('"disconnected"', () => {
+        beforeEach(() => {
+          test.transport.disconnect();
+        });
+
+        it('does not emit "disconnected"', () => {
+          let didEmitEvent = false;
+          test.transport.once('stateChanged', () => { didEmitEvent = true; });
+          test.ua.emit('disconnected');
+          assert(!didEmitEvent);
+        });
+      });
+    });
+  });
 });
 
 function makeTest(options) {
@@ -2339,9 +2378,9 @@ function makeSession(options) {
 }
 
 function makeUA(options) {
-  const ua = {};
+  const ua = new EventEmitter();
   ua.invite = sinon.spy(() => options.session);
-  ua.once = sinon.spy(() => {});
+  ua.once = sinon.spy(ua.once.bind(ua));
   ua.stop = sinon.spy(() => {});
   return ua;
 }
