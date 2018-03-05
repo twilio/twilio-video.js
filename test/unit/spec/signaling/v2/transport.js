@@ -2264,6 +2264,44 @@ describe('Transport', () => {
       });
     });
   });
+
+  describe.only('the underlying SIP.js UA emits', () => {
+    describe('"keepAliveTimeout", and the Transport\'s .state is', () => {
+      let test;
+
+      beforeEach(() => {
+        test = makeTest();
+        test.connect();
+      });
+
+      describe('"connected"', () => {
+        it('emits "disconnected" with a SignalingConnectionDisconnectedError', () => {
+          let state;
+          let error;
+          test.transport.once('stateChanged', (_state, _error) => {
+            state = _state;
+            error = _error;
+          });
+          test.ua.emit('keepAliveTimeout');
+          assert.equal(state, 'disconnected');
+          assert(error instanceof SignalingConnectionTimeoutError);
+        });
+      });
+
+      describe('"disconnected"', () => {
+        beforeEach(() => {
+          test.transport.disconnect();
+        });
+
+        it('does not emit "disconnected"', () => {
+          let didEmitEvent = false;
+          test.transport.once('stateChanged', () => { didEmitEvent = true; });
+          test.ua.emit('keepAliveTimeout');
+          assert(!didEmitEvent);
+        });
+      });
+    });
+  });
 });
 
 function makeTest(options) {
@@ -2339,9 +2377,9 @@ function makeSession(options) {
 }
 
 function makeUA(options) {
-  const ua = {};
+  const ua = new EventEmitter();
   ua.invite = sinon.spy(() => options.session);
-  ua.once = sinon.spy(() => {});
+  ua.once = sinon.spy(ua.once.bind(ua));
   ua.stop = sinon.spy(() => {});
   return ua;
 }
