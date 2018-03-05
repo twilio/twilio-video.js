@@ -8,6 +8,10 @@ Bug Fixes
   example, due to losing internet connectivity), Room would emit a
   "disconnected" event without an error. Now, Room will emit a
   SignalingConnectionDisconnectedError.
+- Fixed a bug where twilio-video.js failed to identify a WebSocket timeout in a
+  timely manner. Now, WebSocket timeouts can be identified in around 30 seconds.
+  If a WebSocket timeout occurs, for example, due to a WebSocket disconnect,
+  Room will emit a "disconnected" event with SignalingConnectionTimeoutError.
 
 1.8.0 (February 9, 2018)
 ========================
