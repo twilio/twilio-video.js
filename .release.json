@@ -15,10 +15,10 @@
         "node ./node_modules/.bin/release --bump ${CURRENT_VERSION} ${RELEASE_VERSION}",
         "git config user.name \"${GIT_USER_NAME}\"",
         "git config user.email \"${GIT_USER_EMAIL}\"",
-        "git rm -rf --ignore-unmatch dist",
+        "git rm -rf --ignore-unmatch dist es5",
         "npm run build:quick",
         "git add package.json bower.json",
-        "git add -f dist",
+        "git add -f dist es5",
         "git commit -m \"${RELEASE_VERSION}\"",
         "git tag ${RELEASE_VERSION}",
         "git remote set-url origin \"https://${GH_TOKEN}@${GH_REF}\"",
@@ -29,7 +29,7 @@
     "development": {
       "commands": [
         "node ./node_modules/.bin/release --bump ${RELEASE_VERSION} ${DEVELOPMENT_VERSION}",
-        "git rm -rf dist",
+        "git rm -rf dist es5",
         "npm run clean",
         "git add package.json bower.json",
         "git commit -m \"${DEVELOPMENT_VERSION}\"",
