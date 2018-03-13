@@ -1,5 +1,18 @@
-1.8.1 (in progress)
+1.9.0 (in progress)
 ===================
+
+New Features
+------------
+
+- By default, twilio-video.js waits up to 3000 milliseconds to fetch ICE servers
+  before connecting to a Room; and, if fetching ICE servers takes longer than
+  3000 milliseconds or otherwise fails, twilio-video.js will fallback to using
+  hard-coded STUN servers. Now you can configure this timeout with a new
+  property in ConnectOptions, `iceServersTimeout`. You can also disable the
+  fallback behavior by setting another new property in ConnectOptions,
+  `abortOnIceServersTimeout`, to `true`. Doing so will cause the Promise
+  returned by `connect` to reject with TwilioError 53500, "Unable to acquire
+  configuration", if fetching ICE servers times out or otherwise fails.
 
 Bug Fixes
 ---------
