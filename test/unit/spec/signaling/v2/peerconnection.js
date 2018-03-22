@@ -1470,6 +1470,182 @@ describe('PeerConnectionV2', () => {
       assert.deepEqual({ type: description.type, sdp: description.sdp }, test.pc.localDescription);
     });
   });
+
+  describe('ICE restart', () => {
+    describe('when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "failed",', () => {
+      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', async () => {
+        const test = makeTest({ offers: 2 });
+
+        // Do a first round of negotiation.
+        await test.pcv2.offer();
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+        // Spy on MockPeerConnection's .createOffer method.
+        test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+        // Then, cause an ICE failure.
+        test.pc.iceConnectionState = 'failed';
+        test.pc.emit('iceconnectionstatechange');
+
+        await oneTick();
+
+        // Check .iceRestart equals true.
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
+      });
+    });
+
+    describe('when a remote answer is applied after restarting ICE, and then .offer is called again', () => {
+      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection without setting .iceRestart to true', async () => {
+        const test = makeTest({ offers: 3 });
+
+        // Do a first round of negotiation.
+        await test.pcv2.offer();
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+        // Then, cause an ICE failure.
+        test.pc.iceConnectionState = 'failed';
+        test.pc.emit('iceconnectionstatechange');
+
+        await oneTick();
+
+        // Apply a remote answer.
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 2));
+
+        // Spy on MockPeerConnection's .createOffer method.
+        test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+        // Create a new offer.
+        await test.pcv2.offer();
+
+        // Check .iceRestart is undefined.
+        assert(test.pc.createOffer.calledWith({}));
+      });
+    });
+
+    describe('when glare is detected during an ICE restart', () => {
+      it('the PeerConnectionV2 will roll back, answer, and then call .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', async () => {
+        const test = makeTest({ offers: 3, answers: 1 });
+
+        // Do a first round of negotiation.
+        await test.pcv2.offer();
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+        // Spy on MockPeerConnection's .createOffer method.
+        test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+        // Then, cause an ICE failure.
+        test.pc.iceConnectionState = 'failed';
+        test.pc.emit('iceconnectionstatechange');
+
+        await oneTick();
+
+        // Check .iceRestart is true.
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
+
+        // Reset the spy.
+        test.pc.createOffer.reset();
+
+        // Trigger glare.
+        await test.pcv2.update(test.state().setDescription(makeOffer(), 2));
+
+        // Check .iceRestart is true (again).
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
+      });
+    });
+
+    describe('when .offer is called during an ICE restart', () => {
+      it('the PeerConnectionV2 will wait until ICE is restarted to re-offer', async () => {
+        const test = makeTest({ offers: 3, answers: 1 });
+
+        // Do a first round of negotiation.
+        await test.pcv2.offer();
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+        // Spy on MockPeerConnection's .createOffer method.
+        test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+        // Then, cause an ICE failure.
+        test.pc.iceConnectionState = 'failed';
+        test.pc.emit('iceconnectionstatechange');
+
+        await oneTick();
+
+        // Check .iceRestart is true.
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
+
+        // Reset the spy.
+        test.pc.createOffer.reset();
+
+        // Call .offer.
+        await test.pcv2.offer();
+
+        // Ensure the spy is not called.
+        assert.equal(test.pc.createOffer.callCount, 0);
+
+        // Apply a remote answer.
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 2));
+
+        // Check .iceRestart is undefined.
+        assert(test.pc.createOffer.calledWith({}));
+      });
+    });
+
+    [
+      'connected',
+      'completed'
+    ].forEach(iceConnectionState => {
+      describe(`when ICE is restarted, the underlying RTCPeerConnection's .iceConnectionState transitions to "${iceConnectionState}", and then back to "failed"`, () => {
+        it('the PeerConnectionV2 calls .createOffer on the underyling RTCPeerConnection with .iceRestart set to true', async () => {
+          const test = makeTest({ offers: 3, answers: 1 });
+
+          // Do a first round of negotiation.
+          await test.pcv2.offer();
+          await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+          // Spy on MockPeerConnection's .createOffer method.
+          test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+          // Then, cause an ICE failure.
+          test.pc.iceConnectionState = 'failed';
+          test.pc.emit('iceconnectionstatechange');
+
+          await oneTick();
+
+          // Check .iceRestart is true.
+          assert(test.pc.createOffer.calledWith({
+            iceRestart: true
+          }));
+
+          // Apply a remote answer, and simulate a successful ICE restart.
+          await test.pcv2.update(test.state().setDescription(makeAnswer(), 2));
+          test.pc.iceConnectionState = iceConnectionState;
+          test.pc.emit('iceconnectionstatechange');
+
+          // Reset the spy.
+          test.pc.createOffer.reset();
+
+          // Then, cause an ICE failure (again).
+          test.pc.iceConnectionState = 'failed';
+          test.pc.emit('iceconnectionstatechange');
+
+          await oneTick();
+
+          // Check .iceRestart is true (again).
+          assert(test.pc.createOffer.calledWith({
+            iceRestart: true
+          }));
+        });
+      });
+    });
+  });
 });
 
 /**
@@ -1523,6 +1699,7 @@ class MockPeerConnection extends EventEmitter {
     this.errorScenario = errorScenario || null;
 
     this.signalingState = 'stable';
+    this.iceConnectionState = 'new';
     this.localDescription = null;
     this.remoteDescription = null;
   }
@@ -1955,4 +2132,8 @@ function makePeerConnection(options) {
     options.offers,
     options.answers,
     options.errorScenario);
+}
+
+function oneTick() {
+  return new Promise(resolve => setTimeout(resolve));
 }
