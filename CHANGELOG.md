@@ -26,8 +26,8 @@ Bug Fixes
   If a WebSocket timeout occurs, for example, due to a WebSocket disconnect,
   Room will emit a "disconnected" event with SignalingConnectionTimeoutError.
 - If an ICE failure occurs, for example due to disconnecting a VPN, but the
-  but the signaling connection remains online, twilio-video.js will attempt an
-  ICE restart to repair the media connection. (JSDK-1810)
+  signaling connection remains online, twilio-video.js will attempt an ICE
+  restart to repair the media connection. (JSDK-1810)
 
 1.8.0 (February 9, 2018)
 ========================
