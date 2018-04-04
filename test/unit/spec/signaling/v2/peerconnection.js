@@ -23,6 +23,25 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('.iceConnectionState', () => {
+    it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
+      const test = makeTest();
+      assert.equal(test.pcv2.iceConnectionState, test.pc.iceConnectionState);
+      test.pc.iceConnectionState = 'failed';
+      assert.equal(test.pcv2.iceConnectionState, 'failed');
+    });
+  });
+
+  describe('"iceConnectionStateChanged"', () => {
+    it('emits "iceConnectionStateChanged" when the underlying RTCPeerConnection emits "iceconnectionstatechange"', () => {
+      const test = makeTest();
+      let didEmit = false;
+      test.pcv2.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.pc.emit('iceconnectionstatechange');
+      assert(didEmit);
+    });
+  });
+
   describe('#addDataTrackSender, called with a DataTrackSender that has', () => {
     let test;
     let dataTrackSender;
