@@ -34,6 +34,8 @@ require('./spec/media/track/remotemediatrack');
 require('./spec/media/track/sender');
 require('./spec/media/track/transceiver');
 
+require('./spec/signaling/room');
+
 require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
