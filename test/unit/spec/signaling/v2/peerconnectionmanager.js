@@ -15,6 +15,157 @@ const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
+  describe('.iceConnectionState', () => {
+    describe('when there are zero RTCPeerConnections', () => {
+      const test = makeTest();
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'new');
+    });
+
+    describe('when there is one RTCPeerConnection', () => {
+      it('equals the RTCPeerConnection\'s ICE connection state', async () => {
+        await Promise.all([
+          'new',
+          'checking',
+          'connected',
+          'completed',
+          'disconnected',
+          'closed'
+        ].map(async state => {
+          const test = makeTest();
+          await test.peerConnectionManager.createAndOffer();
+          test.peerConnectionV2s[0].iceConnectionState = state;
+          test.peerConnectionV2s[0].emit('iceConnectionStateChanged');
+          assert.equal(test.peerConnectionManager.iceConnectionState, state);
+        }));
+      });
+    });
+
+    describe('when there are 2 RTCPeerConnections', () => {
+      [
+        ['new', 'new', 'new'],
+        ['new', 'checking', 'checking'],
+        ['new', 'connected', 'connected'],
+        ['new', 'completed', 'completed'],
+        ['new', 'disconnected', 'new'],
+        ['new', 'failed', 'new'],
+        ['new', 'closed', 'new'],
+        ['checking', 'checking', 'checking'],
+        ['checking', 'connected', 'connected'],
+        ['checking', 'completed', 'completed'],
+        ['checking', 'disconnected', 'checking'],
+        ['checking', 'failed', 'checking'],
+        ['checking', 'closed', 'checking'],
+        ['connected', 'connected', 'connected'],
+        ['connected', 'completed', 'completed'],
+        ['connected', 'disconnected', 'connected'],
+        ['connected', 'failed', 'connected'],
+        ['connected', 'closed', 'connected'],
+        ['completed', 'completed', 'completed'],
+        ['completed', 'disconnected', 'completed'],
+        ['completed', 'failed', 'completed'],
+        ['completed', 'closed', 'completed'],
+        ['disconnected', 'disconnected', 'disconnected'],
+        ['disconnected', 'failed', 'disconnected'],
+        ['disconnected', 'closed', 'disconnected'],
+        ['failed', 'failed', 'failed'],
+        ['failed', 'closed', 'failed'],
+        ['closed', 'closed', 'closed'],
+      ].forEach(([state1, state2, expected]) => {
+        describe(`with ICE connection states "${state1}" and "${state2}"`, () => {
+          it(`equals ${expected}`, async () => {
+            const test = makeTest();
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.createAndOffer();
+            test.peerConnectionV2s[0].iceConnectionState = state1;
+            test.peerConnectionV2s[1].iceConnectionState = state2;
+            test.peerConnectionV2s[0].emit('iceConnectionStateChanged');
+            test.peerConnectionV2s[1].emit('iceConnectionStateChanged');
+            assert.equal(test.peerConnectionManager.iceConnectionState, expected);
+          });
+        });
+      });
+    });
+  });
+
+  describe('"iceConnectionStateChanged"', () => {
+    it('emits only when the summarized ICE connection state changes', async () => {
+      const test = makeTest();
+      await test.peerConnectionManager.createAndOffer();
+
+      // It should emit if a single PeerConnectionV2's .iceConnectionState changes.
+      let didEmit = false;
+      test.peerConnectionV2s[0].iceConnectionState = 'checking';
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[0].emit('iceConnectionStateChanged');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'checking');
+
+      await test.peerConnectionManager.createAndOffer();
+
+      // It should not emit if a second PeerConnectionV2's .iceConnectionState
+      // changes in a way that does not effect the summarized ICE connection
+      // state.
+      didEmit = false;
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[1].iceConnectionState = 'checking';
+      test.peerConnectionV2s[1].emit('iceConnectionStateChanged');
+      assert(!didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'checking');
+
+      // However, if a second PeerConnectionV2's .iceConnectionState does cause
+      // a change in the summarized ICE connection state, it _should_ emit
+      // "iceConnectionStateChanged".
+      test.peerConnectionV2s[1].iceConnectionState = 'connected';
+      test.peerConnectionV2s[1].emit('iceConnectionStateChanged');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'connected');
+
+      // Test a third PeerConnectionV2.
+      didEmit = false;
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      await test.peerConnectionManager.createAndOffer();
+      test.peerConnectionV2s[2].iceConnectionState = 'completed';
+      test.peerConnectionV2s[2].emit('iceConnectionStateChanged');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'completed');
+
+      // If a PeerConnectionV2's closing affects the summarized ICE connection
+      // state, then it should emit.
+      didEmit = false;
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[2].state = 'closed';
+      test.peerConnectionV2s[2].emit('stateChanged', 'closed');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'connected');
+
+      // If a PeerConnectionV2's closing does not affect the summarized ICE
+      // connection state, then it should _not_ emit.
+      didEmit = false;
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[0].state = 'closed';
+      test.peerConnectionV2s[0].emit('stateChanged', 'closed');
+      assert(!didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'connected');
+
+      // Once the last PeerConnectionV2 is closed, and the summarized ICE
+      // connection state was not "new", it should emit in the "new" state.
+      test.peerConnectionV2s[1].state = 'closed';
+      test.peerConnectionV2s[1].emit('stateChanged', 'closed');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'new');
+
+      // If, when the last PeerConnectionV2 is closed, and the summarized ICE
+      // connection state is already "new", it should not emit.
+      await test.peerConnectionManager.createAndOffer();
+      didEmit = false;
+      test.peerConnectionManager.once('iceConnectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[3].state = 'closed';
+      test.peerConnectionV2s[3].emit('stateChanged', 'closed');
+      assert(!didEmit);
+      assert.equal(test.peerConnectionManager.iceConnectionState, 'new');
+    });
+  });
+
   describe('#close', () => {
     it('returns the PeerConnectionManager', async () => {
       const test = makeTest();
@@ -678,6 +829,8 @@ function makePeerConnectionV2Constructor(testOptions) {
       id: id,
       fizz: 'buzz'
     });
+
+    peerConnectionV2.iceConnectionState = 'new';
 
     peerConnectionV2.removeDataTrackSender = sinon.spy();
 
