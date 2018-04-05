@@ -4,6 +4,29 @@
 New Features
 ------------
 
+- Room now emits "reconnecting" and "reconnected" events when the media
+  connection is disconnected and reconnected. You can use these events to update
+  your application and warn your users when a reconnection is occurring.
+  twilio-video.js does not yet support reconnecting the signaling connection;
+  however, when we do, we will use this same event. We recommend you set the
+  following event listeners in your application:
+
+  ```js
+  room.on('reconnecting', error => {
+    // Warn and/or update your application's UI.
+    console.warn('Reconnecting!', error);
+  });
+
+  room.on('reconnected', () => {
+    // Log and/or update your application's UI.
+    console.log('Reconnected!');
+  });
+  ```
+
+  In addition to this change, we've also added a new Room `state` value:
+  "reconnecting". Room `state` can now be one of "connected", "reconnecting", or
+  "disconnected". (JSDK-1855)
+
 - By default, twilio-video.js waits up to 3000 milliseconds to fetch ICE servers
   before connecting to a Room; and, if fetching ICE servers takes longer than
   3000 milliseconds or otherwise fails, twilio-video.js will fallback to using
