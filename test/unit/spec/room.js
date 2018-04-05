@@ -7,7 +7,11 @@ const Room = require('../../../lib/room');
 const ParticipantSignaling = require('../../../lib/signaling/participant');
 const RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 const RoomSignaling = require('../../../lib/signaling/room');
-const { SignalingConnectionDisconnectedError } = require('../../../lib/util/twilio-video-errors');
+
+const {
+  MediaConnectionError,
+  SignalingConnectionDisconnectedError
+} = require('../../../lib/util/twilio-video-errors');
 
 const log = require('../../lib/fakelog');
 
@@ -28,12 +32,34 @@ describe('Room', () => {
       assert.equal(room, room.disconnect());
     });
 
-    it('should trigger "disconnect" event on the Room with the Room as the argument', () => {
-      const spy = sinon.spy();
-      room.on('disconnected', spy);
-      room.disconnect();
-      assert.equal(spy.callCount, 1);
-      assert.equal(spy.args[0][0], room);
+    [
+      'connected',
+      'reconnecting',
+      'disconnected'
+    ].forEach(state => {
+      describe(`called in state "${state}"`, () => {
+        if (state === 'disconnected') {
+          it('should not trigger a "disconnected" event on the Room', () => {
+            const spy = sinon.spy();
+            room.disconnect();
+            room.on('disconnected', spy);
+            room.disconnect();
+            assert.equal(spy.callCount, 0);
+          });
+          return;
+        }
+
+        it('should trigger "disconnected" event on the Room with the Room as the argument', () => {
+          if (state === 'reconnecting') {
+            signaling.preempt('reconnecting');
+          }
+          const spy = sinon.spy();
+          room.on('disconnected', spy);
+          room.disconnect();
+          assert.equal(spy.callCount, 1);
+          assert.equal(spy.args[0][0], room);
+        });
+      });
     });
   });
 
@@ -187,6 +213,29 @@ describe('Room', () => {
       signaling.preempt('disconnected');
       sinon.assert.calledOnce(participants.foo._unsubscribeTracks);
       sinon.assert.calledOnce(participants.bar._unsubscribeTracks);
+    });
+  });
+
+  describe('RoomSignaling state changed to "reconnecting"', () => {
+    it('should trigger the same event on the Room with a TwilioError 53405, "Media Connection Failed"', () => {
+      const spy = sinon.spy();
+      room.on('reconnecting', spy);
+      signaling.preempt('reconnecting');
+      assert.equal(spy.callCount, 1);
+      assert(spy.args[0][0] instanceof MediaConnectionError);
+      assert.equal(spy.args[0][0].code, 53405);
+      assert.equal(room.state, 'reconnecting');
+    });
+  });
+
+  describe('RoomSignaling state changed to "connected"', () => {
+    it('should trigger the "reconnected" event on the Room', () => {
+      signaling.preempt('reconnecting');
+      const spy = sinon.spy();
+      room.on('reconnected', spy);
+      signaling.preempt('connected');
+      assert.equal(spy.callCount, 1);
+      assert.equal(room.state, 'connected');
     });
   });
 });
