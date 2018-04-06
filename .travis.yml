@@ -16,7 +16,6 @@ env:
   global:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
     - DISPLAY=:99.0
-    - PATH=$HOME/.meteor:$PATH
 
 matrix:
   include:
@@ -91,7 +90,6 @@ before_script:
       BROWSER=safari ./setup.sh
     fi
     cd ../..
-    curl https://install.meteor.com | /bin/sh
     if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
       sh -e /etc/init.d/xvfb start
       pulseaudio --start
