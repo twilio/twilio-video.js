@@ -7,8 +7,5 @@
     "env": {
       "PORT": 3000
     }
-  },
-  "test": {
-    "args": ["run", "test-once"]
   }
 }
