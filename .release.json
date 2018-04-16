@@ -9,7 +9,7 @@
     "release": {
       "env": {
         "GIT_USER_NAME": "twilio-ci",
-        "GIT_USER_EMAIL": "mroberts+twilio-ci@twilio.com"
+        "GIT_USER_EMAIL": "twilio-ci@twilio.com"
       },
       "commands": [
         "node ./node_modules/.bin/release --bump ${CURRENT_VERSION} ${RELEASE_VERSION}",
