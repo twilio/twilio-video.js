@@ -37,6 +37,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       });
 
       [
+        ['isTrackEnabled', kind === 'data' ? true : localTrack.isEnabled],
         ['kind', kind],
         ['track', localTrack],
         ['trackName', localTrack.name],
@@ -68,5 +69,39 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         assert.equal(ret, localTrackPublication);
       });
     });
+
+    if (kind !== 'data') {
+      describe('events', () => {
+        ['trackDisabled', 'trackEnabled'].forEach(event => {
+          const trackEvent = {
+            trackDisabled: 'disabled',
+            trackEnabled: 'enabled'
+          }[event];
+
+          context(`when "${trackEvent}" is emitted on the LocalTrack`, () => {
+            it(`should emit "${event}" on the ${description}`, () => {
+              localTrack.enable({
+                trackDisabled: true,
+                trackEnabled: false
+              }[event]);
+
+              const localTrackPublication = new LocalTrackPublication('foo', localTrack, () => {});
+              let localTrackPublicationEvent = false;
+
+              localTrackPublication.once(event, () => {
+                localTrackPublicationEvent = true;
+              });
+
+              localTrack.enable({
+                trackDisabled: false,
+                trackEnabled: true
+              }[event]);
+
+              assert(localTrackPublicationEvent);
+            });
+          });
+        });
+      });
+    }
   });
 });
