@@ -22,7 +22,7 @@ describe('RemoteDataTrack', () => {
         let dataTrack;
 
         beforeEach(() => {
-          trackSignaling = makeTrackSignaling(isSubscribed, makeUUID());
+          trackSignaling = makeSignaling(isSubscribed, makeUUID());
           dataTrack = new RemoteDataTrack(dataTrackReceiver, trackSignaling);
         });
 
@@ -73,7 +73,7 @@ describe('RemoteDataTrack', () => {
         let expectedData;
 
         beforeEach(() => {
-          trackSignaling = makeTrackSignaling(isSubscribed, makeUUID());
+          trackSignaling = makeSignaling(isSubscribed, makeUUID());
           dataTrack = new RemoteDataTrack(dataTrackReceiver, trackSignaling);
           expectedData = makeUUID();
         });
@@ -98,7 +98,7 @@ function makeDataChannel() {
   return dataChannel;
 }
 
-function makeTrackSignaling(isSubscribed, sid) {
+function makeSignaling(isSubscribed, sid) {
   const signaling = new EventEmitter();
   signaling.isSubscribed = isSubscribed;
   signaling.name = makeUUID();
