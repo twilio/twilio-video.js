@@ -2,17 +2,17 @@
 
 const assert = require('assert');
 
-const RemoteTrackV2 = require('../../../../../lib/signaling/v2/remotetrack');
+const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remotetrackpublication');
 const { makeUUID } = require('../../../../../lib/util');
 
-describe('RemoteTrackV2', () => {
+describe('RemoteTrackPublicationV2', () => {
   // RemoteTrackV2
   // -------
 
   describe('constructor', () => {
     it('sets .id', () => {
       const id = makeId();
-      assert.equal(id, (new RemoteTrackV2({
+      assert.equal(id, (new RemoteTrackPublicationV2({
         enabled: makeEnabled(),
         id: id,
         kind: makeKind(),
@@ -23,7 +23,7 @@ describe('RemoteTrackV2', () => {
 
     it('sets .name', () => {
       const name = makeUUID();
-      assert.equal(name, (new RemoteTrackV2({
+      assert.equal(name, (new RemoteTrackPublicationV2({
         enabled: makeEnabled(),
         id: makeId(),
         kind: makeKind(),
@@ -34,7 +34,7 @@ describe('RemoteTrackV2', () => {
 
     it('sets .sid', () => {
       const sid = makeSid();
-      assert.equal(sid, (new RemoteTrackV2({
+      assert.equal(sid, (new RemoteTrackPublicationV2({
         enabled: makeEnabled(),
         id: makeId(),
         kind: makeKind(),
@@ -45,7 +45,7 @@ describe('RemoteTrackV2', () => {
 
     context('when trackState.enabled is true', () => {
       it('sets .isEnabled to true', () => {
-        assert((new RemoteTrackV2({
+        assert((new RemoteTrackPublicationV2({
           enabled: true,
           id: makeId(),
           kind: makeKind(),
@@ -57,7 +57,7 @@ describe('RemoteTrackV2', () => {
 
     context('when trackState.enabled is false', () => {
       it('sets .isEnabled to false', () => {
-        assert(!(new RemoteTrackV2({
+        assert(!(new RemoteTrackPublicationV2({
           enabled: false,
           id: makeId(),
           kind: makeKind(),
@@ -69,7 +69,7 @@ describe('RemoteTrackV2', () => {
 
     context('when trackState.kind is "audio"', () => {
       it('sets .kind to "audio"', () => {
-        assert.equal('audio', (new RemoteTrackV2({
+        assert.equal('audio', (new RemoteTrackPublicationV2({
           enabled: makeEnabled(),
           id: makeId(),
           kind: 'audio',
@@ -81,7 +81,7 @@ describe('RemoteTrackV2', () => {
 
     context('when trackState.kind is "video"', () => {
       it('sets .kind to "video"', () => {
-        assert.equal('video', (new RemoteTrackV2({
+        assert.equal('video', (new RemoteTrackPublicationV2({
           enabled: makeEnabled(),
           id: makeId(),
           kind: 'video',
@@ -103,7 +103,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           assert.equal(track, track.update(trackState));
         });
@@ -116,7 +116,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           track.update(trackState);
           assert(!track.isEnabled);
@@ -130,7 +130,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           let isEnabled;
           track.once('updated', () => { isEnabled = track.isEnabled; });
@@ -148,7 +148,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           assert.equal(track, track.update(trackState));
         });
@@ -161,7 +161,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           track.update(trackState);
           assert(!track.isEnabled);
@@ -175,7 +175,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = false;
           let updated;
           track.once('updated', () => { updated = true; });
@@ -195,7 +195,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           assert.equal(track, track.update(trackState));
         });
@@ -208,7 +208,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           track.update(trackState);
           assert(track.isEnabled);
@@ -222,7 +222,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           let updated;
           track.once('updated', () => { updated = true; });
@@ -240,7 +240,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           assert.equal(track, track.update(trackState));
         });
@@ -253,7 +253,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           track.update(trackState);
           assert(track.isEnabled);
@@ -267,7 +267,7 @@ describe('RemoteTrackV2', () => {
             name: makeUUID(),
             sid: makeSid()
           };
-          const track = new RemoteTrackV2(trackState);
+          const track = new RemoteTrackPublicationV2(trackState);
           trackState.enabled = true;
           let isEnabled;
           track.once('updated', () => { isEnabled = track.isEnabled; });
@@ -284,7 +284,7 @@ describe('RemoteTrackV2', () => {
   describe('#disable', () => {
     context('called when the RemoteTrackV2 is enabled', () => {
       it('returns the RemoteTrackV2', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: true,
           kind: makeKind(),
@@ -295,7 +295,7 @@ describe('RemoteTrackV2', () => {
       });
 
       it('sets .isEnabled to false', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: true,
           kind: makeKind(),
@@ -307,7 +307,7 @@ describe('RemoteTrackV2', () => {
       });
 
       it('emits an "updated" event with .isEnabled set to false', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: true,
           kind: makeKind(),
@@ -323,7 +323,7 @@ describe('RemoteTrackV2', () => {
 
     context('called when the RemoteTrackV2 is disabled', () => {
       it('returns the RemoteTrackV2', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: false,
           kind: makeKind(),
@@ -334,7 +334,7 @@ describe('RemoteTrackV2', () => {
       });
 
       it('.isEnabled remains false', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: false,
           kind: makeKind(),
@@ -346,7 +346,7 @@ describe('RemoteTrackV2', () => {
       });
 
       it('"updated" does not emit', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: false,
           kind: makeKind(),
@@ -365,7 +365,7 @@ describe('RemoteTrackV2', () => {
     context('called with false when the RemoteTrackV2 is', () => {
       context('enabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -376,7 +376,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('sets .isEnabled to false', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -388,7 +388,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('emits an "updated" event with .isEnabled set to false', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -404,7 +404,7 @@ describe('RemoteTrackV2', () => {
 
       context('disabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -415,7 +415,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('.isEnabled remains false', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -427,7 +427,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('"updated" does not emit', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -445,7 +445,7 @@ describe('RemoteTrackV2', () => {
     context('called with true when the RemoteTrackV2 is', () => {
       context('enabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -456,7 +456,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('.isEnabled remains true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -468,7 +468,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('"updated" does not emit', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -484,7 +484,7 @@ describe('RemoteTrackV2', () => {
 
       context('disabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -495,7 +495,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('sets .isEnabled to true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -507,7 +507,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('emits an "updated" event with .isEnabled set to true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -525,7 +525,7 @@ describe('RemoteTrackV2', () => {
     context('called without an argument when the RemoteTrackV2 is', () => {
       context('enabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -536,7 +536,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('.isEnabled remains true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -548,7 +548,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('"updated" does not emit', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
             kind: makeKind(),
@@ -564,7 +564,7 @@ describe('RemoteTrackV2', () => {
 
       context('disabled', () => {
         it('returns the RemoteTrackV2', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -575,7 +575,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('sets .isEnabled to true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -587,7 +587,7 @@ describe('RemoteTrackV2', () => {
         });
 
         it('emits an "updated" event with .isEnabled set to true', () => {
-          const track = new RemoteTrackV2({
+          const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
             kind: makeKind(),
@@ -606,7 +606,7 @@ describe('RemoteTrackV2', () => {
   describe('#getTrackTransceiver', () => {
     context('called after setTrackTransceiver', () => {
       it('returns a Promise that resolves to the MediaTrackReceiver passed to setTrackTransceiver', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind(),
@@ -623,7 +623,7 @@ describe('RemoteTrackV2', () => {
 
     context('called before setTrackTransceiver', () => {
       it('returns a Promise that resolves to the MediaTrackReceiver eventually passed to setTrackTransceiver', () => {
-        const track = new RemoteTrackV2({
+        const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: makeEnabled(),
           kind: makeKind(),
@@ -642,7 +642,7 @@ describe('RemoteTrackV2', () => {
 
   describe('#setTrackTransceiver', () => {
     it('returns the RemoteTrackV2', () => {
-      const track = new RemoteTrackV2({
+      const track = new RemoteTrackPublicationV2({
         id: makeId(),
         enabled: makeEnabled(),
         kind: makeKind(),
