@@ -2,11 +2,10 @@
 
 const assert = require('assert');
 const log = require('../../../../lib/fakelog');
-const { capitalize, randomBoolean, randomName } = require('../../../../lib/util');
+const { capitalize } = require('../../../../lib/util');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
 const RemoteAudioTrack = require('../../../../../lib/media/track/remoteaudiotrack');
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
-const { EventEmitter } = require('events');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 [
@@ -16,59 +15,89 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   let name = `Remote${capitalize(kind)}Track`;
   describe(`${name}`, () => {
     describe('constructor', () => {
-      [() => null, () => ({ log })].forEach(getOptions => {
+      [() => null, () => ({ log, name: 'bar' })].forEach(getOptions => {
         context(`when called with${getOptions() ? '' : 'out'} the options object`, () => {
+          let error;
           let track;
 
-          function makeTrack() {
-            const mediaStreamTrack = new FakeMediaStreamTrack(kind);
-            const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
-            const signaling = makeSignaling(randomBoolean(), randomBoolean(), randomName());
-            return new RemoteTrack(mediaTrackReceiver, signaling, getOptions());
-          }
-
           before(() => {
-            track = makeTrack();
+            try {
+              track = makeTrack('foo', kind, true, getOptions(), RemoteTrack);
+            } catch (e) {
+              error = e;
+            }
           });
 
           it('shouldn\'t throw', () => {
-            assert.doesNotThrow(makeTrack);
+            assert(!error);
           });
 
           it(`should return an instance of ${name}`, () => {
             assert(track instanceof RemoteTrack);
           });
 
-          ['isEnabled', 'isSubscribed', 'name', 'sid'].forEach(prop => {
-            it(`should set the .${prop} property to the RemoteTrackSignaling's .${prop}`, () => {
-              assert.equal(track[prop], track._signaling[prop]);
-            });
+          it('should set the .id property', () => {
+            assert.equal(track.id, 'foo');
+          });
+
+          it('should set the .isEnabled property', () => {
+            assert(track.isEnabled);
+          });
+
+          it('should set the .kind property', () => {
+            assert.equal(track.kind, kind);
+          });
+
+          it('should set the .name property', () => {
+            assert.equal(track.name, getOptions() ? 'bar' : 'foo');
           });
         });
       });
     });
 
-    describe('#_unsubscribe', () => {
-      [true, false].forEach(isSubscribed => {
-        context(`when .isSubscribed is ${isSubscribed}`, () => {
+    describe('setEnabled', () => {
+      [
+        [true, true],
+        [true, false],
+        [false, true],
+        [false, false]
+      ].forEach(([isEnabled, newIsEnabled]) => {
+        context(`when .isEnabled is ${isEnabled} and the new value is ${newIsEnabled}`, () => {
           let track;
-          let unsubscribed;
+          let trackDisabled;
+          let trackEnabled;
 
           before(() => {
-            const mediaStreamTrack = new FakeMediaStreamTrack(kind);
-            const mediaTrackReceiver = new MediaTrackReceiver('foo', mediaStreamTrack);
-            const signaling = makeSignaling(randomBoolean(), isSubscribed, randomName());
-            track = new RemoteTrack(mediaTrackReceiver, signaling);
-            track.once('unsubscribed', track => { unsubscribed = track; });
-            track._unsubscribe();
+            track = makeTrack('foo', kind, isEnabled, null, RemoteTrack);
+            track.once('disabled', () => {
+              trackDisabled = true;
+            });
+            track.once('enabled', () => {
+              trackEnabled = true;
+            });
+            track.setEnabled(newIsEnabled);
           });
 
-          it(isSubscribed ? 'should set .isSubscribed to false' : 'should leave .isSubscribed unchanged', () => {
-            assert.equal(track.isSubscribed, false);
+          if (isEnabled === newIsEnabled) {
+            it('should not change the .isEnabled property', () => {
+              assert.equal(track.isEnabled, isEnabled);
+            });
+
+            it('should not emit any events', () => {
+              assert(!trackDisabled);
+              assert(!trackEnabled);
+            });
+
+            return;
+          }
+
+          it(`should set .isEnabled to ${newIsEnabled}`, () => {
+            assert.equal(track.isEnabled, newIsEnabled);
           });
 
-          it(`should ${isSubscribed ? '' : 'not'} emit the "unsubscribed" event`, () => {
-            assert(isSubscribed ? unsubscribed === track : !unsubscribed);
+          it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${name}`, () => {
+            assert(newIsEnabled ? trackEnabled : trackDisabled);
+            assert(!(newIsEnabled ? trackDisabled : trackEnabled));
           });
         });
       });
@@ -76,6 +105,13 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   });
 });
 
+function makeTrack(id, kind, isEnabled, options, RemoteTrack) {
+  const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+  const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  return new RemoteTrack(mediaTrackReceiver, isEnabled, options);
+}
+
+/*
 function makeSignaling(isEnabled, isSubscribed, sid) {
   const signaling = new EventEmitter();
   signaling.isEnabled = isEnabled;
@@ -84,3 +120,4 @@ function makeSignaling(isEnabled, isSubscribed, sid) {
   signaling.sid = sid;
   return signaling;
 }
+*/
