@@ -79,13 +79,3 @@ function makeDataChannel() {
   dataChannel.ordered = Math.random() > 0.5;
   return dataChannel;
 }
-
-/*
-function makeSignaling(isSubscribed, sid) {
-  const signaling = new EventEmitter();
-  signaling.isSubscribed = isSubscribed;
-  signaling.name = makeUUID();
-  signaling.sid = sid;
-  return signaling;
-}
-*/
