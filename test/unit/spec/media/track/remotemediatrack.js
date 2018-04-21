@@ -110,14 +110,3 @@ function makeTrack(id, kind, isEnabled, options, RemoteTrack) {
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
   return new RemoteTrack(mediaTrackReceiver, isEnabled, options);
 }
-
-/*
-function makeSignaling(isEnabled, isSubscribed, sid) {
-  const signaling = new EventEmitter();
-  signaling.isEnabled = isEnabled;
-  signaling.isSubscribed = isSubscribed;
-  signaling.name = randomName();
-  signaling.sid = sid;
-  return signaling;
-}
-*/
