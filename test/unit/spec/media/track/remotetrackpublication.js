@@ -6,7 +6,6 @@ const { capitalize, randomBoolean, randomName } = require('../../../../lib/util'
 const RemoteAudioTrackPublication = require('../../../../../lib/media/track/remoteaudiotrackpublication');
 const RemoteDataTrackPublication = require('../../../../../lib/media/track/remotedatatrackpublication');
 const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remotevideotrackpublication');
-const TwilioError = require('../../../../../lib/util/twilioerror');
 
 [
   ['audio', RemoteAudioTrackPublication],
@@ -132,7 +131,7 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 
     describe('RemoteTrackSignaling updates', () => {
       [
-        ['subscriptionFailed', { error: { code: 1, message: 'foo' } }],
+        ['subscriptionFailed', { error: new Error('foo') }],
         ['trackDisabled', { isEnabled: false }],
         ['trackEnabled', { isEnabled: true }]
       ].forEach(([event, options]) => {
@@ -156,9 +155,7 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
                 error = err;
               });
               signaling.update(options);
-              assert(error instanceof TwilioError);
-              assert.equal(error.code, options.error.code);
-              assert.equal(error.message, options.error.message);
+              assert.equal(error, options.error);
             });
             return;
           }

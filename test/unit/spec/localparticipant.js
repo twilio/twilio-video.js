@@ -245,16 +245,25 @@ describe('LocalParticipant', () => {
           this.trackName = track.name;
           this.trackSid = sid;
           this.track = track;
+          this.kind = track.kind;
+          this.on = () => {};
+          this.removeListener = () => {};
         },
         LocalVideoTrackPublication: function(sid, track) {
           this.trackName = track.name;
           this.trackSid = sid;
           this.track = track;
+          this.kind = track.kind;
+          this.on = () => {};
+          this.removeListener = () => {};
         },
         LocalDataTrackPublication: function(sid, track) {
           this.trackName = track.name;
           this.trackSid = sid;
           this.track = track;
+          this.kind = track.kind;
+          this.on = () => {};
+          this.removeListener = () => {};
         }
       };
       test = makeTest(options);
