@@ -55,7 +55,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       });
     });
 
-    describe('setEnabled', () => {
+    describe('#setEnabled', () => {
       [
         [true, true],
         [true, false],
