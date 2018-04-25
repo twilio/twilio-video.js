@@ -10,8 +10,11 @@ const {
 } = require('../../../lib');
 
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
+const RemoteAudioTrackPublication = require('../../../lib/media/track/remoteaudiotrackpublication');
 const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
+const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatatrackpublication');
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
+const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
@@ -52,7 +55,9 @@ describe('LocalTrackPublication', function() {
       let thisTrack;
       let thoseRooms;
       let thoseParticipants;
+      let thosePublicationsUnsubscribed;
       let thoseTracksRemoved;
+      let thoseTracksUnpublished;
       let thoseTracksUnsubscribed;
       let thoseTracksMap;
       let thoseUnsubscribed;
@@ -125,14 +130,24 @@ describe('LocalTrackPublication', function() {
           return new Promise(resolve => track.once('unsubscribed', resolve));
         });
 
-        [thoseTracksRemoved, thoseTracksUnsubscribed] = await Promise.all(['trackRemoved', 'trackUnsubscribed'].map(event => {
-          return Promise.all(thoseParticipants.map(thatParticipant => {
-            return waitForTracks(event, thatParticipant, 1).then(tracks => tracks[0]);
+        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.trackPublications.values()]).map(publication => {
+          return new Promise(resolve => publication.once('unsubscribed', resolve));
+        });
+
+        [thoseTracksRemoved, thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
+          'trackRemoved',
+          'trackUnsubscribed',
+          'trackUnpublished'
+        ].map(event => {
+          return Promise.all(thoseParticipants.map(async thatParticipant => {
+            const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
+            return trackOrPublication;
           }));
         }));
 
         thoseTracksMap = {
           trackRemoved: thoseTracksRemoved,
+          trackUnpublished: thoseTracksUnpublished,
           trackUnsubscribed: thoseTracksUnsubscribed
         };
       });
@@ -145,7 +160,28 @@ describe('LocalTrackPublication', function() {
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipants\' RemoteTracks', async () => {
-        await thoseUnsubscribed;
+        await Promise.all(thoseUnsubscribed);
+      });
+
+      it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
+        const thoseTracks = await Promise.all(thosePublicationsUnsubscribed);
+        assert.deepEqual(thoseTracks, thoseTracksMap.trackUnsubscribed);
+      });
+
+      it('should raise a "trackUnpublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
+        const thoseTrackPublications = thoseTracksMap.trackUnpublished;
+        thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
+          audio: RemoteAudioTrackPublication,
+          data: RemoteDataTrackPublication,
+          video: RemoteVideoTrackPublication
+        }[kind]));
+      });
+
+      ['isTrackEnabled', 'trackName', 'trackSid'].forEach(prop => {
+        it(`should set the RemoteTrackPublication's .${prop} to the LocalTrackPublication's .${prop}`, () => {
+          const thoseTrackPublications = thoseTracksMap.trackUnpublished;
+          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[prop], thisLocalTrackPublication[prop]));
+        });
       });
 
       ['trackRemoved', 'trackUnsubscribed'].forEach(event => {

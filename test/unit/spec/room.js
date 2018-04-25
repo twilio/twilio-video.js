@@ -117,6 +117,14 @@ describe('Room', () => {
       assert.equal(spy.callCount, 1);
     });
 
+    it('should re-emit RemoteParticipant trackPublished for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('trackPublished', spy);
+
+      participants.foo.emit('trackPublished');
+      assert.equal(spy.callCount, 1);
+    });
+
     it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackRemoved', spy);
@@ -149,6 +157,14 @@ describe('Room', () => {
       assert.equal(spy.callCount, 1);
     });
 
+    it('should re-emit RemoteParticipant trackUnpublished for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('trackUnpublished', spy);
+
+      participants.foo.emit('trackUnpublished');
+      assert.equal(spy.callCount, 1);
+    });
+
     it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackUnsubscribed', spy);
@@ -166,10 +182,12 @@ describe('Room', () => {
       room.on('trackDisabled', spy);
       room.on('trackEnabled', spy);
       room.on('trackMessage', spy);
+      room.on('trackPublished', spy);
       room.on('trackRemoved', spy);
       room.on('trackStarted', spy);
       room.on('trackSubscribed', spy);
       room.on('trackSubscriptionFailed', spy);
+      room.on('trackUnpublished', spy);
       room.on('trackUnsubscribed', spy);
 
       participants.foo.emit('trackAdded');
@@ -177,10 +195,12 @@ describe('Room', () => {
       participants.foo.emit('trackDisabled');
       participants.foo.emit('trackEnabled');
       participants.foo.emit('trackMessage');
+      participants.foo.emit('trackPublished');
       participants.foo.emit('trackRemoved');
       participants.foo.emit('trackStarted');
       participants.foo.emit('trackSubscribed');
       participants.foo.emit('trackSubscriptionFailed');
+      participants.foo.emit('trackUnpublished');
       participants.foo.emit('trackUnsubscribed');
       assert.equal(spy.callCount, 0);
     });
