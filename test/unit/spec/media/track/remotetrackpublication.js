@@ -238,6 +238,6 @@ function makeTrack(isEnabled) {
       track.emit(track.isEnabled ? 'enabled' : 'disabled');
     }
   };
-
+  track.unsubscribe = () => {};
   return track;
 }

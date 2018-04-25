@@ -33,10 +33,14 @@ describe('Room', function() {
     let participants;
     let participantsBefore;
     let participantsAfter;
+    let publicationsBefore;
+    let publicationsAfter;
     let tracksBefore;
     let tracksAfter;
     let participantsDisconnected;
+    let publicationsUnsubscribed;
     let tracksUnsubscribed;
+    let unsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName(), randomName()];
@@ -45,13 +49,26 @@ describe('Room', function() {
       rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, defaults))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
 
+      await Promise.all(flatMap(rooms, room => [...room.participants.values()]).map(participant => {
+        return tracksAdded(participant, participant.trackPublications.size);
+      }));
+
       room = rooms[0];
       participants = [...room.participants.values()];
       participantsBefore = [...room.participants.keys()];
+      publicationsBefore = [...room.participants.values()].sort().map(participant => [...participant.trackPublications.keys()].sort());
       tracksBefore = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
 
       participantsDisconnected = Promise.all(rooms.slice(1).map(room => {
         return new Promise(resolve => room.once('participantDisconnected', resolve));
+      }));
+
+      publicationsUnsubscribed = Promise.all(flatMap(room.participants, participant => [...participant.trackPublications.values()]).map(publication => {
+        return new Promise(resolve => publication.once('unsubscribed', resolve));
+      }));
+
+      unsubscribed = Promise.all(flatMap(room.participants, participant => [...participant.tracks.values()]).map(track => {
+        return new Promise(resolve => track.once('unsubscribed', resolve));
       }));
 
       tracksUnsubscribed = Promise.all(participants.map(participant => {
@@ -62,6 +79,7 @@ describe('Room', function() {
       room.disconnect();
 
       participantsAfter = [...room.participants.keys()];
+      publicationsAfter = [...room.participants.values()].sort().map(participant => [...participant.trackPublications.keys()].sort());
       tracksAfter = [...room.participants.values()].sort().map(participant => [...participant.tracks.keys()].sort());
     });
 
@@ -85,8 +103,20 @@ describe('Room', function() {
       assert.deepEqual(tracksAfter, tracksBefore);
     });
 
+    it('should not change Room\'s Participant\'s .trackPublications', () => {
+      assert.deepEqual(publicationsAfter, publicationsBefore);
+    });
+
     it('should raise a "participantDisconnected" event for every other RemoteParticipant connected to the Room', async () => {
       await participantsDisconnected;
+    });
+
+    it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTracks', async () => {
+      await unsubscribed;
+    });
+
+    it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
+      await publicationsUnsubscribed;
     });
 
     it('should raise a "trackUnsubscribed" event for each RemoteParticipant\'s RemoteTracks', async () => {
@@ -255,6 +285,9 @@ describe('Room', function() {
   });
 
   describe('"participantDisconnected" event', () => {
+    let publicationsBefore;
+    let publicationsAfter;
+    let publicationsUnsubscribed;
     let thisRoom;
     let thatRoom;
     let thisParticipant;
@@ -262,6 +295,7 @@ describe('Room', function() {
     let tracksAfter;
     let tracksBefore;
     let tracksUnsubscribed;
+    let unsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName()];
@@ -280,14 +314,24 @@ describe('Room', function() {
 
       thatParticipant = [...thatRoom.participants.values()][0];
       tracksBefore = [...thatParticipant.tracks.values()];
+      publicationsBefore = [...thatParticipant.trackPublications.values()];
 
       const n = thatParticipant.tracks.size;
       tracksUnsubscribed = waitForTracks('trackUnsubscribed', thatParticipant, n);
+
+      publicationsUnsubscribed = Promise.all([...thatParticipant.trackPublications.values()].map(publication => {
+        return new Promise(resolve => publication.once('unsubscribed', resolve));
+      }));
+
+      unsubscribed = Promise.all([...thatParticipant.tracks.values()].map(track => {
+        return new Promise(resolve => track.once('unsubscribed', resolve));
+      }));
 
       thisRoom.disconnect();
 
       thatParticipant = await participantDisconnected;
       tracksAfter = [...thatParticipant.tracks.values()];
+      publicationsAfter = [...thatParticipant.trackPublications.values()];
     });
 
     after(() => {
@@ -310,12 +354,24 @@ describe('Room', function() {
         assert.equal(thatParticipant.state, 'disconnected');
       });
 
-      it('should fire the "trackUnsubscribed" event for the RemoteParticipant\'s RemoteTracks', async () => {
-        await tracksUnsubscribed;
-      });
-
       it('should not change the RemoteParticipant\'s .tracks', () => {
         assert.deepEqual(tracksAfter, tracksBefore);
+      });
+
+      it('should not change Room\'s Participant\'s .trackPublications', () => {
+        assert.deepEqual(publicationsAfter, publicationsBefore);
+      });
+
+      it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTracks', async () => {
+        await unsubscribed;
+      });
+
+      it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
+        await publicationsUnsubscribed;
+      });
+
+      it('should fire the "trackUnsubscribed" event for the RemoteParticipant\'s RemoteTracks', async () => {
+        await tracksUnsubscribed;
       });
     });
   });

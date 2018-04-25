@@ -221,11 +221,11 @@ async function tracksAdded(participant, n) {
 }
 
 /**
- * Wait for {@link LocalTrack}s to be published.
- * @param {LocalParticipant} participant - the {@link LocalParticipant}
+ * Wait for {@link Track}s to be published.
+ * @param {Participant} participant - the {@link Participant}
  *   publishing the {@link LocalTrack}s
- * @param {number} n - the number of {@link LocalTrack}s to wait for
- * @param {Track.Kind} [kind] - an optional filter for {@link LocalTrack}s of a
+ * @param {number} n - the number of {@link Track}s to wait for
+ * @param {Track.Kind} [kind] - an optional filter for {@link `Track}s of a
  *   particular kind
  * @returns {Promise<void>}
  */
@@ -291,11 +291,11 @@ function makeEncodingParameters(options) {
 }
 
 /**
- * Wait for a certain number of {@link RemoteTrack} events.
+ * Wait for a certain number of {@link RemoteTrack} or {@link RemoteTrackPublication} events.
  * @param {string} event - the event to wait for
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the number of events to wait for
- * @returns {Promise.<Array<RemoteTracks>>}
+ * @returns {Promise.<Array<RemoteTrack|RemoteTrackPublication>>}
  */
 async function waitForTracks(event, participant, n) {
   if (n <= 0) {
