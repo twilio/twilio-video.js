@@ -143,7 +143,7 @@ describe('RemoteParticipant', () => {
             test.participant[`${kind.toLowerCase()}Tracks`].set(track.id, track);
             participantEvents = {};
             publication = new EventEmitter();
-            publication.unsubscribe = () => { publication.emit('unsubscribed', track); };
+            publication._unsubscribe = () => { publication.emit('unsubscribed', track); };
             trackUnsubscribed = null;
             tracksOnceTrackUnsubscribed = null;
             tracksOnceUnsubscribed = null;
@@ -214,7 +214,7 @@ describe('RemoteParticipant', () => {
             ['trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed'].forEach(event => {
               test.participant.once(event, track => { participantEvents[event] = track; });
             });
-            ret = test.participant[method](newTrack);
+            ret = test.participant[method](newTrack, makeRemoteTrackPublication(newTrackSignaling));
           });
 
           it(`${method === '_addTrack' ? 'should' : 'should not'} ${action} the Remote${kind}Track ${toOrFrom} .tracks`, () => {
@@ -442,12 +442,12 @@ describe('RemoteParticipant', () => {
 
       it('should emit "trackUnsubscribed" events for all the Participant\'s RemoteTrackPublications', () => {
         const track = new EventEmitter();
-        track.unsubscribe = () => {};
+        track._unsubscribe = () => {};
         const publication = makeRemoteTrackPublication(makeTrackSignaling());
         const test = makeTest();
         const unsubscribed = [];
         test.participant._addTrackPublication(publication);
-        publication.subscribed(track);
+        publication._subscribed(track);
         test.participant.on('trackUnsubscribed', track => unsubscribed.push(track));
         test.signaling.emit('stateChanged', 'disconnected');
         assert.equal(unsubscribed.length, 1);
@@ -1579,8 +1579,8 @@ function makeTest(options) {
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this.setSid = () => {};
-    this.unsubscribe = () => {};
+    this._setSid = () => {};
+    this._unsubscribe = () => {};
     options.tracks.push(this);
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
@@ -1591,8 +1591,8 @@ function makeTest(options) {
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this.setSid = () => {};
-    this.unsubscribe = () => {};
+    this._setSid = () => {};
+    this._unsubscribe = () => {};
     options.tracks.push(this);
   });
   inherits(options.RemoteVideoTrack, EventEmitter);
@@ -1604,8 +1604,8 @@ function makeTest(options) {
     this.kind = dataTrackReceiver.kind;
     this.mediaStreamTrack = dataTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this.setSid = () => {};
-    this.unsubscribe = () => {};
+    this._setSid = () => {};
+    this._unsubscribe = () => {};
     options.tracks.push(this);
   });
   inherits(options.RemoteDataTrack, EventEmitter);
@@ -1640,11 +1640,20 @@ function makeRemoteTrackPublication(trackSignaling) {
   publication.track = null;
   publication.trackSid = trackSignaling.sid;
   publication.trackName = trackSignaling.name;
-  publication.subscribed = track => {
+
+  Object.defineProperties(publication, {
+    isSubscribed: {
+      get() {
+        return !!publication.track;
+      }
+    }
+  });
+
+  publication._subscribed = track => {
     publication.track = track;
     publication.emit('subscribed', track);
   };
-  publication.unsubscribe = () => {
+  publication._unsubscribe = () => {
     const track = publication.track;
     publication.track = null;
     publication.emit('unsubscribed', track);
