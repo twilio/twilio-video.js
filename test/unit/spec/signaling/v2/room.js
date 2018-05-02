@@ -97,6 +97,11 @@ describe('RoomV2', () => {
         ],
         [
           'quality',
+          'active-ice-candidate-pair',
+          { baz: 'zee' }
+        ],
+        [
+          'quality',
           'stats-report',
           {
             audioTrackStats: [],
@@ -107,10 +112,15 @@ describe('RoomV2', () => {
             roomSid: test.sid,
             videoTrackStats: []
           }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          { baz: 'zee' }
         ]
       ];
       await wait(175);
-      assert.deepEqual(test.transport.publishEvent.args.slice(0, 2), expectedArgs);
+      assert.deepEqual(test.transport.publishEvent.args.slice(0, 4), expectedArgs);
     });
 
     context('.participants', () => {
@@ -345,6 +355,7 @@ describe('RoomV2', () => {
       ];
       assert.deepEqual(reports, [
         {
+          _activeIceCandidatePair: { baz: 'zee' },
           localAudioTrackStats,
           localVideoTrackStats,
           peerConnectionId: 'foo',
@@ -352,6 +363,7 @@ describe('RoomV2', () => {
           remoteVideoTrackStats
         },
         {
+          _activeIceCandidatePair: { baz: 'zee' },
           localAudioTrackStats,
           localVideoTrackStats,
           peerConnectionId: 'bar',
@@ -1264,12 +1276,14 @@ function makePeerConnectionManager(getRoom) {
       ]);
 
     return [{
+      _activeIceCandidatePair: { baz: 'zee' },
       localAudioTrackStats,
       localVideoTrackStats,
       peerConnectionId: 'foo',
       remoteAudioTrackStats,
       remoteVideoTrackStats
     }, {
+      _activeIceCandidatePair: { baz: 'zee' },
       localAudioTrackStats,
       localVideoTrackStats,
       peerConnectionId: 'bar',
