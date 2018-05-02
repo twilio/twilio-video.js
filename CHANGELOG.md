@@ -4,6 +4,55 @@
 New Features
 ------------
 
+- A RemoteParticipant now maintains a collection of RemoteTrackPublications in a
+  new `.trackPublications` property. It also maintains media specific
+  RemoteTrackPublication collections (`.audioTrackPublications`,
+  `.dataTrackPublications` and `.videoTrackPublications`). A RemoteTrackPublication
+  represents a Track that was published to the Room by a RemoteParticipant. A
+  "trackPublished" event is emitted on the RemoteParticipant (and subsequently on
+  the Room) whenever a Track is published. A "trackUnpublished" event is emitted
+  on the RemoteParticipant whenever a Track is unpublished.
+  
+  ```js
+  participant.on('trackPublished', publication => {
+    console.log('A new Track was published!', publication);
+
+    publication.on('subscribed', track => {
+      console.log('Subscribed to Track!', track);
+    });
+
+    publication.on('subscriptionFailed', error => {
+      console.error('Subscription failed!', error);
+    });
+  
+    publication.on('trackDisabled', () => {
+      console.log('Track disabled!');
+    });
+  
+    publication.on('trackEnabled', () => {
+      console.log('Track enabled!');
+    });
+
+    publication.on('unsubscribed', track => {
+      console.log('Unsubscribed from Track!', track);
+    });
+  });
+
+  remoteParticipant.on('trackUnpublished', publication => {
+    console.log('A new Track was unpublished!', publication);
+  });
+  ```
+
+  The RemoteTrackPublication emits the following events:
+  * "subscribed" - The LocalParticipant subscribed to the RemoteParticipant's
+    Track
+  * "subscriptionFailed" - The LocalParticipant failed to subscribe to the
+    RemoteParticipant's Track
+  * "trackDisabled" - The RemoteParticipant disabled the Track
+  * "trackEnabled" - The RemoteParticipant enabled the Track
+  * "unsubscribed" - The LocalParticipant unsubscribed from the RemoteParticipant's
+    Track
+
 - Room now emits "reconnecting" and "reconnected" events when the media
   connection is disconnected and reconnected. You can use these events to update
   your application and warn your users when a reconnection is occurring.

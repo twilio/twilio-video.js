@@ -36,7 +36,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
       });
     });
 
-    describe('#subscribed', () => {
+    describe('#_subscribed', () => {
       [
         [null, null],
         [null, makeTrack()],
@@ -51,11 +51,11 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
           beforeEach(() => {
             signaling = makeSignaling(randomBoolean(), kind, 'MT123');
             publication = new RemoteTrackPublication(signaling);
-            publication.subscribed(track);
+            publication._subscribed(track);
             publication.once('subscribed', track => {
               subscribedTrack = track;
             });
-            publication.subscribed(newTrack);
+            publication._subscribed(newTrack);
           });
 
           if (!track && newTrack) {
@@ -85,21 +85,29 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
       });
     });
 
-    describe('#unsubscribe', () => {
+    describe('#_unsubscribe', () => {
       [null, makeTrack()].forEach(track => {
         context(`called when .track is ${track ? 'not ' : ''}null`, () => {
           let publication;
           let signaling;
           let unsubscribedTrack;
+          let unsubscribedTrack1;
 
           beforeEach(() => {
             signaling = makeSignaling(randomBoolean(), kind, 'MT123');
             publication = new RemoteTrackPublication(signaling);
-            publication.subscribed(track);
+            publication._subscribed(track);
+
+            if (track) {
+              track.once('unsubscribed', track => {
+                unsubscribedTrack1 = track;
+              });
+            }
+
             publication.once('unsubscribed', track => {
               unsubscribedTrack = track;
             });
-            publication.unsubscribe();
+            publication._unsubscribe();
           });
 
           if (track) {
@@ -109,6 +117,10 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
 
             it('should set the .track property to null', () => {
               assert.equal(publication.track, null);
+            });
+
+            it(`should emit "unsubscribed" on the Remote${capitalize(kind)}Track`, () => {
+              assert.equal(unsubscribedTrack1, track);
             });
 
             it(`should emit "unsubscribed" on the ${className}`, () => {
@@ -180,7 +192,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
                   track.once(trackEvent, () => {
                     trackEventEmitted = true;
                   });
-                  publication.subscribed(track);
+                  publication._subscribed(track);
                 }
                 publication.once(event, () => {
                   publicationEventEmitted = true;
@@ -231,13 +243,20 @@ function makeSignaling(isEnabled, kind, sid) {
 function makeTrack(isEnabled) {
   const track = new EventEmitter();
   track.isEnabled = typeof isEnabled === 'boolean' ? isEnabled : true;
+  track.isSubscribed = true;
 
-  track.setEnabled = isEnabled => {
+  track._setEnabled = isEnabled => {
     if (track.isEnabled !== isEnabled) {
       track.isEnabled = isEnabled;
       track.emit(track.isEnabled ? 'enabled' : 'disabled');
     }
   };
-  track.unsubscribe = () => {};
+
+  track._unsubscribe = () => {
+    if (track.isSubscribed) {
+      track.isSubscribed = false;
+      track.emit('unsubscribed', track);
+    }
+  };
   return track;
 }

@@ -55,7 +55,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       });
     });
 
-    describe('#setEnabled', () => {
+    describe('#_setEnabled', () => {
       [
         [true, true],
         [true, false],
@@ -75,7 +75,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             track.once('enabled', () => {
               trackEnabled = true;
             });
-            track.setEnabled(newIsEnabled);
+            track._setEnabled(newIsEnabled);
           });
 
           if (isEnabled === newIsEnabled) {
