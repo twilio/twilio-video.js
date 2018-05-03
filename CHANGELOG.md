@@ -1,22 +1,50 @@
-1.9.0 (in progress)
+1.10.0 (in progress)
 ===================
 
 New Features
 ------------
 
 - A RemoteParticipant now maintains a collection of RemoteTrackPublications in a
-  new `.trackPublications` property. It also maintains media specific
+  new `.trackPublications` property. It also maintains kind-specific
   RemoteTrackPublication collections (`.audioTrackPublications`,
-  `.dataTrackPublications` and `.videoTrackPublications`). A RemoteTrackPublication
-  represents a Track that was published to the Room by a RemoteParticipant. A
-  "trackPublished" event is emitted on the RemoteParticipant (and subsequently on
-  the Room) whenever a Track is published. A "trackUnpublished" event is emitted
-  on the RemoteParticipant whenever a Track is unpublished.
+  `.dataTrackPublications` and `.videoTrackPublications`). A "trackPublished"
+  event is emitted on the RemoteParticipant (and subsequently on the Room) whenever
+  a Track is published. A "trackUnpublished" event is emitted on the RemoteParticipant
+  whenever a Track is unpublished.
   
   ```js
   participant.on('trackPublished', publication => {
     console.log('A new Track was published!', publication);
+  });
 
+  remoteParticipant.on('trackUnpublished', publication => {
+    console.log('A new Track was unpublished!', publication);
+  });
+  ```
+
+RemoteTrackPublication Guide
+----------------------------
+
+- A RemoteTrackPublication represents a Track that was published to the Room by
+  a RemoteParticipant.
+
+- A RemoteTrackPublication has the following properties:
+  * `isSubscribed` - Whether the LocalParticipant has subscribed to the Track
+  * `isTrackEnabled` - Whether the Track is enabled
+  * `track` - The Track that was subscribed to by the LocalParticipant; If the
+    LocalParticipant has **not** subscribed to the Track, it will be `null`
+
+- A RemoteTrackPublication emits the following events:
+  * "subscribed" - The LocalParticipant subscribed to the RemoteParticipant's
+    Track
+  * "subscriptionFailed" - The LocalParticipant failed to subscribe to the
+    RemoteParticipant's Track
+  * "trackDisabled" - The RemoteParticipant disabled the Track
+  * "trackEnabled" - The RemoteParticipant enabled the Track
+  * "unsubscribed" - The LocalParticipant unsubscribed from the RemoteParticipant's
+    Track
+
+  ```js
     publication.on('subscribed', track => {
       console.log('Subscribed to Track!', track);
     });
@@ -36,22 +64,13 @@ New Features
     publication.on('unsubscribed', track => {
       console.log('Unsubscribed from Track!', track);
     });
-  });
-
-  remoteParticipant.on('trackUnpublished', publication => {
-    console.log('A new Track was unpublished!', publication);
-  });
   ```
 
-  The RemoteTrackPublication emits the following events:
-  * "subscribed" - The LocalParticipant subscribed to the RemoteParticipant's
-    Track
-  * "subscriptionFailed" - The LocalParticipant failed to subscribe to the
-    RemoteParticipant's Track
-  * "trackDisabled" - The RemoteParticipant disabled the Track
-  * "trackEnabled" - The RemoteParticipant enabled the Track
-  * "unsubscribed" - The LocalParticipant unsubscribed from the RemoteParticipant's
-    Track
+1.9.0 (in progress)
+===================
+
+New Features
+------------
 
 - Room now emits "reconnecting" and "reconnected" events when the media
   connection is disconnected and reconnected. You can use these events to update
