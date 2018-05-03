@@ -1,4 +1,4 @@
-1.9.0 (in progress)
+1.9.0 (May 3, 2018)
 ===================
 
 New Features
