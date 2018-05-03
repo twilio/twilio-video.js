@@ -15,56 +15,50 @@ New Features
   ```js
   participant.on('trackPublished', publication => {
     console.log('A new Track was published!', publication);
+    assert.equal(participant.trackPublications.get(publication.trackSid), publication);
   });
 
-  remoteParticipant.on('trackUnpublished', publication => {
+  participant.on('trackUnpublished', publication => {
     console.log('A new Track was unpublished!', publication);
+    assert(!participant.trackPublications.has(publication.trackSid));
   });
   ```
 
 RemoteTrackPublication Guide
 ----------------------------
 
-- A RemoteTrackPublication represents a Track that was published to the Room by
-  a RemoteParticipant.
+A RemoteTrackPublication represents a Track that was published to the Room by
+a RemoteParticipant.
 
-- A RemoteTrackPublication has the following properties:
-  * `isSubscribed` - Whether the LocalParticipant has subscribed to the Track
-  * `isTrackEnabled` - Whether the Track is enabled
-  * `track` - The Track that was subscribed to by the LocalParticipant; If the
-    LocalParticipant has **not** subscribed to the Track, it will be `null`
+```js
+publication.on('subscribed', track => {
+  console.log('Subscribed to Track', track);
+  assert.equal(publication.isSubscribed, true);
+  assert.equal(publication.track, track);
+});
 
-- A RemoteTrackPublication emits the following events:
-  * "subscribed" - The LocalParticipant subscribed to the RemoteParticipant's
-    Track
-  * "subscriptionFailed" - The LocalParticipant failed to subscribe to the
-    RemoteParticipant's Track
-  * "trackDisabled" - The RemoteParticipant disabled the Track
-  * "trackEnabled" - The RemoteParticipant enabled the Track
-  * "unsubscribed" - The LocalParticipant unsubscribed from the RemoteParticipant's
-    Track
+publication.on('subscriptionFailed', error => {
+  console.error('Subscription failed', error);
+  assert.equal(publication.isSubscribed, false);
+  assert.equal(publication.track, null);
+});
 
-  ```js
-    publication.on('subscribed', track => {
-      console.log('Subscribed to Track!', track);
-    });
+publication.on('trackDisabled', () => {
+  console.log('Track disabled');
+  assert.equal(publication.isTrackEnabled, false);
+});
 
-    publication.on('subscriptionFailed', error => {
-      console.error('Subscription failed!', error);
-    });
-  
-    publication.on('trackDisabled', () => {
-      console.log('Track disabled!');
-    });
-  
-    publication.on('trackEnabled', () => {
-      console.log('Track enabled!');
-    });
+publication.on('trackEnabled', () => {
+  console.log('Track enabled');
+  assert.equal(publication.isTrackEnabled, true);
+});
 
-    publication.on('unsubscribed', track => {
-      console.log('Unsubscribed from Track!', track);
-    });
-  ```
+publication.on('unsubscribed', track => {
+  console.log('Unsubscribed from Track', track);
+  assert.equal(publication.isSubscribed, false);
+  assert.equal(publication.track, null);
+});
+```
 
 1.9.0 (in progress)
 ===================
