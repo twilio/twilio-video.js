@@ -143,7 +143,18 @@ describe('RoomV2', () => {
         ]
       ];
       await wait(175);
-      assert.deepEqual(test.transport.publishEvent.args.slice(0, 4), expectedArgs);
+      test.transport.publishEvent.args.slice(0, 4).forEach(([, name, payload], i) => {
+        if (name === 'stats-report') {
+          assert.deepEqual(payload, expectedArgs[i][2]);
+          return;
+        }
+        assert.equal(payload.peerConnectionId, expectedArgs[i][2].peerConnectionId);
+        const payloadProp = {
+          foo: 'baz',
+          bar: 'zee'
+        }[expectedArgs[i][2].peerConnectionId];
+        assert.equal(payload[payloadProp], expectedArgs[i][2][payloadProp]);
+      });
     });
 
     context('.participants', () => {
