@@ -7,6 +7,7 @@ const sinon = require('sinon');
 
 const { flatMap } = require('../../../../../lib/util');
 
+const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
 
 describe('RoomV2', () => {
@@ -81,36 +82,79 @@ describe('RoomV2', () => {
       function wait(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
       }
+
+      const reports = {
+        bar: new StatsReport('bar', {
+          localAudioTrackStats: [{ trackId: '1' }],
+          localVideoTrackStats: [{ trackId: '2' }],
+          remoteAudioTrackStats: [],
+          remoteVideoTrackStats: []
+        }),
+        foo: new StatsReport('foo', {
+          localAudioTrackStats: [{ trackId: '1' }],
+          localVideoTrackStats: [{ trackId: '2' }],
+          remoteAudioTrackStats: [],
+          remoteVideoTrackStats: []
+        })
+      };
+
       const expectedArgs = [
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [],
-            localAudioTrackStats: [{ trackId: '1' }],
-            localVideoTrackStats: [{ trackId: '2' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'foo',
             roomSid: test.sid,
-            videoTrackStats: []
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'foo',
+            baz: 'zee'
           }
         ],
         [
           'quality',
           'stats-report',
           {
-            audioTrackStats: [],
-            localAudioTrackStats: [{ trackId: '1' }],
-            localVideoTrackStats: [{ trackId: '2' }],
             participantSid: test.localParticipant.sid,
             peerConnectionId: 'bar',
             roomSid: test.sid,
-            videoTrackStats: []
+            audioTrackStats: reports.bar.remoteAudioTrackStats,
+            localAudioTrackStats: reports.bar.localAudioTrackStats,
+            localVideoTrackStats: reports.bar.localVideoTrackStats,
+            videoTrackStats: reports.bar.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'bar',
+            zee: 'foo'
           }
         ]
       ];
       await wait(175);
-      assert.deepEqual(test.transport.publishEvent.args.slice(0, 2), expectedArgs);
+      test.transport.publishEvent.args.slice(0, 4).forEach(([, name, payload], i) => {
+        if (name === 'stats-report') {
+          assert.deepEqual(payload, expectedArgs[i][2]);
+          return;
+        }
+        assert.equal(payload.peerConnectionId, expectedArgs[i][2].peerConnectionId);
+        const payloadProp = {
+          foo: 'baz',
+          bar: 'zee'
+        }[expectedArgs[i][2].peerConnectionId];
+        assert.equal(payload[payloadProp], expectedArgs[i][2][payloadProp]);
+      });
     });
 
     context('.participants', () => {
@@ -343,18 +387,18 @@ describe('RoomV2', () => {
       const remoteVideoTrackStats = [
         { trackId: '4' }
       ];
-      assert.deepEqual(reports, [
+      assert.deepEqual([...reports.values()], [
         {
+          activeIceCandidatePair: { baz: 'zee' },
           localAudioTrackStats,
           localVideoTrackStats,
-          peerConnectionId: 'foo',
           remoteAudioTrackStats,
           remoteVideoTrackStats
         },
         {
+          activeIceCandidatePair: { zee: 'foo' },
           localAudioTrackStats,
           localVideoTrackStats,
-          peerConnectionId: 'bar',
           remoteAudioTrackStats,
           remoteVideoTrackStats
         }
@@ -1263,19 +1307,22 @@ function makePeerConnectionManager(getRoom) {
         { trackId: 'bogus4', kind: 'video' }
       ]);
 
-    return [{
-      localAudioTrackStats,
-      localVideoTrackStats,
-      peerConnectionId: 'foo',
-      remoteAudioTrackStats,
-      remoteVideoTrackStats
-    }, {
-      localAudioTrackStats,
-      localVideoTrackStats,
-      peerConnectionId: 'bar',
-      remoteAudioTrackStats,
-      remoteVideoTrackStats
-    }];
+    return new Map([
+      ['foo', {
+        activeIceCandidatePair: { baz: 'zee' },
+        localAudioTrackStats,
+        localVideoTrackStats,
+        remoteAudioTrackStats,
+        remoteVideoTrackStats
+      }],
+      ['bar', {
+        activeIceCandidatePair: { zee: 'foo' },
+        localAudioTrackStats,
+        localVideoTrackStats,
+        remoteAudioTrackStats,
+        remoteVideoTrackStats
+      }]
+    ]);
   };
 
   peerConnectionManager.update = sinon.spy(() => {});
