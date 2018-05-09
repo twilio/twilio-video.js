@@ -17,6 +17,7 @@ function getQueryParameters(location) {
   }, new Map());
 }
 
+// eslint-disable-next-line
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
 
 ReactDOM.render(

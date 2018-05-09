@@ -24,6 +24,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
+const { smallVideoConstraints } = require('../../lib/util');
 
 const {
   capitalize,
@@ -52,7 +53,7 @@ describe('LocalParticipant', function() {
       const token = getToken(randomName());
       [room, tracks] = await Promise.all([
         connect(token, options),
-        createLocalTracks()
+        createLocalTracks({ audio: true, video: smallVideoConstraints })
       ]);
       tracks.push(new LocalDataTrack());
     }
@@ -109,8 +110,7 @@ describe('LocalParticipant', function() {
         after(() => {
           trackPublications = [];
           room.disconnect();
-          tracks.forEach(track => track.kind !== 'data' && track.stop());
-          tracks = [];
+          tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
         });
       });
     });
@@ -162,8 +162,7 @@ describe('LocalParticipant', function() {
         trackPublications = [];
         room.disconnect();
         anotherRoom.disconnect();
-        tracks.forEach(track => track.kind !== 'data' && track.stop());
-        tracks = [];
+        tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
       });
     });
 
@@ -184,8 +183,7 @@ describe('LocalParticipant', function() {
 
       after(() => {
         trackPublications = [];
-        tracks.forEach(track => track.kind !== 'data' && track.stop());
-        tracks = [];
+        tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
       });
     });
 
@@ -229,7 +227,11 @@ describe('LocalParticipant', function() {
         const name = randomName();
         const identities = [randomName(), randomName(), randomName()];
         const options = Object.assign({ name }, defaults);
-        const localTrackOptions = withName ? { name: localTrackNameByKind } : {};
+        const localTrackOptions = Object.assign(
+          withName
+            ? { name: localTrackNameByKind }
+            : {},
+          smallVideoConstraints);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -442,7 +444,7 @@ describe('LocalParticipant', function() {
         after(() => {
           room.disconnect();
           track.stop();
-          tracks.forEach(track => track.stop && track.stop());
+          tracks.splice(0).forEach(track => track.stop && track.stop());
         });
       });
     });
@@ -483,7 +485,7 @@ describe('LocalParticipant', function() {
 
         thisTrack = await {
           audio: createLocalAudioTrack,
-          video: createLocalVideoTrack,
+          video() { return createLocalVideoTrack(smallVideoConstraints); },
           data() { return new LocalDataTrack(); }
         }[kind]();
 
@@ -654,7 +656,7 @@ describe('LocalParticipant', function() {
 
     before(async () => {
       const name = randomName();
-      const constraints = { video: true, fake: true };
+      const constraints = { video: smallVideoConstraints, fake: true };
 
       // Answerer
       const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
@@ -780,7 +782,7 @@ describe('LocalParticipant', function() {
 
     before(async () => {
       const name = randomName();
-      const constraints = { audio: true, video: true, fake: true };
+      const constraints = { audio: true, video: smallVideoConstraints, fake: true };
 
       // Answerer
       const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
@@ -908,17 +910,25 @@ describe('LocalParticipant', function() {
       let thoseRooms;
 
       before(async () => {
-        const options = Object.assign({ name: randomName() }, initialEncodingParameters, defaults);
+        const options = Object.assign({
+          name: randomName(),
+          audio: true,
+          video: smallVideoConstraints
+        }, initialEncodingParameters, defaults);
         const token = getToken(randomName());
         thisRoom = await connect(token, options);
 
-        const thoseOptions = Object.assign({ name: options.name }, defaults);
+        const thoseOptions = Object.assign({ name: options.name, tracks: [] }, defaults);
         const thoseTokens = [randomName(), randomName()].map(getToken);
         thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
         await participantsConnected(thisRoom, thoseRooms.length);
-        const thoseParticipants = [...thisRoom.participants.values()];
-        await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, 2)));
+        // NOTE(mroberts): We're waiting on these events because they should
+        // indicate that one or more RTCPeerConnections is established.
+        await Promise.all(thoseRooms.map(thatRoom => {
+          const thisParticipant = thatRoom.participants.get(thisRoom.localParticipant.sid);
+          return tracksAdded(thisParticipant, thisRoom.localParticipant.tracks.size);
+        }));
         peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
         thisRoom.localParticipant.setParameters(encodingParameters);
 
