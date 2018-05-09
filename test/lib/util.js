@@ -313,6 +313,11 @@ async function waitForTracks(event, participant, n) {
   });
 }
 
+const smallVideoConstraints = {
+  width: 160,
+  height: 120
+};
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
@@ -327,3 +332,4 @@ exports.tracksPublished = tracksPublished;
 exports.tracksRemoved = tracksRemoved;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
+exports.smallVideoConstraints = smallVideoConstraints;

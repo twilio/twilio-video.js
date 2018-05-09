@@ -18,7 +18,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, tracksAdded, tracksPublished } = require('../../lib/util');
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksAdded, tracksPublished } = require('../../lib/util');
 
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
@@ -144,6 +144,9 @@ describe('connect', function() {
       const options = Object.assign({ tracks }, defaults);
       if (withoutTracks) {
         options.tracks = [];
+      } else {
+        options.audio = true;
+        options.video = smallVideoConstraints;
       }
       if (withName) {
         name = randomName();
@@ -395,7 +398,10 @@ describe('connect', function() {
           params[prop] = value;
         }
         return params;
-      }, {});
+      }, {
+        audio: true,
+        video: smallVideoConstraints
+      });
 
       const maxBitrates = {
         audio: encodingParameters.maxAudioBitrate,
@@ -407,7 +413,7 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters);
+        [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters, { tracks: [] }, 0);
       });
 
       ['audio', 'video'].forEach(kind => {
@@ -676,7 +682,7 @@ describe('connect', function() {
                 const name = 'foo';
                 return Promise.all([
                   createLocalAudioTrack({ name }),
-                  createLocalVideoTrack({ name }),
+                  createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints)),
                   new LocalDataTrack()
                 ]);
               },
@@ -688,7 +694,7 @@ describe('connect', function() {
                 const name = '0'.repeat(129);
                 return Promise.all([
                   createLocalAudioTrack(),
-                  createLocalVideoTrack({ name }),
+                  createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints)),
                   new LocalDataTrack()
                 ]);
               },
@@ -795,14 +801,22 @@ function getPayloadTypes(mediaSection) {
 }
 
 async function setup(testOptions, otherOptions, nTracks, alone) {
-  const options = Object.assign({ name: randomName() }, testOptions, defaults);
+  const options = Object.assign({
+    name: randomName(),
+    audio: true,
+    video: smallVideoConstraints
+  }, testOptions, defaults);
   const token = getToken(randomName());
   const thisRoom = await connect(token, options);
   if (alone) {
     return [thisRoom];
   }
 
-  const thoseOptions = Object.assign({ name: options.name }, otherOptions || {}, defaults);
+  otherOptions = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, otherOptions);
+  const thoseOptions = Object.assign({ name: options.name }, otherOptions, defaults);
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
