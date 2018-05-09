@@ -1,5 +1,5 @@
 1.10.0 (in progress)
-===================
+====================
 
 New Features
 ------------
@@ -10,7 +10,7 @@ New Features
   `.dataTrackPublications` and `.videoTrackPublications`). A "trackPublished"
   event is emitted on the RemoteParticipant (and subsequently on the Room) whenever
   a Track is published. A "trackUnpublished" event is emitted on the RemoteParticipant
-  whenever a Track is unpublished.
+  whenever a Track is unpublished. (JSDK-1438)
   
   ```js
   participant.on('trackPublished', publication => {
@@ -60,7 +60,7 @@ publication.on('unsubscribed', track => {
 });
 ```
 
-1.9.0 (in progress)
+1.9.0 (May 9, 2018)
 ===================
 
 New Features
