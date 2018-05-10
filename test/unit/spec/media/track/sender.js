@@ -1,10 +1,23 @@
+/* eslint no-use-before-define:0 */
 'use strict';
 
 const assert = require('assert');
 const MediaTrackSender = require('../../../../../lib/media/track/sender');
 
 describe('MediaTrackSender', () => {
-  const mediaStreamTrack = { id: 'bar', kind: 'baz', readyState: 'zee' };
+  const mediaStreamTrack = {
+    id: 'bar',
+    kind: 'baz',
+    readyState: 'zee',
+    clone() {
+      return clonedMediaStreamTrack;
+    }
+  };
+
+  const clonedMediaStreamTrack = Object.assign({}, mediaStreamTrack, {
+    id: 'cloned'
+  });
+
   let sender;
 
   describe('constructor', () => {
@@ -36,6 +49,16 @@ describe('MediaTrackSender', () => {
       it('should update the MediaTrackTransceiver\'s .readyState', () => {
         assert.equal(sender.readyState, newReadyState);
       });
+    });
+  });
+
+  describe('clone', () => {
+    it('returns a new MediaTrackSender containing a clone of the underlying MediaStreamTrack', () => {
+      sender = new MediaTrackSender(mediaStreamTrack);
+      const clonedSender = sender.clone();
+      assert.notEqual(clonedSender, sender);
+      assert.notEqual(clonedSender.track, sender.track);
+      assert.equal(clonedSender.track, clonedMediaStreamTrack);
     });
   });
 
