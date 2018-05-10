@@ -742,14 +742,29 @@ describe('LocalParticipant', () => {
     context('"trackStopped" event', () => {
       context('when the LocalParticipant .state begins in "connecting"', () => {
         context('and a LocalTrack emits "stopped"', () => {
-          it('emits "trackStopped"', () => {
-            const track = new EventEmitter();
+          let track;
+          let test;
+          let trackSignaling;
+
+          beforeEach(() => {
+            track = new EventEmitter();
+            track.stop = sinon.spy();
             track._trackSender = { track: { enabled: true } };
+            test = makeTest({ tracks: [track] });
+            trackSignaling = test.signaling.tracks.get(track.id);
+            trackSignaling.stop = sinon.spy();
+          });
+
+          it('emits "trackStopped"', () => {
             let trackStopped;
-            const test = makeTest({ tracks: [track] });
             test.participant.once('trackStopped', track => { trackStopped = track; });
             track.emit('stopped', track);
             assert.equal(track, trackStopped);
+          });
+
+          it('calls .stop on the LocalTrackPublicationSignaling', () => {
+            track.emit('stopped', track);
+            assert(trackSignaling.stop.calledOnce);
           });
         });
       });
