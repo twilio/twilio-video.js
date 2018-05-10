@@ -134,6 +134,23 @@ describe('LocalParticipantV2', () => {
         publication.emit('updated');
         assert(!didEmitUpdated);
       });
+
+      describe('and the sender is a MediaTrackSender', () => {
+        it('calls .stop on the MediaTrackSender', () => {
+          // NOTE(mroberts): I'm cheating here. The `trackSender` shared by the
+          // tests is a DataTrackSender, but we want to test that, when called
+          // with a MediaTrackSender, which defines `stop`, `stop` is called.
+          trackSender.stop = sinon.spy();
+          try {
+            localParticipant.removeTrack(trackSender);
+            assert(trackSender.stop.calledOnce);
+          } catch (error) {
+            throw error;
+          } finally {
+            delete trackSender.stop;
+          }
+        });
+      });
     });
 
     describe('not currently added', () => {
