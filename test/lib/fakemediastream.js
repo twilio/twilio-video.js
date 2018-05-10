@@ -81,6 +81,12 @@ class FakeMediaStreamTrack extends EventTarget {
     });
   }
 
+  clone() {
+    const clone = new FakeMediaStreamTrack(this.kind);
+    clone.enabled = this.enabled;
+    return clone;
+  }
+
   stop() {
     this.dispatchEvent({
       type: 'ended',

@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 
 const LocalTrackPublicationV2 = require('../../../../../lib/signaling/v2/localtrackpublication');
 const { makeUUID } = require('../../../../../lib/util');
@@ -29,8 +30,8 @@ describe('LocalTrackPublicationV2', () => {
       assert(localTrackPublicationV2 instanceof LocalTrackPublicationV2);
     });
 
-    it('should set .trackTransceiver', () => {
-      assert.equal(localTrackPublicationV2.trackTransceiver, mediaTrackSender);
+    it('should set .trackTransceiver to a clone of the MediaTrackSender', () => {
+      assert.equal(localTrackPublicationV2.trackTransceiver, mediaTrackSender.clones[0]);
     });
 
     it('should set .sid to null', () => {
@@ -240,8 +241,23 @@ describe('LocalTrackPublicationV2', () => {
     });
   });
 
-  // LocalTrackSignaling
-  // -------------------
+  // LocalTrackPublicationSignaling
+  // ------------------------------
+
+  describe('#enable', () => {
+    [true, false].forEach(enabled => {
+      describe(`called with \`${enabled}\``, () => {
+        it(`sets the cloned MediaTrackSender's MediaStreamTrack's .enabled state to \`${enabled}\``, () => {
+          const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
+          const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID());
+          const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
+          mediaStreamTrack.enabled = !enabled;
+          localTrackPublicationV2.enable(enabled);
+          assert.equal(mediaStreamTrack.enabled, enabled);
+        });
+      });
+    });
+  });
 
   describe('#publishFailed', () => {
     let localTrackPublicationV2;
@@ -333,6 +349,16 @@ describe('LocalTrackPublicationV2', () => {
     });
   });
 
+  describe('#stop', () => {
+    it('calls stop on the cloned MediaTrackSender\'s MediaStreamTrack', () => {
+      const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
+      const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID());
+      const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
+      mediaStreamTrack.stop = sinon.spy();
+      localTrackPublicationV2.stop();
+      assert(mediaStreamTrack.stop.calledOnce);
+    });
+  });
 });
 
 function makeEnabled() {
@@ -352,6 +378,12 @@ function makeTrackSender(mediaStreamTrack) {
   return {
     id,
     kind,
-    track: mediaStreamTrack
+    track: mediaStreamTrack,
+    clones: [],
+    clone() {
+      const clone = makeTrackSender(mediaStreamTrack.clone());
+      this.clones.push(clone);
+      return clone;
+    }
   };
 }
