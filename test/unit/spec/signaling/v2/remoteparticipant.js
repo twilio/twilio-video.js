@@ -893,10 +893,10 @@ describe('RemoteParticipantV2', () => {
 
   describe('#removeTrack', () => {
     context('when the RemoteTrackPublicationV2 to remove was previously added', () => {
-      it('returns true', () => {
+      it('returns the removed RemoteTrackPublicationV2', () => {
         const test = makeTest({ tracks: [{ id: makeId() }] });
         assert.equal(
-          true,
+          test.remoteTrackPublicationV2s[0],
           test.participant.removeTrack(test.remoteTrackPublicationV2s[0]));
       });
 
@@ -923,7 +923,7 @@ describe('RemoteParticipantV2', () => {
         const track = new RemoteTrackPublicationV2({ id: makeId() });
         const test = makeTest();
         assert.equal(
-          false,
+          null,
           test.participant.removeTrack(track));
       });
 
