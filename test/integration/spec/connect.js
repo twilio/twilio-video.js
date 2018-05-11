@@ -581,15 +581,23 @@ describe('connect', function() {
           });
         });
 
-        it(`should set each RemoteTrackPublication's .trackName to its ${names ? 'given name' : 'ID'}`, () => {
+        it(`should set each RemoteTrackPublication's .trackName to its ${names ? 'given name' : 'LocalTrack\'s ID'}`, () => {
           flatMap(thisParticipants, participant => [...participant.trackPublications.values()]).forEach(publication => {
-            assert.equal(publication.trackName, names ? names[publication.kind] : publication.track.id);
+            if (names) {
+              assert.equal(publication.trackName, names[publication.kind]);
+            } else {
+              assert(tracks.find(track => track.id === publication.trackName));
+            }
           });
         });
 
-        it(`should set each RemoteTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
+        it(`should set each RemoteTrack's .name to its ${names ? 'given name' : 'LocalTrack\'s ID'}`, () => {
           flatMap(thisParticipants, participant => [...participant.tracks.values()]).forEach(track => {
-            assert.equal(track.name, names ? names[track.kind] : track.id);
+            if (names) {
+              assert.equal(track.name, names[track.kind]);
+            } else {
+              assert(tracks.find(localTrack => localTrack.id === track.name));
+            }
           });
         });
 
@@ -649,15 +657,25 @@ describe('connect', function() {
             });
           });
 
-          it(`should set each Remote${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'ID'}`, () => {
+          it(`should set each Remote${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'LocalTrack\'s ID'}`, () => {
             flatMap(thisParticipants, participant => [...participant[`${kind}TrackPublications`].values()]).forEach(publication => {
-              assert.equal(publication.trackName, names[kind] || publication.track.id);
+              if (names && names[kind]) {
+                assert.equal(publication.trackName, names[kind]);
+              } else {
+                const tracks = [...thisParticipant.tracks.values()];
+                assert(tracks.find(track => track.id === publication.trackName));
+              }
             });
           });
 
-          it(`should set each Remote${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
+          it(`should set each Remote${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'its LocalTrack\'s ID'}`, () => {
             flatMap(thisParticipants, participant => [...participant[`${kind}Tracks`].values()]).forEach(track => {
-              assert.equal(track.name, names[kind] || track.id);
+              if (names && names[kind]) {
+                assert.equal(track.name, names[kind]);
+              } else {
+                const tracks = [...thisParticipant.tracks.values()];
+                assert(tracks.find(localTrack => localTrack.id === track.name));
+              }
             });
           });
         });

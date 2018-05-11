@@ -43,7 +43,6 @@ describe('LocalTrackPublicationV2', () => {
     });
 
     [
-      ['id', 'id'],
       ['kind', 'kind'],
       ['isEnabled', 'enabled']
     ].forEach(([ltProp, mstProp]) => {
