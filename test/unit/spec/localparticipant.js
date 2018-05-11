@@ -15,42 +15,39 @@ const { FakeMediaStreamTrack } = require('../../lib/fakemediastream');
 const { a, capitalize } = require('../../lib/util');
 
 const LocalAudioTrack = sinon.spy(function LocalAudioTrack(mediaStreamTrack, options) {
+  mediaStreamTrack = mediaStreamTrack || new FakeMediaStreamTrack('audio');
   options = options || {};
   EventEmitter.call(this);
-  if (mediaStreamTrack) {
-    this.id = mediaStreamTrack.id;
-    this.kind = mediaStreamTrack.kind;
-    this.mediaStreamTrack = mediaStreamTrack;
-    this.name = options.name || mediaStreamTrack.id;
-    this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
-  }
+  this.id = mediaStreamTrack.id;
+  this.kind = mediaStreamTrack.kind;
+  this.mediaStreamTrack = mediaStreamTrack;
+  this.name = options.name || mediaStreamTrack.id;
+  this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
   this.stop = sinon.spy();
 });
 inherits(LocalAudioTrack, EventEmitter);
 
 const LocalVideoTrack = sinon.spy(function LocalVideoTrack(mediaStreamTrack, options) {
+  mediaStreamTrack = mediaStreamTrack || new FakeMediaStreamTrack('video');
   options = options || {};
   EventEmitter.call(this);
-  if (mediaStreamTrack) {
-    this.id = mediaStreamTrack.id;
-    this.kind = mediaStreamTrack.kind;
-    this.mediaStreamTrack = mediaStreamTrack;
-    this.name = options.name || mediaStreamTrack.id;
-    this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
-  }
+  this.id = mediaStreamTrack.id;
+  this.kind = mediaStreamTrack.kind;
+  this.mediaStreamTrack = mediaStreamTrack;
+  this.name = options.name || mediaStreamTrack.id;
+  this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
   this.stop = sinon.spy();
 });
 inherits(LocalVideoTrack, EventEmitter);
 
 const LocalDataTrack = sinon.spy(function LocalDataTrack(dataTrackSender, options) {
+  dataTrackSender = dataTrackSender || new DataTrackSender();
   options = options || {};
   EventEmitter.call(this);
-  if (dataTrackSender) {
-    this.id = dataTrackSender.id;
-    this.kind = 'data';
-    this.name = options.name || dataTrackSender.id;
-    this._trackSender = dataTrackSender;
-  }
+  this.id = dataTrackSender.id;
+  this.kind = 'data';
+  this.name = options.name || dataTrackSender.id;
+  this._trackSender = dataTrackSender;
 });
 inherits(LocalDataTrack, EventEmitter);
 
@@ -81,7 +78,7 @@ describe('LocalParticipant', () => {
 
       beforeEach(() => {
         test = makeTest();
-        test.participant[`_${method}`] = sinon.spy(() => ({ foo: 'bar', stop: sinon.spy() }));
+        test.participant[`_${method}`] = sinon.spy(() => new LocalAudioTrack());
       });
 
       context('when called with an invalid argument', () => {
@@ -101,6 +98,7 @@ describe('LocalParticipant', () => {
       ['Audio', 'Video', 'Data'].forEach(kind => {
         context(`when called with a Local${kind}Track`, () => {
           it('should not throw', () => {
+            test.participant[method](new test[`Local${kind}Track`]());
             assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
           });
         });
@@ -996,6 +994,9 @@ function makeSignaling(options) {
     const trackSignaling = new LocalTrackPublicationSignaling(track);
     signaling.tracks.set(track.id, trackSignaling);
     return signaling;
+  });
+  signaling.getPublication = sinon.spy(track => {
+    return signaling.tracks.get(track.id);
   });
   signaling.removeTrack = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
