@@ -24,6 +24,12 @@ New Features
   });
   ```
 
+Bug Fixes
+---------
+
+- Fixed a bug that cause `remoteAudioTrackStats` and `remoteVideoTrackStats` to
+  always be empty Arrays in Firefox. (JSDK-1927)
+
 RemoteTrackPublication Guide
 ----------------------------
 
