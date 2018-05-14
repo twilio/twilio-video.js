@@ -376,16 +376,16 @@ describe('RoomV2', () => {
 
       const reports = await test.room.getStats();
       const localAudioTrackStats = [
-        { trackId: '1' }
+        { trackId: '1', trackSid: 'MT1' }
       ];
       const localVideoTrackStats = [
-        { trackId: '2' }
+        { trackId: '2', trackSid: 'MT2' }
       ];
       const remoteAudioTrackStats = [
-        { trackId: '3' }
+        { trackId: '3', trackSid: 'MT3' }
       ];
       const remoteVideoTrackStats = [
-        { trackId: '4' }
+        { trackId: '4', trackSid: 'MT4' }
       ];
       assert.deepEqual([...reports.values()], [
         {
