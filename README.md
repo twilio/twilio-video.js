@@ -21,10 +21,10 @@ Browser Support
 |             | Chrome | Edge | Firefox | Safari |
 | -----------:|:------ |:---- |:------- |:------ |
 | **Android** | ✓      | -    | ✓       | -      |
-| **iOS**     | *      | -    | *       | -      |
+| **iOS**     | *      | -    | *       | ✓      |
 | **Linux**   | ✓      | -    | ✓       | -      |
 | **macOS**   | ✓      | -    | ✓       | ✓      |
-| **Windows** | ✓      | ✘    | ✓       | ✓      |
+| **Windows** | ✓      | ✘    | ✓       | -      |
 
 \* Chrome and Firefox for iOS do not have access to WebRTC APIs, unlike Safari
 for iOS.
