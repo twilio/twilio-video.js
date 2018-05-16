@@ -4,6 +4,7 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
+const { version } = require('../../../../../package.json');
 const Transport = require('../../../../../lib/signaling/v2/transport');
 const { PUBLISH_MAX_ATTEMPTS } = require('../../../../../lib/util/constants');
 
@@ -109,6 +110,18 @@ describe('Transport', () => {
 
             it('has .type "connect"', () => {
               assert.equal('connect', message.type);
+            });
+
+            it('has .publisher.name "twilio-video.js"', () => {
+              assert.equal('twilio-video.js', message.publisher.name);
+            });
+
+            it('has .publisher.sdk_version equal to the package.json version', () => {
+              assert.equal(version, message.publisher.sdk_version);
+            });
+
+            it('has a .publisher.user_agent string', () => {
+              assert.equal('string', typeof message.publisher.user_agent);
             });
 
             it('has .version 1', () => {
