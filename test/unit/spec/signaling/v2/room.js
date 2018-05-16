@@ -85,14 +85,14 @@ describe('RoomV2', () => {
 
       const reports = {
         bar: new StatsReport('bar', {
-          localAudioTrackStats: [{ trackId: '1' }],
-          localVideoTrackStats: [{ trackId: '2' }],
+          localAudioTrackStats: [{ trackId: '1', trackSid: 'MT1' }],
+          localVideoTrackStats: [{ trackId: '2', trackSid: 'MT2' }],
           remoteAudioTrackStats: [],
           remoteVideoTrackStats: []
         }),
         foo: new StatsReport('foo', {
-          localAudioTrackStats: [{ trackId: '1' }],
-          localVideoTrackStats: [{ trackId: '2' }],
+          localAudioTrackStats: [{ trackId: '1', trackSid: 'MT1' }],
+          localVideoTrackStats: [{ trackId: '2', trackSid: 'MT2' }],
           remoteAudioTrackStats: [],
           remoteVideoTrackStats: []
         })
