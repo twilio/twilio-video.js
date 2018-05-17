@@ -26,6 +26,7 @@ New Features
 
 - Added `trackSid` to TrackStats, so now, when you call `getStats` on a Room,
   the TrackStats will include Track SIDs for local and remote Tracks.
+  (JSDK-1716)
 
 Bug Fixes
 ---------
