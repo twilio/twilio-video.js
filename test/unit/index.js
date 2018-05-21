@@ -52,6 +52,7 @@ require('./spec/signaling/v2/remotetrack');
 require('./spec/signaling/v2/transport');
 
 require('./spec/util');
+require('./spec/util/asyncvar');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/sdp');
