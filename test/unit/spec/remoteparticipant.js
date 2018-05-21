@@ -406,6 +406,24 @@ describe('RemoteParticipant', () => {
         track.emit('started', track);
         assert.equal(track, trackStarted);
       });
+
+      it('re-emits "enabled" events', () => {
+        const track = new EventEmitter();
+        let trackEnabled;
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
+        track.emit('enabled', track);
+        assert.equal(track, trackEnabled);
+      });
+
+      it('re-emits "disabled" events', () => {
+        const track = new EventEmitter();
+        let trackDisabled;
+        const test = makeTest({ tracks: [track] });
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
+        track.emit('disabled', track);
+        assert.equal(track, trackDisabled);
+      });
     });
 
     context('when the RemoteParticipant .state transitions to "disconnected"', () => {
@@ -438,6 +456,26 @@ describe('RemoteParticipant', () => {
         test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
+      });
+
+      it('does not re-emit "enabled" events', () => {
+        const track = new EventEmitter();
+        let trackEnabled;
+        const test = makeTest({ tracks: [track] });
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
+        track.emit('enabled', track);
+        assert(!trackEnabled);
+      });
+
+      it('does not re-emit "disabled" events', () => {
+        const track = new EventEmitter();
+        let trackDisabled;
+        const test = makeTest({ tracks: [track] });
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
+        track.emit('disabled', track);
+        assert(!trackDisabled);
       });
 
       it('should emit "trackUnsubscribed" events for all the Participant\'s RemoteTrackPublications', () => {
@@ -475,6 +513,24 @@ describe('RemoteParticipant', () => {
         assert(!trackMessageEvent);
       });
 
+      it('does not re-emit "enabled" events', () => {
+        const track = new EventEmitter();
+        let trackEnabled;
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackEnabled', track => { trackEnabled = track; });
+        track.emit('enabled', track);
+        assert(!trackEnabled);
+      });
+
+      it('does not re-emit "disabled" events', () => {
+        const track = new EventEmitter();
+        let trackDisabled;
+        const test = makeTest({ tracks: [track], state: 'disconnected' });
+        test.participant.once('trackDisabled', track => { trackDisabled = track; });
+        track.emit('disabled', track);
+        assert(!trackDisabled);
+      });
+
       it('does not re-emit "started" events', () => {
         const track = new EventEmitter();
         let trackStarted;
@@ -486,8 +542,7 @@ describe('RemoteParticipant', () => {
     });
   });
 
-  // NOTE(mmalavalli): Skip these tests until we migrate to twilio-video.js@2.0.0.
-  describe.skip('.trackPublications', () => {
+  describe('.trackPublications', () => {
     context('when the RemoteParticipant begins in .state "connected"', () => {
       let publication;
       let test;
@@ -501,9 +556,10 @@ describe('RemoteParticipant', () => {
       });
 
       [
-        ['subscriptionFailed', 'trackSubscriptionFailed'],
-        ['trackDisabled', 'trackDisabled'],
-        ['trackEnabled', 'trackEnabled']
+        ['subscriptionFailed', 'trackSubscriptionFailed']
+        // NOTE(mroberts): Re-enable these tests when we migrate to twilio-video.js@2.0.0.
+        // ['trackDisabled', 'trackDisabled'],
+        // ['trackEnabled', 'trackEnabled']
       ].forEach(([publicationEvent, participantEvent]) => {
         it(`re-emits "${publicationEvent}" event`, () => {
           const error = new Error('foo');
