@@ -42,6 +42,7 @@ require('./spec/signaling/v2');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/localparticipant');
+require('./spec/signaling/v2/networkquality');
 require('./spec/signaling/v2/recording');
 require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
