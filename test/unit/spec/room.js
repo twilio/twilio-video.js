@@ -65,8 +65,10 @@ describe('Room', () => {
 
   describe('RemoteParticipant events', () => {
     let participants;
+    let track;
 
     beforeEach(() => {
+      track = {};
       [
         new RemoteParticipantSignaling('PA000', 'foo'),
         new RemoteParticipantSignaling('PA111', 'bar')
@@ -81,96 +83,113 @@ describe('Room', () => {
       const spy = sinon.spy();
       room.on('trackAdded', spy);
 
-      participants.foo.emit('trackAdded');
+      participants.foo.emit('trackAdded', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackDimensionsChanged', spy);
 
-      participants.foo.emit('trackDimensionsChanged');
+      participants.foo.emit('trackDimensionsChanged', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipant trackDisabled for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackDisabled', spy);
 
-      participants.foo.emit('trackDisabled');
+      participants.foo.emit('trackDisabled', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipant trackEnabled for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackEnabled', spy);
 
-      participants.foo.emit('trackEnabled');
+      participants.foo.emit('trackEnabled', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipant trackMessage for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackMessage', spy);
 
-      participants.foo.emit('trackMessage');
+      const message = {};
+      participants.foo.emit('trackMessage', message, track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(message, track, participants.foo));
     });
 
     it('should re-emit RemoteParticipant trackPublished for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackPublished', spy);
 
-      participants.foo.emit('trackPublished');
+      const publication = {};
+      participants.foo.emit('trackPublished', publication);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(publication, participants.foo));
     });
 
     it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackRemoved', spy);
 
-      participants.bar.emit('trackRemoved');
+      participants.bar.emit('trackRemoved', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.bar));
     });
 
     it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackStarted', spy);
 
-      participants.foo.emit('trackStarted');
+      participants.foo.emit('trackStarted', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipants trackSubscribed event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackSubscribed', spy);
 
-      participants.foo.emit('trackSubscribed');
+      participants.foo.emit('trackSubscribed', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.foo));
     });
 
     it('should re-emit RemoteParticipants trackSubscriptionFailed event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackSubscriptionFailed', spy);
 
-      participants.bar.emit('trackSubscriptionFailed');
+      const error = {};
+      const publication = {};
+      participants.bar.emit('trackSubscriptionFailed', error, publication);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(error, publication, participants.bar));
     });
 
     it('should re-emit RemoteParticipant trackUnpublished for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackUnpublished', spy);
 
-      participants.foo.emit('trackUnpublished');
+      const publication = {};
+      participants.foo.emit('trackUnpublished', publication);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(publication, participants.foo));
     });
 
     it('should re-emit RemoteParticipants trackUnsubscribed event for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackUnsubscribed', spy);
 
-      participants.bar.emit('trackUnsubscribed');
+      participants.bar.emit('trackUnsubscribed', track);
       assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(track, participants.bar));
     });
 
     it('should not re-emit RemoteParticipant events if the RemoteParticipant is no longer in the room', () => {
