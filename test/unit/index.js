@@ -36,6 +36,7 @@ require('./spec/media/track/remotetrackpublication');
 require('./spec/media/track/sender');
 require('./spec/media/track/transceiver');
 
+require('./spec/signaling/participant');
 require('./spec/signaling/room');
 
 require('./spec/signaling/v2');
