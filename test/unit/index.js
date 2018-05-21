@@ -19,6 +19,7 @@ require('./spec/transceiver');
 require('./spec/data/transceiver');
 require('./spec/data/sender');
 require('./spec/data/receiver');
+require('./spec/data/transport');
 
 require('./spec/iceserversource/constant');
 require('./spec/iceserversource/nts');
