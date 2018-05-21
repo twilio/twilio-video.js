@@ -63,17 +63,21 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         [false, false]
       ].forEach(([isEnabled, newIsEnabled]) => {
         context(`when .isEnabled is ${isEnabled} and the new value is ${newIsEnabled}`, () => {
+          let arg;
           let track;
           let trackDisabled;
           let trackEnabled;
 
           before(() => {
+            arg = null;
             track = makeTrack('foo', kind, isEnabled, null, RemoteTrack);
-            track.once('disabled', () => {
+            track.once('disabled', _arg => {
               trackDisabled = true;
+              arg = _arg;
             });
-            track.once('enabled', () => {
+            track.once('enabled', _arg => {
               trackEnabled = true;
+              arg = _arg;
             });
             track._setEnabled(newIsEnabled);
           });
@@ -95,9 +99,10 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             assert.equal(track.isEnabled, newIsEnabled);
           });
 
-          it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${name}`, () => {
+          it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${name} with the ${name} itself`, () => {
             assert(newIsEnabled ? trackEnabled : trackDisabled);
             assert(!(newIsEnabled ? trackDisabled : trackEnabled));
+            assert.equal(arg, track);
           });
         });
       });
