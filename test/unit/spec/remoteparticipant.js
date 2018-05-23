@@ -207,12 +207,14 @@ describe('RemoteParticipant', () => {
         });
 
         context(`when ${a(kind)} Remote${kind}Track with the same .id does not exist in .tracks`, () => {
+          let sids = {};
+
           before(() => {
             newTrackSignaling = makeTrackSignaling({ kind: kind.toLowerCase() });
             newTrack = new test[`Remote${kind}Track`](newTrackSignaling.trackTransceiver);
             participantEvents = {};
             ['trackAdded', 'trackSubscribed', 'trackRemoved', 'trackUnsubscribed'].forEach(event => {
-              test.participant.once(event, track => { participantEvents[event] = track; });
+              test.participant.once(event, track => { participantEvents[event] = track; sids[event] = track.sid; });
             });
             ret = test.participant[method](newTrack, makeRemoteTrackPublication(newTrackSignaling));
           });
@@ -236,8 +238,10 @@ describe('RemoteParticipant', () => {
           if (method === '_addTrack') {
             it('should emit "trackSubscribed" after "trackAdded"', () => {
               const events = Object.keys(participantEvents);
-              assert(participantEvents.trackSubscribed);
-              assert(participantEvents.trackAdded);
+              assert.equal(participantEvents.trackSubscribed, newTrack);
+              assert.equal(typeof sids.trackSubscribed, 'string');
+              assert.equal(participantEvents.trackAdded, newTrack);
+              assert.equal(typeof sids.trackAdded, 'string');
               assert(events.indexOf('trackAdded') < events.indexOf('trackSubscribed'));
             });
           } else {
@@ -1635,7 +1639,8 @@ function makeTest(options) {
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this._setSid = () => {};
+    this.sid = null;
+    this._setSid = sid => { this.sid = sid; };
     this._unsubscribe = () => {};
     options.tracks.push(this);
   });
@@ -1647,7 +1652,8 @@ function makeTest(options) {
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this._setSid = () => {};
+    this.sid = null;
+    this._setSid = sid => { this.sid = sid; };
     this._unsubscribe = () => {};
     options.tracks.push(this);
   });
@@ -1660,7 +1666,8 @@ function makeTest(options) {
     this.kind = dataTrackReceiver.kind;
     this.mediaStreamTrack = dataTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
-    this._setSid = () => {};
+    this.sid = null;
+    this._setSid = sid => { this.sid = sid; };
     this._unsubscribe = () => {};
     options.tracks.push(this);
   });
