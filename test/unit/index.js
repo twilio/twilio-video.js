@@ -63,6 +63,14 @@ require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');
 
+require('./spec/stats/icereport');
+require('./spec/stats/icereportfactory');
+require('./spec/stats/peerconnectionreport');
+require('./spec/stats/receiverreport');
+require('./spec/stats/receiverreportfactory');
+require('./spec/stats/senderreport');
+require('./spec/stats/senderreportfactory');
+
 require('./spec/stats/trackstats');
 require('./spec/stats/localtrackstats');
 require('./spec/stats/localaudiotrackstats');
