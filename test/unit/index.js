@@ -15,6 +15,7 @@ require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 require('./spec/transceiver');
+require('./spec/twilioconnection');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');
