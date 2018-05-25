@@ -4,7 +4,7 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
-const NetworkQualitySignaling = require('../../../../../lib/signaling/v2/networkquality');
+const NetworkQualitySignaling = require('../../../../../lib/signaling/v2/networkqualitysignaling');
 
 class MockMediaSignalingTransport extends EventEmitter {
   constructor() {
