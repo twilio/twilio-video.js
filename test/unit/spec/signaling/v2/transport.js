@@ -127,6 +127,14 @@ describe('Transport', () => {
             it('has .version 1', () => {
               assert.equal(1, message.version);
             });
+
+            it('advertises support for Network Quality Signaling over RTCDataChannel', () => {
+              assert.deepEqual(message.media_signaling.network_quality, {
+                transports: [
+                  { type: 'data-channel' }
+                ]
+              });
+            });
           });
 
           context('"disconnected", returns an RSP message that', () => {
