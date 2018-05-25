@@ -1169,6 +1169,131 @@ describe('RoomV2', () => {
     context('.subscribed', () => {
     });
   });
+
+  // Network Quality Signaling
+  // -------------------------
+
+  describe('Network Quality Signaling', () => {
+    describe('when update is called with an RSP message that negotiates Network Quality Signaling over RTCDataChannel', () => {
+      let networkQualitySignaling;
+      let NetworkQualitySignaling;
+
+      let networkQualityMonitor;
+      let NetworkQualityMonitor;
+
+      let test;
+
+      beforeEach(() => {
+        NetworkQualitySignaling = sinon.spy(function() {
+          networkQualitySignaling = {};
+          return networkQualitySignaling;
+        });
+
+        NetworkQualityMonitor = sinon.spy(function() {
+          networkQualityMonitor = new EventEmitter();
+          networkQualityMonitor.start = sinon.spy();
+          networkQualityMonitor.stop = sinon.spy();
+          return networkQualityMonitor;
+        });
+
+        test = makeTest({
+          NetworkQualitySignaling,
+          NetworkQualityMonitor,
+        });
+
+        test.transport.emit('message', {
+          // eslint-disable-next-line
+          media_signaling: {
+            // eslint-disable-next-line
+            network_quality: {
+              transport: { type: 'data-channel', label: ':-)' }
+            }
+          }
+        });
+      });
+
+      describe('waits for a DataTrackReceiver with the expected label, and', () => {
+        let dataTrackReceiver;
+        let dataTrackTransport;
+
+        beforeEach(async () => {
+          dataTrackTransport = new EventEmitter();
+          dataTrackTransport.stop = sinon.spy();
+
+          dataTrackReceiver = makeTrackReceiver({ id: ':-)', kind: 'data' });
+          dataTrackReceiver.toDataTransport = sinon.spy(() => dataTrackTransport);
+
+          test.peerConnectionManager.emit('trackAdded', dataTrackReceiver);
+
+          await new Promise(resolve => setTimeout(resolve));
+        });
+
+        it('converts the DataTrackReciever to a DataTrackTransport,', () => {
+          assert(dataTrackReceiver.toDataTransport.calledOnce);
+        });
+
+        it('constructs a NetworkQualitySignaling with the DataTrackTransport,', () => {
+          assert(NetworkQualitySignaling.calledWith(dataTrackTransport));
+        });
+
+        it('constructs a NetworkQualityMonitor with the NetworkQualitySignaling,', () => {
+          assert(NetworkQualityMonitor.calledWith(test.peerConnectionManager, networkQualitySignaling));
+        });
+
+        it('calls .start() on the NetworkQualityMonitor, and', () => {
+          assert(networkQualityMonitor.start.calledOnce);
+        });
+
+        it('starts updating LocalParticipant NetworkQualityLevels when NetworkQualityMonitor emits "updated"', () => {
+          const levels = {};
+          networkQualityMonitor.emit('updated', levels);
+          assert(test.localParticipant.setNetworkQualityLevels.calledWith(levels));
+        });
+
+        describe('then, when the RoomV2 finally disconnects,', () => {
+          it('calls .stop() on the NetworkQualityMonitor', () => {
+            test.room.disconnect();
+            assert(networkQualityMonitor.stop.calledOnce);
+          });
+        });
+      });
+
+      describe('if the RoomV2 is disconnected before it gets the DataTrackReceiver', () => {
+        let NetworkQualitySignaling;
+
+        let test;
+
+        beforeEach(() => {
+          NetworkQualitySignaling = sinon.spy(function() {});
+
+          test = makeTest({
+            NetworkQualitySignaling
+          });
+
+          test.transport.emit('message', {
+            // eslint-disable-next-line
+            media_signaling: {
+              // eslint-disable-next-line
+              network_quality: {
+                transport: { type: 'data-channel', label: ':-)' }
+              }
+            }
+          });
+        });
+
+        it('then no NetworkQualitySignaling or NetworkQualityMonitor is created', async () => {
+          test.room.disconnect();
+
+          const dataTrackReceiver = makeTrackReceiver({ id: ':-)', kind: 'data' });
+          test.peerConnectionManager.emit('trackAdded', dataTrackReceiver);
+
+          await new Promise(resolve => setTimeout(resolve));
+
+          assert(NetworkQualitySignaling.notCalled);
+        });
+      });
+    });
+  });
 });
 
 function makeId() {
@@ -1383,6 +1508,8 @@ function makeLocalParticipant(options) {
       }
     });
   });
+
+  localParticipant.setNetworkQualityLevels = sinon.spy();
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);
   localParticipant.tracks = options.localTracks.reduce((tracks, track) => tracks.set(track.id, track), new Map());
