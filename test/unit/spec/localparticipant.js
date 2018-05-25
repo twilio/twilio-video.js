@@ -187,6 +187,67 @@ describe('LocalParticipant', () => {
     });
   });
 
+  describe('.networkQualityLevle', () => {
+    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are null', () => {
+      it('returns null', () => {
+        const test = makeTest();
+        assert.equal(test.participant.networkQualityLevel, null);
+      });
+    });
+
+    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are not null', () => {
+      it('returns the minimum of the Network Quality Levels', () => {
+        const test = makeTest();
+        test.signaling.networkQualityLevels = {
+          audio: {
+            send: 0,
+            recv: 1
+          },
+          video: {
+            send: 2,
+            recv: 3
+          }
+        };
+        assert.equal(test.participant.networkQualityLevel, 0);
+      });
+    });
+  });
+
+  describe('.networkQualityLevels', () => {
+    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are null', () => {
+      it('returns null', () => {
+        const test = makeTest();
+        assert.equal(test.participant.networkQualityLevels, null);
+      });
+    });
+
+    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are not null', () => {
+      it('returns Network Quality Levels', () => {
+        const test = makeTest();
+        test.signaling.networkQualityLevels = {
+          audio: {
+            send: 0,
+            recv: 1
+          },
+          video: {
+            send: 2,
+            recv: 3
+          }
+        };
+        assert.deepEqual(test.participant.networkQualityLevels, {
+          audio: {
+            publish: 0,
+            subscribe: 1
+          },
+          video: {
+            publish: 2,
+            subscribe: 3
+          }
+        });
+      });
+    });
+  });
+
   describe('#setParameters', () => {
     let test;
 
@@ -937,6 +998,40 @@ describe('LocalParticipant', () => {
           test.participant.once('foo', () => { stateChanged = true; });
           test.signaling.emit('stateChanged', 'foo');
           assert(!stateChanged);
+        });
+      });
+    });
+
+    context('"networkQualityLevelsChanged"', () => {
+      ['connected', 'connected'].forEach(state => {
+        context(`when the LocalParticipant .state is "${state}"`, () => {
+          it('re-emits the "networkQualityLevelsChanged" event', () => {
+            const test = makeTest({ state });
+            const expectedNetworkQualityLevels = {
+              audio: {
+                publish: 0,
+                subscribe: 1
+              },
+              video: {
+                publish: 2,
+                subscribe: 3
+              }
+            };
+            let actualNetworkQualityLevels;
+            test.participant.once('networkQualityLevelsChanged', networkQualityLevels => { actualNetworkQualityLevels = networkQualityLevels; });
+            test.signaling.networkQualityLevels = {
+              audio: {
+                send: 0,
+                recv: 1
+              },
+              video: {
+                send: 2,
+                recv: 3
+              }
+            };
+            test.signaling.emit('networkQualityLevelsChanged');
+            assert.deepEqual(actualNetworkQualityLevels, expectedNetworkQualityLevels);
+          });
         });
       });
     });
