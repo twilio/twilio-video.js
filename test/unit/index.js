@@ -40,6 +40,7 @@ require('./spec/signaling/participant');
 require('./spec/signaling/room');
 
 require('./spec/signaling/v2');
+require('./spec/signaling/v2/activespeakersignaling');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/localparticipant');

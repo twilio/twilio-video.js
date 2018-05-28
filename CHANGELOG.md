@@ -11,6 +11,13 @@ New Features
   the feature is enabled.** Participants will also emit a
   "networkQualityLevelChanged" event when this value changes. See the Network
   Quality Level Guide below for more information on this feature.
+- Room now includes an `activeSpeaker` property that represents the
+  RemoteParticipant actively speaking in the Room, if any. Whenever the active
+  speaker changes, Room emits the "activeSpeakerChanged" event. **This feature
+  depends on server-side support, which we are rolling out gradually. As such,
+  expect this value to always be `null` for the time being. We will make an
+  announcement once the feature is enabled.** This feature is currently
+  unsupported in Peer-to-Peer (P2P) Rooms.
 - Added a workaround for
   [WebKit Bug 180748](https://bugs.webkit.org/show_bug.cgi?id=180748), where, in
   Safari, `getUserMedia` may return a silent MediaStreamTrack. The workaround
