@@ -33,6 +33,7 @@ Bug Fixes
 
 - Fixed a bug that cause `remoteAudioTrackStats` and `remoteVideoTrackStats` to
   always be empty Arrays in Firefox. (JSDK-1927)
+- LogLevel was accidentally omitted from the API docs. (JSDK-1701)
 
 RemoteTrackPublication Guide
 ----------------------------
