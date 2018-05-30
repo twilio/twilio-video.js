@@ -7,18 +7,28 @@ const NetworkQualityMonitor = require('../../../../../lib/signaling/v2/networkqu
 
 describe('NetworkQualityMonitor', () => {
   describe('constructor(manager, signaling)', () => {
-    it('sets .levels to null', () => {
+    it('sets .level to NetworkQualitySignaling\'s .level', () => {
       const signaling = new EventEmitter();
+
       const monitor = new NetworkQualityMonitor(null, signaling);
-      assert.strictEqual(monitor.levels, null);
+
+      signaling.level = null;
+      assert.strictEqual(monitor.level, signaling.level);
+
+      signaling.level = 1;
+      assert.strictEqual(monitor.level, signaling.level);
+
+      signaling.level = 5;
+      assert.strictEqual(monitor.level, signaling.level);
     });
 
-    it('starts listening to signaling\'s "networkQualityLevelsChanged" and updating .levels', () => {
+    it('re-emits NetworkQualitySignaling\'s "updated" event', () => {
       const signaling = new EventEmitter();
       const monitor = new NetworkQualityMonitor(null, signaling);
-      const levels = {};
-      signaling.emit('networkQualityLevelsChanged', levels);
-      assert.equal(monitor.levels, levels);
+      let didEmitEvent;
+      monitor.once('updated', () => { didEmitEvent = true; });
+      signaling.emit('updated');
+      assert(didEmitEvent);
     });
   });
 

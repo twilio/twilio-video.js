@@ -35,7 +35,7 @@ describe('NetworkQualitySignaling', () => {
   describe('#put', () => {
     describe('when no NetworkQualityInputs have been submitted', () => {
       it('calls .publish on the underlying MediaSignalingTransport', async () => {
-        const inputs = createNetworkQualityInputs();
+        const inputs = createInputs();
         nqs.put(inputs);
         await wait();
         didPublish(mst, inputs);
@@ -44,25 +44,25 @@ describe('NetworkQualitySignaling', () => {
 
     describe('when NetworkQualityInputs have been submitted,', () => {
       beforeEach(async () => {
-        const inputs = createNetworkQualityInputs();
+        const inputs = createInputs();
         nqs.put(inputs);
         await wait();
         didPublish(mst, inputs);
       });
 
-      describe('but no NetworkQualityLevels have been received,', () => {
+      describe('but no NetworkQualityLevel has been received,', () => {
         describe('and #put has been called once,', () => {
           let inputs;
 
           beforeEach(async () => {
-            inputs = createNetworkQualityInputs();
+            inputs = createInputs();
             nqs.put(inputs);
             await wait();
             didNotPublish(mst, inputs);
           });
 
-          it('calls .publish on the underlying MediaSignalingTransport 1 s after receiving NetworkQualityLevels', async () => {
-            receiveNetworkQualityLevels(mst);
+          it('calls .publish on the underlying MediaSignalingTransport 1 s after receiving a NetworkQualityLevel', async () => {
+            receiveMessage(mst);
             clock.tick(1000);
             await wait();
             didPublish(mst, inputs);
@@ -73,16 +73,16 @@ describe('NetworkQualitySignaling', () => {
           let inputs;
 
           beforeEach(async () => {
-            nqs.put(createNetworkQualityInputs());
-            nqs.put(createNetworkQualityInputs());
-            inputs = createNetworkQualityInputs();
+            nqs.put(createInputs());
+            nqs.put(createInputs());
+            inputs = createInputs();
             nqs.put(inputs);
             await wait();
             didNotPublish(mst, inputs);
           });
 
-          it('calls .publish on the underlying MediaSignalingTransport 1 s after receiving a NetworkQualityLevels with the most recent NetworkQualityInputs', async () => {
-            receiveNetworkQualityLevels(mst);
+          it('calls .publish on the underlying MediaSignalingTransport 1 s after receiving a NetworkQualityLevel with the most recent NetworkQualityInputs', async () => {
+            receiveMessage(mst);
             clock.tick(1000);
             await wait();
             didPublish(mst, inputs);
@@ -90,9 +90,9 @@ describe('NetworkQualitySignaling', () => {
         });
       });
 
-      describe('NetworkQualityLevels have been received,', () => {
+      describe('a NetworkQualityLevel have been received,', () => {
         beforeEach(() => {
-          receiveNetworkQualityLevels(mst);
+          receiveMessage(mst);
         });
 
         describe('1 s has not yet elapsed,', () => {
@@ -100,7 +100,7 @@ describe('NetworkQualitySignaling', () => {
             let inputs;
 
             beforeEach(async () => {
-              inputs = createNetworkQualityInputs();
+              inputs = createInputs();
               nqs.put(inputs);
               await wait();
               didNotPublish(mst);
@@ -117,9 +117,9 @@ describe('NetworkQualitySignaling', () => {
             let inputs;
 
             beforeEach(async () => {
-              nqs.put(createNetworkQualityInputs());
-              nqs.put(createNetworkQualityInputs());
-              inputs = createNetworkQualityInputs();
+              nqs.put(createInputs());
+              nqs.put(createInputs());
+              inputs = createInputs();
               nqs.put(inputs);
               await wait();
               didNotPublish(mst);
@@ -142,7 +142,7 @@ describe('NetworkQualitySignaling', () => {
             let inputs;
 
             beforeEach(async () => {
-              inputs = createNetworkQualityInputs();
+              inputs = createInputs();
               nqs.put(inputs);
               await wait();
             });
@@ -156,10 +156,10 @@ describe('NetworkQualitySignaling', () => {
             let inputs;
 
             beforeEach(async () => {
-              inputs = createNetworkQualityInputs();
+              inputs = createInputs();
               nqs.put(inputs);
-              nqs.put(createNetworkQualityInputs());
-              nqs.put(createNetworkQualityInputs());
+              nqs.put(createInputs());
+              nqs.put(createInputs());
               await wait();
             });
 
@@ -182,94 +182,101 @@ describe('NetworkQualitySignaling', () => {
     });
 
     describe('a "network_quality" message with', () => {
-      describe('new NetworkQualityLevels', () => {
-        describe('and the NetworkQualitySignaling has never had NetworkQualityLevels set before', () => {
+      describe('a new NetworkQualityLevel', () => {
+        describe('and the NetworkQualitySignaling has never had NetworkQualityLevel set before', () => {
+          let level;
           let levels;
 
           beforeEach(() => {
-            levels = createNetworkQualityLevels();
+            levels = createLevels();
+            level = levels.level;
           });
 
-          it('emits "networkQualityLevelsChanged"', () => {
+          it('emits "updated"', () => {
             let didEmitEvent = false;
-            nqs.once('networkQualityLevelsChanged', () => { didEmitEvent = true; });
-            receiveNetworkQualityLevels(mst, levels);
+            nqs.once('updated', () => { didEmitEvent = true; });
+            receiveMessage(mst, levels);
             assert(didEmitEvent);
           });
 
-          it('sets .networkQualityLevels to the new NetworkQualityLevels', () => {
-            receiveNetworkQualityLevels(mst, levels);
-            assert.deepEqual(levels, nqs.networkQualityLevels);
+          it('sets .level to the new NetworkQualityLevel', () => {
+            receiveMessage(mst, levels);
+            assert.equal(level, nqs.level);
           });
         });
 
-        describe('and the NetworkQualitySignaling has had NetworkQualityLevels set before', () => {
+        describe('and the NetworkQualitySignaling has had NetworkQualityLevel set before', () => {
+          let level;
           let levels;
 
           beforeEach(() => {
-            receiveNetworkQualityLevels(mst);
-            levels = createNetworkQualityLevels();
+            receiveMessage(mst);
+            levels = createLevels();
+            level = levels.level;
           });
 
-          it('emits "networkQualityLevelsChanged"', () => {
+          it('emits "updated"', () => {
             let didEmitEvent = false;
-            nqs.once('networkQualityLevelsChanged', () => { didEmitEvent = true; });
-            receiveNetworkQualityLevels(mst, levels);
+            nqs.once('updated', () => { didEmitEvent = true; });
+            receiveMessage(mst, levels);
             assert(didEmitEvent);
           });
 
-          it('sets .networkQualityLevels to the new NetworkQualityLevels', () => {
-            receiveNetworkQualityLevels(mst, levels);
-            assert.deepEqual(levels, nqs.networkQualityLevels);
+          it('sets .level to the new NetworkQualityLevel', () => {
+            receiveMessage(mst, levels);
+            assert.equal(level, nqs.level);
           });
         });
       });
 
-      describe('unchanged NetworkQualityLevels', () => {
+      describe('unchanged NetworkQualityLevel', () => {
+        let level;
         let levels;
 
         beforeEach(() => {
-          levels = createNetworkQualityLevels();
-          receiveNetworkQualityLevels(mst, levels);
+          levels = createLevels();
+          level = levels.level;
+          receiveMessage(mst, levels);
         });
 
-        it('does not emit "networkQualityLevelsChanged"', () => {
+        it('does not emit "updated"', () => {
           let didEmitEvent = false;
-          nqs.once('networkQualityLevelsChanged', () => { didEmitEvent = true; });
-          receiveNetworkQualityLevels(mst, levels);
+          nqs.once('updated', () => { didEmitEvent = true; });
+          receiveMessage(mst, levels);
           assert(!didEmitEvent);
         });
 
-        it('does not change .networkQualityLevels', () => {
-          receiveNetworkQualityLevels(mst, levels);
-          assert.deepEqual(levels, nqs.networkQualityLevels);
+        it('does not change .level', () => {
+          receiveMessage(mst, levels);
+          assert.equal(level, nqs.level);
         });
       });
     });
 
     describe('an unknown message', () => {
-      it('does not emit "networkQualityLevelsChanged"', () => {
+      it('does not emit "updated"', () => {
         let didEmitEvent = false;
-        nqs.once('networkQualityLevelsChanged', () => { didEmitEvent = true; });
+        nqs.once('updated', () => { didEmitEvent = true; });
         mst.emit('message', { type: 'foo' });
         assert(!didEmitEvent);
       });
 
-      it('does not change .networkQualityLevels', () => {
+      it('does not change .level', () => {
         mst.emit('message', { type: 'foo' });
-        assert.equal(null, nqs.networkQualityLevels);
+        assert.equal(null, nqs.level);
       });
     });
   });
 });
 
-function createNetworkQualityInputs() {
+function createInputs() {
   // NOTE(mroberts): Intentionally unspecified.
   return {};
 }
 
-function createNetworkQualityLevels() {
+function createLevels() {
   return {
+    level: Math.random(),
     audio: {
       send: Math.random(),
       recv: Math.random()
@@ -281,11 +288,11 @@ function createNetworkQualityLevels() {
   };
 }
 
-function createNetworkQualityLevelsMessage(networkQualityLevels) {
+function createMessage(levels) {
   return Object.assign({
     type: 'network_quality'
   }, {
-    local: networkQualityLevels || createNetworkQualityLevels()
+    local: levels || createLevels()
   });
 }
 
@@ -301,8 +308,8 @@ function didPublish(mst) {
   mst.publish.reset();
 }
 
-function receiveNetworkQualityLevels(mst, networkQualityLevels) {
-  mst.emit('message', createNetworkQualityLevelsMessage(networkQualityLevels));
+function receiveMessage(mst, levels) {
+  mst.emit('message', createMessage(levels));
 }
 
 async function wait() {
