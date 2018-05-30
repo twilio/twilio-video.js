@@ -128,7 +128,7 @@ describe('Transport', () => {
               assert.equal(1, message.version);
             });
 
-            it('advertises support for Network Quality Signaling over RTCDataChannel', () => {
+            it.skip('advertises support for Network Quality Signaling over RTCDataChannel', () => {
               assert.deepEqual(message.media_signaling.network_quality, {
                 transports: [
                   { type: 'data-channel' }
