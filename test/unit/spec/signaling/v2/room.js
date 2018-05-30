@@ -1244,10 +1244,14 @@ describe('RoomV2', () => {
           assert(networkQualityMonitor.start.calledOnce);
         });
 
-        it('starts updating LocalParticipant NetworkQualityLevels when NetworkQualityMonitor emits "updated"', () => {
-          const levels = {};
-          networkQualityMonitor.emit('updated', levels);
-          assert(test.localParticipant.setNetworkQualityLevels.calledWith(levels));
+        it('starts updating LocalParticipant NetworkQualityLevel when NetworkQualityMonitor emits "updated"', () => {
+          networkQualityMonitor.level = 1;
+          networkQualityMonitor.emit('updated');
+          assert(test.localParticipant.setNetworkQualityLevel.calledWith(networkQualityMonitor.level));
+
+          networkQualityMonitor.level = 4;
+          networkQualityMonitor.emit('updated');
+          assert(test.localParticipant.setNetworkQualityLevel.calledWith(networkQualityMonitor.level));
         });
 
         describe('then, when the RoomV2 finally disconnects,', () => {
@@ -1509,7 +1513,7 @@ function makeLocalParticipant(options) {
     });
   });
 
-  localParticipant.setNetworkQualityLevels = sinon.spy();
+  localParticipant.setNetworkQualityLevel = sinon.spy();
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);
   localParticipant.tracks = options.localTracks.reduce((tracks, track) => tracks.set(track.id, track), new Map());

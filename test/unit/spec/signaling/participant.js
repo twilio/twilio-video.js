@@ -12,30 +12,30 @@ describe('ParticipantSignaling', () => {
       participant = new ParticipantSignaling();
     });
 
-    it('sets .networkQualityLevels to null', () => {
-      assert.equal(participant.networkQualityLevels, null);
+    it('sets .networkQualityLevel to null', () => {
+      assert.equal(participant.networkQualityLevel, null);
     });
   });
 
-  describe('setNetworkQualityLevels(networkQualityLevels)', () => {
+  describe('setNetworkQualityLevel(networkQualityLevel)', () => {
     let participant;
-    let expectedNetworkQualityLevels;
+    let expectedNetworkQualityLevel;
 
     beforeEach(() => {
       participant = new ParticipantSignaling();
-      expectedNetworkQualityLevels = {};
+      expectedNetworkQualityLevel = 1;
     });
 
-    it('sets .networkQualityLevels to networkQualityLevels', () => {
-      participant.setNetworkQualityLevels(expectedNetworkQualityLevels);
-      assert.equal(participant.networkQualityLevels, expectedNetworkQualityLevels);
+    it('sets .networkQualityLevel to networkQualityLevel', () => {
+      participant.setNetworkQualityLevel(expectedNetworkQualityLevel);
+      assert.equal(participant.networkQualityLevel, expectedNetworkQualityLevel);
     });
 
-    it('emits "networkQualityLevelsChanged" with networkQualityLevels', () => {
-      let actualNetworkQualityLevels;
-      participant.once('networkQualityLevelsChanged', networkQualityLevels => { actualNetworkQualityLevels = networkQualityLevels; });
-      participant.setNetworkQualityLevels(expectedNetworkQualityLevels);
-      assert.equal(actualNetworkQualityLevels, expectedNetworkQualityLevels);
+    it('emits "networkQualityLevelChanged"', () => {
+      let didEmitEvent;
+      participant.once('networkQualityLevelChanged', () => { didEmitEvent = true; });
+      participant.setNetworkQualityLevel(expectedNetworkQualityLevel);
+      assert(didEmitEvent);
     });
   });
 });

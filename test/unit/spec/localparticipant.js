@@ -187,64 +187,18 @@ describe('LocalParticipant', () => {
     });
   });
 
-  describe('.networkQualityLevle', () => {
-    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are null', () => {
-      it('returns null', () => {
-        const test = makeTest();
-        assert.equal(test.participant.networkQualityLevel, null);
-      });
-    });
+  describe('.networkQualityLevel', () => {
+    it('equals the underlying ParticipantSignaling\'s .networkQualityLevel', () => {
+      const test = makeTest();
 
-    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are not null', () => {
-      it('returns the minimum of the Network Quality Levels', () => {
-        const test = makeTest();
-        test.signaling.networkQualityLevels = {
-          audio: {
-            send: 0,
-            recv: 1
-          },
-          video: {
-            send: 2,
-            recv: 3
-          }
-        };
-        assert.equal(test.participant.networkQualityLevel, 0);
-      });
-    });
-  });
+      test.signaling.networkQualityLevel = null;
+      assert.equal(test.participant.networkQualityLevel, test.signaling.networkQualityLevel);
 
-  describe('.networkQualityLevels', () => {
-    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are null', () => {
-      it('returns null', () => {
-        const test = makeTest();
-        assert.equal(test.participant.networkQualityLevels, null);
-      });
-    });
+      test.signaling.networkQualityLevel = 0;
+      assert.equal(test.participant.networkQualityLevel, test.signaling.networkQualityLevel);
 
-    describe('when the underlying ParticipantSignaling\'s .networkQualityLevels are not null', () => {
-      it('returns Network Quality Levels', () => {
-        const test = makeTest();
-        test.signaling.networkQualityLevels = {
-          audio: {
-            send: 0,
-            recv: 1
-          },
-          video: {
-            send: 2,
-            recv: 3
-          }
-        };
-        assert.deepEqual(test.participant.networkQualityLevels, {
-          audio: {
-            publish: 0,
-            subscribe: 1
-          },
-          video: {
-            publish: 2,
-            subscribe: 3
-          }
-        });
-      });
+      test.signaling.networkQualityLevel = 2;
+      assert.equal(test.participant.networkQualityLevel, test.signaling.networkQualityLevel);
     });
   });
 
@@ -1002,35 +956,17 @@ describe('LocalParticipant', () => {
       });
     });
 
-    context('"networkQualityLevelsChanged"', () => {
+    context('"networkQualityLevelChanged"', () => {
       ['connected', 'connected'].forEach(state => {
         context(`when the LocalParticipant .state is "${state}"`, () => {
-          it('re-emits the "networkQualityLevelsChanged" event', () => {
+          it('re-emits the "networkQualityLevelChanged" event', () => {
             const test = makeTest({ state });
-            const expectedNetworkQualityLevels = {
-              audio: {
-                publish: 0,
-                subscribe: 1
-              },
-              video: {
-                publish: 2,
-                subscribe: 3
-              }
-            };
-            let actualNetworkQualityLevels;
-            test.participant.once('networkQualityLevelsChanged', networkQualityLevels => { actualNetworkQualityLevels = networkQualityLevels; });
-            test.signaling.networkQualityLevels = {
-              audio: {
-                send: 0,
-                recv: 1
-              },
-              video: {
-                send: 2,
-                recv: 3
-              }
-            };
-            test.signaling.emit('networkQualityLevelsChanged');
-            assert.deepEqual(actualNetworkQualityLevels, expectedNetworkQualityLevels);
+            const expectedNetworkQualityLevel = 1;
+            let actualNetworkQualityLevel;
+            test.participant.once('networkQualityLevelChanged', networkQualityLevel => { actualNetworkQualityLevel = networkQualityLevel; });
+            test.signaling.networkQualityLevel = expectedNetworkQualityLevel;
+            test.signaling.emit('networkQualityLevelChanged');
+            assert.equal(actualNetworkQualityLevel, expectedNetworkQualityLevel);
           });
         });
       });
