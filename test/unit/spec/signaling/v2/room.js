@@ -1245,6 +1245,26 @@ describe('RoomV2', () => {
         });
 
         it('starts updating LocalParticipant NetworkQualityLevel when NetworkQualityMonitor emits "updated"', () => {
+          // Case 1: ICE Connection State transitions to "failed", Network
+          //         Quality Level has not been computed.
+          test.localParticipant.networkQualityLevel = null;
+          test.peerConnectionManager.iceConnectionState = 'failed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert.equal(test.localParticipant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 2: ICE Connection State is still "failed", and Network Quality
+          //         Level is computed.
+          networkQualityMonitor.level = 1;
+          networkQualityMonitor.emit('updated');
+          assert.equal(test.localParticipant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 3: ICE Connection State transitions to "completed"
+          test.peerConnectionManager.iceConnectionState = 'completed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert.equal(test.localParticipant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 4: ICE Connection State is still "completed", and Network
+          //         Quality Level is computed.
           networkQualityMonitor.level = 1;
           networkQualityMonitor.emit('updated');
           assert(test.localParticipant.setNetworkQualityLevel.calledWith(networkQualityMonitor.level));
@@ -1252,6 +1272,12 @@ describe('RoomV2', () => {
           networkQualityMonitor.level = 4;
           networkQualityMonitor.emit('updated');
           assert(test.localParticipant.setNetworkQualityLevel.calledWith(networkQualityMonitor.level));
+
+          // Case 5: ICE Connection State transitions to "failed"
+          test.localParticipant.networkQualityLevel = networkQualityMonitor.level;
+          test.peerConnectionManager.iceConnectionState = 'failed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert(test.localParticipant.setNetworkQualityLevel.calledWith(0));
         });
 
         describe('then, when the RoomV2 finally disconnects,', () => {
