@@ -1,3 +1,57 @@
+1.11.0 (in progress)
+====================
+
+New Features
+------------
+
+- Participants now include a `networkQualityLevel` property that represents the
+  quality of their connection to the Room. **This feature depends on server-side
+  support, which we are rolling out gradually. As such, expect this value to
+  always be `null` for the time being. We will make an announcement once
+  the feature is enabled.** Participants will also emit a
+  "networkQualityLevelChanged" event when this value changes. See the Network
+  Quality Level Guide below for more information on this feature.
+
+Network Quality Level Guide
+---------------------------
+
+Participants (both LocalParticipants and RemoteParticipants) now include a
+`networkQualityLevel` property that represents the quality of their connection
+to the Room. This value is not always known. For example, in Peer-to-Peer (P2P)
+Rooms, we do not compute it; therefore, the value is always `null`. We _will_
+compute this value in Group Rooms, first for the LocalParticipant, and then for
+the RemoteParticipants; however, this feature is being rolled out gradually, and
+so we are shipping SDK changes ahead of the server-side changes.
+
+If a Participant's Network Quality Level is known, then it has some value 0–5,
+where 0 represents an unusable connection, 1 represents a very poor connection,
+and 5 represents an excellent connection. While a Room is in the "reconnecting"
+state, a LocalParticipant's `networkQualityLevel`, if it was being computed, is
+set to 0.
+
+### Example Usage
+
+In this example, we print a string representing a Participant's Network Quality
+Level as cell phone-style signal bars:
+
+```js
+function printNetworkQualityLevel(networkQualityLevel) {
+  console.log({
+    1: '▃',
+    2: '▃▄',
+    3: '▃▄▅',
+    4: '▃▄▅▆',
+    5: '▃▄▅▆▇'
+  }[networkQualityLevel] || '');
+}
+
+// Print the initial Network Quality Level
+printNetworkQualityLevel(participant.networkQualityLevel);
+
+// Print changes to Network Quality Level
+participant.on('networkQualityLevelChanged', printNetworkQualityLevel);
+```
+
 1.10.0 (May 30, 2018)
 =====================
 
