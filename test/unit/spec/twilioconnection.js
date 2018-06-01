@@ -64,6 +64,7 @@ describe('TwilioConnection', function() {
           twilioConnection = new TwilioConnection('foo', {
             WebSocket: FakeWebSocket
           });
+          twilioConnection._ws.open();
 
           if (state === 'closed') {
             twilioConnection.close();
@@ -124,6 +125,8 @@ describe('TwilioConnection', function() {
           twilioConnection = new TwilioConnection('foo', {
             WebSocket: FakeWebSocket
           });
+          twilioConnection._ws.open();
+          twilioConnection._ws.send.resetHistory();
 
           if (state === 'closed') {
             twilioConnection.close();
