@@ -18,8 +18,7 @@ const mediaConnectionStates = [
 
 const signalingConnectionStates = [
   'connected',
-  'reconnecting',
-  'disconnected'
+  'reconnecting'
 ];
 
 class RoomSignalingImpl extends RoomSignaling {
