@@ -52,6 +52,13 @@ printNetworkQualityLevel(participant.networkQualityLevel);
 participant.on('networkQualityLevelChanged', printNetworkQualityLevel);
 ```
 
+Bug Fixes
+---------
+
+- Fixed a bug where if a Firefox or Safari Participant gets disconnected from a
+  group Room due to duplicate identity error, a "disconnected" event is
+  emitted on the Room without the corresponding TwilioError. (JSDK-1931)
+
 1.10.0 (May 30, 2018)
 =====================
 
