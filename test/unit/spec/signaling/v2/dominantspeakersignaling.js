@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 
-const ActiveSpeakerSignaling = require('../../../../../lib/signaling/v2/activespeakersignaling');
+const DominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
 
 function makeTransport() {
   const transport = new EventEmitter();
@@ -11,57 +11,57 @@ function makeTransport() {
   return transport;
 }
 
-describe('ActiveSpeakerSignaling', () => {
+describe('DominantSpeakerSignaling', () => {
   describe('constructor(mediaSignalingTransport)', () => {
     it('initializes .loudestParticipantSid to null', () => {
-      assert.strictEqual(new ActiveSpeakerSignaling(makeTransport()).loudestParticipantSid, null);
+      assert.strictEqual(new DominantSpeakerSignaling(makeTransport()).loudestParticipantSid, null);
     });
 
-    describe('when mediaSignalingTransport emits a "message" event containing an Active Speaker message', () => {
-      describe('and the Active Speaker message\'s .participant is new', () => {
+    describe('when mediaSignalingTransport emits a "message" event containing an Dominant Speaker message', () => {
+      describe('and the Dominant Speaker message\'s .participant is new', () => {
         const participant = 'PA123';
 
         let mediaSignalingTransport;
-        let activeSpeakerSignaling;
+        let dominantSpeakerSignaling;
 
         beforeEach(() => {
           mediaSignalingTransport = makeTransport();
-          activeSpeakerSignaling = new ActiveSpeakerSignaling(mediaSignalingTransport);
+          dominantSpeakerSignaling = new DominantSpeakerSignaling(mediaSignalingTransport);
         });
 
         it('updates .loudestParticipantSid', () => {
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
-          assert.equal(activeSpeakerSignaling.loudestParticipantSid, participant);
+          assert.equal(dominantSpeakerSignaling.loudestParticipantSid, participant);
         });
 
         it('emits "updated"', () => {
           let didEmitEvent;
-          activeSpeakerSignaling.once('updated', () => { didEmitEvent = true; });
+          dominantSpeakerSignaling.once('updated', () => { didEmitEvent = true; });
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
           assert(didEmitEvent);
         });
       });
 
-      describe('and the Active Speaker message\'s .participant is the same', () => {
+      describe('and the Dominant Speaker message\'s .participant is the same', () => {
         const participant = 'PA123';
 
         let mediaSignalingTransport;
-        let activeSpeakerSignaling;
+        let dominantSpeakerSignaling;
 
         beforeEach(() => {
           mediaSignalingTransport = makeTransport();
-          activeSpeakerSignaling = new ActiveSpeakerSignaling(mediaSignalingTransport);
+          dominantSpeakerSignaling = new DominantSpeakerSignaling(mediaSignalingTransport);
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
         });
 
         it('does not change .loudestParticipantSid', () => {
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
-          assert.equal(activeSpeakerSignaling.loudestParticipantSid, participant);
+          assert.equal(dominantSpeakerSignaling.loudestParticipantSid, participant);
         });
 
         it('does not emit "updated"', () => {
           let didEmitEvent;
-          activeSpeakerSignaling.once('updated', () => { didEmitEvent = true; });
+          dominantSpeakerSignaling.once('updated', () => { didEmitEvent = true; });
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
           assert(!didEmitEvent);
         });
