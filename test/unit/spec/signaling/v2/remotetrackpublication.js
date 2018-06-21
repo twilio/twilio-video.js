@@ -6,7 +6,7 @@ const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remote
 const { makeUUID } = require('../../../../../lib/util');
 
 describe('RemoteTrackPublicationV2', () => {
-  // RemoteTrackV2
+  // RemoteTrackPublicationV2
   // -------
 
   describe('constructor', () => {
@@ -93,9 +93,9 @@ describe('RemoteTrackPublicationV2', () => {
   });
 
   describe('#update', () => {
-    context('called with a trackState setting .enabled to false when the RemoteTrackV2 is', () => {
+    context('called with a trackState setting .enabled to false when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const trackState = {
             id: makeId(),
             enabled: true,
@@ -140,7 +140,7 @@ describe('RemoteTrackPublicationV2', () => {
       });
 
       context('disabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const trackState = {
             id: makeId(),
             enabled: false,
@@ -185,9 +185,9 @@ describe('RemoteTrackPublicationV2', () => {
       });
     });
 
-    context('called with a trackState setting .enabled to true when the RemoteTrackV2 is', () => {
+    context('called with a trackState setting .enabled to true when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const trackState = {
             id: makeId(),
             enabled: true,
@@ -232,7 +232,7 @@ describe('RemoteTrackPublicationV2', () => {
       });
 
       context('disabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const trackState = {
             id: makeId(),
             enabled: false,
@@ -282,8 +282,8 @@ describe('RemoteTrackPublicationV2', () => {
   // --------------
 
   describe('#disable', () => {
-    context('called when the RemoteTrackV2 is enabled', () => {
-      it('returns the RemoteTrackV2', () => {
+    context('called when the RemoteTrackPublicationV2 is enabled', () => {
+      it('returns the RemoteTrackPublicationV2', () => {
         const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: true,
@@ -321,8 +321,8 @@ describe('RemoteTrackPublicationV2', () => {
       });
     });
 
-    context('called when the RemoteTrackV2 is disabled', () => {
-      it('returns the RemoteTrackV2', () => {
+    context('called when the RemoteTrackPublicationV2 is disabled', () => {
+      it('returns the RemoteTrackPublicationV2', () => {
         const track = new RemoteTrackPublicationV2({
           id: makeId(),
           enabled: false,
@@ -362,9 +362,9 @@ describe('RemoteTrackPublicationV2', () => {
   });
 
   describe('#enable', () => {
-    context('called with false when the RemoteTrackV2 is', () => {
+    context('called with false when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
@@ -403,7 +403,7 @@ describe('RemoteTrackPublicationV2', () => {
       });
 
       context('disabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
@@ -442,9 +442,9 @@ describe('RemoteTrackPublicationV2', () => {
       });
     });
 
-    context('called with true when the RemoteTrackV2 is', () => {
+    context('called with true when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
@@ -483,7 +483,7 @@ describe('RemoteTrackPublicationV2', () => {
       });
 
       context('disabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
@@ -522,9 +522,9 @@ describe('RemoteTrackPublicationV2', () => {
       });
     });
 
-    context('called without an argument when the RemoteTrackV2 is', () => {
+    context('called without an argument when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: true,
@@ -563,7 +563,7 @@ describe('RemoteTrackPublicationV2', () => {
       });
 
       context('disabled', () => {
-        it('returns the RemoteTrackV2', () => {
+        it('returns the RemoteTrackPublicationV2', () => {
           const track = new RemoteTrackPublicationV2({
             id: makeId(),
             enabled: false,
@@ -599,49 +599,12 @@ describe('RemoteTrackPublicationV2', () => {
           track.enable();
           assert(isEnabled);
         });
-      });
-    });
-  });
-
-  describe('#getTrackTransceiver', () => {
-    context('called after setTrackTransceiver', () => {
-      it('returns a Promise that resolves to the MediaTrackReceiver passed to setTrackTransceiver', () => {
-        const track = new RemoteTrackPublicationV2({
-          id: makeId(),
-          enabled: makeEnabled(),
-          kind: makeKind(),
-          name: makeUUID(),
-          sid: makeSid()
-        });
-        const mediaTrackReceiver = {};
-        track.setTrackTransceiver(mediaTrackReceiver);
-        return track.getTrackTransceiver().then(trackReceiver => {
-          assert.equal(mediaTrackReceiver, trackReceiver);
-        });
-      });
-    });
-
-    context('called before setTrackTransceiver', () => {
-      it('returns a Promise that resolves to the MediaTrackReceiver eventually passed to setTrackTransceiver', () => {
-        const track = new RemoteTrackPublicationV2({
-          id: makeId(),
-          enabled: makeEnabled(),
-          kind: makeKind(),
-          name: makeUUID(),
-          sid: makeSid()
-        });
-        const mediaTrackReceiver = {};
-        const promise = track.getTrackTransceiver().then(trackReceiver => {
-          assert.equal(mediaTrackReceiver, trackReceiver);
-        });
-        track.setTrackTransceiver(mediaTrackReceiver);
-        return promise;
       });
     });
   });
 
   describe('#setTrackTransceiver', () => {
-    it('returns the RemoteTrackV2', () => {
+    it('returns the RemoteTrackPublicationV2', () => {
       const track = new RemoteTrackPublicationV2({
         id: makeId(),
         enabled: makeEnabled(),
@@ -651,6 +614,23 @@ describe('RemoteTrackPublicationV2', () => {
       });
       const mediaTrackReceiver = {};
       assert.equal(track, track.setTrackTransceiver(mediaTrackReceiver));
+    });
+
+    it('emits "updated" with .trackTransceiver set to the given TrackReceiver', () => {
+      const track = new RemoteTrackPublicationV2({
+        id: makeId(),
+        enabled: makeEnabled(),
+        kind: makeKind(),
+        name: makeUUID(),
+        sid: makeSid()
+      });
+      const mediaTrackReceiver = {};
+
+      let updated;
+      track.once('updated', () => { updated = true; });
+      track.setTrackTransceiver(mediaTrackReceiver);
+      assert(updated);
+      assert.equal(track.trackTransceiver, mediaTrackReceiver);
     });
   });
 });
