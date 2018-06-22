@@ -11,6 +11,18 @@ New Features
   the feature is enabled.** Participants will also emit a
   "networkQualityLevelChanged" event when this value changes. See the Network
   Quality Level Guide below for more information on this feature.
+- Added a workaround for
+  [WebKit Bug 180748](https://bugs.webkit.org/show_bug.cgi?id=180748), where, in
+  Safari, `getUserMedia` may return a silent MediaStreamTrack. The workaround
+  works by detecting the silence (this takes up to 250 ms) and retrying
+  `getUserMedia` (up to 3 times). Enable it by setting the
+  `workaroundWebKitBug180748` property to `true` in CreateLocalTrackOptions:
+
+  ```js
+  connect(token, { audio: { workaroundWebKitBug180748: true } });
+  createLocalAudioTrack({ workaroundWebKitBug180748: true });
+  createLocalTracks({ audio: { workaroundWebKitBug180748: true } });
+  ```
 
 Network Quality Level Guide
 ---------------------------
