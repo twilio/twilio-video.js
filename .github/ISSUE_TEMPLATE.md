@@ -8,6 +8,8 @@ Otherwise, feel free to delete the template.
  - [ ] I have verified that the issue occurs with the latest twilio-video.js release and is not marked as a known issue in the [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
  - [ ] I reviewed the [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md) and open GitHub issues and verified that this report represents a potentially new issue.
  - [ ] I verified that the [Quickstart](https://github.com/twilio/video-quickstart-js) application works in my environment.
+ - [ ] I am not sharing any [Personally Identifiable Information (PII)](https://www.twilio.com/docs/glossary/what-is-personally-identifiable-information-pii)
+       or sensitive account information (API keys, credentials, etc.) when reporting this issue.
 
 **Code to reproduce the issue:**
 
