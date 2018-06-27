@@ -17,6 +17,7 @@ const { a, capitalize } = require('../../lib/util');
 const LocalAudioTrack = sinon.spy(function LocalAudioTrack(mediaStreamTrack, options) {
   options = options || {};
   EventEmitter.call(this);
+  this.kind = 'audio';
   if (mediaStreamTrack) {
     this.id = mediaStreamTrack.id;
     this.kind = mediaStreamTrack.kind;
@@ -31,6 +32,7 @@ inherits(LocalAudioTrack, EventEmitter);
 const LocalVideoTrack = sinon.spy(function LocalVideoTrack(mediaStreamTrack, options) {
   options = options || {};
   EventEmitter.call(this);
+  this.kind = 'video';
   if (mediaStreamTrack) {
     this.id = mediaStreamTrack.id;
     this.kind = mediaStreamTrack.kind;
@@ -45,9 +47,9 @@ inherits(LocalVideoTrack, EventEmitter);
 const LocalDataTrack = sinon.spy(function LocalDataTrack(dataTrackSender, options) {
   options = options || {};
   EventEmitter.call(this);
+  this.kind = 'data';
   if (dataTrackSender) {
     this.id = dataTrackSender.id;
-    this.kind = 'data';
     this.name = options.name || dataTrackSender.id;
     this._trackSender = dataTrackSender;
   }
@@ -101,6 +103,11 @@ describe('LocalParticipant', () => {
       ['Audio', 'Video', 'Data'].forEach(kind => {
         context(`when called with a Local${kind}Track`, () => {
           it('should not throw', () => {
+            if (method === 'addTrack') {
+              mockPublishTrack(test.participant)
+            } else {
+              mockUnpublishTrack(test.participant);
+            }
             assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
           });
         });
@@ -122,17 +129,15 @@ describe('LocalParticipant', () => {
     'unpublishTracks',
   ].forEach(method => {
     describe(`#${method}`, () => {
-      const trackMethod = method.match('(add|publish).*') ? 'publishTrack' : 'unpublishTrack';
-
       let test;
 
       beforeEach(() => {
         test = makeTest();
-        test.participant[trackMethod] = sinon.spy(track => {
-          // TODO(mroberts): Here is a very bare-bones "mock"
-          // LocalTrackPublication. We should improve this later.
-          return { track, sid: track.id };
-        });
+        if (method === 'addTracks' || method === 'publishTracks') {
+          mockPublishTrack(test.participant)
+        } else {
+          mockUnpublishTrack(test.participant);
+        }
       });
 
       context('when called with an invalid argument', () => {
@@ -1014,4 +1019,16 @@ function makeSignaling(options) {
   signaling.setParameters = sinon.spy(() => {});
   signaling.tracks = new Map();
   return signaling;
+}
+
+function mockPublishTrack(participant) {
+  participant['publishTrack'] = sinon.spy(track => {
+    return Promise.resolve({ track, sid: track.id });
+  });
+}
+
+function mockUnpublishTrack(participant) {
+  participant['unpublishTrack'] = sinon.spy(track => {
+    return { track, sid: track.id };
+  });
 }
