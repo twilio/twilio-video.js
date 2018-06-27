@@ -129,9 +129,9 @@ describe('LocalParticipant', () => {
       beforeEach(() => {
         test = makeTest();
         test.participant[trackMethod] = sinon.spy(track => {
-            // TODO(mroberts): Here is a very bare-bones "mock"
-            // LocalTrackPublication. We should improve this later.
-            return { track, sid: track.id };
+          // TODO(mroberts): Here is a very bare-bones "mock"
+          // LocalTrackPublication. We should improve this later.
+          return { track, sid: track.id };
         });
       });
 
