@@ -122,19 +122,16 @@ describe('LocalParticipant', () => {
     'unpublishTracks',
   ].forEach(method => {
     describe(`#${method}`, () => {
-      const trackMethod = method.slice(0, -1);
+      const trackMethod = method.match('(add|publish).*') ? 'publishTrack' : 'unpublishTrack';
 
       let test;
 
       beforeEach(() => {
         test = makeTest();
         test.participant[trackMethod] = sinon.spy(track => {
-          if (trackMethod.startsWith('publish')) {
             // TODO(mroberts): Here is a very bare-bones "mock"
             // LocalTrackPublication. We should improve this later.
             return { track, sid: track.id };
-          }
-          return track.kind === 'audio' ? null : { foo: 'bar', stop: sinon.spy() };
         });
       });
 
