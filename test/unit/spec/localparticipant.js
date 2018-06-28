@@ -104,7 +104,7 @@ describe('LocalParticipant', () => {
         context(`when called with a Local${kind}Track`, () => {
           it('should not throw', () => {
             if (method === 'addTrack') {
-              mockPublishTrack(test.participant)
+              mockPublishTrack(test.participant);
             } else {
               mockUnpublishTrack(test.participant);
             }
@@ -134,7 +134,7 @@ describe('LocalParticipant', () => {
       beforeEach(() => {
         test = makeTest();
         if (method === 'addTracks' || method === 'publishTracks') {
-          mockPublishTrack(test.participant)
+          mockPublishTrack(test.participant);
         } else {
           mockUnpublishTrack(test.participant);
         }
@@ -1022,13 +1022,13 @@ function makeSignaling(options) {
 }
 
 function mockPublishTrack(participant) {
-  participant['publishTrack'] = sinon.spy(track => {
+  participant.publishTrack = sinon.spy(track => {
     return Promise.resolve({ track, sid: track.id });
   });
 }
 
 function mockUnpublishTrack(participant) {
-  participant['unpublishTrack'] = sinon.spy(track => {
+  participant.unpublishTrack = sinon.spy(track => {
     return { track, sid: track.id };
   });
 }
