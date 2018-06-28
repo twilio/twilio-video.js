@@ -3,10 +3,22 @@
 const assert = require('assert');
 const https = require('https');
 
-const { apiKeySecret, apiKeySid, enableRestApiTests } = require('../../env');
+const {
+  apiKeySecret,
+  apiKeySid,
+  enableRestApiTests
+} = require('../../env');
+
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
-const { randomName, participantsConnected, tracksAdded } = require('../../lib/util');
+
+const {
+  randomName,
+  participantsConnected,
+  smallVideoConstraints,
+  tracksAdded
+} = require('../../lib/util');
+
 const connect = require('../../../lib/connect');
 
 // TODO(mmalavalli): Use twilio-node to call Track Subscription REST APIs.
@@ -53,7 +65,7 @@ describe('', () => {
     let rooms;
 
     before(async () => {
-      const options = Object.assign({ name: randomName() }, defaults);
+      const options = Object.assign({ audio: true, name: randomName(), video: smallVideoConstraints }, defaults);
       const tokens = [1, 2].map(randomName).map(getToken);
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
@@ -65,18 +77,18 @@ describe('', () => {
       const subscribesToOrUnsubscribesFrom = { subscribe: 'subscribes to', unsubscribe: 'unsubscribes from' }[trackAction];
 
       context(`when a Participant ${subscribesToOrUnsubscribesFrom} a RemoteTrack of another RemoteParticipant`, () => {
+        let originalTrack;
         let participant;
         let publication;
         let room;
         let subscribedOrUnsubscribedTrack;
-        let track;
         let trackSubscribedOrUnsubscribed;
 
         before(async () => {
           room = rooms[1];
           participant = [...room.participants.values()][0];
           publication = [...participant.videoTrackPublications.values()][0];
-          track = publication.track;
+          originalTrack = publication.track;
 
           trackSubscribedOrUnsubscribed = new Promise(resolve => participant.once(event, resolve));
           await unsubscribeTrack(publication, room);
@@ -91,11 +103,15 @@ describe('', () => {
           if (trackAction === 'unsubscribe') {
             assert.equal(publication.track, null);
           }
-          assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? publication.track : track);
-          assert.equal(participant.tracks.has(track.id), trackAction === 'subscribe');
-          assert.equal(participant[`${track.kind}Tracks`].has(track.id), trackAction === 'subscribe');
-          assert(participant.trackPublications.has(publication.trackSid));
-          assert(participant[`${track.kind}TrackPublications`].has(publication.trackSid));
+          const subsequentTrack = publication.track;
+          const { id, kind } = originalTrack;
+          const { trackSid } = publication;
+
+          assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? subsequentTrack : originalTrack);
+          assert.equal(participant.tracks.has(id), trackAction === 'subscribe');
+          assert.equal(participant[`${kind}Tracks`].has(id), trackAction === 'subscribe');
+          assert(participant.trackPublications.has(trackSid));
+          assert(participant[`${kind}TrackPublications`].has(trackSid));
         });
       });
     });
