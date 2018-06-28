@@ -75,6 +75,10 @@ participant.on('networkQualityLevelChanged', printNetworkQualityLevel);
 Bug Fixes
 ---------
 
+- Fixed a bug where subscribing to or unsubscribing from a RemoteTrack using
+  the Track Subscription REST API did not emit "trackSubscribed" or
+  "trackUnsubscribed" events on the RemoteParticipant. (JSDK-2031)
+
 - Fixed a bug where if a Firefox or Safari Participant gets disconnected from a
   group Room due to duplicate identity error, a "disconnected" event is
   emitted on the Room without the corresponding TwilioError. (JSDK-1931)

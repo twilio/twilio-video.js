@@ -97,6 +97,7 @@ before_script:
     if [ "${TOPOLOGY}" == 'P2P' ]; then
       export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_P2P
     else
+      export ENABLE_REST_API_TESTS=1
       export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_SFU
     fi
 
