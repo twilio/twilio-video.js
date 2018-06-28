@@ -83,6 +83,10 @@ Bug Fixes
   group Room due to duplicate identity error, a "disconnected" event is
   emitted on the Room without the corresponding TwilioError. (JSDK-1931)
 
+- Fixed a bug where calling `removeTracks` attempted to call `stop` on a
+  LocalDataTrack, resulting in an error (LocalDataTrack does not have a `stop`
+  method). (JSDK-2063)
+
 1.10.0 (May 30, 2018)
 =====================
 
