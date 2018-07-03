@@ -1,3 +1,8 @@
+1.11.1 (July 3, 2018)
+=====================
+
+This release simply updates the dependency on @twilio/webrtc.
+
 1.11.0 (July 3, 2018)
 =====================
 
