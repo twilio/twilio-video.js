@@ -79,15 +79,6 @@ describe('Room', () => {
       });
     });
 
-    it('should re-emit RemoteParticipants trackAdded event for matching RemoteParticipant only', () => {
-      const spy = sinon.spy();
-      room.on('trackAdded', spy);
-
-      participants.foo.emit('trackAdded', track);
-      assert.equal(spy.callCount, 1);
-      assert(spy.calledWith(track, participants.foo));
-    });
-
     it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackDimensionsChanged', spy);
@@ -133,15 +124,6 @@ describe('Room', () => {
       participants.foo.emit('trackPublished', publication);
       assert.equal(spy.callCount, 1);
       assert(spy.calledWith(publication, participants.foo));
-    });
-
-    it('should re-emit RemoteParticipants trackRemoved event for matching RemoteParticipant only', () => {
-      const spy = sinon.spy();
-      room.on('trackRemoved', spy);
-
-      participants.bar.emit('trackRemoved', track);
-      assert.equal(spy.callCount, 1);
-      assert(spy.calledWith(track, participants.bar));
     });
 
     it('should re-emit RemoteParticipant trackStarted for matching RemoteParticipant only', () => {
@@ -196,26 +178,22 @@ describe('Room', () => {
       participants.foo.emit('disconnected');
 
       const spy = sinon.spy();
-      room.on('trackAdded', spy);
       room.on('trackDimensionsChanged', spy);
       room.on('trackDisabled', spy);
       room.on('trackEnabled', spy);
       room.on('trackMessage', spy);
       room.on('trackPublished', spy);
-      room.on('trackRemoved', spy);
       room.on('trackStarted', spy);
       room.on('trackSubscribed', spy);
       room.on('trackSubscriptionFailed', spy);
       room.on('trackUnpublished', spy);
       room.on('trackUnsubscribed', spy);
 
-      participants.foo.emit('trackAdded');
       participants.foo.emit('trackDimensionsChanged');
       participants.foo.emit('trackDisabled');
       participants.foo.emit('trackEnabled');
       participants.foo.emit('trackMessage');
       participants.foo.emit('trackPublished');
-      participants.foo.emit('trackRemoved');
       participants.foo.emit('trackStarted');
       participants.foo.emit('trackSubscribed');
       participants.foo.emit('trackSubscriptionFailed');
