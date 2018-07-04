@@ -18,7 +18,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksAdded, tracksPublished } = require('../../lib/util');
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, tracksPublished } = require('../../lib/util');
 
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
@@ -249,7 +249,7 @@ describe('connect', function() {
 
         it('should eventually update each Participant\'s .tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
           await Promise.all(flatMap(rooms, ({ participants }) => {
-            return [...participants.values()].map(participant => tracksAdded(participant, 2));
+            return [...participants.values()].map(participant => tracksSubscribed(participant, 2));
           }));
           pairs(rooms).forEach(([{ participants }, otherRooms]) => {
             otherRooms.forEach(({ localParticipant }) => {
@@ -566,7 +566,7 @@ describe('connect', function() {
           [thisRoom, thoseRooms] = await setup({ name, tracks }, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
+          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, tracks.length)));
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
@@ -641,7 +641,7 @@ describe('connect', function() {
           [thisRoom, thoseRooms] = await setup(options, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, thisParticipant.tracks.size)));
+          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant.tracks.size)));
         });
 
         ['audio', 'video'].forEach(kind => {
@@ -842,7 +842,7 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
     return participantsConnected(room, thoseRooms.length);
   }));
   const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
   return [thisRoom, thoseRooms, peerConnections];
 }
