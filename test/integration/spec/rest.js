@@ -13,7 +13,7 @@ const {
   randomName,
   participantsConnected,
   smallVideoConstraints,
-  tracksAdded
+  tracksSubscribed
 } = require('../../lib/util');
 
 const {
@@ -77,7 +77,7 @@ describe('', () => {
       const tokens = [1, 2].map(randomName).map(getToken);
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
-      await Promise.all(rooms.map(({ participants }) => [...participants.values()][0]).map(participant => tracksAdded(participant, 2)));
+      await Promise.all(rooms.map(({ participants }) => [...participants.values()][0]).map(participant => tracksSubscribed(participant, 2)));
     });
 
     ['subscribe', 'unsubscribe'].forEach(trackAction => {

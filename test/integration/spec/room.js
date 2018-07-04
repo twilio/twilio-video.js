@@ -23,7 +23,7 @@ const {
   participantsConnected,
   randomName,
   trackStarted,
-  tracksAdded,
+  tracksSubscribed,
   tracksPublished,
   waitForTracks
 } = require('../../lib/util');
@@ -55,7 +55,7 @@ describe('Room', function() {
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
 
       await Promise.all(flatMap(rooms, room => [...room.participants.values()]).map(participant => {
-        return tracksAdded(participant, participant.trackPublications.size);
+        return tracksSubscribed(participant, participant.trackPublications.size);
       }));
 
       room = rooms[0];
@@ -172,7 +172,7 @@ describe('Room', function() {
         const remoteParticipants = [...room.participants.values()];
 
         // 5. Wait for RemoteTracks to be published.
-        await Promise.all(remoteParticipants.map(participant => tracksAdded(participant, 1)));
+        await Promise.all(remoteParticipants.map(participant => tracksSubscribed(participant, 1)));
         const remoteTracksBySid = flatMap(remoteParticipants,
           remoteParticipant => [...remoteParticipant.tracks.values()])
           .reduce((remoteTracksBySid, remoteTrack) => remoteTracksBySid.set(remoteTrack.sid, remoteTrack), new Map());
@@ -317,7 +317,7 @@ describe('Room', function() {
       await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));
 
       await Promise.all(flatMap([...thatRoom.participants.values()], participant =>
-        tracksAdded(participant, thisParticipant.tracks.size)));
+        tracksSubscribed(participant, thisParticipant.tracks.size)));
 
       const participantDisconnected = new Promise(resolve => thatRoom.once('participantDisconnected', resolve));
 
