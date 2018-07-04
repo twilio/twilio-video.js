@@ -636,47 +636,6 @@ describe('LocalParticipant', () => {
   });
 
   describe('LocalTrack events', () => {
-    context('"trackAdded" event', () => {
-      context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
-          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
-          assert.equal(track.name, test.signaling.addTrack.args[0][1]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
-          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
-          assert.equal(track.name, test.signaling.addTrack.args[0][1]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
-          assert(!test.signaling.addTrack.calledOnce);
-        });
-      });
-
-      context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
-          assert(!test.signaling.addTrack.calledOnce);
-        });
-      });
-    });
-
     ['disable', 'enable'].forEach(trackMethod => {
       context(`"track${capitalize(trackMethod)}d" event`, () => {
         ['connecting', 'connected'].forEach(state => {
@@ -708,45 +667,6 @@ describe('LocalParticipant', () => {
               assert(!trackSignaling[trackMethod].calledOnce);
             });
           });
-        });
-      });
-    });
-
-    context('"trackRemoved" event', () => {
-      context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert(!test.signaling.removeTrack.calledOnce);
-        });
-      });
-
-      context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert(!test.signaling.removeTrack.calledOnce);
         });
       });
     });
