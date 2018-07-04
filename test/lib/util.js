@@ -209,14 +209,14 @@ async function participantsConnected(room, n) {
 }
 
 /**
- * Wait for {@link RemoteTrack}s to be added to a {@link RemoteParticipant}.
+ * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be subscribed to.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the number of {@link RemoteTrack}s to wait for
  * @returns Promise<void>
  */
-async function tracksAdded(participant, n) {
+async function tracksSubscribed(participant, n) {
   while (participant.tracks.size < n) {
-    await new Promise(resolve => participant.once('trackAdded', resolve));
+    await new Promise(resolve => participant.once('trackSubscribed', resolve));
   }
 }
 
@@ -248,14 +248,14 @@ async function tracksPublished(participant, n, kind) {
 }
 
 /**
- * Wait for {@link RemoteTrack}s to be removed from a {@link RemoteParticipant}.
+ * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be unsubscribed from.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the final number of {@link RemoteTrack}s to count down to
  * @returns Promise<void>
  */
-async function tracksRemoved(participant, n) {
+async function tracksUnsubscribed(participant, n) {
   while (participant.tracks.size > n) {
-    await new Promise(resolve => participant.once('trackRemoved', resolve));
+    await new Promise(resolve => participant.once('trackUnsubscribed', resolve));
   }
 }
 
@@ -327,9 +327,9 @@ exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
-exports.tracksAdded = tracksAdded;
+exports.tracksSubscribed = tracksSubscribed;
 exports.tracksPublished = tracksPublished;
-exports.tracksRemoved = tracksRemoved;
+exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
