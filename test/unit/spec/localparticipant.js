@@ -70,57 +70,7 @@ describe('LocalParticipant', () => {
   });
 
   [
-    'addTrack',
-    'removeTrack'
-  ].forEach(method => {
-    describe(`#${method}`, () => {
-      let test;
-
-      beforeEach(() => {
-        test = makeTest();
-        test.participant[`_${method}`] = sinon.spy(() => new LocalAudioTrack());
-      });
-
-      context('when called with an invalid argument', () => {
-        it('should throw', () => {
-          assert.throws(() => test.participant[method]('invalid track argument'));
-        });
-
-        it(`should not call ._${method}`, () => {
-          try {
-            test.participant[method]('invalid track argument');
-          } catch (e) {
-            assert(!test.participant[`_${method}`].calledOnce);
-          }
-        });
-      });
-
-      ['Audio', 'Video', 'Data'].forEach(kind => {
-        context(`when called with a Local${kind}Track`, () => {
-          it('should not throw', () => {
-            if (method === 'addTrack') {
-              mockPublishTrack(test.participant);
-            } else {
-              mockUnpublishTrack(test.participant);
-            }
-            assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
-          });
-        });
-      });
-
-      context('when called with a MediaStreamTrack', () => {
-        it('should not throw', () => {
-          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('audio')));
-          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('video')));
-        });
-      });
-    });
-  });
-
-  [
-    'addTracks',
     'publishTracks',
-    'removeTracks',
     'unpublishTracks',
   ].forEach(method => {
     describe(`#${method}`, () => {
@@ -128,7 +78,7 @@ describe('LocalParticipant', () => {
 
       beforeEach(() => {
         test = makeTest();
-        if (method === 'addTracks' || method === 'publishTracks') {
+        if (method === 'publishTracks') {
           mockPublishTrack(test.participant);
         } else {
           mockUnpublishTrack(test.participant);
@@ -839,7 +789,7 @@ describe('LocalParticipant', () => {
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.addTrack(track));
+            tracks2.forEach(track => test.participant.publishTrack(track));
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
@@ -863,7 +813,7 @@ describe('LocalParticipant', () => {
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.addTrack(track));
+            tracks2.forEach(track => test.participant.publishTrack(track));
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
