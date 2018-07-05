@@ -104,12 +104,10 @@ describe('', () => {
             assert.equal(publication.track, null);
           }
           const subsequentTrack = publication.track;
-          const { id, kind } = originalTrack;
+          const { kind } = originalTrack;
           const { trackSid } = publication;
 
           assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? subsequentTrack : originalTrack);
-          assert.equal(participant.tracks.has(id), trackAction === 'subscribe');
-          assert.equal(participant[`${kind}Tracks`].has(id), trackAction === 'subscribe');
           assert(participant.trackPublications.has(trackSid));
           assert(participant[`${kind}TrackPublications`].has(trackSid));
         });
