@@ -608,7 +608,7 @@ describe('LocalParticipant', () => {
               const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
               const trackSignaling = { id: 'foo', [trackMethod]: sinon.spy() };
 
-              test.signaling.tracks = { get: () => trackSignaling };
+              test.signaling.tracks = { forEach: fn => fn(trackSignaling), get: () => trackSignaling };
               if (action === 'transitions to') {
                 test.signaling.emit('stateChanged', 'disconnected');
               }
@@ -950,7 +950,6 @@ function makeSignaling(options) {
   });
   signaling.removeTrack = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
-  signaling.tracks = new Map();
   return signaling;
 }
 

@@ -22,7 +22,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             try {
-              track = makeTrack('foo', kind, true, getOptions(), RemoteTrack);
+              track = makeTrack('foo', 'bar', kind, true, getOptions(), RemoteTrack);
             } catch (e) {
               error = e;
             }
@@ -36,10 +36,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             assert(track instanceof RemoteTrack);
           });
 
-          it('should set the .id property', () => {
-            assert.equal(track.id, 'foo');
-          });
-
           it('should set the .isEnabled property', () => {
             assert(track.isEnabled);
           });
@@ -50,6 +46,10 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           it('should set the .name property', () => {
             assert.equal(track.name, getOptions() ? 'bar' : 'foo');
+          });
+
+          it('should set the .sid property', () => {
+            assert.equal(track.sid, 'bar');
           });
         });
       });
@@ -70,7 +70,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             arg = null;
-            track = makeTrack('foo', kind, isEnabled, null, RemoteTrack);
+            track = makeTrack('foo', 'bar', kind, isEnabled, null, RemoteTrack);
             track.once('disabled', _arg => {
               trackDisabled = true;
               arg = _arg;
@@ -112,7 +112,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let track;
 
       before(() => {
-        track = makeTrack('foo', kind, true, null, RemoteTrack);
+        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
       });
 
       it('only returns public properties', () => {
@@ -124,7 +124,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'isStarted',
             'mediaStreamTrack',
             'isEnabled',
-            'isSubscribed',
             'sid'
           ]);
         } else {
@@ -136,7 +135,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'mediaStreamTrack',
             'dimensions',
             'isEnabled',
-            'isSubscribed',
             'sid'
           ]);
         }
@@ -147,7 +145,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let track;
 
       before(() => {
-        track = makeTrack('foo', kind, true, null, RemoteTrack);
+        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
       });
 
       it('only returns public properties', () => {
@@ -156,7 +154,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
-            isSubscribed: track.isSubscribed,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
@@ -168,7 +165,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
-            isSubscribed: track.isSubscribed,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
@@ -180,8 +176,8 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   });
 });
 
-function makeTrack(id, kind, isEnabled, options, RemoteTrack) {
+function makeTrack(id, sid, kind, isEnabled, options, RemoteTrack) {
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  return new RemoteTrack(mediaTrackReceiver, isEnabled, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, options);
 }
