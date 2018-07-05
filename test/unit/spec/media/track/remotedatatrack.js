@@ -17,15 +17,15 @@ describe('RemoteDataTrack', () => {
     let dataTrack;
 
     beforeEach(() => {
-      dataTrack = new RemoteDataTrack(dataTrackReceiver, { name: 'foo' });
+      dataTrack = new RemoteDataTrack('foo', dataTrackReceiver, { name: 'foo' });
     });
 
     it('returns an instance of RemoteDataTrack', () => {
       assert(dataTrack instanceof RemoteDataTrack);
     });
 
-    it('sets .id to the DataTrackReceiver\'s ID', () => {
-      assert.equal(dataTrack.id, dataTrackReceiver.id);
+    it('sets .sid', () => {
+      assert.equal(dataTrack.sid, 'foo');
     });
 
     it('should set .isEnabled to true', () => {
@@ -58,7 +58,7 @@ describe('RemoteDataTrack', () => {
     let expectedData;
 
     beforeEach(() => {
-      dataTrack = new RemoteDataTrack(dataTrackReceiver);
+      dataTrack = new RemoteDataTrack('foo', dataTrackReceiver);
       expectedData = makeUUID();
     });
 

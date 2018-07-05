@@ -40,7 +40,6 @@ describe('Room', function() {
     let participantsDisconnected;
     let publicationsUnsubscribed;
     let tracksUnsubscribed;
-    let unsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName(), randomName()];
@@ -65,10 +64,6 @@ describe('Room', function() {
 
       publicationsUnsubscribed = Promise.all(flatMap(room.participants, participant => [...participant.trackPublications.values()]).map(publication => {
         return new Promise(resolve => publication.once('unsubscribed', resolve));
-      }));
-
-      unsubscribed = Promise.all(flatMap(room.participants, participant => [...participant.tracks.values()]).map(track => {
-        return new Promise(resolve => track.once('unsubscribed', resolve));
       }));
 
       tracksUnsubscribed = Promise.all(participants.map(participant => {
@@ -109,10 +104,6 @@ describe('Room', function() {
 
     it('should raise a "participantDisconnected" event for every other RemoteParticipant connected to the Room', async () => {
       await participantsDisconnected;
-    });
-
-    it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTracks', async () => {
-      await unsubscribed;
     });
 
     it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
@@ -295,7 +286,6 @@ describe('Room', function() {
     let tracksAfter;
     let tracksBefore;
     let tracksUnsubscribed;
-    let unsubscribed;
 
     before(async () => {
       const identities = [randomName(), randomName()];
@@ -323,12 +313,7 @@ describe('Room', function() {
         return new Promise(resolve => publication.once('unsubscribed', resolve));
       }));
 
-      unsubscribed = Promise.all([...thatParticipant.tracks.values()].map(track => {
-        return new Promise(resolve => track.once('unsubscribed', resolve));
-      }));
-
       thisRoom.disconnect();
-
       thatParticipant = await participantDisconnected;
       tracksAfter = [...thatParticipant.tracks.values()];
       publicationsAfter = [...thatParticipant.trackPublications.values()];
@@ -360,10 +345,6 @@ describe('Room', function() {
 
       it('should not change Room\'s Participant\'s .trackPublications', () => {
         assert.deepEqual(publicationsAfter, publicationsBefore);
-      });
-
-      it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTracks', async () => {
-        await unsubscribed;
       });
 
       it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
