@@ -483,7 +483,6 @@ describe('LocalParticipant', function() {
       let thoseTracksUnpublished;
       let thoseTracksUnsubscribed;
       let thoseTracksMap;
-      let thoseUnsubscribed;
 
       before(async () => {
         const name = randomName();
@@ -548,10 +547,6 @@ describe('LocalParticipant', function() {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
-        thoseUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(track => {
-          return new Promise(resolve => track.once('unsubscribed', resolve));
-        });
-
         [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
           'trackUnsubscribed',
           'trackUnpublished'
@@ -573,10 +568,6 @@ describe('LocalParticipant', function() {
           thisTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
-      });
-
-      it('should raise "unsubscribed" events on the corresponding RemoteParticipants\' RemoteTracks', async () => {
-        await Promise.all(thoseUnsubscribed);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
@@ -626,11 +617,6 @@ describe('LocalParticipant', function() {
             thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
           });
         }
-
-        it('should set each RemoteTrack\'s .isSubscribed to false', () => {
-          const thoseTracks = thoseTracksMap.trackUnsubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isSubscribed, false));
-        });
       });
     });
   });
