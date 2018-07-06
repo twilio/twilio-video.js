@@ -215,7 +215,7 @@ async function participantsConnected(room, n) {
  * @returns Promise<void>
  */
 async function tracksSubscribed(participant, n) {
-  while (participant.tracks.size < n) {
+  while (participant._tracks.size < n) {
     await new Promise(resolve => participant.once('trackSubscribed', resolve));
   }
 }
@@ -230,9 +230,7 @@ async function tracksSubscribed(participant, n) {
  * @returns {Promise<void>}
  */
 async function tracksPublished(participant, n, kind) {
-  const trackPublications = kind
-    ? participant[`${kind}TrackPublications`]
-    : participant.trackPublications;
+  const trackPublications = kind ? participant[`${kind}Tracks`] : participant.tracks;
   while (trackPublications.size < n) {
     await new Promise(resolve => {
       function trackPublished(publication) {
@@ -254,7 +252,7 @@ async function tracksPublished(participant, n, kind) {
  * @returns Promise<void>
  */
 async function tracksUnsubscribed(participant, n) {
-  while (participant.tracks.size > n) {
+  while (participant._tracks.size > n) {
     await new Promise(resolve => participant.once('trackUnsubscribed', resolve));
   }
 }
