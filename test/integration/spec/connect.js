@@ -192,12 +192,12 @@ describe('connect', function() {
       });
 
       if (!withoutTracks) {
-        it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .tracks Map with the LocalTracks`, () => {
-          rooms.forEach(room => assert.deepEqual(Array.from(room.localParticipant.tracks.values()), tracks));
+        it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's ._tracks Map with the LocalTracks`, () => {
+          rooms.forEach(room => assert.deepEqual(Array.from(room.localParticipant._tracks.values()), tracks));
         });
 
-        ['tracks', 'audioTracks', 'videoTracks'].forEach(tracks => {
-          const trackPublications = `${tracks.slice(0, tracks.length - 1)}Publications`;
+        ['_tracks', '_audioTracks', '_videoTracks'].forEach(tracks => {
+          const trackPublications = `${tracks.slice(1)}`;
 
           it(`should update ${n === 1 ? 'the' : 'each'} Room's LocalParticipant's .${trackPublications} Map with the corresponding ${capitalize(trackPublications)}`, () => {
             rooms.forEach(room => {
@@ -240,14 +240,14 @@ describe('connect', function() {
 
       describe('should eventually update each Room\'s .participants Map to contain a Participant for every other Room\'s LocalParticipant and', () => {
         if (withoutTracks) {
-          it('should set each Participant\'s .tracks Map to an empty Map', () => {
-            rooms.forEach(room => [...room.participants.values()].map(participant => assert.equal(participant.tracks.size, 0)));
+          it('should set each Participant\'s ._tracks Map to an empty Map', () => {
+            rooms.forEach(room => [...room.participants.values()].map(participant => assert.equal(participant._tracks.size, 0)));
           });
 
           return;
         }
 
-        it('should eventually update each Participant\'s .tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
+        it('should eventually update each Participant\'s ._tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
           await Promise.all(flatMap(rooms, ({ participants }) => {
             return [...participants.values()].map(participant => tracksSubscribed(participant, 2));
           }));
@@ -255,21 +255,21 @@ describe('connect', function() {
             otherRooms.forEach(({ localParticipant }) => {
               const participant = participants.get(localParticipant.sid);
               assert(participant);
-              const trackSids = [...participant.tracks.values()].map(track => track.sid).sort();
-              const localTrackPublicationSids = [...localParticipant.trackPublications.values()].map(publication => publication.trackSid).sort();
+              const trackSids = [...participant._tracks.values()].map(track => track.sid).sort();
+              const localTrackPublicationSids = [...localParticipant.tracks.values()].map(publication => publication.trackSid).sort();
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
             });
           });
         });
 
-        it('should eventually update each Participant\'s .trackPublications Map to contain a RemoteTrackPublication for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
+        it('should eventually update each Participant\'s .tracks Map to contain a RemoteTrackPublication for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
           pairs(rooms).forEach(([{ participants }, otherRooms]) => {
             otherRooms.forEach(({ localParticipant }) => {
               const participant = participants.get(localParticipant.sid);
               assert(participant);
-              const trackSids = [...participant.trackPublications.values()].map(publication => publication.trackSid).sort();
-              const localTrackPublicationSids = [...localParticipant.trackPublications.values()].map(publication => publication.trackSid).sort();
+              const trackSids = [...participant.tracks.values()].map(publication => publication.trackSid).sort();
+              const localTrackPublicationSids = [...localParticipant.tracks.values()].map(publication => publication.trackSid).sort();
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
             });
@@ -570,19 +570,19 @@ describe('connect', function() {
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
-          thisParticipant.tracks.forEach(track => {
+          thisParticipant._tracks.forEach(track => {
             assert.equal(track.name, names ? names[track.kind] : track.id);
           });
         });
 
         it(`should set each LocalTrackPublication's .trackName to its ${names ? 'given name' : 'ID'}`, () => {
-          thisParticipant.trackPublications.forEach(trackPublication => {
+          thisParticipant.tracks.forEach(trackPublication => {
             assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track.id);
           });
         });
 
         it(`should set each RemoteTrackPublication's .trackName to its ${names ? 'given name' : 'LocalTrack\'s ID'}`, () => {
-          flatMap(thisParticipants, participant => [...participant.trackPublications.values()]).forEach(publication => {
+          flatMap(thisParticipants, participant => [...participant.tracks.values()]).forEach(publication => {
             if (names) {
               assert.equal(publication.trackName, names[publication.kind]);
             } else {
@@ -592,7 +592,7 @@ describe('connect', function() {
         });
 
         it(`should set each RemoteTrack's .name to its ${names ? 'given name' : 'LocalTrack\'s ID'}`, () => {
-          flatMap(thisParticipants, participant => [...participant.tracks.values()]).forEach(track => {
+          flatMap(thisParticipants, participant => [...participant._tracks.values()]).forEach(track => {
             if (names) {
               assert.equal(track.name, names[track.kind]);
             } else {
@@ -641,39 +641,39 @@ describe('connect', function() {
           [thisRoom, thoseRooms] = await setup(options, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant.tracks.size)));
+          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant._tracks.size)));
         });
 
         ['audio', 'video'].forEach(kind => {
           it(`should set the Local${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
-            thisParticipant[`${kind}Tracks`].forEach(track => {
+            thisParticipant[`_${kind}Tracks`].forEach(track => {
               assert.equal(track.name, names[kind] || track.id);
             });
           });
 
           it(`should set the Local${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'ID'}`, () => {
-            thisParticipant[`${kind}TrackPublications`].forEach(trackPublication => {
+            thisParticipant[`${kind}Tracks`].forEach(trackPublication => {
               assert.equal(trackPublication.trackName, names[kind] || trackPublication.track.id);
             });
           });
 
           it(`should set each Remote${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'LocalTrack\'s ID'}`, () => {
-            flatMap(thisParticipants, participant => [...participant[`${kind}TrackPublications`].values()]).forEach(publication => {
+            flatMap(thisParticipants, participant => [...participant[`${kind}Tracks`].values()]).forEach(publication => {
               if (names && names[kind]) {
                 assert.equal(publication.trackName, names[kind]);
               } else {
-                const tracks = [...thisParticipant.tracks.values()];
+                const tracks = [...thisParticipant._tracks.values()];
                 assert(tracks.find(track => track.id === publication.trackName));
               }
             });
           });
 
-          it(`should set each Remote${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'its LocalTrack\'s ID'}`, () => {
-            flatMap(thisParticipants, participant => [...participant[`${kind}Tracks`].values()]).forEach(track => {
+          it(`should set each Remote${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'LocalTrack\'s ID'}`, () => {
+            flatMap(thisParticipants, participant => [...participant[`_${kind}Tracks`].values()]).forEach(track => {
               if (names && names[kind]) {
                 assert.equal(track.name, names[kind]);
               } else {
-                const tracks = [...thisParticipant.tracks.values()];
+                const tracks = [...thisParticipant._tracks.values()];
                 assert(tracks.find(localTrack => localTrack.id === track.name));
               }
             });
@@ -768,7 +768,7 @@ describe('connect', function() {
 
     it('eventually results in a LocalDataTrackPublication', async () => {
       await tracksPublished(room.localParticipant, 1, 'data');
-      const publication = Array.from(room.localParticipant.dataTrackPublications.values()).find(publication => {
+      const publication = Array.from(room.localParticipant.dataTracks.values()).find(publication => {
         return publication.track === dataTrack;
       });
       assert(publication);

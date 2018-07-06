@@ -109,28 +109,28 @@ describe('LocalTrackPublication', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant.tracks.size))
+            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
           ]);
         }
 
-        thisLocalTrackPublication = [...thisParticipant.trackPublications.values()].find(trackPublication => {
+        thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
           return trackPublication.track === thisTrack;
         });
         thisLocalTrackPublication.unpublish();
 
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.trackPublications.values()]).map(publication => {
+        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
