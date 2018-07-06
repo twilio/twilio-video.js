@@ -95,7 +95,7 @@ describe('', () => {
         before(async () => {
           room = rooms[1];
           participant = [...room.participants.values()][0];
-          publication = [...participant.videoTrackPublications.values()][0];
+          publication = [...participant.videoTracks.values()][0];
           originalTrack = publication.track;
 
           trackSubscribedOrUnsubscribed = new Promise(resolve => participant.once(event, resolve));
@@ -116,8 +116,8 @@ describe('', () => {
           const { trackSid } = publication;
 
           assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? subsequentTrack : originalTrack);
-          assert(participant.trackPublications.has(trackSid));
-          assert(participant[`${kind}TrackPublications`].has(trackSid));
+          assert(participant.tracks.has(trackSid));
+          assert(participant[`${kind}Tracks`].has(trackSid));
         });
       });
     });
