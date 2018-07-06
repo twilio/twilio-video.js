@@ -93,17 +93,17 @@ describe('LocalParticipant', function() {
           });
         });
 
-        it('should add each of the LocalTracks to the LocalParticipant\'s .tracks and their respective kinds\' collections', () => {
+        it('should add each of the LocalTracks to the LocalParticipant\'s ._tracks and their respective kinds\' collections', () => {
           tracks.forEach(track => {
-            assert.equal(room.localParticipant.tracks.get(track.id), track);
-            assert.equal(room.localParticipant[`${track.kind}Tracks`].get(track.id), track);
+            assert.equal(room.localParticipant._tracks.get(track.id), track);
+            assert.equal(room.localParticipant[`_${track.kind}Tracks`].get(track.id), track);
           });
         });
 
-        it('should add each of the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' collections', () => {
+        it('should add each of the LocalTrackPublications to the LocalParticipant\'s .tracks and their respective kinds\' collections', () => {
           trackPublications.forEach(trackPublication => {
-            assert.equal(room.localParticipant.trackPublications.get(trackPublication.trackSid), trackPublication);
-            assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.trackSid), trackPublication);
+            assert.equal(room.localParticipant.tracks.get(trackPublication.trackSid), trackPublication);
+            assert.equal(room.localParticipant[`${trackPublication.track.kind}Tracks`].get(trackPublication.trackSid), trackPublication);
           });
         });
 
@@ -134,9 +134,9 @@ describe('LocalParticipant', function() {
         ]);
       });
 
-      it('should add the LocalTrack to the LocalParticipant\'s .tracks in both Rooms', () => {
-        assert.equal(room.localParticipant.tracks.get(tracks[0].id), tracks[0]);
-        assert.equal(anotherRoom.localParticipant.tracks.get(tracks[0].id), tracks[0]);
+      it('should add the LocalTrack to the LocalParticipant\'s ._tracks in both Rooms', () => {
+        assert.equal(room.localParticipant._tracks.get(tracks[0].id), tracks[0]);
+        assert.equal(anotherRoom.localParticipant._tracks.get(tracks[0].id), tracks[0]);
       });
 
       it('should create two different LocalTrackPublications', () => {
@@ -145,10 +145,10 @@ describe('LocalParticipant', function() {
         assert.notEqual(trackPublications[0], trackPublications[1]);
       });
 
-      it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .trackPublications', () => {
-        const localTrackPublication1 = [...room.localParticipant.trackPublications.values()].find(
+      it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .tracks', () => {
+        const localTrackPublication1 = [...room.localParticipant.tracks.values()].find(
           localTrackPublication => localTrackPublication.track === tracks[0]);
-        const localTrackPublication2 = [...anotherRoom.localParticipant.trackPublications.values()].find(
+        const localTrackPublication2 = [...anotherRoom.localParticipant.tracks.values()].find(
           localTrackPublication => localTrackPublication.track === tracks[0]);
         assert.equal(localTrackPublication1.track, tracks[0]);
         assert.equal(localTrackPublication2.track, tracks[0]);
@@ -260,7 +260,7 @@ describe('LocalParticipant', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
+        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -276,18 +276,18 @@ describe('LocalParticipant', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
-          return [...thatParticipant.tracks.values()];
+          return [...thatParticipant._tracks.values()];
         });
 
         if (when === 'previously') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
         }
 
@@ -509,7 +509,7 @@ describe('LocalParticipant', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
+        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -525,25 +525,25 @@ describe('LocalParticipant', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant.tracks.size))
+            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
           ]);
         }
 
         thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
 
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.trackPublications.values()]).map(publication => {
+        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
@@ -660,7 +660,7 @@ describe('LocalParticipant', function() {
       thatParticipant = thatRoom.participants.get(thisParticipant.sid);
       assert(thatParticipant);
 
-      await tracksSubscribed(thatParticipant, thisParticipant.tracks.size);
+      await tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
 
       // NOTE(mroberts): Wait 5 seconds.
       await new Promise(resolve => setTimeout(resolve, 5 * 1000));
