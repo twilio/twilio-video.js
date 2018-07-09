@@ -25,8 +25,8 @@ const {
   combinationContext,
   participantsConnected,
   randomName,
-  tracksAdded,
-  tracksRemoved,
+  tracksSubscribed,
+  tracksUnsubscribed,
   waitForTracks
 } = require('../../lib/util');
 
@@ -62,11 +62,9 @@ describe('LocalTrackPublication', function() {
       let thoseRooms;
       let thoseParticipants;
       let thosePublicationsUnsubscribed;
-      let thoseTracksRemoved;
       let thoseTracksUnpublished;
       let thoseTracksUnsubscribed;
       let thoseTracksMap;
-      let thoseUnsubscribed;
 
       before(async () => {
         const name = randomName();
@@ -111,37 +109,32 @@ describe('LocalTrackPublication', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksAdded(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksAdded(thatParticipant, thisParticipant.tracks.size))
+            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
           ]);
         }
 
-        thisLocalTrackPublication = [...thisParticipant.trackPublications.values()].find(trackPublication => {
+        thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
           return trackPublication.track === thisTrack;
         });
         thisLocalTrackPublication.unpublish();
 
-        thoseUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(track => {
-          return new Promise(resolve => track.once('unsubscribed', resolve));
-        });
-
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.trackPublications.values()]).map(publication => {
+        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
-        [thoseTracksRemoved, thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
-          'trackRemoved',
+        [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
           'trackUnsubscribed',
           'trackUnpublished'
         ].map(event => {
@@ -152,7 +145,6 @@ describe('LocalTrackPublication', function() {
         }));
 
         thoseTracksMap = {
-          trackRemoved: thoseTracksRemoved,
           trackUnpublished: thoseTracksUnpublished,
           trackUnsubscribed: thoseTracksUnsubscribed
         };
@@ -163,10 +155,6 @@ describe('LocalTrackPublication', function() {
           thisTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
-      });
-
-      it('should raise "unsubscribed" events on the corresponding RemoteParticipants\' RemoteTracks', async () => {
-        await Promise.all(thoseUnsubscribed);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
@@ -190,39 +178,32 @@ describe('LocalTrackPublication', function() {
         });
       });
 
-      ['trackRemoved', 'trackUnsubscribed'].forEach(event => {
-        it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
-          const thoseTracks = thoseTracksMap[event];
-          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
-            audio: RemoteAudioTrack,
-            video: RemoteVideoTrack,
-            data: RemoteDataTrack
-          }[thatTrack.kind]));
+      it('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
+        const thoseTracks = thoseTracksMap.trackUnsubscribed;
+        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+          audio: RemoteAudioTrack,
+          video: RemoteVideoTrack,
+          data: RemoteDataTrack
+        }[thatTrack.kind]));
+      });
+
+      describe('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
+        it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+          const thoseTracks = thoseTracksMap.trackUnsubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
         });
 
-        describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
-          });
-
-          it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-          });
-
-          if (kind !== 'data') {
-            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-              const thoseTracks = thoseTracksMap[event];
-              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-            });
-          }
-
-          it('should set each RemoteTrack\'s .isSubscribed to false', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isSubscribed, false));
-          });
+        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+          const thoseTracks = thoseTracksMap.trackUnsubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
         });
+
+        if (kind !== 'data') {
+          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+            const thoseTracks = thoseTracksMap.trackUnsubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+          });
+        }
       });
     });
   });

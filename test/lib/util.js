@@ -209,14 +209,14 @@ async function participantsConnected(room, n) {
 }
 
 /**
- * Wait for {@link RemoteTrack}s to be added to a {@link RemoteParticipant}.
+ * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be subscribed to.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the number of {@link RemoteTrack}s to wait for
  * @returns Promise<void>
  */
-async function tracksAdded(participant, n) {
-  while (participant.tracks.size < n) {
-    await new Promise(resolve => participant.once('trackAdded', resolve));
+async function tracksSubscribed(participant, n) {
+  while (participant._tracks.size < n) {
+    await new Promise(resolve => participant.once('trackSubscribed', resolve));
   }
 }
 
@@ -230,9 +230,7 @@ async function tracksAdded(participant, n) {
  * @returns {Promise<void>}
  */
 async function tracksPublished(participant, n, kind) {
-  const trackPublications = kind
-    ? participant[`${kind}TrackPublications`]
-    : participant.trackPublications;
+  const trackPublications = kind ? participant[`${kind}Tracks`] : participant.tracks;
   while (trackPublications.size < n) {
     await new Promise(resolve => {
       function trackPublished(publication) {
@@ -248,14 +246,14 @@ async function tracksPublished(participant, n, kind) {
 }
 
 /**
- * Wait for {@link RemoteTrack}s to be removed from a {@link RemoteParticipant}.
+ * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be unsubscribed from.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the final number of {@link RemoteTrack}s to count down to
  * @returns Promise<void>
  */
-async function tracksRemoved(participant, n) {
-  while (participant.tracks.size > n) {
-    await new Promise(resolve => participant.once('trackRemoved', resolve));
+async function tracksUnsubscribed(participant, n) {
+  while (participant._tracks.size > n) {
+    await new Promise(resolve => participant.once('trackUnsubscribed', resolve));
   }
 }
 
@@ -327,9 +325,9 @@ exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
-exports.tracksAdded = tracksAdded;
+exports.tracksSubscribed = tracksSubscribed;
 exports.tracksPublished = tracksPublished;
-exports.tracksRemoved = tracksRemoved;
+exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;

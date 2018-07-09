@@ -70,57 +70,7 @@ describe('LocalParticipant', () => {
   });
 
   [
-    'addTrack',
-    'removeTrack'
-  ].forEach(method => {
-    describe(`#${method}`, () => {
-      let test;
-
-      beforeEach(() => {
-        test = makeTest();
-        test.participant[`_${method}`] = sinon.spy(() => new LocalAudioTrack());
-      });
-
-      context('when called with an invalid argument', () => {
-        it('should throw', () => {
-          assert.throws(() => test.participant[method]('invalid track argument'));
-        });
-
-        it(`should not call ._${method}`, () => {
-          try {
-            test.participant[method]('invalid track argument');
-          } catch (e) {
-            assert(!test.participant[`_${method}`].calledOnce);
-          }
-        });
-      });
-
-      ['Audio', 'Video', 'Data'].forEach(kind => {
-        context(`when called with a Local${kind}Track`, () => {
-          it('should not throw', () => {
-            if (method === 'addTrack') {
-              mockPublishTrack(test.participant);
-            } else {
-              mockUnpublishTrack(test.participant);
-            }
-            assert.doesNotThrow(() => test.participant[method](new test[`Local${kind}Track`]()));
-          });
-        });
-      });
-
-      context('when called with a MediaStreamTrack', () => {
-        it('should not throw', () => {
-          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('audio')));
-          assert.doesNotThrow(() => test.participant[method](new FakeMediaStreamTrack('video')));
-        });
-      });
-    });
-  });
-
-  [
-    'addTracks',
     'publishTracks',
-    'removeTracks',
     'unpublishTracks',
   ].forEach(method => {
     describe(`#${method}`, () => {
@@ -128,7 +78,7 @@ describe('LocalParticipant', () => {
 
       beforeEach(() => {
         test = makeTest();
-        if (method === 'addTracks' || method === 'publishTracks') {
+        if (method === 'publishTracks') {
           mockPublishTrack(test.participant);
         } else {
           mockUnpublishTrack(test.participant);
@@ -327,7 +277,7 @@ describe('LocalParticipant', () => {
         context(`when called with ${a(kind)} ${kind} ${trackType}`, () => {
           [true, false].forEach(isConnected => {
             context(`and the LocalParticipant's ParticipantSignaling is in the "${isConnected ? 'connected' : 'connecting'}" state`, () => {
-              context(`when the .trackPublications collection already has an entry for the ${trackType}`, () => {
+              context(`when the .tracks collection already has an entry for the ${trackType}`, () => {
                 let localTrack;
 
                 beforeEach(async () => {
@@ -339,9 +289,9 @@ describe('LocalParticipant', () => {
                   await new Promise(resolve => test.participant.on('trackPublished', resolve));
                 });
 
-                it('should return a Promise that is resolved with the entry from the .trackPublications', async () => {
+                it('should return a Promise that is resolved with the entry from the .tracks', async () => {
                   const localTrackPublication = await test.participant.publishTrack(localTrack);
-                  assert.equal(localTrackPublication, test.participant.trackPublications.get('foo'));
+                  assert.equal(localTrackPublication, test.participant.tracks.get('foo'));
                 });
 
                 it('should not raise a "trackPublished" event', async () => {
@@ -412,14 +362,14 @@ describe('LocalParticipant', () => {
                       });
                     }
 
-                    it(`should add the ${capitalize(kind)}TrackPublication to the .trackPublications and .${kind}TrackPublications collections`, () => {
-                      assert.equal(localTrackPublication, test.participant.trackPublications.get(localTrackPublication.trackSid));
-                      assert.equal(localTrackPublication, test.participant[`${kind}TrackPublications`].get(localTrackPublication.trackSid));
+                    it(`should add the ${capitalize(kind)}TrackPublication to the .tracks and .${kind}Tracks collections`, () => {
+                      assert.equal(localTrackPublication, test.participant.tracks.get(localTrackPublication.trackSid));
+                      assert.equal(localTrackPublication, test.participant[`${kind}Tracks`].get(localTrackPublication.trackSid));
                     });
 
                     otherKinds.forEach(otherKind => {
-                      it(`should not add the ${capitalize(kind)}TrackPublication to the .${otherKind}TrackPublications collection`, () => {
-                        assert(!test.participant[`${otherKind}TrackPublications`].has(localTrack.id));
+                      it(`should not add the ${capitalize(kind)}TrackPublication to the .${otherKind}Tracks collection`, () => {
+                        assert(!test.participant[`${otherKind}Tracks`].has(localTrack.id));
                       });
                     });
                   });
@@ -463,8 +413,8 @@ describe('LocalParticipant', () => {
                       assert.deepEqual(trackPublicationFailedEvent, [expectedError, localTrack2]);
                     });
 
-                    it(`should not add the Local${capitalize(kind)}Track to the .tracks collection`, () => {
-                      assert(!test.participant.tracks.has(localTrack2.id));
+                    it(`should not add the Local${capitalize(kind)}Track to the ._tracks collection`, () => {
+                      assert(!test.participant._tracks.has(localTrack2.id));
                     });
                   });
                 });
@@ -531,8 +481,8 @@ describe('LocalParticipant', () => {
       ].forEach(kind => {
         let localTrack;
 
-        context(`when the .trackPublications collection has an entry for the given ${kind} ${trackType}`, () => {
-          context(`and the .tracks collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
+        context(`when the .tracks collection has an entry for the given ${kind} ${trackType}`, () => {
+          context(`and the ._tracks collection has an entry for the given ${kind} ${trackType}'s .id`, () => {
             let ret;
             let track;
 
@@ -544,21 +494,21 @@ describe('LocalParticipant', () => {
                   ? localTrack : (localTrack.mediaStreamTrack || localTrack._trackSender));
 
               test.signaling.tracks.set(localTrack.id, makeTrackSignaling(localTrack.id, 'foo'));
-              test.participant.tracks.set(localTrack.id, track);
-              test.participant[`${kind}Tracks`].set(localTrack.id, track);
-              test.participant.trackPublications.set('foo', { track, sid: 'foo' });
-              test.participant[`${kind}TrackPublications`].set('foo', { track, sid: 'foo' });
+              test.participant._tracks.set(localTrack.id, track);
+              test.participant[`_${kind}Tracks`].set(localTrack.id, track);
+              test.participant.tracks.set('foo', { track, sid: 'foo' });
+              test.participant[`${kind}Tracks`].set('foo', { track, sid: 'foo' });
               ret = test.participant.unpublishTrack(localTrack);
             });
 
-            it(`should remove the ${kind} ${trackType} from the .tracks and .${kind}Tracks collections`, () => {
-              assert(!test.participant.tracks.has(localTrack.id));
-              assert(!test.participant[`${kind}Tracks`].has(localTrack.id));
+            it(`should remove the ${kind} ${trackType} from the ._tracks and ._${kind}Tracks collections`, () => {
+              assert(!test.participant._tracks.has(localTrack.id));
+              assert(!test.participant[`_${kind}Tracks`].has(localTrack.id));
             });
 
-            it(`should remove the ${kind} ${trackType}'s entry from the .trackPublications and .${kind}TrackPublications collections`, () => {
-              assert(!test.participant.trackPublications.has(localTrack.id));
-              assert(!test.participant[`${kind}TrackPublications`].has(localTrack.id));
+            it(`should remove the ${kind} ${trackType}'s entry from the .tracks and .${kind}Tracks collections`, () => {
+              assert(!test.participant.tracks.has(localTrack.id));
+              assert(!test.participant[`${kind}Tracks`].has(localTrack.id));
             });
 
             it('should call .removeTrack on the underlying ParticipantSignaling with the corresponding MediaStreamTrack', () => {
@@ -573,8 +523,8 @@ describe('LocalParticipant', () => {
           });
         });
 
-        context(`when the .trackPublications collection does not have an entry for the given ${kind} ${trackType}'s ID`, () => {
-          context(`and the .tracks collection has the given ${kind} ${trackType}`, () => {
+        context(`when the .tracks collection does not have an entry for the given ${kind} ${trackType}`, () => {
+          context(`and the ._tracks collection has the given ${kind} ${trackType}`, () => {
             let ret;
             let track;
             let trackSignaling;
@@ -588,14 +538,14 @@ describe('LocalParticipant', () => {
 
               trackSignaling = makeTrackSignaling(localTrack.id, 'foo');
               test.signaling.tracks.set(localTrack.id, trackSignaling);
-              test.participant.tracks.set(localTrack.id, track);
-              test.participant[`${kind}Tracks`].set(localTrack.id, track);
+              test.participant._tracks.set(localTrack.id, track);
+              test.participant[`_${kind}Tracks`].set(localTrack.id, track);
               ret = test.participant.unpublishTrack(localTrack);
             });
 
-            it(`should remove the ${kind} ${trackType} from the .tracks and .${kind}Tracks collections`, () => {
-              assert(!test.participant.tracks.has(localTrack.id));
-              assert(!test.participant[`${kind}Tracks`].has(localTrack.id));
+            it(`should remove the ${kind} ${trackType} from the ._tracks and ._${kind}Tracks collections`, () => {
+              assert(!test.participant._tracks.has(localTrack.id));
+              assert(!test.participant[`_${kind}Tracks`].has(localTrack.id));
             });
 
             it('should reject the pending Promise returned by the previous call to LocalParticipant#publishTrack', () => {
@@ -612,7 +562,7 @@ describe('LocalParticipant', () => {
             });
           });
 
-          context(`and the .tracks collection does not have the given ${kind} ${trackType}`, () => {
+          context(`and the ._tracks collection does not have the given ${kind} ${trackType}`, () => {
             beforeEach(() => {
               localTrack = createTrack(kind);
             });
@@ -636,47 +586,6 @@ describe('LocalParticipant', () => {
   });
 
   describe('LocalTrack events', () => {
-    context('"trackAdded" event', () => {
-      context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
-          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
-          assert.equal(track.name, test.signaling.addTrack.args[0][1]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
-          assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
-          assert.equal(track.name, test.signaling.addTrack.args[0][1]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
-          assert(!test.signaling.addTrack.calledOnce);
-        });
-      });
-
-      context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
-          assert(!test.signaling.addTrack.calledOnce);
-        });
-      });
-    });
-
     ['disable', 'enable'].forEach(trackMethod => {
       context(`"track${capitalize(trackMethod)}d" event`, () => {
         ['connecting', 'connected'].forEach(state => {
@@ -699,7 +608,7 @@ describe('LocalParticipant', () => {
               const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
               const trackSignaling = { id: 'foo', [trackMethod]: sinon.spy() };
 
-              test.signaling.tracks = { get: () => trackSignaling };
+              test.signaling.tracks = { forEach: fn => fn(trackSignaling), get: () => trackSignaling };
               if (action === 'transitions to') {
                 test.signaling.emit('stateChanged', 'disconnected');
               }
@@ -708,45 +617,6 @@ describe('LocalParticipant', () => {
               assert(!trackSignaling[trackMethod].calledOnce);
             });
           });
-        });
-      });
-    });
-
-    context('"trackRemoved" event', () => {
-      context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
-        });
-      });
-
-      context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert(!test.signaling.removeTrack.calledOnce);
-        });
-      });
-
-      context('when the LocalParticipant .state transitions to "disconnected"', () => {
-        it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
-          const test = makeTest({ state: 'connected' });
-          test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
-          assert(!test.signaling.removeTrack.calledOnce);
         });
       });
     });
@@ -919,7 +789,7 @@ describe('LocalParticipant', () => {
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.addTrack(track));
+            tracks2.forEach(track => test.participant.publishTrack(track));
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
@@ -943,7 +813,7 @@ describe('LocalParticipant', () => {
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.addTrack(track));
+            tracks2.forEach(track => test.participant.publishTrack(track));
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
@@ -1030,7 +900,6 @@ function makeSignaling(options) {
   });
   signaling.removeTrack = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
-  signaling.tracks = new Map();
   return signaling;
 }
 

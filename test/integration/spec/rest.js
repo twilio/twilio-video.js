@@ -16,7 +16,7 @@ const {
   randomName,
   participantsConnected,
   smallVideoConstraints,
-  tracksAdded
+  tracksSubscribed
 } = require('../../lib/util');
 
 const connect = require('../../../lib/connect');
@@ -69,7 +69,7 @@ describe('', () => {
       const tokens = [1, 2].map(randomName).map(getToken);
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
-      await Promise.all(rooms.map(({ participants }) => [...participants.values()][0]).map(participant => tracksAdded(participant, 2)));
+      await Promise.all(rooms.map(({ participants }) => [...participants.values()][0]).map(participant => tracksSubscribed(participant, 2)));
     });
 
     ['subscribe', 'unsubscribe'].forEach(trackAction => {
@@ -87,7 +87,7 @@ describe('', () => {
         before(async () => {
           room = rooms[1];
           participant = [...room.participants.values()][0];
-          publication = [...participant.videoTrackPublications.values()][0];
+          publication = [...participant.videoTracks.values()][0];
           originalTrack = publication.track;
 
           trackSubscribedOrUnsubscribed = new Promise(resolve => participant.once(event, resolve));
@@ -104,14 +104,12 @@ describe('', () => {
             assert.equal(publication.track, null);
           }
           const subsequentTrack = publication.track;
-          const { id, kind } = originalTrack;
+          const { kind } = originalTrack;
           const { trackSid } = publication;
 
           assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? subsequentTrack : originalTrack);
-          assert.equal(participant.tracks.has(id), trackAction === 'subscribe');
-          assert.equal(participant[`${kind}Tracks`].has(id), trackAction === 'subscribe');
-          assert(participant.trackPublications.has(trackSid));
-          assert(participant[`${kind}TrackPublications`].has(trackSid));
+          assert(participant.tracks.has(trackSid));
+          assert(participant[`${kind}Tracks`].has(trackSid));
         });
       });
     });

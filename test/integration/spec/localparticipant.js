@@ -31,9 +31,9 @@ const {
   combinationContext,
   participantsConnected,
   randomName,
-  tracksAdded,
+  tracksSubscribed,
   tracksPublished,
-  tracksRemoved,
+  tracksUnsubscribed,
   trackStarted,
   waitForTracks
 } = require('../../lib/util');
@@ -93,17 +93,17 @@ describe('LocalParticipant', function() {
           });
         });
 
-        it('should add each of the LocalTracks to the LocalParticipant\'s .tracks and their respective kinds\' collections', () => {
+        it('should add each of the LocalTracks to the LocalParticipant\'s ._tracks and their respective kinds\' collections', () => {
           tracks.forEach(track => {
-            assert.equal(room.localParticipant.tracks.get(track.id), track);
-            assert.equal(room.localParticipant[`${track.kind}Tracks`].get(track.id), track);
+            assert.equal(room.localParticipant._tracks.get(track.id), track);
+            assert.equal(room.localParticipant[`_${track.kind}Tracks`].get(track.id), track);
           });
         });
 
-        it('should add each of the LocalTrackPublications to the LocalParticipant\'s .trackPublications and their respective kinds\' collections', () => {
+        it('should add each of the LocalTrackPublications to the LocalParticipant\'s .tracks and their respective kinds\' collections', () => {
           trackPublications.forEach(trackPublication => {
-            assert.equal(room.localParticipant.trackPublications.get(trackPublication.trackSid), trackPublication);
-            assert.equal(room.localParticipant[`${trackPublication.track.kind}TrackPublications`].get(trackPublication.trackSid), trackPublication);
+            assert.equal(room.localParticipant.tracks.get(trackPublication.trackSid), trackPublication);
+            assert.equal(room.localParticipant[`${trackPublication.track.kind}Tracks`].get(trackPublication.trackSid), trackPublication);
           });
         });
 
@@ -134,9 +134,9 @@ describe('LocalParticipant', function() {
         ]);
       });
 
-      it('should add the LocalTrack to the LocalParticipant\'s .tracks in both Rooms', () => {
-        assert.equal(room.localParticipant.tracks.get(tracks[0].id), tracks[0]);
-        assert.equal(anotherRoom.localParticipant.tracks.get(tracks[0].id), tracks[0]);
+      it('should add the LocalTrack to the LocalParticipant\'s ._tracks in both Rooms', () => {
+        assert.equal(room.localParticipant._tracks.get(tracks[0].id), tracks[0]);
+        assert.equal(anotherRoom.localParticipant._tracks.get(tracks[0].id), tracks[0]);
       });
 
       it('should create two different LocalTrackPublications', () => {
@@ -145,10 +145,10 @@ describe('LocalParticipant', function() {
         assert.notEqual(trackPublications[0], trackPublications[1]);
       });
 
-      it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .trackPublications', () => {
-        const localTrackPublication1 = [...room.localParticipant.trackPublications.values()].find(
+      it('should add each LocalTrackPublication to its corresponding Room\'s LocalParticipant .tracks', () => {
+        const localTrackPublication1 = [...room.localParticipant.tracks.values()].find(
           localTrackPublication => localTrackPublication.track === tracks[0]);
-        const localTrackPublication2 = [...anotherRoom.localParticipant.trackPublications.values()].find(
+        const localTrackPublication2 = [...anotherRoom.localParticipant.tracks.values()].find(
           localTrackPublication => localTrackPublication.track === tracks[0]);
         assert.equal(localTrackPublication1.track, tracks[0]);
         assert.equal(localTrackPublication2.track, tracks[0]);
@@ -218,7 +218,6 @@ describe('LocalParticipant', function() {
       let thoseRooms;
       let thoseParticipants;
       let thoseTracksBefore;
-      let thoseTracksAdded;
       let thoseTracksPublished;
       let thoseTracksSubscribed;
       let thoseTracksMap;
@@ -261,7 +260,7 @@ describe('LocalParticipant', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
+        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -277,24 +276,24 @@ describe('LocalParticipant', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksAdded(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
-          return [...thatParticipant.tracks.values()];
+          return [...thatParticipant._tracks.values()];
         });
 
         if (when === 'previously') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
         }
 
-        [thisLocalTrackPublication, thoseTracksPublished, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
+        [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
-          ...['trackPublished', 'trackAdded', 'trackSubscribed'].map(event => {
+          ...['trackPublished', 'trackSubscribed'].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
               const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
               return trackOrPublication;
@@ -303,7 +302,6 @@ describe('LocalParticipant', function() {
         ]);
 
         thoseTracksMap = {
-          trackAdded: thoseTracksAdded,
           trackPublished: thoseTracksPublished,
           trackSubscribed: thoseTracksSubscribed
         };
@@ -332,67 +330,65 @@ describe('LocalParticipant', function() {
         });
       });
 
-      ['trackAdded', 'trackSubscribed'].forEach(event => {
-        it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
-          const thoseTracks = thoseTracksMap[event];
-          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
-            audio: RemoteAudioTrack,
-            video: RemoteVideoTrack,
-            data: RemoteDataTrack
-          }[thatTrack.kind]));
+      it('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
+        const thoseTracks = thoseTracksMap.trackSubscribed;
+        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+          audio: RemoteAudioTrack,
+          video: RemoteVideoTrack,
+          data: RemoteDataTrack
+        }[thatTrack.kind]));
+      });
+
+      describe('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
+        it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+          const thoseTracks = thoseTracksMap.trackSubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
         });
 
-        describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
-          });
-
-          it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-          });
-
-          it('should set each RemoteTrack\'s .name to the LocalTrackPublication\'s .trackName', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
-          });
-
-          if (kind === 'data') {
-            ['string', 'arraybuffer'].forEach(dataType => {
-              it(`should transmit any ${dataType} data sent through the LocalDataTrack to the Room to each RemoteDataTrack`, async () => {
-                const data = dataType === 'string' ? 'foo' : new Uint32Array([1, 2, 3]);
-                const thoseTracks = thoseTracksMap[event];
-                const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
-                const dataChannelSendInterval = setInterval(() => thisTrack.send(dataType === 'string' ? data : data.buffer), 1000);
-                const receivedData = await Promise.all(thoseTracksReceivedData);
-                clearInterval(dataChannelSendInterval);
-                receivedData.forEach(item => dataType === 'string' ? assert.equal(item, data) : assert.deepEqual(new Uint32Array(item), data));
-              });
-            });
-          } else {
-            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-              const thoseTracks = thoseTracksMap[event];
-              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-            });
-          }
-
-          if (when === 'previously') {
-            it('the RemoteTrack should be a new RemoteTrack instance', () => {
-              const thoseTracks = thoseTracksMap[event];
-              assert.equal(thoseTracksBefore.length, thoseTracks.length);
-              thoseTracksBefore.forEach((thatTrackBefore, i) => {
-                const thatTrackAfter = thoseTracks[i];
-                if (!isFirefox && !isSafari) {
-                  assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
-                }
-                assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
-                assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
-                assert.notEqual(thatTrackAfter, thatTrackBefore);
-              });
-            });
-          }
+        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+          const thoseTracks = thoseTracksMap.trackSubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
         });
+
+        it('should set each RemoteTrack\'s .name to the LocalTrackPublication\'s .trackName', () => {
+          const thoseTracks = thoseTracksMap.trackSubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
+        });
+
+        if (kind === 'data') {
+          ['string', 'arraybuffer'].forEach(dataType => {
+            it(`should transmit any ${dataType} data sent through the LocalDataTrack to the Room to each RemoteDataTrack`, async () => {
+              const data = dataType === 'string' ? 'foo' : new Uint32Array([1, 2, 3]);
+              const thoseTracks = thoseTracksMap.trackSubscribed;
+              const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
+              const dataChannelSendInterval = setInterval(() => thisTrack.send(dataType === 'string' ? data : data.buffer), 1000);
+              const receivedData = await Promise.all(thoseTracksReceivedData);
+              clearInterval(dataChannelSendInterval);
+              receivedData.forEach(item => dataType === 'string' ? assert.equal(item, data) : assert.deepEqual(new Uint32Array(item), data));
+            });
+          });
+        } else {
+          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+            const thoseTracks = thoseTracksMap.trackSubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+          });
+        }
+
+        if (when === 'previously') {
+          it('the RemoteTrack should be a new RemoteTrack instance', () => {
+            const thoseTracks = thoseTracksMap.trackSubscribed;
+            assert.equal(thoseTracksBefore.length, thoseTracks.length);
+            thoseTracksBefore.forEach((thatTrackBefore, i) => {
+              const thatTrackAfter = thoseTracks[i];
+              if (!isFirefox && !isSafari) {
+                assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
+              }
+              assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
+              assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
+              assert.notEqual(thatTrackAfter, thatTrackBefore);
+            });
+          });
+        }
       });
     });
 
@@ -484,11 +480,9 @@ describe('LocalParticipant', function() {
       let thoseRooms;
       let thoseParticipants;
       let thosePublicationsUnsubscribed;
-      let thoseTracksRemoved;
       let thoseTracksUnpublished;
       let thoseTracksUnsubscribed;
       let thoseTracksMap;
-      let thoseUnsubscribed;
 
       before(async () => {
         const name = randomName();
@@ -515,7 +509,7 @@ describe('LocalParticipant', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant.tracks.size);
+        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
@@ -531,34 +525,29 @@ describe('LocalParticipant', function() {
         });
 
         await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksAdded(thatParticipant, thisParticipant.tracks.size);
+          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
         }));
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
+            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksAdded(thatParticipant, thisParticipant.tracks.size))
+            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
           ]);
         }
 
         thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
 
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.trackPublications.values()]).map(publication => {
+        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
-        thoseUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(track => {
-          return new Promise(resolve => track.once('unsubscribed', resolve));
-        });
-
-        [thoseTracksRemoved, thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
-          'trackRemoved',
+        [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
           'trackUnsubscribed',
           'trackUnpublished'
         ].map(event => {
@@ -569,7 +558,6 @@ describe('LocalParticipant', function() {
         }));
 
         thoseTracksMap = {
-          trackRemoved: thoseTracksRemoved,
           trackUnpublished: thoseTracksUnpublished,
           trackUnsubscribed: thoseTracksUnsubscribed
         };
@@ -580,10 +568,6 @@ describe('LocalParticipant', function() {
           thisTrack.stop();
         }
         [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
-      });
-
-      it('should raise "unsubscribed" events on the corresponding RemoteParticipants\' RemoteTracks', async () => {
-        await Promise.all(thoseUnsubscribed);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
@@ -607,39 +591,32 @@ describe('LocalParticipant', function() {
         });
       });
 
-      ['trackRemoved', 'trackUnsubscribed'].forEach(event => {
-        it(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack`, () => {
-          const thoseTracks = thoseTracksMap[event];
-          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
-            audio: RemoteAudioTrack,
-            video: RemoteVideoTrack,
-            data: RemoteDataTrack
-          }[thatTrack.kind]));
+      it('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
+        const thoseTracks = thoseTracksMap.trackUnsubscribed;
+        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+          audio: RemoteAudioTrack,
+          video: RemoteVideoTrack,
+          data: RemoteDataTrack
+        }[thatTrack.kind]));
+      });
+
+      describe('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
+        it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+          const thoseTracks = thoseTracksMap.trackUnsubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
         });
 
-        describe(`should raise a "${event}" event on the corresponding RemoteParticipants with a RemoteTrack and`, () => {
-          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
-          });
-
-          it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-          });
-
-          if (kind !== 'data') {
-            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-              const thoseTracks = thoseTracksMap[event];
-              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-            });
-          }
-
-          it('should set each RemoteTrack\'s .isSubscribed to false', () => {
-            const thoseTracks = thoseTracksMap[event];
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isSubscribed, false));
-          });
+        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+          const thoseTracks = thoseTracksMap.trackUnsubscribed;
+          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
         });
+
+        if (kind !== 'data') {
+          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+            const thoseTracks = thoseTracksMap.trackUnsubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+          });
+        }
       });
     });
   });
@@ -657,8 +634,6 @@ describe('LocalParticipant', function() {
     let thisTrack2;
     let thatRoom;
     let thatParticipant;
-    let thatTrackRemoved;
-    let thatTrackAdded;
     let thatTrackUnpublished;
     let thatTrackUnsubscribed;
     let thatTrackSubscribed;
@@ -685,39 +660,33 @@ describe('LocalParticipant', function() {
       thatParticipant = thatRoom.participants.get(thisParticipant.sid);
       assert(thatParticipant);
 
-      await tracksAdded(thatParticipant, thisParticipant.tracks.size);
+      await tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
 
       // NOTE(mroberts): Wait 5 seconds.
       await new Promise(resolve => setTimeout(resolve, 5 * 1000));
 
       const trackUnpublishedPromise = new Promise(resolve => thatParticipant.once('trackUnpublished', resolve));
       const trackUnsubscribedPromise = new Promise(resolve => thatParticipant.once('trackUnsubscribed', resolve));
-      const trackRemovedPromise = new Promise(resolve => thatParticipant.once('trackRemoved', resolve));
       const trackPublishedPromise = new Promise(resolve => thatParticipant.once('trackPublished', resolve));
-      const trackAddedPromise = new Promise(resolve => thatParticipant.once('trackAdded', resolve));
       const trackSubscribedPromise = new Promise(resolve => thatParticipant.once('trackSubscribed', resolve));
 
       thisLocalTrackPublication1 = thisParticipant.unpublishTrack(thisTrack1);
       [thisTrack2] = await createLocalTracks(constraints);
 
-      [thatTrackUnpublished, thatTrackUnsubscribed, thatTrackRemoved, thatTrackPublished, thatTrackAdded, thatTrackSubscribed, thisLocalTrackPublication2] = await Promise.all([
+      [thatTrackUnpublished, thatTrackUnsubscribed, thatTrackPublished, thatTrackSubscribed, thisLocalTrackPublication2] = await Promise.all([
         trackUnpublishedPromise,
         trackUnsubscribedPromise,
-        trackRemovedPromise,
         trackPublishedPromise,
-        trackAddedPromise,
         trackSubscribedPromise,
         thisParticipant.publishTrack(thisTrack2)
       ]);
 
       thatTracksPublished = {
-        trackAdded: thatTrackAdded,
         trackPublished: thatTrackPublished,
         trackSubscribed: thatTrackSubscribed
       };
 
       thatTracksUnpublished = {
-        trackRemoved: thatTrackRemoved,
         trackUnpublished: thatTrackUnpublished,
         trackUnsubscribed: thatTrackUnsubscribed
       };
@@ -746,33 +715,29 @@ describe('LocalParticipant', function() {
       });
     });
 
-    ['trackUnsubscribed', 'trackRemoved'].forEach(event => {
-      it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
-        const thatTrack = thatTracksUnpublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
-        assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
-        assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-        if (!isFirefox && !isSafari) {
-          assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
-        }
-      });
+    it('should eventually raise a "trackUnsubscribed" event with the unpublished LocalVideoTrack', () => {
+      const thatTrack = thatTracksUnpublished.trackUnsubscribed;
+      assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
+      assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
+      assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
+      if (!isFirefox && !isSafari) {
+        assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
+      }
     });
 
-    ['trackAdded', 'trackSubscribed'].forEach(event => {
-      it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
-        const thatTrack = thatTracksPublished[event];
-        assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid);
-        assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
-        assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
-        assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
-      });
+    it('should eventually raise a "trackSubscribed" event with the published LocalVideoTrack', () => {
+      const thatTrack = thatTracksPublished.trackSubscribed;
+      assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid);
+      assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
+      assert.equal(thatTrack.enabled, thisLocalTrackPublication2.enabled);
+      assert.equal(thatTrack.mediaStreamTrack.readyState, thisTrack2.mediaStreamTrack.readyState);
     });
 
     it('should eventually raise a "trackStarted" event for the published LocalVideoTrack', async () => {
       if (isFirefox /* && isGroupRoom */) {
         return;
       }
-      await trackStarted(thatTrackAdded);
+      await trackStarted(thatTrackSubscribed);
     });
   });
 
@@ -815,13 +780,11 @@ describe('LocalParticipant', function() {
       await new Promise(resolve => setTimeout(resolve, 5 * 1000));
 
       let thoseTracksPublished;
-      let thoseTracksAdded;
       let thoseTracksSubscribed;
-      [thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksPublished, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
+      [thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
         thisParticipant.publishTrack(thisAudioTrack),
         thisParticipant.publishTrack(thisVideoTrack),
         waitForTracks('trackPublished', thatParticipant, 2),
-        waitForTracks('trackAdded', thatParticipant, 2),
         waitForTracks('trackSubscribed', thatParticipant, 2)
       ]);
 
@@ -831,12 +794,10 @@ describe('LocalParticipant', function() {
 
       thoseAudioTracks = {
         trackPublished: findTrackOrPublication(thoseTracksPublished, 'audio'),
-        trackAdded: findTrackOrPublication(thoseTracksAdded, 'audio'),
         trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, 'audio')
       };
       thoseVideoTracks = {
         trackPublished: findTrackOrPublication(thoseTracksPublished, 'video'),
-        trackAdded: findTrackOrPublication(thoseTracksAdded, 'video'),
         trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, 'video')
       };
     });
@@ -862,25 +823,23 @@ describe('LocalParticipant', function() {
       });
     });
 
-    ['trackAdded', 'trackSubscribed'].forEach(event => {
-      it(`should eventually raise a "${event}" event for each published LocalTracks`, () => {
-        const thatAudioTrack = thoseAudioTracks[event];
-        assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.trackSid);
-        assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
-        assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
-        assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
+    it('should eventually raise a "trackSubscribed" event for each published LocalTracks', () => {
+      const thatAudioTrack = thoseAudioTracks.trackSubscribed;
+      assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.trackSid);
+      assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
+      assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
+      assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
 
-        const thatVideoTrack = thoseVideoTracks[event];
-        assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.trackSid);
-        assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
-        assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
-        assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
-      });
+      const thatVideoTrack = thoseVideoTracks.trackSubscribed;
+      assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.trackSid);
+      assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
+      assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
+      assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
     });
 
     it('should eventually raise a "trackStarted" event for each published LocalTrack', async () => {
-      const thatAudioTrack = thoseAudioTracks.trackAdded;
-      const thatVideoTrack = thoseVideoTracks.trackAdded;
+      const thatAudioTrack = thoseAudioTracks.trackSubscribed;
+      const thatVideoTrack = thoseVideoTracks.trackSubscribed;
       await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
@@ -939,7 +898,7 @@ describe('LocalParticipant', function() {
         // indicate that one or more RTCPeerConnections is established.
         await Promise.all(thoseRooms.map(thatRoom => {
           const thisParticipant = thatRoom.participants.get(thisRoom.localParticipant.sid);
-          return tracksAdded(thisParticipant, thisRoom.localParticipant.tracks.size);
+          return tracksSubscribed(thisParticipant, thisRoom.localParticipant.tracks.size);
         }));
         peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
         thisRoom.localParticipant.setParameters(encodingParameters);
