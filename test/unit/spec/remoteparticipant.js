@@ -681,6 +681,286 @@ describe('RemoteParticipant', () => {
       });
     });
 
+    context('"trackAdded" event', () => {
+      context('when the RemoteParticipant .state begins in "connected"', () => {
+        it('constructs a new RemoteTrackPublication from the underlying RemoteTrackPublicationSignaling', () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          const audioTrackPublication = test.participant.tracks.get(audioTrack.sid);
+          const dataTrackPublication = test.participant.tracks.get(dataTrack.sid);
+          const videoTrackPublication = test.participant.tracks.get(videoTrack.sid);
+          assert(audioTrackPublication instanceof RemoteAudioTrackPublication);
+          assert.equal(test.participant.audioTracks.get(audioTrack.sid), audioTrackPublication);
+          assert(dataTrackPublication instanceof RemoteDataTrackPublication);
+          assert.equal(test.participant.dataTracks.get(dataTrack.sid), dataTrackPublication);
+          assert(videoTrackPublication instanceof RemoteVideoTrackPublication);
+          assert.equal(test.participant.videoTracks.get(videoTrack.sid), videoTrackPublication);
+        });
+
+        it('emits "trackPublished" events for each RemoteTrackPublication on the RemoteParticipant', () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          const publications = [];
+          test.participant.on('trackPublished', publication => publications.push(publication));
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+
+          assert.equal(publications.length, 3);
+          publications.forEach(publication => {
+            assert(publication instanceof {
+              audio: RemoteAudioTrackPublication,
+              data: RemoteDataTrackPublication,
+              video: RemoteVideoTrackPublication
+            }[publication.kind]);
+            assert.equal(test.participant.tracks.get(publication.trackSid), publication);
+            assert.equal(test.participant[`${publication.kind}Tracks`].get(publication.trackSid), publication);
+          });
+        });
+
+        context('if "updated" is emitted on the RemoteTrackPublicationSignaling due to .setTrackTransceiver', () => {
+          it('constructs a new RemoteTrack and sets its .name to that of the underlying RemoteTrackPublicationSignaling', () => {
+            const test = makeTest();
+            const audioTrack = makeTrackSignaling({ kind: 'audio', testTrackSubscriptionRestApi: true });
+            const videoTrack = makeTrackSignaling({ kind: 'video', testTrackSubscriptionRestApi: true });
+            const dataTrack = makeTrackSignaling({ kind: 'data', testTrackSubscriptionRestApi: true });
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            function updated(trackSignaling) {
+              return new Promise(resolve => trackSignaling.once('updated', resolve));
+            }
+
+            const updateds = [
+              updated(audioTrack),
+              updated(videoTrack),
+              updated(dataTrack)
+            ];
+
+            audioTrack.setTrackTransceiver({ id: audioTrack.id, kind: audioTrack.kind, track: {} });
+            videoTrack.setTrackTransceiver({ id: videoTrack.id, kind: videoTrack.kind, track: {} });
+            dataTrack.setTrackTransceiver({ id: dataTrack.id, kind: dataTrack.kind, track: {} });
+
+            return Promise.all(updateds).then(() => {
+              assert.equal(audioTrack.trackTransceiver, test.RemoteAudioTrack.args[0][1]);
+              assert.equal(audioTrack.name, test.tracks[0].name);
+
+              assert.equal(videoTrack.trackTransceiver, test.RemoteVideoTrack.args[0][1]);
+              assert.equal(videoTrack.name, test.tracks[1].name);
+
+              assert.equal(dataTrack.trackTransceiver, test.RemoteDataTrack.args[0][1]);
+              assert.equal(dataTrack.name, test.tracks[2].name);
+            });
+          });
+
+          it('adds the newly-constructed RemoteTrack to the RemoteParticipant\'s RemoteTrack collections', () => {
+            const test = makeTest();
+            const audioTrack = makeTrackSignaling({ kind: 'audio', testTrackSubscriptionRestApi: true });
+            const videoTrack = makeTrackSignaling({ kind: 'video', testTrackSubscriptionRestApi: true });
+            const dataTrack = makeTrackSignaling({ kind: 'data', testTrackSubscriptionRestApi: true });
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            function updated(trackSignaling) {
+              return new Promise(resolve => trackSignaling.once('updated', resolve));
+            }
+
+            const updateds = [
+              updated(audioTrack),
+              updated(videoTrack),
+              updated(dataTrack)
+            ];
+
+            audioTrack.setTrackTransceiver({ id: audioTrack.id, kind: audioTrack.kind, track: {} });
+            videoTrack.setTrackTransceiver({ id: videoTrack.id, kind: videoTrack.kind, track: {} });
+            dataTrack.setTrackTransceiver({ id: dataTrack.id, kind: dataTrack.kind, track: {} });
+
+            return Promise.all(updateds).then(() => {
+              assert.equal(test.tracks[0], test.participant._tracks.get(audioTrack.id));
+              assert.equal(test.tracks[1], test.participant._tracks.get(videoTrack.id));
+              assert.equal(test.tracks[2], test.participant._tracks.get(dataTrack.id));
+              assert.equal(test.tracks[0], test.participant._audioTracks.get(audioTrack.id));
+              assert.equal(test.tracks[1], test.participant._videoTracks.get(videoTrack.id));
+              assert.equal(test.tracks[2], test.participant._dataTracks.get(dataTrack.id));
+            });
+          });
+
+
+          it('fires the "trackSubscribed" event on the RemoteParticipant', () => {
+            const test = makeTest();
+            const audioTrack = makeTrackSignaling({ kind: 'audio', testTrackSubscriptionRestApi: true });
+            const videoTrack = makeTrackSignaling({ kind: 'video', testTrackSubscriptionRestApi: true });
+            const dataTrack = makeTrackSignaling({ kind: 'data', testTrackSubscriptionRestApi: true });
+            const subscribed = [];
+
+            const trackSubscribedPromise = new Promise(resolve => {
+              function shouldResolve() {
+                return subscribed.length === 3;
+              }
+              test.participant.on('trackSubscribed', track => {
+                subscribed.push(track);
+                if (shouldResolve()) {
+                  resolve();
+                }
+              });
+            });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            function updated(trackSignaling) {
+              return new Promise(resolve => trackSignaling.once('updated', resolve));
+            }
+
+            const updateds = [
+              updated(audioTrack),
+              updated(videoTrack),
+              updated(dataTrack)
+            ];
+
+            audioTrack.setTrackTransceiver({ id: audioTrack.id, kind: audioTrack.kind, track: {} });
+            videoTrack.setTrackTransceiver({ id: videoTrack.id, kind: videoTrack.kind, track: {} });
+            dataTrack.setTrackTransceiver({ id: dataTrack.id, kind: dataTrack.kind, track: {} });
+
+            return Promise.all([
+              trackSubscribedPromise,
+              ...updateds
+            ]).then(() => {
+              assert.equal(test.tracks[0], subscribed[0]);
+              assert.equal(test.tracks[1], subscribed[1]);
+              assert.equal(test.tracks[2], subscribed[2]);
+            });
+          });
+        });
+      });
+
+      context('when the RemoteParticipant .state transitions to "disconnected"', () => {
+        it('should not create a RemoteTrackPublication for the underlying RemoteTrackPublicationSignaling', () => {
+          const test = makeTest();
+          test.signaling.emit('stateChanged', 'disconnected');
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.participant.tracks.has(audioTrack.sid));
+          assert(!test.participant.audioTracks.has(audioTrack.sid));
+          assert(!test.participant.tracks.has(dataTrack.sid));
+          assert(!test.participant.dataTracks.has(dataTrack.sid));
+          assert(!test.participant.tracks.has(videoTrack.sid));
+          assert(!test.participant.videoTracks.has(videoTrack.sid));
+        });
+
+        it('should not emit "trackPublished" on the RemoteParticipant', () => {
+          const test = makeTest();
+          test.signaling.emit('stateChanged', 'disconnected');
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          const publications = [];
+          test.participant.on('trackPublished', publication => publications.push(publication));
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert.equal(publications.length, 0);
+        });
+
+        it('does not construct a new RemoteTrack', () => {
+          const test = makeTest();
+          test.signaling.emit('stateChanged', 'disconnected');
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.RemoteAudioTrack.calledOnce);
+          assert(!test.RemoteVideoTrack.calledOnce);
+          assert(!test.RemoteDataTrack.calledOnce);
+        });
+
+        it('does not call ._addTrack on the RemoteParticipant', () => {
+          const test = makeTest();
+          test.participant._addTrack = sinon.spy();
+          test.signaling.emit('stateChanged', 'disconnected');
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.participant._addTrack.calledOnce);
+        });
+      });
+
+      context('when the RemoteParticipant .state begins in "disconnected"', () => {
+        it('should not create a RemoteTrackPublication for the underlying RemoteTrackPublicationSignaling', () => {
+          const test = makeTest({ state: 'disconnected' });
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.participant.tracks.has(audioTrack.sid));
+          assert(!test.participant.audioTracks.has(audioTrack.sid));
+          assert(!test.participant.tracks.has(dataTrack.sid));
+          assert(!test.participant.dataTracks.has(dataTrack.sid));
+          assert(!test.participant.tracks.has(videoTrack.sid));
+          assert(!test.participant.videoTracks.has(videoTrack.sid));
+        });
+
+        it('should not emit "trackPublished" on the RemoteParticipant', () => {
+          const test = makeTest({ state: 'disconnected' });
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          const publications = [];
+          test.participant.on('trackPublished', publication => publications.push(publication));
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert.equal(publications.length, 0);
+        });
+
+        it('does not construct a new RemoteTrack', () => {
+          const test = makeTest({ state: 'disconnected' });
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.RemoteAudioTrack.calledOnce);
+          assert(!test.RemoteVideoTrack.calledOnce);
+          assert(!test.RemoteDataTrack.calledOnce);
+        });
+
+        it('does not call ._addTrack on the RemoteParticipant', () => {
+          const test = makeTest({ state: 'disconnected' });
+          test.participant._addTrack = sinon.spy();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          assert(!test.participant._addTrack.calledOnce);
+        });
+      });
+    });
+
     context('"trackSubscriptionFailed" event', () => {
       context('when the RemoteParticipant .state begins in "connected"', () => {
         context('and a RemoteTrackPublicationSignaling fails to subscribe', () => {
@@ -813,6 +1093,239 @@ describe('RemoteParticipant', () => {
             dataTrack.subscribeFailed(new Error());
 
             assert(!trackSubscriptionFailed);
+          });
+        });
+      });
+    });
+
+    context('"trackRemoved" event', () => {
+      context('when the RemoteParticipant .state begins in "connected"', () => {
+        it('should remove the RemoteTrackPublication for the removed RemoteTrackPublicationSignaling', async () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+
+          assert(!test.participant.tracks.has(audioTrack.sid));
+          assert(!test.participant.audioTracks.has(audioTrack.sid));
+          assert(!test.participant.tracks.has(dataTrack.sid));
+          assert(!test.participant.dataTracks.has(dataTrack.sid));
+          assert(!test.participant.tracks.has(videoTrack.sid));
+          assert(!test.participant.videoTracks.has(videoTrack.sid));
+        });
+
+        it('should emit "trackUnpublished" for each removed RemoteTrackPublication', async () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+
+          const publications = [];
+          test.participant.on('trackUnpublished', publication => publications.push(publication));
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+
+          assert.equal(publications.length, 3);
+          publications.forEach(publication => {
+            assert(publication instanceof {
+              audio: RemoteAudioTrackPublication,
+              data: RemoteDataTrackPublication,
+              video: RemoteVideoTrackPublication
+            }[publication.kind]);
+          });
+        });
+
+        context('and a RemoteTrack with an .id matching that of the RemoteTrackPublicationSignaling exists in the RemoteParticipant\'s RemoteTrack collections', () => {
+          it('calls ._removeTrack on the RemoteParticipant with the RemoteTrack', () => {
+            const test = makeTest();
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+            const unsubscribed = [];
+
+            const trackUnsubscribedPromise = new Promise(resolve => {
+              function shouldResolve() {
+                return unsubscribed.length === 2;
+              }
+              test.participant.on('trackUnsubscribed', track => {
+                unsubscribed.push(track);
+                if (shouldResolve()) {
+                  resolve();
+                }
+              });
+            });
+
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+
+            const unsubscribedEventPromises = [...test.participant.tracks.values()].map(publication => {
+              return new Promise(resolve => publication.once('unsubscribed', resolve));
+            });
+
+            test.signaling.emit('trackRemoved', audioTrack);
+            test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
+
+            return Promise.all([
+              trackUnsubscribedPromise,
+              ...unsubscribedEventPromises
+            ]).then(() => {
+              assert.equal(test.tracks[0], unsubscribed[0]);
+              assert.equal(test.tracks[1], unsubscribed[1]);
+              assert.equal(test.tracks[2], unsubscribed[2]);
+              assert.equal(test.participant._tracks.size, 0);
+              assert.equal(test.participant._audioTracks.size, 0);
+              assert.equal(test.participant._videoTracks.size, 0);
+              assert.equal(test.participant._dataTracks.size, 0);
+            });
+          });
+        });
+
+        context('and a RemoteTrack with an .id matching that of the RemoteTrackPublicationSignaling does not exist in the RemoteParticipant\'s RemoteTrack collections', () => {
+          it('does not call ._removeTrack on the RemoteParticipant', () => {
+            const test = makeTest();
+            test.participant._removeTrack = sinon.spy();
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+            test.signaling.emit('trackRemoved', audioTrack);
+            test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
+            assert(!test.participant._removeTrack.calledOnce);
+          });
+        });
+      });
+
+      context('when the RemoteParticipant .state transitions to "disconnected"', () => {
+        it('should not remove the RemoteTrackPublication for the removed RemoteParticipantSignaling', async () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          test.signaling.emit('stateChanged', 'disconnected');
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+
+          assert(test.participant.tracks.has(audioTrack.sid));
+          assert(test.participant.audioTracks.has(audioTrack.sid));
+          assert(test.participant.tracks.has(dataTrack.sid));
+          assert(test.participant.dataTracks.has(dataTrack.sid));
+          assert(test.participant.tracks.has(videoTrack.sid));
+          assert(test.participant.videoTracks.has(videoTrack.sid));
+        });
+
+        it('should not emit "trackUnpublished" on the RemoteParticipant', async () => {
+          const test = makeTest();
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          test.signaling.emit('stateChanged', 'disconnected');
+
+          const publications = [];
+          test.participant.on('trackUnpublished', publication => publications.push(publication));
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+
+          assert.equal(publications.length, 0);
+        });
+
+        context('and a RemoteTrack with an .id matching that of the RemoteTrackPublicationSignaling exists in the RemoteParticipant\'s RemoteTrack collections', () => {
+          it('does not call ._removeTrack on the RemoteParticipant', () => {
+            const test = makeTest();
+            test.participant._removeTrack = sinon.spy();
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+            test.signaling.emit('trackAdded', audioTrack);
+            test.signaling.emit('trackAdded', videoTrack);
+            test.signaling.emit('trackAdded', dataTrack);
+            test.signaling.emit('stateChanged', 'disconnected');
+            test.signaling.emit('trackRemoved', audioTrack);
+            test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
+            assert(!test.participant._removeTrack.calledOnce);
+          });
+        });
+
+        context('and a RemoteTrack with an .id matching that of the RemoteTrackPublicationSignaling does not exist in the RemoteParticipant\'s RemoteTrack collections', () => {
+          it('does not call ._removeTrack on the RemoteParticipant', () => {
+            const test = makeTest();
+            test.participant._removeTrack = sinon.spy();
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+            test.signaling.emit('stateChanged', 'disconnected');
+            test.signaling.emit('trackRemoved', audioTrack);
+            test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
+            assert(!test.participant._removeTrack.calledOnce);
+          });
+        });
+      });
+
+      context('when the RemoteParticipant .state begins in "disconnected"', () => {
+        it('should not call ._removeTrackPublication on the RemoteParticipant', async () => {
+          const test = makeTest({ state: 'disconnected' });
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.participant._removeTrackPublication = sinon.spy(() => {});
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+          sinon.assert.callCount(test.participant._removeTrackPublication, 0);
+        });
+
+        it('should not emit "trackUnpublished" on the RemoteParticipant', () => {
+          const test = makeTest({ state: 'disconnected' });
+          const audioTrack = makeTrackSignaling({ kind: 'audio' });
+          const videoTrack = makeTrackSignaling({ kind: 'video' });
+          const dataTrack = makeTrackSignaling({ kind: 'data' });
+          test.signaling.emit('trackAdded', audioTrack);
+          test.signaling.emit('trackAdded', videoTrack);
+          test.signaling.emit('trackAdded', dataTrack);
+
+          const publications = [];
+          test.participant.on('trackUnpublished', publication => publications.push(publication));
+          test.signaling.emit('trackRemoved', audioTrack);
+          test.signaling.emit('trackRemoved', videoTrack);
+          test.signaling.emit('trackRemoved', dataTrack);
+          assert.equal(publications.length, 0);
+        });
+
+        context('and a RemoteTrack with an .id matching that of the RemoteTrackPublicationSignaling does not exist in the RemoteParticipant\'s RemoteTrack collections', () => {
+          it('does not call ._removeTrack on the RemoteParticipant', () => {
+            const test = makeTest({ state: 'disconnected' });
+            test.participant._removeTrack = sinon.spy();
+            const audioTrack = makeTrackSignaling({ kind: 'audio' });
+            const videoTrack = makeTrackSignaling({ kind: 'video' });
+            const dataTrack = makeTrackSignaling({ kind: 'data' });
+            test.signaling.emit('trackRemoved', audioTrack);
+            test.signaling.emit('trackRemoved', videoTrack);
+            test.signaling.emit('trackRemoved', dataTrack);
+            assert(!test.participant._removeTrack.calledOnce);
           });
         });
       });
@@ -1065,7 +1578,7 @@ function makeTest(options) {
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
-    this.name = opts && opts.name ? opts.name : this.id;
+    this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this._setEnabled = enabled => { this.enabled = enabled; };
     options.tracks.push(this);
@@ -1077,7 +1590,7 @@ function makeTest(options) {
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
-    this.name = opts && opts.name ? opts.name : this.id;
+    this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this._setEnabled = enabled => { this.enabled = enabled; };
     options.tracks.push(this);
@@ -1090,7 +1603,7 @@ function makeTest(options) {
     this._dataTrackReceiver = dataTrackReceiver;
     this.kind = dataTrackReceiver.kind;
     this.mediaStreamTrack = dataTrackReceiver.track;
-    this.name = opts && opts.name ? opts.name : this.id;
+    this.name = opts && opts.name ? opts.name : dataTrackReceiver.id;
     this.sid = sid;
     this._setEnabled = enabled => { this.enabled = enabled; };
     options.tracks.push(this);
