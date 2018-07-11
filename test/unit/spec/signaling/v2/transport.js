@@ -183,6 +183,29 @@ describe('Transport', () => {
     });
   });
 
+  describe('constructor, when createMessage is called within the SIPJSMediaHandler constructor', () => {
+    it('returns an RSP message that has a .publisher.user_agent string', () => {
+      const testOptions = {
+        SIPJSMediaHandler: function SIPJSMediaHandler(peerConnectionManager, createMessage) {
+          this.peerConnectionManager = peerConnectionManager;
+          this.createMessage = createMessage;
+          testOptions.message = createMessage();
+          return this;
+        },
+        session: makeSession({}),
+        ua: makeUA({})
+      };
+
+      testOptions.ua.invite = sinon.spy((target, { mediaHandlerFactory }) => {
+        testOptions.mediaHandler = mediaHandlerFactory();
+        return testOptions.session;
+      });
+
+      const test = makeTest(testOptions);
+      assert.equal(typeof test.message.publisher.user_agent, 'string');
+    });
+  });
+
   describe('#disconnect, called when the Transport\'s .state is', () => {
     let test;
     let ret;
