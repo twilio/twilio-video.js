@@ -1,3 +1,12 @@
+1.12.0 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where publishing a LocalVideoTrack with VP8 simulcast enabled
+  caused Chrome to crash. (JSDK-2032)
+
 1.11.1 (July 3, 2018)
 =====================
 
