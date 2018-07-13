@@ -131,8 +131,8 @@ describe('setCodecPreferences', () => {
           ? ['8', '101', '9', '109', '0']
           : ['109', '9', '0', '8', '101'];
         const expectedVideoCodecIds = preferredVideoCodecs.length
-          ? ['126', '97', '121', '120']
-          : ['120', '121', '126', '97'];
+          ? ['126', '97', '121', '120', '99']
+          : ['120', '121', '126', '97', '99'];
         itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds);
       });
     });
@@ -230,7 +230,7 @@ describe('setSimulcast', () => {
     });
   });
 
-  describe.only('when a subsequent offer disables RTX', () => {
+  describe('when a subsequent offer disables RTX', () => {
     it('does not add RTX SSRCs, FID groups, etc.', () => {
       const sdp1 = `\
 v=0\r
@@ -469,7 +469,6 @@ a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
 
       assert(!simSdp2.match(/a=ssrc-group:FID/), 'RTX is disabled; therefore, there should be no FID groups in the SDP');
 
-      console.log(simSdp2);
       const ssrcs2 = new Set(simSdp2.match(/a=ssrc:[0-9]+/g).map(line => line.match(/a=ssrc:([0-9]+)/)[1]));
       assert.equal(ssrcs2.size, 3, 'RTX is disabled; therefore, there should be just 3 SSRCs in the SDP');
     });

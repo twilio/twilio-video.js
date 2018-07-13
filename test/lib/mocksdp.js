@@ -37,7 +37,7 @@ a=fingerprint:sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:0
   return ['audio', 'video'].reduce((sdp, kind) => {
     const codecs = {
       audio: '109 9 0 8 101',
-      video: '120 121 126 97'
+      video: '120 121 126 97 99'
     }[kind];
 
     const bLine = kind === 'audio' && typeof maxAudioBitrate === 'number'
@@ -54,7 +54,8 @@ ${kind === 'video'
       ? 'a=rtpmap:120 VP8/90000\r\n' +
         'a=rtpmap:121 VP9/90000\r\n' +
         'a=rtpmap:126 H264/90000\r\n' +
-        'a=rtpmap:97 H264/180000'
+        'a=rtpmap:97 H264/180000\r\n' +
+        'a=rtpmap:99 rtx/8000'
       : 'a=rtpmap:109 opus/48000/2\r\n' +
         'a=rtpmap:9 G722/8000/1\r\n' +
         'a=rtpmap:0 PCMU/8000\r\n' +
