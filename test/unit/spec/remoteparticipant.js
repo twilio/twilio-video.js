@@ -400,24 +400,6 @@ describe('RemoteParticipant', () => {
         track.emit('started', track);
         assert.equal(track, trackStarted);
       });
-
-      it('re-emits "enabled" events', () => {
-        let trackEnabled;
-        const test = makeTest({ trackSignalings: [makeTrackSignaling()] });
-        const track = [...test.participant._tracks.values()][0];
-        test.participant.once('trackEnabled', track => { trackEnabled = track; });
-        track.emit('enabled', track);
-        assert.equal(track, trackEnabled);
-      });
-
-      it('re-emits "disabled" events', () => {
-        let trackDisabled;
-        const test = makeTest({ trackSignalings: [makeTrackSignaling()] });
-        const track = [...test.participant._tracks.values()][0];
-        test.participant.once('trackDisabled', track => { trackDisabled = track; });
-        track.emit('disabled', track);
-        assert.equal(track, trackDisabled);
-      });
     });
 
     context('when the RemoteParticipant .state transitions to "disconnected"', () => {
@@ -450,26 +432,6 @@ describe('RemoteParticipant', () => {
         test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
-      });
-
-      it('does not re-emit "enabled" events', () => {
-        let trackEnabled;
-        const test = makeTest({ trackSignalings: [makeTrackSignaling()] });
-        const track = [...test.participant._tracks.values()][0];
-        test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackEnabled', track => { trackEnabled = track; });
-        track.emit('enabled', track);
-        assert(!trackEnabled);
-      });
-
-      it('does not re-emit "disabled" events', () => {
-        let trackDisabled;
-        const test = makeTest({ trackSignalings: [makeTrackSignaling()] });
-        const track = [...test.participant._tracks.values()][0];
-        test.signaling.emit('stateChanged', 'disconnected');
-        test.participant.once('trackDisabled', track => { trackDisabled = track; });
-        track.emit('disabled', track);
-        assert(!trackDisabled);
       });
 
       it('should emit "trackUnsubscribed" events for all the Participant\'s RemoteTrackPublications', () => {
@@ -506,24 +468,6 @@ describe('RemoteParticipant', () => {
         assert(!trackMessageEvent);
       });
 
-      it('does not re-emit "enabled" events', () => {
-        const track = new EventEmitter();
-        let trackEnabled;
-        const test = makeTest({ tracks: [track], state: 'disconnected' });
-        test.participant.once('trackEnabled', track => { trackEnabled = track; });
-        track.emit('enabled', track);
-        assert(!trackEnabled);
-      });
-
-      it('does not re-emit "disabled" events', () => {
-        const track = new EventEmitter();
-        let trackDisabled;
-        const test = makeTest({ tracks: [track], state: 'disconnected' });
-        test.participant.once('trackDisabled', track => { trackDisabled = track; });
-        track.emit('disabled', track);
-        assert(!trackDisabled);
-      });
-
       it('does not re-emit "started" events', () => {
         const track = new EventEmitter();
         let trackStarted;
@@ -549,10 +493,9 @@ describe('RemoteParticipant', () => {
       });
 
       [
-        ['subscriptionFailed', 'trackSubscriptionFailed']
-        // NOTE(mroberts): Re-enable these tests when we migrate to twilio-video.js@2.0.0.
-        // ['trackDisabled', 'trackDisabled'],
-        // ['trackEnabled', 'trackEnabled']
+        ['subscriptionFailed', 'trackSubscriptionFailed'],
+        ['trackDisabled', 'trackDisabled'],
+        ['trackEnabled', 'trackEnabled']
       ].forEach(([publicationEvent, participantEvent]) => {
         it(`re-emits "${publicationEvent}" event`, () => {
           const error = new Error('foo');
@@ -801,13 +744,15 @@ describe('RemoteParticipant', () => {
             const videoTrack = makeTrackSignaling({ kind: 'video', testTrackSubscriptionRestApi: true });
             const dataTrack = makeTrackSignaling({ kind: 'data', testTrackSubscriptionRestApi: true });
             const subscribed = [];
+            const subscribedPublications = [];
 
             const trackSubscribedPromise = new Promise(resolve => {
               function shouldResolve() {
-                return subscribed.length === 3;
+                return subscribed.length + subscribedPublications.length === 6;
               }
-              test.participant.on('trackSubscribed', track => {
+              test.participant.on('trackSubscribed', (track, publication) => {
                 subscribed.push(track);
+                subscribedPublications.push(publication);
                 if (shouldResolve()) {
                   resolve();
                 }
@@ -839,6 +784,7 @@ describe('RemoteParticipant', () => {
               assert.equal(test.tracks[0], subscribed[0]);
               assert.equal(test.tracks[1], subscribed[1]);
               assert.equal(test.tracks[2], subscribed[2]);
+              subscribedPublications.forEach(publication => assert.equal(publication, test.participant.tracks.get(publication.trackSid)));
             });
           });
         });
@@ -1152,13 +1098,15 @@ describe('RemoteParticipant', () => {
             const videoTrack = makeTrackSignaling({ kind: 'video' });
             const dataTrack = makeTrackSignaling({ kind: 'data' });
             const unsubscribed = [];
+            const unsubscribedPublications = [];
 
             const trackUnsubscribedPromise = new Promise(resolve => {
               function shouldResolve() {
-                return unsubscribed.length === 2;
+                return unsubscribed.length + unsubscribedPublications.length === 6;
               }
-              test.participant.on('trackUnsubscribed', track => {
+              test.participant.on('trackUnsubscribed', (track, publication) => {
                 unsubscribed.push(track);
+                unsubscribedPublications.push(publication);
                 if (shouldResolve()) {
                   resolve();
                 }
@@ -1188,6 +1136,7 @@ describe('RemoteParticipant', () => {
               assert.equal(test.participant._audioTracks.size, 0);
               assert.equal(test.participant._videoTracks.size, 0);
               assert.equal(test.participant._dataTracks.size, 0);
+              unsubscribedPublications.forEach((publication, i) => assert.equal(publication.trackSid, unsubscribed[i].sid));
             });
           });
         });
