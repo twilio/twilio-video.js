@@ -1,11 +1,60 @@
 1.12.0 (in progress)
 ====================
 
+Deprecations
+------------
+
+The following `1.x` APIs/events are now deprecated and scheduled for removal
+in `twilio-video.js@2.0.0`:
+
+- Participant's "trackAdded" and "trackRemoved" events
+- RemoteTrack's `id` property
+- RemoteTrack's `isSubscribed` property
+- RemoteTrack's "unsubscribed" event
+
+Please refer to the migration guide below for handling these deprecations.
+
 Bug Fixes
 ---------
 
 - Fixed a bug where publishing a LocalVideoTrack with VP8 simulcast enabled
   caused Chrome to crash. (JSDK-2032)
+
+Migration Guide
+---------------
+
+### Migrating from Participant's "trackAdded" and "trackRemoved" events
+
+- On the LocalParticipant, these events indicated that a LocalTrack has been
+  __scheduled to__ be added to or removed from a Room. Since calling
+  `publishTrack` or `unpublishTrack` conveys the same information, we have
+  deprecated these events.
+- On the RemoteParticipant, you can use "trackSubscribed" and "trackUnsubscribed"
+  events as drop-in replacements:
+
+  ```js
+  participant.on('trackSubscribed', (track, publication) => {
+    console.log(`Subscribed to a RemoteTrack: ${track} ${publication}`);
+  });
+
+  participant.on('trackUnsubscribed', (track, publication) => {
+    console.log(`Unsubscribed from a RemoteTrack: ${track} ${publication}`);
+  });
+  ```
+
+### Migrating from RemoteTrack's deprecated properties and events
+
+- Instead of the RemoteTrack's `id` property, use its `sid` or `name` property.
+- Instead of the RemoteTrack's `isSubscribed` property, use the corresponding
+  RemoteTrackPublication's `isSubscribed` property.
+- Instead of listening to the RemoteTrack's "unsubscribed" event, listen to
+  the corresponding RemoteTrackPublication's "unsubscribed" event:
+
+  ```js
+  publication.on('unsubscribed', track => {
+    console.log(`Unsubscribed from a RemoteTrack: ${track}`);
+  });
+  ```
 
 1.11.1 (July 3, 2018)
 =====================

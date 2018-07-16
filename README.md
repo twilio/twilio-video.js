@@ -91,9 +91,9 @@ function participantConnected(participant) {
   div.id = participant.sid;
   div.innerText = participant.identity;
 
-  participant.on('trackAdded', track => trackAdded(div, track));
-  participant.tracks.forEach(track => trackAdded(div, track));
-  participant.on('trackRemoved', trackRemoved);
+  participant.on('trackSubscribed', track => trackSubscribed(div, track));
+  participant.tracks.forEach(track => trackSubscribed(div, track));
+  participant.on('trackUnsubscribed', trackUnsubscribed);
 
   document.body.appendChild(div);
 }
@@ -101,15 +101,15 @@ function participantConnected(participant) {
 function participantDisconnected(participant) {
   console.log('Participant "%s" disconnected', participant.identity);
 
-  participant.tracks.forEach(trackRemoved);
+  participant.tracks.forEach(trackUnsubscribed);
   document.getElementById(participant.sid).remove();
 }
 
-function trackAdded(div, track) {
+function trackSubscribed(div, track) {
   div.appendChild(track.attach());
 }
 
-function trackRemoved(track) {
+function trackUnsubscribed(track) {
   track.detach().forEach(element => element.remove());
 }
 ```
