@@ -1,30 +1,25 @@
 2.0.0 (in progress)
 ===================
 
-New Features
-------------
+Breaking Changes
+----------------
 
 - RemoteParticipant no longer emits the deprecated "trackAdded" and "trackRemoved"
   events. Use the "trackSubscribed" and "trackUnsubscribed" events instead.
-
-- LocalParticipant no longer contains the deprecated `addTrack(s)` and
-  `removeTrack(s)` methods. Use `publishTrack(s)` and `unpublishTrack(s)`
-  instead.
-
-- RemoteTrack no longer has the deprecated `.id` property. Use the `.sid` property
-  instead.
-
-- RemoteTrack no longer has the deprecated `.isSubscribed` property. Use the
-  corresponding RemoteTrackPublication's `.isSubscribed` property instead.
-
+- LocalParticipant no longer contains the deprecated `addTrack`, `addTracks`,
+  `removeTrack` and `removeTracks` methods. Use `publishTrack`, `publishTracks`,
+  `unpublishTrack`, and `unpublishTracks` instead.
+- RemoteTrack no longer has the deprecated `id` property. Use the `sid` or `name`
+  properties instead.
+- RemoteTrack no longer has the deprecated `isSubscribed` property. Use the
+  corresponding RemoteTrackPublication's `isSubscribed` property instead.
 - RemoteTrack no longer emits the deprecated "unsubscribed" event. Use the
   corresponding RemoteTrackPublication's "unsubscribed" event instead.
-
-- Participant's `.trackPublications` collection is now renamed to `.tracks`.
-  Similarly, `.audioTrackPublications` is now renamed to `.audioTracks`,
-  `.dataTrackPublications` is now renamed to `.dataTracks`, and
-  `.videoTrackPublications` is now renamed to `.videoTracks`. Participant
-  no longer maintains the deprecated Track-based collections.
+- Participant's `trackPublications` collection is now renamed to `tracks`.
+  Similarly, `audioTrackPublications` is now renamed to `audioTracks`,
+  `dataTrackPublications` is now renamed to `dataTracks`, and
+  `videoTrackPublications` is now renamed to `videoTracks`. Participant no
+  longer maintains the deprecated Track-based collections.
 
 1.12.0 (July 25, 2018)
 ======================
