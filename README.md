@@ -92,16 +92,19 @@ function participantConnected(participant) {
   div.innerText = participant.identity;
 
   participant.on('trackSubscribed', track => trackSubscribed(div, track));
-  participant.tracks.forEach(track => trackSubscribed(div, track));
   participant.on('trackUnsubscribed', trackUnsubscribed);
+
+  participant.tracks.forEach(publication => {
+    if (publication.isSubscribed) {
+      trackSubscribed(div, publication.track);
+    }
+  });
 
   document.body.appendChild(div);
 }
 
 function participantDisconnected(participant) {
   console.log('Participant "%s" disconnected', participant.identity);
-
-  participant.tracks.forEach(trackUnsubscribed);
   document.getElementById(participant.sid).remove();
 }
 
