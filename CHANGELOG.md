@@ -19,6 +19,7 @@ Bug Fixes
 
 - Fixed a bug where publishing a LocalVideoTrack with VP8 simulcast enabled
   caused Chrome to crash. (JSDK-2032)
+- Fixed a bug where we used deprecated `getStats` APIs in Firefox. (JSDK-1227)
 
 Migration Guide
 ---------------
