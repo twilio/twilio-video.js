@@ -34,12 +34,12 @@ Migration Guide
   events as drop-in replacements:
 
   ```js
-  participant.on('trackSubscribed', (track, publication) => {
-    console.log(`Subscribed to a RemoteTrack: ${track} ${publication}`);
+  participant.on('trackSubscribed', track => {
+    console.log(`Subscribed to a RemoteTrack: ${track}`);
   });
 
-  participant.on('trackUnsubscribed', (track, publication) => {
-    console.log(`Unsubscribed from a RemoteTrack: ${track} ${publication}`);
+  participant.on('trackUnsubscribed', track => {
+    console.log(`Unsubscribed from a RemoteTrack: ${track}`);
   });
   ```
 
