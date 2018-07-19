@@ -631,7 +631,14 @@ describe('LocalParticipant', () => {
           beforeEach(() => {
             track = new EventEmitter();
             track.stop = sinon.spy();
-            track._trackSender = { track: { enabled: true } };
+            track._trackSender = {
+              clone() {
+                return track._trackSender;
+              },
+              track: {
+                enabled: true
+              }
+            };
             test = makeTest({ tracks: [track] });
             trackSignaling = test.signaling.tracks.get(track.id);
             trackSignaling.stop = sinon.spy();
@@ -655,7 +662,14 @@ describe('LocalParticipant', () => {
         context('and a LocalTrack emits "stopped"', () => {
           it('does not emit "trackStopped"', () => {
             const track = new EventEmitter();
-            track._trackSender = { track: { enabled: true } };
+            track._trackSender = {
+              clone() {
+                return track._trackSender;
+              },
+              track: {
+                enabled: true
+              }
+            };
             let trackStopped;
             const test = makeTest({ tracks: [track] });
             test.signaling.emit('stateChanged', 'disconnected');
@@ -685,7 +699,14 @@ describe('LocalParticipant', () => {
         it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const track = new EventEmitter();
           track.id = 'foo';
-          track._trackSender = { track: { enabled: true } };
+          track._trackSender = {
+            clone() {
+              return track._trackSender;
+            },
+            track: {
+              enabled: true
+            }
+          };
           track.name = 'baz';
           const test = makeTest({
             state: 'connecting',
@@ -700,7 +721,14 @@ describe('LocalParticipant', () => {
         it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const track = new EventEmitter();
           track.id = 'foo';
-          track._trackSender = { track: { enabled: true } };
+          track._trackSender = {
+            clone() {
+              return track._trackSender;
+            },
+            track: {
+              enabled: true
+            }
+          };
           track.name = 'baz';
           const test = makeTest({
             state: 'connected',
