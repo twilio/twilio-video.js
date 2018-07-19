@@ -383,6 +383,9 @@ function makeTrackSender(mediaStreamTrack) {
       const clone = makeTrackSender(mediaStreamTrack.clone());
       this.clones.push(clone);
       return clone;
+    },
+    stop() {
+      mediaStreamTrack.stop();
     }
   };
 }
