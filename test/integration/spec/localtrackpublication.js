@@ -49,9 +49,9 @@ describe('LocalTrackPublication', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      // TODO(mmalavalli): Remove this once we've figured out why this test
-      // case is failing.
-      if (kind === 'data' && when !== 'published') {
+      // TODO(mroberts): Remove me when VMS-920 is fixed.
+      // eslint-disable-next-line
+      if (kind === 'data' && when !== 'published' && process.env.TOPOLOGY === 'SFU') {
         return;
       }
 
