@@ -8,10 +8,15 @@ const {
   LocalDataTrack
 } = require('../../../lib');
 
+const {
+  RoomCompletedError
+} = require('../../../lib/util/twilio-video-errors');
+
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
+const { completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
 const {
@@ -241,8 +246,12 @@ describe('Room', function() {
   });
 
   describe('"disconnected" event', () => {
-    it.skip('is raised whenever the LocalParticipant is disconnected via the REST API', () => {
-      // TODO(mroberts): POST to the REST API to disconnect the LocalParticipant from the Room.
+    it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
+      const room = await connect(getToken(randomName()), Object.assign({}, defaults, { logLevel: 'debug' }));
+      const errorPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
+      await completeRoom(room.name);
+      const error = await errorPromise;
+      assert(error instanceof RoomCompletedError);
     });
   });
 
