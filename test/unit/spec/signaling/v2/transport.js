@@ -9,6 +9,7 @@ const Transport = require('../../../../../lib/signaling/v2/transport');
 const { PUBLISH_MAX_ATTEMPTS } = require('../../../../../lib/util/constants');
 
 const {
+  RoomCompletedError,
   SignalingConnectionDisconnectedError,
   SignalingConnectionError,
   SignalingConnectionTimeoutError,
@@ -1479,6 +1480,25 @@ describe('Transport', () => {
           });
         });
 
+        context('"disconnected" with status "completed"', () => {
+          let disconnect;
+
+          beforeEach(() => {
+            disconnect = test.transport.disconnect;
+            test.transport.disconnect = sinon.spy();
+            test.receiveRequest({ type: 'disconnected', status: 'completed' }, 'info');
+          });
+
+          it('calls #disconnect() with a TwilioError', () => {
+            const error = test.transport.disconnect.args[0][0];
+            assert(error instanceof RoomCompletedError);
+          });
+
+          afterEach(() => {
+            test.transport.disconnect = disconnect;
+          });
+        });
+
         context('"error"', () => {
           const message = {
             type: 'error'
@@ -2092,7 +2112,8 @@ describe('Transport', () => {
         [{ body: '{ "type": "error", "code": 12345, "message": "foo bar" }' }],
         [{ headers: { 'X-Twilio-Error': [{ raw: '67890 bar baz' }] } }],
         [null, 'Request Timeout'],
-        [null, 'Connection Error']
+        [null, 'Connection Error'],
+        [{ body: '{ "type": "disconnected", "status": "completed" }' }],
       ];
 
       let evtPayloadsIdx = 0;
@@ -2153,6 +2174,11 @@ describe('Transport', () => {
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with RoomCompletedError when type is "disconnected" and status is "completed"', () => {
+          const error = test.transport.disconnect.args[0][0];
+          assert(error instanceof RoomCompletedError);
         });
 
         afterEach(() => {
@@ -2216,6 +2242,11 @@ describe('Transport', () => {
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with RoomCompletedError when type is "disconnected" and status is "completed"', () => {
+          const error = test.transport.disconnect.args[0][0];
+          assert(error instanceof RoomCompletedError);
         });
 
         afterEach(() => {
@@ -2298,6 +2329,11 @@ describe('Transport', () => {
           assert(error instanceof SignalingConnectionError);
           assert.equal(error.code, expectedError.code);
           assert.equal(error.message, expectedError.message);
+        });
+
+        it('should call #disconnect() with RoomCompletedError when type is "disconnected" and status is "completed"', () => {
+          const error = test.transport.disconnect.args[0][0];
+          assert(error instanceof RoomCompletedError);
         });
 
         afterEach(() => {
