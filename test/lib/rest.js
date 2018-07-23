@@ -4,15 +4,20 @@ const https = require('https');
 
 const {
   apiKeySecret,
-  apiKeySid
+  apiKeySid,
+  environment
 } = require('../env');
+
+const hostname = environment && environment !== 'prod'
+  ? `video.${environment}.twilio.com`
+  : 'video.twilio.com'
 
 function post(resource, data) {
   return new Promise((resolve, reject) => {
     const request = https.request({
       auth: `${apiKeySid}:${apiKeySecret}`,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      hostname: 'video.twilio.com',
+      hostname,
       method: 'POST',
       path: resource
     }, response => {
