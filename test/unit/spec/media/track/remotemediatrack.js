@@ -107,6 +107,74 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         });
       });
     });
+
+    describe('Object.keys', () => {
+      let track;
+
+      before(() => {
+        track = makeTrack('foo', kind, true, null, RemoteTrack);
+      });
+
+      it('only returns public properties', () => {
+        if (kind === 'audio') {
+          assert.deepEqual(Object.keys(track), [
+            'id',
+            'kind',
+            'name',
+            'isStarted',
+            'mediaStreamTrack',
+            'isEnabled',
+            'isSubscribed',
+            'sid'
+          ]);
+        } else {
+          assert.deepEqual(Object.keys(track), [
+            'id',
+            'kind',
+            'name',
+            'isStarted',
+            'mediaStreamTrack',
+            'dimensions',
+            'isEnabled',
+            'isSubscribed',
+            'sid'
+          ]);
+        }
+      });
+    });
+
+    describe('#toJSON', () => {
+      let track;
+
+      before(() => {
+        track = makeTrack('foo', kind, true, null, RemoteTrack);
+      });
+
+      it('only returns public properties', () => {
+        if (kind === 'audio') {
+          assert.deepEqual(track.toJSON(), {
+            id: track.id,
+            isEnabled: track.isEnabled,
+            isStarted: track.isStarted,
+            isSubscribed: track.isSubscribed,
+            kind: track.kind,
+            name: track.name,
+            sid: track.sid
+          });
+        } else {
+          assert.deepEqual(track.toJSON(), {
+            dimensions: track.dimensions,
+            id: track.id,
+            isEnabled: track.isEnabled,
+            isStarted: track.isStarted,
+            isSubscribed: track.isSubscribed,
+            kind: track.kind,
+            name: track.name,
+            sid: track.sid
+          });
+        }
+      });
+    });
   });
 });
 

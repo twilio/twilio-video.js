@@ -174,6 +174,70 @@ const log = require('../../../../lib/fakelog');
         track.emit('started', track);
       });
     });
+
+    describe('Object.keys', () => {
+      let track;
+
+      before(() => {
+        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+      });
+
+      it('only returns public properties', () => {
+        if (kind[description] === 'audio') {
+          assert.deepEqual(Object.keys(track), [
+            'id',
+            'kind',
+            'name',
+            'isStarted',
+            'mediaStreamTrack',
+            'isEnabled',
+            'isStopped'
+          ]);
+        } else {
+          assert.deepEqual(Object.keys(track), [
+            'id',
+            'kind',
+            'name',
+            'isStarted',
+            'mediaStreamTrack',
+            'dimensions',
+            'isEnabled',
+            'isStopped'
+          ]);
+        }
+      });
+    });
+
+    describe('#toJSON', () => {
+      let track;
+
+      before(() => {
+        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+      });
+
+      it('only returns public properties', () => {
+        if (kind[description] === 'audio') {
+          assert.deepEqual(track.toJSON(), {
+            id: track.id,
+            isEnabled: track.isEnabled,
+            isStarted: track.isStarted,
+            isStopped: track.isStopped,
+            kind: track.kind,
+            name: track.name
+          });
+        } else {
+          assert.deepEqual(track.toJSON(), {
+            id: track.id,
+            isEnabled: track.isEnabled,
+            isStarted: track.isStarted,
+            isStopped: track.isStopped,
+            dimensions: track.dimensions,
+            kind: track.kind,
+            name: track.name
+          });
+        }
+      });
+    });
   });
 });
 

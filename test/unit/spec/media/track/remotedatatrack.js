@@ -69,6 +69,50 @@ describe('RemoteDataTrack', () => {
       assert.equal(actualData, expectedData);
     });
   });
+
+  describe('Object.keys', () => {
+    let track;
+
+    before(() => {
+      track = new RemoteDataTrack(dataTrackReceiver);
+    });
+
+    it('only returns public properties', () => {
+      assert.deepEqual(Object.keys(track), [
+        'id',
+        'kind',
+        'name',
+        'isEnabled',
+        'isSubscribed',
+        'maxPacketLifeTime',
+        'maxRetransmits',
+        'ordered',
+        'reliable',
+        'sid'
+      ]);
+    });
+  });
+
+  describe('#toJSON', () => {
+    let track;
+
+    before(() => {
+      track = new RemoteDataTrack(dataTrackReceiver);
+    });
+
+    it('only returns public properties', () => {
+      assert.deepEqual(track.toJSON(), {
+        id: track.id,
+        kind: track.kind,
+        maxPacketLifeTime: track.maxPacketLifeTime,
+        maxRetransmits: track.maxRetransmits,
+        name: track.name,
+        ordered: track.ordered,
+        reliable: track.reliable,
+        sid: track.sid
+      });
+    });
+  });
 });
 
 function makeDataChannel() {
