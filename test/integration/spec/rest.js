@@ -20,25 +20,45 @@ const {
 } = require('../../lib/util');
 
 const connect = require('../../../lib/connect');
+const { RoomMaxParticipantsExceededError } = require('../../../lib/util/twilio-video-errors');
 
-// TODO(mmalavalli): Use twilio-node to call Track Subscription REST APIs.
-
-function subscribedTracks(publication, room, trackAction) {
-  const { localParticipant, sid } = room;
+function post(resource, data) {
   return new Promise((resolve, reject) => {
     const request = https.request({
       auth: `${apiKeySid}:${apiKeySecret}`,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       hostname: 'video.twilio.com',
       method: 'POST',
-      path: `/v1/Rooms/${sid}/Participants/${localParticipant.sid}/SubscribedTracks`
+      path: resource
     }, response => {
       response.on('data', () => {});
       response.on('end', resolve);
     });
     request.once('error', reject);
-    request.write(`Track=${publication.trackSid}&Status=${trackAction}`);
+    request.write(Object.keys(data).map(key => `${key}=${data[key]}`).join('&'));
     request.end();
+  });
+
+}
+
+function completeRoom(name) {
+  return post(`/v1/Rooms/${name}`, {
+    Status: 'completed'
+  });
+}
+
+function createRoom(name, type) {
+  return post('/v1/Rooms', {
+    Type: type,
+    UniqueName: name
+  });
+}
+
+function subscribedTracks(publication, room, trackAction) {
+  const { localParticipant, sid } = room;
+  return post(`/v1/Rooms/${sid}/Participants/${localParticipant.sid}/SubscribedTracks`, {
+    Status: trackAction,
+    Track: publication.trackSid
   });
 }
 
@@ -60,6 +80,38 @@ describe('', () => {
 (enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
+  describe('Small Group Room', () => {
+    let name;
+
+    before(async () => {
+      name = randomName();
+      await createRoom(name, 'group-small');
+      const options = Object.assign({ name, tracks: [] }, defaults);
+      await Promise.all([1, 2, 3, 4].map(randomName).map(getToken).map(token => connect(token, options)));
+    });
+
+    context('when a fifth Participant tries to connect to a Small Group Room', () => {
+      let error;
+
+      before(async () => {
+        try {
+          const options = Object.assign({ name, tracks: [] }, defaults);
+          await connect(getToken(randomName()), options);
+        } catch (e) {
+          error = e;
+        }
+      });
+
+      it('should reject with a RoomMaxParticipantsExceededError', () => {
+        assert(error instanceof RoomMaxParticipantsExceededError);
+      });
+    });
+
+    after(() => {
+      return completeRoom(name);
+    });
+  });
 
   describe('Track Subscription', () => {
     let rooms;
