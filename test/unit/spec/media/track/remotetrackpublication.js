@@ -214,6 +214,44 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
         });
       });
     });
+
+    describe('Object.keys', () => {
+      let publication;
+
+      before(() => {
+        publication = new RemoteTrackPublication(makeSignaling(true, kind, 'MT123'));
+      });
+
+      it('only returns public properties', () => {
+        assert.deepEqual(Object.keys(publication), [
+          'trackName',
+          'trackSid',
+          'isSubscribed',
+          'isTrackEnabled',
+          'kind',
+          'track'
+        ]);
+      });
+    });
+
+    describe('#toJSON', () => {
+      let publication;
+
+      before(() => {
+        publication = new RemoteTrackPublication(makeSignaling(true, kind, 'MT123'));
+      });
+
+      it('only returns public properties', () => {
+        assert.deepEqual(publication.toJSON(), {
+          isSubscribed: publication.isSubscribed,
+          isTrackEnabled: publication.isTrackEnabled,
+          kind: publication.kind,
+          track: null,
+          trackName: publication.trackName,
+          trackSid: publication.trackSid
+        });
+      });
+    });
   });
 });
 

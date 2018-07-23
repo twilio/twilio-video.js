@@ -103,5 +103,41 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         });
       });
     }
+
+    describe('Object.keys', () => {
+      let publication;
+
+      before(() => {
+        publication = new LocalTrackPublication('foo', localTrack, () => {});
+      });
+
+      it('only returns public properties', () => {
+        assert.deepEqual(Object.keys(publication), [
+          'trackName',
+          'trackSid',
+          'isTrackEnabled',
+          'kind',
+          'track'
+        ]);
+      });
+    });
+
+    describe('#toJSON', () => {
+      let publication;
+
+      before(() => {
+        publication = new LocalTrackPublication('foo', localTrack, () => {});
+      });
+
+      it('only returns public properties', () => {
+        assert.deepEqual(publication.toJSON(), {
+          isTrackEnabled: publication.isTrackEnabled,
+          kind: publication.kind,
+          track: publication.track.toJSON(),
+          trackName: publication.trackName,
+          trackSid: publication.trackSid
+        });
+      });
+    });
   });
 });
