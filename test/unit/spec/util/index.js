@@ -4,9 +4,22 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
-const { makeUUID, promiseFromEvents } = require('../../../../lib/util');
+const {
+  hidePrivateProperties,
+  makeUUID,
+  promiseFromEvents
+} = require('../../../../lib/util');
 
 describe('util', () => {
+  describe('hidePrivateProperties', () => {
+    it('should do what it says', () => {
+      const object = { foo: 'bar', _baz: 'qux' };
+      assert.deepEqual(Object.keys(object), ['foo', '_baz']);
+      hidePrivateProperties(object);
+      assert.deepEqual(Object.keys(object), ['foo']);
+    });
+  });
+
   describe('makeUUID', () => {
     it('should generate a unique UUID', () => {
       const uuid1 = makeUUID();
