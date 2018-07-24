@@ -4,6 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 
 const Room = require('../../../lib/room');
+const LocalParticipant = require('../../../lib/localparticipant');
 const ParticipantSignaling = require('../../../lib/signaling/participant');
 const RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 const RoomSignaling = require('../../../lib/signaling/room');
@@ -275,6 +276,52 @@ describe('Room', () => {
       signaling.preempt('connected');
       assert.equal(spy.callCount, 1);
       assert.equal(room.state, 'connected');
+    });
+  });
+
+  describe('Object.keys', () => {
+    let room;
+
+    beforeEach(() => {
+      const localParticipantSignaling = new ParticipantSignaling('PAXXX', 'client');
+      const localParticipant = new LocalParticipant(localParticipantSignaling, [], { log });
+      const signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
+      room = new Room(localParticipant, signaling, options);
+    });
+
+    it('only returns public properties', () => {
+      assert.deepEqual(Object.keys(room), [
+        'dominantSpeaker',
+        'isRecording',
+        'localParticipant',
+        'name',
+        'participants',
+        'sid',
+        'state'
+      ]);
+    });
+  });
+
+  describe('#toJSON', () => {
+    let room;
+
+    beforeEach(() => {
+      const localParticipantSignaling = new ParticipantSignaling('PAXXX', 'client');
+      const localParticipant = new LocalParticipant(localParticipantSignaling, [], { log });
+      const signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
+      room = new Room(localParticipant, signaling, options);
+    });
+
+    it('only returns public properties', () => {
+      assert.deepEqual(room.toJSON(), {
+        dominantSpeaker: room.dominantSpeaker ? room.dominantSpeaker.toJSON() : null,
+        isRecording: room.isRecording,
+        localParticipant: room.localParticipant.toJSON(),
+        name: room.name,
+        participants: {},
+        sid: room.sid,
+        state: room.state
+      });
     });
   });
 });
