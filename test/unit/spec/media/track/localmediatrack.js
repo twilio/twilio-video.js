@@ -223,6 +223,7 @@ const log = require('../../../../lib/fakelog');
             isStarted: track.isStarted,
             isStopped: track.isStopped,
             kind: track.kind,
+            mediaStreamTrack: track.mediaStreamTrack,
             name: track.name
           });
         } else {
@@ -233,6 +234,7 @@ const log = require('../../../../lib/fakelog');
             isStopped: track.isStopped,
             dimensions: track.dimensions,
             kind: track.kind,
+            mediaStreamTrack: track.mediaStreamTrack,
             name: track.name
           });
         }
