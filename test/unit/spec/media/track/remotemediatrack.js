@@ -158,6 +158,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             isStarted: track.isStarted,
             isSubscribed: track.isSubscribed,
             kind: track.kind,
+            mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
             sid: track.sid
           });
@@ -169,6 +170,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             isStarted: track.isStarted,
             isSubscribed: track.isSubscribed,
             kind: track.kind,
+            mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
             sid: track.sid
           });
