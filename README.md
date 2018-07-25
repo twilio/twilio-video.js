@@ -119,6 +119,27 @@ Changelog
 
 See [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+Content Security Policy (CSP)
+-----------------------------
+
+Want to enable [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) in a
+way that's compatible with twilio-video.js? Use the following policy directives:
+
+```
+connect-src https://ecs.us1.twilio.com wss://endpoint.twilio.com wss://sdkgw.us1.twilio.com
+media-src mediastream:
+```
+
+If you're loading twilio-video.js from [media.twiliocdn.com](https://media.twiliocdn.com),
+you should also include the following `script-src` directive:
+
+```
+script-src https://media.twiliocdn.com
+```
+
+Keep in mind, you may need to merge these policy directives with your own if
+you're using other services.
+
 License
 -------
 
