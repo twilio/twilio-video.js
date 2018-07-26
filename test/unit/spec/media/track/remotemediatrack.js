@@ -118,7 +118,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       it('only returns public properties', () => {
         if (kind === 'audio') {
           assert.deepEqual(Object.keys(track), [
-            'id',
             'kind',
             'name',
             'isStarted',
@@ -128,7 +127,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           ]);
         } else {
           assert.deepEqual(Object.keys(track), [
-            'id',
             'kind',
             'name',
             'isStarted',
@@ -151,7 +149,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       it('only returns public properties', () => {
         if (kind === 'audio') {
           assert.deepEqual(track.toJSON(), {
-            id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
             kind: track.kind,
@@ -162,7 +159,6 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         } else {
           assert.deepEqual(track.toJSON(), {
             dimensions: track.dimensions,
-            id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
             kind: track.kind,

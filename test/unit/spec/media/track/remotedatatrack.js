@@ -79,7 +79,6 @@ describe('RemoteDataTrack', () => {
 
     it('only returns public properties', () => {
       assert.deepEqual(Object.keys(track), [
-        'id',
         'kind',
         'name',
         'isEnabled',
@@ -101,7 +100,6 @@ describe('RemoteDataTrack', () => {
 
     it('only returns public properties', () => {
       assert.deepEqual(track.toJSON(), {
-        id: track.id,
         isEnabled: track.isEnabled,
         kind: track.kind,
         maxPacketLifeTime: track.maxPacketLifeTime,
