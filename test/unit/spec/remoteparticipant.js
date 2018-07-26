@@ -1452,17 +1452,13 @@ describe('RemoteParticipant', () => {
     it('only returns public properties', () => {
       assert.deepEqual(Object.keys(participant), [
         'audioTracks',
-        'audioTrackPublications',
         'dataTracks',
-        'dataTrackPublications',
         'identity',
         'networkQualityLevel',
         'sid',
         'state',
         'tracks',
-        'trackPublications',
-        'videoTracks',
-        'videoTrackPublications'
+        'videoTracks'
       ]);
     });
   });
@@ -1477,17 +1473,13 @@ describe('RemoteParticipant', () => {
     it('only returns public properties', () => {
       assert.deepEqual(participant.toJSON(), {
         audioTracks: {},
-        audioTrackPublications: {},
         dataTracks: {},
-        dataTrackPublications: {},
         identity: participant.identity,
         networkQualityLevel: participant.networkQualityLevel,
         sid: participant.sid,
         state: participant.state,
         tracks: {},
-        trackPublications: {},
-        videoTracks: {},
-        videoTrackPublications: {}
+        videoTracks: {}
       });
     });
   });

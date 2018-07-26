@@ -185,22 +185,22 @@ const log = require('../../../../lib/fakelog');
       it('only returns public properties', () => {
         if (kind[description] === 'audio') {
           assert.deepEqual(Object.keys(track), [
-            'id',
             'kind',
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'id',
             'isEnabled',
             'isStopped'
           ]);
         } else {
           assert.deepEqual(Object.keys(track), [
-            'id',
             'kind',
             'name',
             'isStarted',
             'mediaStreamTrack',
             'dimensions',
+            'id',
             'isEnabled',
             'isStopped'
           ]);

@@ -139,9 +139,9 @@ describe('LocalDataTrack', () => {
 
     it('only returns public properties', () => {
       assert.deepEqual(Object.keys(track), [
-        'id',
         'kind',
         'name',
+        'id',
         'maxPacketLifeTime',
         'maxRetransmits',
         'ordered',
