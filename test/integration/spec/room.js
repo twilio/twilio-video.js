@@ -246,6 +246,36 @@ describe('Room', function() {
     });
   });
 
+  // eslint-disable-next-line
+  (process.env.TOPOLOGY === 'SFU' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
+    const options = Object.assign({ name: randomName() }, defaults);
+    let thisRoom;
+    let thatRoom;
+    let dominantSpeaker;
+
+    before(async () => {
+      thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
+      const promise = new Promise(resolve => thisRoom.on('dominantSpeakerChanged', resolve));
+
+      const tracks = await createLocalTracks({ audio: true, fake: true });
+      thatRoom = await connect(getToken(randomName()), Object.assign({ tracks }, options));
+      dominantSpeaker = await promise;
+    });
+
+    it('is raised whenever the dominant speaker in the Room changes', () => {
+      assert.equal(dominantSpeaker, thisRoom.participants.get(dominantSpeaker.sid));
+    });
+
+    after(() => {
+      if (thisRoom) {
+        thisRoom.disconnect();
+      }
+      if (thatRoom) {
+        thatRoom.disconnect();
+      }
+    });
+  });
+
   describe('"participantConnected" event', () => {
     let thisRoom;
     let thatRoom;
