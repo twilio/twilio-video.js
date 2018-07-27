@@ -10,7 +10,7 @@ const {
 
 const hostname = environment && environment !== 'prod'
   ? `video.${environment}.twilio.com`
-  : 'video.twilio.com'
+  : 'video.twilio.com';
 
 function post(resource, data) {
   return new Promise((resolve, reject) => {
