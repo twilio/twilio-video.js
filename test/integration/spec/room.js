@@ -248,9 +248,7 @@ describe('Room', function() {
 
   // eslint-disable-next-line
   (process.env.TOPOLOGY === 'SFU' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
-    const _enableDominantSpeaker = true;
-    const name = randomName();
-    const options = Object.assign({ _enableDominantSpeaker, name }, defaults);
+    const options = Object.assign({ name: randomName() }, defaults);
     let thisRoom;
     let thatRoom;
     let dominantSpeaker;
