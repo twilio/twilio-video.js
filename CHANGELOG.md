@@ -4,15 +4,18 @@
 New Features
 ------------
 
-- Previously, if a Room was completed via the REST API while your
-  twilio-video.js-based application was connected to it, the Room would emit a
-  "disconnected" event, but it wouldn't explain _why_ the disconnect occurred.
-  Now, the "disconnect" event will include a TwilioError 53118, "Room
-  completed". In some applications, this will be expected, and so you should set
-  an event listener on the Room as follows:
+- When the Room is completed via the REST API, the Room emits a "disconnected"
+  event with a TwilioError 53188, "Room completed". Previously, there was no way
+  to distinguish this case from calling `disconnect` on the Room (JSDK-1884). In
+  some applications, this will be expected, so you should set an event listener
+  on the Room as follows:
 
   ```js
   room.once('disconnected', (room, error) => {
+    if (!error) {
+      console.log('You disconnected from the Room by calling `disconnect`');
+      return;
+    }
     switch (error.code) {
       case 53118:
         console.log('The Room was completed server-side');
@@ -25,8 +28,8 @@ New Features
   });
   ```
 
-1.12.0 (in progress)
-====================
+1.12.0 (July 25, 2018)
+======================
 
 Deprecations
 ------------
