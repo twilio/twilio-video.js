@@ -1,3 +1,33 @@
+1.13.0 (in progress)
+====================
+
+New Features
+------------
+
+- When the Room is completed via the REST API, the Room emits a "disconnected"
+  event with a TwilioError 53188, "Room completed". Previously, there was no way
+  to distinguish this case from calling `disconnect` on the Room (JSDK-1884). In
+  some applications, this will be expected, so you should set an event listener
+  on the Room as follows:
+
+  ```js
+  room.once('disconnected', (room, error) => {
+    if (!error) {
+      console.log('You disconnected from the Room by calling `disconnect`');
+      return;
+    }
+    switch (error.code) {
+      case 53118:
+        console.log('The Room was completed server-side');
+        break;
+      // Handle any other errors of interest.
+      default:
+        console.error(`You were disconnected: ${error.message}`);
+        break;
+    }
+  });
+  ```
+
 1.12.0 (July 25, 2018)
 ======================
 
