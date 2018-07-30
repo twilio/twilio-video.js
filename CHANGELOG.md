@@ -1,4 +1,4 @@
-1.13.0 (in progress)
+1.13.0 (July 30, 2018)
 ====================
 
 New Features
