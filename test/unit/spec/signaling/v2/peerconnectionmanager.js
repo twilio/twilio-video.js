@@ -613,7 +613,7 @@ describe('PeerConnectionManager', () => {
         context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
           it(`calls addMediaTrackSender for the MediaTrackSenders containing any previously-added MediaStreamTracks ${isAudioContextSupported ? ' and the dummy audio MediaTrackSender' : ''} on the new PeerConnectionV2`, async () => {
             const test = makeTest({ isAudioContextSupported });
-            const mediaStream = makeMediaStream();
+            const mediaStream = makeMediaStream({ video: 1 });
             const trackSenders = mediaStream.getTracks().map(makeTrackSender);
 
             test.peerConnectionManager.setTrackSenders(trackSenders);
@@ -624,6 +624,9 @@ describe('PeerConnectionManager', () => {
             const addedMediaTracks = test.peerConnectionV2s[0].addMediaTrackSender.args.map(([sender]) => sender.track);
             const dummyAudioTrack = (test.peerConnectionManager._dummyAudioTrackSender || { track: null }).track;
             assert.deepEqual(addedMediaTracks.filter(track => dummyAudioTrack !== track), mediaStream.getTracks());
+            if (dummyAudioTrack) {
+              assert.equal(addedMediaTracks[0], dummyAudioTrack, 'the dummy audio MediaTrackSender should be added first');
+            }
           });
         });
       });
