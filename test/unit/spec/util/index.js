@@ -6,7 +6,7 @@ const sinon = require('sinon');
 
 const {
   hidePrivateProperties,
-  hidePrivatePropertiesInClass,
+  hidePrivateAndCertainPublicPropertiesInClass,
   makeUUID,
   promiseFromEvents
 } = require('../../../../lib/util');
@@ -21,21 +21,22 @@ describe('util', () => {
     });
   });
 
-  describe('hidePrivatePropertiesInClass', () => {
+  describe('hidePrivateAndCertainPublicPropertiesInClass', () => {
     it('should do what it says', () => {
       class Foo1 {
         constructor() {
           this.args = [].slice.call(arguments);
+          this.bar = 'baz';
           this._foo = 'bar';
           this._baz = 'qux';
         }
       }
 
       const foo1 = new Foo1(1, 2, 3);
-      assert.deepEqual(Object.keys(foo1), ['args', '_foo', '_baz']);
+      assert.deepEqual(Object.keys(foo1), ['args', 'bar', '_foo', '_baz']);
       assert.deepEqual(foo1.args, [1, 2, 3]);
 
-      const Foo2 = hidePrivatePropertiesInClass(Foo1);
+      const Foo2 = hidePrivateAndCertainPublicPropertiesInClass(Foo1, ['bar']);
       const foo2 = new Foo2(1, 2, 3);
       assert.deepEqual(Object.keys(foo2), ['args']);
       assert.deepEqual(foo2.args, [1, 2, 3]);
