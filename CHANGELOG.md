@@ -1,5 +1,5 @@
-2.0.0 (in progress)
-===================
+2.0.0-beta1 (in progress)
+=========================
 
 Breaking Changes
 ----------------
@@ -20,6 +20,7 @@ Breaking Changes
   `dataTrackPublications` is now renamed to `dataTracks`, and
   `videoTrackPublications` is now renamed to `videoTracks`. Participant no
   longer maintains the deprecated Track-based collections.
+- We removed support for Bower.
 
 1.13.0 (July 30, 2018)
 ====================

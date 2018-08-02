@@ -44,12 +44,6 @@ Using this method, you can `require` twilio-video.js like so:
 const Video = require('twilio-video');
 ```
 
-### Bower
-
-```
-bower install twilio-video --save
-```
-
 ### CDN
 
 Releases of twilio-video.js are hosted on a CDN, and you can include these
