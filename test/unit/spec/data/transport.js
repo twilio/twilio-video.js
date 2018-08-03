@@ -7,6 +7,14 @@ const DataTransport = require('../../../../lib/data/transport');
 const EventTarget = require('../../../../lib/eventtarget');
 
 describe('DataTransport', () => {
+  describe('constructor', () => {
+    it('sends a "ready" message over the underlying RTCDataChannel', () => {
+      const dataChannel = mockRTCDataChannel();
+      new DataTransport(dataChannel);
+      sinon.assert.calledWith(dataChannel.send, JSON.stringify({ type: 'ready' }));
+    });
+  });
+
   describe('"message"', () => {
     describe('when the underlying RTCDataChannel emits a "message" event containing a JSON string', () => {
       it('emits a "message" event with the result of JSON.parse', () => {
