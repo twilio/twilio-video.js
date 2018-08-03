@@ -1,5 +1,13 @@
-1.13.0 (July 30, 2018)
+1.13.1 (in progress)
 ====================
+
+Bug Fixes
+---------
+
+- Worked around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
+
+1.13.0 (July 30, 2018)
+======================
 
 New Features
 ------------
