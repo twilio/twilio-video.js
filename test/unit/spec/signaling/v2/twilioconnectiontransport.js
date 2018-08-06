@@ -6,34 +6,52 @@ const sinon = require('sinon');
 
 const { name, version } = require('../../../../../package.json');
 const TwilioConnectionTransport = require('../../../../../lib/signaling/v2/twilioconnectiontransport');
-const { SignalingConnectionError } = require('../../../../../lib/util/twilio-video-errors');
+const { RoomCompletedError, SignalingConnectionError } = require('../../../../../lib/util/twilio-video-errors');
 const TwilioError = require('../../../../../lib/util/twilioerror');
 
 describe('TwilioConnectionTransport', () => {
-  describe('constructor', () => {
-    let test;
+  [false, true].forEach(negotiateNetworkQuality => {
+    describe(`constructor, called with .negotiateNetworkQuality flag ${negotiateNetworkQuality ? 'enabled' : 'disabled'}`, () => {
+      let test;
 
-    beforeEach(() => {
-      test = makeTest();
-      test.open();
+      beforeEach(() => {
+        test = makeTest({
+          iceServerSourceStatus: [
+            { foo: 'bar' }
+          ],
+          negotiateNetworkQuality
+        });
+        test.open();
+      });
+
+      it('should set the .state to "connecting"', () => {
+        assert.equal('connecting', test.transport.state);
+      });
+
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${negotiateNetworkQuality ? 'contains' : 'does not contain'} the "network_quality" payload`, () => {
+        const message = test.twilioConnection.sendMessage.args[0][0];
+        assert.equal(typeof message.format, 'string');
+        assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
+        assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
+        assert.equal(message.name, test.name);
+
+        if (negotiateNetworkQuality) {
+          assert.deepEqual(message.media_signaling.network_quality.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('network_quality' in message.media_signaling));
+        }
+
+        assert.equal(message.participant, test.localParticipantState);
+        assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
+        assert.equal(message.token, test.accessToken);
+        assert.equal(message.type, 'connect');
+        assert.equal(message.version, 1);
+        assert.equal(message.publisher.name, `${name}.js`);
+        assert.equal(message.publisher.sdk_version, version);
+        assert.equal(typeof message.publisher.user_agent, 'string');
+      });
     });
 
-    it('should set the .state to "connecting"', () => {
-      assert.equal('connecting', test.transport.state);
-    });
-
-    it('should call .sendMessage on the underlying TwilioConnection with a Connect RSP message', () => {
-      const message = test.twilioConnection.sendMessage.args[0][0];
-      assert.equal(message.name, test.name);
-      assert.equal(message.participant, test.localParticipantState);
-      assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
-      assert.equal(message.token, test.accessToken);
-      assert.equal(message.type, 'connect');
-      assert.equal(message.version, 1);
-      assert.equal(message.publisher.name, `${name}.js`);
-      assert.equal(message.publisher.sdk_version, version);
-      assert.equal(typeof message.publisher.user_agent, 'string');
-    });
   });
 
   describe('#disconnect, called when the Transport\'s .state is', () => {
@@ -886,6 +904,43 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
+        context('"disconnected" with status "completed"', () => {
+          let connected;
+          let disconnectedError;
+          let message;
+
+          beforeEach(() => {
+            test.transport.once('connected', msg => {
+              connected = msg;
+            });
+            test.transport.on('stateChanged', function stateChanged(state, error) {
+              if (state === 'disconnected') {
+                disconnectedError = error;
+                test.transport.removeListener('stateChanged', stateChanged);
+              }
+            });
+            test.transport.once('message', msg => {
+              message = msg;
+            });
+            test.twilioConnection.receiveMessage({ status: 'completed', type: 'disconnected' });
+          });
+
+          it('should transition .state to "disconnected" with a RoomCompletedError', () => {
+            assert.deepEqual(test.transitions, [
+              'disconnected'
+            ]);
+            assert(disconnectedError instanceof RoomCompletedError);
+          });
+
+          it('should not emit "connected"', () => {
+            assert(!connected);
+          });
+
+          it('should not emit "message"', () => {
+            assert(!message);
+          });
+        });
+
         context('"error"', () => {
           let connected;
           let message;
@@ -979,6 +1034,43 @@ describe('TwilioConnectionTransport', () => {
             assert.deepEqual(test.transitions, [
               'disconnected'
             ]);
+          });
+
+          it('should not emit "connected"', () => {
+            assert(!connected);
+          });
+
+          it('should not emit "message"', () => {
+            assert(!message);
+          });
+        });
+
+        context('"disconnected" with status "completed"', () => {
+          let connected;
+          let disconnectedError;
+          let message;
+
+          beforeEach(() => {
+            test.transport.once('connected', msg => {
+              connected = msg;
+            });
+            test.transport.on('stateChanged', function stateChanged(state, error) {
+              if (state === 'disconnected') {
+                disconnectedError = error;
+                test.transport.removeListener('stateChanged', stateChanged);
+              }
+            });
+            test.transport.once('message', msg => {
+              message = msg;
+            });
+            test.twilioConnection.receiveMessage({ status: 'completed', type: 'disconnected' });
+          });
+
+          it('should transition .state to "disconnected" with a RoomCompletedError', () => {
+            assert.deepEqual(test.transitions, [
+              'disconnected'
+            ]);
+            assert(disconnectedError instanceof RoomCompletedError);
           });
 
           it('should not emit "connected"', () => {
@@ -1193,6 +1285,43 @@ describe('TwilioConnectionTransport', () => {
             assert.deepEqual(test.transitions, [
               'disconnected'
             ]);
+          });
+
+          it('should not emit "connected"', () => {
+            assert(!connected);
+          });
+
+          it('should not emit "message"', () => {
+            assert(!message);
+          });
+        });
+
+        context('"disconnected" with status "completed"', () => {
+          let connected;
+          let disconnectedError;
+          let message;
+
+          beforeEach(() => {
+            test.transport.once('connected', msg => {
+              connected = msg;
+            });
+            test.transport.on('stateChanged', function stateChanged(state, error) {
+              if (state === 'disconnected') {
+                disconnectedError = error;
+                test.transport.removeListener('stateChanged', stateChanged);
+              }
+            });
+            test.transport.once('message', msg => {
+              message = msg;
+            });
+            test.twilioConnection.receiveMessage({ status: 'completed', type: 'disconnected' });
+          });
+
+          it('should transition .state to "disconnected" with a RoomCompletedError', () => {
+            assert.deepEqual(test.transitions, [
+              'disconnected'
+            ]);
+            assert(disconnectedError instanceof RoomCompletedError);
           });
 
           it('should not emit "connected"', () => {
