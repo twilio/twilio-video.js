@@ -150,12 +150,12 @@ describe('TwilioConnection', function() {
             sinon.assert.callCount(twilioConnection._ws.send, 0);
           },
           connecting: () => {
-            assert.deepEqual(twilioConnection._messageQueue[0], { body: JSON.stringify(body), type: 'msg' });
+            assert.deepEqual(twilioConnection._messageQueue[0], { body, type: 'msg' });
             sinon.assert.callCount(twilioConnection._ws.send, 0);
           },
           open: () => {
             assert.equal(twilioConnection._messageQueue.length, 0);
-            sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify({ body: JSON.stringify(body), type: 'msg' }));
+            sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify({ body, type: 'msg' }));
           }
         }[state]);
       });
