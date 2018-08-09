@@ -206,6 +206,7 @@ describe('Room', function() {
           assert.equal(theseLocalTrackStats.length, 1);
           assert.equal(thoseLocalTrackStats.length, 0);
           assert.equal(theseLocalTrackStats[0].trackId, localTracks[i].id);
+          Object.entries(theseLocalTrackStats[0]).forEach(([, value]) => assert(typeof value !== 'undefined'));
         });
       });
     });
@@ -238,7 +239,7 @@ describe('Room', function() {
 
   describe('"disconnected" event', () => {
     it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
-      const room = await connect(getToken(randomName()), Object.assign({}, defaults, { logLevel: 'debug' }));
+      const room = await connect(getToken(randomName()), defaults);
       const errorPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
       await completeRoom(room.name);
       const error = await errorPromise;
