@@ -1,5 +1,5 @@
-2.0.0-beta1 (in progress)
-=========================
+2.0.0-beta1 (August 10, 2018)
+=============================
 
 Breaking Changes
 ----------------
@@ -21,6 +21,14 @@ Breaking Changes
   `videoTrackPublications` is now renamed to `videoTracks`. Participant no
   longer maintains the deprecated Track-based collections.
 - We removed support for Bower.
+
+1.13.1 (August 7, 2018)
+=======================
+
+Bug Fixes
+---------
+
+- Worked around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 1.13.0 (July 30, 2018)
 ====================
