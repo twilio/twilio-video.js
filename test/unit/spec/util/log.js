@@ -3,6 +3,7 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
+const { makeUUID } = require('../../../../lib/util');
 const { DEFAULT_LOG_LEVEL } = require('../../../../lib/util/constants');
 const Log = require('../../../../lib/util/log');
 
@@ -186,8 +187,9 @@ describe('Log', () => {
       it('should call #log(Log.WARN, message)', () => {
         // eslint-disable-next-line new-cap
         const log = new Log('foo', component('bar'), { foo: 'warn' });
-        log.deprecated('baz');
-        log.deprecated('baz');
+        const uuid = makeUUID();
+        log.deprecated(uuid);
+        log.deprecated(uuid);
         sinon.assert.calledOnce(log.log);
       });
     });
