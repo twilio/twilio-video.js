@@ -78,6 +78,7 @@ describe('TwilioConnectionTransport', () => {
 
       it('should call .sendMessage on the underlying TwilioConnection with a Disconnect RSP message', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+          session: test.transport._session,
           type: 'disconnect',
           version: 1
         });
@@ -110,6 +111,7 @@ describe('TwilioConnectionTransport', () => {
 
       it('should call .sendMessage on the underlying TwilioConnection with a Disconnect RSP message', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+          session: test.transport._session,
           type: 'disconnect',
           version: 1
         });
@@ -172,6 +174,7 @@ describe('TwilioConnectionTransport', () => {
 
       it('should call .sendMessage on the underlying TwilioConnection with a Disconnect RSP message', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+          session: test.transport._session,
           type: 'disconnect',
           version: 1
         });
@@ -783,6 +786,7 @@ describe('TwilioConnectionTransport', () => {
 
         it('should call .sendMessage on the underlying TwilioConnection with a Disconnect RSP message', () => {
           sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+            session: test.transport._session,
             type: 'disconnect',
             version: 1
           });
