@@ -1,3 +1,29 @@
+1.14.0 (in progress)
+====================
+
+New Features
+------------
+
+- Added a new property to ConnectOptions, `dominantSpeaker`, for enabling the
+  Dominant Speaker API. Once the Dominant Speaker API is generally available,
+  you will need to set the `dominantSpeaker` property to `true`. This will only
+  take effect in Group Rooms.
+- Added a new property to ConnectOptions, `networkQuality`, for enabling the
+  Network Quality API. Once the Network Quality API is generally available,
+  you will need to set the `networkQuality` property to `true`. This will only
+  take effect in Group Rooms.
+
+For example, here is how you can enable both APIs:
+
+```js
+connect(token, {
+  dominantSpeaker: true,
+  networkQuality: true
+});
+```
+
+Please note that these features are still in beta and not generally available.
+
 1.13.1 (August 7, 2018)
 =======================
 
