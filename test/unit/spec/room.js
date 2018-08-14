@@ -83,7 +83,7 @@ describe('Room', () => {
       const spy = sinon.spy();
       room.on('trackAdded', spy);
 
-      participants.foo.emit('trackAdded', track);
+      participants.foo.emit('trackSubscribed', track);
       assert.equal(spy.callCount, 1);
       assert(spy.calledWith(track, participants.foo));
     });
@@ -139,7 +139,7 @@ describe('Room', () => {
       const spy = sinon.spy();
       room.on('trackRemoved', spy);
 
-      participants.bar.emit('trackRemoved', track);
+      participants.bar.emit('trackUnsubscribed', track);
       assert.equal(spy.callCount, 1);
       assert(spy.calledWith(track, participants.bar));
     });
