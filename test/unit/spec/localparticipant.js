@@ -645,8 +645,11 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz', kind: 'audio' }
+          );
+          test.participant._addTrack(track);
           assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
@@ -655,8 +658,11 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connected"', () => {
         it('calls .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz' };
-          test.participant.emit('trackAdded', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, name: 'baz', kind: 'audio' }
+          );
+          test.participant._addTrack(track);
           assert.equal(track._trackSender, test.signaling.addTrack.args[0][0]);
           assert.equal(track.name, test.signaling.addTrack.args[0][1]);
         });
@@ -665,8 +671,11 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
@@ -674,9 +683,13 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
         it('does not call .addTrack with the LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
+          test.signaling.state = 'disconnected';
           test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackAdded', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
           assert(!test.signaling.addTrack.calledOnce);
         });
       });
@@ -721,8 +734,12 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
         it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connecting' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
+          test.participant._removeTrack(track);
           assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
         });
       });
@@ -730,8 +747,12 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "connected"', () => {
         it('calls .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
+          test.participant._removeTrack(track);
           assert.equal(track._trackSender, test.signaling.removeTrack.args[0][0]);
         });
       });
@@ -739,8 +760,12 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'disconnected' });
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
+          test.participant._removeTrack(track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
       });
@@ -748,9 +773,14 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
         it('does not call .removeTrack with the LocalTrack\'s LocalTrackPublicationSignaling on the ParticipantSignaling', () =>{
           const test = makeTest({ state: 'connected' });
+          test.signaling.state = 'disconnected';
           test.signaling.emit('stateChanged', 'disconnected');
-          const track = { id: 'foo', _trackSender: { track: { enabled: true } } };
-          test.participant.emit('trackRemoved', track);
+          const track = Object.assign(
+            new EventEmitter(),
+            { id: 'foo', _trackSender: { track: { enabled: true } }, kind: 'audio' }
+          );
+          test.participant._addTrack(track);
+          test.participant._removeTrack(track);
           assert(!test.signaling.removeTrack.calledOnce);
         });
       });
