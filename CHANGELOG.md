@@ -24,6 +24,15 @@ connect(token, {
 
 Please note that these features are still in beta and not generally available.
 
+Bug Fixes
+---------
+
+- Fixed a bug where we erroneously raised deprecation warnings for "trackAdded"
+  and "trackRemoved" events. (JSDK-2131)
+- Reduced our usage of MediaStreams in Firefox. This should improve performance.
+  (JSDK-2118)
+- Worked around Firefox [Bug 1481335](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335).
+
 1.13.1 (August 7, 2018)
 =======================
 
