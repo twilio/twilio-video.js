@@ -62,7 +62,9 @@ describe('connect', function() {
         cancelablePromise = connect(token, Object.assign({}, defaults, extraOptions, { logLevel: 'off', tracks: [] }));
       });
 
-      it(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
+      // TODO(mmalavalli): Enable these tests for TwilioConnectionTransport
+      // once video-signaling-gateway supports token authentication.
+      (defaults._useTwilioConnection ? it.skip : it)(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
         assert(cancelablePromise instanceof CancelablePromise);
         try {
           const room = await cancelablePromise;

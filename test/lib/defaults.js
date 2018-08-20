@@ -15,6 +15,6 @@ const defaults = Object.seal([
     });
   }
   return defaults;
-}, {}));
+}, { _useTwilioConnection: !!env.useTwilioConnection }));
 
 module.exports = defaults;
