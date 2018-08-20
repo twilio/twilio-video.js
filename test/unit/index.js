@@ -15,6 +15,7 @@ require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 require('./spec/transceiver');
+require('./spec/twilioconnection');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');
@@ -54,6 +55,7 @@ require('./spec/signaling/v2/peerconnectionmanager');
 require('./spec/signaling/v2/localtrackpublication');
 require('./spec/signaling/v2/remotetrackpublication');
 require('./spec/signaling/v2/transport');
+require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');

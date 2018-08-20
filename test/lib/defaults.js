@@ -4,6 +4,7 @@ const env = require('../env');
 
 const defaults = Object.seal([
   'ecsServer',
+  'environment',
   'logLevel',
   'wsServer',
   'wsServerInsights'
@@ -15,6 +16,6 @@ const defaults = Object.seal([
     });
   }
   return defaults;
-}, {}));
+}, { _useTwilioConnection: !!env.useTwilioConnection }));
 
 module.exports = defaults;
