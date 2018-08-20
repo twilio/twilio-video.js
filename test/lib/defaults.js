@@ -4,6 +4,7 @@ const env = require('../env');
 
 const defaults = Object.seal([
   'ecsServer',
+  'environment',
   'logLevel',
   'wsServer',
   'wsServerInsights'
