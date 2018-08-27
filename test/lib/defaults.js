@@ -17,7 +17,10 @@ const defaults = [
     });
   }
   return defaults;
-}, {});
+}, {
+  dominantSpeaker: true,
+  networkQuality: true
+});
 
 // NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows
 // down with the number of ICE candidates it has to gather; therefore, in our
