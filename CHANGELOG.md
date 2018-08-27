@@ -32,6 +32,8 @@ Bug Fixes
 - Reduced our usage of MediaStreams in Firefox. This should improve performance.
   (JSDK-2118)
 - Worked around Firefox [Bug 1481335](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335).
+- Fixed a bug in our workaround for WebRTC
+  [Issue 8329](https://bugs.chromium.org/p/webrtc/issues/detail?id=8329).
 
 1.13.1 (August 7, 2018)
 =======================
