@@ -129,7 +129,10 @@ describe('Room', function() {
     });
   });
 
-  describe('getStats', () => {
+  describe('getStats', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.timeout(120000);
+
     let localDataTrack;
     let localMediaTracks;
     let localTrackPublications;
