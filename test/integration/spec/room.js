@@ -247,7 +247,7 @@ describe('Room', function() {
 
   describe('"disconnected" event', () => {
     it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
-      const room = await connect(getToken(randomName()), Object.assign({}, defaults, { logLevel: 'debug' }));
+      const room = await connect(getToken(randomName()), Object.assign({}, defaults));
       const errorPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
       await completeRoom(room.name);
       const error = await errorPromise;
