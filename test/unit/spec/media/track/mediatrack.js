@@ -87,10 +87,6 @@ describe('MediaTrack', () => {
         assert.equal(track, _track);
       });
 
-      it('should call ._detachElement with the passed element', () => {
-        assert(track._detachElement.calledWith(dummyElement));
-      });
-
       it('should set .isStarted to true', () => {
         assert(track.isStarted);
       });

@@ -1,8 +1,10 @@
 'use strict';
 
+const { guessBrowser } = require('../../lib/util');
+
 const env = require('../env');
 
-const defaults = Object.seal([
+const defaults = [
   'ecsServer',
   'environment',
   'logLevel',
@@ -16,6 +18,17 @@ const defaults = Object.seal([
     });
   }
   return defaults;
-}, { _useTwilioConnection: !!env.useTwilioConnection }));
+}, {
+  _useTwilioConnection: !!env.useTwilioConnection,
+  dominantSpeaker: true,
+  networkQuality: true
+});
 
-module.exports = defaults;
+// NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows
+// down with the number of ICE candidates it has to gather; therefore, in our
+// tests, we disable ICE servers and trust our host candidates work out.
+if (guessBrowser() === 'firefox') {
+  defaults.iceServers = [];
+}
+
+module.exports = Object.seal(defaults);
