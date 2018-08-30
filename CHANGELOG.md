@@ -22,6 +22,43 @@ Breaking Changes
   longer maintains the deprecated Track-based collections.
 - We removed support for Bower.
 
+1.14.0 (August 28, 2018)
+========================
+
+New Features
+------------
+
+- Added a new property to ConnectOptions, `dominantSpeaker`, for enabling the
+  Dominant Speaker API. Once the Dominant Speaker API is generally available,
+  you will need to set the `dominantSpeaker` property to `true`. This will only
+  take effect in Group Rooms.
+- Added a new property to ConnectOptions, `networkQuality`, for enabling the
+  Network Quality API. Once the Network Quality API is generally available,
+  you will need to set the `networkQuality` property to `true`. This will only
+  take effect in Group Rooms.
+
+For example, here is how you can enable both APIs:
+
+```js
+connect(token, {
+  dominantSpeaker: true,
+  networkQuality: true
+});
+```
+
+Please note that these features are still in beta and not generally available.
+
+Bug Fixes
+---------
+
+- Fixed a bug where we erroneously raised deprecation warnings for "trackAdded"
+  and "trackRemoved" events. (JSDK-2131)
+- Reduced our usage of MediaStreams in Firefox. This should improve performance.
+  (JSDK-2118)
+- Worked around Firefox [Bug 1481335](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335).
+- Fixed a bug in our workaround for WebRTC
+  [Issue 8329](https://bugs.chromium.org/p/webrtc/issues/detail?id=8329).
+
 1.13.1 (August 7, 2018)
 =======================
 
@@ -31,7 +68,7 @@ Bug Fixes
 - Worked around Firefox [Bug 1480277](https://bugzilla.mozilla.org/show_bug.cgi?id=1480277).
 
 1.13.0 (July 30, 2018)
-====================
+======================
 
 New Features
 ------------

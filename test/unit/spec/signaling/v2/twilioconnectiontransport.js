@@ -9,9 +9,11 @@ const TwilioConnectionTransport = require('../../../../../lib/signaling/v2/twili
 const { RoomCompletedError, SignalingConnectionError } = require('../../../../../lib/util/twilio-video-errors');
 const TwilioError = require('../../../../../lib/util/twilioerror');
 
+const { combinations } = require('../../../../lib/util');
+
 describe('TwilioConnectionTransport', () => {
-  [false, true].forEach(negotiateNetworkQuality => {
-    describe(`constructor, called with .negotiateNetworkQuality flag ${negotiateNetworkQuality ? 'enabled' : 'disabled'}`, () => {
+  combinations([[true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker]) => {
+    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'} and .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'}`, () => {
       let test;
 
       beforeEach(() => {
@@ -19,7 +21,8 @@ describe('TwilioConnectionTransport', () => {
           iceServerSourceStatus: [
             { foo: 'bar' }
           ],
-          negotiateNetworkQuality
+          networkQuality,
+          dominantSpeaker
         });
         test.open();
       });
@@ -28,17 +31,22 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${negotiateNetworkQuality ? 'contains' : 'does not contain'} the "network_quality" payload`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
-        assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
         assert.equal(message.name, test.name);
 
-        if (negotiateNetworkQuality) {
+        if (networkQuality) {
           assert.deepEqual(message.media_signaling.network_quality.transports, [{ type: 'data-channel' }]);
         } else {
           assert(!('network_quality' in message.media_signaling));
+        }
+
+        if (dominantSpeaker) {
+          assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('active_speaker' in message.media_signaling));
         }
 
         assert.equal(message.participant, test.localParticipantState);
