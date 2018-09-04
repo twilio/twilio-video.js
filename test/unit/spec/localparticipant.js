@@ -666,6 +666,9 @@ describe('LocalParticipant', () => {
               clone() {
                 return track._trackSender;
               },
+              stop() {
+                return true;
+              },
               track: {
                 enabled: true
               }
@@ -793,7 +796,9 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state transitions to "disconnected"', () => {
         let test;
         let tracks1;
+        let tracks1ClonesStopped;
         let tracks2;
+        let tracks2ClonesStopped;
 
         beforeEach(() => {
           tracks1 = [];
@@ -817,7 +822,18 @@ describe('LocalParticipant', () => {
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.publishTrack(track));
+            tracks1ClonesStopped = 0;
+            tracks2ClonesStopped = 0;
+
+            test.participant._signaling.tracks.forEach(trackSignaling => {
+              trackSignaling.trackTransceiver.once('stopped', () => tracks1ClonesStopped++);
+            });
+
+            tracks2.forEach(track => {
+              test.participant.publishTrack(track);
+              const trackSignaling = test.participant._signaling.tracks.get(track.id);
+              trackSignaling.trackTransceiver.once('stopped', () => tracks2ClonesStopped++);
+            });
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
@@ -826,8 +842,16 @@ describe('LocalParticipant', () => {
             tracks1.forEach(track => sinon.assert.calledOnce(track.stop));
           });
 
+          it('stops the cloned MediaTrackSenders of LocalTracks passed at construction', () => {
+            assert.equal(tracks1ClonesStopped, tracks1.length);
+          });
+
           it('does not stop any LocalTracks added after construction', () => {
             tracks2.forEach(track => sinon.assert.notCalled(track.stop));
+          });
+
+          it('stops the cloned MediaTrackSenders of LocalTracks added after construction', () => {
+            assert.equal(tracks2ClonesStopped, tracks2.length);
           });
         });
 
@@ -836,22 +860,41 @@ describe('LocalParticipant', () => {
             test = makeTest({
               LocalAudioTrack,
               LocalVideoTrack,
-              shouldStopLocalTracks: true,
+              shouldStopLocalTracks: false,
               state: 'connected',
               tracks: tracks1
             });
 
-            tracks2.forEach(track => test.participant.publishTrack(track));
+            tracks1ClonesStopped = 0;
+            tracks2ClonesStopped = 0;
+
+            test.participant._signaling.tracks.forEach(trackSignaling => {
+              trackSignaling.trackTransceiver.once('stopped', () => tracks1ClonesStopped++);
+            });
+
+            tracks2.forEach(track => {
+              test.participant.publishTrack(track);
+              const trackSignaling = test.participant._signaling.tracks.get(track.id);
+              trackSignaling.trackTransceiver.once('stopped', () => tracks2ClonesStopped++);
+            });
 
             test.signaling.emit('stateChanged', 'disconnected');
           });
 
           it('does not stop any LocalTracks passed at construction', () => {
-            tracks1.forEach(track => sinon.assert.calledOnce(track.stop));
+            tracks1.forEach(track => sinon.assert.notCalled(track.stop));
+          });
+
+          it('stops the cloned MediaTrackSenders of LocalTracks passed at construction', () => {
+            assert.equal(tracks1ClonesStopped, tracks1.length);
           });
 
           it('does not stop any LocalTracks added after construction', () => {
             tracks2.forEach(track => sinon.assert.notCalled(track.stop));
+          });
+
+          it('stops the cloned MediaTrackSenders of LocalTracks added after construction', () => {
+            assert.equal(tracks2ClonesStopped, tracks2.length);
           });
         });
 
