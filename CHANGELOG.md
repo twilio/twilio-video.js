@@ -1,3 +1,12 @@
+2.0.0-beta2 (in progress)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where calling a LocalVideoTrack's `stop` method did not stop the
+  video capture, and thereby did not turn the camera light off. (JSDK-2156)
+
 2.0.0-beta1 (August 10, 2018)
 =============================
 
