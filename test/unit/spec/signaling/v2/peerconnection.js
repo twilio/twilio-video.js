@@ -1408,7 +1408,7 @@ describe('PeerConnectionV2', () => {
               assert.deepEqual(
                 iceState.ice.candidates,
                 [{ candidate: 'candidate1' },
-                 { candidate: 'candidate2' }]);
+                 { candidate: 'candidate2' }, null]);
             });
           }
 
