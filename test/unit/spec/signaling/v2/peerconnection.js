@@ -1405,10 +1405,11 @@ describe('PeerConnectionV2', () => {
             });
           } else {
             it('with the full list of ICE candidates gathered up to that point', () => {
-              assert.deepEqual(
-                iceState.ice.candidates,
-                [{ candidate: 'candidate1' },
-                 { candidate: 'candidate2' }]);
+              let expectedCandidates = [{ candidate: 'candidate1' }, { candidate: 'candidate2' }];
+              if (which === 'final') {
+                expectedCandidates.push(null);
+              }
+              assert.deepEqual(iceState.ice.candidates, expectedCandidates);
             });
           }
 
