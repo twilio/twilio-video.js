@@ -11,10 +11,11 @@ const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localpartici
 class MockLocalTrackPublicationV2 extends EventEmitter {
   constructor(trackSender, name) {
     super();
-    this.trackSender = trackSender;
+    this.trackTransceiver = trackSender.clone();
     this.id = trackSender.id;
     this.name = name;
     this.sid = null;
+    this.stop = () => this.trackTransceiver.stop();
   }
 }
 
@@ -136,14 +137,18 @@ describe('LocalParticipantV2', () => {
       });
 
       describe('and the sender is a MediaTrackSender', () => {
-        it('calls .stop on the MediaTrackSender', () => {
+        it('calls .stop on the cloned MediaTrackSender', () => {
           // NOTE(mroberts): I'm cheating here. The `trackSender` shared by the
           // tests is a DataTrackSender, but we want to test that, when called
           // with a MediaTrackSender, which defines `stop`, `stop` is called.
+          const publication = localParticipant.tracks.get(trackSender.id);
+          publication.trackTransceiver.stop = sinon.spy();
           trackSender.stop = sinon.spy();
+
           try {
             localParticipant.removeTrack(trackSender);
-            assert(trackSender.stop.calledOnce);
+            assert(publication.trackTransceiver.stop.calledOnce);
+            assert(trackSender.stop.notCalled);
           } catch (error) {
             throw error;
           } finally {

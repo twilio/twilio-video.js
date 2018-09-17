@@ -7,6 +7,9 @@ Bug Fixes
 - Fixed a bug where calling a LocalVideoTrack's `stop` method did not stop the
   video capture, and thereby did not turn the camera light off. (JSDK-2156)
 
+- Fixed a bug where calling LocalParticipant's `unpublishTrack` on a LocalTrack
+  that was being published to a Room also stopped the LocalTrack. (JSDK-2169) 
+
 2.0.0-beta1 (August 10, 2018)
 =============================
 
