@@ -28,6 +28,12 @@ You may also experience codec issues in Peer-to-Peer (P2P) Rooms containing
 Android- or iOS-based Participants who do not support H.264. However, P2P Rooms
 with browser-based Participants should work.
 
+Also, there is an existing bug in twilio-video.js where publication of
+DataTracks after joining a Group Room never reaches completion (JSDK-2161).
+While we work to fix this bug, you can work around this by publishing your
+DataTracks while connecting to a Room using the `tracks` property of
+ConnectOptions.
+
 ### Angular
 
 There is a misinteraction between one of Angular's libraries, Zone.js, and
@@ -71,6 +77,12 @@ issues on the Firefox bug tracker:
 
 * [Bug 881532](https://bugzilla.mozilla.org/show_bug.cgi?id=881532)
 * [Bug 1278384](https://bugzilla.mozilla.org/show_bug.cgi?id=1278384)
+
+Also, there is an existing bug in twilio-video.js where publication of
+DataTracks after joining a Group Room never reaches completion (JSDK-2161).
+While we work to fix this bug, you can work around this by publishing your
+DataTracks while connecting to a Room using the `tracks` property of
+ConnectOptions.
 
 Aggressive Browser Extensions and Plugins
 -----------------------------------------
