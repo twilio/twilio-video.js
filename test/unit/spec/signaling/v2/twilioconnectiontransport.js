@@ -587,19 +587,57 @@ describe('TwilioConnectionTransport', () => {
           test.transport.once('stateChanged', (state, error) => {
             disconnectedError = error;
           });
-          test.twilioConnection.close(new Error('foo'));
         });
 
-        it('should transition .state to "disconnected"', () => {
-          assert.deepEqual([
-            'connected',
-            'disconnected'
-          ], test.transitions);
-          assert(disconnectedError instanceof SignalingConnectionError);
+        context('when closed with an Error', () => {
+          context('when the re-connect attempts haven\'t been exhausted', () => {
+            beforeEach(() => {
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should not transition states', () => {
+              assert.deepEqual([
+                'connected'
+              ], test.transitions);
+            });
+          });
+
+          context('when the re-connect attempts have been exhausted', () => {
+            beforeEach(() => {
+              test.transport._reconnectAttemptsLeft = 0;
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual([
+                'connected',
+                'disconnected'
+              ], test.transitions);
+              assert(disconnectedError instanceof SignalingConnectionError);
+            });
+
+            it('should not emit either "connected" or "message" events', () => {
+              assert(!connectedOrMessageEventEmitted);
+            });
+          });
         });
 
-        it('should not emit either "connected" or "message" events', () => {
-          assert(!connectedOrMessageEventEmitted);
+        context('when closed without an Error', () => {
+          beforeEach(() => {
+            test.twilioConnection.close();
+          });
+
+          it('should transition .state to "disconnected"', () => {
+            assert.deepEqual([
+              'connected',
+              'disconnected'
+            ], test.transitions);
+            assert.equal(disconnectedError, null);
+          });
+
+          it('should not emit either "connected" or "message" events', () => {
+            assert(!connectedOrMessageEventEmitted);
+          });
         });
       });
 
@@ -618,18 +656,53 @@ describe('TwilioConnectionTransport', () => {
           test.transport.once('stateChanged', (state, error) => {
             disconnectedError = error;
           });
-          test.twilioConnection.close(new Error('foo'));
         });
 
-        it('should transition .state to "disconnected"', () => {
-          assert.deepEqual([
-            'disconnected'
-          ], test.transitions);
-          assert(disconnectedError instanceof SignalingConnectionError);
+        context('when closed with an Error', () => {
+          context('when the re-connect attempts haven\'t been exhausted', () => {
+            beforeEach(() => {
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should not transition states', () => {
+              assert.deepEqual([], test.transitions);
+            });
+          });
+
+          context('when the re-connect attempts have been exhausted', () => {
+            beforeEach(() => {
+              test.transport._reconnectAttemptsLeft = 0;
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual([
+                'disconnected'
+              ], test.transitions);
+              assert(disconnectedError instanceof SignalingConnectionError);
+            });
+
+            it('should not emit either "connected" or "message" events', () => {
+              assert(!connectedOrMessageEventEmitted);
+            });
+          });
         });
 
-        it('should not emit either "connected" or "message" events', () => {
-          assert(!connectedOrMessageEventEmitted);
+        context('when closed without an Error', () => {
+          beforeEach(() => {
+            test.twilioConnection.close();
+          });
+
+          it('should transition .state to "disconnected"', () => {
+            assert.deepEqual([
+              'disconnected'
+            ], test.transitions);
+            assert.equal(disconnectedError, null);
+          });
+
+          it('should not emit either "connected" or "message" events', () => {
+            assert(!connectedOrMessageEventEmitted);
+          });
         });
       });
 
@@ -684,52 +757,124 @@ describe('TwilioConnectionTransport', () => {
           test.transport.once('stateChanged', (state, error) => {
             disconnectedError = error;
           });
-          test.twilioConnection.close(new Error('foo'));
         });
 
-        it('should transition .state to "disconnected"', () => {
-          assert.deepEqual([
-            'connected',
-            'syncing',
-            'disconnected'
-          ], test.transitions);
-          assert(disconnectedError instanceof SignalingConnectionError);
+        context('when closed with an Error', () => {
+          context('when the re-connect attempts haven\'t been exhausted', () => {
+            beforeEach(() => {
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should not transition states', () => {
+              assert.deepEqual([
+                'connected',
+                'syncing'
+              ], test.transitions);
+            });
+          });
+
+          context('when the re-connect attempts have been exhausted', () => {
+            beforeEach(() => {
+              test.transport._reconnectAttemptsLeft = 0;
+              test.twilioConnection.close(new Error('foo'));
+            });
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual([
+                'connected',
+                'syncing',
+                'disconnected'
+              ], test.transitions);
+              assert(disconnectedError instanceof SignalingConnectionError);
+            });
+
+            it('should not emit either "connected" or "message" events', () => {
+              assert(!connectedOrMessageEventEmitted);
+            });
+          });
         });
 
-        it('should not emit either "connected" or "message" events', () => {
-          assert(!connectedOrMessageEventEmitted);
+        context('when closed without an Error', () => {
+          beforeEach(() => {
+            test.twilioConnection.close();
+          });
+
+          it('should transition .state to "disconnected"', () => {
+            assert.deepEqual([
+              'connected',
+              'syncing',
+              'disconnected'
+            ], test.transitions);
+            assert.equal(disconnectedError, null);
+          });
+
+          it('should not emit either "connected" or "message" events', () => {
+            assert(!connectedOrMessageEventEmitted);
+          });
         });
       });
     });
 
     context('an "open" event, and the Transport\'s .state is', () => {
       context('"connected"', () => {
-        let connectedOrMessageEventEmitted;
+        [true, false].forEach(isReconnecting => {
+          context(`when ${!isReconnecting ? 'not ' : ''}re-connecting`, () => {
+            let connectedOrMessageEventEmitted;
 
-        beforeEach(() => {
-          test.open();
-          test.connect();
-          test.transport.once('connected', () => {
-            connectedOrMessageEventEmitted = true;
+            beforeEach(done => {
+              test.open();
+              test.connect();
+              test.transport.once('connected', () => {
+                connectedOrMessageEventEmitted = true;
+              });
+              test.transport.once('message', () => {
+                connectedOrMessageEventEmitted = true;
+              });
+              if (isReconnecting) {
+                test.close(new Error('foo'));
+              }
+              setTimeout(() => {
+                test.open();
+                done();
+              });
+            });
+
+            it('should not emit either "connected" or "message" events', () => {
+              assert(!connectedOrMessageEventEmitted);
+            });
+
+            if (isReconnecting) {
+              it('should transition .state to "syncing"', () => {
+                assert.deepEqual([
+                  'connected',
+                  'syncing'
+                ], test.transitions);
+              });
+
+              it('should call .sendMessage on the underlying TwilioConnection with a Sync RSP message', () => {
+                sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+                  name: test.name,
+                  participant: test.localParticipantState,
+                  // eslint-disable-next-line
+                  peer_connections: test.peerConnectionManager.getStates(),
+                  session: test.transport._session,
+                  token: test.accessToken,
+                  type: 'sync',
+                  version: 1
+                });
+              });
+            } else {
+              it('should not transition .state', () => {
+                assert.deepEqual([
+                  'connected'
+                ], test.transitions);
+              });
+
+              it('should not call .sendMessage on the underlying TwilioConnection', () => {
+                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
+              });
+            }
           });
-          test.transport.once('message', () => {
-            connectedOrMessageEventEmitted = true;
-          });
-          test.open();
-        });
-
-        it('should not transition .state', () => {
-          assert.deepEqual([
-            'connected'
-          ], test.transitions);
-        });
-
-        it('should not emit either "connected" or "message" events', () => {
-          assert(!connectedOrMessageEventEmitted);
-        });
-
-        it('should not call .sendMessage on the underlying TwilioConnection with a Connect RSP message', () => {
-          sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
         });
       });
 
@@ -1424,6 +1569,8 @@ class FakeTwilioConnection extends EventEmitter {
 
 function makeTest(options) {
   options = options || {};
+  options.reconnectBackOffJitter = options.reconnectBackOffJitter || 0;
+  options.reconnectBackOffMs = options.reconnectBackOffMs || 0;
   options.name = 'name' in options ? options.name : makeName();
   options.accessToken = options.accessToken || makeAccessToken();
   options.wsServer = options.wsServer || makeName();
@@ -1451,7 +1598,14 @@ function makeTest(options) {
     options.transitions.push(state);
   });
   options.receiveMessage = message => options.twilioConnection.receiveMessage(message);
-  options.close = error => options.twilioConnection.close(error);
+
+  options.close = error => {
+    options.twilioConnection.close(error);
+    setTimeout(() => {
+      options.twilioConnection = options.transport._twilioConnection;
+    });
+  };
+
   options.open = () => options.twilioConnection.open();
   options.connect = () => options.receiveMessage({ session: makeName(), type: 'connected' });
   options.sync = () => options.receiveMessage({ type: 'synced' });
