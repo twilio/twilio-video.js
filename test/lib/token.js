@@ -56,8 +56,7 @@ function createToken(identity, options) {
       break;
     case 'video':
       grant = new AccessToken.VideoGrant({
-        identity,
-        configurationProfileSid
+        identity
       });
       break;
     default:

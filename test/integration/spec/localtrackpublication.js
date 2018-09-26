@@ -16,7 +16,7 @@ const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatat
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { flatMap } = require('../../../lib/util');
-
+const { createRoom, completeRoom } = require('../../lib/rest');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
 
@@ -55,6 +55,7 @@ describe('LocalTrackPublication', function() {
         return;
       }
 
+      let name;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -67,7 +68,7 @@ describe('LocalTrackPublication', function() {
       let thoseTracksMap;
 
       before(async () => {
-        const name = randomName();
+        name = randomName();
         // TODO(mroberts): Update when VIDEO-954 is fixed.
         const identities = kind === 'data'
           ? [randomName(), randomName()]
@@ -88,6 +89,7 @@ describe('LocalTrackPublication', function() {
         }
 
         const tracks = [thisTrack];
+        await createRoom(name, options.topology);
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -150,11 +152,12 @@ describe('LocalTrackPublication', function() {
         };
       });
 
-      after(() => {
+      after(async () => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
+        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+        await completeRoom(name);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {

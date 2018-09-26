@@ -8,6 +8,7 @@ const defaults = [
   'ecsServer',
   'environment',
   'logLevel',
+  'topology',
   'wsServer',
   'wsServerInsights'
 ].reduce((defaults, option) => {
@@ -21,7 +22,8 @@ const defaults = [
 }, {
   _useTwilioConnection: !!env.useTwilioConnection,
   dominantSpeaker: true,
-  networkQuality: true
+  networkQuality: true,
+  topology: 'peer-to-peer'
 });
 
 // NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows

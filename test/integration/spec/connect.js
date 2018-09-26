@@ -17,6 +17,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox } = require('../../lib/guessbrowser');
+const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, tracksPublished } = require('../../lib/util');
 
@@ -34,11 +35,6 @@ describe('connect', function() {
       'with an invalid API Key SID',
       { apiKeySid: 'foo' },
       20103
-    ],
-    [
-      'with an invalid Configuration Profile SID',
-      { configurationProfileSid: 'foo' },
-      20101
     ],
     [
       'with an expired Access Token',
@@ -152,13 +148,15 @@ describe('connect', function() {
         name = randomName();
         options.name = name;
       }
+      await createRoom(name, options.topology);
       cancelablePromises = tokens.map(token => connect(token, options));
       rooms = await Promise.all(cancelablePromises);
     });
 
-    after(() => {
+    after(async () => {
       tracks.forEach(track => track.kind !== 'data' && track.stop());
       rooms.forEach(room => room.disconnect());
+      completeRoom(name);
     });
 
     it(`should return ${n === 1 ? 'a ' : ''}CancelablePromise${n === 1 ? '' : 's'} that resolve${n === 1 ? 's' : ''} to ${howManyRooms}`, async () => {
@@ -280,24 +278,30 @@ describe('connect', function() {
   });
 
   describe('called with the name of a Room to which other Participants have already connected', () => {
-    let rooms;
     let cancelablePromise;
+    let name;
     let room;
+    let rooms;
 
     before(async () => {
-      const options = Object.assign({ name: randomName(), tracks: [] }, defaults);
+      name = randomName();
+      const options = Object.assign({ name, tracks: [] }, defaults);
 
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
 
+      await createRoom(name, options.topology);
       cancelablePromise = connect(getToken(randomName()), options);
       room = await cancelablePromise;
     });
 
-    after(() => {
+    after(async () => {
       rooms.forEach(room => room.disconnect());
-      room.disconnect();
+      if (room) {
+        room.disconnect();
+      }
+      await completeRoom(name);
     });
 
     it('should return a CancelablePromise that resolves to a Room', () => {
@@ -319,11 +323,18 @@ describe('connect', function() {
 
   describe('called with a Room name and canceled before connecting', () => {
     let cancelablePromise;
+    let name;
 
     before(async () => {
-      const options = Object.assign({ tracks: [] }, defaults);
+      name = randomName();
+      const options = Object.assign({ name, tracks: [] }, defaults);
+      await createRoom(name, options.topology);
       cancelablePromise = connect(getToken(randomName()), options);
       cancelablePromise.cancel();
+    });
+
+    after(() => {
+      completeRoom(name);
     });
 
     it('should return a CancelablePromise that rejects with a "Canceled" Error', async () => {
@@ -343,6 +354,7 @@ describe('connect', function() {
     describe(`called with isInsightsEnabled = ${insights}`, () => {
       let InsightsPublisher;
       let NullInsightsPublisher;
+      let name;
       let room;
 
       before(async () => {
@@ -356,18 +368,24 @@ describe('connect', function() {
           this.publish = sinon.spy();
         });
 
+        name = randomName();
         const options = Object.assign({
+          name,
           tracks: [],
           insights,
           InsightsPublisher,
           NullInsightsPublisher
         }, defaults);
 
+        await createRoom(name, options.topology);
         room = await connect(getToken(randomName()), options);
       });
 
-      after(() => {
-        room.disconnect();
+      after(async () => {
+        if (room) {
+          room.disconnect();
+        }
+        await completeRoom(name);
       });
 
       it(`should ${insights ? '' : 'not'} publish events to the Insights gateway`, () => {
@@ -408,11 +426,14 @@ describe('connect', function() {
         video: encodingParameters.maxVideoBitrate
       };
 
+      let name;
       let peerConnections;
       let thisRoom;
       let thoseRooms;
 
       before(async () => {
+        name = randomName();
+        encodingParameters.name = name;
         [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters, { tracks: [] }, 0);
       });
 
@@ -438,8 +459,9 @@ describe('connect', function() {
         });
       });
 
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+      after(async () => {
+        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+        await completeRoom(name);
       });
     });
   });
@@ -451,6 +473,7 @@ describe('connect', function() {
         x => `video codec ${x}s`
       ]
     ], ([codecType]) => {
+      let name;
       let peerConnections;
       let thisRoom;
       let thoseRooms;
@@ -463,6 +486,8 @@ describe('connect', function() {
       };
 
       before(async () => {
+        name = randomName();
+        testOptions.name = name;
         [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
       });
 
@@ -480,13 +505,15 @@ describe('connect', function() {
         });
       });
 
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+      after(async () => {
+        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+        await completeRoom(name);
       });
     });
   });
 
   describe('when called with a fixed bitrate preferred audio codec', () => {
+    let name;
     let peerConnections;
     let thisRoom;
     let thoseRooms;
@@ -497,6 +524,8 @@ describe('connect', function() {
     };
 
     before(async () => {
+      name = randomName();
+      testOptions.name = name;
       [thisRoom, thoseRooms, peerConnections] = await setup(testOptions);
     });
 
@@ -517,8 +546,9 @@ describe('connect', function() {
       });
     });
 
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+    after(async () => {
+      [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+      await completeRoom(name);
     });
   });
 
@@ -553,6 +583,7 @@ describe('connect', function() {
           return;
         }
 
+        let name;
         let thisRoom;
         let thoseRooms;
         let thisParticipant;
@@ -561,8 +592,7 @@ describe('connect', function() {
 
         before(async () => {
           tracks = [...await getTracks(names), names ? new LocalDataTrack({ name: names.data }) : new LocalDataTrack()];
-
-          const name = randomName();
+          name = randomName();
           [thisRoom, thoseRooms] = await setup({ name, tracks }, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
@@ -601,16 +631,12 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
+        after(async () => {
           if (tracks) {
             tracks.forEach(track => track.kind !== 'data' && track.stop());
           }
-          if (thisRoom) {
-            thisRoom.disconnect();
-          }
-          if (thoseRooms) {
-            thoseRooms.forEach(room => room.disconnect());
-          }
+          [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+          await completeRoom(name);
         });
       });
     });
@@ -626,17 +652,18 @@ describe('connect', function() {
           ][Object.keys(x).length]()
         ]
       ], ([names]) => {
+        let name;
         let thisRoom;
         let thoseRooms;
         let thisParticipant;
         let thisParticipants;
 
         before(async () => {
-          const name = randomName();
+          name = randomName();
           const options = {
             audio: names.audio ? { name: names.audio } : true,
+            name,
             video: names.video ? { name: names.video } : true,
-            name
           };
           [thisRoom, thoseRooms] = await setup(options, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
@@ -680,13 +707,9 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          if (thisRoom) {
-            thisRoom.disconnect();
-          }
-          if (thoseRooms) {
-            thoseRooms.forEach(room => room.disconnect());
-          }
+        after(async () => {
+          [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+          await completeRoom(name);
         });
       });
     });
@@ -725,13 +748,15 @@ describe('connect', function() {
       ], ([{ createLocalTracks, scenario, TwilioError }]) => {
         void scenario;
 
+        let name;
         let room;
         let tracks;
         let trackPublicationFailed;
 
         before(async () => {
           tracks = await createLocalTracks();
-          [room] = await setup({ tracks }, {}, 0, true);
+          name = randomName();
+          [room] = await setup({ name, tracks }, {}, 0, true);
           trackPublicationFailed = await new Promise(resolve => room.localParticipant.once('trackPublicationFailed', resolve));
         });
 
@@ -739,15 +764,19 @@ describe('connect', function() {
           assert(trackPublicationFailed instanceof TwilioError);
         });
 
-        after(() => {
-          room.disconnect();
+        after(async () => {
           tracks.forEach(track => track.stop && track.stop());
+          if (room) {
+            room.disconnect();
+          }
+          await completeRoom(name);
         });
       });
     });
   });
 
   describe('called with a single LocalDataTrack in the tracks Array', () => {
+    let name;
     let room;
     let dataTrack;
     let tracks;
@@ -757,13 +786,18 @@ describe('connect', function() {
       const token = getToken(identity);
       dataTrack = new LocalDataTrack();
       tracks = [dataTrack];
-      const options = Object.assign({ tracks }, defaults);
+      name = randomName();
+      const options = Object.assign({ name, tracks }, defaults);
+      await createRoom(name, options.topology);
       room = await connect(token, options);
     });
 
-    after(() => {
+    after(async () => {
       tracks.forEach(track => track.kind !== 'data' && track.stop());
-      room.disconnect();
+      if (room) {
+        room.disconnect();
+      }
+      await completeRoom(name);
     });
 
     it('eventually results in a LocalDataTrackPublication', async () => {
@@ -776,12 +810,15 @@ describe('connect', function() {
   });
 
   (isChrome ? describe : describe.skip)('VP8 simulcast', () => {
+    let name;
     let peerConnections;
     let thisRoom;
     let thoseRooms;
 
     before(async () => {
+      name = randomName();
       [thisRoom, thoseRooms, peerConnections] = await setup({
+        name,
         preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
       });
     });
@@ -808,8 +845,9 @@ describe('connect', function() {
       });
     });
 
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+    after(async () => {
+      [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
+      await completeRoom(name);
     });
   });
 });
@@ -820,11 +858,11 @@ function getPayloadTypes(mediaSection) {
 
 async function setup(testOptions, otherOptions, nTracks, alone) {
   const options = Object.assign({
-    name: randomName(),
     audio: true,
     video: smallVideoConstraints
   }, testOptions, defaults);
   const token = getToken(randomName());
+  await createRoom(options.name, options.topology);
   const thisRoom = await connect(token, options);
   if (alone) {
     return [thisRoom];
@@ -834,7 +872,7 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
     audio: true,
     video: smallVideoConstraints
   }, otherOptions);
-  const thoseOptions = Object.assign({ name: options.name }, otherOptions, defaults);
+  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
   const thoseTokens = [randomName(), randomName()].map(getToken);
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 

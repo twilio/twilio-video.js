@@ -20,62 +20,62 @@ env:
 matrix:
   include:
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=P2P
+      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=SFU
+      env: BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=P2P
+      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=SFU
+      env: BROWSER=chrome BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=P2P
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=SFU
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=P2P
+      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=SFU
+      env: BROWSER=firefox BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=P2P
+      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=SFU
+      env: BROWSER=firefox BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=P2P
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=SFU
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
 
     # - os: osx
     #   sudo: required
     #   osx_image: xcode8.3
-    #   env: BROWSER=safari BVER=unstable TOPOLOGY=P2P
+    #   env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
 
     # - os: osx
     #   sudo: required
     #   osx_image: xcode8.3
-    #   env: BROWSER=safari BVER=unstable TOPOLOGY=SFU
+    #   env: BROWSER=safari BVER=unstable TOPOLOGY=group
 
   allow_failures:
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=P2P
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=SFU
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=P2P
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=SFU
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=P2P
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=SFU
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=P2P
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=SFU
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=P2P
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=SFU
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=group
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=group
 
 before_script:
   - |
@@ -94,11 +94,8 @@ before_script:
       sh -e /etc/init.d/xvfb start
       pulseaudio --start
     fi
-    if [ "${TOPOLOGY}" == 'P2P' ]; then
-      export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_P2P
-    else
+    if [ "${TOPOLOGY}" != 'peer-to-peer' ]; then
       export ENABLE_REST_API_TESTS=1
-      export CONFIGURATION_PROFILE_SID=$CONFIGURATION_PROFILE_SID_SFU
     fi
 
 script: npm run build:travis
