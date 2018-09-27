@@ -55,7 +55,7 @@ describe('LocalTrackPublication', function() {
         return;
       }
 
-      let name;
+      let sid;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -68,12 +68,12 @@ describe('LocalTrackPublication', function() {
       let thoseTracksMap;
 
       before(async () => {
-        name = randomName();
+        sid = await createRoom(randomName(), defaults.topology);
         // TODO(mroberts): Update when VIDEO-954 is fixed.
         const identities = kind === 'data'
           ? [randomName(), randomName()]
           : [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaults);
+        const options = Object.assign({ name: sid }, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -89,8 +89,6 @@ describe('LocalTrackPublication', function() {
         }
 
         const tracks = [thisTrack];
-        await createRoom(name, options.topology);
-
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
@@ -152,12 +150,12 @@ describe('LocalTrackPublication', function() {
         };
       });
 
-      after(async () => {
+      after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
-        await completeRoom(name);
+        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {

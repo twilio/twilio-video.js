@@ -33,17 +33,16 @@ describe('', () => {
   it('', () => {});
 });
 
-(enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
+(defaults.topology !== 'peer-to-peer' && enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  describe('Small Group Room', () => {
-    let name;
+  (defaults.topology === 'group-small' ? describe : describe.skip)('Small Group Room', () => {
+    let sid;
 
     before(async () => {
-      name = randomName();
-      await createRoom(name, 'group-small');
-      const options = Object.assign({ name, tracks: [] }, defaults);
+      sid = await createRoom(randomName(), 'group-small');
+      const options = Object.assign({ name: sid, tracks: [] }, defaults);
       await Promise.all([1, 2, 3, 4].map(randomName).map(getToken).map(token => connect(token, options)));
     });
 
@@ -52,7 +51,7 @@ describe('', () => {
 
       before(async () => {
         try {
-          const options = Object.assign({ name, tracks: [] }, defaults);
+          const options = Object.assign({ name: sid, tracks: [] }, defaults);
           await connect(getToken(randomName()), options);
         } catch (e) {
           error = e;
@@ -65,15 +64,17 @@ describe('', () => {
     });
 
     after(() => {
-      return completeRoom(name);
+      return completeRoom(sid);
     });
   });
 
   describe('Track Subscription', () => {
     let rooms;
+    let sid;
 
     before(async () => {
-      const options = Object.assign({ audio: true, name: randomName(), video: smallVideoConstraints }, defaults);
+      sid = await createRoom(randomName(), defaults.topology);
+      const options = Object.assign({ audio: true, name: sid, video: smallVideoConstraints }, defaults);
       const tokens = [1, 2].map(randomName).map(getToken);
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
@@ -123,10 +124,8 @@ describe('', () => {
     });
 
     after(() => {
-      if (Array.isArray(rooms)) {
-        rooms.forEach(room => room.disconnect());
-      }
-      rooms = null;
+      (rooms || []).forEach(room => room.disconnect());
+      return completeRoom(sid);
     });
   });
 });

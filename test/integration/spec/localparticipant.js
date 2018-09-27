@@ -44,16 +44,15 @@ describe('LocalParticipant', function() {
   this.timeout(60000);
 
   describe('#publishTrack', () => {
-    let name;
-    let trackPublications = [];
     let room;
+    let sid;
+    let trackPublications = [];
     let tracks;
 
     async function setup() {
-      name = randomName();
-      const options = Object.assign({ name, tracks: [] }, defaults);
+      sid = await createRoom(name, defaults.topology);
+      const options = Object.assign({ name: sid, tracks: [] }, defaults);
       const token = getToken(randomName());
-      await createRoom(name, options.topology);
       [room, tracks] = await Promise.all([
         connect(token, options),
         createLocalTracks({ audio: true, video: smallVideoConstraints })
@@ -110,27 +109,25 @@ describe('LocalParticipant', function() {
           });
         });
 
-        after(async () => {
+        after(() => {
           trackPublications = [];
           tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
           if (room) {
             room.disconnect();
           }
-          await completeRoom(name);
+          return completeRoom(sid);
         });
       });
     });
 
     context('when a LocalTrack is published to two Rooms', () => {
-      let anotherName;
       let anotherRoom;
+      let anotherSid;
 
       before(async () => {
-        anotherName = randomName();
-        const options = Object.assign({ name: anotherName, tracks: [] }, defaults);
+        anotherSid =  await createRoom(randomName(), defaults.topology);
+        const options = Object.assign({ name: anotherSid, tracks: [] }, defaults);
         const token = getToken(randomName());
-
-        await createRoom(anotherName, options.topology);
         [anotherRoom] = await Promise.all([
           connect(token, options),
           setup()
@@ -166,14 +163,11 @@ describe('LocalParticipant', function() {
         assert.notEqual(trackPublications[0].trackSid, trackPublications[1].trackSid);
       });
 
-      after(async () => {
+      after(() => {
         trackPublications = [];
         tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
-        [anotherRoom, room].filter(room => room).forEach(room => room.disconnect());
-        await Promise.all([
-          anotherName,
-          name
-        ].map(completeRoom));
+        [anotherRoom, room].forEach(room => room && room.disconnect());
+        return Promise.all([anotherSid, sid].map(completeRoom));
       });
     });
 
@@ -192,10 +186,10 @@ describe('LocalParticipant', function() {
         throw new Error('Unexpected resolution');
       });
 
-      after(async () => {
+      after(() => {
         trackPublications = [];
         tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
-        await completeRoom(name);
+        return completeRoom(sid);
       });
     });
 
@@ -218,8 +212,7 @@ describe('LocalParticipant', function() {
       ]
     ], ([isEnabled, kind, withName, when]) => {
       // TODO(mroberts): Remove me when VMS-920 is fixed.
-      // eslint-disable-next-line
-      if (kind === 'data' && when !== 'published' && process.env.TOPOLOGY === 'SFU') {
+      if (kind === 'data' && when !== 'published' && defaults.topology !== 'peer-to-peer') {
         return;
       }
 
@@ -241,9 +234,9 @@ describe('LocalParticipant', function() {
       }[kind];
 
       before(async () => {
-        name = randomName();
+        sid = await createRoom(randomName(), defaults.topology);
         const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaults);
+        const options = Object.assign({ name: sid }, defaults);
         const localTrackOptions = Object.assign(
           withName
             ? { name: localTrackNameByKind }
@@ -266,8 +259,6 @@ describe('LocalParticipant', function() {
         const tracks = when === 'previously'
           ? [thisTrack]
           : [];
-
-        await createRoom(options.name, options.topology);
 
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
@@ -321,12 +312,12 @@ describe('LocalParticipant', function() {
         };
       });
 
-      after(async () => {
+      after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
-        await completeRoom(name);
+        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
       });
 
       it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
@@ -458,13 +449,13 @@ describe('LocalParticipant', function() {
           assert(trackPublicationFailed instanceof TwilioError);
         });
 
-        after(async () => {
+        after(() => {
           track.stop();
           tracks.splice(0).forEach(track => track.stop && track.stop());
           if (room) {
             room.disconnect();
           }
-          await completeRoom(name);
+          return completeRoom(sid);
         });
       });
     });
@@ -491,7 +482,7 @@ describe('LocalParticipant', function() {
         return;
       }
 
-      let name;
+      let sid;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -504,9 +495,9 @@ describe('LocalParticipant', function() {
       let thoseTracksMap;
 
       before(async () => {
-        name = randomName();
+        sid = await createRoom(randomName(), defaults.topology);
         const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaults);
+        const options = Object.assign({ name: sid }, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -522,8 +513,6 @@ describe('LocalParticipant', function() {
         }
 
         const tracks = [thisTrack];
-        await createRoom(name, options.topology);
-
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
@@ -583,12 +572,12 @@ describe('LocalParticipant', function() {
         };
       });
 
-      after(async () => {
+      after(() => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
-        await completeRoom(name);
+        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
@@ -647,7 +636,7 @@ describe('LocalParticipant', function() {
   //   https://github.com/twilio/twilio-video.js/issues/72
   //
   describe('#unpublishTrack and #publishTrack called with two different LocalVideoTracks in quick succession', () => {
-    let name;
+    let sid;
     let thisRoom;
     let thisParticipant;
     let thisLocalTrackPublication1;
@@ -664,18 +653,17 @@ describe('LocalParticipant', function() {
     let thatTracksUnpublished;
 
     before(async () => {
-      name = randomName();
+      sid = await createRoom(randomName(), defaults.topology);
       const constraints = { video: smallVideoConstraints, fake: true };
 
       // Answerer
-      const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
-      await createRoom(name, thoseOptions.topology);
+      const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
       thatRoom = await connect(getToken(randomName()), thoseOptions);
 
       [thisTrack1] = await createLocalTracks(constraints);
 
       // Offerer
-      const theseOptions = Object.assign({ name, tracks: [thisTrack1] }, defaults);
+      const theseOptions = Object.assign({ name: sid, tracks: [thisTrack1] }, defaults);
       thisRoom = await connect(getToken(randomName()), theseOptions);
       thisParticipant = thisRoom.localParticipant;
 
@@ -715,11 +703,11 @@ describe('LocalParticipant', function() {
       };
     });
 
-    after(async () => {
+    after(() => {
       thisTrack1.stop();
       thisTrack2.stop();
-      [thisRoom, thatRoom].filter(room => room).forEach(room => room.disconnect());
-      await completeRoom(name);
+      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
 
     it('should eventually raise a "trackUnpublished" event for the unpublished LocalVideoTrack', () => {
@@ -769,7 +757,7 @@ describe('LocalParticipant', function() {
   //   https://github.com/twilio/twilio-video.js/issues/81
   //
   describe('#publishTrack called twice with two different LocalTracks in quick succession', () => {
-    let name;
+    let sid;
     let thisRoom;
     let thisParticipant;
     let thisAudioTrack;
@@ -782,18 +770,17 @@ describe('LocalParticipant', function() {
     let thoseVideoTracks;
 
     before(async () => {
-      name = randomName();
+      sid = await createRoom(randomName(), defaults.topology);
       const constraints = { audio: true, video: smallVideoConstraints, fake: true };
 
       // Answerer
-      const thoseOptions = Object.assign({ name, tracks: [] }, defaults);
-      await createRoom(name, thoseOptions.topology);
+      const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
       thatRoom = await connect(getToken(randomName()), thoseOptions);
 
       [thisAudioTrack, thisVideoTrack] = await createLocalTracks(constraints);
 
       // Offerer
-      const theseOptions = Object.assign({ name, tracks: [] }, defaults);
+      const theseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
       thisRoom = await connect(getToken(randomName()), theseOptions);
       thisParticipant = thisRoom.localParticipant;
 
@@ -827,11 +814,11 @@ describe('LocalParticipant', function() {
       };
     });
 
-    after(async () => {
+    after(() => {
       thisAudioTrack.stop();
       thisVideoTrack.stop();
-      [thisRoom, thatRoom].filter(room => room).forEach(room => room.disconnect());
-      await completeRoom(name);
+      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
 
     it('should eventually raise "trackPublished" event for each published LocalTracks', () => {
@@ -900,21 +887,20 @@ describe('LocalParticipant', function() {
         video: encodingParameters.maxVideoBitrate
       };
 
-      let name;
       let peerConnections;
       let remoteDescriptions;
+      let sid;
       let thisRoom;
       let thoseRooms;
 
       before(async () => {
-        name = randomName();
+        sid = await createRoom(randomName(), defaults.topology);
         const options = Object.assign({
           audio: true,
-          name,
+          name: sid,
           video: smallVideoConstraints
         }, initialEncodingParameters, defaults);
         const token = getToken(randomName());
-        await createRoom(name, options.topology);
         thisRoom = await connect(token, options);
 
         const thoseOptions = Object.assign({ name: options.name, tracks: [] }, defaults);
@@ -984,9 +970,9 @@ describe('LocalParticipant', function() {
         });
       });
 
-      after(async () => {
-        [thisRoom, ...thoseRooms].filter(room => room).forEach(room => room.disconnect());
-        await completeRoom(name);
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
       });
     });
   });
