@@ -1,3 +1,12 @@
+1.14.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where twilio-video.js was internally using the deprecated
+  RemoteTrack's `id` property. (JSDK-2173)
+
 1.14.0 (August 28, 2018)
 ========================
 
