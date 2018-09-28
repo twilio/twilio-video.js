@@ -39,15 +39,18 @@ describe('RemoteParticipant', () => {
 
       before(() => {
         audioTrack = new EventEmitter();
-        audioTrack.id = 'audioTrack';
+        audioTrack._id = 'audioTrack';
+        audioTrack.id = audioTrack._id;
         audioTrack.kind = 'audio';
 
         videoTrack = new EventEmitter();
-        videoTrack.id = 'videoTrack';
+        videoTrack._id = 'videoTrack';
+        videoTrack.id = videoTrack._id;
         videoTrack.kind = 'video';
 
         dataTrack = new EventEmitter();
-        dataTrack.id = 'dataTrack';
+        dataTrack._id = 'dataTrack';
+        dataTrack.id = dataTrack._id;
         dataTrack.kind = 'data';
 
         test = makeTest({ tracks: [audioTrack, videoTrack, dataTrack] });
@@ -1557,7 +1560,8 @@ function makeTest(options) {
   options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(mediaTrackReceiver, opts) {
     EventEmitter.call(this);
     this.enabled = true;
-    this.id = mediaTrackReceiver.id;
+    this._id = mediaTrackReceiver.id;
+    this.id = this._id;
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
@@ -1572,7 +1576,8 @@ function makeTest(options) {
   options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(mediaTrackReceiver, opts) {
     EventEmitter.call(this);
     this.enabled = true;
-    this.id = mediaTrackReceiver.id;
+    this._id = mediaTrackReceiver.id;
+    this.id = this._id;
     this.kind = mediaTrackReceiver.kind;
     this.mediaStreamTrack = mediaTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
@@ -1588,7 +1593,8 @@ function makeTest(options) {
     EventEmitter.call(this);
     this.enabled = true;
     this._dataTrackReceiver = dataTrackReceiver;
-    this.id = dataTrackReceiver.id;
+    this._id = dataTrackReceiver.id;
+    this.id = this._id;
     this.kind = dataTrackReceiver.kind;
     this.mediaStreamTrack = dataTrackReceiver.track;
     this.name = opts && opts.name ? opts.name : this.id;
