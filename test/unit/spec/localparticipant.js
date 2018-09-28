@@ -19,7 +19,8 @@ const LocalAudioTrack = sinon.spy(function LocalAudioTrack(mediaStreamTrack, opt
   EventEmitter.call(this);
   this.kind = 'audio';
   if (mediaStreamTrack) {
-    this.id = mediaStreamTrack.id;
+    this._id = mediaStreamTrack.id;
+    this.id = this._id;
     this.kind = mediaStreamTrack.kind;
     this.mediaStreamTrack = mediaStreamTrack;
     this.name = options.name || mediaStreamTrack.id;
@@ -34,7 +35,8 @@ const LocalVideoTrack = sinon.spy(function LocalVideoTrack(mediaStreamTrack, opt
   EventEmitter.call(this);
   this.kind = 'video';
   if (mediaStreamTrack) {
-    this.id = mediaStreamTrack.id;
+    this._id = mediaStreamTrack.id;
+    this.id = this._id;
     this.kind = mediaStreamTrack.kind;
     this.mediaStreamTrack = mediaStreamTrack;
     this.name = options.name || mediaStreamTrack.id;
@@ -49,7 +51,8 @@ const LocalDataTrack = sinon.spy(function LocalDataTrack(dataTrackSender, option
   EventEmitter.call(this);
   this.kind = 'data';
   if (dataTrackSender) {
-    this.id = dataTrackSender.id;
+    this._id = dataTrackSender.id;
+    this.id = this._id;
     this.name = options.name || dataTrackSender.id;
     this._trackSender = dataTrackSender;
   }
