@@ -3,8 +3,13 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
+const fakeLog = require('../../lib/fakelog');
 const EventTarget = require('../../../lib/eventtarget');
 const TwilioConnection = require('../../../lib/twilioconnection');
+
+function FakeLog() {
+  return fakeLog;
+}
 
 class FakeWebSocket extends EventTarget {
   constructor(arg) {
@@ -41,6 +46,7 @@ describe('TwilioConnection', function() {
 
     before(() => {
       twilioConnection = new TwilioConnection('foo', {
+        Log: FakeLog,
         WebSocket: FakeWebSocket
       });
     });
@@ -62,6 +68,7 @@ describe('TwilioConnection', function() {
 
         before(() => {
           twilioConnection = new TwilioConnection('foo', {
+            Log: FakeLog,
             WebSocket: FakeWebSocket
           });
           twilioConnection._ws.open();
@@ -123,6 +130,7 @@ describe('TwilioConnection', function() {
 
         before(() => {
           twilioConnection = new TwilioConnection('foo', {
+            Log: FakeLog,
             WebSocket: FakeWebSocket
           });
           twilioConnection._ws.open();
@@ -169,6 +177,7 @@ describe('TwilioConnection', function() {
       twilioConnection = new TwilioConnection('foo', {
         maxConsecutiveMissedHeartbeats: 2,
         welcomeTimeout: 500,
+        Log: FakeLog,
         WebSocket: FakeWebSocket
       });
     });
