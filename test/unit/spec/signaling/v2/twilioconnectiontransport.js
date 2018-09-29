@@ -595,9 +595,10 @@ describe('TwilioConnectionTransport', () => {
               test.twilioConnection.close(new Error('foo'));
             });
 
-            it('should not transition states', () => {
+            it('should transition .state to "syncing"', () => {
               assert.deepEqual([
-                'connected'
+                'connected',
+                'syncing'
               ], test.transitions);
             });
           });
