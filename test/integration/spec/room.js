@@ -16,7 +16,7 @@ const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
-const { completeRoom } = require('../../lib/rest');
+const { completeRoom, createRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
 const {
@@ -33,13 +33,14 @@ describe('Room', function() {
   this.timeout(60000);
 
   describe('disconnect', () => {
-    let rooms;
-    let room;
     let participants;
     let participantsBefore;
     let participantsAfter;
     let publicationsBefore;
     let publicationsAfter;
+    let room;
+    let rooms;
+    let sid;
     let tracksBefore;
     let tracksAfter;
     let participantsDisconnected;
@@ -49,8 +50,8 @@ describe('Room', function() {
     before(async () => {
       const identities = [randomName(), randomName(), randomName()];
       const tokens = identities.map(getToken);
-      const name = randomName();
-      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, defaults))));
+      sid = await createRoom(randomName(), defaults.topology);
+      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name: sid }, defaults))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
 
       await Promise.all(flatMap(rooms, room => [...room.participants.values()]).map(participant => {
@@ -84,7 +85,8 @@ describe('Room', function() {
     });
 
     after(() => {
-      rooms.forEach(room => room.disconnect());
+      rooms.forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
 
     it('should set the Room\'s LocalParticipant\'s .state to "disconnected"', () => {
@@ -131,6 +133,7 @@ describe('Room', function() {
     let remoteTracks;
     let reports;
     let rooms;
+    let sid;
 
     before(async () => {
       // 1. Get LocalTracks.
@@ -139,33 +142,35 @@ describe('Room', function() {
       localTracks = localMediaTracks.concat(localDataTrack);
       localTrackPublications = [null, null, null];
 
-      const name = randomName();
+      // 2. Create Room.
+      sid = await createRoom(randomName(), defaults.topology);
+
       rooms = await Promise.all(localTracks.map(async (localTrack, i) => {
-        // 2. Connect to Room with specified LocalTrack.
+        // 3. Connect to Room with specified LocalTrack.
         const identity = randomName();
         const token = getToken(identity);
         const room = await connect(token, Object.assign({
-          name,
+          name: sid,
           tracks: [localTrack]
         }, defaults));
 
-        // 3. Wait for the LocalTrack to be published.
+        // 4. Wait for the LocalTrack to be published.
         await tracksPublished(room.localParticipant, 1, localTrack.kind);
         const localTrackPublication = [...room.localParticipant.tracks.values()].find(localTrackPublication => {
           return localTrackPublication.track === localTrack;
         });
+
         assert(localTrackPublication);
         localTrackPublications[i] = localTrackPublication;
-
         return room;
       }));
 
       await Promise.all(rooms.map(async room => {
-        // 4. Wait for RemoteParticipants to connect.
+        // 5. Wait for RemoteParticipants to connect.
         await participantsConnected(room, 2);
         const remoteParticipants = [...room.participants.values()];
 
-        // 5. Wait for RemoteTracks to be published.
+        // 6. Wait for RemoteTracks to be published.
         await Promise.all(remoteParticipants.map(participant => tracksSubscribed(participant, 1)));
         const remoteTracksBySid = flatMap(remoteParticipants,
           remoteParticipant => [...remoteParticipant._tracks.values()])
@@ -178,14 +183,14 @@ describe('Room', function() {
           .map(localTrackPublication => remoteTracksBySid.get(localTrackPublication.trackSid))
           .filter(remoteTrack => remoteTrack);
 
-        // 6. Wait for RemoteMediaTracks to be started.
+        // 7. Wait for RemoteMediaTracks to be started.
         const remoteMediaTracks = remoteTracks.filter(remoteTrack => remoteTrack.kind !== 'data');
         await Promise.all(remoteMediaTracks.map(remoteMediaTrack => trackStarted(remoteMediaTrack)));
 
         return room;
       }));
 
-      // 7. Get StatsReports.
+      // 8. Get StatsReports.
       reports = await Promise.all(rooms.map(room => room.getStats()));
     });
 
@@ -236,28 +241,33 @@ describe('Room', function() {
 
     after(() => {
       localMediaTracks.forEach(localMediaTrack => localMediaTrack.stop());
-      rooms.forEach(room => room.disconnect());
+      rooms.forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
   });
 
   describe('"disconnected" event', () => {
     it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
-      const room = await connect(getToken(randomName()), defaults);
+      const sid = await createRoom(randomName(), defaults.topology);
+      const room = await connect(getToken(randomName()), Object.assign({ name: sid }, defaults));
       const errorPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
-      await completeRoom(room.name);
+      await completeRoom(sid);
       const error = await errorPromise;
       assert(error instanceof RoomCompletedError);
     });
   });
 
   // eslint-disable-next-line
-  (process.env.TOPOLOGY === 'SFU' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
-    const options = Object.assign({ name: randomName() }, defaults);
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
+    let options;
+    let sid;
     let thisRoom;
     let thatRoom;
     let dominantSpeaker;
 
     before(async () => {
+      sid = await createRoom(randomName(), defaults.topology);
+      options = Object.assign({ name: sid }, defaults);
       thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
       const promise = new Promise(resolve => thisRoom.on('dominantSpeakerChanged', resolve));
 
@@ -271,35 +281,32 @@ describe('Room', function() {
     });
 
     after(() => {
-      if (thisRoom) {
-        thisRoom.disconnect();
-      }
-      if (thatRoom) {
-        thatRoom.disconnect();
-      }
+      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
   });
 
   describe('"participantConnected" event', () => {
+    let sid;
     let thisRoom;
     let thatRoom;
     let thisParticipant;
     let thatParticipant;
 
     before(async () => {
-      thisRoom = await connect(getToken(randomName()), defaults);
+      sid = await createRoom(randomName(), defaults.topology);
+      const options = Object.assign({ name: sid }, defaults);
+      thisRoom = await connect(getToken(randomName()), options);
     });
 
     after(() => {
-      thisRoom.disconnect();
-      if (thatRoom) {
-        thatRoom.disconnect();
-      }
+      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
 
     it('is raised whenever a RemoteParticipant connects to the Room', async () => {
       const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
-      thatRoom = await connect(getToken(randomName()), Object.assign({ name: thisRoom.name }, defaults));
+      thatRoom = await connect(getToken(randomName()), Object.assign({ name: sid }, defaults));
       thisParticipant = await participantConnected;
       thatParticipant = thatRoom.localParticipant;
       assert(thisParticipant instanceof RemoteParticipant);
@@ -322,6 +329,7 @@ describe('Room', function() {
     let publicationsBefore;
     let publicationsAfter;
     let publicationsUnsubscribed;
+    let sid;
     let thisRoom;
     let thatRoom;
     let thisParticipant;
@@ -333,9 +341,9 @@ describe('Room', function() {
     before(async () => {
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
-      const name = randomName();
+      sid = await createRoom(randomName(), defaults.topology);
 
-      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name }, defaults))));
+      [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name: sid }, defaults))));
       thisParticipant = thisRoom.localParticipant;
 
       await Promise.all(flatMap([thisRoom, thatRoom], room => participantsConnected(room, 1)));
@@ -363,8 +371,8 @@ describe('Room', function() {
     });
 
     after(() => {
-      thisRoom.disconnect();
-      thatRoom.disconnect();
+      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      return completeRoom(sid);
     });
 
     it('is raised whenever a RemoteParticipant disconnects from the Room', () => {

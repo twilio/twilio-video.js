@@ -16,7 +16,7 @@ const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatat
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { flatMap } = require('../../../lib/util');
-
+const { createRoom, completeRoom } = require('../../lib/rest');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
 
@@ -55,6 +55,7 @@ describe('LocalTrackPublication', function() {
         return;
       }
 
+      let sid;
       let thisRoom;
       let thisParticipant;
       let thisLocalTrackPublication;
@@ -67,12 +68,12 @@ describe('LocalTrackPublication', function() {
       let thoseTracksMap;
 
       before(async () => {
-        const name = randomName();
+        sid = await createRoom(randomName(), defaults.topology);
         // TODO(mroberts): Update when VIDEO-954 is fixed.
         const identities = kind === 'data'
           ? [randomName(), randomName()]
           : [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name }, defaults);
+        const options = Object.assign({ name: sid }, defaults);
 
         thisTrack = await {
           audio: createLocalAudioTrack,
@@ -88,7 +89,6 @@ describe('LocalTrackPublication', function() {
         }
 
         const tracks = [thisTrack];
-
         const thisIdentity = identities[0];
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
@@ -154,7 +154,8 @@ describe('LocalTrackPublication', function() {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom].concat(thoseRooms).forEach(room => room.disconnect());
+        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {

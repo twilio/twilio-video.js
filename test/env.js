@@ -6,14 +6,14 @@ const processEnv = {
   ACCOUNT_SID: process.env.ACCOUNT_SID,
   API_KEY_SID: process.env.API_KEY_SID,
   API_KEY_SECRET: process.env.API_KEY_SECRET,
-  CONFIGURATION_PROFILE_SID: process.env.CONFIGURATION_PROFILE_SID,
   ECS_SERVER: process.env.ECS_SERVER,
   ENVIRONMENT: process.env.ENVIRONMENT,
   WS_SERVER: process.env.WS_SERVER,
   WS_SERVER_INSIGHTS: process.env.WS_SERVER_INSIGHTS,
   LOG_LEVEL: process.env.LOG_LEVEL,
   ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
-  USE_TWILIO_CONNECTION: process.env.USE_TWILIO_CONNECTION
+  USE_TWILIO_CONNECTION: process.env.USE_TWILIO_CONNECTION,
+  TOPOLOGY: process.env.TOPOLOGY
 };
 
 // Copy environment variables
@@ -21,14 +21,14 @@ const env = [
   ['ACCOUNT_SID',               'accountSid'],
   ['API_KEY_SID',               'apiKeySid'],
   ['API_KEY_SECRET',            'apiKeySecret'],
-  ['CONFIGURATION_PROFILE_SID', 'configurationProfileSid'],
   ['ECS_SERVER',                'ecsServer'],
   ['ENVIRONMENT',               'environment'],
   ['WS_SERVER',                 'wsServer'],
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
   ['LOG_LEVEL',                 'logLevel'],
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
-  ['USE_TWILIO_CONNECTION',     'useTwilioConnection']
+  ['USE_TWILIO_CONNECTION',     'useTwilioConnection'],
+  ['TOPOLOGY',                  'topology']
 ].reduce((env, [processEnvKey, envKey]) => {
   if (processEnvKey in processEnv) {
     env[envKey] = processEnv[processEnvKey];
@@ -40,8 +40,7 @@ const env = [
 [
   'accountSid',
   'apiKeySid',
-  'apiKeySecret',
-  'configurationProfileSid'
+  'apiKeySecret'
 ].forEach(function forEachRequiredKey(key) {
   if (!(key in env)) {
     throw new Error('Missing ' + key);
