@@ -142,6 +142,10 @@ describe('setCodecPreferences', () => {
 describe('setSimulcast', () => {
   combinationContext([
     [
+      ['planb', 'unified'],
+      x => `when called with a ${x} sdp`
+    ],
+    [
       [true, false],
       x => `when the SDP ${x ? 'already has' : 'does not already have'} simulcast SSRCs`
     ],
@@ -153,14 +157,14 @@ describe('setSimulcast', () => {
       [new Set(['01234']), new Set(['01234', '56789'])],
       x => `when retransmission is${x.size === 2 ? '' : ' not'} supported`
     ]
-  ], ([areSimSSRCsAlreadyPresent, isVP8PayloadTypePresent, ssrcs]) => {
+  ], ([sdpType, areSimSSRCsAlreadyPresent, isVP8PayloadTypePresent, ssrcs]) => {
     let sdp;
     let simSdp;
     let trackIdsToAttributes;
 
     before(() => {
       ssrcs = Array.from(ssrcs.values());
-      sdp = makeSdpForSimulcast(ssrcs);
+      sdp = makeSdpForSimulcast(sdpType, ssrcs);
       trackIdsToAttributes = new Map();
 
       if (!isVP8PayloadTypePresent) {

@@ -8,6 +8,7 @@ const defaults = [
   'ecsServer',
   'environment',
   'logLevel',
+  'sdpSemantics',
   'topology',
   'wsServer',
   'wsServerInsights'
