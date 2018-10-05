@@ -73,7 +73,7 @@ a=mid:mid_${id}\r
 a=msid:stream ${id}\r
 `) + `\
 a=ssrc:${ssrc} cname:0\r
-a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream ' : ''}${id}\r
+a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream' : '-'} ${id}\r
 `;
     }, sdp + (type === 'planb' ? media : ''));
   }, session);
@@ -92,7 +92,7 @@ function makeSdpForSimulcast(type, ssrcs) {
   });
   const ssrcSdpLines = ssrcs.length === 2 ? [
     `a=ssrc:${ssrcs[1]} cname:0`,
-    `a=ssrc:${ssrcs[1]} msid:${type === 'planb' ? 'stream ' : ''}video-1`
+    `a=ssrc:${ssrcs[1]} msid:${type === 'planb' ? 'stream' : '-'} video-1`
   ] : [];
   const fidSdpLines = ssrcs.length === 2
     ? [`a=ssrc-group:FID ${ssrcs.join(' ')}`]

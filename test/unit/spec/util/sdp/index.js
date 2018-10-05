@@ -172,9 +172,9 @@ describe('setSimulcast', () => {
           'm=video 9 UDP/TLS/RTP/SAVPF 121 126 97');
       }
       if (areSimSSRCsAlreadyPresent) {
-        sdp = setSimulcast(sdp, trackIdsToAttributes);
+        sdp = setSimulcast(sdp, sdpType, trackIdsToAttributes);
       }
-      simSdp = setSimulcast(sdp, trackIdsToAttributes);
+      simSdp = setSimulcast(sdp, sdpType, trackIdsToAttributes);
     });
 
     if (!isVP8PayloadTypePresent || areSimSSRCsAlreadyPresent) {
@@ -208,7 +208,7 @@ describe('setSimulcast', () => {
 
     context('when the SDP contains a previously added MediaStreamTrack ID', () => {
       before(() => {
-        simSdp = setSimulcast(sdp, trackIdsToAttributes);
+        simSdp = setSimulcast(sdp, sdpType, trackIdsToAttributes);
       });
 
       it('should not generate new simulcast SSRCs and re-use the existing simulcast SSRCs', () => {
@@ -461,7 +461,7 @@ a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
 
       const trackAttributes = new Map();
 
-      const simSdp1 = setSimulcast(sdp1, trackAttributes);
+      const simSdp1 = setSimulcast(sdp1, 'planb', trackAttributes);
 
       const fidGroups = simSdp1.match(/a=ssrc-group:FID/g);
       assert.equal(fidGroups.length, 3, 'RTX is enabled; therefore, there should be 3 FID groups in the SDP');
@@ -469,7 +469,7 @@ a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
       const ssrcs1 = new Set(simSdp1.match(/a=ssrc:[0-9]+/g).map(line => line.match(/a=ssrc:([0-9]+)/)[1]));
       assert.equal(ssrcs1.size, 6, 'RTX is enabled; therefore, there should be 6 SSRCs in the SDP');
 
-      const simSdp2 = setSimulcast(sdp2, trackAttributes);
+      const simSdp2 = setSimulcast(sdp2, 'planb', trackAttributes);
 
       assert(!simSdp2.match(/a=ssrc-group:FID/), 'RTX is disabled; therefore, there should be no FID groups in the SDP');
 
