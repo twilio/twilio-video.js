@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { sdpSemantics } = require('../../../lib/defaults');
 const { getSdpFormat, guessBrowser } = require('../../../../lib/util');
-const { setSimulcast } = require('../../../../lib/util/sdp');
+const { getMediaSections, setSimulcast } = require('../../../../lib/util/sdp');
 const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
 
 const isChrome = guessBrowser() === 'chrome';
@@ -29,9 +29,9 @@ describe('setSimulcast', () => {
       before(async () => {
         const constraints = { audio: true, video: true };
         stream = await makeStream(constraints);
-        pc1 = new RTCPeerConnection({ iceServers: [] });
+        pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
         pc1.addStream(stream);
-        pc2 = new RTCPeerConnection({ iceServers: [] });
+        pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
         pc2.addStream(stream);
         trackIdsToAttributes = new Map();
 
@@ -68,11 +68,13 @@ describe('setSimulcast', () => {
       it('should preserve simulcast SSRCs during renegotiation', () => {
         const sdp1 = createSdp === 'createOffer' ? offer1.sdp : answer1.sdp;
         const sdp2 = createSdp === 'createOffer' ? offer2.sdp : answer2.sdp;
-        const ssrcAttrs1 = sdp1.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
-        const ssrcAttrs2 = sdp2.match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+        const ssrcAttrs1 = getMediaSections(sdp1, 'video')[0].match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+        const ssrcAttrs2 = getMediaSections(sdp2, 'video')[0].match(/^a=ssrc:.+ (cname|msid):.+$/gm);
+        const ssrcs1 = new Set(ssrcAttrs1.map(attr => attr.match(/a=ssrc:(.+) (cname|msid):.+/)[1]));
+        const ssrcs2 = new Set(ssrcAttrs2.map(attr => attr.match(/a=ssrc:(.+) (cname|msid):.+/)[1]));
         const ssrcGroupAttrs1 = sdp1.match(/^a=ssrc-group:.+$/gm);
         const ssrcGroupAttrs2 = sdp2.match(/^a=ssrc-group:.+$/gm);
-        assert.deepEqual(ssrcAttrs1, ssrcAttrs2);
+        assert.deepEqual([...ssrcs1], [...ssrcs2]);
         assert.deepEqual(ssrcGroupAttrs1, ssrcGroupAttrs2);
       });
 
@@ -88,7 +90,7 @@ describe('setSimulcast', () => {
     before(async () => {
       const constraints = { audio: true, video: true };
       stream = await makeStream(constraints);
-      pc1 = new RTCPeerConnection({ iceServers: [] });
+      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
       pc1.addStream(stream);
       trackIdsToAttributes = new Map();
 

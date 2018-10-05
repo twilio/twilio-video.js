@@ -116,7 +116,7 @@
   },
   "dependencies": {
     "@twilio/sip.js": "^0.7.7",
-    "@twilio/webrtc": "twilio/twilio-webrtc.js#JSDK-2164",
+    "@twilio/webrtc": "twilio/twilio-webrtc.js#bf4be012df333f51238c32ce565dc0dfb05fcdce",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },
