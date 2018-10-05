@@ -4,6 +4,8 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where LocalVideoTracks representing screenshares were not taking
+  full advantage of simulcast. (JSDK-2163)
 - Fixed a bug where twilio-video.js was internally using the deprecated
   RemoteTrack's `id` property. (JSDK-2173)
 
