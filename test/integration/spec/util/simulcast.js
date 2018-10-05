@@ -1,11 +1,13 @@
 'use strict';
 
 const assert = require('assert');
-const { guessBrowser } = require('../../../../lib/util');
+const { sdpSemantics } = require('../../../lib/defaults');
+const { getSdpFormat, guessBrowser } = require('../../../../lib/util');
 const { setSimulcast } = require('../../../../lib/util/sdp');
 const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
 
 const isChrome = guessBrowser() === 'chrome';
+const sdpFormat = getSdpFormat(sdpSemantics);
 
 describe('setSimulcast', () => {
   let answer1;
@@ -38,7 +40,7 @@ describe('setSimulcast', () => {
 
         offer1 = createSdp === 'createOffer' ? new RTCSessionDescription({
           type: offer.type,
-          sdp: setSimulcast(offer.sdp, trackIdsToAttributes)
+          sdp: setSimulcast(offer.sdp, sdpFormat, trackIdsToAttributes)
         }) : offer;
 
         await pc1.setLocalDescription(offer1);
@@ -47,7 +49,7 @@ describe('setSimulcast', () => {
 
         answer1 = createSdp === 'createAnswer' ? new RTCSessionDescription({
           type: answer.type,
-          sdp: setSimulcast(answer.sdp, trackIdsToAttributes)
+          sdp: setSimulcast(answer.sdp, sdpFormat, trackIdsToAttributes)
         }) : answer;
 
         await pc2.setLocalDescription(answer1);
@@ -56,7 +58,7 @@ describe('setSimulcast', () => {
 
         offer2 = createSdp === 'createOffer' ? new RTCSessionDescription({
           type: _offer.type,
-          sdp: setSimulcast(_offer.sdp, trackIdsToAttributes)
+          sdp: setSimulcast(_offer.sdp, sdpFormat, trackIdsToAttributes)
         }) : _offer;
 
         await pc2.setRemoteDescription(offer2);
@@ -95,7 +97,7 @@ describe('setSimulcast', () => {
 
       offer1 = new RTCSessionDescription({
         type: offer.type,
-        sdp: setSimulcast(offer.sdp, trackIdsToAttributes)
+        sdp: setSimulcast(offer.sdp, sdpFormat, trackIdsToAttributes)
       });
 
       await pc1.setLocalDescription(offer1);
@@ -104,7 +106,7 @@ describe('setSimulcast', () => {
 
       offer2 = new RTCSessionDescription({
         type: _offer.type,
-        sdp: setSimulcast(_offer.sdp, trackIdsToAttributes)
+        sdp: setSimulcast(_offer.sdp, sdpFormat, trackIdsToAttributes)
       });
     });
 

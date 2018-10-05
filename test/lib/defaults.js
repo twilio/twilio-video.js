@@ -24,6 +24,7 @@ const defaults = [
   _useTwilioConnection: !!env.useTwilioConnection,
   dominantSpeaker: true,
   networkQuality: true,
+  sdpSemantics: 'plan-b',
   topology: 'peer-to-peer'
 });
 
