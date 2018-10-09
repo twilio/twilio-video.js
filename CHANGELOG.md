@@ -8,12 +8,6 @@ New Features
   gets disconnected and reconnected, but also when signaling gets disconnected
   and reconnected.
 
-Bug Fixes
----------
-
-- Fixed a bug where LocalVideoTracks representing screenshares were not taking
-  full advantage of simulcast. (JSDK-2163)
-
 2.0.0-beta2 (October 1, 2018)
 =============================
 
