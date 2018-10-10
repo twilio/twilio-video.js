@@ -202,10 +202,6 @@ describe('setSimulcast', () => {
       }
     });
 
-    it('should include "a=x-google-flag:conference"', () => {
-      assert(simSdp.match(/a=x-google-flag:conference/));
-    });
-
     context('when the SDP contains a previously added MediaStreamTrack ID', () => {
       before(() => {
         simSdp = setSimulcast(sdp, trackIdsToAttributes);
