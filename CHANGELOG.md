@@ -1,11 +1,9 @@
-1.14.1 (in progress)
-====================
+1.14.1 (October 10, 2018)
+=========================
 
 Bug Fixes
 ---------
 
-- Fixed a bug where LocalVideoTracks representing screenshares were not taking
-  full advantage of simulcast. (JSDK-2163)
 - Fixed a bug where twilio-video.js was internally using the deprecated
   RemoteTrack's `id` property. (JSDK-2173)
 
