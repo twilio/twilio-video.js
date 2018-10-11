@@ -22,7 +22,7 @@ const { getMediaSections } = require('../../../lib/util/sdp');
 const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
-const { isFirefox, isSafari } = require('../../lib/guessbrowser');
+const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
 const { smallVideoConstraints } = require('../../lib/util');
 
@@ -747,19 +747,19 @@ describe('LocalParticipant', function() {
     });
 
     ['trackUnsubscribed', 'trackRemoved'].forEach(event => {
-      it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
+      it(`should eventually raise a "${event}" event for the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksUnpublished[event];
         assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
         assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-        if (!isFirefox && !isSafari) {
+        if (isChrome && defaults.sdpSemantics !== 'unified-plan') {
           assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
         }
       });
     });
 
     ['trackAdded', 'trackSubscribed'].forEach(event => {
-      it(`should eventually raise a "${event}" event with the unpublished LocalVideoTrack`, () => {
+      it(`should eventually raise a "${event}" event for the unpublished LocalVideoTrack`, () => {
         const thatTrack = thatTracksPublished[event];
         assert.equal(thatTrack.sid, thisLocalTrackPublication2.trackSid);
         assert.equal(thatTrack.kind, thisLocalTrackPublication2.kind);
