@@ -13,6 +13,7 @@ const processEnv = {
   LOG_LEVEL: process.env.LOG_LEVEL,
   ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
   USE_TWILIO_CONNECTION: process.env.USE_TWILIO_CONNECTION,
+  SDP_SEMANTICS: process.env.SDP_SEMANTICS,
   TOPOLOGY: process.env.TOPOLOGY
 };
 
@@ -28,6 +29,7 @@ const env = [
   ['LOG_LEVEL',                 'logLevel'],
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
   ['USE_TWILIO_CONNECTION',     'useTwilioConnection'],
+  ['SDP_SEMANTICS',             'sdpSemantics'],
   ['TOPOLOGY',                  'topology']
 ].reduce((env, [processEnvKey, envKey]) => {
   if (processEnvKey in processEnv) {

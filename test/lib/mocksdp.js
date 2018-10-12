@@ -18,7 +18,7 @@
 
 /**
  * Create an SDP string.
- * @params {string} type - 'planb' | 'unified'
+ * @param {'planb' | 'unified'} type
  * @param {TracksByKind} kinds
  * @param {number} [maxAudioBitrate]
  * @param {number} [maxVideoBitrate]
@@ -70,23 +70,29 @@ a=rtcp-mux\r
         : trackAndSSRC;
       return sdp + (type === 'planb' ? '' : media + `\
 a=mid:mid_${id}\r
-a=msid:stream ${id}\r
+a=msid:- ${id}\r
 `) + `\
 a=ssrc:${ssrc} cname:0\r
-a=ssrc:${ssrc} msid:stream ${id}\r
+a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream' : '-'} ${id}\r
 `;
     }, sdp + (type === 'planb' ? media : ''));
   }, session);
 }
 
-function makeSdpForSimulcast(ssrcs) {
-  const sdp = makeSdpWithTracks('planb', {
+/**
+ * Make an sdp to test simulcast.
+ * @param {'planb' | 'unified'} type
+ * @param {Array<string>} ssrcs
+ * @returns {string} sdp
+ */
+function makeSdpForSimulcast(type, ssrcs) {
+  const sdp = makeSdpWithTracks(type, {
     audio: ['audio-1'],
     video: [{ id: 'video-1', ssrc: ssrcs[0] }]
   });
   const ssrcSdpLines = ssrcs.length === 2 ? [
     `a=ssrc:${ssrcs[1]} cname:0`,
-    `a=ssrc:${ssrcs[1]} msid:stream video-1`
+    `a=ssrc:${ssrcs[1]} msid:${type === 'planb' ? 'stream' : '-'} video-1`
   ] : [];
   const fidSdpLines = ssrcs.length === 2
     ? [`a=ssrc-group:FID ${ssrcs.join(' ')}`]

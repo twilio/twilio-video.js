@@ -755,7 +755,7 @@ describe('connect', function() {
     it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
       flatMap(peerConnections, pc => {
         assert(pc.localDescription.sdp);
-        return getMediaSections(pc.localDescription.sdp, 'video');
+        return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
       }).forEach(section => {
         const flowSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:FID .+$/gm), line => {
           return line.split(' ').slice(1);

@@ -8,6 +8,7 @@ const defaults = [
   'ecsServer',
   'environment',
   'logLevel',
+  'sdpSemantics',
   'topology',
   'wsServer',
   'wsServerInsights'
@@ -23,6 +24,7 @@ const defaults = [
   _useTwilioConnection: !!env.useTwilioConnection,
   dominantSpeaker: true,
   networkQuality: true,
+  sdpSemantics: 'plan-b',
   topology: 'peer-to-peer'
 });
 
