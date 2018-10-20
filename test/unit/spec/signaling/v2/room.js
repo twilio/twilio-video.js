@@ -1101,53 +1101,67 @@ describe('RoomV2', () => {
       });
 
       context('when .participants omits a Participant state for a connected ParticipantV2', () => {
-        it('does not call .disconnect on the ParticipantV2', () => {
-          const sid = makeParticipantSid();
-          const test = makeTest({
-            participants: [
-              { sid: sid, tracks: [] }
-            ]
-          });
-          test.transport.emit('message', {
-            participants: [],
-            // eslint-disable-next-line camelcase
-            peer_connections: []
-          });
-          assert(!test.participantV2s[0].disconnect.calledOnce);
-        });
+        ['connected', 'synced', 'update'].forEach(type => {
+          context(`when processing a "${type}" RSP message`, () => {
+            it(`should ${type === 'synced' ? '' : 'not '}call .disconnect on the ParticipantV2`, () => {
+              const sid = makeParticipantSid();
+              const test = makeTest({
+                participants: [
+                  { sid: sid, tracks: [] }
+                ]
+              });
+              test.transport.emit('message', {
+                participants: [],
+                // eslint-disable-next-line camelcase
+                peer_connections: [],
+                type
+              });
+              assert.equal(
+                type === 'synced',
+                test.participantV2s[0].disconnect.calledOnce);
+            });
 
-        it('the ParticipantV2 remains in the RoomV2\'s .participants Map', () => {
-          const sid = makeParticipantSid();
-          const test = makeTest({
-            participants: [
-              { sid: sid, tracks: [] }
-            ]
-          });
-          test.transport.emit('message', {
-            participants: [],
-            // eslint-disable-next-line camelcase
-            peer_connections: []
-          });
-          assert.equal(
-            test.participantV2s[0],
-            test.room.participants.get(sid));
-        });
+            it(`should ${type === 'synced' ? '' : 'not '}retain the ParticipantV2 remains in the RoomV2's .participants Map`, () => {
+              const sid = makeParticipantSid();
+              const test = makeTest({
+                participants: [
+                  { sid: sid, tracks: [] }
+                ]
+              });
+              test.transport.emit('message', {
+                participants: [],
+                // eslint-disable-next-line camelcase
+                peer_connections: [],
+                type
+              });
+              if (type === 'synced') {
+                assert(!test.room.participants.has(sid));
+              } else {
+                assert.equal(
+                  test.participantV2s[0],
+                  test.room.participants.get(sid));
+              }
+            });
 
-        it('does not emit a "participantDisconnected" event', () => {
-          const sid = makeParticipantSid();
-          const test = makeTest({
-            participants: [
-              { sid: sid, tracks: [] }
-            ]
+            it(`shound ${type === 'synced' ? '' : 'not '}emit a "participantDisconnected" event`, () => {
+              const sid = makeParticipantSid();
+              const test = makeTest({
+                participants: [
+                  { sid: sid, tracks: [] }
+                ]
+              });
+              let participantDisconnected;
+              test.room.once('participantDisconnected', () => { participantDisconnected = true; });
+              test.transport.emit('message', {
+                participants: [],
+                // eslint-disable-next-line camelcase
+                peer_connections: [],
+                type
+              });
+              assert.equal(type === 'synced',
+                !!participantDisconnected);
+            });
           });
-          let participantDisconnected;
-          test.room.once('participantDisconnected', () => { participantDisconnected = true; });
-          test.transport.emit('message', {
-            participants: [],
-            // eslint-disable-next-line camelcase
-            peer_connections: []
-          });
-          assert(!participantDisconnected);
         });
       });
     });
