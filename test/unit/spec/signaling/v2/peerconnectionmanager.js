@@ -664,7 +664,6 @@ describe('PeerConnectionManager', () => {
 
         const peerConnectionManager = await test.peerConnectionManager.update([peerConnectionState]);
         assert.equal(test.peerConnectionManager, peerConnectionManager);
-
       });
 
       it('passes the PeerConnection states to the corresponding PeerConnectionV2\'s #update method', async () => {
@@ -683,6 +682,64 @@ describe('PeerConnectionManager', () => {
             fizz: 'buzz'
           },
           test.peerConnectionV2s[0].update.args[0][0]);
+      });
+    });
+
+    context('when called with an array of PeerConnection states where some PeerConnection IDs are no longer present', () => {
+      [false, true].forEach(synced => {
+        context(`and the PeerConnection states are part of a ${synced ? '"synced"' : '"connected" or "update"'} message`, () => {
+          it('returns a Promise for the PeerConnectionManager', async () => {
+            const test = makeTest();
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.createAndOffer();
+
+            const peerConnectionState = {
+              id: test.peerConnectionV2s[0].id,
+              fizz: 'buzz'
+            };
+
+            const peerConnectionManager = await test.peerConnectionManager.update([peerConnectionState]);
+            assert.equal(test.peerConnectionManager, peerConnectionManager);
+          });
+
+          it(`${synced ? 'closes' : 'does not close'} those PeerConnections whose IDs are not present in the array`, async () => {
+            const test = makeTest();
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.createAndOffer();
+
+            const peerConnectionState = {
+              id: test.peerConnectionV2s[0].id,
+              fizz: 'buzz'
+            };
+
+            await test.peerConnectionManager.update([peerConnectionState], synced);
+            if (synced) {
+              sinon.assert.calledOnce(test.peerConnectionV2s[1]._close);
+            } else {
+              sinon.assert.notCalled(test.peerConnectionV2s[1]._close);
+            }
+          });
+
+          it('passes the PeerConnection states to the corresponding PeerConnectionV2\'s #update method', async () => {
+            const test = makeTest();
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.createAndOffer();
+
+            const peerConnectionState = {
+              id: test.peerConnectionV2s[0].id,
+              fizz: 'buzz'
+            };
+
+            await test.peerConnectionManager.update([peerConnectionState]);
+            assert.deepEqual(
+              {
+                id: test.peerConnectionV2s[0].id,
+                fizz: 'buzz'
+              },
+              test.peerConnectionV2s[0].update.args[0][0]);
+            sinon.assert.notCalled(test.peerConnectionV2s[1].update);
+          });
+        });
       });
     });
 
@@ -813,6 +870,8 @@ function makePeerConnectionV2Constructor(testOptions) {
     peerConnectionV2.configuration = {
       iceServers: testOptions.iceServers
     };
+
+    peerConnectionV2._close = sinon.spy();
 
     peerConnectionV2.id = id;
 
