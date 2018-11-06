@@ -1,3 +1,13 @@
+2.1.0 (in progress)
+===================
+
+This release introduces experimental support for Edge. Support for Edge is "experimental" 
+because, at the time of writing, Edge does not support data channels. This means data 
+tracks are not supported.
+
+twilio-video.js will log these same caveats as a warning if you call `connect`
+in Edge. You can disable this warning by setting the `logLevel` to "warn".
+
 2.0.0 (in progress)
 ===================
 
