@@ -8,6 +8,13 @@ New Features
   gets disconnected and reconnected, but also when signaling gets disconnected
   and reconnected.
 
+Bug Fixes
+---------
+
+- Fixed a bug where unpublishing a LocalTrack from within one if its event
+  listeners that have been added before publishing it to the Room throws a
+  TypeError. (JSDK-2212)
+
 2.0.0-beta2 (October 1, 2018)
 =============================
 
