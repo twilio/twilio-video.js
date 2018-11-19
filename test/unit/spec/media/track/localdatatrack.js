@@ -37,6 +37,23 @@ describe('LocalDataTrack', () => {
       assert.equal(dataTrack.kind, 'data');
     });
 
+    context('when the browser is Edge', () => {
+      let isError = false;
+      before(() => {
+        try {
+          const track = new LocalDataTrack({
+            guessBrowser: () => 'edge'
+          })
+        } catch(error) {
+          isError = true;
+        }
+      });
+
+      it('throws an Error', () => {
+        assert(isError);
+      })
+    });
+
     [true, false].forEach(isNamePresentInOptions => {
       let sender;
       let track;
