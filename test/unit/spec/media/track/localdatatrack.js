@@ -41,17 +41,17 @@ describe('LocalDataTrack', () => {
       let isError = false;
       before(() => {
         try {
-          const track = new LocalDataTrack({
+          new LocalDataTrack({
             guessBrowser: () => 'edge'
-          })
-        } catch(error) {
+          });
+        } catch (error) {
           isError = true;
         }
       });
 
       it('throws an Error', () => {
         assert(isError);
-      })
+      });
     });
 
     [true, false].forEach(isNamePresentInOptions => {
