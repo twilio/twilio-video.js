@@ -1,12 +1,12 @@
-2.0.0 (in progress)
-===================
+2.0.0-beta3 (in progress)
+=========================
 
-New Features
-------------
+Bug Fixes
+---------
 
-- The Room now emits "reconnecting" and "reconnected" events not only when media
-  gets disconnected and reconnected, but also when signaling gets disconnected
-  and reconnected.
+- Fixed a bug where unpublishing a LocalTrack from within one of its event
+  listeners that have been added before publishing it to the Room throws a
+  TypeError. (JSDK-2212)
 
 2.0.0-beta2 (October 1, 2018)
 =============================

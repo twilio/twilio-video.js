@@ -976,4 +976,34 @@ describe('LocalParticipant', function() {
       });
     });
   });
+
+  // NOTE (mmalavalli): This test ensures that the behavior described in
+  // https://issues.corp.twilio.com/browse/JSDK-2212 is not observed.
+  describe('JSDK-2212', () => {
+    [
+      ['disabled', 'disable'],
+      ['enabled', 'enable'],
+      ['stopped', 'stop']
+    ].forEach(([event, action]) => {
+      context(`when a LocalTrack is unpublished in a "${event}" event listener`, () => {
+        context('when the listener is added to the LocalTrack before publishing it to the Room', () => {
+          it('should not throw', async () => {
+            let room;
+            const track = await createLocalAudioTrack();
+            if (event === 'enabled') {
+              track.disable();
+            }
+            track.once(event, () => {
+              room.localParticipant.unpublishTrack(track);
+            });
+            room = await connect(getToken('foo'), {
+              name: randomName(),
+              tracks: [track]
+            });
+            assert.doesNotThrow(() => track[action]());
+          });
+        });
+      });
+    });
+  });
 });
