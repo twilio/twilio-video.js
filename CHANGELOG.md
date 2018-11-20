@@ -1,12 +1,5 @@
-2.0.0 (in progress)
-===================
-
-New Features
-------------
-
-- The Room now emits "reconnecting" and "reconnected" events not only when media
-  gets disconnected and reconnected, but also when signaling gets disconnected
-  and reconnected.
+2.0.0-beta3 (in progress)
+=========================
 
 Bug Fixes
 ---------
