@@ -4,7 +4,7 @@
 Bug Fixes
 ---------
 
-- Fixed a bug where unpublishing a LocalTrack from within one if its event
+- Fixed a bug where unpublishing a LocalTrack from within one of its event
   listeners that have been added before publishing it to the Room throws a
   TypeError. (JSDK-2212)
 
