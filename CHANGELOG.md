@@ -1,5 +1,5 @@
-2.0.0-beta3 (in progress)
-=========================
+2.0.0-beta3 (November 20, 2018)
+===============================
 
 Bug Fixes
 ---------
@@ -7,6 +7,12 @@ Bug Fixes
 - Fixed a bug where unpublishing a LocalTrack from within one of its event
   listeners that have been added before publishing it to the Room throws a
   TypeError. (JSDK-2212)
+
+Note for Electron developers
+----------------------------
+
+- twilio-video.js will no longer be usable on Electron 2.x or below. Please
+  upgrade to Electron 3.x or higher.
 
 2.0.0-beta2 (October 1, 2018)
 =============================
