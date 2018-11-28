@@ -1,3 +1,11 @@
+2.0.0-beta4 (in progress)
+===============================
+
+Bug Fixes
+---------
+
+  - Fixed a bug where Safari failed to stream a video track from Firefox. (JSDK-2224)
+
 2.0.0-beta3 (November 20, 2018)
 ===============================
 
