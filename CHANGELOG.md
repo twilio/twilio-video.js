@@ -1,3 +1,12 @@
+2.0.0-beta4 (in progress)
+===============================
+
+Bug Fixes
+---------
+
+  - Fixed a bug where, when a Safari Participant joins a Room after a Firefox Participant,
+    it did not receive video frames for VideoTracks published by the Firefox Participant. (JSDK-2224)
+
 2.0.0-beta3 (November 20, 2018)
 ===============================
 
