@@ -1,4 +1,4 @@
-2.0.0-beta4 (in progress)
+2.0.0-beta4 (November 29, 2018)
 ===============================
 
 Bug Fixes
