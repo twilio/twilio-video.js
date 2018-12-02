@@ -7,6 +7,8 @@ Bug Fixes
 - Fixed a bug where unpublishing a LocalTrack from within one of its event
   listeners that have been added before publishing it to the Room throws a
   TypeError. (JSDK-2212)
+- Fixed a bug where, when a Safari Participant joins a Room after a Firefox Participant,
+  it did not receive video frames for VideoTracks published by the Firefox Participant. (JSDK-2224)
 
 1.14.1 (October 10, 2018)
 =========================
