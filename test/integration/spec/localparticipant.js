@@ -731,7 +731,7 @@ describe('LocalParticipant', function() {
       assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
       assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
       assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-      if (isChrome && defaults.sdpSemantics !== 'unified-plan') {
+      if (isChrome && defaults._sdpSemantics !== 'unified-plan') {
         assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
       }
     });

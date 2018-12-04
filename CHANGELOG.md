@@ -1,3 +1,15 @@
+2.0.0-beta5 (in progress)
+=========================
+
+New Features
+------------
+
+- `Room.getStats` on Chrome now uses the WebRTC 1.0 compliant version of the
+  RTCPeerConnection's `getStats` API. (JSDK-2182)
+  
+- Worked around Firefox 63's [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/)
+  of the `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats`. (JSDK-2222)
+
 2.0.0-beta4 (November 29, 2018)
 ===============================
 
