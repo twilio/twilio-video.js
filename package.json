@@ -116,7 +116,7 @@
   },
   "dependencies": {
     "@twilio/sip.js": "^0.7.7",
-    "@twilio/webrtc": "twilio/twilio-webrtc.js#safari-unified-plan",
+    "@twilio/webrtc": "twilio/twilio-webrtc.js#3852f5cf1121843483b4fbbd6e57ba6d83b97a58",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },
