@@ -1033,32 +1033,52 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('"disconnected"', () => {
-          let connected;
-          let message;
+        [
+          { code: 1, message: 'foo', type: 'error' },
+          { type: 'disconnected' }
+        ].forEach(expectedMessage => {
+          context(`"${expectedMessage.type}"`, () => {
+            let connected;
+            let disconnectedError;
+            let message;
 
-          beforeEach(() => {
-            test.transport.once('connected', msg => {
-              connected = msg;
+            beforeEach(() => {
+              test.transport.once('connected', msg => {
+                connected = msg;
+              });
+              test.transport.on('stateChanged', function stateChanged(state, error) {
+                if (state === 'disconnected') {
+                  disconnectedError = error;
+                  test.transport.removeListener('stateChanged', stateChanged);
+                }
+              });
+              test.transport.once('message', msg => {
+                message = msg;
+              });
+              test.twilioConnection.receiveMessage(expectedMessage);
             });
-            test.transport.once('message', msg => {
-              message = msg;
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual(test.transitions, [
+                'disconnected'
+              ]);
             });
-            test.twilioConnection.receiveMessage({ type: 'disconnected' });
-          });
 
-          it('should transition .state to "disconnected"', () => {
-            assert.deepEqual(test.transitions, [
-              'disconnected'
-            ]);
-          });
+            if (expectedMessage.type === 'error') {
+              it('should transition to .state "disconnected" with a TwilioError', () => {
+                assert(disconnectedError instanceof TwilioError);
+                assert.equal(disconnectedError.code, expectedMessage.code);
+                assert.equal(disconnectedError.message, expectedMessage.message);
+              });
+            }
 
-          it('should not emit "connected"', () => {
-            assert(!connected);
-          });
+            it('should not emit "connected"', () => {
+              assert(!connected);
+            });
 
-          it('should not emit "message"', () => {
-            assert(!message);
+            it('should not emit "message"', () => {
+              assert(!message);
+            });
           });
         });
 
@@ -1088,37 +1108,6 @@ describe('TwilioConnectionTransport', () => {
               'disconnected'
             ]);
             assert(disconnectedError instanceof RoomCompletedError);
-          });
-
-          it('should not emit "connected"', () => {
-            assert(!connected);
-          });
-
-          it('should not emit "message"', () => {
-            assert(!message);
-          });
-        });
-
-        context('"error"', () => {
-          let connected;
-          let message;
-
-          beforeEach(() => {
-            test.transport.once('connected', msg => {
-              connected = msg;
-            });
-            test.transport.once('message', msg => {
-              message = msg;
-            });
-            test.twilioConnection.receiveMessage({
-              code: 1000,
-              message: 'foo',
-              type: 'error'
-            });
-          });
-
-          it('should not transition .state', () => {
-            assert(test.transitions, []);
           });
 
           it('should not emit "connected"', () => {
@@ -1174,32 +1163,52 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('"disconnected"', () => {
-          let connected;
-          let message;
+        [
+          { code: 1, message: 'foo', type: 'error' },
+          { type: 'disconnected' }
+        ].forEach(expectedMessage => {
+          context(`"${expectedMessage.type}"`, () => {
+            let connected;
+            let disconnectedError;
+            let message;
 
-          beforeEach(() => {
-            test.transport.once('connected', msg => {
-              connected = msg;
+            beforeEach(() => {
+              test.transport.once('connected', msg => {
+                connected = msg;
+              });
+              test.transport.on('stateChanged', function stateChanged(state, error) {
+                if (state === 'disconnected') {
+                  disconnectedError = error;
+                  test.transport.removeListener('stateChanged', stateChanged);
+                }
+              });
+              test.transport.once('message', msg => {
+                message = msg;
+              });
+              test.twilioConnection.receiveMessage(expectedMessage);
             });
-            test.transport.once('message', msg => {
-              message = msg;
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual(test.transitions, [
+                'disconnected'
+              ]);
             });
-            test.twilioConnection.receiveMessage({ type: 'disconnected' });
-          });
 
-          it('should transition .state to "disconnected"', () => {
-            assert.deepEqual(test.transitions, [
-              'disconnected'
-            ]);
-          });
+            if (expectedMessage.type === 'error') {
+              it('should transition to .state "disconnected" with a TwilioError', () => {
+                assert(disconnectedError instanceof TwilioError);
+                assert.equal(disconnectedError.code, expectedMessage.code);
+                assert.equal(disconnectedError.message, expectedMessage.message);
+              });
+            }
 
-          it('should not emit "connected"', () => {
-            assert(!connected);
-          });
+            it('should not emit "connected"', () => {
+              assert(!connected);
+            });
 
-          it('should not emit "message"', () => {
-            assert(!message);
+            it('should not emit "message"', () => {
+              assert(!message);
+            });
           });
         });
 
@@ -1237,51 +1246,6 @@ describe('TwilioConnectionTransport', () => {
 
           it('should not emit "message"', () => {
             assert(!message);
-          });
-        });
-
-        context('"error"', () => {
-          [
-            { code: 1000, message: 'foo', type: 'error' },
-            { type: 'error' }
-          ].forEach(errorMessage => {
-            const expectedCode = errorMessage.code || 0;
-            const expectedMessage = errorMessage.message || 'Unknown error';
-            context(expectedCode ? 'with .code and .message' : 'without .code or .message', () => {
-              let connected;
-              let error;
-              let message;
-
-              beforeEach(() => {
-                test.transport.once('connected', msg => {
-                  connected = msg;
-                });
-                test.transport.once('message', msg => {
-                  message = msg;
-                });
-                test.transport.once('stateChanged', (state, err) => {
-                  error = err;
-                });
-                test.twilioConnection.receiveMessage(errorMessage);
-              });
-
-              it(`should transition .state to "disconnected" with a TwilioError (code=${expectedCode}, message="${expectedMessage}")`, () => {
-                assert.deepEqual(test.transitions, [
-                  'disconnected'
-                ]);
-                assert(error instanceof TwilioError);
-                assert.equal(error.code, expectedCode);
-                assert.equal(error.message, expectedMessage);
-              });
-
-              it('should not emit "connected"', () => {
-                assert(!connected);
-              });
-
-              it('should not emit "message"', () => {
-                assert(!message);
-              });
-            });
           });
         });
 
@@ -1425,32 +1389,52 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('"disconnected"', () => {
-          let connected;
-          let message;
+        [
+          { code: 1, message: 'foo', type: 'error' },
+          { type: 'disconnected' }
+        ].forEach(expectedMessage => {
+          context(`"${expectedMessage.type}"`, () => {
+            let connected;
+            let disconnectedError;
+            let message;
 
-          beforeEach(() => {
-            test.transport.once('connected', msg => {
-              connected = msg;
+            beforeEach(() => {
+              test.transport.once('connected', msg => {
+                connected = msg;
+              });
+              test.transport.on('stateChanged', function stateChanged(state, error) {
+                if (state === 'disconnected') {
+                  disconnectedError = error;
+                  test.transport.removeListener('stateChanged', stateChanged);
+                }
+              });
+              test.transport.once('message', msg => {
+                message = msg;
+              });
+              test.twilioConnection.receiveMessage(expectedMessage);
             });
-            test.transport.once('message', msg => {
-              message = msg;
+
+            it('should transition .state to "disconnected"', () => {
+              assert.deepEqual(test.transitions, [
+                'disconnected'
+              ]);
             });
-            test.twilioConnection.receiveMessage({ type: 'disconnected' });
-          });
 
-          it('should transition .state to "disconnected"', () => {
-            assert.deepEqual(test.transitions, [
-              'disconnected'
-            ]);
-          });
+            if (expectedMessage.type === 'error') {
+              it('should transition to .state "disconnected" with a TwilioError', () => {
+                assert(disconnectedError instanceof TwilioError);
+                assert.equal(disconnectedError.code, expectedMessage.code);
+                assert.equal(disconnectedError.message, expectedMessage.message);
+              });
+            }
 
-          it('should not emit "connected"', () => {
-            assert(!connected);
-          });
+            it('should not emit "connected"', () => {
+              assert(!connected);
+            });
 
-          it('should not emit "message"', () => {
-            assert(!message);
+            it('should not emit "message"', () => {
+              assert(!message);
+            });
           });
         });
 
@@ -1489,38 +1473,6 @@ describe('TwilioConnectionTransport', () => {
           it('should not emit "message"', () => {
             assert(!message);
           });
-        });
-
-        context('"error"', () => {
-          let connected;
-          let message;
-
-          beforeEach(() => {
-            test.transport.once('connected', msg => {
-              connected = msg;
-            });
-            test.transport.once('message', msg => {
-              message = msg;
-            });
-            test.twilioConnection.receiveMessage({
-              code: 1000,
-              message: 'foo',
-              type: 'error'
-            });
-          });
-
-          it('should not transition .state', () => {
-            assert(test.transitions, []);
-          });
-
-          it('should not emit "connected"', () => {
-            assert(!connected);
-          });
-
-          it('should not emit "message"', () => {
-            assert(!message);
-          });
-
         });
 
         context('"synced"', () => {
