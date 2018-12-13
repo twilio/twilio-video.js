@@ -3,6 +3,7 @@
 const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
+const { isSafari } = require('./guessbrowser');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -313,8 +314,9 @@ async function waitForTracks(event, participant, n) {
   });
 }
 
-const smallVideoConstraints = {
-  width: 160,
+// NOTE(mmalavalli): Safari is rejecting getUserMedia()'s Promise with an
+// OverConstrainedError. So these capture dimensions are disabled.
+const smallVideoConstraints = isSafari ? {} : {  width: 160,
   height: 120
 };
 
