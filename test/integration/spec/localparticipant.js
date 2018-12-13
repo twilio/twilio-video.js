@@ -996,10 +996,10 @@ describe('LocalParticipant', function() {
             track.once(event, () => {
               room.localParticipant.unpublishTrack(track);
             });
-            room = await connect(getToken('foo'), {
+            room = await connect(getToken('foo'), Object.assign({
               name: randomName(),
               tracks: [track]
-            });
+            }, defaults));
             assert.doesNotThrow(() => track[action]());
           });
         });

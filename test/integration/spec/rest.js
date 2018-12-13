@@ -113,7 +113,7 @@ describe('', () => {
             assert.equal(publication.track, null);
           }
           const subsequentTrack = publication.track;
-          const { kind } = originalTrack;
+          const { kind } = subscribedOrUnsubscribedTrack;
           const { trackSid } = publication;
 
           assert.equal(subscribedOrUnsubscribedTrack, trackAction === 'subscribe' ? subsequentTrack : originalTrack);

@@ -89,8 +89,8 @@ describe('Transport', () => {
               assert.equal('update', message.type);
             });
 
-            it('has .version 1', () => {
-              assert.equal(1, message.version);
+            it('has .version 2', () => {
+              assert.equal(2, message.version);
             });
           });
 
@@ -125,8 +125,8 @@ describe('Transport', () => {
               assert.equal('string', typeof message.publisher.user_agent);
             });
 
-            it('has .version 1', () => {
-              assert.equal(1, message.version);
+            it('has .version 2', () => {
+              assert.equal(2, message.version);
             });
 
             it.skip('advertises support for Network Quality Signaling over RTCDataChannel', () => {
@@ -149,7 +149,7 @@ describe('Transport', () => {
             it('is a disconnect request', () => {
               assert.deepEqual({
                 type: 'disconnect',
-                version: 1
+                version: 2
               }, message);
             });
           });
@@ -175,8 +175,8 @@ describe('Transport', () => {
               assert.equal('sync', message.type);
             });
 
-            it('has .version 1', () => {
-              assert.equal(1, message.version);
+            it('has .version 2', () => {
+              assert.equal(2, message.version);
             });
           });
         });
@@ -245,7 +245,7 @@ describe('Transport', () => {
         it('sets the body to a disconnect RSP request', () => {
           assert.deepEqual({
             type: 'disconnect',
-            version: 1
+            version: 2
           }, JSON.parse(test.session.terminate.args[0][0].body));
         });
 
@@ -289,7 +289,7 @@ describe('Transport', () => {
         it('sets the body to a disconnect RSP request', () => {
           assert.deepEqual({
             type: 'disconnect',
-            version: 1
+            version: 2
           }, JSON.parse(test.session.terminate.args[0][0].body));
         });
 
@@ -363,7 +363,7 @@ describe('Transport', () => {
         it('sets the body to a disconnect RSP request', () => {
           assert.deepEqual({
             type: 'disconnect',
-            version: 1
+            version: 2
           }, JSON.parse(test.session.terminate.args[0][0].body));
         });
 
@@ -477,7 +477,7 @@ describe('Transport', () => {
         }
       ],
       type: 'update',
-      version: 1
+      version: 2
     };
 
     context('"connected"', () => {
@@ -504,7 +504,7 @@ describe('Transport', () => {
           assert.deepEqual({
             foo: 'bar',
             type: 'update',
-            version: 1
+            version: 2
           }, JSON.parse(test.session.sendRequest.args[0][1].body));
         });
 

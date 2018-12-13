@@ -33,69 +33,33 @@ describe('RemoteParticipantV2', () => {
 
     context('.tracks', () => {
       it('constructs a new RemoteTrackPublicationV2 from each trackState', () => {
-        const id1 = makeId();
-        const id2 = makeId();
+        const sid1 = makeSid();
+        const sid2 = makeSid();
         const test = makeTest({
           tracks: [
-            { id: id1 },
-            { id: id2 }
+            { sid: sid1 },
+            { sid: sid2 }
           ]
         });
-        assert.equal(id1, test.remoteTrackPublicationV2s[0].id);
-        assert.equal(id2, test.remoteTrackPublicationV2s[1].id);
+        assert.equal(sid1, test.remoteTrackPublicationV2s[0].sid);
+        assert.equal(sid2, test.remoteTrackPublicationV2s[1].sid);
       });
 
       it('adds the newly-constructed RemoteTrackPublicationV2s to the RemoteParticipantV2\'s .tracks Map', () => {
-        const id1 = makeId();
-        const id2 = makeId();
+        const sid1 = makeSid();
+        const sid2 = makeSid();
         const test = makeTest({
           tracks: [
-            { id: id1 },
-            { id: id2 }
+            { sid: sid1 },
+            { sid: sid2 }
           ]
         });
         assert.equal(
           test.remoteTrackPublicationV2s[0],
-          test.participant.tracks.get(id1));
+          test.participant.tracks.get(sid1));
         assert.equal(
           test.remoteTrackPublicationV2s[1],
-          test.participant.tracks.get(id2));
-      });
-
-      it('calls getTrackTransceiver with the newly-constructed RemoteTrackPublicationV2s\' IDs', () => {
-        const id1 = makeId();
-        const id2 = makeId();
-        const test = makeTest({
-          tracks: [
-            { id: id1 },
-            { id: id2 }
-          ]
-        });
-        assert.equal(id1, test.getTrackTransceiver.args[0][0]);
-        assert.equal(id2, test.getTrackTransceiver.args[1][0]);
-      });
-
-      it('calls setTrackTransceiver on the newly-constructed RemoteTrackPublicationV2s with the results of calling getTrackTransceiver', () => {
-        const id1 = makeId();
-        const id2 = makeId();
-        const test = makeTest({
-          tracks: [
-            { id: id1 },
-            { id: id2 }
-          ]
-        });
-        // NOTE(mroberts): Really we should provide mediaTrackReceiver1 and
-        // mediaTrackReceiver2, etc., but it is a pain to setup.
-        const mediaTrackReceiver = {};
-        test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
-        return test.getTrackTransceiverDeferred.promise.then(() => {
-          assert.equal(
-            mediaTrackReceiver,
-            test.remoteTrackPublicationV2s[0].setTrackTransceiver.args[0][0]);
-          assert.equal(
-            mediaTrackReceiver,
-            test.remoteTrackPublicationV2s[1].setTrackTransceiver.args[0][0]);
-        });
+          test.participant.tracks.get(sid2));
       });
     });
   });
@@ -122,25 +86,25 @@ describe('RemoteParticipantV2', () => {
       context('which includes a new trackState not matching an existing RemoteTrackPublicationV2', () => {
         it('constructs a new RemoteTrackPublicationV2 from the trackState', () => {
           const test = makeTest();
-          const id = makeId();
-          const participantState = test.state(test.revision + 1).setTrack({ id: id });
+          const sid = makeSid();
+          const participantState = test.state(test.revision + 1).setTrack({ sid });
           test.participant.update(participantState);
-          assert.equal(id, test.remoteTrackPublicationV2s[0].id);
+          assert.equal(sid, test.remoteTrackPublicationV2s[0].sid);
         });
 
         it('adds the newly-constructed RemoteTrackPublicationV2 to the RemoteParticipantV2\'s .tracks Map', () => {
           const test = makeTest();
-          const id = makeId();
-          const participantState = test.state(test.revision + 1).setTrack({ id: id });
+          const sid = makeSid();
+          const participantState = test.state(test.revision + 1).setTrack({ sid });
           test.participant.update(participantState);
           assert.equal(
             test.remoteTrackPublicationV2s[0],
-            test.participant.tracks.get(id));
+            test.participant.tracks.get(sid));
         });
 
         it('emits the "trackAdded" event with the newly-constructed RemoteTrackPublicationV2', () => {
           const test = makeTest();
-          const participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
+          const participantState = test.state(test.revision + 1).setTrack({ id: makeSid() });
           let track;
           test.participant.once('trackAdded', _track => { track = _track; });
           test.participant.update(participantState);
@@ -149,62 +113,41 @@ describe('RemoteParticipantV2', () => {
             track);
         });
 
-        it('calls getTrackTransceiver with the newly-constructed RemoteTrackPublicationV2\'s ID', () => {
-          const test = makeTest();
-          const id = makeId();
-          const participantState = test.state(test.revision + 1).setTrack({ id: id });
-          test.participant.update(participantState);
-          assert.equal(id, test.getTrackTransceiver.args[0][0]);
-        });
-
-        it('calls setTrackTransceiver on the newly-constructed RemoteTrackPublicationV2 with the result of calling getTrackTransceiver', () => {
-          const test = makeTest();
-          const participantState = test.state(test.revision + 1).setTrack({ id: makeId() });
-          test.participant.update(participantState);
-          const mediaTrackReceiver = {};
-          test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
-          return test.getTrackTransceiverDeferred.promise.then(() => {
-            assert.equal(
-              mediaTrackReceiver,
-              test.remoteTrackPublicationV2s[0].setTrackTransceiver.args[0][0]);
-          });
-        });
-
         it('calls update with the trackState on the newly-constructed RemoteTrackPublicationV2', () => {
           const test = makeTest();
-          const id = makeId();
-          const participantState = test.state(test.revision + 1).setTrack({ id: id, fizz: 'buzz' });
+          const sid = makeSid();
+          const participantState = test.state(test.revision + 1).setTrack({ sid, fizz: 'buzz' });
           test.participant.update(participantState);
           assert.deepEqual(
-            { id: id, fizz: 'buzz' },
+            { sid, fizz: 'buzz' },
             test.remoteTrackPublicationV2s[0].update.args[0][0]);
         });
       });
 
       context('which includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('calls update with the trackState on the existing RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
-          const participantState = test.state(test.revision + 1).setTrack({ id: id, fizz: 'buzz' });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
+          const participantState = test.state(test.revision + 1).setTrack({ sid, fizz: 'buzz' });
           test.participant.update(participantState);
           assert.deepEqual(
-            { id: id, fizz: 'buzz' },
+            { sid, fizz: 'buzz' },
             test.remoteTrackPublicationV2s[0].update.args[1][0]);
         });
       });
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision + 1);
           test.participant.update(participantState);
-          assert(!test.participant.tracks.has(id));
+          assert(!test.participant.tracks.has(sid));
         });
 
         it('emits the "trackRemoved" event with the RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision + 1);
           let track;
           test.participant.once('trackRemoved', _track => { track = _track; });
@@ -349,14 +292,14 @@ describe('RemoteParticipantV2', () => {
       context('which includes a new trackState not matching an existing RemoteTrackPublicationV2', () => {
         it('does not construct a new RemoteTrackPublicationV2 from the trackState', () => {
           const test = makeTest();
-          const participantState = test.state(test.revision).setTrack({ id: makeId() });
+          const participantState = test.state(test.revision).setTrack({ sid: makeSid() });
           test.participant.update(participantState);
           assert.equal(0, test.remoteTrackPublicationV2s.length);
         });
 
         it('does not call getTrackTransceiver with a newly-constructed RemoteTrackPublicationV2\'s ID', () => {
           const test = makeTest();
-          const participantState = test.state(test.revision).setTrack({ id: makeId() });
+          const participantState = test.state(test.revision).setTrack({ sid: makeSid() });
           test.participant.update(participantState);
           assert(!test.getTrackTransceiver.calledOnce);
         });
@@ -364,9 +307,9 @@ describe('RemoteParticipantV2', () => {
 
       context('which includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('does not call update with the trackState on the existing RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
-          const participantState = test.state(test.revision).setTrack({ id: id });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
+          const participantState = test.state(test.revision).setTrack({ sid });
           test.participant.update(participantState);
           assert(!test.remoteTrackPublicationV2s[0].update.calledTwice);
         });
@@ -374,18 +317,18 @@ describe('RemoteParticipantV2', () => {
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision);
           test.participant.update(participantState);
           assert.equal(
             test.remoteTrackPublicationV2s[0],
-            test.participant.tracks.get(id));
+            test.participant.tracks.get(sid));
         });
 
         it('does not emit the "trackRemoved" event with the RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision);
           let trackRemoved;
           test.participant.once('trackRemoved', () => { trackRemoved = false; });
@@ -527,14 +470,14 @@ describe('RemoteParticipantV2', () => {
       context('which includes a new trackState not matching an existing RemoteTrackPublicationV2', () => {
         it('does not construct a new RemoteTrackPublicationV2 from the trackState', () => {
           const test = makeTest();
-          const participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
+          const participantState = test.state(test.revision - 1).setTrack({ sid: makeSid() });
           test.participant.update(participantState);
           assert.equal(0, test.remoteTrackPublicationV2s.length);
         });
 
         it('does not call getTrackTransceiver with a newly-constructed RemoteTrackPublicationV2\'s ID', () => {
           const test = makeTest();
-          const participantState = test.state(test.revision - 1).setTrack({ id: makeId() });
+          const participantState = test.state(test.revision - 1).setTrack({ sid: makeSid() });
           test.participant.update(participantState);
           assert(!test.getTrackTransceiver.calledOnce);
         });
@@ -542,9 +485,9 @@ describe('RemoteParticipantV2', () => {
 
       context('which includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('does not call update with the trackState on the existing RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
-          const participantState = test.state(test.revision - 1).setTrack({ id: id });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
+          const participantState = test.state(test.revision - 1).setTrack({ sid });
           test.participant.update(participantState);
           assert(!test.remoteTrackPublicationV2s[0].update.calledTwice);
         });
@@ -552,18 +495,18 @@ describe('RemoteParticipantV2', () => {
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
         it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision - 1);
           test.participant.update(participantState);
           assert.equal(
             test.remoteTrackPublicationV2s[0],
-            test.participant.tracks.get(id));
+            test.participant.tracks.get(sid));
         });
 
         it('does not emit the "trackRemoved" event with the RemoteTrackPublicationV2', () => {
-          const id = makeId();
-          const test = makeTest({ tracks: [{ id: id }] });
+          const sid = makeSid();
+          const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision - 1);
           let trackRemoved;
           test.participant.once('trackRemoved', () => { trackRemoved = false; });
@@ -691,7 +634,7 @@ describe('RemoteParticipantV2', () => {
     it('returns the RemoteParticipantV2', () => {
       const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
       const test = makeTest();
-      const track = new RemoteTrackPublicationV2({ id: makeId() });
+      const track = new RemoteTrackPublicationV2({ sid: makeSid() });
       assert.equal(
         test.participant,
         test.participant.addTrack(track));
@@ -700,48 +643,24 @@ describe('RemoteParticipantV2', () => {
     it('adds the RemoteTrackPublicationV2 to the RemoteParticipantV2\'s .tracks Map', () => {
       const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
       const test = makeTest();
-      const id = makeId();
-      const track = new RemoteTrackPublicationV2({ id: id });
+      const sid = makeSid();
+      const track = new RemoteTrackPublicationV2({ sid });
       test.participant.addTrack(track);
       assert.equal(
         track,
-        test.participant.tracks.get(id));
+        test.participant.tracks.get(sid));
     });
 
     it('emits the "trackAdded" event with the RemoteTrackPublicationV2', () => {
       const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
       const test = makeTest();
-      const track = new RemoteTrackPublicationV2({ id: makeId() });
+      const track = new RemoteTrackPublicationV2({ sid: makeSid() });
       let trackAdded;
       test.participant.once('trackAdded', track => { trackAdded = track; });
       test.participant.addTrack(track);
       assert.equal(
         track,
         trackAdded);
-    });
-
-    it('calls getTrackTransceiver with the newly-constructed RemoteTrackPublicationV2\'s ID', () => {
-      const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
-      const test = makeTest();
-      const id = makeId();
-      const track = new RemoteTrackPublicationV2({ id: id });
-      test.participant.addTrack(track);
-      assert.equal(id, test.getTrackTransceiver.args[0][0]);
-    });
-
-    it('calls setTrackTransceiver on the newly-constructed RemoteTrackPublicationV2 with the result of calling getTrackTransceiver', () => {
-      const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
-      const test = makeTest();
-      const id = makeId();
-      const track = new RemoteTrackPublicationV2({ id: id });
-      test.participant.addTrack(track);
-      const mediaTrackReceiver = {};
-      test.getTrackTransceiverDeferred.resolve(mediaTrackReceiver);
-      return test.getTrackTransceiverDeferred.promise.then(() => {
-        assert.equal(
-          mediaTrackReceiver,
-          track.setTrackTransceiver.args[0][0]);
-      });
     });
   });
 
@@ -894,20 +813,20 @@ describe('RemoteParticipantV2', () => {
   describe('#removeTrack', () => {
     context('when the RemoteTrackPublicationV2 to remove was previously added', () => {
       it('returns the removed RemoteTrackPublicationV2', () => {
-        const test = makeTest({ tracks: [{ id: makeId() }] });
+        const test = makeTest({ tracks: [{ sid: makeSid() }] });
         assert.equal(
           test.remoteTrackPublicationV2s[0],
           test.participant.removeTrack(test.remoteTrackPublicationV2s[0]));
       });
 
       it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
-        const test = makeTest({ tracks: [{ id: makeId() }] });
+        const test = makeTest({ tracks: [{ sid: makeSid() }] });
         test.participant.removeTrack(test.remoteTrackPublicationV2s[0]);
-        assert(!test.participant.tracks.has(test.remoteTrackPublicationV2s[0].id));
+        assert(!test.participant.tracks.has(test.remoteTrackPublicationV2s[0].sid));
       });
 
       it('emits the "trackRemoved" event with the RemoteTrackPublicationV2', () => {
-        const test = makeTest({ tracks: [{ id: makeId() }] });
+        const test = makeTest({ tracks: [{ sid: makeSid() }] });
         let trackRemoved;
         test.participant.once('trackRemoved', track => { trackRemoved = track; });
         test.participant.removeTrack(test.remoteTrackPublicationV2s[0]);
@@ -920,7 +839,7 @@ describe('RemoteParticipantV2', () => {
     context('when the RemoteTrackPublicationV2 to remove was not previously added', () => {
       it('returns false', () => {
         const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
-        const track = new RemoteTrackPublicationV2({ id: makeId() });
+        const track = new RemoteTrackPublicationV2({ sid: makeSid() });
         const test = makeTest();
         assert.equal(
           null,
@@ -929,7 +848,7 @@ describe('RemoteParticipantV2', () => {
 
       it('does not emit the "trackRemoved" event with the RemoteTrackPublicationV2', () => {
         const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
-        const track = new RemoteTrackPublicationV2({ id: makeId() });
+        const track = new RemoteTrackPublicationV2({ sid: makeSid() });
         const test = makeTest();
         let trackRemoved;
         test.participant.once('trackRemoved', () => { trackRemoved = true; });
@@ -939,10 +858,6 @@ describe('RemoteParticipantV2', () => {
     });
   });
 });
-
-function makeId() {
-  return Math.floor(Math.random() * 1000 + 0.5);
-}
 
 function makeIdentity() {
   return Math.random().toString(36).slice(2);
@@ -1025,7 +940,7 @@ function makeRemoteTrackPublicationV2Constructor(testOptions) {
   testOptions = testOptions || {};
   testOptions.remoteTrackPublicationV2s = testOptions.remoteTrackPublicationV2s || [];
   return function RemoteTrackPublicationV2(trackState) {
-    this.id = trackState.id;
+    this.sid = trackState.sid;
     this.setTrackTransceiver = sinon.spy(() => {});
     this.update = sinon.spy(() => this);
     testOptions.remoteTrackPublicationV2s.push(this);
