@@ -4,6 +4,9 @@
 New Features
 ------------
 
+- `Room.getStats` on Firefox will now consume the spec-compliant `RTCIceCandidateStats`
+  available in [versions 65 and above](https://www.fxsitecompat.com/en-CA/docs/2018/rtcicecandidatestats-has-been-updated-to-the-latest-spec/). (JSDK-2235)
+
 - Participants will now be able to stay in the Room and recover their media
   connections if the media server becomes unresponsive, instead of being
   disconnected. (JSDK-2245)
