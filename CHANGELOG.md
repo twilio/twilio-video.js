@@ -1,23 +1,19 @@
-2.0.0-beta5 (in progress)
-=========================
+2.0.0-beta5 (January 7, 2019)
+=============================
 
 New Features
 ------------
 
 - `Room.getStats` on Firefox will now consume the spec-compliant `RTCIceCandidateStats`
   available in [versions 65 and above](https://www.fxsitecompat.com/en-CA/docs/2018/rtcicecandidatestats-has-been-updated-to-the-latest-spec/). (JSDK-2235)
-
 - Participants will now be able to stay in the Room and recover their media
   connections if the media server becomes unresponsive, instead of being
   disconnected. (JSDK-2245)
-
 - `Room.getStats` is now supported on Safari 12.1 and above. It is not supported
   on Safari 12.0 and below due to this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
   We have updated the documentation to reflect this behavior. (JSDK-2201)
-
 - `Room.getStats` on Chrome now uses the WebRTC 1.0 compliant version of the
   RTCPeerConnection's `getStats` API. (JSDK-2182)
-  
 - Worked around Firefox 63's [deprecation](https://blog.mozilla.org/webrtc/getstats-isremote-65/)
   of the `isRemote` property in `RTCInboundRTPStreamStats` and `RTCOutboundRTPStreamStats`. (JSDK-2222)
 
