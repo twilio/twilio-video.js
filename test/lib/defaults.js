@@ -7,7 +7,6 @@ const env = require('../env');
 const defaults = [
   'ecsServer',
   'logLevel',
-  'sdpSemantics',
   'wsServer',
   'wsServerInsights'
 ].reduce((defaults, option) => {
@@ -19,9 +18,9 @@ const defaults = [
   }
   return defaults;
 }, {
+  _sdpSemantics: env.sdpSemantics,
   dominantSpeaker: true,
-  networkQuality: true,
-  sdpSemantics: 'plan-b'
+  networkQuality: true
 });
 
 // NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows

@@ -1,12 +1,13 @@
 'use strict';
 
 const assert = require('assert');
-const { sdpSemantics } = require('../../../lib/defaults');
+const { _sdpSemantics } = require('../../../lib/defaults');
 const { getSdpFormat, guessBrowser } = require('../../../../lib/util');
 const { getMediaSections, setSimulcast } = require('../../../../lib/util/sdp');
 const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
 
 const isChrome = guessBrowser() === 'chrome';
+const sdpSemantics = _sdpSemantics;
 const sdpFormat = getSdpFormat(sdpSemantics);
 
 describe('setSimulcast', () => {
