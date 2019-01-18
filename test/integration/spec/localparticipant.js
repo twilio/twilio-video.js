@@ -34,6 +34,7 @@ const {
   randomName,
   tracksSubscribed,
   tracksPublished,
+  tracksUnpublished,
   tracksUnsubscribed,
   trackStarted,
   waitForTracks
@@ -541,7 +542,7 @@ describe('LocalParticipant', function() {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
+            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([

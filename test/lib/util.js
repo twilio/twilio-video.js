@@ -247,6 +247,18 @@ async function tracksPublished(participant, n, kind) {
 }
 
 /**
+ * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be unpublished.
+ * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
+ * @param {number} n - the final number of {@link RemoteTrack}s to count down to
+ * @returns Promise<void>
+ */
+async function tracksUnpublished(participant, n) {
+  while (participant.tracks.size > n) {
+    await new Promise(resolve => participant.once('trackUnpublished', resolve));
+  }
+}
+
+/**
  * Wait for {@link RemoteTrack}s of a {@link RemoteParticipant} to be unsubscribed from.
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
  * @param {number} n - the final number of {@link RemoteTrack}s to count down to
@@ -330,6 +342,7 @@ exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksSubscribed = tracksSubscribed;
 exports.tracksPublished = tracksPublished;
+exports.tracksUnpublished = tracksUnpublished;
 exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
