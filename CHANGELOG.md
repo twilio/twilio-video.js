@@ -1,3 +1,11 @@
+1.15.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where RemoteTrack subscription events were not firing in Electron 2.x. (JSDK-2266)
+
 1.15.0 (January 11, 2019)
 =========================
 
