@@ -4,6 +4,7 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 2.x and 3.x. (JSDK-2267)
 - Fixed a bug where RemoteTrack subscription events were not firing in Electron 2.x. (JSDK-2266)
 
 1.15.0 (January 11, 2019)
