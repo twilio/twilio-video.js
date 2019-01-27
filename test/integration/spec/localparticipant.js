@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat();
 
 const {
   connect,
@@ -732,7 +733,7 @@ describe('LocalParticipant', function() {
       assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
       assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
       assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-      if (isChrome && defaults._sdpSemantics !== 'unified-plan') {
+      if (isChrome && sdpFormat === 'planb') {
         assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
       }
     });

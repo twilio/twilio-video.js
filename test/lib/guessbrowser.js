@@ -1,6 +1,6 @@
 'use strict';
 
-const guess = require('../../lib/util').guessBrowser();
+const guess = require('@twilio/webrtc/lib/util').guessBrowser();
 
 module.exports = {
   isChrome: guess === 'chrome',

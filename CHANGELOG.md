@@ -1,3 +1,11 @@
+2.0.0-beta6 (in progress)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 3.x. (JSDK-2267)
+
 2.0.0-beta5 (January 7, 2019)
 =============================
 

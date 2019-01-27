@@ -1526,6 +1526,7 @@ function makeTest(options) {
   options.reconnectBackOffMs = options.reconnectBackOffMs || 0;
   options.name = 'name' in options ? options.name : makeName();
   options.accessToken = options.accessToken || makeAccessToken();
+  options.sdpFormat = options.sdpFormat || 'foo';
   options.wsServer = options.wsServer || makeName();
   options.localParticipantState = options.localParticipantState || {
     revision: 1,
