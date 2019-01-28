@@ -4,6 +4,9 @@
 Bug Fixes
 ---------
 
+- Fixed a bug where, in Electron 2.x, if a RemoteParticipant published a second
+  MediaTrack after publishing the first MediaTrack, calling `Room.getStats` did
+  not return the RemoteTrackStatsReport for the second MediaTrack. (JSDK-2269)
 - Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 2.x and 3.x. (JSDK-2267)
 - Fixed a bug where RemoteTrack subscription events were not firing in Electron 2.x. (JSDK-2266)
 

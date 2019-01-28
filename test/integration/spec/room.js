@@ -248,6 +248,48 @@ describe('Room', function() {
     });
   });
 
+  describe('JSDK-2269', () => {
+    let reports;
+    let rooms;
+    let tracks;
+
+    before(async () => {
+      const name = randomName();
+      const tokens = ['alice', 'bob'].map(getToken);
+      tracks = await createLocalTracks();
+
+      // 1. Alice and Bob connect to a Room.
+      rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({
+        name,
+        tracks: []
+      }, defaults))));
+
+      // 2. Alice and Bob wait to see each other in the Room.
+      await Promise.all(rooms.map(room => participantsConnected(room, 1)));
+      const participant = [...rooms[1].participants.values()][0];
+
+      // 3. Alice publishes its LocalMediaTracks sequentially.
+      for (let i = 0; i < tracks.length; i++) {
+        await Promise.all([
+          rooms[0].localParticipant.publishTrack(tracks[i]),
+          tracksAdded(participant, i + 1)
+        ]);
+      }
+
+      // 4. Bob gets the StatsReport for the Room.
+      reports = await rooms[1].getStats();
+    });
+
+    it('is fixed', () => {
+      assert.equal(reports.length, 1);
+      reports.forEach(({ remoteAudioTrackStats, remoteVideoTrackStats }) => {
+        // Actual: Bob sees only the RemoteTrackStats for the LocalMediaTrack published first by Alice.
+        // Expected: Bob should be able to see 2 RemoteTrackStats for Alice.
+        assert.equal(remoteAudioTrackStats.length + remoteVideoTrackStats.length, 2);
+      });
+    });
+  });
+
   describe('"disconnected" event', () => {
     it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
       const room = await connect(getToken(randomName()), Object.assign({}, defaults));
