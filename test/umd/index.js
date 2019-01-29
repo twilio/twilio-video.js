@@ -1,8 +1,7 @@
 'use strict';
 
-const phantom = require('phantom');
-const requirejs = require('requirejs');
-
+const { join } = require('path');
+const puppeteer = require('puppeteer');
 const version = require('../../package.json').version;
 
 const publicVars = [
@@ -19,54 +18,37 @@ const publicVars = [
 describe('UMD', function() {
   this.timeout(5000);
 
-  describe('RequireJS (browser)', function() {
+  describe('RequireJS (browser)', () => {
+    let browser;
     let page;
-    let instance;
 
-    beforeEach(function() {
-      return phantom.create([]).then(function(_instance) {
-        instance = _instance;
-        return instance.createPage();
-      }).then(function(_page) {
-        page = _page;
-      });
+    beforeEach(async () => {
+      browser = await puppeteer.launch({ headless: true });
+      page = await browser.newPage();
     });
 
-    it(`should receive a video object with ${publicVars.join(', ')} properties (unminified)`, function(done) {
-      page.on('onCallback', function(res) {
-        if (res.status === 'success') {
-          if (res.version === version) {
-            return done();
-          } else {
+    [
+      ['unminified', 'index'],
+      ['minified', 'min']
+    ].forEach(([mode, filename]) => {
+      it(`should receive a video object with ${publicVars.join(', ')} properties (${mode})`, done => {
+        page.on('console', async msg => {
+          const res = msg.args()[0] ? await msg.args()[0].jsonValue() : { reason: 'Unknown' };
+          if (res.status === 'success') {
+            if (res.version === version) {
+              return done();
+            }
             return done(new Error('Version mismatch'));
           }
-        } else {
           return done(new Error(res.reason));
-        }
+        });
+        page.goto(`file:${join(__dirname, 'require-browser', `${filename}.html`)}`);
       });
-
-      page.open(__dirname + '/require-browser/index.html');
     });
 
-    it(`should receive a video object with ${publicVars.join(', ')} properties (minified)`, function(done) {
-      page.on('onCallback', function(res) {
-        if (res.status === 'success') {
-          if (res.version === version) {
-            return done();
-          } else {
-            return done(new Error('Version mismatch'));
-          }
-        } else {
-          return done(new Error(res.reason));
-        }
-      });
-
-      page.open(__dirname + '/require-browser/min.html');
-    });
-
-    afterEach(function() {
-      page.close();
-      instance.exit();
+    afterEach(async () => {
+      await page.close();
+      await browser.close();
     });
   });
 });
