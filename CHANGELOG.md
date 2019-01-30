@@ -1,3 +1,12 @@
+1.15.2 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where the LocalParticipant sometimes failed to publish a LocalTrack
+  to a group Room due to media negotiation failure. (JSDK-2219)
+
 1.15.1 (January 29, 2019)
 =========================
 
