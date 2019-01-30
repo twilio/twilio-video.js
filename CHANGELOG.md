@@ -8,7 +8,8 @@ New Features
   Chrome, starting from version 72, and Safari, starting from version 12.1 will
   enable Unified Plan as the default SDP format. We highly recommend that you
   upgrade your twilio-video.js dependency to this version so that your application
-  does not break on the above mentioned browser versions. (JSDK-2265)
+  continues to work on the above mentioned browser versions. For more details, please
+  refer to the Unified Plan Guide. (JSDK-2265)
 
 Bug Fixes
 ---------
@@ -16,6 +17,24 @@ Bug Fixes
 - Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 3.x. (JSDK-2267)
 - Fixed a bug where the LocalParticipant sometimes failed to publish a LocalTrack
   to a group Room due to media negotiation failure. (JSDK-2219)
+
+Unified Plan Guide
+------------------
+
+In December 2018, we published this [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-),
+where we recommended customers to upgrade to the latest versions of twilio-video.js
+in order not be affected by Chrome migrating to Unified Plan as the default SDP format,
+starting from version 72. The way we ensured that we support newer versions of Chrome was
+by overriding the default SDP format to Plan B.
+
+We also mentioned that we are working to support Unified Plan on all browsers in future
+versions of twilio-video.js, so that we can continue to support our customers on
+browser versions that no longer support the older Plan B SDP format. This version
+of twilio-video.js will support Unified Plan, which is the default SDP format
+in Chrome starting from version 72 and in Safari starting from version 12.1, while
+also maintaining support for earlier browser versions with Plan B as the default SDP
+format.
+
 
 2.0.0-beta5 (January 7, 2019)
 =============================
