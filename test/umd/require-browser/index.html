@@ -3,7 +3,7 @@
   <head></head>
 
   <body>
-    <script data-main="js/main" src="js/require.js"/></script>
+    <script data-main="js/main" src="js/require.js"></script>
     <script>
       var publicVars = [
         'connect',
@@ -17,21 +17,21 @@
       ];
       require(['../../../../dist/twilio-video'], function(video) {
         try {
-          if (publicVars.every(function(publicVar) {
+          if (typeof video !== 'undefined' && publicVars.every(function(publicVar) {
             return publicVar in video;
           })) {
-            window.callPhantom({
+            console.log({
               status: 'success',
               version: video.version
             });
           } else {
-            window.callPhantom({
+            console.log({
               status: 'failure',
               reason: 'Video undefined'
             });
           }
         } catch(e) {
-          window.callPhantom({
+          console.log({
             status: 'failure',
             reason: e.message || e
           });

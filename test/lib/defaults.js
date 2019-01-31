@@ -1,6 +1,6 @@
 'use strict';
 
-const { guessBrowser } = require('../../lib/util');
+const { guessBrowser } = require('@twilio/webrtc/lib/util');
 
 const env = require('../env');
 
@@ -20,7 +20,6 @@ const defaults = [
   }
   return defaults;
 }, {
-  _sdpSemantics: env.sdpSemantics,
   _useTwilioConnection: !!env.useTwilioConnection,
   dominantSpeaker: true,
   networkQuality: true,
