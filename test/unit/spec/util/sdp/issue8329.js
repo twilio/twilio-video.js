@@ -140,8 +140,6 @@ a=rtcp-fb:126 goog-remb
 a=fmtp:126 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
 a=rtpmap:97 rtx/90000
 a=fmtp:97 apt=120
-a=rtpmap:99 rtx/90000
-a=fmtp:99 apt=121
 a=rtpmap:101 rtx/90000
 a=rtpmap:102 red/90000
 a=rtpmap:123 rtx/90000
@@ -156,7 +154,9 @@ a=rtcp-fb:124 transport-cc
 a=fmtp:124 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=420032
 a=rtpmap:122 rtx/90000
 a=fmtp:122 apt=124
-a=fmtp:101 apt=126
+a=rtpmap:99 rtx/90000
+a=fmtp:99 apt=126
+a=fmtp:101 apt=121
 `.split('\n').join('\r\n');
 
 const invalidSdp = `v=0
@@ -222,6 +222,8 @@ a=rtcp-fb:121 ccm fir
 a=rtcp-fb:121 nack
 a=rtcp-fb:121 nack pli
 a=rtcp-fb:121 goog-remb
+a=rtpmap:121 rtx/90000
+a=fmtp:121 apt=120
 a=rtpmap:126 H264/90000
 a=rtcp-fb:126 ccm fir
 a=rtcp-fb:126 nack
@@ -247,6 +249,8 @@ a=rtcp-fb:124 transport-cc
 a=fmtp:124 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=420032
 a=rtpmap:122 rtx/90000
 a=fmtp:122 apt=124
+a=rtpmap:99 rtx/90000
+a=fmtp:99 apt=98
 `.split('\n').join('\r\n');
 
 const validSdp2 = `v=0
