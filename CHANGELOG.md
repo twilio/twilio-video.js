@@ -5,8 +5,8 @@ New Features
 ------------
 
 - twilio-video.js will now use the Unified Plan SDP format where available.
-  Google Chrome, starting from version 72 has, and Safari, starting from version
-  12.1 will enable Unified Plan as the default SDP format. We highly recommend
+  Google Chrome, starting from version 72, has and Safari, starting from version
+  12.1, will enable Unified Plan as the default SDP format. We highly recommend
   that you upgrade your twilio-video.js dependency to this version so that your
   application continues to work on the above mentioned browser versions.
 
