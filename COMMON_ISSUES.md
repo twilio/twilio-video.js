@@ -21,6 +21,13 @@ stable release.
 Safari
 ------
 
+### Network Quality API not working
+
+We are working to fix a bug in twilio-video.js where Safari clients do not
+receive Network Quality Score updates in a Group Room. (JSDK-2133)
+
+### Experimental support
+
 twilio-video.js 1.2.1 introduces experimental support for Safari 11 and newer.
 Support for Safari is "experimental" because, at the time of writing, Safari
 does not support VP8. This means you may experience codec issues in Group Rooms.
@@ -66,6 +73,11 @@ LocalTracks will fail.
 
 Firefox
 -------
+
+### Network Quality API not working
+
+We are working to fix a bug in twilio-video.js where Firefox clients do not
+receive Network Quality Score updates in a Group Room. (JSDK-2133)
 
 ### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
 

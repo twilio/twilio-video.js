@@ -235,14 +235,22 @@ describe('Room', () => {
   });
 
   describe('RoomSignaling state changed to "reconnecting"', () => {
-    it('should trigger the same event on the Room with a TwilioError 53405, "Media Connection Failed"', () => {
-      const spy = sinon.spy();
-      room.on('reconnecting', spy);
-      signaling.preempt('reconnecting');
-      assert.equal(spy.callCount, 1);
-      assert(spy.args[0][0] instanceof MediaConnectionError);
-      assert.equal(spy.args[0][0].code, 53405);
-      assert.equal(room.state, 'reconnecting');
+    [
+      MediaConnectionError,
+      SignalingConnectionDisconnectedError
+    ].forEach(ReconnectingError => {
+      context(`with a ${ReconnectingError.name}`, () => {
+        const error = new ReconnectingError();
+        it(`should trigger the same event on the Room with the ${ReconnectingError.name} (${error.code}, "${error.message}")`, () => {
+          const spy = sinon.spy();
+          room.on('reconnecting', spy);
+          signaling.preempt('reconnecting', null, [error]);
+          assert.equal(spy.callCount, 1);
+          assert(spy.args[0][0] instanceof ReconnectingError);
+          assert.equal(spy.args[0][0], error);
+          assert.equal(room.state, 'reconnecting');
+        });
+      });
     });
   });
 

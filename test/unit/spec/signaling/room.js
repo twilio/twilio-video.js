@@ -3,6 +3,7 @@
 const assert = require('assert');
 
 const RoomSignaling = require('../../../../lib/signaling/room');
+const { MediaConnectionError, SignalingConnectionDisconnectedError } = require('../../../../lib/util/twilio-video-errors');
 
 const { combinations } = require('../../../lib/util');
 
@@ -48,15 +49,43 @@ describe('RoomSignaling', () => {
             : 'connected'
         : signalingConnectionState;
 
+      const reconnectError = signalingConnectionState === 'connected'
+        ? mediaConnectionState === 'failed'
+          ? new MediaConnectionError()
+          : null
+        : signalingConnectionState === 'reconnecting'
+          ? new SignalingConnectionDisconnectedError()
+          : null;
+
       describe(`the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${mediaConnectionState}"`, () => {
-        it(`sets the Room State to "${roomState}"`, () => {
-          const room = new RoomSignalingImpl();
+        let error;
+        let room;
+        let state;
+        let stateChanged;
 
-          room.setMediaConnectionState(mediaConnectionState);
+        before(() => {
+          room = new RoomSignalingImpl();
+          room.once('stateChanged', (state_, error_) => { stateChanged = true; state = state_; error = error_; });
           room.setSignalingConnectionState(signalingConnectionState);
-
-          assert.equal(room.state, roomState);
+          room.setMediaConnectionState(mediaConnectionState);
         });
+
+        it(`sets the Room State to "${roomState}"`, () => {
+          assert.equal(room.state, roomState);
+          if (roomState === 'reconnecting') {
+            assert.equal(state, roomState);
+          }
+        });
+
+        if (roomState === 'reconnecting') {
+          it(`emits "stateChanged" on RoomSignaling with a ${reconnectError.constructor.name}`, async () => {
+            assert(error instanceof reconnectError.constructor);
+          });
+        } else {
+          it('does not emit "stateChanged" on RoomSignaling', () => {
+            assert(!stateChanged);
+          });
+        }
       });
     });
   });
@@ -72,15 +101,36 @@ describe('RoomSignaling', () => {
         : signalingConnectionState;
 
       describe(`the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${mediaConnectionState}"`, () => {
-        it(`sets the Room State to "${roomState}"`, () => {
-          const room = new RoomSignalingImpl();
+        let error;
+        let room;
+        let state;
+        let stateChanged;
+
+        before(() => {
+          room = new RoomSignalingImpl();
           room.setMediaConnectionState('failed');
-
-          room.setMediaConnectionState(mediaConnectionState);
+          room.once('stateChanged', (state_, error_) => { stateChanged = true; state = state_; error = error_; });
           room.setSignalingConnectionState(signalingConnectionState);
-
-          assert.equal(room.state, roomState);
+          room.setMediaConnectionState(mediaConnectionState);
         });
+
+        it(`sets the Room State to "${roomState}"`, () => {
+          assert.equal(room.state, roomState);
+          if (roomState === 'connected') {
+            assert.equal(state, roomState);
+          }
+        });
+
+        if (roomState === 'connected') {
+          it('emits "stateChanged" on RoomSignaling without a TwilioError', async () => {
+            assert(stateChanged);
+            assert.equal(typeof error, 'undefined');
+          });
+        } else {
+          it('does not emit "stateChanged" on RoomSignaling', () => {
+            assert(!stateChanged);
+          });
+        }
       });
     });
   });
