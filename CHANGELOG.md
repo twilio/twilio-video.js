@@ -4,6 +4,8 @@
 New Features
 ------------
 
+- The Dominant Speaker and Network Quality APIs are generally available.
+
 - Previously, Room emitted "reconnecting" and "reconnected" events while recovering
   from a disruption in your media connection. Now, it will emit these events while
   recovering from a disruption in your signaling connection as well. As of now, this
@@ -30,6 +32,11 @@ New Features
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
+  
+  **NOTE:** The new signaling transport will reject access tokens containing configuration
+  profiles, which were deprecated when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
+  the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
+  if you want to override the default settings while creating a Room.
 
 - twilio-video.js will now use the Unified Plan SDP format where available.
   Google Chrome, starting from version 72, has and Safari, starting from version
