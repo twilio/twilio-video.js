@@ -7,7 +7,8 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalDataTrack
+  LocalDataTrack,
+  LocalVideoTrack
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
@@ -1032,13 +1033,16 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('JSDK-2219', () => {
+  // NOTE(mmalavalli): This test runs the scenario described in JSDK-2219. It is
+  // disabled on Chrome (unified-plan) due to JSDK-2276.
+  (isChrome && defaults._sdpSemantics === 'unified-plan' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 
     before(async () => {
       const audioTrack = await createLocalAudioTrack();
       const name = randomName();
+      let videoTrack;
 
       const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
         name,
@@ -1049,7 +1053,7 @@ describe('LocalParticipant', function() {
 
       try {
         for (let i = 0; i < 10; i++) {
-          let videoTrack = await createLocalVideoTrack();
+          videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
           publication = await rooms[0].localParticipant.publishTrack(videoTrack);
           publication.unpublish();
         }
@@ -1058,7 +1062,7 @@ describe('LocalParticipant', function() {
       }
     });
 
-    it('is fixed', () => {
+    it('should complete without any error', () => {
       assert(publication);
       assert(!error);
     });
