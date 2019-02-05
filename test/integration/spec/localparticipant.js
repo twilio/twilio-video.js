@@ -1021,14 +1021,46 @@ describe('LocalParticipant', function() {
             track.once(event, () => {
               room.localParticipant.unpublishTrack(track);
             });
-            room = await connect(getToken('foo'), {
+            room = await connect(getToken('foo'), Object.assign({
               name: randomName(),
               tracks: [track]
-            });
+            }, defaults));
             assert.doesNotThrow(() => track[action]());
           });
         });
       });
+    });
+  });
+
+  describe('JSDK-2219', () => {
+    let error;
+    let publication;
+
+    before(async () => {
+      const audioTrack = await createLocalAudioTrack();
+      const name = randomName();
+
+      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
+        name,
+        tracks: [audioTrack]
+      }, defaults))));
+
+      await Promise.all(rooms.map(room => participantsConnected(room, 1)));
+
+      try {
+        for (let i = 0; i < 10; i++) {
+          let videoTrack = await createLocalVideoTrack();
+          publication = await rooms[0].localParticipant.publishTrack(videoTrack);
+          publication.unpublish();
+        }
+      } catch (e) {
+        error = e;
+      }
+    });
+
+    it('is fixed', () => {
+      assert(publication);
+      assert(!error);
     });
   });
 });
