@@ -1055,7 +1055,7 @@ describe('LocalParticipant', function() {
         for (let i = 0; i < 10; i++) {
           videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
           publication = await rooms[0].localParticipant.publishTrack(videoTrack);
-          publication.unpublish();
+          rooms[0].localParticipant.unpublishTrack(videoTrack);
         }
       } catch (e) {
         error = e;
