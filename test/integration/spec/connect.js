@@ -647,7 +647,9 @@ describe('connect', function() {
       });
     });
 
-    describe('"trackPublicationFailed" event', () => {
+    // NOTE(mmalavalli): Because of this bug: VIDEO-1961, this test is being
+    // disabled for peer-to-peer Rooms using TCMP.
+    (defaults.topology === 'peer-to-peer' && defaults._useTwilioConnection ? describe.skip : describe)('"trackPublicationFailed" event', () => {
       combinationContext([
         [
           [
