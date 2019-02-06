@@ -1012,7 +1012,7 @@ describe('LocalParticipant', function() {
 
   // NOTE(mmalavalli): This test runs the scenario described in JSDK-2219. It is
   // disabled on Chrome (unified-plan) due to JSDK-2276.
-  (isChrome && sdpFormat === 'unified-plan' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+  (isChrome && sdpFormat === 'unified' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 

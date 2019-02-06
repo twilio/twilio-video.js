@@ -20,40 +20,40 @@ env:
 matrix:
   include:
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: BROWSER=chrome BVER=stable TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=group
+      env: BROWSER=chrome BVER=beta TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=group
+      env: BROWSER=firefox BVER=stable TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=group
+      env: BROWSER=firefox BVER=beta TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
     # - os: osx
     #   sudo: required
@@ -66,16 +66,16 @@ matrix:
     #   env: BROWSER=safari BVER=unstable TOPOLOGY=group
 
   allow_failures:
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=group
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=group
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=group
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=group USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=group USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group USE_TWILIO_CONNECTION=1
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer USE_TWILIO_CONNECTION=1
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=group USE_TWILIO_CONNECTION=1
 
 before_script:
   - |
