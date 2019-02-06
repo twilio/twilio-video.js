@@ -7,7 +7,8 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalDataTrack
+  LocalDataTrack,
+  LocalVideoTrack
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
@@ -1021,14 +1022,49 @@ describe('LocalParticipant', function() {
             track.once(event, () => {
               room.localParticipant.unpublishTrack(track);
             });
-            room = await connect(getToken('foo'), {
+            room = await connect(getToken('foo'), Object.assign({
               name: randomName(),
               tracks: [track]
-            });
+            }, defaults));
             assert.doesNotThrow(() => track[action]());
           });
         });
       });
+    });
+  });
+
+  // NOTE(mmalavalli): This test runs the scenario described in JSDK-2219. It is
+  // disabled on Chrome (unified-plan) due to JSDK-2276.
+  (isChrome && defaults._sdpSemantics === 'unified-plan' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+    let error;
+    let publication;
+
+    before(async () => {
+      const audioTrack = await createLocalAudioTrack();
+      const name = randomName();
+      let videoTrack;
+
+      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
+        name,
+        tracks: [audioTrack]
+      }, defaults))));
+
+      await Promise.all(rooms.map(room => participantsConnected(room, 1)));
+
+      try {
+        for (let i = 0; i < 10; i++) {
+          videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
+          publication = await rooms[0].localParticipant.publishTrack(videoTrack);
+          rooms[0].localParticipant.unpublishTrack(videoTrack);
+        }
+      } catch (e) {
+        error = e;
+      }
+    });
+
+    it('should complete without any error', () => {
+      assert(publication);
+      assert(!error);
     });
   });
 });
