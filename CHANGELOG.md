@@ -29,6 +29,20 @@ New Features
 
   When you opt in for this feature, you join a Room using our new signaling transport,
   which enables us to detect and recover from disruptions in your signaling connection.
+  Whenever your signaling connection is interrupted, the signaling back-end waits
+  for you to reconnect for a period of 30-45 seconds, before it determines that you
+  have left the Room. As a result, if you close the tab/browser or navigate away from
+  your web application without disconnecting from the Room, the other Participants
+  will only be notified after the reconnecting period is over. So, we recommend that
+  you disconnect from the Room when you detect a tab/browser close or page navigation
+  as follows:
+
+  ```js
+  window.addEventListener('beforeunload', () => {
+    room.disconnect();
+  });
+  ```
+
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
