@@ -356,14 +356,10 @@ describe('PeerConnectionV2', () => {
   describe('#offer', () => {
     combinationContext([
       [
-        [true, false],
-        x => `${x ? 'before' : 'after'} the initial round of negotiation`
-      ],
-      [
         ['stable', 'have-local-offer'],
         x => `in signaling state "${x}"`
       ]
-    ], ([initial, signalingState]) => {
+    ], ([signalingState]) => {
       let test;
       let descriptions;
       let rev;
@@ -371,7 +367,7 @@ describe('PeerConnectionV2', () => {
       let signalingStateBefore;
       let result;
 
-      if (signalingState === 'have-local-offer' && initial) {
+      if (signalingState === 'have-local-offer') {
         beforeEach(setup);
         return itShouldEventuallyCreateOffer();
       }
@@ -383,14 +379,6 @@ describe('PeerConnectionV2', () => {
         test = makeTest({ offers: [makeOffer({ session: 1 }), makeOffer({ session: 2 }), makeOffer({ session: 3 })] });
         descriptions = [];
         rev = 0;
-
-        if (!initial) {
-          await test.pcv2.offer();
-          const answer = makeAnswer();
-          const answerDescription = test.state().setDescription(answer, 1);
-          await test.pcv2.update(answerDescription);
-          rev++;
-        }
 
         switch (signalingState) {
           case 'stable':
@@ -412,15 +400,9 @@ describe('PeerConnectionV2', () => {
 
       function itShouldCreateOffer() {
         const expectedOfferIndex = {
-          'stable': {
-            true: 0,
-            false: 1
-          },
-          'have-local-offer': {
-            true: 1,
-            false: 2
-          }
-        }[signalingState][initial];
+          'stable': 0,
+          'have-local-offer': 1
+        }[signalingState];
 
         it('returns a Promise that resolves to undefined', () => {
           assert.equal(result);
@@ -844,7 +826,7 @@ describe('PeerConnectionV2', () => {
               break;
             }
             beforeEach(setup);
-            if (signalingState === 'have-local-offer' && initial) {
+            if (signalingState === 'have-local-offer') {
               return itShouldEventuallyCreateOffer();
             }
             return itShouldCreateOffer();
@@ -1087,10 +1069,10 @@ describe('PeerConnectionV2', () => {
 
         itDoesNothing();
 
-        context('then, once the initial answer is received', () => {
+        context(`then, once the ${initial ? 'initial ' : ''}answer is received`, () => {
           beforeEach(async () => {
             const answer = makeAnswer();
-            const answerDescription = test.state().setDescription(answer, 1);
+            const answerDescription = test.state().setDescription(answer, initial ? 1 : 2);
             await test.pcv2.update(answerDescription);
           });
 

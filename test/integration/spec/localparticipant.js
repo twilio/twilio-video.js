@@ -8,7 +8,8 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalDataTrack
+  LocalDataTrack,
+  LocalVideoTrack
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
@@ -1006,6 +1007,42 @@ describe('LocalParticipant', function() {
           });
         });
       });
+    });
+  });
+
+  // NOTE(mmalavalli): This test runs the scenario specified in JSDK-2219. We disable
+  // this test in Chrome (unified-plan) with SIP as the transport because, for some
+  // reason, it stalls without finishing.
+  (isChrome && sdpFormat === 'unified' && !defaults._useTwilioConnection ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+    let error;
+    let publication;
+
+    before(async () => {
+      const audioTrack = await createLocalAudioTrack();
+      const name = randomName();
+      let videoTrack;
+
+      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
+        name,
+        tracks: [audioTrack]
+      }, defaults))));
+
+      await Promise.all(rooms.map(room => participantsConnected(room, 1)));
+
+      try {
+        for (let i = 0; i < 10; i++) {
+          videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
+          publication = await rooms[0].localParticipant.publishTrack(videoTrack);
+          rooms[0].localParticipant.unpublishTrack(videoTrack);
+        }
+      } catch (e) {
+        error = e;
+      }
+    });
+
+    it('should complete without any error', () => {
+      assert(publication);
+      assert(!error);
     });
   });
 });
