@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat();
 
 const {
   connect,
@@ -753,7 +754,7 @@ describe('LocalParticipant', function() {
         assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
         assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
         assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-        if (isChrome && defaults._sdpSemantics !== 'unified-plan') {
+        if (isChrome && sdpFormat === 'planb') {
           assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
         }
       });
@@ -1035,7 +1036,7 @@ describe('LocalParticipant', function() {
 
   // NOTE(mmalavalli): This test runs the scenario described in JSDK-2219. It is
   // disabled on Chrome (unified-plan) due to JSDK-2276.
-  (isChrome && defaults._sdpSemantics === 'unified-plan' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+  (isChrome && sdpFormat === 'unified' ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 

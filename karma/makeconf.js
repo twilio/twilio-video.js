@@ -70,8 +70,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
           prefs: {
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
-            'media.navigator.streams.fake': true
-          }
+            'media.navigator.streams.fake': true,
+            'media.autoplay.enabled.user-gestures-needed': false,
+            'media.block-autoplay-until-in-foreground': false          }
         }
       }
     });

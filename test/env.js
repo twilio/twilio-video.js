@@ -12,8 +12,7 @@ const processEnv = {
   WS_SERVER: process.env.WS_SERVER,
   WS_SERVER_INSIGHTS: process.env.WS_SERVER_INSIGHTS,
   LOG_LEVEL: process.env.LOG_LEVEL,
-  ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
-  SDP_SEMANTICS: process.env.SDP_SEMANTICS
+  ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS
 };
 
 // Copy environment variables
@@ -27,8 +26,7 @@ const env = [
   ['WS_SERVER',                 'wsServer'],
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
   ['LOG_LEVEL',                 'logLevel'],
-  ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
-  ['SDP_SEMANTICS',             'sdpSemantics']
+  ['ENABLE_REST_API_TESTS',     'enableRestApiTests']
 ].reduce((env, [processEnvKey, envKey]) => {
   if (processEnvKey in processEnv) {
     env[envKey] = processEnv[processEnvKey];

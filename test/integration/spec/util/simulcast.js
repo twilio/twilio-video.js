@@ -1,14 +1,13 @@
 'use strict';
 
 const assert = require('assert');
-const { _sdpSemantics } = require('../../../lib/defaults');
-const { getSdpFormat, guessBrowser } = require('../../../../lib/util');
+const { guessBrowser } = require('@twilio/webrtc/lib/util');
+const { getSdpFormat } = require('@twilio/webrtc/lib/util/sdp');
 const { getMediaSections, setSimulcast } = require('../../../../lib/util/sdp');
 const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
 
 const isChrome = guessBrowser() === 'chrome';
-const sdpSemantics = _sdpSemantics;
-const sdpFormat = getSdpFormat(sdpSemantics);
+const sdpFormat = getSdpFormat();
 
 describe('setSimulcast', () => {
   let answer1;
@@ -30,9 +29,9 @@ describe('setSimulcast', () => {
       before(async () => {
         const constraints = { audio: true, video: true };
         stream = await makeStream(constraints);
-        pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+        pc1 = new RTCPeerConnection({ iceServers: [] });
         pc1.addStream(stream);
-        pc2 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+        pc2 = new RTCPeerConnection({ iceServers: [] });
         pc2.addStream(stream);
         trackIdsToAttributes = new Map();
 
@@ -91,7 +90,7 @@ describe('setSimulcast', () => {
     before(async () => {
       const constraints = { audio: true, video: true };
       stream = await makeStream(constraints);
-      pc1 = new RTCPeerConnection({ iceServers: [], sdpSemantics });
+      pc1 = new RTCPeerConnection({ iceServers: [] });
       pc1.addStream(stream);
       trackIdsToAttributes = new Map();
 
