@@ -19,6 +19,11 @@ New Features
   twilio-video.js will use Unified Plan where available, while also maintaining
   support for earlier browser versions with Plan B as the default SDP format. (JSDK-2265)
 
+Bug Fixes
+---------
+
+- Removed workaround for this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335) on Firefox 65 and above. (JSDK-2280)
+
 1.15.2 (February 7, 2019)
 =========================
 
