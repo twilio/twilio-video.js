@@ -73,6 +73,7 @@ Bug Fixes
 - Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 3.x. (JSDK-2267)
 - Fixed a bug where the LocalParticipant sometimes failed to publish a LocalTrack
   to a group Room due to media negotiation failure. (JSDK-2219)
+- Removed workaround for this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335) on Firefox 65 and above.
 
 2.0.0-beta5 (January 7, 2019)
 =============================
