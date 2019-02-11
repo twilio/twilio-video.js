@@ -23,7 +23,7 @@ describe('Transport', () => {
     let test;
 
     beforeEach(() => {
-      test = makeTest();
+      test = makeTest({ sdpFormat: 'foo' });
     });
 
     it('sets the .state to "connecting"', () => {
@@ -111,6 +111,10 @@ describe('Transport', () => {
 
             it('has .type "connect"', () => {
               assert.equal('connect', message.type);
+            });
+
+            it('has .format "foo"', () => {
+              assert.equal('foo', message.format);
             });
 
             it('has .publisher.name "twilio-video.js"', () => {
