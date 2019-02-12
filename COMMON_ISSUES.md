@@ -13,8 +13,8 @@ Incompatibility between Mobile 1.x/2.x and Javascript on Firefox 63+ in Peer-to-
 
 Mozilla [announced](https://blog.mozilla.org/webrtc/how-to-avoid-data-channel-breaking/)
 a change in July 2018 related to how RTCDataChannels are negotiated in Firefox 63+.
-Unfortunately, this has caused an incompatibility with those versions of our Android
-and iOS Video SDKs that use WebRTC 57 and below.
+Unfortunately, this has caused an incompatibility with versions of our Android and
+iOS Video SDKs that use WebRTC 57 and below.
 
 ### What is the impact?
 
