@@ -671,8 +671,12 @@ describe('PeerConnectionV2', () => {
       [
         [true, false],
         x => `when matching ICE candidates have ${x ? '' : 'not '}been received`
+      ],
+      [
+        [true, false],
+        x => `when the remote peer is ${x ? '' : 'not '}an ICE-lite agent`
       ]
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching]) => {
+    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite]) => {
       // The Test
       let test;
 
@@ -713,7 +717,7 @@ describe('PeerConnectionV2', () => {
         // hence, we answer with revision 1.
         if (!initial) {
           await test.pcv2.offer();
-          const answer = makeAnswer();
+          const answer = makeAnswer({ iceLite });
           const answerDescription = test.state().setDescription(answer, 1);
           await test.pcv2.update(answerDescription);
         }
@@ -752,12 +756,12 @@ describe('PeerConnectionV2', () => {
         desc = null;
         switch (type) {
           case 'offer': {
-            const offer = makeOffer({ ufrag });
+            const offer = makeOffer({ iceLite, ufrag });
             desc = test.state().setDescription(offer, rev);
             break;
           }
           case 'answer': {
-            const answer = makeAnswer({ ufrag });
+            const answer = makeAnswer({ iceLite, ufrag });
             desc = test.state().setDescription(answer, rev);
             break;
           }
@@ -887,6 +891,10 @@ describe('PeerConnectionV2', () => {
           assert.equal(test.pc.signalingState, 'stable');
         });
 
+        it(`should detect ${iceLite ? '' : 'non-'}ICE-lite remote peer`, () => {
+          assert.equal(test.pcv2._isIceLite, iceLite);
+        });
+
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
       }
@@ -896,7 +904,7 @@ describe('PeerConnectionV2', () => {
 
         context('then, once the initial answer is received', () => {
           beforeEach(async () => {
-            const answer = makeAnswer();
+            const answer = makeAnswer({ iceLite });
             const answerDescription = test.state().setDescription(answer, 1);
             await test.pcv2.update(answerDescription);
           });
@@ -988,6 +996,10 @@ describe('PeerConnectionV2', () => {
           assert.equal(test.pc.signalingState, 'have-local-offer');
         });
 
+        it(`should detect ${iceLite ? '' : 'non-'}ICE-lite remote peer`, () => {
+          assert.equal(test.pcv2._isIceLite, iceLite);
+        });
+
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
       }
@@ -1024,6 +1036,10 @@ describe('PeerConnectionV2', () => {
 
         it('should leave the underlying RTCPeerConnection in signalingState "stable"', () => {
           assert.equal(test.pc.signalingState, 'stable');
+        });
+
+        it(`should detect ${iceLite ? '' : 'non-'}ICE-lite remote peer`, () => {
+          assert.equal(test.pcv2._isIceLite, iceLite);
         });
 
         itShouldApplyBandwidthConstraints();
@@ -1071,7 +1087,7 @@ describe('PeerConnectionV2', () => {
 
         context(`then, once the ${initial ? 'initial ' : ''}answer is received`, () => {
           beforeEach(async () => {
-            const answer = makeAnswer();
+            const answer = makeAnswer({ iceLite });
             const answerDescription = test.state().setDescription(answer, initial ? 1 : 2);
             await test.pcv2.update(answerDescription);
           });
@@ -1100,6 +1116,10 @@ describe('PeerConnectionV2', () => {
 
           it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
             assert.equal(test.pc.signalingState, 'have-local-offer');
+          });
+
+          it(`should detect ${iceLite ? '' : 'non-'}ICE-lite remote peer`, () => {
+            assert.equal(test.pcv2._isIceLite, iceLite);
           });
 
           itShouldApplyBandwidthConstraints();
@@ -1326,84 +1346,96 @@ describe('PeerConnectionV2', () => {
   });
 
   describe('"candidates" event', () => {
-    ['initial', 'subsequent', 'final'].forEach(which => {
-      const description = 'when the underlying RTCPeerConnection\'s "icecandidate" event fires with' + {
-        initial: 'an initial candidate for the current username fragment',
-        subsequent: 'a subsequent candidate for the current username fragment',
-        final: 'without a candidate (ICE gathering completed)'
-      }[which];
+    combinationContext([
+      [
+        ['initial', 'subsequent', 'final'],
+        x => `when the underlying RTCPeerConnection's "icecandidate" event fires ${{
+          initial: 'with an initial candidate for the current username fragment',
+          subsequent: 'with a subsequent candidate for the current username fragment',
+          final: 'without a candidate (ICE gathering completed)'
+        }[x]}`
+      ],
+      [
+        [true, false],
+        x => `when the remote peer is ${x ? '' : 'not '}an ICE-lite agent`
+      ]
+    ], ([which, iceLite]) => {
+      let test;
+      let iceState;
 
-      context(description, () => {
-        let test;
-        let iceState;
+      before(async () => {
+        test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
+        test.pcv2._isIceLite = iceLite;
 
-        beforeEach(async () => {
-          test = makeTest({ offers: [makeOffer({ ufrag: 'foo' })] });
+        await test.pcv2.offer();
 
-          await test.pcv2.offer();
+        let iceStatePromise;
 
-          let iceStatePromise;
+        if (which === 'initial') {
+          iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+        }
 
-          if (which === 'initial') {
-            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
-          }
-
-          test.pc.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate1' }
-          });
-
-          if (which === 'subsequent') {
-            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
-          }
-
-          test.pc.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: { candidate: 'candidate2' }
-          });
-
-          if (which === 'final') {
-            iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
-          }
-
-          test.pc.emit('icecandidate', {
-            type: 'icecandidate',
-            candidate: null
-          });
-
-          iceState = await iceStatePromise;
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate1' }
         });
 
-        context('emits the event', () => {
-          it('with the correct ID', () => {
-            assert.equal(iceState.id, test.pcv2.id);
-          });
+        if (which === 'subsequent') {
+          iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+        }
 
-          if (which === 'initial') {
-            it('with a single-element list of ICE candidates', () => {
-              assert.deepEqual(
-                iceState.ice.candidates,
-                [{ candidate: 'candidate1' }]);
-            });
-          } else {
-            it('with the full list of ICE candidates gathered up to that point', () => {
-              assert.deepEqual(
-                iceState.ice.candidates,
-                [{ candidate: 'candidate1' },
-                 { candidate: 'candidate2' }]);
-            });
-          }
-
-          if (which === 'final') {
-            it('with completed set to true', () => {
-              assert(iceState.ice.complete);
-            });
-          } else {
-            it('with completed unset', () => {
-              assert(!iceState.ice.complete);
-            });
-          }
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: { candidate: 'candidate2' }
         });
+
+        if (which === 'final') {
+          iceStatePromise = new Promise(resolve => test.pcv2.once('candidates', resolve));
+        }
+
+        test.pc.emit('icecandidate', {
+          type: 'icecandidate',
+          candidate: null
+        });
+
+        iceState = await iceStatePromise;
+      });
+
+      if (iceLite && which !== 'final') {
+        it('should not emit the event', () => {
+          assert.deepEqual(iceState.ice.candidates, []);
+          assert(iceState.ice.complete);
+        });
+        return;
+      }
+
+      context('emits the event', () => {
+        it('with the correct ID', () => {
+          assert.equal(iceState.id, test.pcv2.id);
+        });
+
+        if (which === 'initial') {
+          it('with a single-element list of ICE candidates', () => {
+            assert.deepEqual(
+              iceState.ice.candidates,
+              [{ candidate: 'candidate1' }]);
+          });
+        } else {
+          it(iceLite ? 'with no candidates' : 'with the full list of ICE candidates gathered up to that point', () => {
+            assert.deepEqual(iceState.ice.candidates, iceLite
+              ? [] : [{ candidate: 'candidate1' }, { candidate: 'candidate2' }]);
+          });
+        }
+
+        if (which === 'final') {
+          it('with completed set to true', () => {
+            assert(iceState.ice.complete);
+          });
+        } else {
+          it('with completed unset', () => {
+            assert(!iceState.ice.complete);
+          });
+        }
       });
     });
   });
@@ -1975,6 +2007,9 @@ function makeDescription(type, options) {
       type === 'pranswer') {
     const session = 'session' in options ? options.session : Number.parseInt(Math.random() * 1000);
     description.sdp = 'o=- ' + session + '\r\n';
+    if (options.iceLite) {
+      description.sdp += 'a=ice-lite\r\n';
+    }
     if (options.application) {
       description.sdp += 'm=application foo bar baz\r\na=sendrecv\r\n';
     }
