@@ -8,6 +8,42 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Incompatibility between Mobile 1.x/2.x and Javascript on Firefox 63+ in Peer-to-Peer Rooms
+------------------------------------------------------------------------------------------
+
+Mozilla [announced](https://blog.mozilla.org/webrtc/how-to-avoid-data-channel-breaking/)
+a change in July 2018 related to how RTCDataChannels are negotiated in Firefox 63+.
+Unfortunately, this has caused an incompatibility with those versions of our Android
+and iOS Video SDKs that use WebRTC 57 and below.
+
+###What is the impact?
+
+Firefox 63+ Participants that join a Peer-to-Peer Room that also has Android and
+iOS Participants with the affected versions of the Video SDK, will not be able to
+publish their local media Tracks. The mobile Participants can see the Firefox 63+
+Participants in the Room but no Tracks are ever published, as a result no media
+is ever published/visible from those Participants.
+                                                                     
+###Is my app impacted?
+
+If you use one of the following Twilio Video Android or iOS SDK versions with any
+version of the Twilio Video Javascript SDK on Firefox 63+ then your application
+will be impacted:
+
+| Twilio SDK  | Affected Versions | Upgrade Path       |
+| ----------- | ----------------- | ------------------ |
+| Android SDK | 1.x & 2.x         | 3.0.0+             |
+| iOS SDK     | 1.0.0 - 2.2.2     | 2.3.0+             |
+
+###If my app is impacted, how can I overcome it?
+
+Upgrade to a release of Twilio Video Android or iOS SDK as noted above. You can
+find more information about any changes introduced in these releases by reviewing
+the changelogs:
+
+* [Twilio Video Android SDK 3.x](https://www.twilio.com/docs/video/changelog-twilio-video-android-3x)
+* [Twilio Video iOS SDK 2.x](https://www.twilio.com/docs/video/changelog-twilio-video-ios-version-2x)
+
 Chrome and Firefox Beta, Canary, Nightly, etc., Releases
 --------------------------------------------------------
 
