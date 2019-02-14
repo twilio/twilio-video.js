@@ -32,6 +32,34 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('.isApplicationSectionNegotiated', () => {
+    context('when the underlying RTCPeerConnection has a local RTCSessionDescription', () => {
+      [true, false].forEach(hasApplicationSection => {
+        context(`when the RTCSessionDescription ${hasApplicationSection ? 'has' : 'does not have'} an application m= section`, () => {
+          it(`should be set to ${hasApplicationSection}`, async () => {
+            const test = makeTest({
+              offers: [
+                makeOffer({ application: hasApplicationSection })
+              ]
+            });
+            // TODO(mmalavalli): Remove this line once VIDEO-1981 is fixed.
+            test.pcv2._isIceLite = true;
+            await test.pcv2.offer();
+            assert.equal(test.pcv2.isApplicationSectionNegotiated, hasApplicationSection);
+          });
+        });
+      });
+    });
+    context('when the underlying RTCPeerConnection does not have a local RTCSessionDescription', () => {
+      it('should be set to false', async () => {
+        const test = makeTest();
+        // TODO(mmalavalli): Remove this line once VIDEO-1981 is fixed.
+        test.pcv2._isIceLite = true;
+        assert.equal(test.pcv2.isApplicationSectionNegotiated, false);
+      });
+    });
+  });
+
   describe('"iceConnectionStateChanged"', () => {
     it('emits "iceConnectionStateChanged" when the underlying RTCPeerConnection emits "iceconnectionstatechange"', () => {
       const test = makeTest();
