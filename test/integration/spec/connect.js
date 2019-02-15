@@ -770,6 +770,13 @@ describe('connect', function() {
       [thisRoom, thoseRooms, peerConnections] = await setup({
         preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
       });
+
+      // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
+      // before verifying that simulcast has been enabled. This was added to remove
+      // flakiness of this test in Travis.
+      await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+        pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+      })));
     });
 
     it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
