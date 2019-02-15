@@ -13,8 +13,8 @@ Firefox 63+ Incompatible with Mobile SDKs 1.x/2.x in Peer-to-Peer Rooms
 
 Firefox 63 [introduced](https://blog.mozilla.org/webrtc/how-to-avoid-data-channel-breaking/)
 a new SDP format for data channel negotiation. This new SDP format has caused
-incompatibility with Android and iOS Video SDK 1.x and 2.x when used with P2P Rooms.
-Please refer to this [issue](https://github.com/twilio/twilio-video.js/issues/544)
+incompatibility with the 1.x and 2.x Android and iOS Video SDKs when used with
+Peer-to-Peer Rooms. Please refer to this [issue](https://github.com/twilio/twilio-video.js/issues/544)
 to find out if your app is impacted and how to overcome it.
 
 Chrome and Firefox Beta, Canary, Nightly, etc., Releases
