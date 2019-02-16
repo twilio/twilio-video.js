@@ -12,7 +12,12 @@ const { flatMap } = require('../../../lib/util');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
 const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../lib/util/sdp');
 const TwilioError = require('../../../lib/util/twilioerror');
-const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
+
+const {
+  MediaConnectionError,
+  TrackNameIsDuplicatedError,
+  TrackNameTooLongError
+} = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox } = require('../../lib/guessbrowser');
@@ -91,6 +96,29 @@ describe('connect', function() {
       } catch (error) {
         assert(error instanceof RangeError);
         assert(/level must be one of/.test(error.message));
+      }
+      assert(cancelablePromise instanceof CancelablePromise);
+    });
+  });
+
+  describe('called with an incorrect RTCIceServer url', () => {
+    let cancelablePromise;
+
+    beforeEach(() => {
+      const iceServers = [{ url: 'turn159.148.17.9:3478', credential: 'foo' }];
+      const options = Object.assign({}, defaults, { iceServers, tracks: [] });
+      const token = getToken(randomName());
+      cancelablePromise = connect(token, options);
+    });
+
+    it('should return a CancelablePromise that rejects with a MediaConnectionError', async () => {
+      try {
+        const room = await cancelablePromise;
+        room.disconnect();
+        throw new Error(`Connected to ${room.sid} with an incorrect RTCIceServer url`);
+      } catch (error) {
+        assert(error instanceof MediaConnectionError);
+        assert.equal(error.code, 53405);
       }
       assert(cancelablePromise instanceof CancelablePromise);
     });
