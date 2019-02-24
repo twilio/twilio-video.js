@@ -213,8 +213,9 @@ describe('LocalParticipant', function() {
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
-      // TODO(mroberts): Remove me when VMS-920 is fixed.
-      if (kind === 'data' && when !== 'published' && defaults.topology !== 'peer-to-peer') {
+      // TODO(mmalavalli): Enable this scenario for Firefox when the following
+      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+      if (isFirefox && kind === 'data' && when === 'previously') {
         return;
       }
 
@@ -297,6 +298,8 @@ describe('LocalParticipant', function() {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
         }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),

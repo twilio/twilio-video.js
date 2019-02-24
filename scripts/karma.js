@@ -19,7 +19,7 @@ function getTestPaths(path) {
   return [path];
 }
 
-const files = getTestPaths(integrationTests);
+const files = getTestPaths(integrationTests).filter(path => /localparticipant/.test(path));
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
