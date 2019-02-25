@@ -481,9 +481,9 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      // TODO(mroberts): Remove me when VMS-920 is fixed.
-      // eslint-disable-next-line
-      if (kind === 'data' && when !== 'published' && process.env.TOPOLOGY === 'SFU') {
+      // TODO(mmalavalli): Enable this scenario for Firefox when the following
+      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+      if (isFirefox && kind === 'data' && when === 'previously') {
         return;
       }
 
