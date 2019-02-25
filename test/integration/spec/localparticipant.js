@@ -37,7 +37,6 @@ const {
   tracksSubscribed,
   tracksPublished,
   tracksUnpublished,
-  tracksUnsubscribed,
   trackStarted,
   waitForTracks
 } = require('../../lib/util');
@@ -214,8 +213,9 @@ describe('LocalParticipant', function() {
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
-      // TODO(mroberts): Remove me when VMS-920 is fixed.
-      if (kind === 'data' && when !== 'published' && defaults.topology !== 'peer-to-peer') {
+      // TODO(mmalavalli): Enable this scenario for Firefox when the following
+      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+      if (isFirefox && kind === 'data' && when === 'previously') {
         return;
       }
 
@@ -295,9 +295,11 @@ describe('LocalParticipant', function() {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
+            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
         }
+
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
@@ -479,9 +481,9 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      // TODO(mroberts): Remove me when VMS-920 is fixed.
-      // eslint-disable-next-line
-      if (kind === 'data' && when !== 'published' && process.env.TOPOLOGY === 'SFU') {
+      // TODO(mmalavalli): Enable this scenario for Firefox when the following
+      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+      if (isFirefox && kind === 'data' && when !== 'published') {
         return;
       }
 
@@ -1010,10 +1012,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  // NOTE(mmalavalli): This test runs the scenario specified in JSDK-2219. We disable
-  // this test in Chrome (unified-plan) with SIP as the transport because, for some
-  // reason, it stalls without finishing.
-  (isChrome && sdpFormat === 'unified' && !defaults._useTwilioConnection ? describe.skip : describe)('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+  describe('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 
