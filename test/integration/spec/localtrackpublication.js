@@ -27,7 +27,7 @@ const {
   participantsConnected,
   randomName,
   tracksSubscribed,
-  tracksUnsubscribed,
+  tracksUnpublished,
   waitForTracks
 } = require('../../lib/util');
 
@@ -117,7 +117,7 @@ describe('LocalTrackPublication', function() {
           thisParticipant.unpublishTrack(thisTrack);
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnsubscribed(thatParticipant, thisParticipant._tracks.size);
+            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
 
           await Promise.all([
