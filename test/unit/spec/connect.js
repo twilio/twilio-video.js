@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const { inherits } = require('util');
 
 const connect = require('../../../lib/connect');
-const { DEFAULT_LOG_LEVEL, WS_SERVER } = require('../../../lib/util/constants');
+const { DEFAULT_LOG_LEVEL, WS_SERVER, WS_SERVER_TWILIOCONNECTION } = require('../../../lib/util/constants');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -44,7 +44,9 @@ describe('connect', () => {
       const options = signaling.args[0][1];
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       /* eslint new-cap:0 */
-      assert.equal(options.wsServer, WS_SERVER(options.environment, options.realm));
+      assert.equal(options.wsServer, options._useTwilioConnection
+        ? WS_SERVER_TWILIOCONNECTION(options.environment)
+        : WS_SERVER(options.environment, options.realm));
     });
   });
 

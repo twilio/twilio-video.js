@@ -8,16 +8,11 @@ New Features
 
 - Previously, Room emitted "reconnecting" and "reconnected" events while recovering
   from a disruption in your media connection. Now, it will emit these events while
-  recovering from a disruption in your signaling connection as well. As of now, this
-  is an opt-in feature and can be enabled with a temporary ConnectOptions flag as follows:
+  recovering from a disruption in your signaling connection as well. You can
+  now distinguish between media related disruptions and signaling related
+  disruptions as follows:
 
   ```js
-  const { connect } = require('twilio-video');
-
-  const room = await connect(token, {
-    _useTwilioConnection: true
-  });
-
   room.on('reconnecting', error => {
     if (error.code === 53001) {
       console.log('Reconnecting your signaling connection!', error.message);
@@ -27,7 +22,7 @@ New Features
   });
   ```
 
-  When you opt in for this feature, you join a Room using our new signaling transport,
+  This is possible because you will now join a Room using our new signaling transport,
   which enables us to detect and recover from disruptions in your signaling connection.
   Whenever your signaling connection is interrupted, the signaling back-end waits
   for you to reconnect for a period of 30-45 seconds, before it determines that you
@@ -43,9 +38,19 @@ New Features
   });
   ```
 
-  After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
-  feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
-  signaling transport altogether in twilio-video.js@2.2.0.
+  If you want to opt out of this feature and use our legacy SIP-based signaling
+  transport, you can do so in the following way:
+
+  ```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect(token, {
+    _useTwilioConnection: false
+  });
+  ```
+
+  After twilio-video.js@2.0.0 is generally available, we will remove the legacy
+  SIP-based signaling transport in twilio-video.js@2.1.0.
   
   **NOTE:** The new signaling transport will reject access tokens containing configuration
   profiles, which were deprecated when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
