@@ -284,7 +284,13 @@ function createLevels() {
     video: {
       send: Math.random(),
       recv: Math.random()
-    }
+    },
+    remotes: [
+      {
+        level: Math.random(),
+        sid: 'PA9bcf2c26f2f1ba197b06ead6ec8b1f01'
+      }
+    ]
   };
 }
 
@@ -303,7 +309,8 @@ function didNotPublish(mst) {
 function didPublish(mst) {
   sinon.assert.calledOnce(mst.publish);
   sinon.assert.calledWith(mst.publish, {
-    type: 'network_quality'
+    type: 'network_quality',
+    remoteReportLevel: 1
   });
   mst.publish.reset();
 }
