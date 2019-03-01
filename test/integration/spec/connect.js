@@ -105,7 +105,7 @@ describe('connect', function() {
     let cancelablePromise;
 
     beforeEach(() => {
-      const iceServers = [{ url: 'turn159.148.17.9:3478', credential: 'foo' }];
+      const iceServers = [{ urls: 'turn159.148.17.9:3478', credential: 'foo' }];
       const options = Object.assign({}, defaults, { iceServers, tracks: [] });
       const token = getToken(randomName());
       cancelablePromise = connect(token, options);
