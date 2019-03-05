@@ -1,3 +1,5 @@
+For *twilio-video.js@2.x* changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
+
 1.16.0 (in progress)
 ====================
 
@@ -162,6 +164,14 @@ New Features
 
 1.12.0 (July 25, 2018)
 ======================
+
+Changes to support Google Chrome 72+
+------------------------------------
+
+- Google Chrome, starting from version 72, will enable Unified Plan as the default
+  SDP format. This version of twilio-video.js will choose Plan B as the SDP format
+  in order to continue supporting Google Chrome versions 72 and above until Unified
+  Plan support is added. For more details, please refer to this [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-).
 
 Deprecations
 ------------
