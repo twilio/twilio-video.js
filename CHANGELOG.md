@@ -1,4 +1,4 @@
-For *twilio-video.js\@1.x* changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
+For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
 2.0.0-beta6 (in progress)
 =========================
