@@ -37,11 +37,11 @@ New Features
   you disconnect from the Room when you detect a tab/browser close or page navigation
   as follows:
   
-    ```js
-    window.addEventListener('beforeunload', () => {
-      room.disconnect();
-    });
-    ```
+  ```js
+  window.addEventListener('beforeunload', () => {
+    room.disconnect();
+  });
+  ```
 
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
