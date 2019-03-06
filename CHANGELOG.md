@@ -36,7 +36,7 @@ New Features
   will only be notified after the reconnecting period is over. So, we recommend that
   you disconnect from the Room when you detect a tab/browser close or page navigation
   as follows:
-  
+
   ```js
   window.addEventListener('beforeunload', () => {
     room.disconnect();
