@@ -330,6 +330,46 @@ describe('Room', function() {
     });
   });
 
+  // eslint-disable-next-line
+  (process.env.TOPOLOGY === 'SFU' ? describe.only : describe.skip)('"networkQualityLevelChanged" event', () => {
+    const options = Object.assign({ name: randomName() }, defaults);
+    let thisRoom;
+    let thatRoom;
+    let localNQLevel;
+    let remoteNQLevel;
+
+    before(async () => {
+      const thisTracks = await createLocalTracks({ audio: true, fake: true });
+      thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks, networkQuality: true }, options));
+      const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.on('networkQualityLevelChanged', resolve));
+      const remoteNqLevelPromise = new Promise(resolve => thisRoom.on('participantConnected',
+        participant => participant.on('networkQualityLevelChanged', resolve)));
+
+      const thatTracks = await createLocalTracks({ audio: true, fake: true });
+      thatRoom = await connect(getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
+
+      localNQLevel = await localNqLevelPromise;
+      remoteNQLevel = await remoteNqLevelPromise;
+    });
+
+    it('is raised whenever network quality level for local participant changes', () => {
+      assert.equal(localNQLevel, thisRoom.localParticipant.networkQualityLevel);
+    });
+
+    it('is raised whenever network quality level for remote participant changes', () => {
+      assert.equal(remoteNQLevel, Array.from(thisRoom.participants.values())[0].networkQualityLevel);
+    });
+
+    after(() => {
+      if (thisRoom) {
+        thisRoom.disconnect();
+      }
+      if (thatRoom) {
+        thatRoom.disconnect();
+      }
+    });
+  });
+
   describe('"participantConnected" event', () => {
     let thisRoom;
     let thatRoom;
