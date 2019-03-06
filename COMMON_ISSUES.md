@@ -8,6 +8,13 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
+-----------------------------------------------------------------------------
+
+Mozilla introduced a [regression](https://bugzilla.mozilla.org/show_bug.cgi?id=1526477)
+in Firefox 64, because of which Firefox 64/65 Participants in a Group Room may
+sometimes experience media loss. For more details, please refer to this [issue](https://github.com/twilio/twilio-video.js/issues/565).
+
 Firefox 63+ Incompatible with Mobile SDKs 1.x/2.x in Peer-to-Peer Rooms
 -----------------------------------------------------------------------
 
