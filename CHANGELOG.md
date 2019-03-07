@@ -10,11 +10,14 @@ New Features
 
 - Previously, Room emitted "reconnecting" and "reconnected" events while recovering
   from a disruption in your media connection. Now, it will emit these events while
-  recovering from a disruption in your signaling connection as well. You can
-  now distinguish between media related disruptions and signaling related
-  disruptions as follows:
+  recovering from a disruption in your signaling connection as well. As of now, this
+  is an opt-in feature and can be enabled with a temporary ConnectOptions flag as follows:
 
   ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    _useTwilioConnection: true
+  });
   room.on('reconnecting', error => {
     if (error.code === 53001) {
       console.log('Reconnecting your signaling connection!', error.message);
@@ -24,7 +27,7 @@ New Features
   });
   ```
 
-  This is possible because you will now join a Room using our new signaling transport,
+  When you opt in for this feature, you join a Room using our new signaling transport,
   which enables us to detect and recover from disruptions in your signaling connection.
   Whenever your signaling connection is interrupted, the signaling back-end waits
   for you to reconnect for a period of 30-45 seconds, before it determines that you
@@ -40,39 +43,19 @@ New Features
   });
   ```
 
-  If you want to opt out of this feature and use our legacy SIP-based signaling
-  transport, you can do so in the following way:
+  After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
+  feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
+  signaling transport altogether in twilio-video.js@2.2.0.
 
-  ```js
-  const { connect } = require('twilio-video');
-
-  const room = await connect(token, {
-    _useTwilioConnection: false
-  });
-  ```
-
-  After twilio-video.js@2.0.0 is generally available, we will remove the legacy
-  SIP-based signaling transport in twilio-video.js@2.1.0.
-  
   **NOTE:** The new signaling transport will reject access tokens containing configuration
   profiles, which were deprecated when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
   the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
   if you want to override the default settings while creating a Room.
 
-- twilio-video.js will now use the Unified Plan SDP format where available.
-  Google Chrome, starting from version 72, has and Safari, starting from version
-  12.1, will enable Unified Plan as the default SDP format. We highly recommend
-  that you upgrade your twilio-video.js dependency to this version so that your
-  application continues to work on the above mentioned browser versions.
-
-  In December 2018, we published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
-  recommending customers to upgrade to the latest versions of twilio-video.js
-  in order to not be affected by Google Chrome switching to Unified Plan starting
-  from version 72. The way we ensured support of newer versions of Google Chrome
-  in the versions of twilio-video.js released between December 2018 and now was
-  by overriding the default SDP format to Plan B. Starting with this version,
-  twilio-video.js will use Unified Plan where available, while also maintaining
-  support for earlier browser versions with Plan B as the default SDP format. (JSDK-2265)
+- This version of twilio-video.js will support Safari 12.1 and above which enables
+  Unified Plan as the default SDP format. We highly recommend that you upgrade your
+  twilio-video.js dependency to this version so that your application continues to
+  work on Safari versions 12.1 and above. (JSDK-2306)
 
 Bug Fixes
 ---------
@@ -80,7 +63,8 @@ Bug Fixes
 - Fixed a bug where `Room.getStats` was throwing a TypeError in Electron 3.x. (JSDK-2267)
 - Fixed a bug where the LocalParticipant sometimes failed to publish a LocalTrack
   to a group Room due to media negotiation failure. (JSDK-2219)
-- Removed workaround for this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335) on Firefox 65 and above. (JSDK-2280)
+- Removed workaround for this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335)
+  on Firefox 65 and above. (JSDK-2280)
 - Fixed a bug where passing invalid RTCIceServer urls in ConnectOptions did not
   raise a MediaConnectionError. (JSDK-2279)
 
