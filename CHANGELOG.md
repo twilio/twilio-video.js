@@ -6,25 +6,18 @@ For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master
 New Features
 ------------
 
-- twilio-video.js will now use the Unified Plan SDP format where available.
-  Google Chrome, starting from version 72, has and Safari, starting from version
-  12.1, will enable Unified Plan as the default SDP format. We highly recommend
-  that you upgrade your twilio-video.js dependency to this version so that your
-  application continues to work on the above mentioned browser versions.
+- The Dominant Speaker and Network Quality APIs are generally available.
 
-  In December 2018, we published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
-  recommending customers to upgrade to the latest versions of twilio-video.js
-  in order to not be affected by Google Chrome switching to Unified Plan starting
-  from version 72. The way we ensured support of newer versions of Google Chrome
-  in the versions of twilio-video.js released between December 2018 and now was
-  by overriding the default SDP format to Plan B. Starting with this version,
-  twilio-video.js will use Unified Plan where available, while also maintaining
-  support for earlier browser versions with Plan B as the default SDP format. (JSDK-2265)
+- This version of twilio-video.js will support Safari 12.2 and above which enables
+  Unified Plan as the default SDP format. We highly recommend that you upgrade your
+  twilio-video.js dependency to this version so that your application continues to
+  work on Safari versions 12.2 and above. (JSDK-2305)
 
 Bug Fixes
 ---------
 
 - Removed workaround for this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1481335) on Firefox 65 and above. (JSDK-2280)
+- Fixed a bug where passing invalid RTCIceServer urls in ConnectOptions did not raise a MediaConnectionError. (JSDK-2279)
 
 1.15.2 (February 7, 2019)
 =========================
