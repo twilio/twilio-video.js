@@ -7,11 +7,9 @@ New Features
 ------------
 
 - The Dominant Speaker and Network Quality APIs are generally available.
-
-- This version of twilio-video.js will support Safari 12.2 and above which enables
-  Unified Plan as the default SDP format. We highly recommend that you upgrade your
-  twilio-video.js dependency to this version so that your application continues to
-  work on Safari versions 12.2 and above. (JSDK-2305)
+- twilio-video.js will now support versions of Safari that enable Unified Plan as
+  the default SDP format. As of now, Unified Plan is enabled by default in the
+  latest Safari Technology Preview. (JSDK-2305)
 
 Bug Fixes
 ---------
