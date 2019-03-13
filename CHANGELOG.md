@@ -49,14 +49,11 @@ New Features
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
 
-  **NOTE:** The new signaling transport will:
+  **Non-compatible changes:** The new signaling transport will:
   - disconnect you from the Room with an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104)
     if while reconnecting, it detects that your AccessToken is expired. Therefore,
-    we recommend that you create an AccessToken that is valid for the maximum
-    allowed session duration, i.e., *4 hours*.
-  - raise an [AccessTokenInvalidError](https://www.twilio.com/docs/api/errors/20101)
-    when you try to join a Room with an AccessToken created using a *non-string*
-    `identity`, instead of a [ParticipantIdentityInvalidError](https://www.twilio.com/docs/api/errors/53200).
+    we recommend that you create an AccessToken with the [ttl](https://www.twilio.com/docs/libraries/reference/twilio-node/3.29.1/AccessToken.html)
+    set to the maximum allowed session duration, which is currently *14400 seconds (4 hours)*.
   - reject AccessTokens containing configuration profiles, which were deprecated
     when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
     the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
