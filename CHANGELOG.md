@@ -15,9 +15,9 @@ New Features
 
   To try this new feature in your application **you must perform the following steps**:
 
-  1. Set the Time-To-Live(TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failure to set a sufficiently long TTL may result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104) when the client attempts to reconnect.
+  1. Set the Time-To-Live (TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate the reconnection. Note, a reconnection attempt with an expired access token will result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104).
   2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)) does not contain a configuration profile sid. Configuration profiles were deprecated
-    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0 and are not supported when using this feature.
+    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0. Configuration profiles are not supported when using this feature.
   3. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
      ```js
@@ -27,7 +27,7 @@ New Features
      });
      ```
 
-  4. The reconnecting event will raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+  4. The reconnecting event will now raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
 
      ```js
      room.on('reconnecting', error => {
