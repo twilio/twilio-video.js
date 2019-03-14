@@ -11,7 +11,7 @@ New Features
 - twilio-video.js now supports versions of Safari that enable Unified Plan as
   the default SDP format. As of now, Unified Plan is enabled by default in the latest
   Safari Technology Preview. (JSDK-2306)
-- Network reconnection is now supported as an opt-in feature. Previously, participants would be disconnected from the Room during network disruptions or handoffs. You can now enable a new opt-in feature that allows Participants to remain connected to the Room.
+- Network reconnection is now supported as an opt-in feature. Previously, Participants would be disconnected from the Room during network disruptions or handoffs. You can now enable a new opt-in feature that allows Participants to remain connected to the Room.
 
   To try this new feature in your application **you must perform the following steps**:
 
