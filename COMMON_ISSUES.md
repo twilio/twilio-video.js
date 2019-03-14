@@ -8,6 +8,14 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Network Handoff (opt-in)
+------------------------
+
+If you have opted in for reconnecting to the Room when the signaling connection
+is interrupted, then the signaling back-end will raise an [AccessTokenInvalidError](https://www.twilio.com/docs/api/errors/20101)
+if the reconnect attempt takes too long. In the near future, a different TwilioError
+will be raised that better describes this behavior.
+
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
 
@@ -36,6 +44,13 @@ stable release.
 
 Safari
 ------
+
+### Safari 12.1 Participants cannot publish Track(s) of the same kind as the unpublished Track(s)
+
+Because of this Safari 12.1 (currently in Beta) [bug](https://bugs.webkit.org/show_bug.cgi?id=195489),
+once a Participant unpublishes a MediaTrack of any kind (audio or video), it will
+not be able to publish another MediaTrack of the same kind. DataTracks are not affected.
+We have escalated this bug to the Safari Team and keeping track of related developments.
 
 ### Network Quality API not working
 
@@ -89,11 +104,6 @@ LocalTracks will fail.
 
 Firefox
 -------
-
-### Network Quality API not working
-
-We are working to fix a bug in twilio-video.js where Firefox clients do not
-receive Network Quality Score updates in a Group Room. (JSDK-2133)
 
 ### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
 

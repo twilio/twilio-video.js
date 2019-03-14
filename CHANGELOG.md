@@ -6,7 +6,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- The Dominant Speaker and Network Quality APIs are generally available.
+- The [Dominant Speaker](https://www.twilio.com/docs/video/detecting-dominant-speaker)
+  and [Network Quality](https://www.twilio.com/docs/video/using-network-quality-api)
+  APIs are generally available.
 
 - Previously, Room emitted "reconnecting" and "reconnected" events while recovering
   from a disruption in your media connection. Now, it will emit these events while
@@ -47,15 +49,19 @@ New Features
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
 
-  **NOTE:** The new signaling transport will reject access tokens containing configuration
-  profiles, which were deprecated when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
-  the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
-  if you want to override the default settings while creating a Room.
+  **Non-compatible changes:** The new signaling transport will:
+  - disconnect you from the Room with an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104)
+    if while reconnecting, it detects that your AccessToken is expired. Therefore,
+    we recommend that you create an AccessToken with the [ttl](https://www.twilio.com/docs/libraries/reference/twilio-node/3.29.1/AccessToken.html)
+    set to the maximum allowed session duration, which is currently *14400 seconds (4 hours)*.
+  - reject AccessTokens containing configuration profiles, which were deprecated
+    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
+    the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
+    if you want to override the default settings while creating a Room.
 
-- This version of twilio-video.js will support Safari 12.1 and above which enables
-  Unified Plan as the default SDP format. We highly recommend that you upgrade your
-  twilio-video.js dependency to this version so that your application continues to
-  work on Safari versions 12.1 and above. (JSDK-2306)
+- twilio-video.js will now support versions of Safari that enable Unified Plan as
+  the default SDP format. As of now, Unified Plan is enabled by default in the latest
+  Safari Technology Preview. (JSDK-2306)
 
 Bug Fixes
 ---------
@@ -79,8 +85,9 @@ New Features
 - Participants will now be able to stay in the Room and recover their media
   connections if the media server becomes unresponsive, instead of being
   disconnected. (JSDK-2245)
-- `Room.getStats` is now supported on Safari 12.1 and above. It is not supported
-  on Safari 12.0 and below due to this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
+- `Room.getStats` is now supported on versions of Safari that enable Unified Plan
+  as the default SDP format. It is not supported on earlier versions due to this
+  [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
   We have updated the documentation to reflect this behavior. (JSDK-2201)
 - `Room.getStats` on Chrome now uses the WebRTC 1.0 compliant version of the
   RTCPeerConnection's `getStats` API. (JSDK-2182)
