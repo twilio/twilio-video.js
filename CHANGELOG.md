@@ -18,33 +18,34 @@ New Features
   1. Set the Time-To-Live(TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failure to set a sufficiently long TTL may result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104) when the client attempts to reconnect.
   2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)) does not contain a configuration profile sid. Configuration profiles were deprecated
     when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0 and are not supported when using this feature.
-  3. Ensure that the `identity` field provided in the [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens#generate-helper-lib) is a string. Using a non-string value will result in an [AccessTokenInvalidError](https://www.twilio.com/docs/api/errors/20101).
-  4. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
+  3. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
-	  ```js
-	  const { connect } = require('twilio-video');
-	  const room = await connect(token, {
-	    _useTwilioConnection: true
-	  });
-	  ```
-  5. The reconnecting event will raise a [Signaling connection disconnected error](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [Media connection failed or ceased error](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+     ```js
+     const { connect } = require('twilio-video');
+     const room = await connect(token, {
+       _useTwilioConnection: true
+     });
+     ```
 
-	  ```js
-	  room.on('reconnecting', error => {
-	    if (error.code === 53001) {
-	      console.log('Reconnecting your signaling connection!', error.message);
-	    } else if (error.code === 53405) {
-	      console.log('Reconnecting your media connection!', error.message);
-	    }
-	  });
-	  ```
-  6. To ensure that the total time to detect a participant leaving the room is minimized it is recommended that you disconnect from the room whenever the tab/browser is closed or when a page navigation event occurs. This can be acommplished as follows:
+  4. The reconnecting event will raise a [Signaling connection disconnected error](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [Media connection failed or ceased error](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
 
-	  ```js
-	  window.addEventListener('beforeunload', () => {
-	    room.disconnect();
-	  });
-	  ```
+     ```js
+     room.on('reconnecting', error => {
+       if (error.code === 53001) {
+         console.log('Reconnecting your signaling connection!', error.message);
+       } else if (error.code === 53405) {
+         console.log('Reconnecting your media connection!', error.message);
+       }
+     });
+     ```
+
+  5. To ensure that the total time to detect a participant leaving the room is minimized it is recommended that you disconnect from the room whenever the tab/browser is closed or when a page navigation event occurs. This can be acommplished as follows:
+
+     ```js
+     window.addEventListener('beforeunload', () => {
+       room.disconnect();
+     });
+     ```
 
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
