@@ -26,6 +26,7 @@ New Features
        _useTwilioConnection: true
      });
      ```
+
   4. The reconnecting event will raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
 
      ```js
@@ -37,13 +38,15 @@ New Features
        }
      });
      ```
-  5. To ensure that the total time to detect a participant leaving the room is minimized it is recommended that you disconnect from the room whenever the tab/browser is closed or when a page navigation event occurs. This can be acommplished as follows:
+
+  5. When a Participant closes the tab/browser or navigates away from your application, we recommend that you disconnect from the Room so that other Participants are immediately notified. You can achieve this as follows:
 
      ```js
      window.addEventListener('beforeunload', () => {
        room.disconnect();
      });
      ```
+
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
