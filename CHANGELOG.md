@@ -43,6 +43,7 @@ New Features
 	  ```js
 	  window.addEventListener('beforeunload', () => {
 	    room.disconnect();
+	  });
 	  ```
 
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
