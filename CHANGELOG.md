@@ -26,7 +26,7 @@ New Features
        _useTwilioConnection: true
      });
      ```
-  4. The reconnecting event will raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [Media connection failed or ceased error](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+  4. The reconnecting event will raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
 
      ```js
      room.on('reconnecting', error => {
