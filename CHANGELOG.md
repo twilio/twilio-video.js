@@ -11,7 +11,7 @@ New Features
 - twilio-video.js now supports versions of Safari that enable Unified Plan as
   the default SDP format. As of now, Unified Plan is enabled by default in the latest
   Safari Technology Preview. (JSDK-2306)
-- Previously, Participants would be disconnected from the Room during network disruptions or handoffs. Now, you can now enable a new opt-in feature that enables Participants to remain connected to the Room.
+- Previously, Participants would be disconnected from the Room during network disruptions or handoffs. Now, you can now enable a new opt-in feature that allows Participants to remain connected to the Room.
 
   To try this new feature in your application **you must perform the following steps**:
 
@@ -26,8 +26,7 @@ New Features
        _useTwilioConnection: true
      });
      ```
-
-  4. The reconnecting event will raise a [Signaling connection disconnected error](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [Media connection failed or ceased error](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+  4. The reconnecting event will raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [Media connection failed or ceased error](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
 
      ```js
      room.on('reconnecting', error => {
@@ -38,7 +37,6 @@ New Features
        }
      });
      ```
-
   5. To ensure that the total time to detect a participant leaving the room is minimized it is recommended that you disconnect from the room whenever the tab/browser is closed or when a page navigation event occurs. This can be acommplished as follows:
 
      ```js
@@ -46,7 +44,6 @@ New Features
        room.disconnect();
      });
      ```
-
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
