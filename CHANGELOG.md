@@ -5,63 +5,51 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-
-- The [Dominant Speaker](https://www.twilio.com/docs/video/detecting-dominant-speaker)
+- [Dominant Speaker](https://www.twilio.com/docs/video/detecting-dominant-speaker)
   and [Network Quality](https://www.twilio.com/docs/video/using-network-quality-api)
-  APIs are generally available.
+  APIs are now generally available.
+- twilio-video.js now supports versions of Safari that enable Unified Plan as
+  the default SDP format. As of now, Unified Plan is enabled by default in the latest
+  Safari Technology Preview. (JSDK-2306)
+- Network reconnection is now supported as an opt-in feature. Previously, Participants would be disconnected from the Room during network disruptions or handoffs. You can now enable a new opt-in feature that allows Participants to remain connected to the Room.
 
-- Previously, Room emitted "reconnecting" and "reconnected" events while recovering
-  from a disruption in your media connection. Now, it will emit these events while
-  recovering from a disruption in your signaling connection as well. As of now, this
-  is an opt-in feature and can be enabled with a temporary ConnectOptions flag as follows:
+  To try this new feature in your application **you must perform the following steps**:
 
-  ```js
-  const { connect } = require('twilio-video');
-  const room = await connect(token, {
-    _useTwilioConnection: true
-  });
-  room.on('reconnecting', error => {
-    if (error.code === 53001) {
-      console.log('Reconnecting your signaling connection!', error.message);
-    } else if (error.code === 53405) {
-      console.log('Reconnecting your media connection!', error.message);
-    }
-  });
-  ```
+  1. Set the Time-To-Live (TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate the reconnection. Note, a reconnection attempt with an expired access token will result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104).
+  2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)) does not contain a configuration profile sid. Configuration profiles were deprecated
+    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0. Configuration profiles are not supported when using this feature.
+  3. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
-  When you opt in for this feature, you join a Room using our new signaling transport,
-  which enables us to detect and recover from disruptions in your signaling connection.
-  Whenever your signaling connection is interrupted, the signaling back-end waits
-  for you to reconnect for a period of 30-45 seconds, before it determines that you
-  have left the Room. As a result, if you close the tab/browser or navigate away from
-  your web application without disconnecting from the Room, the other Participants
-  will only be notified after the reconnecting period is over. So, we recommend that
-  you disconnect from the Room when you detect a tab/browser close or page navigation
-  as follows:
+     ```js
+     const { connect } = require('twilio-video');
+     const room = await connect(token, {
+       _useTwilioConnection: true
+     });
+     ```
 
-  ```js
-  window.addEventListener('beforeunload', () => {
-    room.disconnect();
-  });
-  ```
+  4. The reconnecting event will now raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+
+     ```js
+     room.on('reconnecting', error => {
+       if (error.code === 53001) {
+         console.log('Reconnecting your signaling connection!', error.message);
+       } else if (error.code === 53405) {
+         console.log('Reconnecting your media connection!', error.message);
+       }
+     });
+     ```
+
+  5. When a Participant closes the tab/browser or navigates away from your application, we recommend that you disconnect from the Room so that other Participants are immediately notified. You can achieve this as follows:
+
+     ```js
+     window.addEventListener('beforeunload', () => {
+       room.disconnect();
+     });
+     ```
 
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
-
-  **Non-compatible changes:** The new signaling transport will:
-  - disconnect you from the Room with an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104)
-    if while reconnecting, it detects that your AccessToken is expired. Therefore,
-    we recommend that you create an AccessToken with the [ttl](https://www.twilio.com/docs/libraries/reference/twilio-node/3.29.1/AccessToken.html)
-    set to the maximum allowed session duration, which is currently *14400 seconds (4 hours)*.
-  - reject AccessTokens containing configuration profiles, which were deprecated
-    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
-    the general availability of twilio-video.js@1.0.0. Use the [Programmable Video REST API](https://www.twilio.com/docs/video/api)
-    if you want to override the default settings while creating a Room.
-
-- twilio-video.js will now support versions of Safari that enable Unified Plan as
-  the default SDP format. As of now, Unified Plan is enabled by default in the latest
-  Safari Technology Preview. (JSDK-2306)
 
 Bug Fixes
 ---------
