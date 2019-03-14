@@ -11,14 +11,14 @@ New Features
 - twilio-video.js now supports versions of Safari that enable Unified Plan as
   the default SDP format. As of now, Unified Plan is enabled by default in the latest
   Safari Technology Preview. (JSDK-2306)
-- Reconnection improvements are available via a new feature that enables the client to reconnect to the signaling server when network disruptions occur.
+- Previously, Participants would be disconnected from the Room during network disruptions or handoffs. Now, you can now enable a new opt-in feature that enables Participants to remain connected to the Room.
 
   To try this new feature in your application **you must perform the following steps**:
 
-  1. Set the Time-To-Live(TTL) of your [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failure to set a sufficiently long TTL may result in an [access token expired error](https://www.twilio.com/docs/api/errors/20104) when the client attempts to reconnect.
-  2. Ensure that the access token does not contain a configuration profile sid. Configuration profiles were deprecated
+  1. Set the Time-To-Live(TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failure to set a sufficiently long TTL may result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104) when the client attempts to reconnect.
+  2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)) does not contain a configuration profile sid. Configuration profiles were deprecated
     when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0 and are not supported when using this feature.
-  3. Ensure that the `identity` field provided in the [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens#generate-helper-lib) is a string. Using a non-string value will result in an [invalid access token error](https://www.twilio.com/docs/api/errors/20101).
+  3. Ensure that the `identity` field provided in the [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens#generate-helper-lib) is a string. Using a non-string value will result in an [AccessTokenInvalidError](https://www.twilio.com/docs/api/errors/20101).
   4. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
 	  ```js
