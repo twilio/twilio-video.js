@@ -15,10 +15,10 @@ New Features
 
   To try this new feature in your application **you must perform the following steps**:
 
-  1. Set the Time-To-Live(TTL) of your [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failing to set a sufficiently long TTL may result in an [access token expired error](https://www.twilio.com/docs/api/errors/20104) error when the client attempts to reconnect.
+  1. Set the Time-To-Live(TTL) of your [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate with the signaling server. Failure to set a sufficiently long TTL may result in an [access token expired error](https://www.twilio.com/docs/api/errors/20104) when the client attempts to reconnect.
   2. Ensure that the access token does not contain a configuration profile sid. Configuration profiles were deprecated
     when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0 and are not supported when using this feature.
-  3. Ensure that the `identity` field provided in the [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens#generate-helper-lib) is a string.
+  3. Ensure that the `identity` field provided in the [access token](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens#generate-helper-lib) is a string. Using a non-string value will result in an [invalid access token error](https://www.twilio.com/docs/api/errors/20101).
   4. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
 	  ```js
