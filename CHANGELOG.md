@@ -1,23 +1,32 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta6 (in progress)
-=========================
+2.0.0-beta6 (March 15, 2019)
+============================
 
 New Features
 ------------
 - [Dominant Speaker](https://www.twilio.com/docs/video/detecting-dominant-speaker)
   and [Network Quality](https://www.twilio.com/docs/video/using-network-quality-api)
   APIs are now generally available.
-- twilio-video.js now supports versions of Safari that enable Unified Plan as
-  the default SDP format. As of now, Unified Plan is enabled by default in the latest
+- twilio-video.js now supports versions of Safari that enable Unified Plan as the
+  default SDP format. As of now, Unified Plan is enabled by default in the latest
   Safari Technology Preview. (JSDK-2306)
-- Network reconnection is now supported as an opt-in feature. Previously, Participants would be disconnected from the Room during network disruptions or handoffs. You can now enable a new opt-in feature that allows Participants to remain connected to the Room.
+- Network reconnection is now supported as an opt-in feature. Previously, Participants
+  would be disconnected from the Room during network disruptions or handoffs. This
+  feature allows Participants to remain connected to the Room.
 
   To try this new feature in your application **you must perform the following steps**:
 
-  1. Set the Time-To-Live (TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens) to the maximum allowed session duration, currently 14400 seconds (4 hours). This ensures that when a network loss occurs the client will be able to re-authenticate the reconnection. Note, a reconnection attempt with an expired access token will result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104).
-  2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)) does not contain a configuration profile sid. Configuration profiles were deprecated
-    when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control) the general availability of twilio-video.js@1.0.0. Configuration profiles are not supported when using this feature.
+  1. Set the Time-To-Live (TTL) of your [AccessToken](https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens)
+     to the maximum allowed session duration, currently 14400 seconds (4 hours).
+     This ensures that when a network loss occurs the client will be able to
+     re-authenticate the reconnection. Note, a reconnection attempt with an expired
+     AccessToken will result in an [AccessTokenExpiredError](https://www.twilio.com/docs/api/errors/20104).
+  2. Ensure that the [AccessToken]((https://www.twilio.com/docs/video/tutorials/user-identity-access-tokens))
+     does not contain a configuration profile sid. Configuration profiles were
+     deprecated when we [announced](https://www.twilio.com/blog/2017/04/programmable-video-peer-to-peer-rooms-ga.html#room-based-access-control)
+     the general availability of twilio-video.js@1.0.0. Configuration profiles are
+     not supported when using this feature.
   3. Enable the feature using the temporary flag `_useTwilioConnection` as follows:
 
      ```js
@@ -27,7 +36,10 @@ New Features
      });
      ```
 
-  4. The reconnecting event will now raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001) when a signaling connection network disruption occurs. Previously, the reconnecting event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405). You can differentiate between errors in the handler as follows:
+  4. The reconnecting event will now raise a [SignalingConnectionDisconnectedError](https://www.twilio.com/docs/api/errors/53001)
+     when a signaling connection network disruption occurs. Previously, the reconnecting
+     event only raised a [MediaConnectionError](https://www.twilio.com/docs/api/errors/53405).
+     You can differentiate between errors in the handler as follows:
 
      ```js
      room.on('reconnecting', error => {
@@ -39,7 +51,9 @@ New Features
      });
      ```
 
-  5. When a Participant closes the tab/browser or navigates away from your application, we recommend that you disconnect from the Room so that other Participants are immediately notified. You can achieve this as follows:
+  5. When a Participant closes the tab/browser or navigates away from your application,
+     we recommend that you disconnect from the Room so that other Participants are
+     immediately notified. You can achieve this as follows:
 
      ```js
      window.addEventListener('beforeunload', () => {
