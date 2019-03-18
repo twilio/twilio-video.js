@@ -1,12 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.16.0 (in progress)
-====================
+1.16.0 (March 18, 2019)
+=======================
 
 New Features
 ------------
 
-- The Dominant Speaker and Network Quality APIs are generally available.
+- The [Dominant Speaker](https://www.twilio.com/docs/video/detecting-dominant-speaker)
+  and [Network Quality](https://www.twilio.com/docs/video/using-network-quality-api)
+  APIs are generally available.
 - twilio-video.js will now support versions of Safari that enable Unified Plan as
   the default SDP format. As of now, Unified Plan is enabled by default in the
   latest Safari Technology Preview. (JSDK-2305)
@@ -49,8 +51,9 @@ New Features
 - Participants will now be able to stay in the Room and recover their media
   connections if the media server becomes unresponsive, instead of being
   disconnected. (JSDK-2245)
-- `Room.getStats` is now supported on Safari 12.1 and above. It is not supported
-  on Safari 12.0 and below due to this [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
+- `Room.getStats` is now supported on versions of Safari that enable Unified Plan
+  as the default SDP format. It is not supported on earlier versions due to this
+  [Safari bug](https://bugs.webkit.org/show_bug.cgi?id=192601).
   We have updated the documentation to reflect this behavior. (JSDK-2201)
 - `Room.getStats` on Chrome now uses the WebRTC 1.0 compliant version of the
   RTCPeerConnection's `getStats` API. (JSDK-2182)
