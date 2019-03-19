@@ -1,5 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.17.0 (in progress)
+====================
+
+New Features
+------------
+
+- Added VP8 simulcast support for Safari. VP8 codec support is enabled in Safari
+  12.1 which is currently in Beta. (JSDK-2314) 
+
 1.16.0 (March 18, 2019)
 =======================
 
