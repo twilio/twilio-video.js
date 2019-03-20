@@ -20,10 +20,12 @@ const {
 } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
-const { isChrome, isFirefox } = require('../../lib/guessbrowser');
+const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, tracksPublished } = require('../../lib/util');
+
+const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
@@ -770,7 +772,7 @@ describe('connect', function() {
     });
   });
 
-  (isChrome ? describe : describe.skip)('VP8 simulcast', () => {
+  (isChrome || safariVersion >= 12.1 ? describe : describe.skip)('VP8 simulcast', () => {
     let peerConnections;
     let sid;
     let thisRoom;
