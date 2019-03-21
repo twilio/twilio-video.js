@@ -1048,8 +1048,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  // eslint-disable-next-line
-  (process.env.TOPOLOGY === 'SFU' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
+  (defaults.topology === 'group' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
     const options = Object.assign({ name: randomName() }, defaults);
     let thisRoom;
     let thatRoom;
