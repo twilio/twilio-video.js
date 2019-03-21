@@ -22,6 +22,19 @@ describe('NetworkQualityMonitor', () => {
       assert.strictEqual(monitor.level, signaling.level);
     });
 
+    it('sets .remoteLevels to NetworkQualitySignaling\'s .remoteLevels', () => {
+      const signaling = new EventEmitter();
+
+      const monitor = new NetworkQualityMonitor(null, signaling);
+
+      signaling.remoteLevels = new Map();
+      assert.deepEqual(monitor.level, signaling.level);
+
+      signaling.remoteLevels = new Map().set('PA9bcf2c26f2f1ba197b06ead6ec8b1f01',
+        { sid: 'PA9bcf2c26f2f1ba197b06ead6ec8b1f01', level: 3 });
+      assert.deepEqual(monitor.remoteLevels, signaling.remoteLevels);
+    });
+
     it('re-emits NetworkQualitySignaling\'s "updated" event', () => {
       const signaling = new EventEmitter();
       const monitor = new NetworkQualityMonitor(null, signaling);
