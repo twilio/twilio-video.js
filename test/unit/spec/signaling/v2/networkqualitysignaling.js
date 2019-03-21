@@ -187,21 +187,27 @@ describe('NetworkQualitySignaling', () => {
           let level;
           let levels;
 
+          let remoteLevel;
+          let remoteLevels;
+
           beforeEach(() => {
             levels = createLevels();
             level = levels.level;
+            remoteLevels = createRemoteLevels();
+            remoteLevel = remoteLevels[0].level;
           });
 
           it('emits "updated"', () => {
             let didEmitEvent = false;
             nqs.once('updated', () => { didEmitEvent = true; });
-            receiveMessage(mst, levels);
+            receiveMessage(mst, levels, remoteLevels);
             assert(didEmitEvent);
           });
 
           it('sets .level to the new NetworkQualityLevel', () => {
-            receiveMessage(mst, levels);
+            receiveMessage(mst, levels, remoteLevels);
             assert.equal(level, nqs.level);
+            assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
           });
         });
 
@@ -209,22 +215,28 @@ describe('NetworkQualitySignaling', () => {
           let level;
           let levels;
 
+          let remoteLevel;
+          let remoteLevels;
+
           beforeEach(() => {
             receiveMessage(mst);
             levels = createLevels();
             level = levels.level;
+            remoteLevels = createRemoteLevels();
+            remoteLevel = remoteLevels[0].level;
           });
 
           it('emits "updated"', () => {
             let didEmitEvent = false;
             nqs.once('updated', () => { didEmitEvent = true; });
-            receiveMessage(mst, levels);
+            receiveMessage(mst, levels, remoteLevels);
             assert(didEmitEvent);
           });
 
           it('sets .level to the new NetworkQualityLevel', () => {
-            receiveMessage(mst, levels);
+            receiveMessage(mst, levels, remoteLevels);
             assert.equal(level, nqs.level);
+            assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
           });
         });
       });
@@ -233,22 +245,28 @@ describe('NetworkQualitySignaling', () => {
         let level;
         let levels;
 
+        let remoteLevel;
+        let remoteLevels;
+
         beforeEach(() => {
           levels = createLevels();
           level = levels.level;
-          receiveMessage(mst, levels);
+          remoteLevels = createRemoteLevels();
+          remoteLevel = remoteLevels[0].level;
+          receiveMessage(mst, levels, remoteLevels);
         });
 
         it('does not emit "updated"', () => {
           let didEmitEvent = false;
           nqs.once('updated', () => { didEmitEvent = true; });
-          receiveMessage(mst, levels);
+          receiveMessage(mst, levels, remoteLevels);
           assert(!didEmitEvent);
         });
 
         it('does not change .level', () => {
-          receiveMessage(mst, levels);
+          receiveMessage(mst, levels, remoteLevels);
           assert.equal(level, nqs.level);
+          assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
         });
       });
     });
@@ -288,11 +306,19 @@ function createLevels() {
   };
 }
 
-function createMessage(levels) {
+function createRemoteLevels() {
+  return  [{
+    level: Math.random(),
+    sid: 'PA9bcf2c26f2f1ba197b06ead6ec8b1f01'
+  }];
+}
+
+function createMessage(levels, rlevels) {
   return Object.assign({
     type: 'network_quality'
   }, {
-    local: levels || createLevels()
+    local: levels || createLevels(),
+    remotes: rlevels || createRemoteLevels()
   });
 }
 
@@ -303,13 +329,14 @@ function didNotPublish(mst) {
 function didPublish(mst) {
   sinon.assert.calledOnce(mst.publish);
   sinon.assert.calledWith(mst.publish, {
-    type: 'network_quality'
+    type: 'network_quality',
+    remoteReportLevel: 1
   });
   mst.publish.reset();
 }
 
-function receiveMessage(mst, levels) {
-  mst.emit('message', createMessage(levels));
+function receiveMessage(mst, levels, rlevels) {
+  mst.emit('message', createMessage(levels, rlevels));
 }
 
 async function wait() {
