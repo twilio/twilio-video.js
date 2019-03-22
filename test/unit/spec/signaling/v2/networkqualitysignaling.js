@@ -187,27 +187,31 @@ describe('NetworkQualitySignaling', () => {
           let level;
           let levels;
 
-          let remoteLevel;
-          let remoteLevels;
-
           beforeEach(() => {
             levels = createLevels();
             level = levels.level;
-            remoteLevels = createRemoteLevels();
-            remoteLevel = remoteLevels[0].level;
           });
 
           it('emits "updated"', () => {
             let didEmitEvent = false;
             nqs.once('updated', () => { didEmitEvent = true; });
-            receiveMessage(mst, levels, remoteLevels);
+            receiveMessage(mst, levels);
             assert(didEmitEvent);
           });
 
           it('sets .level to the new NetworkQualityLevel', () => {
-            receiveMessage(mst, levels, remoteLevels);
+            receiveMessage(mst, levels);
             assert.equal(level, nqs.level);
-            assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
+          });
+
+          it('sets .levels to the new local levels', () => {
+            receiveMessage(mst, levels);
+            assert.equal(levels, nqs.levels);
+          });
+
+          it('sets .remoteLevels to empty map', () => {
+            receiveMessage(mst, levels);
+            assert.equal(0, nqs.remoteLevels.size);
           });
         });
 
@@ -215,28 +219,32 @@ describe('NetworkQualitySignaling', () => {
           let level;
           let levels;
 
-          let remoteLevel;
-          let remoteLevels;
-
           beforeEach(() => {
             receiveMessage(mst);
             levels = createLevels();
             level = levels.level;
-            remoteLevels = createRemoteLevels();
-            remoteLevel = remoteLevels[0].level;
           });
 
           it('emits "updated"', () => {
             let didEmitEvent = false;
             nqs.once('updated', () => { didEmitEvent = true; });
-            receiveMessage(mst, levels, remoteLevels);
+            receiveMessage(mst, levels);
             assert(didEmitEvent);
           });
 
           it('sets .level to the new NetworkQualityLevel', () => {
-            receiveMessage(mst, levels, remoteLevels);
+            receiveMessage(mst, levels);
             assert.equal(level, nqs.level);
-            assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
+          });
+
+          it('sets .levels to new local levels', () => {
+            receiveMessage(mst, levels);
+            assert.equal(levels, nqs.levels);
+          });
+
+          it('sets .remoteLevels to empty map', () => {
+            receiveMessage(mst, levels);
+            assert.equal(0, nqs.remoteLevels.size);
           });
         });
       });
@@ -245,28 +253,32 @@ describe('NetworkQualitySignaling', () => {
         let level;
         let levels;
 
-        let remoteLevel;
-        let remoteLevels;
-
         beforeEach(() => {
           levels = createLevels();
           level = levels.level;
-          remoteLevels = createRemoteLevels();
-          remoteLevel = remoteLevels[0].level;
-          receiveMessage(mst, levels, remoteLevels);
+          receiveMessage(mst, levels);
         });
 
         it('does not emit "updated"', () => {
           let didEmitEvent = false;
           nqs.once('updated', () => { didEmitEvent = true; });
-          receiveMessage(mst, levels, remoteLevels);
+          receiveMessage(mst, levels);
           assert(!didEmitEvent);
         });
 
         it('does not change .level', () => {
-          receiveMessage(mst, levels, remoteLevels);
+          receiveMessage(mst, levels);
           assert.equal(level, nqs.level);
-          assert.equal(remoteLevel, Array.from(nqs.remoteLevels.values())[0].level);
+        });
+
+        it('does not change .levels', () => {
+          receiveMessage(mst, levels);
+          assert.equal(levels, nqs.levels);
+        });
+
+        it('does not change .remoteLevels', () => {
+          receiveMessage(mst, levels);
+          assert.equal(0, nqs.remoteLevels.size);
         });
       });
     });
@@ -306,19 +318,12 @@ function createLevels() {
   };
 }
 
-function createRemoteLevels() {
-  return  [{
-    level: Math.random(),
-    sid: 'PA9bcf2c26f2f1ba197b06ead6ec8b1f01'
-  }];
-}
-
-function createMessage(levels, rlevels) {
+function createMessage(levels) {
   return Object.assign({
     type: 'network_quality'
   }, {
     local: levels || createLevels(),
-    remotes: rlevels || createRemoteLevels()
+    remotes: null
   });
 }
 
@@ -330,13 +335,14 @@ function didPublish(mst) {
   sinon.assert.calledOnce(mst.publish);
   sinon.assert.calledWith(mst.publish, {
     type: 'network_quality',
-    remoteReportLevel: 1
+    reportLevel: 1,
+    remoteReportLevel: 0
   });
   mst.publish.reset();
 }
 
-function receiveMessage(mst, levels, rlevels) {
-  mst.emit('message', createMessage(levels, rlevels));
+function receiveMessage(mst, levels) {
+  mst.emit('message', createMessage(levels));
 }
 
 async function wait() {

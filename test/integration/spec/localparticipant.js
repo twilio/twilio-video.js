@@ -1074,28 +1074,20 @@ describe('LocalParticipant', function() {
     let thisRoom;
     let thatRoom;
     let localNQLevel;
-    let remoteNQLevel;
 
     before(async () => {
       const thisTracks = await createLocalTracks({ audio: true, fake: true });
       thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options));
       const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', resolve));
-      const remoteNqLevelPromise = new Promise(resolve => thisRoom.on('participantConnected',
-        participant => participant.once('networkQualityLevelChanged', resolve)));
 
       const thatTracks = await createLocalTracks({ audio: true, fake: true });
       thatRoom = await connect(getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
 
       localNQLevel = await localNqLevelPromise;
-      remoteNQLevel = await remoteNqLevelPromise;
     });
 
     it('is raised whenever network quality level for the LocalParticipant changes', () => {
       assert.equal(localNQLevel, thisRoom.localParticipant.networkQualityLevel);
-    });
-
-    it('is raised whenever network quality level for the RemoteParticipant changes', () => {
-      assert.equal(remoteNQLevel, Array.from(thisRoom.participants.values())[0].networkQualityLevel);
     });
 
     after(() => {
