@@ -1205,6 +1205,7 @@ describe('RoomV2', () => {
 
         NetworkQualityMonitor = sinon.spy(function() {
           networkQualityMonitor = new EventEmitter();
+          networkQualityMonitor.setNetworkConfiguration = sinon.spy;
           networkQualityMonitor.start = sinon.spy();
           networkQualityMonitor.stop = sinon.spy();
           return networkQualityMonitor;

@@ -7,19 +7,19 @@ const NetworkQualityMonitor = require('../../../../../lib/signaling/v2/networkqu
 
 describe('NetworkQualityMonitor', () => {
   describe('constructor(manager, signaling)', () => {
-    it('sets .level to NetworkQualitySignaling\'s .level', () => {
+    it('sets .levels to NetworkQualitySignaling\'s .levels', () => {
       const signaling = new EventEmitter();
 
       const monitor = new NetworkQualityMonitor(null, signaling);
 
-      signaling.level = null;
-      assert.strictEqual(monitor.level, signaling.level);
+      signaling.levels = null;
+      assert.strictEqual(monitor.levels, signaling.levels);
 
-      signaling.level = 1;
-      assert.strictEqual(monitor.level, signaling.level);
+      signaling.levels = { level: 1 };
+      assert.strictEqual(monitor.levels, signaling.levels);
 
-      signaling.level = 5;
-      assert.strictEqual(monitor.level, signaling.level);
+      signaling.levels = { level: 5 };
+      assert.strictEqual(monitor.levels, signaling.levels);
     });
 
     it('sets .remoteLevels to NetworkQualitySignaling\'s .remoteLevels', () => {
@@ -28,7 +28,7 @@ describe('NetworkQualityMonitor', () => {
       const monitor = new NetworkQualityMonitor(null, signaling);
 
       signaling.remoteLevels = new Map();
-      assert.deepEqual(monitor.level, signaling.level);
+      assert.deepEqual(monitor.remoteLevels, signaling.remoteLevels);
 
       signaling.remoteLevels = new Map().set('PA9bcf2c26f2f1ba197b06ead6ec8b1f01',
         { sid: 'PA9bcf2c26f2f1ba197b06ead6ec8b1f01', level: 3 });
