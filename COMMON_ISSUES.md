@@ -8,6 +8,42 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Working around the browsers' autoplay policy
+--------------------------------------------
+
+Chrome, Firefox and Safari enforce the autoplay policy, which blocks automatically
+playing audio or video if the user has not interacted with your application
+(ex: clicking a button to join a Room). You can find more details about the autoplay
+policies here:
+
+- [Chrome Autoplay Policy](https://developers.google.com/web/updates/2017/09/autoplay-policy-changes)
+- [Firefox Autoplay Policy](https://hacks.mozilla.org/2019/02/firefox-66-to-block-automatically-playing-audible-video-and-audio/)
+- [Safari Autoplay Policy](https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/)
+
+Playback of RemoteAudioTracks should not be affected since its playback does not
+depend on the \<audio\> element. However, for RemoteVideoTracks, there are two ways
+to ensure playback:
+
+- Make sure that the user interacts with your application before joining a Room.
+  Here is an example:
+  
+  ```js
+  document.getElementById('join_room').addEventListener('click', () => {
+    Twilio.Video.connect(token, {
+      name: 'my-room'
+    });
+  });
+  ```
+
+- If your application needs to join a Room on page load, set the `muted` attribute
+  of the \<video\> element returned by `VideoTrack.attach()` to true. The autoplay
+  policy allows muted video to be automatically played.
+  
+  ```js
+  const video = videoTrack.attach();
+  video.muted = true;
+  ```
+
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
 
