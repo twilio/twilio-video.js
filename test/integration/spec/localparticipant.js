@@ -299,6 +299,8 @@ describe('LocalParticipant', function() {
           }));
         }
 
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...['trackPublished', 'trackSubscribed'].map(event => {
@@ -546,6 +548,8 @@ describe('LocalParticipant', function() {
           await Promise.all(thoseParticipants.map(thatParticipant => {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
+
+          await new Promise(resolve => setTimeout(resolve, 100));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
