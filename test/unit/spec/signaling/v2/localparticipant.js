@@ -7,6 +7,7 @@ const sinon = require('sinon');
 const DataTrackSender = require('../../../../../lib/data/sender');
 const EncodingParameters = require('../../../../../lib/encodingparameters');
 const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
+const NetworkQualityConfiguration = require('../../../../../lib/networkqualityconfiguration');
 
 class MockLocalTrackPublicationV2 extends EventEmitter {
   constructor(trackSender, name) {
@@ -31,7 +32,7 @@ describe('LocalParticipantV2', () => {
       return publication;
     });
 
-    localParticipant = new LocalParticipantV2(new EncodingParameters(), {
+    localParticipant = new LocalParticipantV2(new EncodingParameters(), new NetworkQualityConfiguration(), {
       LocalTrackPublicationV2: LocalTrackPublicationV2Constructor
     });
 
