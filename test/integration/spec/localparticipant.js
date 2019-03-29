@@ -1069,7 +1069,8 @@ describe('LocalParticipant', function() {
     });
   });
 
-  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
+  // eslint-disable-next-line
+  (process.env.TOPOLOGY === 'SFU' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
     combinationContext([
       [
         [null, 1, 2, 3],
