@@ -120,7 +120,7 @@ describe('LocalTrackPublication', function() {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }));
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
