@@ -1069,7 +1069,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  (defaults.topology === 'group' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
     combinationContext([
       [
         [null, 1, 2, 3],
