@@ -5,6 +5,7 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
 const NetworkQualitySignaling = require('../../../../../lib/signaling/v2/networkqualitysignaling');
+const NetworkQualityConfiguration = require('../../../../../lib/networkqualityconfiguration');
 
 class MockMediaSignalingTransport extends EventEmitter {
   constructor() {
@@ -25,7 +26,7 @@ describe('NetworkQualitySignaling', () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers();
     mst = new MockMediaSignalingTransport();
-    nqs = new NetworkQualitySignaling(mst);
+    nqs = new NetworkQualitySignaling(mst, new NetworkQualityConfiguration());
   });
 
   afterEach(() => {
