@@ -92,7 +92,7 @@ const privateConstructors = [
   'NetworkQualityBandwidthStats',
   'NetworkQualityFractionLostStats',
   'NetworkQualityLatencyStats',
-  'NetworkQualityMediaStatsq',
+  'NetworkQualityMediaStats',
   'NetworkQualityRecvStats',
   'NetworkQualitySendOrRecvStats',
   'NetworkQualitySendStats',
