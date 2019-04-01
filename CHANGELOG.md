@@ -70,6 +70,10 @@ New Features
      });
      ```
 
+  6. If the reconnect attempt takes too long to complete due to network loss or
+     latency issues, then you will be disconnected from the Room with a
+     [ParticipantNotFoundError](https://www.twilio.com/docs/api/errors/53204).
+
   After twilio-video.js@2.0.0 is generally available, we plan to make this an opt-out
   feature in twilio-video.js@2.1.0, followed by removing our existing SIP-based
   signaling transport altogether in twilio-video.js@2.2.0.
