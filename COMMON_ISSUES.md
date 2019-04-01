@@ -44,14 +44,6 @@ to ensure playback:
   video.muted = true;
   ```
 
-Reconnecting to a Room due to network disruption/handoff (opt-in)
------------------------------------------------------------------
-
-If you have opted in for reconnecting to the Room when the signaling connection
-is interrupted, then the signaling back-end will raise an [AccessTokenInvalidError](https://www.twilio.com/docs/api/errors/20101)
-if the reconnect attempt takes too long. In the near future, a different TwilioError
-will be raised that better describes this behavior.
-
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
 
