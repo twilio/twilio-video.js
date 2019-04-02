@@ -407,8 +407,6 @@ describe('LocalParticipant', function() {
           }));
         }
 
-        await new Promise(resolve => setTimeout(resolve, 100));
-
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...['trackPublished', 'trackSubscribed'].map(event => {
