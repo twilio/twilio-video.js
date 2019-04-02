@@ -14,7 +14,10 @@ const tokens = new Map([
   ['valid', getToken('foo')]
 ]);
 
-const options = Object.assign({}, defaults);
+const options = Object.assign({
+  environment: 'prod'
+}, defaults);
+
 if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
 }
@@ -32,7 +35,7 @@ describe('InsightsPublisher', function() {
           publisher = new InsightsPublisher(tokens.get(tokenType),
             'twilio-video.js',
             '1.2.3',
-            'prod',
+            options.environment,
             'us1',
             options);
         });
@@ -66,7 +69,7 @@ describe('InsightsPublisher', function() {
       const publisher = new InsightsPublisher(tokens.get('valid'),
         'twilio-video.js',
         '1.2.3',
-        'prod',
+        options.environment,
         'us1',
         options);
 
