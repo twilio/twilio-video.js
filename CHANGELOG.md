@@ -6,16 +6,8 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
-  Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
-  In December 2018, we published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
-  recommending customers to upgrade to the latest versions of twilio-video.js
-  in order to not be affected by Google Chrome switching to Unified Plan starting
-  from version 72. The way we ensured support of newer versions of Google Chrome
-  in the versions of twilio-video.js released between December 2018 and now was
-  by overriding the default SDP format to Plan B. Starting with this version,
-  twilio-video.js will use Unified Plan where available, while also maintaining
-  support for earlier browser versions with Plan B as the default SDP format. (JSDK-2312)
+- twilio-video.js will now detect and attempt to recover from media disruptions
+  quicker than before thereby improving the performance of the [Network Reconnection API](https://www.twilio.com/docs/video/reconnection-states-and-events). (JSDK-2337)
 
 Bug Fixes
 ---------
