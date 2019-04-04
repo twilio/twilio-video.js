@@ -61,6 +61,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         ChromeWebRTC: {
           base: 'Chrome',
           flags: [
+            '--ignore-autoplay-restrictions',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]
