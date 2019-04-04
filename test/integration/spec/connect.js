@@ -804,6 +804,7 @@ describe('connect', function() {
 
     it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
       flatMap(peerConnections, pc => {
+        console.log(pc.localDescription);
         assert(pc.localDescription.sdp);
         return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
       }).forEach(section => {
