@@ -791,7 +791,7 @@ describe('connect', function() {
     });
   });
 
-  (isChrome || safariVersion >= 12.1 ? describe.only : describe.skip)('VP8 simulcast', () => {
+  (isChrome || safariVersion >= 12.1 ? describe : describe.skip)('VP8 simulcast', () => {
     let peerConnections;
     let thisRoom;
     let thoseRooms;
@@ -804,7 +804,6 @@ describe('connect', function() {
 
     it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
       flatMap(peerConnections, pc => {
-        console.log(pc.localDescription);
         assert(pc.localDescription.sdp);
         return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
       }).forEach(section => {
