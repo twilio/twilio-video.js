@@ -311,7 +311,15 @@ describe('Room', function() {
       thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
       const promise = new Promise(resolve => thisRoom.on('dominantSpeakerChanged', resolve));
 
-      const tracks = await createLocalTracks({ audio: true, fake: true });
+      const tracks = typeof AudioContext !== 'undefined' && 'createMediaStreamDestination' in AudioContext.prototype ? (() => {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const dest = audioContext.createMediaStreamDestination();
+        oscillator.connect(dest);
+        oscillator.start(0);
+        return dest.stream.getTracks();
+      })() : await createLocalTracks({ audio: true, fake: true });
+
       thatRoom = await connect(getToken(randomName()), Object.assign({ tracks }, options));
       dominantSpeaker = await promise;
     });
