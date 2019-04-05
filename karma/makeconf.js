@@ -62,7 +62,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
           base: 'Chrome',
           flags: [
             '--autoplay-policy=no-user-gesture-required',
-            '--ignore-autoplay-restrictions',
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]
