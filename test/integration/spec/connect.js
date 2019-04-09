@@ -860,5 +860,15 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
   const thoseParticipants = [...thisRoom.participants.values()];
   await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+
+  await Promise.all(peerConnections.map(pc => pc.signalingState === 'stable' ? Promise.resolve() : new Promise(resolve => {
+    pc.onsignalingstatechange = () => {
+      if (pc.signalingState === 'stable') {
+        pc.onsignalingstatechange = null;
+        resolve();
+      }
+    };
+  })));
+
   return [thisRoom, thoseRooms, peerConnections];
 }
