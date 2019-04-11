@@ -6,11 +6,11 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- You can now use the [Network Quality](https://www.twilio.com/docs/video/using-network-quality-api)
-  API to control the verbosity of the network quality statistics that are reported
-  for the LocalParticipant and RemoteParticipants in a Group Room. A Participant will
-  now have an additional property `networkQualityStats` which contains the network
-  quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
+- You can now use the [Network Quality API](https://www.twilio.com/docs/video/using-network-quality-api)
+  to receive Network Quality levels for RemoteParticipants in a Group Room. You can
+  also control the verbosity of the network quality information that is reported.
+  A Participant will now have an additional property `networkQualityStats` which
+  contains the network quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
  
   ```js
   const { connect } = require('twilio-video');
