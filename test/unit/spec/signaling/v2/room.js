@@ -1205,6 +1205,7 @@ describe('RoomV2', () => {
 
         NetworkQualityMonitor = sinon.spy(function() {
           networkQualityMonitor = new EventEmitter();
+          networkQualityMonitor.setNetworkConfiguration = sinon.spy;
           networkQualityMonitor.start = sinon.spy();
           networkQualityMonitor.stop = sinon.spy();
           return networkQualityMonitor;
@@ -1292,6 +1293,46 @@ describe('RoomV2', () => {
           test.peerConnectionManager.iceConnectionState = 'failed';
           test.peerConnectionManager.emit('iceConnectionStateChanged');
           assert(test.localParticipant.setNetworkQualityLevel.calledWith(0));
+        });
+
+        it('starts updating RemoteParticipant NetworkQualityLevel when NetworkQualityMonitor emits "updated"', () => {
+          const RemoteParticipantV2 = makeRemoteParticipantV2Constructor();
+          const participant = new RemoteParticipantV2({ sid: makeSid() });
+          test.room.connectParticipant(participant);
+
+          // Case 1: ICE Connection State transitions to "failed", Network
+          //         Quality Level has not been computed.
+          participant.networkQualityLevel = null;
+          test.peerConnectionManager.iceConnectionState = 'failed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert.equal(participant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 2: ICE Connection State is still "failed", and Network Quality
+          //         Level is computed.
+          networkQualityMonitor.remoteLevels = new Map().set(participant.sid, { sid: participant.sid, level: 1 });
+          networkQualityMonitor.emit('updated');
+          assert.equal(participant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 3: ICE Connection State transitions to "completed"
+          test.peerConnectionManager.iceConnectionState = 'completed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert.equal(participant.setNetworkQualityLevel.callCount, 0);
+
+          // Case 4: ICE Connection State is still "completed", and Network
+          //         Quality Level is computed.
+          networkQualityMonitor.remoteLevels = new Map().set(participant.sid, { sid: participant.sid, level: 1 });
+          networkQualityMonitor.emit('updated');
+          assert(participant.setNetworkQualityLevel.calledWith(1));
+
+          networkQualityMonitor.remoteLevels = new Map().set(participant.sid, { sid: participant.sid, level: 1 });
+          networkQualityMonitor.emit('updated');
+          assert(participant.setNetworkQualityLevel.calledWith(1));
+
+          // Case 5: ICE Connection State transitions to "failed"
+          participant.networkQualityLevel = networkQualityMonitor.remoteLevels.get(participant.sid).level;
+          test.peerConnectionManager.iceConnectionState = 'failed';
+          test.peerConnectionManager.emit('iceConnectionStateChanged');
+          assert(participant.setNetworkQualityLevel.calledWith(0));
         });
 
         describe('then, when the RoomV2 finally disconnects,', () => {
@@ -1414,6 +1455,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
       this.emit('stateChanged', this.state);
     });
     this.update = sinon.spy(() => {});
+    this.setNetworkQualityLevel = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 

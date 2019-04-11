@@ -5,6 +5,7 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
 const NetworkQualitySignaling = require('../../../../../lib/signaling/v2/networkqualitysignaling');
+const NetworkQualityConfiguration = require('../../../../../lib/networkqualityconfiguration');
 
 class MockMediaSignalingTransport extends EventEmitter {
   constructor() {
@@ -25,7 +26,7 @@ describe('NetworkQualitySignaling', () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers();
     mst = new MockMediaSignalingTransport();
-    nqs = new NetworkQualitySignaling(mst);
+    nqs = new NetworkQualitySignaling(mst, new NetworkQualityConfiguration());
   });
 
   afterEach(() => {
@@ -203,6 +204,16 @@ describe('NetworkQualitySignaling', () => {
             receiveMessage(mst, levels);
             assert.equal(level, nqs.level);
           });
+
+          it('sets .levels to the new local levels', () => {
+            receiveMessage(mst, levels);
+            assert.equal(levels, nqs.levels);
+          });
+
+          it('sets .remoteLevels to empty map', () => {
+            receiveMessage(mst, levels);
+            assert.equal(0, nqs.remoteLevels.size);
+          });
         });
 
         describe('and the NetworkQualitySignaling has had NetworkQualityLevel set before', () => {
@@ -225,6 +236,16 @@ describe('NetworkQualitySignaling', () => {
           it('sets .level to the new NetworkQualityLevel', () => {
             receiveMessage(mst, levels);
             assert.equal(level, nqs.level);
+          });
+
+          it('sets .levels to new local levels', () => {
+            receiveMessage(mst, levels);
+            assert.equal(levels, nqs.levels);
+          });
+
+          it('sets .remoteLevels to empty map', () => {
+            receiveMessage(mst, levels);
+            assert.equal(0, nqs.remoteLevels.size);
           });
         });
       });
@@ -249,6 +270,16 @@ describe('NetworkQualitySignaling', () => {
         it('does not change .level', () => {
           receiveMessage(mst, levels);
           assert.equal(level, nqs.level);
+        });
+
+        it('does not change .levels', () => {
+          receiveMessage(mst, levels);
+          assert.equal(levels, nqs.levels);
+        });
+
+        it('does not change .remoteLevels', () => {
+          receiveMessage(mst, levels);
+          assert.equal(0, nqs.remoteLevels.size);
         });
       });
     });
@@ -292,7 +323,8 @@ function createMessage(levels) {
   return Object.assign({
     type: 'network_quality'
   }, {
-    local: levels || createLevels()
+    local: levels || createLevels(),
+    remotes: null
   });
 }
 
@@ -303,7 +335,9 @@ function didNotPublish(mst) {
 function didPublish(mst) {
   sinon.assert.calledOnce(mst.publish);
   sinon.assert.calledWith(mst.publish, {
-    type: 'network_quality'
+    type: 'network_quality',
+    reportLevel: 1,
+    remoteReportLevel: 0
   });
   mst.publish.reset();
 }
