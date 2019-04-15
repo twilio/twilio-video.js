@@ -195,7 +195,7 @@ describe('LocalParticipantV2', () => {
   });
 
   describe('#setParameters', () => {
-    it('should call .update on the underlying EncodingParametersImple', () => {
+    it('should call .update on the underlying EncodingParametersImpl', () => {
       localParticipant.setParameters({ maxAudioBitrate: 100, maxVideoBitrate: 50 });
       assert.equal(encodingParameters.maxAudioBitrate, 100);
       assert.equal(encodingParameters.maxVideoBitrate, 50);
