@@ -68,7 +68,8 @@ describe('', () => {
     });
   });
 
-  describe('Track Subscription', () => {
+  // NOTE(mmalavalli): Disabling Track Subscription tests using deprecated REST APIs
+  describe.skip('Track Subscription', () => {
     let rooms;
     let sid;
 
