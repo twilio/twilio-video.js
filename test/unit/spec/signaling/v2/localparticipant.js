@@ -5,8 +5,9 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
 const DataTrackSender = require('../../../../../lib/data/sender');
-const EncodingParameters = require('../../../../../lib/encodingparameters');
+const EncodingParametersImpl = require('../../../../../lib/encodingparameters');
 const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
+const NetworkQualityConfigurationImpl = require('../../../../../lib/networkqualityconfiguration');
 
 class MockLocalTrackPublicationV2 extends EventEmitter {
   constructor(trackSender, name) {
@@ -22,7 +23,9 @@ describe('LocalParticipantV2', () => {
   let LocalTrackPublicationV2Constructor;
   let localParticipant;
   let trackSender;
+  let encodingParameters;
   let name;
+  let networkQualityConfiguration;
   let publication;
 
   beforeEach(() => {
@@ -31,7 +34,9 @@ describe('LocalParticipantV2', () => {
       return publication;
     });
 
-    localParticipant = new LocalParticipantV2(new EncodingParameters(), {
+    encodingParameters = new EncodingParametersImpl();
+    networkQualityConfiguration = new NetworkQualityConfigurationImpl();
+    localParticipant = new LocalParticipantV2(encodingParameters, networkQualityConfiguration, {
       LocalTrackPublicationV2: LocalTrackPublicationV2Constructor
     });
 
@@ -41,6 +46,14 @@ describe('LocalParticipantV2', () => {
   });
 
   describe('constructor', () => {
+    it('should set .networkQualityConfiguration', () => {
+      assert.equal(localParticipant.networkQualityConfiguration, networkQualityConfiguration);
+    });
+
+    it('should set .revision', () => {
+      assert.equal(localParticipant.revision, 1);
+    });
+
     it('returns an instanceof LocalParticipantV2', () => {
       assert(localParticipant instanceof LocalParticipantV2);
     });
@@ -148,6 +161,22 @@ describe('LocalParticipantV2', () => {
         localParticipant.removeTrack(trackSender);
         assert.deepEqual(events, []);
       });
+    });
+  });
+
+  describe('#setNetworkQualityConfiguration', () => {
+    it('should call .update on the underlying NetworkQualityConfigurationImpl', () => {
+      localParticipant.setNetworkQualityConfiguration({ local: 3, remote: 1 });
+      assert.equal(networkQualityConfiguration.local, 3);
+      assert.equal(networkQualityConfiguration.remote, 1);
+    });
+  });
+
+  describe('#setParameters', () => {
+    it('should call .update on the underlying EncodingParametersImpl', () => {
+      localParticipant.setParameters({ maxAudioBitrate: 100, maxVideoBitrate: 50 });
+      assert.equal(encodingParameters.maxAudioBitrate, 100);
+      assert.equal(encodingParameters.maxVideoBitrate, 50);
     });
   });
 });

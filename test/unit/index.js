@@ -10,6 +10,7 @@ require('./spec/createlocaltracks');
 require('./spec/ecs');
 require('./spec/encodingparameters');
 require('./spec/localparticipant');
+require('./spec/networkqualityconfiguration');
 require('./spec/room');
 require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
