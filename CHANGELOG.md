@@ -1,5 +1,53 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.18.0 (in progress)
+====================
+
+New Features
+------------
+
+- You can now use the [Network Quality API](https://www.twilio.com/docs/video/using-network-quality-api)
+  to receive Network Quality levels for RemoteParticipants in a Group Room. You can
+  also control the verbosity of the network quality information that is reported.
+  A Participant will now have an additional property `networkQualityStats` which
+  contains the network quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    networkQuality: {
+      local: 1, // Verbosity level for LocalParticipant [1 - 3]
+      remote: 2 // Verbosity level for RemoteParticipants [0 - 3]
+    }
+  });
+
+  // Set up reporting of network quality statistics for the LocalParticipant.
+  setupNetworkQualityStats(room.localParticipant);
+
+  // Set up reporting of network quality statistics for RemoteParticipants in the Group Room.
+  room.participants.forEach(setupNetworkQualityStats);
+
+  // Set up reporting of network quality statistics for RemoteParticipants that will join the Group Room.
+  room.on('participantConnected', setupNetworkQualityStats);
+
+  function logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats) {
+    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);  
+    if (networkQualityStats) {
+      // Verbosity is in the range [2 - 3].
+      console.log('Network quality statistics used to compute the level:', networkQualityStats);
+    }
+  }
+
+  function setupNetworkQualityStats(participant) {
+    // Log current network quality statistics of the Participant.
+    logNetworkQualityStats(participant, participant.networkQualityLevel, participant.networkQualityStats);
+    // Listen to changes in the Participant's network quality level.
+    participant.on('networkQualityLevelChanged', (networkQualityLevel, networkQualityStats) => {
+      logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats);
+    });
+  }
+  ```
+
 1.17.0 (April 1, 2019)
 ======================
 

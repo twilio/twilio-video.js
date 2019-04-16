@@ -207,6 +207,49 @@ describe('LocalParticipant', () => {
     });
   });
 
+  describe('#setNetworkQualityConfiguration', () => {
+    let test;
+
+    context('when the NetworkQualityConfiguration is', () => {
+      [
+        [undefined, 'undefined'],
+        [null, 'null'],
+        ['foo', 'not an object'],
+        [{ local: 'bar', remote: 1 }, 'an object that has .local which is not a number'],
+        [{ local: 2, remote: false }, 'an object that has .remote which is not a number'],
+        [{ local: 'foo', remote: null }, 'an object which has both .local and .remote which are not numbers']
+      ].forEach(([networkQualityConfiguration, scenario]) => {
+        context(scenario, () => itShould(networkQualityConfiguration, true));
+      });
+
+      [
+        [{}, 'an object which does not have .local and .remote'],
+        [{ remote: 1 }, 'an object that does not have .local'],
+        [{ local: 2 }, 'an object that does not have .remote'],
+        [{ local: 1, remote: 2 }, 'an object which has both .local and .remote which are numbers']
+      ].forEach(([networkQualityConfiguration, scenario]) => {
+        context(scenario, () => itShould(networkQualityConfiguration, false));
+      });
+    });
+
+    function itShould(networkQualityConfiguration, throwAndFail) {
+      before(() => {
+        test = makeTest();
+      });
+
+      it(`should ${throwAndFail ? '' : 'not '}throw`, () => {
+        assert[throwAndFail ? 'throws' : 'doesNotThrow'](() => test.participant.setNetworkQualityConfiguration(networkQualityConfiguration));
+      });
+
+      it(`should ${throwAndFail ? 'not ' : ''}call .setNetworkQualityConfiguration on the underlying ParticipantSignaling`, () => {
+        sinon.assert.callCount(test.signaling.setNetworkQualityConfiguration, throwAndFail ? 0 : 1);
+        if (!throwAndFail) {
+          sinon.assert.calledWith(test.signaling.setNetworkQualityConfiguration, networkQualityConfiguration);
+        }
+      });
+    }
+  });
+
   describe('#setParameters', () => {
     let test;
 
@@ -1049,6 +1092,7 @@ function makeSignaling(options) {
     return signaling;
   });
   signaling.removeTrack = sinon.spy(() => {});
+  signaling.setNetworkQualityConfiguration = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
   signaling.tracks = new Map();
   return signaling;
