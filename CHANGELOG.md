@@ -12,6 +12,9 @@ New Features
   A Participant will now have an additional property `networkQualityStats` which
   contains the network quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
 
+  You can specify the verbosity levels of the network quality information in ConnectOptions
+  while joining the Room:
+
   ```js
   const { connect } = require('twilio-video');
   const room = await connect(token, {
@@ -46,6 +49,16 @@ New Features
       logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats);
     });
   }
+  ```
+
+  You can also change the verbosity levels of the network quality information after
+  joining the Room:
+
+  ```js
+  room.localParticipant.setNetworkQualityConfiguration({
+    local: 3,
+    remote: 1
+  });
   ```
 
 1.17.0 (April 1, 2019)
