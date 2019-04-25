@@ -20,7 +20,6 @@ const defaults = [
   }
   return defaults;
 }, {
-  _useTwilioConnection: !!env.useTwilioConnection,
   dominantSpeaker: true,
   networkQuality: true,
   topology: 'peer-to-peer'
