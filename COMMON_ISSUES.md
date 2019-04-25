@@ -44,6 +44,13 @@ to ensure playback:
   video.muted = true;
   ```
 
+Firefox Participants are not able to recover media after network interruptions or handoffs
+------------------------------------------------------------------------------------------
+
+Because of this [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562), Firefox
+is not able to recover media connections with other Participants in a Room after
+network interruptions or handoffs.
+
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
 

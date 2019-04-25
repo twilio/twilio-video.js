@@ -12,7 +12,6 @@ const processEnv = {
   WS_SERVER_INSIGHTS: process.env.WS_SERVER_INSIGHTS,
   LOG_LEVEL: process.env.LOG_LEVEL,
   ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
-  USE_TWILIO_CONNECTION: process.env.USE_TWILIO_CONNECTION,
   TOPOLOGY: process.env.TOPOLOGY
 };
 
@@ -27,7 +26,6 @@ const env = [
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
   ['LOG_LEVEL',                 'logLevel'],
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
-  ['USE_TWILIO_CONNECTION',     'useTwilioConnection'],
   ['TOPOLOGY',                  'topology']
 ].reduce((env, [processEnvKey, envKey]) => {
   if (processEnvKey in processEnv) {
