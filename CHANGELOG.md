@@ -1,14 +1,15 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta9 (in progress)
+2.0.0-beta9 (May 2, 2019)
 =========================
 
 New Features
 ------------
 
-- Network reconnection, which was introduced as an opt-in feature in `twilio-video.js@2.0.0-beta6`,
-  is now enabled by default. The temporary ConnectOptions flag `_useTwilioConnection` has been
-  removed. If this flag is present in ConnectOptions, it will be ignored. (JSDK-2335)
+- [Network reconnection](https://www.twilio.com/docs/video/reconnection-states-and-events),
+  which was introduced as an opt-in feature in `twilio-video.js@2.0.0-beta6`, is now
+  enabled by default. The temporary ConnectOptions flag `_useTwilioConnection` has
+  been removed. If this flag is present in ConnectOptions, it will be ignored. (JSDK-2335)
 
 2.0.0-beta8 (April 23, 2019)
 ============================
