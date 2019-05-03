@@ -1,6 +1,6 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta10 (in progress)
+2.0.0-beta10 (In progress)
 ==========================
 
 New Features
