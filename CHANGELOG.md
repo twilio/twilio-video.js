@@ -5,6 +5,19 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
+- [When connecting to a room](https://www.twilio.com/docs/video/javascript-v2-getting-started#connect-to-a-room),
+  you can now specify a region that is closest to the participant in ConnectOptions. This region will be used for choosing signaling server for lower latencies. (JSDK-2338).
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    region: 'de1'
+  });
+  ```
+  Above option will use signaling servers in Germany. For other possible values for region
+  refer to [the documentation TODO: FIX LINK](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication)
+  when region is not specified it defaults to `gll` which uses latency based routing.
+
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
