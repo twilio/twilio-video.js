@@ -33,7 +33,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
+- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 
 2.0.0-beta9 (May 2, 2019)
@@ -58,7 +58,7 @@ New Features
   also control the verbosity of the network quality information that is reported.
   A Participant will now have an additional property `networkQualityStats` which
   contains the network quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
-
+ 
   You can specify the verbosity levels of the network quality information in ConnectOptions
   while joining the Room:
 
@@ -81,7 +81,7 @@ New Features
   room.on('participantConnected', setupNetworkQualityStats);
 
   function logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats) {
-    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);
+    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);  
     if (networkQualityStats) {
       // Verbosity is in the range [2 - 3].
       console.log('Network quality statistics used to compute the level:', networkQualityStats);
@@ -254,7 +254,7 @@ Bug Fixes
 - Fixed a bug where calling a LocalVideoTrack's `stop` method did not stop the
   video capture, and thereby did not turn the camera light off. (JSDK-2156)
 - Fixed a bug where calling LocalParticipant's `unpublishTrack` on a LocalTrack
-  that was being published to a Room also stopped the LocalTrack. (JSDK-2169)
+  that was being published to a Room also stopped the LocalTrack. (JSDK-2169) 
 
 2.0.0-beta1 (August 10, 2018)
 =============================
