@@ -5,12 +5,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-<<<<<<< HEAD
 - By default, twilio-video.js connects to your nearest signaling server, as determined by
-=======
-- [When connecting to a room](https://www.twilio.com/docs/video/javascript-v2-getting-started#connect-to-a-room),
-  By default, twilio-video.js connects to your nearest signaling server, as determined by
->>>>>>> 8e8c7501ca3db5c3b53436863f945ffa4b6ec48b
   [latency based routing](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
   You can now override this behavior by using a new ConnectOptions flag called `region`. This will make
   sure that your signaling traffic will terminate at the specified region. (JSDK-2338)
@@ -24,10 +19,6 @@ New Features
 
   This will guarantee that your signaling traffic will terminate in Germany. For other possible values
   for region, please refer to this [table](https://www.twilio.com/docs/video/ip-address-whitelisting#media-servers).
-<<<<<<< HEAD
-=======
-  TODO: the table mentions lot more regions that what we havev working right now (only us1, in1, and de1) are working currently. What should we update the link to that lists only valid values.
->>>>>>> 8e8c7501ca3db5c3b53436863f945ffa4b6ec48b
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
