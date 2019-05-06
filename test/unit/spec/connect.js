@@ -49,6 +49,54 @@ describe('connect', () => {
     });
   });
 
+  describe.only('called with ConnectOptions#region', () => {
+    ['us1', 'de1', 'anyother', 'gll', 'anyOtherRegion'].forEach(region => {
+      it(`generates correct serverUrl for the region "${region}"`, () => {
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        const signaling = sinon.spy(() => mockSignaling);
+
+        connect(token, {
+          iceServers: [],
+          signaling,
+          region
+        });
+
+        const options = signaling.args[0][1];
+        assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+        if (region === 'gll') {
+          assert(options.wsServer.indexOf('global') > 0);
+        } else {
+          assert(options.wsServer.indexOf(region) > 0);
+        }
+      });
+    });
+  });
+
+  describe.only('called with ConnectOptions#environment', () => {
+    ['dev', 'stage', 'prod', 'anyOtherEnv'].forEach(environment => {
+      it(`generates correct serverUrl for the environment "${environment}"`, () => {
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        const signaling = sinon.spy(() => mockSignaling);
+
+        connect(token, {
+          iceServers: [],
+          signaling,
+          environment
+        });
+
+        const options = signaling.args[0][1];
+        assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+        if (environment === 'prod') {
+          assert(options.wsServer.indexOf(environment) === -1);
+        } else {
+          assert(options.wsServer.indexOf(environment) > 0);
+        }
+      });
+    });
+  });
+
   describe('called without ConnectOptions#tracks', () => {
     it('automatically acquires LocalTracks', () => {
       const createLocalTracks = sinon.spy();
