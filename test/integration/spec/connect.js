@@ -141,7 +141,7 @@ describe('connect', function() {
     });
 
     context('with missing region', async () => {
-      it('should return a CancelablePromise that resolves after connecting to us1', async () => {
+      it('should return a CancelablePromise that resolves after connecting', async () => {
         const cancelablePromise = connect(token, Object.assign({}, defaults, { tracks: [] }));
         assert(cancelablePromise instanceof CancelablePromise);
         const room = await cancelablePromise;
