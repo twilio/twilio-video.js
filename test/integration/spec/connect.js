@@ -104,7 +104,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('region selection ', async () => {
+  describe('region selection ', async () => {
     let token;
     let cancelablePromise;
 
@@ -421,10 +421,12 @@ describe('connect', function() {
   describe('called with EncodingParameters', () => {
     combinationContext([
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 20000],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ],
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 40000],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ]

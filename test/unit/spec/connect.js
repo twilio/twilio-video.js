@@ -36,8 +36,10 @@ describe('connect', () => {
 
       connect(token, {
         iceServers: [],
+        // eslint-disable-next-line no-undefined
         logLevel: undefined,
         signaling,
+        // eslint-disable-next-line no-undefined
         wsServer: undefined
       });
 
@@ -49,7 +51,7 @@ describe('connect', () => {
     });
   });
 
-  describe.only('called with ConnectOptions#region', () => {
+  describe('called with ConnectOptions#region', () => {
     ['us1', 'de1', 'anyother', 'gll', 'anyOtherRegion'].forEach(region => {
       it(`generates correct serverUrl for the region "${region}"`, () => {
         const mockSignaling = new Signaling();
@@ -73,7 +75,7 @@ describe('connect', () => {
     });
   });
 
-  describe.only('called with ConnectOptions#environment', () => {
+  describe('called with ConnectOptions#environment', () => {
     ['dev', 'stage', 'prod', 'anyOtherEnv'].forEach(environment => {
       it(`generates correct serverUrl for the environment "${environment}"`, () => {
         const mockSignaling = new Signaling();
