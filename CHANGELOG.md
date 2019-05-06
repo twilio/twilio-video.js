@@ -6,7 +6,10 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 - [When connecting to a room](https://www.twilio.com/docs/video/javascript-v2-getting-started#connect-to-a-room),
-  you can now specify a region that is closest to the participant in ConnectOptions. This region will be used for choosing signaling server for lower latencies. (JSDK-2338).
+  By default, twilio-video.js connects to your nearest signaling server, as determined by
+  [latency based routing](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
+  You can now override this behavior by using a new ConnectOptions flag called `region`. This will make
+  sure that your signaling traffic will terminate at the specified region. (JSDK-2338)
 
   ```js
   const { connect } = require('twilio-video');
@@ -14,10 +17,10 @@ New Features
     region: 'de1'
   });
   ```
-  Above option will use signaling servers in Germany. For other possible values for region
-  refer to [the documentation TODO: FIX LINK](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication)
-  when region is not specified it defaults to `gll` which uses latency based routing.
 
+  This will guarantee that your signaling traffic will terminate in Germany. For other possible values
+  for region, please refer to this [table](https://www.twilio.com/docs/video/ip-address-whitelisting#media-servers).
+  TODO: the table mentions lot more regions that what we havev working right now (only us1, in1, and de1) are working currently. What should we update the link to that lists only valid values.
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
@@ -33,7 +36,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
+- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 
 2.0.0-beta9 (May 2, 2019)
@@ -58,7 +61,7 @@ New Features
   also control the verbosity of the network quality information that is reported.
   A Participant will now have an additional property `networkQualityStats` which
   contains the network quality statistics used to calculate the `networkQualityLevel`. (JSDK-2255)
- 
+
   You can specify the verbosity levels of the network quality information in ConnectOptions
   while joining the Room:
 
@@ -81,7 +84,7 @@ New Features
   room.on('participantConnected', setupNetworkQualityStats);
 
   function logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats) {
-    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);  
+    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);
     if (networkQualityStats) {
       // Verbosity is in the range [2 - 3].
       console.log('Network quality statistics used to compute the level:', networkQualityStats);
@@ -254,7 +257,7 @@ Bug Fixes
 - Fixed a bug where calling a LocalVideoTrack's `stop` method did not stop the
   video capture, and thereby did not turn the camera light off. (JSDK-2156)
 - Fixed a bug where calling LocalParticipant's `unpublishTrack` on a LocalTrack
-  that was being published to a Room also stopped the LocalTrack. (JSDK-2169) 
+  that was being published to a Room also stopped the LocalTrack. (JSDK-2169)
 
 2.0.0-beta1 (August 10, 2018)
 =============================
