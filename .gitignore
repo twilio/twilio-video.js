@@ -14,3 +14,4 @@ package-lock.json
 test.json
 yarn.lock
 .idea
+.vscode
