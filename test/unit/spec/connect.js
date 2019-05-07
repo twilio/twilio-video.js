@@ -52,7 +52,7 @@ describe('connect', () => {
   });
 
   describe('called with ConnectOptions#region', () => {
-    ['us1', 'de1', 'anyother', 'gll', 'anyOtherRegion'].forEach(region => {
+    ['de1', 'gll'].forEach(region => {
       it(`generates correct serverUrl for the region "${region}"`, () => {
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -65,18 +65,14 @@ describe('connect', () => {
         });
 
         const options = signaling.args[0][1];
-        assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
-        if (region === 'gll') {
-          assert(options.wsServer.indexOf('global') > 0);
-        } else {
-          assert(options.wsServer.indexOf(region) > 0);
-        }
+        assert.equal(options.wsServer, `wss://${region === 'gll'
+            ? 'global' : region}.vss.twilio.com/signaling`);
       });
     });
   });
 
   describe('called with ConnectOptions#environment', () => {
-    ['dev', 'stage', 'prod', 'anyOtherEnv'].forEach(environment => {
+    ['dev', 'prod'].forEach(environment => {
       it(`generates correct serverUrl for the environment "${environment}"`, () => {
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -89,12 +85,8 @@ describe('connect', () => {
         });
 
         const options = signaling.args[0][1];
-        assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
-        if (environment === 'prod') {
-          assert(options.wsServer.indexOf(environment) === -1);
-        } else {
-          assert(options.wsServer.indexOf(environment) > 0);
-        }
+        assert.equal(options.wsServer, `wss://global.vss.${environment === 'prod' ?
+             '' : `${environment}.`}twilio.com/signaling`);
       });
     });
   });

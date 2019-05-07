@@ -104,48 +104,41 @@ describe('connect', function() {
     });
   });
 
-  describe('region selection ', async () => {
-    let token;
-    let cancelablePromise;
+  describe('region selection', async () => {
+    ['without', 'global', 'specific', 'invalid'].forEach(regionType => {
+      const regionOptions = {
+        global: { region: 'gll' },
+        invalid: { region: 'foo' },
+        specific: { region: 'de1' },
+        without: {}
+      }[regionType];
 
-    beforeEach(() => {
-      const identity = randomName();
-      token = getToken(identity);
-    });
-
-    context('with an invalid region', async () => {
-      const region = 'fictional';
-      it('should return a CancelablePromise that rejects with a SignalingConnectionError', async () => {
-        cancelablePromise = connect(token, Object.assign({}, defaults, { region, tracks: [] }));
-        try {
-          const room = await cancelablePromise;
-          room.disconnect();
-          throw new Error(`Connected to ${room.sid} with an invalid LogLevel`);
-        } catch (error) {
-          assert(error instanceof SignalingConnectionError);
-          assert(/Signaling connection error/.test(error.message));
-        }
-        assert(cancelablePromise instanceof CancelablePromise);
-      });
-    });
-
-    context('with valid region', async () => {
-      ['de1', 'us1', 'in1'].forEach((region) => {
-        it('should return a CancelablePromise that resolves after connecting to ' + region, async () => {
-          const cancelablePromise = connect(token, Object.assign({}, defaults, { region, tracks: [] }));
+      context(`when called ${regionType === 'without' ? regionType : `with a(n) ${regionType}`} region`, () => {
+        let token;
+        let cancelablePromise;
+        beforeEach(() => {
+          const identity = randomName();
+          token = getToken(identity);
+          cancelablePromise = connect(token, Object.assign({}, defaults, regionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
-          const room = await cancelablePromise;
-          room.disconnect();
         });
-      });
-    });
 
-    context('with missing region', async () => {
-      it('should return a CancelablePromise that resolves after connecting', async () => {
-        const cancelablePromise = connect(token, Object.assign({}, defaults, { tracks: [] }));
-        assert(cancelablePromise instanceof CancelablePromise);
-        const room = await cancelablePromise;
-        room.disconnect();
+        if (regionType === 'invalid') {
+          it('should return a CancelablePromise that rejects with a SignalingConnectionError', async () => {
+            try {
+              const room = await cancelablePromise;
+              room.disconnect();
+              throw new Error(`Connected to ${room.sid} with an invalid region`);
+            } catch (error) {
+              assert(error instanceof SignalingConnectionError);
+            }
+          });
+        } else {
+          it('should return a CancelablePromise that resolves with a Room', async () => {
+            const room = await cancelablePromise;
+            room.disconnect();
+          });
+        }
       });
     });
   });
