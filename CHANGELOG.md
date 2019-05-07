@@ -20,7 +20,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
+- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 
 2.0.0-beta11 (June 12, 2019)
