@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const { inherits } = require('util');
 
 const connect = require('../../../lib/connect');
-const { DEFAULT_LOG_LEVEL, WS_SERVER, WS_SERVER_TWILIOCONNECTION } = require('../../../lib/util/constants');
+const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION } = require('../../../lib/util/constants');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -36,17 +36,58 @@ describe('connect', () => {
 
       connect(token, {
         iceServers: [],
+        // eslint-disable-next-line no-undefined
         logLevel: undefined,
         signaling,
+        // eslint-disable-next-line no-undefined
         wsServer: undefined
       });
 
       const options = signaling.args[0][1];
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
+      assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
-      assert.equal(options.wsServer, options._useTwilioConnection
-        ? WS_SERVER_TWILIOCONNECTION(options.environment)
-        : WS_SERVER(options.environment, options.realm));
+      assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+    });
+  });
+
+  describe('called with ConnectOptions#region', () => {
+    ['de1', 'gll'].forEach(region => {
+      it(`generates correct serverUrl for the region "${region}"`, () => {
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        const signaling = sinon.spy(() => mockSignaling);
+
+        connect(token, {
+          iceServers: [],
+          signaling,
+          region
+        });
+
+        const options = signaling.args[0][1];
+        assert.equal(options.wsServer, `wss://${region === 'gll'
+            ? 'global' : region}.vss.twilio.com/signaling`);
+      });
+    });
+  });
+
+  describe('called with ConnectOptions#environment', () => {
+    ['dev', 'prod'].forEach(environment => {
+      it(`generates correct serverUrl for the environment "${environment}"`, () => {
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        const signaling = sinon.spy(() => mockSignaling);
+
+        connect(token, {
+          iceServers: [],
+          signaling,
+          environment
+        });
+
+        const options = signaling.args[0][1];
+        assert.equal(options.wsServer, `wss://global.vss.${environment === 'prod' ?
+             '' : `${environment}.`}twilio.com/signaling`);
+      });
     });
   });
 
