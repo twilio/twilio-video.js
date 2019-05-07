@@ -8,7 +8,7 @@ New Features
 - By default, twilio-video.js connects to your nearest signaling server, as determined by
   [latency based routing](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
   You can now override this behavior by using a new ConnectOptions flag called `region`. This will make
-  sure that your signaling traffic will terminate at the specified region. (JSDK-2338)
+  sure that your signaling traffic will terminate in the specified region. (JSDK-2338)
 
   ```js
   const { connect } = require('twilio-video');
