@@ -152,11 +152,12 @@ issues on the Firefox bug tracker:
 * [Bug 881532](https://bugzilla.mozilla.org/show_bug.cgi?id=881532)
 * [Bug 1278384](https://bugzilla.mozilla.org/show_bug.cgi?id=1278384)
 
-Also, there is an existing bug in twilio-video.js where publication of
-DataTracks after joining a Group Room never reaches completion (JSDK-2161).
-While we work to fix this bug, you can work around this by publishing your
-DataTracks while connecting to a Room using the `tracks` property of
-ConnectOptions.
+Also, because of this [Firefox bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1526253),
+Participants will be able to successfully publish LocalDataTracks to a Group Room only when:
+
+* They are connecting to the Room.
+* They have connected to the Room and have not published or unpublished any
+  LocalAudioTracks and LocalVideoTracks since then.
 
 Aggressive Browser Extensions and Plugins
 -----------------------------------------

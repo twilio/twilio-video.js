@@ -5,6 +5,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
+
 - By default, twilio-video.js connects to your nearest signaling server, as determined by
   [latency based routing](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
   You can now override this behavior by using a new ConnectOptions flag called `region`. This will make
@@ -36,6 +37,10 @@ Bug Fixes
 
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
+- Fixed a bug where Firefox Participants were not able to publish more than one
+  LocalDataTrack after joining a Group Room. (JSDK-2274)
+- Fixed a bug where Firefox Participants sometimes lost their media connections
+  when they tried to publish a LocalDataTrack in a Group Room. (JSDK-2256)
 
 2.0.0-beta9 (May 2, 2019)
 =========================
