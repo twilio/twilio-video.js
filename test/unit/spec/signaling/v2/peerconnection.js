@@ -42,8 +42,6 @@ describe('PeerConnectionV2', () => {
                 makeOffer({ application: hasApplicationSection })
               ]
             });
-            // TODO(mmalavalli): Remove this line once VIDEO-1981 is fixed.
-            test.pcv2._isIceLite = true;
             await test.pcv2.offer();
             assert.equal(test.pcv2.isApplicationSectionNegotiated, hasApplicationSection);
           });
@@ -51,10 +49,8 @@ describe('PeerConnectionV2', () => {
       });
     });
     context('when the underlying RTCPeerConnection does not have a local RTCSessionDescription', () => {
-      it('should be set to false', async () => {
+      it('should be set to false', () => {
         const test = makeTest();
-        // TODO(mmalavalli): Remove this line once VIDEO-1981 is fixed.
-        test.pcv2._isIceLite = true;
         assert.equal(test.pcv2.isApplicationSectionNegotiated, false);
       });
     });
