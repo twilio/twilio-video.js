@@ -329,7 +329,7 @@ describe('PeerConnectionManager', () => {
 
   describe('#setTrackSenders', () => {
     [true, false].forEach(isAudioContextSupported => {
-      context(`when AudioContext is ${isAudioContextSupported ? '' : 'not'} supported`, () => {
+      context(`when AudioContext is ${isAudioContextSupported ? '' : 'not '}supported`, () => {
         it('returns the PeerConnectionManager', async () => {
           const test = makeTest({ isAudioContextSupported });
           const mediaStream1 = makeMediaStream();
@@ -500,11 +500,8 @@ describe('PeerConnectionManager', () => {
           });
         });
 
-        // TODO(mroberts): Technically, we only need to renegotiate if an
-        // m=application section has not yet been negotiated. We should optimize
-        // this in the future.
         context('when the DataTrackSenders changed', () => {
-          it('calls offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
+          it('should not call offer on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
             const test = makeTest({ isAudioContextSupported });
 
             const dataTrackSender1 = new DataTrackSender(null, null, true);
@@ -523,8 +520,8 @@ describe('PeerConnectionManager', () => {
 
             test.peerConnectionManager.setTrackSenders([dataTrackSender2, dataTrackSender3]);
 
-            assert(test.peerConnectionV2s[0].offer.calledOnce);
-            assert(test.peerConnectionV2s[1].offer.calledOnce);
+            assert(test.peerConnectionV2s[0].offer.notCalled);
+            assert(test.peerConnectionV2s[1].offer.notCalled);
           });
         });
 
@@ -875,7 +872,9 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     peerConnectionV2.id = id;
 
-    peerConnectionV2.addDataTrackSender = sinon.spy();
+    peerConnectionV2.addDataTrackSender = sinon.spy(() => {
+      peerConnectionV2.isApplicationSectionNegotiated = true;
+    });
 
     peerConnectionV2.addMediaTrackSender = sinon.spy();
 
@@ -889,6 +888,8 @@ function makePeerConnectionV2Constructor(testOptions) {
     });
 
     peerConnectionV2.iceConnectionState = 'new';
+
+    peerConnectionV2.isApplicationSectionNegotiated = false;
 
     peerConnectionV2.removeDataTrackSender = sinon.spy();
 
