@@ -68,7 +68,7 @@ a=rtcp-mux\r
       const { id, ssrc } = typeof trackAndSSRC === 'string'
         ? { id: trackAndSSRC, ssrc: 1 }
         : trackAndSSRC;
-      return sdp + (type === 'planb' ? '' : media + `\
+      return sdp + `a=mid:mid_${id}\r\n` + (type === 'planb' ? '' : media + `\
 a=mid:mid_${id}\r
 a=msid:- ${id}\r
 `) + `\

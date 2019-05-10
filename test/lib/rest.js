@@ -55,11 +55,11 @@ function completeRoom(nameOrSid) {
  * @param {'group' | 'group-small' | 'peer-to-peer'} type
  * @returns {Promise<Room.SID>}
  */
- async function createRoom(name, type) {
-  const { sid, status } = await post('/v1/Rooms', {
+ async function createRoom(name, type, roomOptions) {
+  const { sid, status } = await post('/v1/Rooms', Object.assign({
     Type: type,
     UniqueName: name
-  });
+  }, roomOptions));
   if (status === 'in-progress') {
     return sid;
   }
