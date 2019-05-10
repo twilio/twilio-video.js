@@ -491,7 +491,7 @@ a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
   });
 });
 
-describe.only('revertSimulcastForNonVP8MediaSections', () => {
+describe('revertSimulcastForNonVP8MediaSections', () => {
   combinationContext([
     [
       ['planb', 'unified'],
