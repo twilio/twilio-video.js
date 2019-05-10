@@ -846,7 +846,7 @@ describe('connect', function() {
             const flowSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:FID .+$/gm), line => {
               return line.split(' ').slice(1);
             }));
-            if (shouldAddSSRCs) {
+            if (shouldAddSSRCs || defaults.topology === 'peer-to-peer') {
               const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
                 return line.split(' ').slice(1);
               }));
