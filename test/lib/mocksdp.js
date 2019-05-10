@@ -69,7 +69,6 @@ a=rtcp-mux\r
         ? { id: trackAndSSRC, ssrc: 1 }
         : trackAndSSRC;
       return sdp + (type === 'planb' ? '' : media + `\
-a=mid:mid_${id}\r
 a=msid:- ${id}\r
 `) + `\
 a=ssrc:${ssrc} cname:0\r
