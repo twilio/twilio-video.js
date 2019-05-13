@@ -129,7 +129,7 @@ Want to enable [CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) in a
 way that's compatible with twilio-video.js? Use the following policy directives:
 
 ```
-connect-src https://ecs.us1.twilio.com wss://endpoint.twilio.com wss://sdkgw.us1.twilio.com
+connect-src https://ecs.us1.twilio.com wss://global.vss.twilio.com wss://sdkgw.us1.twilio.com
 media-src mediastream:
 ```
 
