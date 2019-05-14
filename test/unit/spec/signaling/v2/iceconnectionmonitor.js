@@ -22,11 +22,11 @@ describe.only('IceConnectionMonitor', () => {
     });
 
     it('defaults to 1sec of check period', () => {
-      assert.equal(new IceConnectionMonitor(pc)._activityCheckPeriodMS, 1000);
+      assert.equal(new IceConnectionMonitor(pc)._activityCheckPeriodMs, 1000);
     });
 
     it('defaults to 3 sec of inactivity threshold', () => {
-      assert.equal(new IceConnectionMonitor(pc)._inactivityThresholdMS, 3000);
+      assert.equal(new IceConnectionMonitor(pc)._inactivityThresholdMs, 3000);
     });
   });
 
@@ -51,6 +51,44 @@ describe.only('IceConnectionMonitor', () => {
     });
   });
 
+  describe('_getMediaStats', () => {
+    it('extracts media stats from _getIceConnectionStats', () => {
+      var pc = { foo: 1 };
+      const iceConnectionMonitor = new IceConnectionMonitor(pc);
+      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.resolve({
+        timestamp: 10,
+        otherProp: 20,
+        bytesSent: 30,
+        bytesReceived: 40
+      }));
+      return iceConnectionMonitor._getMediaStats().then((mediaStats) => {
+        assert.deepStrictEqual(mediaStats, {
+          timestamp: 10,
+          bytesSent: 30,
+          bytesReceived: 40
+        });
+      });
+    });
+
+    it('returns null if _getIceConnectionStats returns undefined', () => {
+      var pc = { foo: 1 };
+      const iceConnectionMonitor = new IceConnectionMonitor(pc);
+      // eslint-disable-next-line no-undefined
+      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.resolve(undefined));
+      return iceConnectionMonitor._getMediaStats().then((mediaStats) => {
+        assert.strictEqual(mediaStats, null);
+      });
+    });
+
+    it('returns nullif _getIceConnectionStats rejects', () => {
+      var pc = { foo: 1 };
+      const iceConnectionMonitor = new IceConnectionMonitor(pc);
+      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.reject(new Error('boo')));
+      return iceConnectionMonitor._getMediaStats().then((mediaStats) => {
+        assert.strictEqual(mediaStats, null);
+      });
+    });
+  });
 
   describe('stop', () => {
     it('stops the timer', () => {
@@ -78,8 +116,8 @@ describe.only('IceConnectionMonitor', () => {
     it('fires when it detects inactivity in bytesReceived', (done) => {
       var pc = { foo: 1 };
       const monitor = new IceConnectionMonitor(pc, {
-        activityCheckPeriodMS: 1,
-        inactivityThresholdMS: 3
+        activityCheckPeriodMs: 1,
+        inactivityThresholdMs: 3
       });
 
       mockMediaStats(monitor, [
@@ -101,8 +139,8 @@ describe.only('IceConnectionMonitor', () => {
     it('does not fire when it detects inactivity in bytesSent', (done) => {
       var pc = { foo: 1 };
       const monitor = new IceConnectionMonitor(pc, {
-        activityCheckPeriodMS: 1,
-        inactivityThresholdMS: 3
+        activityCheckPeriodMs: 1,
+        inactivityThresholdMs: 3
       });
 
       mockMediaStats(monitor, [
