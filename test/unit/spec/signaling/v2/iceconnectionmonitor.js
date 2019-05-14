@@ -3,9 +3,9 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const IceMediaMonitor = require('../../../../../lib/signaling/v2/icemediamonitor');
+const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor');
 
-describe.only('IceMediaMonitor', () => {
+describe.only('IceConnectionMonitor', () => {
 
   describe('constructor', () => {
     var pc;
@@ -13,20 +13,20 @@ describe.only('IceMediaMonitor', () => {
       pc = { foo: 1 };
     });
 
-    it('stores the pc provided', () => {
-      assert.equal(new IceMediaMonitor(pc)._pc, pc);
+    it('stores the peerConnection provided', () => {
+      assert.equal(new IceConnectionMonitor(pc)._peerConnection, pc);
     });
 
     it('sets the timer to null', () => {
-      assert.equal(new IceMediaMonitor(pc)._timer, null);
+      assert.equal(new IceConnectionMonitor(pc)._timer, null);
     });
 
     it('defaults to 1sec of check period', () => {
-      assert.equal(new IceMediaMonitor(pc)._activityCheckPeriodMS, 1000);
+      assert.equal(new IceConnectionMonitor(pc)._activityCheckPeriodMS, 1000);
     });
 
     it('defaults to 3 sec of inactivity threshold', () => {
-      assert.equal(new IceMediaMonitor(pc)._inactivityThresholdMS, 3000);
+      assert.equal(new IceConnectionMonitor(pc)._inactivityThresholdMS, 3000);
     });
   });
 
@@ -35,7 +35,7 @@ describe.only('IceMediaMonitor', () => {
     ['foo', 45, { foo: 5 }, null].forEach((callback) => {
       it(`throws if callback is ${typeof callback} `, () => {
         const pc = { foo: 1 };
-        const monitor = new IceMediaMonitor(pc);
+        const monitor = new IceConnectionMonitor(pc);
         assert.throws(() => {
           monitor.start(callback);
         });
@@ -44,7 +44,7 @@ describe.only('IceMediaMonitor', () => {
 
     it('starts the timer', () => {
       var pc = { foo: 1 };
-      const monitor = new IceMediaMonitor(pc);
+      const monitor = new IceConnectionMonitor(pc);
       assert.equal(monitor._timer, null);
       monitor.start(() => {});
       assert.notEqual(monitor._timer, null);
@@ -55,7 +55,7 @@ describe.only('IceMediaMonitor', () => {
   describe('stop', () => {
     it('stops the timer', () => {
       var pc = { foo: 1 };
-      const monitor = new IceMediaMonitor(pc);
+      const monitor = new IceConnectionMonitor(pc);
       assert.equal(monitor._timer, null);
       monitor.start(() => {});
       assert.notEqual(monitor._timer, null);
@@ -67,7 +67,7 @@ describe.only('IceMediaMonitor', () => {
   describe('Callback', () => {
     it('stops the timer', () => {
       var pc = { foo: 1 };
-      const monitor = new IceMediaMonitor(pc);
+      const monitor = new IceConnectionMonitor(pc);
       assert.equal(monitor._timer, null);
       monitor.start(() => {});
       assert.notEqual(monitor._timer, null);
@@ -77,7 +77,7 @@ describe.only('IceMediaMonitor', () => {
 
     it('fires when it detects inactivity in bytesReceived', (done) => {
       var pc = { foo: 1 };
-      const monitor = new IceMediaMonitor(pc, {
+      const monitor = new IceConnectionMonitor(pc, {
         activityCheckPeriodMS: 1,
         inactivityThresholdMS: 3
       });
@@ -100,7 +100,7 @@ describe.only('IceMediaMonitor', () => {
 
     it('does not fire when it detects inactivity in bytesSent', (done) => {
       var pc = { foo: 1 };
-      const monitor = new IceMediaMonitor(pc, {
+      const monitor = new IceConnectionMonitor(pc, {
         activityCheckPeriodMS: 1,
         inactivityThresholdMS: 3
       });
@@ -135,8 +135,8 @@ describe.only('IceMediaMonitor', () => {
   });
 });
 
-function mockMediaStats(iceMediaMonitor, mediaStatResults) {
-  const stub = sinon.stub(iceMediaMonitor, '_getMediaStats');
+function mockMediaStats(iceConnectionMonitor, mediaStatResults) {
+  const stub = sinon.stub(iceConnectionMonitor, '_getMediaStats');
   for (var i = 0; i < mediaStatResults.length; i++) {
     stub.onCall(i).returns(Promise.resolve(mediaStatResults[i]));
   }
