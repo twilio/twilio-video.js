@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 
 const IceMediaMonitor = require('../../../../../lib/signaling/v2/icemediamonitor');
 
@@ -73,22 +74,70 @@ describe.only('IceMediaMonitor', () => {
       monitor.stop();
       assert.equal(monitor._timer, null);
     });
+
+    it('fires when it detects inactivity in bytesReceived', (done) => {
+      var pc = { foo: 1 };
+      const monitor = new IceMediaMonitor(pc, {
+        activityCheckPeriodMS: 1,
+        inactivityThresholdMS: 3
+      });
+
+      mockMediaStats(monitor, [
+        { timestamp: 1, bytesReceived: 1, bytesSent: 1 },
+        { timestamp: 2, bytesReceived: 1, bytesSent: 2 },
+        { timestamp: 3, bytesReceived: 1, bytesSent: 3 },
+        { timestamp: 4, bytesReceived: 1, bytesSent: 4 },
+        { timestamp: 5, bytesReceived: 1, bytesSent: 5 },
+        { timestamp: 6, bytesReceived: 1, bytesSent: 6 },
+        { timestamp: 7, bytesReceived: 1, bytesSent: 7 }
+      ]);
+      monitor.start(() => {
+        assert.equal(monitor._getMediaStats.callCount, 4);
+        monitor.stop();
+        done();
+      });
+    });
+
+    it('does not fire when it detects inactivity in bytesSent', (done) => {
+      var pc = { foo: 1 };
+      const monitor = new IceMediaMonitor(pc, {
+        activityCheckPeriodMS: 1,
+        inactivityThresholdMS: 3
+      });
+
+      mockMediaStats(monitor, [
+        { timestamp: 1, bytesReceived: 1, bytesSent: 1 },
+        { timestamp: 2, bytesReceived: 2, bytesSent: 1 },
+        { timestamp: 3, bytesReceived: 3, bytesSent: 1 },
+        { timestamp: 4, bytesReceived: 4, bytesSent: 1 },
+        { timestamp: 5, bytesReceived: 5, bytesSent: 1 },
+        { timestamp: 6, bytesReceived: 6, bytesSent: 1 },
+        { timestamp: 7, bytesReceived: 7, bytesSent: 1 },
+        { timestamp: 8, bytesReceived: 8, bytesSent: 1 },
+        { timestamp: 9, bytesReceived: 9, bytesSent: 1 },
+        { timestamp: 10, bytesReceived: 10, bytesSent: 1 },
+        { timestamp: 11, bytesReceived: 11, bytesSent: 1 },
+        { timestamp: 12, bytesReceived: 12, bytesSent: 1 },
+        { timestamp: 13, bytesReceived: 13, bytesSent: 1 },
+        { timestamp: 14, bytesReceived: 14, bytesSent: 1 },
+        { timestamp: 15, bytesReceived: 15, bytesSent: 1 }
+      ]);
+      monitor.start(() => {
+        assert.fail('inactivity callback should not have been called for bytesSent inactivity');
+      });
+
+      setTimeout(() => {
+        assert(monitor._getMediaStats.callCount < 12, 'timeout should reach before reasonable callCount');
+        done();
+      }, 10);
+    });
+
   });
 });
 
-function makeMockPC() {
-
-}
-
-function makeMockPromise(resolveValues) {
-  // this function takes an array as input
-  // and returns a promise that resolves to
-  // next element in th array (starting from 0)
-  let currentIndex = 0;
-  return function() {
-    return new Promise((resolve) =>{
-      return resolve(resolveValues[currentIndex++]);
-    });
-  };
-
+function mockMediaStats(iceMediaMonitor, mediaStatResults) {
+  const stub = sinon.stub(iceMediaMonitor, '_getMediaStats');
+  for (var i = 0; i < mediaStatResults.length; i++) {
+    stub.onCall(i).returns(Promise.resolve(mediaStatResults[i]));
+  }
 }
