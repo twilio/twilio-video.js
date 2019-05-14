@@ -49,6 +49,7 @@ require('./spec/signaling/v2/localparticipant');
 require('./spec/signaling/v2/networkqualitymonitor');
 require('./spec/signaling/v2/networkqualitysignaling');
 require('./spec/signaling/v2/recording');
+require('./spec/signaling/v2/icemediamonitor');
 require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
 require('./spec/signaling/v2/peerconnection');
