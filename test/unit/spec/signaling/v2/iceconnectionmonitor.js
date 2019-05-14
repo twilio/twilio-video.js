@@ -5,7 +5,7 @@ const sinon = require('sinon');
 
 const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor');
 
-describe.only('IceConnectionMonitor', () => {
+describe('IceConnectionMonitor', () => {
 
   describe('constructor', () => {
     var pc;
@@ -19,6 +19,7 @@ describe.only('IceConnectionMonitor', () => {
 
     it('sets the timer to null', () => {
       assert.equal(new IceConnectionMonitor(pc)._timer, null);
+      assert.equal(new IceConnectionMonitor(pc)._lastActivity, null);
     });
 
     it('defaults to 1sec of check period', () => {
@@ -91,7 +92,7 @@ describe.only('IceConnectionMonitor', () => {
   });
 
   describe('stop', () => {
-    it('stops the timer', () => {
+    it('stops the timer, and resets the state', () => {
       var pc = { foo: 1 };
       const monitor = new IceConnectionMonitor(pc);
       assert.equal(monitor._timer, null);
@@ -99,6 +100,7 @@ describe.only('IceConnectionMonitor', () => {
       assert.notEqual(monitor._timer, null);
       monitor.stop();
       assert.equal(monitor._timer, null);
+      assert.equal(monitor._lastActivity, null);
     });
   });
 
