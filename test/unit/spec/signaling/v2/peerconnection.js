@@ -5,12 +5,34 @@ const EventEmitter = require('events');
 const sinon = require('sinon');
 
 const EventTarget = require('../../../../../lib/eventtarget');
+const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor.js');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
+  let didStartMonitor;
+  let didStopMonitor;
+  let inactiveCallback;
+  beforeEach(() => {
+    // stub out IceConnectionMonitor to not have any side effects
+    didStartMonitor = false;
+    didStopMonitor = false;
+    inactiveCallback = null;
+    sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake((callback) => {
+      inactiveCallback = callback;
+      didStartMonitor = true;
+    });
+    sinon.stub(IceConnectionMonitor.prototype, 'stop').callsFake(() => {
+      didStopMonitor = true;
+    });
+  });
+  afterEach(() => {
+    IceConnectionMonitor.prototype.start.restore();
+    IceConnectionMonitor.prototype.stop.restore();
+  });
+
   describe('constructor', () => {
     let test;
 
@@ -39,6 +61,44 @@ describe('PeerConnectionV2', () => {
       test.pcv2.once('iceConnectionStateChanged', () => { didEmit = true; });
       test.pc.emit('iceconnectionstatechange');
       assert(didEmit);
+    });
+
+    it('starts IceConnectionMonitor on disconnect', () => {
+      const test = makeTest();
+      assert(!didStartMonitor);
+      assert(!didStopMonitor);
+      assert(inactiveCallback === null);
+
+      // simulate disconnect.
+      test.pc.iceConnectionState = 'disconnected';
+      test.pc.emit('iceconnectionstatechange');
+      assert(didStartMonitor);
+      assert(!didStopMonitor);
+      assert(typeof inactiveCallback === 'function' );
+
+      // simulate connection.
+      test.pc.iceConnectionState = 'connected';
+      test.pc.emit('iceconnectionstatechange');
+      assert(didStartMonitor);
+      assert(didStopMonitor);
+    });
+
+    it('restarts ice', () => {
+      const test = makeTest();
+      assert(!didStartMonitor);
+      assert(!didStopMonitor);
+
+      // simulate disconnect.
+      test.pc.iceConnectionState = 'disconnected';
+      test.pc.emit('iceconnectionstatechange');
+      assert(didStartMonitor);
+      assert(!didStopMonitor);
+
+      // simulate connection.
+      test.pc.iceConnectionState = 'connected';
+      test.pc.emit('iceconnectionstatechange');
+      assert(didStartMonitor);
+      assert(didStopMonitor);
     });
   });
 
@@ -1497,6 +1557,36 @@ describe('PeerConnectionV2', () => {
       });
     });
 
+    describe('when ice connection monitor detects inactivity', () => {
+      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', async () => {
+        const test = makeTest({ offers: 2 });
+
+        // Do a first round of negotiation.
+        await test.pcv2.offer();
+        await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+
+        // Spy on MockPeerConnection's .createOffer method.
+        test.pc.createOffer = sinon.spy(test.pc.createOffer.bind(test.pc));
+
+        assert(inactiveCallback === null);
+
+        // Then, cause an ICE disconnect.
+        test.pc.iceConnectionState = 'disconnected';
+        test.pc.emit('iceconnectionstatechange');
+
+        assert(typeof inactiveCallback === 'function');
+
+        await oneTick();
+        inactiveCallback(); // invoke inactive call back.
+        await oneTick();
+
+        // Check .iceRestart equals true.
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
+      });
+    });
+
     describe('when a remote answer is applied after restarting ICE, and then .offer is called again', () => {
       it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection without setting .iceRestart to true', async () => {
         const test = makeTest({ offers: 3 });
@@ -2077,6 +2167,7 @@ function makeDataChannel(id) {
   dataChannel.close = sinon.spy(() => {});
   return dataChannel;
 }
+
 
 /**
  * @interface MockPeerConnectionOptions

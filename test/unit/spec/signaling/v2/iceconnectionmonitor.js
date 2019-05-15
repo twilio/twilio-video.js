@@ -7,7 +7,7 @@ const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnect
 
 describe('IceConnectionMonitor', () => {
 
-  describe('constructor', () => {
+  describe('.constructor', () => {
     var pc;
     beforeEach( () => {
       pc = { foo: 1 };
@@ -31,7 +31,7 @@ describe('IceConnectionMonitor', () => {
     });
   });
 
-  describe('start', () => {
+  describe('.start', () => {
     // eslint-disable-next-line no-undefined
     ['foo', 45, { foo: 5 }, null].forEach((callback) => {
       it(`throws if callback is ${typeof callback} `, () => {
@@ -52,7 +52,7 @@ describe('IceConnectionMonitor', () => {
     });
   });
 
-  describe('_getMediaStats', () => {
+  describe('._getMediaStats', () => {
     it('extracts media stats from _getIceConnectionStats', () => {
       var pc = { foo: 1 };
       const iceConnectionMonitor = new IceConnectionMonitor(pc);
@@ -91,7 +91,7 @@ describe('IceConnectionMonitor', () => {
     });
   });
 
-  describe('stop', () => {
+  describe('.stop', () => {
     it('stops the timer, and resets the state', () => {
       var pc = { foo: 1 };
       const monitor = new IceConnectionMonitor(pc);
@@ -104,17 +104,7 @@ describe('IceConnectionMonitor', () => {
     });
   });
 
-  describe('Callback', () => {
-    it('stops the timer', () => {
-      var pc = { foo: 1 };
-      const monitor = new IceConnectionMonitor(pc);
-      assert.equal(monitor._timer, null);
-      monitor.start(() => {});
-      assert.notEqual(monitor._timer, null);
-      monitor.stop();
-      assert.equal(monitor._timer, null);
-    });
-
+  describe('on inactivity', () => {
     it('fires when it detects inactivity in bytesReceived', (done) => {
       var pc = { foo: 1 };
       const monitor = new IceConnectionMonitor(pc, {
@@ -171,7 +161,6 @@ describe('IceConnectionMonitor', () => {
         done();
       }, 10);
     });
-
   });
 });
 
