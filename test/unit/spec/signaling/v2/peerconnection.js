@@ -52,6 +52,27 @@ describe('PeerConnectionV2', () => {
       test.pc.iceConnectionState = 'failed';
       assert.equal(test.pcv2.iceConnectionState, 'failed');
     });
+
+    it('equals "failed" when IceConnectionMonitor detects failures, also emits the iceConnectionStateChanged', async () => {
+      const test = makeTest();
+      assert.equal(test.pcv2.iceConnectionState, test.pc.iceConnectionState);
+
+      // simulate disconnect.
+      test.pc.iceConnectionState = 'disconnected';
+      test.pc.emit('iceconnectionstatechange');
+
+      await oneTick();
+
+      let didEmit = false;
+      test.pcv2.once('iceConnectionStateChanged', () => { didEmit = true; });
+
+      inactiveCallback(); // invoke inactive call back.
+
+      assert.equal(test.pcv2.iceConnectionState, 'failed');
+      assert.equal(didEmit, true);
+      await oneTick();
+      assert.equal(test.pcv2.iceConnectionState, 'failed');
+    });
   });
 
   describe('"iceConnectionStateChanged"', () => {
