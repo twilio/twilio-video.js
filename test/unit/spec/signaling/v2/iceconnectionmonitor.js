@@ -16,8 +16,7 @@ describe('IceConnectionMonitor', () => {
     // other tests.
     monitor.stop();
   });
-
-  describe('.constructor', () => {
+  describe('constructor', () => {
     it('stores the peerConnection provided', () => {
       assert.equal(new IceConnectionMonitor(pc)._peerConnection, pc);
     });
