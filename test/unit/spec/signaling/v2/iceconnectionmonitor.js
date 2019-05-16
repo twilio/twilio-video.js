@@ -59,7 +59,7 @@ describe('IceConnectionMonitor', () => {
         { timestamp: 7, bytesReceived: 1, bytesSent: 7 }
       ]);
       monitor.start(() => {
-        assert.equal(monitor._getStats.callCount, 4);
+        assert.equal(monitor._getIceConnectionStats.callCount, 4);
         monitor.stop();
         done();
       });
@@ -93,44 +93,31 @@ describe('IceConnectionMonitor', () => {
       });
 
       setTimeout(() => {
-        assert(monitor._getStats.callCount < 12, 'timeout should reach before reasonable callCount');
+        assert(monitor._getIceConnectionStats.callCount < 12, 'timeout should reach before reasonable callCount');
         done();
       }, 10);
     });
-
   });
 
-  describe('._getStats', () => {
-    it('extracts limited stats from _getIceConnectionStats', () => {
-      const iceConnectionMonitor = new IceConnectionMonitor(pc);
-      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.resolve({
-        timestamp: 10,
-        otherProp: 20,
-        bytesSent: 30,
-        bytesReceived: 40
-      }));
-      return iceConnectionMonitor._getStats().then((iceStats) => {
-        assert.deepStrictEqual(iceStats, {
-          timestamp: 10,
-          bytesSent: 30,
-          bytesReceived: 40
-        });
+  describe('._getIceConnectionStats', () => {
+    it('returns null if peerConnection.getStats returns undefined', () => {
+      const iceConnectionMonitor = new IceConnectionMonitor({
+        getStats: function() {
+          return Promise.resolve();
+        }
       });
-    });
-
-    it('returns null if _getIceConnectionStats returns undefined', () => {
-      const iceConnectionMonitor = new IceConnectionMonitor(pc);
-      // eslint-disable-next-line no-undefined
-      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.resolve(undefined));
-      return iceConnectionMonitor._getStats().then((iceStats) => {
+      return iceConnectionMonitor._getIceConnectionStats().then((iceStats) => {
         assert.strictEqual(iceStats, null);
       });
     });
 
     it('returns null if _getIceConnectionStats rejects', () => {
-      const iceConnectionMonitor = new IceConnectionMonitor(pc);
-      sinon.stub(iceConnectionMonitor, '_getIceConnectionStats').returns(Promise.reject(new Error('boo')));
-      return iceConnectionMonitor._getStats().then((iceStats) => {
+      const iceConnectionMonitor = new IceConnectionMonitor({
+        getStats: function() {
+          return Promise.reject(new Error('boo'));
+        }
+      });
+      return iceConnectionMonitor._getIceConnectionStats().then((iceStats) => {
         assert.strictEqual(iceStats, null);
       });
     });
@@ -149,7 +136,7 @@ describe('IceConnectionMonitor', () => {
 });
 
 function mockIceConnectionStats(iceConnectionMonitor, statResults) {
-  const stub = sinon.stub(iceConnectionMonitor, '_getStats');
+  const stub = sinon.stub(iceConnectionMonitor, '_getIceConnectionStats');
   for (var i = 0; i < statResults.length; i++) {
     stub.onCall(i).returns(Promise.resolve(statResults[i]));
   }
