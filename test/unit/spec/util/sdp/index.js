@@ -10,6 +10,7 @@ const {
   setCodecPreferences,
   setSimulcast,
   unifiedPlanFilterLocalCodecs,
+  revertSimulcastForNonVP8MediaSections,
   unifiedPlanRewriteTrackIds
 } = require('../../../../../lib/util/sdp');
 
@@ -792,6 +793,56 @@ a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
 
       assert.equal(filteredNewVideoSection, newVideoSection);
     });
+  });
+});
+
+describe('revertSimulcastForNonVP8MediaSections', () => {
+  combinationContext([
+    [
+      ['planb', 'unified'],
+      x => `when called with a ${x} sdp`
+    ],
+    [
+      [true, false],
+      x => `when the preferred payload type in answer is${x ? '' : ' not'} VP8`
+    ],
+    [
+      [new Set(['01234']), new Set(['01234', '56789'])],
+      x => `when retransmission is${x.size === 2 ? '' : ' not'} supported`
+    ]
+  ], ([sdpType, isVP8PreferredPayloadType, ssrcs]) => {
+    let sdp;
+    let simSdp;
+    let remoteSdp;
+    let revertedSdp;
+    let trackIdsToAttributes;
+
+    before(() => {
+      ssrcs = Array.from(ssrcs.values());
+      sdp = makeSdpForSimulcast(sdpType, ssrcs);
+      trackIdsToAttributes = new Map();
+      simSdp = setSimulcast(sdp, sdpType, trackIdsToAttributes);
+      remoteSdp = makeSdpWithTracks(sdpType, {
+        audio: ['audio-1'],
+        video: [{ id: 'video-1', ssrc: ssrcs[0] }]
+      });
+      if (isVP8PreferredPayloadType) {
+        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'VP8' }]);
+      } else {
+        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'H264' }]);
+      }
+      revertedSdp = revertSimulcastForNonVP8MediaSections(simSdp, sdp, remoteSdp);
+    });
+
+    if (isVP8PreferredPayloadType) {
+      it('should not revert simulcast SSRCs', () => {
+        assert.equal(revertedSdp, simSdp);
+      });
+    } else {
+      it('should revert simulcast SSRCs', () => {
+        assert.equal(revertedSdp, sdp);
+      });
+    }
   });
 });
 

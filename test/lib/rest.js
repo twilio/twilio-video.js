@@ -53,13 +53,14 @@ function completeRoom(nameOrSid) {
  * Create a Room using the REST API.
  * @param {string} name
  * @param {'group' | 'group-small' | 'peer-to-peer'} type
+ * @param {object} roomOptions
  * @returns {Promise<Room.SID>}
  */
- async function createRoom(name, type) {
-  const { sid, status } = await post('/v1/Rooms', {
+ async function createRoom(name, type, roomOptions) {
+  const { sid, status } = await post('/v1/Rooms', Object.assign({
     Type: type,
     UniqueName: name
-  });
+  }, roomOptions));
   if (status === 'in-progress') {
     return sid;
   }

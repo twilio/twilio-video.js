@@ -22,6 +22,8 @@ Bug Fixes
 
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
+- Fixed a bug where Chrome and Safari Participants were enabling simulcast for
+  H264 LocalVideoTracks when VP8 simulcast was enabled. (JSDK-2321)
 
 2.0.0-beta11 (June 12, 2019)
 ============================
