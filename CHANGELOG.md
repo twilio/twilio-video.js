@@ -41,6 +41,8 @@ Bug Fixes
   LocalDataTrack after joining a Group Room. (JSDK-2274)
 - Fixed a bug where Firefox Participants sometimes lost their media connections
   when they tried to publish a LocalDataTrack in a Group Room. (JSDK-2256)
+- Fixed a bug where LocalParticipant on Chrome and Safari failed to publish 
+  a VideoTrack when VP8 simulcast is enabled but H264 is the preferred codec. (JSDK-2321)
 
 2.0.0-beta9 (May 2, 2019)
 =========================

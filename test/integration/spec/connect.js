@@ -813,49 +813,64 @@ describe('connect', function() {
   });
 
   (isChrome || safariVersion >= 12.1 ? describe : describe.skip)('VP8 simulcast', () => {
-    let peerConnections;
-    let sid;
-    let thisRoom;
-    let thoseRooms;
+    [
+      ['VP8', true],
+      ['H264', false]
+    ].forEach(([roomCodec, shouldAddSSRCs]) => {
+      describe(`in ${roomCodec} only room`, () => {
+        let peerConnections;
+        let sid;
+        let thisRoom;
+        let thoseRooms;
 
-    before(async () => {
-      [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), {
-        preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
+        before(async () => {
+          [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), {
+            preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
+          }, null, null, null, {
+            VideoCodecs: [roomCodec]
+          });
+
+          // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
+          // before verifying that simulcast has been enabled. This was added to remove
+          // flakiness of this test in Travis.
+          await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+            pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+          })));
+        });
+
+        it(`should ${shouldAddSSRCs ? '' : 'not '}add Simulcast SSRCs to the video m= section of all local descriptions`, () => {
+          flatMap(peerConnections, pc => {
+            assert(pc.localDescription.sdp);
+            return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
+          }).forEach(section => {
+            const flowSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:FID .+$/gm), line => {
+              return line.split(' ').slice(1);
+            }));
+            if (shouldAddSSRCs || defaults.topology === 'peer-to-peer') {
+              const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
+                return line.split(' ').slice(1);
+              }));
+              const trackSSRCs = new Set(section.match(/^a=ssrc:.+ msid:.+$/gm).map(line => {
+                return line.match(/a=ssrc:([0-9]+)/)[1];
+              }));
+              assert.equal(flowSSRCs.size, 6);
+              assert.equal(simSSRCs.size, 3);
+              assert.equal(trackSSRCs.size, 6);
+              simSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+              flowSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+            } else {
+              assert.equal(flowSSRCs.size, 2);
+              assert.equal(section.match(/^a=ssrc-group:SIM .+$/gm), null);
+              assert.equal(section.match(/^a=ssrc:.+ msid:.+$/gm), null);
+            }
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
       });
-
-      // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
-      // before verifying that simulcast has been enabled. This was added to remove
-      // flakiness of this test in Travis.
-      await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
-        pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
-      })));
-    });
-
-    it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
-      flatMap(peerConnections, pc => {
-        assert(pc.localDescription.sdp);
-        return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
-      }).forEach(section => {
-        const flowSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:FID .+$/gm), line => {
-          return line.split(' ').slice(1);
-        }));
-        const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
-          return line.split(' ').slice(1);
-        }));
-        const trackSSRCs = new Set(section.match(/^a=ssrc:.+ msid:.+$/gm).map(line => {
-          return line.match(/a=ssrc:([0-9]+)/)[1];
-        }));
-        assert.equal(flowSSRCs.size, 6);
-        assert.equal(simSSRCs.size, 3);
-        assert.equal(trackSSRCs.size, 6);
-        simSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
-        flowSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
-      });
-    });
-
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
     });
   });
 });
@@ -864,13 +879,13 @@ function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
 }
 
-async function setup(name, testOptions, otherOptions, nTracks, alone) {
+async function setup(name, testOptions, otherOptions, nTracks, alone, roomOptions) {
   const options = Object.assign({
     audio: true,
     video: smallVideoConstraints
   }, testOptions, defaults);
   const token = getToken(randomName());
-  options.name = await createRoom(name, options.topology);
+  options.name = await createRoom(name, options.topology, roomOptions);
   const thisRoom = await connect(token, options);
   if (alone) {
     return [options.name, thisRoom];
