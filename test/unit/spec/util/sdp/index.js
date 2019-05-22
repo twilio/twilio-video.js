@@ -498,7 +498,7 @@ v=0\r
 o=- 6385359508499371184 3 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE 0 1\r
+a=group:BUNDLE 0 1 2\r
 a=msid-semantic: WMS 7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
 m=audio 22602 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 34.203.250.135\r
@@ -537,6 +537,90 @@ a=ice-options:trickle\r
 a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
 a=setup:actpass\r
 a=mid:1\r
+a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:4 urn:3gpp:video-orientation\r
+a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type\r
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtcp-rsize\r
+a=rtpmap:96 VP8/90000\r
+a=rtcp-fb:96 goog-remb\r
+a=rtcp-fb:96 transport-cc\r
+a=rtcp-fb:96 ccm fir\r
+a=rtcp-fb:96 nack\r
+a=rtcp-fb:96 nack pli\r
+a=rtpmap:97 rtx/90000\r
+a=fmtp:97 apt=96\r
+a=rtpmap:99 rtx/90000\r
+a=fmtp:99 apt=98\r
+a=rtpmap:101 rtx/90000\r
+a=fmtp:101 apt=100\r
+a=rtpmap:123 rtx/90000\r
+a=fmtp:123 apt=102\r
+a=rtpmap:122 rtx/90000\r
+a=fmtp:122 apt=127\r
+a=rtpmap:107 rtx/90000\r
+a=fmtp:107 apt=125\r
+a=rtpmap:109 rtx/90000\r
+a=fmtp:109 apt=108\r
+a=rtpmap:98 VP9/90000\r
+a=rtcp-fb:98 goog-remb\r
+a=rtcp-fb:98 transport-cc\r
+a=rtcp-fb:98 ccm fir\r
+a=rtcp-fb:98 nack\r
+a=rtcp-fb:98 nack pli\r
+a=rtpmap:100 H264/90000\r
+a=rtcp-fb:100 goog-remb\r
+a=rtcp-fb:100 transport-cc\r
+a=rtcp-fb:100 ccm fir\r
+a=rtcp-fb:100 nack\r
+a=rtcp-fb:100 nack pli\r
+a=fmtp:100 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f\r
+a=rtpmap:102 H264/90000\r
+a=rtcp-fb:102 goog-remb\r
+a=rtcp-fb:102 transport-cc\r
+a=rtcp-fb:102 ccm fir\r
+a=rtcp-fb:102 nack\r
+a=rtcp-fb:102 nack pli\r
+a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r
+a=rtpmap:127 H264/90000\r
+a=rtcp-fb:127 goog-remb\r
+a=rtcp-fb:127 transport-cc\r
+a=rtcp-fb:127 ccm fir\r
+a=rtcp-fb:127 nack\r
+a=rtcp-fb:127 nack pli\r
+a=fmtp:127 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d0032\r
+a=rtpmap:125 H264/90000\r
+a=rtcp-fb:125 goog-remb\r
+a=rtcp-fb:125 transport-cc\r
+a=rtcp-fb:125 ccm fir\r
+a=rtcp-fb:125 nack\r
+a=rtcp-fb:125 nack pli\r
+a=fmtp:125 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640032\r
+a=rtpmap:108 red/90000\r
+a=rtpmap:124 ulpfec/90000\r
+a=ssrc-group:FID 0000000000 1111111111\r
+a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+m=video 9 UDP/TLS/RTP/SAVPF 96 97 99 101 123 122 107 109 98 100 102 127 125 108 124\r
+c=IN IP4 0.0.0.0\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:2\r
 a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r
 a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
 a=extmap:4 urn:3gpp:video-orientation\r
@@ -675,24 +759,24 @@ a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
 `;
 
     const filteredLocalSdp = unifiedPlanFilterLocalCodecs(localSdp, remoteSdp);
-    const audioSection = getMediaSections(filteredLocalSdp, 'audio')[0];
-    const videoSection = getMediaSections(filteredLocalSdp, 'video')[0];
+    const [audioSection, videoSection, newVideoSection] = getMediaSections(localSdp);
+    const [filteredAudioSection, filteredVideoSection, filteredNewVideoSection] = getMediaSections(filteredLocalSdp);
 
     [
-      ['audio', audioSection, [111, 0], [103, 104, 9, 8, 106, 105, 13, 110, 112, 113, 126]],
-      ['video', videoSection, [123, 102], [96, 97, 99, 101, 122, 107, 109, 98, 100, 127, 125, 108, 124]]
-    ].forEach(([kind, section, expectedPtsRetained, expectedPtsFiltered]) => {
+      ['audio', filteredAudioSection, audioSection, [111, 0], [103, 104, 9, 8, 106, 105, 13, 110, 112, 113, 126]],
+      ['video', filteredVideoSection, videoSection, [123, 102], [96, 97, 99, 101, 122, 107, 109, 98, 100, 127, 125, 108, 124]]
+    ].forEach(([kind, filteredSection, section, expectedPtsRetained, expectedPtsFiltered]) => {
       const mLineRegex = new RegExp(`^m=${kind} .+ ${expectedPtsRetained.join(' ')}$`, 'm');
-      assert(mLineRegex.test(section));
+      assert(mLineRegex.test(filteredSection));
 
       expectedPtsRetained.forEach(pt => {
         ['rtpmap', 'rtcp-fb', 'fmtp'].forEach(attr => {
           const attrRegex = new RegExp(`^a=${attr}:${pt} (.+)$`, 'm');
-          const localSdpMatch = localSdp.match(attrRegex);
-          const filteredLocalSdpMatch = filteredLocalSdp.match(attrRegex);
-          assert.equal(!!filteredLocalSdpMatch, !!localSdpMatch);
-          if (filteredLocalSdpMatch) {
-            assert.equal(filteredLocalSdpMatch[1], localSdpMatch[1]);
+          const match = section.match(attrRegex);
+          const filteredMatch = filteredSection.match(attrRegex);
+          assert.equal(!!filteredMatch, !!match);
+          if (filteredMatch) {
+            assert.equal(filteredMatch[1], match[1]);
           }
         });
       });
@@ -700,9 +784,11 @@ a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
       expectedPtsFiltered.forEach(pt => {
         ['rtpmap', 'rtcp-fb', 'fmtp'].forEach(attr => {
           const attrRegex = new RegExp(`^a=${attr}:${pt} .+$`, 'm');
-          assert(!attrRegex.test(filteredLocalSdp));
+          assert(!attrRegex.test(filteredSection));
         });
       });
+
+      assert.equal(filteredNewVideoSection, newVideoSection);
     });
   });
 });
