@@ -12,6 +12,9 @@ addons:
     packages:
       - pulseaudio
 
+# https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
+dist: trusty
+
 env:
   global:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
@@ -93,6 +96,7 @@ before_script:
     if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
       sh -e /etc/init.d/xvfb start
       pulseaudio --start
+      sleep 3
     fi
     if [ "${TOPOLOGY}" != 'peer-to-peer' ]; then
       export ENABLE_REST_API_TESTS=1
