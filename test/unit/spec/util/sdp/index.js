@@ -739,7 +739,7 @@ a=rtpmap:111 opus/48000/2\r
 a=rtcp-fb:111 transport-cc\r
 a=fmtp:111 minptime=10;useinbandfec=1\r
 a=rtpmap:0 PCMU/8000\r
-m=video 9 UDP/TLS/RTP/SAVPF 102\r
+m=video 9 UDP/TLS/RTP/SAVPF 99 22\r
 c=IN IP4 0.0.0.0\r
 a=rtcp:9 IN IP4 0.0.0.0\r
 a=ice-ufrag:Cmuk\r
@@ -758,13 +758,15 @@ a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r
 a=recvonly\r
 a=rtcp-mux\r
 a=rtcp-rsize\r
-a=rtpmap:102 H264/90000\r
-a=rtcp-fb:102 goog-remb\r
-a=rtcp-fb:102 transport-cc\r
-a=rtcp-fb:102 ccm fir\r
-a=rtcp-fb:102 nack\r
-a=rtcp-fb:102 nack pli\r
-a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r
+a=rtpmap:99 H264/90000\r
+a=rtcp-fb:99 goog-remb\r
+a=rtcp-fb:99 transport-cc\r
+a=rtcp-fb:99 ccm fir\r
+a=rtcp-fb:99 nack\r
+a=rtcp-fb:99 nack pli\r
+a=fmtp:99 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r
+a=rtpmap:22 rtx/90000\r
+a=fmtp:22 apt=99\r
 a=ssrc-group:FID 0000000000 1111111111\r
 a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
 a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
