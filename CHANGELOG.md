@@ -19,7 +19,7 @@ New Features
   ```
 
   This will guarantee that your signaling traffic will terminate in Germany. For other possible values
-  for region, please refer to this [table](https://www.twilio.com/docs/video/ip-address-whitelisting#media-servers).
+  for region, please refer to this [table](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
 
 Bug Fixes
 ---------
