@@ -15,6 +15,7 @@ const TwilioError = require('../../../lib/util/twilioerror');
 
 const {
   MediaConnectionError,
+  SignalingConnectionError,
   TrackNameIsDuplicatedError,
   TrackNameTooLongError
 } = require('../../../lib/util/twilio-video-errors');
@@ -100,6 +101,45 @@ describe('connect', function() {
         assert(/level must be one of/.test(error.message));
       }
       assert(cancelablePromise instanceof CancelablePromise);
+    });
+  });
+
+  describe('region selection', async () => {
+    ['without', 'global', 'specific', 'invalid'].forEach(regionType => {
+      const regionOptions = {
+        global: { region: 'gll' },
+        invalid: { region: 'foo' },
+        specific: { region: 'de1' },
+        without: {}
+      }[regionType];
+
+      context(`when called ${regionType === 'without' ? regionType : `with a(n) ${regionType}`} region`, () => {
+        let token;
+        let cancelablePromise;
+        beforeEach(() => {
+          const identity = randomName();
+          token = getToken(identity);
+          cancelablePromise = connect(token, Object.assign({}, defaults, regionOptions, { tracks: [] }));
+          assert(cancelablePromise instanceof CancelablePromise);
+        });
+
+        if (regionType === 'invalid') {
+          it('should return a CancelablePromise that rejects with a SignalingConnectionError', async () => {
+            try {
+              const room = await cancelablePromise;
+              room.disconnect();
+              throw new Error(`Connected to ${room.sid} with an invalid region`);
+            } catch (error) {
+              assert(error instanceof SignalingConnectionError);
+            }
+          });
+        } else {
+          it('should return a CancelablePromise that resolves with a Room', async () => {
+            const room = await cancelablePromise;
+            room.disconnect();
+          });
+        }
+      });
     });
   });
 
@@ -374,10 +414,12 @@ describe('connect', function() {
   describe('called with EncodingParameters', () => {
     combinationContext([
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 20000],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ],
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 40000],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ]
