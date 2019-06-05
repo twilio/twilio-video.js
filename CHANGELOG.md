@@ -1,5 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.18.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Participants on Firefox 68 or above were unable to publish
+  LocalAudioTracks or LocalVideoTracks. (JSDK-2381)
+
 1.18.0 (April 23, 2019)
 =======================
 
