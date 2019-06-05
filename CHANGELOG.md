@@ -1,5 +1,14 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta10 (in progress)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Participants on Firefox 68 or above were unable to publish
+  LocalAudioTracks or LocalVideoTracks. (JSDK-2381)
+
 2.0.0-beta9 (May 2, 2019)
 =========================
 
