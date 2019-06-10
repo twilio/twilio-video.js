@@ -1,6 +1,5 @@
-**IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid upcoming
-breaking changes in Google Chrome. See [this advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
-for details.
+**IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid upcoming breaking changes in Firefox 68.
+See [this advisory](https://support.twilio.com/hc/en-us/articles/360024434554-Twilio-Video-JavaScript-SDK-Breaking-Changes-in-Firefox-68-July-9-2019-) for details.
 
 twilio-video.js
 ===============
