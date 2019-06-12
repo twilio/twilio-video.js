@@ -132,8 +132,8 @@ describe('connect', function() {
         });
 
         it(`should return a CancelablePromise that ${region === 'invalid' ? 'rejects with a SignalingConnectionError' : 'resolves with a Room'}`, async () => {
-          let error;
-          let room;
+          let error = null;
+          let room = null;
           try {
             room = await cancelablePromise;
           } catch (error_) {
@@ -143,10 +143,10 @@ describe('connect', function() {
               room.disconnect();
             }
             if (region === 'invalid') {
-              assert(!room, `Connected to Room ${room && room.sid} with an invalid signaling region "${region}"`);
+              assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid signaling region "${region}"`);
               assert(error instanceof SignalingConnectionError);
             } else {
-              assert(!error);
+              assert.equal(error, null);
               assert(room instanceof Room);
             }
           }
