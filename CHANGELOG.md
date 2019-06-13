@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta11 (in progress)
-==========================
+2.0.0-beta11 (June 12, 2019)
+============================
 
 New Features
 ------------
@@ -20,6 +20,20 @@ New Features
 
   This will guarantee that your signaling traffic will terminate in Germany. For other possible values
   for region, please refer to this [table](https://www.twilio.com/docs/video/ip-address-whitelisting#signaling-communication).
+  If you specify an invalid value for `region`, `connect` will raise a [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000):
+
+  ```js
+  const { connect } = require('twilio-video');
+
+  try {
+    const room = await connect(token, {
+      region: 'foo'
+    });
+  } catch (error) {
+    assert.equal(error.code, 53000);
+    assert.equal(error.message, 'Signaling connection error');
+  }
+  ```
 
 Bug Fixes
 ---------
