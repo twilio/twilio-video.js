@@ -1,6 +1,6 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta11 (June 13, 2019)
+2.0.0-beta11 (June 12, 2019)
 ============================
 
 New Features
