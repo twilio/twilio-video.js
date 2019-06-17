@@ -22,9 +22,10 @@
  * @param {TracksByKind} kinds
  * @param {number} [maxAudioBitrate]
  * @param {number} [maxVideoBitrate]
+ * @param {boolean} [withAppData = true]
  * @returns {string} sdp
  */
-function makeSdpWithTracks(type, kinds, maxAudioBitrate, maxVideoBitrate) {
+function makeSdpWithTracks(type, kinds, maxAudioBitrate, maxVideoBitrate, withAppData = true) {
   const session = `\
 v=0\r
 o=- 0 1 IN IP4 0.0.0.0\r
@@ -69,10 +70,10 @@ a=rtcp-mux\r
         ? { id: trackAndSSRC, ssrc: 1 }
         : trackAndSSRC;
       return sdp + (type === 'planb' ? '' : media + `\
-a=msid:- ${id}\r
+a=msid:-${type === 'planb' || withAppData ? ` ${id}` : ''}\r
 `) + `\
 a=ssrc:${ssrc} cname:0\r
-a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream' : '-'} ${id}\r
+a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream' : '-'}${type === 'planb' || withAppData ? ` ${id}` : ''}\r
 a=mid:mid_${id}\r
 `;
     }, sdp + (type === 'planb' ? media : ''));

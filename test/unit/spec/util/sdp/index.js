@@ -11,7 +11,8 @@ const {
   setSimulcast,
   unifiedPlanFilterLocalCodecs,
   revertSimulcastForNonVP8MediaSections,
-  unifiedPlanRewriteTrackIds
+  unifiedPlanAddOrRewriteNewTrackIds,
+  unifiedPlanAddOrRewriteTrackIds
 } = require('../../../../../lib/util/sdp');
 
 const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../../lib/mocksdp');
@@ -846,16 +847,46 @@ describe('revertSimulcastForNonVP8MediaSections', () => {
   });
 });
 
-describe('unifiedPlanRewriteTrackIds', () => {
-  it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with RTCRtpTransceivers', () => {
-    const sdp = makeSdpWithTracks('unified', { audio: ['foo'], video: ['bar'] });
-    const midsToTrackIds = new Map([['mid_foo', 'baz'], ['mid_bar', 'zee']]);
-    const newSdp = unifiedPlanRewriteTrackIds(sdp, midsToTrackIds);
-    const sections = getMediaSections(newSdp);
-    midsToTrackIds.forEach((trackId, mid) => {
-      const section = sections.find(section => new RegExp(`^a=mid:${mid}$`, 'm').test(section));
-      assert.equal(section.match(/^a=msid:.+ (.+)$/m)[1], trackId);
-      assert.equal(section.match(/^a=ssrc:.+ msid:.+ (.+)$/m)[1], trackId);
+describe('unifiedPlanAddOrRewriteNewTrackIds', () => {
+  [true, false].forEach(withAppData => {
+    context(`when the Unified Plan SDP ${withAppData ? 'has' : 'does not have'} MediaStreamTrack IDs in a=msid: lines`, () => {
+      it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with unassigned RTCRtpTransceivers', () => {
+        const sdp = makeSdpWithTracks('unified', {
+          audio: ['foo', 'bar'],
+          video: ['baz', 'zee']
+        }, null, null, withAppData);
+        const newTrackIdsByKind = new Map([['audio', ['yyy']], ['video', ['zzz']]]);
+        const newSdp = unifiedPlanAddOrRewriteNewTrackIds(sdp, newTrackIdsByKind);
+        const msAttrsAndKinds = getMediaSections(newSdp).map(section => [
+          section.match(/^a=msid:(.+)/m)[1],
+          section.match(/^m=(audio|video)/)[1]
+        ]);
+        assert.deepEqual(msAttrsAndKinds, [
+          [withAppData ? '- foo' : '-', 'audio'],
+          ['- yyy', 'audio'],
+          [withAppData ? '- baz' : '-', 'video'],
+          ['- zzz', 'video']
+        ]);
+      });
+
+    });
+  });
+});
+
+describe('unifiedPlanAddOrRewriteTrackIds', () => {
+  [true, false].forEach(withAppData => {
+    context(`when the Unified Plan SDP ${withAppData ? 'has' : 'does not have'} MediaStreamTrack IDs in a=msid: lines`, () => {
+      it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with RTCRtpTransceivers', () => {
+        const sdp = makeSdpWithTracks('unified', { audio: ['foo'], video: ['bar'] }, null, null, withAppData);
+        const midsToTrackIds = new Map([['mid_foo', 'baz'], ['mid_bar', 'zee']]);
+        const newSdp = unifiedPlanAddOrRewriteTrackIds(sdp, midsToTrackIds);
+        const sections = getMediaSections(newSdp);
+        midsToTrackIds.forEach((trackId, mid) => {
+          const section = sections.find(section => new RegExp(`^a=mid:${mid}$`, 'm').test(section));
+          assert.equal(section.match(/^a=msid:.+ (.+)$/m)[1], trackId);
+          assert.equal(section.match(/^a=ssrc:.+ msid:.+ (.+)$/m)[1], trackId);
+        });
+      });
     });
   });
 });
