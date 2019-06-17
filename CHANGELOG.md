@@ -6,6 +6,21 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
+- Added a new property `enableAutomaticSubscription` to control Track subscription behavior in Group Rooms.
+  - Selecting `true` (the default value) causes the Participant to be subscribed to all Tracks that are published in the Room
+  - Selecting `false` causes the Participant to be subscribed to none of the Tracks that are published in the Room
+  - Selecting `false` has no impact in a Peer-to-Peer Room
+
+```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    enableAutomaticSubscription: false
+  });
+```
+
+New Features
+------------
+
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
   In December 2018, we published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
