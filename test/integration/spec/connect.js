@@ -137,10 +137,10 @@ describe('connect', function() {
           }
         });
         if (expectSubscriptionsEnabled) {
-          assert.equal(subscribed, 4, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(subscribed, 4, 'subscribed should be 4, but were: ' + subscribed);
           assert.equal(notsubscribed, 0, 'notsubscribed should be zero, but were: ' + notsubscribed);
         } else {
-          assert.equal(subscribed, 0, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(subscribed, 0, 'subscribed should be 4, but were: ' + subscribed);
           assert.equal(notsubscribed, 4, 'notsubscribed should be zero, but were: ' + notsubscribed);
         }
       });
@@ -954,7 +954,6 @@ function getPayloadTypes(mediaSection) {
 }
 
 async function setup(setupOptions) {
-
   setupOptions = Object.assign({
     name: randomName(),
     nTracks: 2,
@@ -963,7 +962,6 @@ async function setup(setupOptions) {
     waitForSubscriptions: true,
   }, setupOptions);
 
-  setupOptions.name = setupOptions.name || randomName();
   const options = Object.assign({
     audio: true,
     video: smallVideoConstraints
