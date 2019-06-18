@@ -104,6 +104,49 @@ describe('connect', function() {
     });
   });
 
+  describe.only('automaticSubscription option', () => {
+    ['missing', 'enabled', 'disabled'].forEach((option) => {
+      const subscriptionOption = {
+        missing: {},
+        enabled: { automaticSubscription: true },
+        disabled: { automaticSubscription: false },
+      }[option];
+
+      const expectSubscriptionsEnabled = subscriptionOption.automaticSubscription !== false;
+
+      let thisRoom;
+      before(async () => {
+        [, thisRoom] = await setup({
+          testOptions: subscriptionOption,
+          waitForSubscriptions: false,
+          topology: 'group-small',
+        });
+      });
+
+      it(`when automaticSubscription is ${option}, subscriptions are ${expectSubscriptionsEnabled ? 'enabled' : 'disabled'}.`, async () => {
+        const thoseParticipants = [...thisRoom.participants.values()];
+        await Promise.all(thoseParticipants.map(participant => tracksPublished(participant, 2)));
+
+        let subscribed = 0;
+        let notsubscribed = 0;
+        flatMap(thoseParticipants, participant => [...participant.tracks.values()]).forEach(publication => {
+          if (publication.isSubscribed) {
+            subscribed++;
+          } else {
+            notsubscribed++;
+          }
+        });
+        if (expectSubscriptionsEnabled) {
+          assert.equal(subscribed, 4, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(notsubscribed, 0, 'notsubscribed should be zero, but were: ' + notsubscribed);
+        } else {
+          assert.equal(subscribed, 0, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(notsubscribed, 4, 'notsubscribed should be zero, but were: ' + notsubscribed);
+        }
+      });
+    });
+  });
+
   describe('signaling region', async () => {
     const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
       'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'
@@ -919,6 +962,8 @@ async function setup(setupOptions) {
     name: randomName(),
     nTracks: 2,
     alone: false,
+    topology: defaults.topology,
+    waitForSubscriptions: true,
   }, setupOptions);
 
   setupOptions.name = setupOptions.name || randomName();
@@ -927,7 +972,7 @@ async function setup(setupOptions) {
     video: smallVideoConstraints
   }, setupOptions.testOptions, defaults);
   const token = getToken(randomName());
-  options.name = await createRoom(setupOptions.name, options.topology, setupOptions.roomOptions);
+  options.name = await createRoom(setupOptions.name, setupOptions.topology, setupOptions.roomOptions);
   const thisRoom = await connect(token, options);
   if (setupOptions.alone) {
     return [options.name, thisRoom];
@@ -945,7 +990,10 @@ async function setup(setupOptions) {
     return participantsConnected(room, thoseRooms.length);
   }));
   const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, setupOptions.nTracks)));
+  if (setupOptions.waitForSubscriptions) {
+    await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, setupOptions.nTracks)));
+  }
+
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
   return [options.name, thisRoom, thoseRooms, peerConnections];
 }
