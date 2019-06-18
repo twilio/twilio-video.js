@@ -104,21 +104,22 @@ describe('connect', function() {
     });
   });
 
-  describe.only('enableAutomaticSubscription option', () => {
+  describe.only('automaticSubscription option', () => {
     ['missing', 'enabled', 'disabled'].forEach((option) => {
       const subscriptionOption = {
         missing: {},
-        enabled: { enableAutomaticSubscription: true },
-        disabled: { enableAutomaticSubscription: false },
+        enabled: { automaticSubscription: true },
+        disabled: { automaticSubscription: false },
       }[option];
 
-      const expectSubscriptionsEnabled = subscriptionOption.enableAutomaticSubscription !== false;
+      const expectSubscriptionsEnabled = subscriptionOption.automaticSubscription !== false;
 
       let thisRoom;
       before(async () => {
         [, thisRoom] = await setup({
           testOptions: subscriptionOption,
-          waitForTrackubscribed: false
+          waitForSubscriptions: false,
+          topology: 'group-small',
         });
       });
 
@@ -958,6 +959,8 @@ async function setup(setupOptions) {
     name: randomName(),
     nTracks: 2,
     alone: false,
+    topology: defaults.topology,
+    waitForSubscriptions: true,
   }, setupOptions);
 
   setupOptions.name = setupOptions.name || randomName();
@@ -966,7 +969,7 @@ async function setup(setupOptions) {
     video: smallVideoConstraints
   }, setupOptions.testOptions, defaults);
   const token = getToken(randomName());
-  options.name = await createRoom(setupOptions.name, options.topology, setupOptions.roomOptions);
+  options.name = await createRoom(setupOptions.name, setupOptions.topology, setupOptions.roomOptions);
   const thisRoom = await connect(token, options);
   if (setupOptions.alone) {
     return [options.name, thisRoom];
@@ -984,7 +987,10 @@ async function setup(setupOptions) {
     return participantsConnected(room, thoseRooms.length);
   }));
   const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, setupOptions.nTracks)));
+  if (setupOptions.waitForSubscriptions) {
+    await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, setupOptions.nTracks)));
+  }
+
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
   return [options.name, thisRoom, thoseRooms, peerConnections];
 }

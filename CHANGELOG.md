@@ -6,20 +6,18 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- Added a new property `enableAutomaticSubscription` to control Track subscription behavior in Group Rooms.
-  - Selecting `true` (the default value) causes the Participant to be subscribed to all Tracks that are published in the Room
-  - Selecting `false` causes the Participant to be subscribed to none of the Tracks that are published in the Room
-  - Selecting `false` has no impact in a Peer-to-Peer Room
+- By default, you will subscribe to all RemoteTracks shared by other Participants in a Room.
+  You can now override this behavior through a new ConnectOptions flag automaticSubscription.
+  Setting it to false will make sure that you will not subscribe to any RemoteTrack in a Group or
+  Small Group Room. Setting it to true, or not setting it at all preserves the default behavior.
+  This flag does not have any effect in a Peer-to-Peer Room. (JSDK-2395)
 
 ```js
   const { connect } = require('twilio-video');
   const room = await connect(token, {
-    enableAutomaticSubscription: false
+    automaticSubscription: false
   });
 ```
-
-New Features
-------------
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
