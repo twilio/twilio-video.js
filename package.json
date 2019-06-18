@@ -117,7 +117,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#add-sdpSemantics-flag",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#87f7e61106f58e29364999d8753c773e5602536f",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },
