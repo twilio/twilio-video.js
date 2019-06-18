@@ -104,6 +104,48 @@ describe('connect', function() {
     });
   });
 
+  describe.only('enableAutomaticSubscription option', () => {
+    ['missing', 'enabled', 'disabled'].forEach((option) => {
+      const subscriptionOption = {
+        missing: {},
+        enabled: { enableAutomaticSubscription: true },
+        disabled: { enableAutomaticSubscription: false },
+      }[option];
+
+      const expectSubscriptionsEnabled = subscriptionOption.enableAutomaticSubscription !== false;
+
+      let thisRoom;
+      before(async () => {
+        [, thisRoom] = await setup({
+          testOptions: subscriptionOption,
+          waitForTrackubscribed: false
+        });
+      });
+
+      it(`when automaticSubscription is ${option}, subscriptions are ${expectSubscriptionsEnabled ? 'enabled' : 'disabled'}.`, async () => {
+        const thoseParticipants = [...thisRoom.participants.values()];
+        await Promise.all(thoseParticipants.map(participant => tracksPublished(participant, 2)));
+
+        let subscribed = 0;
+        let notsubscribed = 0;
+        flatMap(thoseParticipants, participant => [...participant.tracks.values()]).forEach(publication => {
+          if (publication.isSubscribed) {
+            subscribed++;
+          } else {
+            notsubscribed++;
+          }
+        });
+        if (expectSubscriptionsEnabled) {
+          assert.equal(subscribed, 4, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(notsubscribed, 0, 'notsubscribed should be zero, but were: ' + notsubscribed);
+        } else {
+          assert.equal(subscribed, 0, 'subscribed should be zero, but were: ' + subscribed);
+          assert.equal(notsubscribed, 4, 'notsubscribed should be zero, but were: ' + notsubscribed);
+        }
+      });
+    });
+  });
+
   describe('signaling region', async () => {
     const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
       'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'
