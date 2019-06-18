@@ -7,9 +7,9 @@ New Features
 ------------
 
 - By default, you will subscribe to all RemoteTracks shared by other Participants in a Room.
-  You can now override this behavior through a new ConnectOptions flag automaticSubscription.
-  Setting it to false will make sure that you will not subscribe to any RemoteTrack in a Group or
-  Small Group Room. Setting it to true, or not setting it at all preserves the default behavior.
+  You can now override this behavior through a new ConnectOptions flag `automaticSubscription`.
+  Setting it to `false` will make sure that you will not subscribe to any RemoteTrack in a Group or
+  Small Group Room. Setting it to `true`, or not setting it at all preserves the default behavior.
   This flag does not have any effect in a Peer-to-Peer Room. (JSDK-2395)
 
 ```js
