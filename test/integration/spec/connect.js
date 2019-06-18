@@ -104,8 +104,8 @@ describe('connect', function() {
     });
   });
 
-  describe.only('automaticSubscription option', () => {
-    ['missing', 'enabled', 'disabled'].forEach((option) => {
+  describe('automaticSubscription', () => {
+    ['missing', 'enabled', 'disabled'].forEach(option => {
       const subscriptionOption = {
         missing: {},
         enabled: { automaticSubscription: true },
@@ -137,11 +137,11 @@ describe('connect', function() {
           }
         });
         if (expectSubscriptionsEnabled) {
-          assert.equal(subscribed, 4, 'subscribed should be 4, but were: ' + subscribed);
-          assert.equal(notsubscribed, 0, 'notsubscribed should be zero, but were: ' + notsubscribed);
+          assert.equal(subscribed, 4, `subscribed should be 4, but were: ${subscribed}`);
+          assert.equal(notsubscribed, 0, `notsubscribed should be 0, but were: ${notsubscribed}`);
         } else {
-          assert.equal(subscribed, 0, 'subscribed should be 4, but were: ' + subscribed);
-          assert.equal(notsubscribed, 4, 'notsubscribed should be zero, but were: ' + notsubscribed);
+          assert.equal(subscribed, 0, `subscribed should be 0, but were: ${subscribed}`);
+          assert.equal(notsubscribed, 4, `notsubscribed should be 4, but were: ${notsubscribed}`);
         }
       });
     });
