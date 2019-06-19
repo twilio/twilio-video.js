@@ -1199,8 +1199,8 @@ describe('RoomV2', () => {
 
       beforeEach(() => {
         NetworkQualitySignaling = sinon.spy(function() {
-          networkQualitySignaling = {};
-          return networkQualitySignaling;
+            networkQualitySignaling = {};
+            return networkQualitySignaling;
         });
 
         NetworkQualityMonitor = sinon.spy(function() {
@@ -1333,6 +1333,49 @@ describe('RoomV2', () => {
           test.peerConnectionManager.iceConnectionState = 'failed';
           test.peerConnectionManager.emit('iceConnectionStateChanged');
           assert(participant.setNetworkQualityLevel.calledWith(0));
+        });
+
+        describe('when the dataTrackReceiver receives close event', () => {
+          let dataTrackTransport2;
+          let dataTrackReceiver2;
+          beforeEach(async () => {
+            dataTrackTransport2 = new EventEmitter();
+            dataTrackTransport2.stop = sinon.spy();
+
+
+            // emit old on old track
+            dataTrackReceiver.emit('close');
+            await new Promise(resolve => setTimeout(resolve));
+
+            // send update message.
+            test.transport.emit('message', {
+              // eslint-disable-next-line
+              media_signaling: {
+                // eslint-disable-next-line
+                network_quality: {
+                  transport: { type: 'data-channel', label: ':-)' }
+                }
+              }
+            });
+
+            // create another track receiver
+            dataTrackReceiver2 = makeTrackReceiver({ id: ':-)', kind: 'data' });
+            dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackReceiver2);
+            test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
+            await new Promise(resolve => setTimeout(resolve));
+          });
+
+          it('converts DataTrackReciever to a DataTrackTransport,', () => {
+            assert(dataTrackReceiver2.toDataTransport.calledOnce);
+          });
+
+          it('constructs new NetworkQualitySignaling with the DataTrackTransport,', () => {
+            assert(NetworkQualitySignaling.calledWith(dataTrackReceiver2));
+          });
+
+          it('calls .start() on the NetworkQualityMonitor, and', () => {
+            assert(networkQualityMonitor.start.calledOnce);
+          });
         });
 
         describe('then, when the RoomV2 finally disconnects,', () => {
@@ -1621,11 +1664,11 @@ function makeTrack(options) {
 }
 
 function makeTrackReceiver(mediaStreamTrack) {
+  var trackReceiver = new EventEmitter();
   const { id, kind } = mediaStreamTrack;
-  return {
-    id,
-    kind,
-    readyState: 'foo',
-    track: mediaStreamTrack
-  };
+  trackReceiver.id = id;
+  trackReceiver.kind = kind;
+  trackReceiver.readyState = 'foo';
+  trackReceiver.track = mediaStreamTrack;
+  return trackReceiver;
 }
