@@ -855,14 +855,14 @@ describe('unifiedPlanAddOrRewriteNewTrackIds', () => {
           audio: ['foo', 'bar'],
           video: ['baz', 'zee']
         }, null, null, withAppData);
-        const newTrackIdsByKind = new Map([['audio', ['yyy']], ['video', ['zzz']]]);
+        const newTrackIdsByKind = new Map([['audio', ['xxx', 'yyy']], ['video', ['zzz']]]);
         const newSdp = unifiedPlanAddOrRewriteNewTrackIds(sdp, newTrackIdsByKind);
         const msAttrsAndKinds = getMediaSections(newSdp).map(section => [
           section.match(/^a=msid:(.+)/m)[1],
           section.match(/^m=(audio|video)/)[1]
         ]);
         assert.deepEqual(msAttrsAndKinds, [
-          [withAppData ? '- foo' : '-', 'audio'],
+          ['- xxx', 'audio'],
           ['- yyy', 'audio'],
           [withAppData ? '- baz' : '-', 'video'],
           ['- zzz', 'video']
