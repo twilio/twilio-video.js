@@ -104,6 +104,46 @@ describe('connect', function() {
     });
   });
 
+  describe(`automaticSubscription (${defaults.topology} topology)`, () => {
+    [undefined, true, false].forEach(automaticSubscription => {
+      const automaticSubscriptionOptions = typeof automaticSubscription === 'boolean'
+        ? { automaticSubscription }
+        : {};
+
+      context(`when automaticSubscription is ${typeof automaticSubscription === 'undefined' ? 'not set' : automaticSubscription}`, () => {
+        const shouldSubscribe = defaults.topology === 'peer-to-peer' || automaticSubscription !== false;
+        let room;
+
+        before(async () => {
+          [, room] = await setup(randomName(), Object.assign({ tracks: [] }, automaticSubscriptionOptions), null, 0);
+        });
+
+        it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
+          const participants = [...room.participants.values()];
+          await Promise.all(participants.map(participant => tracksPublished(participant, 2)));
+
+          // Wait for a second for any "trackSubscribed" events.
+          await Promise.race([
+            new Promise(resolve => setTimeout(resolve, 1000)),
+            Promise.all(participants.map(participant => tracksSubscribed(participant, 2)))
+          ]);
+
+          const publications = flatMap(participants, participant => [...participant.tracks.values()]);
+          publications.forEach(publication => {
+            assert.equal(publication.isSubscribed, shouldSubscribe);
+            assert(shouldSubscribe ? publication.track : publication.track === null);
+          });
+        });
+
+        after(() => {
+          if (room) {
+            room.disconnect();
+          }
+        });
+      });
+    });
+  });
+
   describe('signaling region', async () => {
     const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
       'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'

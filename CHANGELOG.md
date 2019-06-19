@@ -6,6 +6,19 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
+- By default, you will subscribe to all RemoteTracks shared by other Participants in a Room.
+  You can now override this behavior through a new ConnectOptions flag `automaticSubscription`.
+  Setting it to `false` will make sure that you will not subscribe to any RemoteTrack in a Group or
+  Small Group Room. Setting it to `true`, or not setting it at all preserves the default behavior.
+  This flag does not have any effect in a Peer-to-Peer Room. (JSDK-2395)
+ 
+  ```js
+    const { connect } = require('twilio-video');
+    const room = await connect(token, {
+      automaticSubscription: false
+    });
+  ```
+
 - twilio-video.js will now detect and attempt to recover from media disruptions
   quicker than before thereby improving the performance of the [Network Reconnection API](https://www.twilio.com/docs/video/reconnection-states-and-events). (JSDK-2337)
 
