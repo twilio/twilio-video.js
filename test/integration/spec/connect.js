@@ -112,14 +112,16 @@ describe('connect', function() {
 
       context(`when automaticSubscription is ${typeof automaticSubscription === 'undefined' ? 'not set' : automaticSubscription}`, () => {
         const shouldSubscribe = defaults.topology === 'peer-to-peer' || automaticSubscription !== false;
-        let room;
+        let sid;
+        let thisRoom;
+        let thoseRooms;
 
         before(async () => {
-          [, room] = await setup(randomName(), Object.assign({ tracks: [] }, automaticSubscriptionOptions), null, 0);
+          [sid, thisRoom, thoseRooms] = await setup(randomName(), Object.assign({ name: sid, tracks: [] }, automaticSubscriptionOptions), null, 0);
         });
 
         it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
-          const participants = [...room.participants.values()];
+          const participants = [...thisRoom.participants.values()];
           await Promise.all(participants.map(participant => tracksPublished(participant, 2)));
 
           // Wait for a second for any "trackSubscribed" events.
@@ -136,9 +138,8 @@ describe('connect', function() {
         });
 
         after(() => {
-          if (room) {
-            room.disconnect();
-          }
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
         });
       });
     });
@@ -161,13 +162,15 @@ describe('connect', function() {
       }[region] || `with "${region}" as the`} signaling region`;
 
       context(scenario, () => {
-        let token;
         let cancelablePromise;
+        let sid;
+        let token;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           const identity = randomName();
           token = getToken(identity);
-          cancelablePromise = connect(token, Object.assign({}, defaults, regionOptions, { tracks: [] }));
+          sid = await createRoom(randomName(), defaults.topology);
+          cancelablePromise = connect(token, Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
         });
 
@@ -181,6 +184,7 @@ describe('connect', function() {
           } finally {
             if (room) {
               room.disconnect();
+              await completeRoom(sid);
             }
             if (region === 'invalid') {
               assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid signaling region "${region}"`);
