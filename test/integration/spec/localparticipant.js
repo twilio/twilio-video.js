@@ -1,7 +1,8 @@
 'use strict';
 
 const assert = require('assert');
-const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat();
+const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../lib/util/constants');
+const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat(DEFAULT_CHROME_SDP_SEMANTICS);
 
 const {
   connect,

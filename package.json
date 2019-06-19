@@ -117,7 +117,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#4.1.0-rc1",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#479469971944f88a3ea6a9ca78a3e41630287a31",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },

@@ -862,7 +862,7 @@ describe('connect', function() {
               const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
                 return line.split(' ').slice(1);
               }));
-              const trackSSRCs = new Set(section.match(/^a=ssrc:.+ msid:.+$/gm).map(line => {
+              const trackSSRCs = new Set(section.match(/^a=ssrc:.+$/gm).map(line => {
                 return line.match(/a=ssrc:([0-9]+)/)[1];
               }));
               assert.equal(flowSSRCs.size, 6);
@@ -873,7 +873,10 @@ describe('connect', function() {
             } else {
               assert.equal(flowSSRCs.size, 2);
               assert.equal(section.match(/^a=ssrc-group:SIM .+$/gm), null);
-              assert.equal(section.match(/^a=ssrc:.+ msid:.+$/gm), null);
+              const ssrcsWithAttributes = new Set(flatMap(section.match(/^a=ssrc:.+$/gm), line => {
+                return line.match(/a=ssrc:([0-9]+)/)[1];
+              }));
+              assert.deepEqual(Array.from(flowSSRCs), Array.from(ssrcsWithAttributes));
             }
           });
         });
