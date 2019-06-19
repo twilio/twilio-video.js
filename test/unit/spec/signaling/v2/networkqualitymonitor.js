@@ -45,6 +45,29 @@ describe('NetworkQualityMonitor', () => {
     });
   });
 
+  describe('.updateSignaling()', () => {
+    it('removes old signaling and uses new signaling for updates', () => {
+      const signaling1 = new EventEmitter();
+      const signaling2 = new EventEmitter();
+      const monitor = new NetworkQualityMonitor(null, signaling1);
+      let emitCount = 0;
+
+      monitor.once('updated', () => { emitCount++; });
+      assert.equal(signaling1.listenerCount('updated'), 1);
+      assert.equal(signaling2.listenerCount('updated'), 0);
+
+      monitor.updateSignaling(signaling2);
+      assert.equal(signaling1.listenerCount('updated'), 0);
+      assert.equal(signaling2.listenerCount('updated'), 1);
+
+      assert.equal(emitCount, 0);
+      signaling1.emit('updated');
+      assert.equal(emitCount, 0);
+      signaling2.emit('updated');
+      assert.equal(emitCount, 1);
+    });
+  });
+
   describe('.start()', () => {
     it('constructs a PeerConnectionReportFactory for each RTCPeerConnection contained within PeerConnectionManager', () => {
       // TODO(mroberts): ...
