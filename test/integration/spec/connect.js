@@ -117,7 +117,7 @@ describe('connect', function() {
         let thoseRooms;
 
         before(async () => {
-          [sid, thisRoom, thoseRooms] = await setup(randomName(), Object.assign({ name: sid, tracks: [] }, automaticSubscriptionOptions), null, 0);
+          [sid, thisRoom, thoseRooms] = await setup(randomName(), Object.assign({ tracks: [] }, automaticSubscriptionOptions), null, 0);
         });
 
         it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
