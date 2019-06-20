@@ -1199,8 +1199,8 @@ describe('RoomV2', () => {
 
       beforeEach(() => {
         NetworkQualitySignaling = sinon.spy(function() {
-            networkQualitySignaling = {};
-            return networkQualitySignaling;
+          networkQualitySignaling = {};
+          return networkQualitySignaling;
         });
 
         NetworkQualityMonitor = sinon.spy(function() {
@@ -1342,8 +1342,7 @@ describe('RoomV2', () => {
             dataTrackTransport2 = new EventEmitter();
             dataTrackTransport2.stop = sinon.spy();
 
-
-            // emit old on old track
+            // emit close on old channel
             dataTrackReceiver.emit('close');
             await new Promise(resolve => setTimeout(resolve));
 
