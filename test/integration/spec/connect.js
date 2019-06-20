@@ -104,6 +104,47 @@ describe('connect', function() {
     });
   });
 
+  describe(`automaticSubscription (${defaults.topology} topology)`, () => {
+    [undefined, true, false].forEach(automaticSubscription => {
+      const automaticSubscriptionOptions = typeof automaticSubscription === 'boolean'
+        ? { automaticSubscription }
+        : {};
+
+      context(`when automaticSubscription is ${typeof automaticSubscription === 'undefined' ? 'not set' : automaticSubscription}`, () => {
+        const shouldSubscribe = defaults.topology === 'peer-to-peer' || automaticSubscription !== false;
+        let sid;
+        let thisRoom;
+        let thoseRooms;
+
+        before(async () => {
+          [sid, thisRoom, thoseRooms] = await setup(randomName(), Object.assign({ tracks: [] }, automaticSubscriptionOptions), null, 0);
+        });
+
+        it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
+          const participants = [...thisRoom.participants.values()];
+          await Promise.all(participants.map(participant => tracksPublished(participant, 2)));
+
+          // Wait for a second for any "trackSubscribed" events.
+          await Promise.race([
+            new Promise(resolve => setTimeout(resolve, 1000)),
+            Promise.all(participants.map(participant => tracksSubscribed(participant, 2)))
+          ]);
+
+          const publications = flatMap(participants, participant => [...participant.tracks.values()]);
+          publications.forEach(publication => {
+            assert.equal(publication.isSubscribed, shouldSubscribe);
+            assert(shouldSubscribe ? publication.track : publication.track === null);
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
+      });
+    });
+  });
+
   describe('signaling region', async () => {
     const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
       'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'
@@ -121,13 +162,15 @@ describe('connect', function() {
       }[region] || `with "${region}" as the`} signaling region`;
 
       context(scenario, () => {
-        let token;
         let cancelablePromise;
+        let sid;
+        let token;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           const identity = randomName();
           token = getToken(identity);
-          cancelablePromise = connect(token, Object.assign({}, defaults, regionOptions, { tracks: [] }));
+          sid = await createRoom(randomName(), defaults.topology);
+          cancelablePromise = connect(token, Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
         });
 
@@ -141,6 +184,7 @@ describe('connect', function() {
           } finally {
             if (room) {
               room.disconnect();
+              await completeRoom(sid);
             }
             if (region === 'invalid') {
               assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid signaling region "${region}"`);

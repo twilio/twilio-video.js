@@ -12,8 +12,8 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 const { combinations } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
-  combinations([[true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker]) => {
-    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'} and .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'}`, () => {
+  combinations([[true, false], [true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker, automaticSubscription]) => {
+    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'} and .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'}`, () => {
       let test;
 
       beforeEach(() => {
@@ -21,6 +21,7 @@ describe('TwilioConnectionTransport', () => {
           iceServerSourceStatus: [
             { foo: 'bar' }
           ],
+          automaticSubscription,
           networkQuality,
           dominantSpeaker
         });
@@ -31,7 +32,7 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload and the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
@@ -48,6 +49,14 @@ describe('TwilioConnectionTransport', () => {
         } else {
           assert(!('active_speaker' in message.media_signaling));
         }
+
+        assert.deepEqual(message.subscribe, {
+          rules: [{
+            type: automaticSubscription ? 'include' : 'exclude',
+            all: true
+          }],
+          revision: 1
+        });
 
         assert.equal(message.participant, test.localParticipantState);
         assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
