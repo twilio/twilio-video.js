@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta12 (in progress)
-==========================
+2.0.0-beta12 (June 24, 2019)
+============================
 
 New Features
 ------------
@@ -25,10 +25,27 @@ New Features
 Bug Fixes
 ---------
 
+- Fixed a bug where a WebRTC PeerConnection was created before the application
+  had used the `connect()` API to join a Room. (JSDK-2392)
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 - Fixed a bug where Chrome and Safari Participants were enabling simulcast for
   H264 LocalVideoTracks when VP8 simulcast was enabled. (JSDK-2321)
+
+Developer Notes
+---------------
+
+- On October 12, 2018, the specification for the JavaScript Session Establishment
+  Protocol (JSEP) was [updated](https://github.com/rtcweb-wg/jsep/pull/850) to say
+  that MediaStreamTrack IDs will no longer be present in Unified Plan SDPs
+  (Media Session Descriptions). twilio-video.js depends on them to map WebRTC
+  MediaStreamTracks to the appropriate RemoteAudioTracks and RemoteVideoTracks.
+  So, this release will make sure that MediaStreamTrack IDs are included in
+  Unified Plan SDPs. Once browsers implement this updated JSEP specification, you
+  will need to upgrade at least to this version of twilio-video.js for your application
+  to continue working. We will reach out to you with a detailed advisory once we
+  have more information from browser vendors about when they are planning to
+  implement the updated JSEP specification. (JSDK-2385)
 
 2.0.0-beta11 (June 12, 2019)
 ============================

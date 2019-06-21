@@ -88,11 +88,6 @@ once a Participant unpublishes a MediaTrack of any kind (audio or video), it wil
 not be able to publish another MediaTrack of the same kind. DataTracks are not affected.
 We have escalated this bug to the Safari Team and are keeping track of related developments.
 
-### Network Quality API not working
-
-We are working to fix a bug in twilio-video.js where Safari clients do not
-receive Network Quality Score updates in a Group Room. (JSDK-2133)
-
 ### Experimental support
 
 twilio-video.js 1.2.1 introduces experimental support for Safari 11 and newer.
