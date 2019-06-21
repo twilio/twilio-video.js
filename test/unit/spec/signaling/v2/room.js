@@ -1171,7 +1171,7 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('Dominant Speaker', () => {
+  describe('Dominant Speaker Signaling', () => {
     describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
       let DominantSpeakerSignaling;
       let dominantSpeakerSignaling;
