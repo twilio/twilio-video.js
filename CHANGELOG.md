@@ -11,7 +11,7 @@ New Features
   Setting it to `false` will make sure that you will not subscribe to any RemoteTrack in a Group or
   Small Group Room. Setting it to `true`, or not setting it at all preserves the default behavior.
   This flag does not have any effect in a Peer-to-Peer Room. (JSDK-2395)
- 
+
   ```js
     const { connect } = require('twilio-video');
     const room = await connect(token, {
@@ -24,7 +24,8 @@ New Features
 
 Bug Fixes
 ---------
-
+- Fixed a bug where, Dominant Speaker and Network Quality events used to stop
+  emitting after VMS instance fails over (JSDK-2307)
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 - Fixed a bug where Chrome and Safari Participants were enabling simulcast for

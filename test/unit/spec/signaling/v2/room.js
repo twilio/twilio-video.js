@@ -9,6 +9,7 @@ const { flatMap } = require('../../../../../lib/util');
 
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
+const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
 
 describe('RoomV2', () => {
   // RoomV2
@@ -1184,6 +1185,118 @@ describe('RoomV2', () => {
     });
   });
 
+  // Dominant Speaker Signaling
+  // -------------------------
+  describe('Dominant Speaker', () => {
+    describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
+      let DominantSpeakerSignaling;
+      let dominantSpeakerSignaling;
+      let dominantSpeaker;
+      let test;
+      beforeEach(() => {
+        DominantSpeakerSignaling = sinon.spy(function(param) {
+          dominantSpeakerSignaling = new RealDominantSpeakerSignaling(param);
+          return dominantSpeakerSignaling;
+        });
+
+        test = makeTest({
+          DominantSpeakerSignaling
+        });
+
+        test.room.on('dominantSpeakerChanged', () => {
+          dominantSpeaker = test.room.dominantSpeakerSid;
+        });
+
+        test.transport.emit('message', {
+          // eslint-disable-next-line
+          media_signaling: {
+            // eslint-disable-next-line
+            active_speaker: {
+              transport: { type: 'data-channel', label: 'foo' }
+            }
+          }
+        });
+      });
+
+      describe('waits for a DataTrackReceiver with the expected label, and', () => {
+        let dataTrackReceiver;
+        let dataTrackTransport;
+
+        beforeEach(async () => {
+          dataTrackTransport = new EventEmitter();
+          dataTrackTransport.stop = sinon.spy();
+
+          dataTrackReceiver = makeTrackReceiver({ id: 'foo', kind: 'data' });
+          dataTrackReceiver.toDataTransport = sinon.spy(() => dataTrackTransport);
+
+          test.peerConnectionManager.emit('trackAdded', dataTrackReceiver);
+
+          await new Promise(resolve => setTimeout(resolve));
+        });
+
+        it('converts the DataTrackReciever to a DataTrackTransport,', () => {
+          assert(dataTrackReceiver.toDataTransport.calledOnce);
+        });
+
+        it('constructs a DominantSpeakerSignaling with the DataTrackTransport,', () => {
+          assert(DominantSpeakerSignaling.calledWith(dataTrackTransport));
+        });
+
+        it('starts updating when the track emits "message"', () => {
+          dataTrackTransport.emit('message', { type: 'active_speaker', participant: 'bob' });
+          assert.equal(dominantSpeaker, 'bob');
+          dataTrackTransport.emit('message', { type: 'active_speaker', participant: 'alice' });
+          assert.equal(dominantSpeaker, 'alice');
+        });
+
+        describe('when the underlying DataTrackReceiver is closed, and new one is created', () => {
+          let dataTrackTransport2;
+          let dataTrackReceiver2;
+          beforeEach(async () => {
+            // emit close on old channel
+            dataTrackReceiver.emit('close');
+            await new Promise(resolve => setTimeout(resolve));
+            dataTrackTransport2 = new EventEmitter();
+            dataTrackTransport2.stop = sinon.spy();
+
+            // send update message.
+            test.transport.emit('message', {
+              // eslint-disable-next-line
+              media_signaling: {
+                // eslint-disable-next-line
+                active_speaker: {
+                  transport: { type: 'data-channel', label: 'foo' }
+                }
+              }
+            });
+
+            // create another track receiver
+            dataTrackReceiver2 = makeTrackReceiver({ id: 'foo', kind: 'data' });
+            dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackReceiver2);
+            test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
+            await new Promise(resolve => setTimeout(resolve));
+          });
+
+          it('converts DataTrackReciever2 to a DataTrackTransport,', () => {
+            assert(dataTrackReceiver2.toDataTransport.calledOnce);
+          });
+
+          it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
+            assert(DominantSpeakerSignaling.calledWith(dataTrackReceiver2));
+          });
+
+          it('starts updating when new track emits "message"', () => {
+            dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'Charlie' });
+            assert.equal(dominantSpeaker, 'Charlie');
+
+            dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'alice' });
+            assert.equal(dominantSpeaker, 'alice');
+          });
+        });
+      });
+    });
+  });
+
   // Network Quality Signaling
   // -------------------------
 
@@ -1203,8 +1316,10 @@ describe('RoomV2', () => {
           return networkQualitySignaling;
         });
 
+        let instanceNumber = 0;
         NetworkQualityMonitor = sinon.spy(function() {
           networkQualityMonitor = new EventEmitter();
+          networkQualityMonitor.instanceNumber = ++instanceNumber;
           networkQualityMonitor.setNetworkConfiguration = sinon.spy;
           networkQualityMonitor.start = sinon.spy();
           networkQualityMonitor.stop = sinon.spy();
@@ -1335,45 +1450,60 @@ describe('RoomV2', () => {
           assert(participant.setNetworkQualityLevel.calledWith(0));
         });
 
-        describe('when the dataTrackReceiver receives close event', () => {
+        describe('when the underlying DataTrackReceiver is closed', () => {
           let dataTrackTransport2;
           let dataTrackReceiver2;
           beforeEach(async () => {
-            dataTrackTransport2 = new EventEmitter();
-            dataTrackTransport2.stop = sinon.spy();
-
             // emit close on old channel
             dataTrackReceiver.emit('close');
             await new Promise(resolve => setTimeout(resolve));
+          });
 
-            // send update message.
-            test.transport.emit('message', {
-              // eslint-disable-next-line
-              media_signaling: {
+          it('should tear down the networkQualityMonitor', () => {
+            assert(networkQualityMonitor.stop.calledOnce);
+            assert(networkQualityMonitor.instanceNumber === 1);
+          });
+
+          context('when a new DataTrackReceiver is created', () => {
+            beforeEach(async () => {
+              dataTrackTransport2 = new EventEmitter();
+              dataTrackTransport2.stop = sinon.spy();
+
+              // send update message.
+              test.transport.emit('message', {
                 // eslint-disable-next-line
-                network_quality: {
-                  transport: { type: 'data-channel', label: ':-)' }
+                media_signaling: {
+                  // eslint-disable-next-line
+                  network_quality: {
+                    transport: { type: 'data-channel', label: ':-)' }
+                  }
                 }
-              }
+              });
+
+              // create another track receiver
+              dataTrackReceiver2 = makeTrackReceiver({ id: ':-)', kind: 'data' });
+              dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackReceiver2);
+              test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
+              await new Promise(resolve => setTimeout(resolve));
             });
 
-            // create another track receiver
-            dataTrackReceiver2 = makeTrackReceiver({ id: ':-)', kind: 'data' });
-            dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackReceiver2);
-            test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
-            await new Promise(resolve => setTimeout(resolve));
-          });
+            it('converts DataTrackReciever2 to a DataTrackTransport,', () => {
+              assert(dataTrackReceiver2.toDataTransport.calledOnce);
+            });
 
-          it('converts DataTrackReciever to a DataTrackTransport,', () => {
-            assert(dataTrackReceiver2.toDataTransport.calledOnce);
-          });
+            it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
+              assert(NetworkQualitySignaling.calledWith(dataTrackReceiver2));
+            });
 
-          it('constructs new NetworkQualitySignaling with the DataTrackTransport,', () => {
-            assert(NetworkQualitySignaling.calledWith(dataTrackReceiver2));
-          });
+            it('constructs a NetworkQualityMonitor with the NetworkQualitySignaling,', () => {
+              assert(NetworkQualityMonitor.calledWith(test.peerConnectionManager, networkQualitySignaling));
+              assert(networkQualityMonitor.instanceNumber === 2);
+            });
 
-          it('calls .start() on the NetworkQualityMonitor, and', () => {
-            assert(networkQualityMonitor.start.calledOnce);
+            it('calls .start() on the another instance of NetworkQualityMonitor', () => {
+              assert(networkQualityMonitor.instanceNumber === 2);
+              assert(networkQualityMonitor.start.calledOnce);
+            });
           });
         });
 
