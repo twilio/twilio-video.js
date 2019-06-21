@@ -1,5 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.18.2 (in progress)
+=====================
+
+Bug Fixes
+---------
+- Fixed a bug where Participants in a Group or Small Group Room stopped receiving
+  Dominant Speaker and Network Quality updates when the media server recovered
+  from a failover. (JSDK-2307)
+
 1.18.1 (June 7, 2019)
 =====================
 
@@ -43,7 +52,7 @@ New Features
   room.on('participantConnected', setupNetworkQualityStats);
 
   function logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats) {
-    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);  
+    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);
     if (networkQualityStats) {
       // Verbosity is in the range [2 - 3].
       console.log('Network quality statistics used to compute the level:', networkQualityStats);
@@ -80,7 +89,7 @@ New Features
   with H264. You will now be able to play back VP8 VideoTracks from Chrome and Firefox
   Participants in a Group Room. For more details, refer to these guides:
   [Developing for Safari](https://www.twilio.com/docs/video/developing-safari-11)
-  and [Working with VP8 Simulcast](https://www.twilio.com/docs/video/tutorials/working-with-vp8-simulcast). (JSDK-2314) 
+  and [Working with VP8 Simulcast](https://www.twilio.com/docs/video/tutorials/working-with-vp8-simulcast). (JSDK-2314)
 
 1.16.0 (March 18, 2019)
 =======================
@@ -412,7 +421,7 @@ New Features
   event is emitted on the RemoteParticipant (and subsequently on the Room) whenever
   a Track is published. A "trackUnpublished" event is emitted on the RemoteParticipant
   whenever a Track is unpublished. (JSDK-1438)
-  
+
   ```js
   participant.on('trackPublished', publication => {
     console.log('A new Track was published!', publication);
@@ -1094,13 +1103,13 @@ New Features
   LocalTacks should be stopped. If `stop` is not specified, then the removed
   LocalTracks will be stopped. This mirrors the behavior of the LocalParticicipant's
   `removeTrack` method.
-  
+
   ```js
   // Stops the removed LocalTracks
   localParticipant.removeTracks(tracks);
   localParticipant.removeTracks(tracks, true);
   ```
-  
+
   ```js
   // Does not stop the removed LocalTracks
   localParticipant.removeTracks(tracks, false);
@@ -1120,9 +1129,9 @@ Bug Fixes
 1.0.0 (April 25, 2017)
 ======================
 
-1.0.0-beta7 has been promoted to 1.0.0! 
+1.0.0-beta7 has been promoted to 1.0.0!
 
-This library uses [Semantic Versioning](http://semver.org/): We've removed the 
+This library uses [Semantic Versioning](http://semver.org/): We've removed the
 pre-release identifier, and we're proud to share the first generally available
 release of twilio-video.js.
 
