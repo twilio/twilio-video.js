@@ -24,8 +24,9 @@ New Features
 
 Bug Fixes
 ---------
-- Fixed a bug where, Dominant Speaker and Network Quality events used to stop
-  emitting after VMS instance fails over (JSDK-2307)
+- Fixed a bug where Participants in a Group or Small Group Room stopped receiving
+  Dominant Speaker and Network Quality updates when the media server recovered
+  from a failover. (JSDK-2307)
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2303)
 - Fixed a bug where Chrome and Safari Participants were enabling simulcast for
