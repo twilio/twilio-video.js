@@ -36,16 +36,15 @@ Developer Notes
 ---------------
 
 - On October 12, 2018, the specification for the JavaScript Session Establishment
-  Protocol (JSEP) was [updated](https://github.com/rtcweb-wg/jsep/pull/850) to say
-  that MediaStreamTrack IDs will no longer be present in Unified Plan SDPs
-  (Media Session Descriptions). twilio-video.js depends on them to map WebRTC
-  MediaStreamTracks to the appropriate RemoteAudioTracks and RemoteVideoTracks.
-  So, this release will make sure that MediaStreamTrack IDs are included in
-  Unified Plan SDPs. Once browsers implement this updated JSEP specification, you
-  will need to upgrade at least to this version of twilio-video.js for your application
-  to continue working. We will reach out to you with a detailed advisory once we
-  have more information from browser vendors about when they are planning to
-  implement the updated JSEP specification. (JSDK-2385)
+  Protocol (JSEP) was [updated](https://github.com/rtcweb-wg/jsep/pull/850) to remove
+  MediaStreamTrack IDs from Unified Plan SDPs (Media Session Descriptions). twilio-video.js
+  depends on MediaStreamTrack IDs in SDPs to map WebRTC MediaStreamTracks to the
+  corresponding RemoteAudioTracks and RemoteVideoTracks. With this release of
+  twilio-video.js, we have added support for the updated JSEP specification. We highly
+  recommend that you upgrade to this version so your application continues to work
+  even after browsers support the updated JSEP specification. We will provide a detailed
+  advisory once we have more information from browser vendors about when they are planning
+  to support the updated JSEP specification. (JSDK-2385)
 
 2.0.0-beta11 (June 12, 2019)
 ============================
