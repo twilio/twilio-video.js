@@ -10,6 +10,8 @@ const { flatMap } = require('../../../../../lib/util');
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
 const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
+const RealTrackSwitchOffSignaling = require('../../../../../lib/signaling/v2/trackswitchoffsignaling');
+
 
 describe('RoomV2', () => {
   // RoomV2
@@ -1185,8 +1187,159 @@ describe('RoomV2', () => {
     });
   });
 
-  // Dominant Speaker Signaling
-  // -------------------------
+  describe('Track switch off Signaling', () => {
+    describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
+      let TrackSwitchOffSignaling;
+      let trackSwitchOffSignaling;
+      let test;
+      beforeEach(() => {
+        TrackSwitchOffSignaling = sinon.spy(function(param) {
+          trackSwitchOffSignaling = new RealTrackSwitchOffSignaling(param);
+          return trackSwitchOffSignaling;
+        });
+
+        test = makeTest({
+          TrackSwitchOffSignaling,
+          localTracks: [{ id: '1', kind: 'audio' }, { id: '2', kind: 'video' }]
+        });
+        test.room._update({
+          published: {
+            revision: 1,
+            tracks: [{ id: '1', sid: 'MT1' }, { id: '2', sid: 'MT2' }]
+          },
+          subscribed: {
+            revision: 1,
+            tracks: [{ id: '3', sid: 'MT3' }, { id: '4', sid: 'MT4' }]
+          },
+          participants: [
+            {
+              identity: 'alice',
+              sid: 'PA1',
+              state: 'connected',
+              tracks: [{ id: '3', kind: 'audio', sid: 'MT3' }]
+            },
+            {
+              identity: 'bob',
+              sid: 'PA2',
+              state: 'connected',
+              tracks: [{ id: '4', kind: 'video', sid: 'MT4' }]
+            }
+          ]
+        });
+
+        function trackPublished(publication) {
+          // publication.on('switchedon', () => {
+          //   console.log("publication was truned on:", publication.sid);
+          // });
+          // publication.on('switchedOff', () => {
+          //   console.log("publication was truned off:", publication.sid);
+          // });
+        }
+        function participantConnected(participant) {
+          participant.tracks.forEach(trackPublished);
+          participant.on('trackPublished', trackPublished);
+          // participant.on('trackUnpublished', trackUnpublished);
+        }
+        test.room.participants.forEach(participantConnected);
+        test.room.on('participantConnected', participantConnected);
+
+        test.transport.emit('message', {
+          // eslint-disable-next-line
+          media_signaling: {
+            // eslint-disable-next-line
+            track_switch_off: {
+              transport: { type: 'data-channel', label: 'foo' }
+            }
+          }
+        });
+      });
+
+      describe('waits for a DataTrackReceiver with the expected label, and', () => {
+        let dataTrackReceiver;
+        let dataTrackTransport;
+
+        beforeEach(async () => {
+          dataTrackTransport = new EventEmitter();
+          dataTrackTransport.stop = sinon.spy();
+
+          dataTrackReceiver = makeTrackReceiver({ id: 'foo', kind: 'data' });
+          dataTrackReceiver.toDataTransport = sinon.spy(() => dataTrackTransport);
+
+          test.peerConnectionManager.emit('trackAdded', dataTrackReceiver);
+
+          await new Promise(resolve => setTimeout(resolve));
+        });
+
+        it('converts the DataTrackReciever to a DataTrackTransport,', () => {
+          assert(dataTrackReceiver.toDataTransport.calledOnce);
+        });
+
+        it('constructs a TrackSwitchOffSignaling with the DataTrackTransport,', () => {
+          assert(TrackSwitchOffSignaling.calledWith(dataTrackTransport));
+        });
+
+        function getTrackSwitchoffPromise(room, trackSid) {
+          const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
+          const track = remoteTracks.find(track => track.sid === trackSid);
+          return new Promise(resolve => track.on('trackSwitchedOff', resolve));
+        }
+
+        it('fires trackSwitchOff event when such is received', async () => {
+          // start of with two tracks. [abc, bcd]
+          const trackSid = 'MT3';
+          const trackSwitchedoffPromise = getTrackSwitchoffPromise(test.room, trackSid);
+          dataTrackTransport.emit('message', { type: 'track_switch_off', off: [trackSid] });
+          await trackSwitchedoffPromise;
+        });
+
+        // describe('when the underlying DataTrackReceiver is closed, and new one is created', () => {
+        //   let dataTrackTransport2;
+        //   let dataTrackReceiver2;
+        //   beforeEach(async () => {
+        //     // emit close on old channel
+        //     dataTrackReceiver.emit('close');
+        //     await new Promise(resolve => setTimeout(resolve));
+        //     dataTrackTransport2 = new EventEmitter();
+        //     dataTrackTransport2.stop = sinon.spy();
+
+        //     // send update message.
+        //     test.transport.emit('message', {
+        //       // eslint-disable-next-line
+        //       media_signaling: {
+        //         // eslint-disable-next-line
+        //         active_speaker: {
+        //           transport: { type: 'data-channel', label: 'foo' }
+        //         }
+        //       }
+        //     });
+
+        //     // create another track receiver
+        //     dataTrackReceiver2 = makeTrackReceiver({ id: 'foo', kind: 'data' });
+        //     dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackReceiver2);
+        //     test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
+        //     await new Promise(resolve => setTimeout(resolve));
+        //   });
+
+        //   it('converts DataTrackReciever2 to a DataTrackTransport,', () => {
+        //     assert(dataTrackReceiver2.toDataTransport.calledOnce);
+        //   });
+
+        //   it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
+        //     assert(DominantSpeakerSignaling.calledWith(dataTrackReceiver2));
+        //   });
+
+        //   it('starts updating when new track emits "message"', () => {
+        //     dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'Charlie' });
+        //     assert.equal(dominantSpeaker, 'Charlie');
+
+        //     dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'alice' });
+        //     assert.equal(dominantSpeaker, 'alice');
+        //   });
+        // });
+      });
+    });
+  });
+
   describe('Dominant Speaker', () => {
     describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
       let DominantSpeakerSignaling;
@@ -1296,9 +1449,6 @@ describe('RoomV2', () => {
       });
     });
   });
-
-  // Network Quality Signaling
-  // -------------------------
 
   describe('Network Quality Signaling', () => {
     describe('when update is called with an RSP message that negotiates Network Quality Signaling over RTCDataChannel', () => {
