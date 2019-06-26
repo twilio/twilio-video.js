@@ -855,8 +855,9 @@ describe('unifiedPlanAddOrRewriteNewTrackIds', () => {
           audio: ['foo', 'bar'],
           video: ['baz', 'zee']
         }, null, null, withAppData);
+        const activeMidsToTrackIds = new Map([['mid_baz', 'baz']]);
         const newTrackIdsByKind = new Map([['audio', ['xxx', 'yyy']], ['video', ['zzz']]]);
-        const newSdp = unifiedPlanAddOrRewriteNewTrackIds(sdp, newTrackIdsByKind);
+        const newSdp = unifiedPlanAddOrRewriteNewTrackIds(sdp, activeMidsToTrackIds, newTrackIdsByKind);
         const msAttrsAndKinds = getMediaSections(newSdp).map(section => [
           section.match(/^a=msid:(.+)/m)[1],
           section.match(/^m=(audio|video)/)[1]
