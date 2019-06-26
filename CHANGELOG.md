@@ -5,9 +5,27 @@ For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master
 
 Bug Fixes
 ---------
+
+- Fixed a bug where, in a Peer-to-Peer Room, a Firefox Participant's AudioTrack was
+  silent if it was the first to join the Room. (JSDK-2410)
 - Fixed a bug where Participants in a Group or Small Group Room stopped receiving
   Dominant Speaker and Network Quality updates when the media server recovered
   from a failover. (JSDK-2307)
+
+Developer Notes
+---------------
+
+- On October 12, 2018, the specification for the JavaScript Session Establishment
+  Protocol (JSEP) was [updated](https://github.com/rtcweb-wg/jsep/pull/850) to remove
+  MediaStreamTrack IDs from Unified Plan SDPs (Media Session Descriptions). twilio-video.js
+  depends on MediaStreamTrack IDs to map WebRTC MediaStreamTracks to the corresponding
+  RemoteAudioTracks and RemoteVideoTracks. With this release of twilio-video.js, we have
+  added support for the updated JSEP specification for Firefox and Safari (twilio-video.js
+  uses Plan B SDPs on Chrome). We highly recommend that you upgrade to this version so your
+  application continues to work on Firefox and Safari even after they support the updated
+  JSEP specification. We will provide a detailed advisory once we have more information
+  about when they are planning to support the updated JSEP specification. (JSDK-2383)
+
 
 1.18.1 (June 7, 2019)
 =====================
