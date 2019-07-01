@@ -343,9 +343,8 @@ describe('LocalParticipant', function() {
 
       // TODO(mmalavalli): Until we find out why Travis is failing tests due
       // to not being able to create enough RTCPeerConnections, we will enable
-      // testing for only 2 cases: specifying no priority and specifying "high"
-      // priority.
-      if (priority === 'low' || priority === 'medium') {
+      // testing for only when priority is set to "high".
+      if (priority !== 'high') {
         return;
       }
 
