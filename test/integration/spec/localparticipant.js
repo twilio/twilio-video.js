@@ -245,8 +245,8 @@ describe('LocalParticipant', function() {
         ]);
 
         trackPublications = await Promise.all([
-          room.localParticipant.publishTrack(tracks[0]),
-          anotherRoom.localParticipant.publishTrack(tracks[0])
+          room.localParticipant.publishTrack(tracks[0], { priority: 'low' }),
+          anotherRoom.localParticipant.publishTrack(tracks[0], { priority: 'high' })
         ]);
       });
 
@@ -272,6 +272,15 @@ describe('LocalParticipant', function() {
 
       it('should assign different SIDs to the two LocalTrackPublications', () => {
         assert.notEqual(trackPublications[0].trackSid, trackPublications[1].trackSid);
+      });
+
+      it('should set the appropriate priority values to the two LocalTrackPublications', () => {
+        const localTrackPublication1 = [...room.localParticipant.tracks.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        const localTrackPublication2 = [...anotherRoom.localParticipant.tracks.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        assert.equal(localTrackPublication1.priority, 'low');
+        assert.equal(localTrackPublication2.priority, 'high');
       });
 
       after(() => {
@@ -318,10 +327,14 @@ describe('LocalParticipant', function() {
         x => `with${x ? '' : 'out'} a name for the LocalTrack`
       ],
       [
+        [undefined, 'low', 'medium', 'high'],
+        x => `with${x ? ` priority "${x}"` : 'out specifying a priority'}`
+      ],
+      [
         ['never', 'previously'],
         x => `that has ${x} been published`
       ]
-    ], ([isEnabled, kind, withName, when]) => {
+    ], ([isEnabled, kind, withName, priority, when]) => {
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
       if (isFirefox && kind === 'data' && when === 'previously') {
@@ -409,7 +422,7 @@ describe('LocalParticipant', function() {
         }
 
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
-          thisParticipant.publishTrack(thisTrack),
+          thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
           ...['trackPublished', 'trackSubscribed'].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
               const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
@@ -441,10 +454,11 @@ describe('LocalParticipant', function() {
         }[kind]));
       });
 
-      ['isTrackEnabled', 'trackName', 'trackSid'].forEach(prop => {
-        it(`should set the RemoteTrackPublication's .${prop} to the LocalTrackPublication's .${prop}`, () => {
+      ['isTrackEnabled', ['publishPriority', 'priority'], 'trackName', 'trackSid'].forEach(propOrPropPair => {
+        const [remoteProp, localProp] = Array.isArray(propOrPropPair) ? propOrPropPair : [propOrPropPair, propOrPropPair];
+        it(`should set the RemoteTrackPublication's .${remoteProp} to the LocalTrackPublication's .${localProp}`, () => {
           const thoseTrackPublications = thoseTracksMap.trackPublished;
-          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[prop], thisLocalTrackPublication[prop]));
+          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[remoteProp], thisLocalTrackPublication[localProp]));
         });
       });
 
