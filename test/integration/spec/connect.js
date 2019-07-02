@@ -146,6 +146,35 @@ describe('connect', function() {
   });
 
   describe('signaling region', async () => {
+    let sid;
+    let token;
+    beforeEach(async () => {
+      const identity = randomName();
+      token = getToken(identity);
+      sid = await createRoom(randomName(), defaults.topology);
+    });
+
+    // few examples of invalid regions.
+    ['invalid', '34', '$abc', 'abc!'].forEach((region) => {
+      it('should return a CancelablePromise that rejects with a SignalingConnectionError when region is: ' + region, async () => {
+        const connectOptions = Object.assign({
+          name: sid,
+          tracks: [],
+          region: region
+        }, defaults );
+        const cancelablePromise = connect(token, connectOptions);
+        assert(cancelablePromise instanceof CancelablePromise);
+
+        let error = null;
+        try {
+          await cancelablePromise;
+        } catch (error_) {
+          error = error_;
+        }
+        assert(error instanceof SignalingConnectionError);
+      });
+    });
+
     const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
       'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'
     ]);
@@ -162,19 +191,11 @@ describe('connect', function() {
       }[region] || `with "${region}" as the`} signaling region`;
 
       context(scenario, () => {
-        let cancelablePromise;
-        let sid;
-        let token;
-
-        beforeEach(async () => {
-          const identity = randomName();
-          token = getToken(identity);
-          sid = await createRoom(randomName(), defaults.topology);
-          cancelablePromise = connect(token, Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] }));
-          assert(cancelablePromise instanceof CancelablePromise);
-        });
 
         it(`should return a CancelablePromise that ${region === 'invalid' ? 'rejects with a SignalingConnectionError' : 'resolves with a Room'}`, async () => {
+          const cancelablePromise = connect(token, Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] }));
+          assert(cancelablePromise instanceof CancelablePromise);
+
           let error = null;
           let room = null;
           try {
