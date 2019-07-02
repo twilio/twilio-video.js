@@ -9,6 +9,7 @@ const DataTrackSender = require('../../../lib/data/sender');
 const LocalParticipant = require('../../../lib/localparticipant');
 const LocalTrackPublicationSignaling = require('../../../lib/signaling/localtrackpublication');
 const MediaTrackSender = require('../../../lib/media/track/sender');
+const { trackPriority: { HIGH, LOW, STANDARD } } = require('../../../lib/util/constants');
 
 const log = require('../../lib/fakelog');
 const { FakeMediaStreamTrack } = require('../../lib/fakemediastream');
@@ -310,7 +311,7 @@ describe('LocalParticipant', () => {
         x => `of kind ${x}`
       ],
       [
-        [undefined, 'low', 'medium', 'high'],
+        [undefined, HIGH, LOW, STANDARD],
         x => `with priority ${x ? `"${x}"` : 'not specified'}`
       ]
     ], ([trackType, kind, priority]) => {
@@ -338,7 +339,7 @@ describe('LocalParticipant', () => {
             ? () => test.participant.publishTrack(track, { priority })
             : () => test.participant.publishTrack(track),
           MediaStreamTrack: priority
-            ? () => test.participant.publishTrack(track, options, { priority })
+            ? () => test.participant.publishTrack(track, Object.assign({ priority }, options))
             : () => test.participant.publishTrack(track, options)
         }[trackType]();
       }

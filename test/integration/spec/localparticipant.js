@@ -21,6 +21,7 @@ const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatat
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { flatMap } = require('../../../lib/util');
+const { trackPriority: { HIGH, LOW, STANDARD } } = require('../../../lib/util/constants');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
@@ -245,8 +246,8 @@ describe('LocalParticipant', function() {
         ]);
 
         trackPublications = await Promise.all([
-          room.localParticipant.publishTrack(tracks[0], { priority: 'low' }),
-          anotherRoom.localParticipant.publishTrack(tracks[0], { priority: 'high' })
+          room.localParticipant.publishTrack(tracks[0], { priority: LOW }),
+          anotherRoom.localParticipant.publishTrack(tracks[0], { priority: HIGH })
         ]);
       });
 
@@ -279,8 +280,8 @@ describe('LocalParticipant', function() {
           localTrackPublication => localTrackPublication.track === tracks[0]);
         const localTrackPublication2 = [...anotherRoom.localParticipant.tracks.values()].find(
           localTrackPublication => localTrackPublication.track === tracks[0]);
-        assert.equal(localTrackPublication1.priority, 'low');
-        assert.equal(localTrackPublication2.priority, 'high');
+        assert.equal(localTrackPublication1.priority, LOW);
+        assert.equal(localTrackPublication2.priority, HIGH);
       });
 
       after(() => {
@@ -327,7 +328,7 @@ describe('LocalParticipant', function() {
         x => `with${x ? '' : 'out'} a name for the LocalTrack`
       ],
       [
-        [undefined, 'low', 'medium', 'high'],
+        [undefined, HIGH, LOW, STANDARD],
         x => `with${x ? ` priority "${x}"` : 'out specifying a priority'}`
       ],
       [
@@ -344,7 +345,7 @@ describe('LocalParticipant', function() {
       // TODO(mmalavalli): Until we find out why Travis is failing tests due
       // to not being able to create enough RTCPeerConnections, we will enable
       // testing for only when priority is set to "high".
-      if (priority !== 'high') {
+      if (priority !== HIGH) {
         return;
       }
 
