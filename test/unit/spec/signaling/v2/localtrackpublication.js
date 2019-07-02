@@ -17,13 +17,15 @@ describe('LocalTrackPublicationV2', () => {
     let mediaStreamTrack;
     let mediaTrackSender;
     let name;
+    let priority;
 
     before(() => {
       mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       mediaStreamTrack.enabled = makeEnabled();
       mediaTrackSender = makeTrackSender(mediaStreamTrack);
       name = makeUUID();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, name);
+      priority = makePriority();
+      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, name, priority);
     });
 
     it('should return a LocalTrackPublicationV2', () => {
@@ -42,6 +44,10 @@ describe('LocalTrackPublicationV2', () => {
       assert.equal(localTrackPublicationV2.name, name);
     });
 
+    it('should set the .priority property', () => {
+      assert.equal(localTrackPublicationV2.priority, priority);
+    });
+
     [
       ['kind', 'kind'],
       ['isEnabled', 'enabled']
@@ -54,12 +60,14 @@ describe('LocalTrackPublicationV2', () => {
     describe('#getState', () => {
       let localTrackPublicationV2;
       let mediaStreamTrack;
+      let priority;
       let state;
 
       before(() => {
         mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         mediaStreamTrack.enabled = makeEnabled();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID());
+        priority = makePriority();
+        localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), priority);
         state = localTrackPublicationV2.getState();
       });
 
@@ -68,7 +76,8 @@ describe('LocalTrackPublicationV2', () => {
           ['id', 'id'],
           ['kind', 'kind'],
           ['enabled', 'isEnabled'],
-          ['name', 'name']
+          ['name', 'name'],
+          ['priority', 'priority']
         ].forEach(([stateProp, ltProp]) => {
           it(`.${stateProp} is equal to the LocalTrackPublicationV2's ${ltProp}`, () => {
             assert.equal(state[stateProp], localTrackPublicationV2[ltProp]);
@@ -88,7 +97,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'ready', sid: makeSid() };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()));
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority());
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -121,7 +130,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'failed', error: { code: 1, message: 'foo' } };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()));
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority());
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -159,7 +168,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       sid = makeSid();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID());
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority());
       updated = false;
     });
 
@@ -248,7 +257,7 @@ describe('LocalTrackPublicationV2', () => {
       describe(`called with \`${enabled}\``, () => {
         it(`sets the cloned MediaTrackSender's MediaStreamTrack's .enabled state to \`${enabled}\``, () => {
           const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
-          const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID());
+          const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority());
           const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
           mediaStreamTrack.enabled = !enabled;
           localTrackPublicationV2.enable(enabled);
@@ -267,7 +276,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       error = new Error('Track publication failed');
-      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack));
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority());
       updated = false;
     });
 
@@ -351,7 +360,7 @@ describe('LocalTrackPublicationV2', () => {
   describe('#stop', () => {
     it('calls stop on the cloned MediaTrackSender\'s MediaStreamTrack', () => {
       const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
-      const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID());
+      const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority());
       const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
       mediaStreamTrack.stop = sinon.spy();
       localTrackPublicationV2.stop();
@@ -366,6 +375,10 @@ function makeEnabled() {
 
 function makeKind() {
   return ['audio', 'video'][Number(Math.random() > 0.5)];
+}
+
+function makePriority() {
+  return makeUUID();
 }
 
 function makeSid() {

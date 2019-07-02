@@ -449,8 +449,10 @@ describe('connect', function() {
               assert(participant);
               const trackSids = [...participant.tracks.values()].map(publication => publication.trackSid).sort();
               const localTrackPublicationSids = [...localParticipant.tracks.values()].map(publication => publication.trackSid).sort();
+              const publishPriorities = [...participant.tracks.values()].map(publication => publication.publishPriority);
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
+              publishPriorities.forEach(priority => assert.equal(priority, 'medium'));
             });
           });
         });

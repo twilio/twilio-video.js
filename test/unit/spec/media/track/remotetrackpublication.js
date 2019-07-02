@@ -26,6 +26,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
         ['isSubscribed', false],
         ['isTrackEnabled', signaling.isEnabled],
         ['kind', kind],
+        ['publishPriority', signaling.priority],
         ['track', null],
         ['trackName', signaling.name],
         ['trackSid', signaling.sid]
@@ -217,6 +218,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
           'isSubscribed',
           'isTrackEnabled',
           'kind',
+          'publishPriority',
           'track'
         ]);
       });
@@ -234,6 +236,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
           isSubscribed: publication.isSubscribed,
           isTrackEnabled: publication.isTrackEnabled,
           kind: publication.kind,
+          publishPriority: publication.publishPriority,
           track: null,
           trackName: publication.trackName,
           trackSid: publication.trackSid
@@ -249,6 +252,7 @@ function makeSignaling(isEnabled, kind, sid) {
   signaling.isEnabled = isEnabled;
   signaling.kind = kind;
   signaling.name = randomName();
+  signaling.priority = randomName();
   signaling.sid = sid;
 
   signaling.update = options => {

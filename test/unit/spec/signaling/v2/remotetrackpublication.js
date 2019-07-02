@@ -6,71 +6,31 @@ const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remote
 const { makeUUID } = require('../../../../../lib/util');
 
 describe('RemoteTrackPublicationV2', () => {
-  // RemoteTrackPublicationV2
-  // -------
-
   describe('constructor', () => {
-    it('sets .name', () => {
-      const name = makeUUID();
-      assert.equal(name, (new RemoteTrackPublicationV2({
-        enabled: makeEnabled(),
-        kind: makeKind(),
-        name: name,
-        sid: makeSid()
-      })).name);
-    });
-
-    it('sets .sid', () => {
-      const sid = makeSid();
-      assert.equal(sid, (new RemoteTrackPublicationV2({
-        enabled: makeEnabled(),
-        kind: makeKind(),
-        name: makeUUID(),
-        sid: sid
-      })).sid);
-    });
-
-    context('when trackState.enabled is true', () => {
-      it('sets .isEnabled to true', () => {
-        assert((new RemoteTrackPublicationV2({
-          enabled: true,
+    ['kind', 'name', 'priority', 'sid'].forEach(prop => {
+      it(`sets .${prop}`, () => {
+        const trackState = {
+          enabled: makeEnabled(),
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
-        })).isEnabled);
+        };
+        assert.equal((new RemoteTrackPublicationV2(trackState))[prop], trackState[prop]);
       });
     });
 
-    context('when trackState.enabled is false', () => {
-      it('sets .isEnabled to false', () => {
-        assert(!(new RemoteTrackPublicationV2({
-          enabled: false,
-          kind: makeKind(),
-          name: makeUUID(),
-          sid: makeSid()
-        })).isEnabled);
-      });
-    });
-
-    context('when trackState.kind is "audio"', () => {
-      it('sets .kind to "audio"', () => {
-        assert.equal('audio', (new RemoteTrackPublicationV2({
-          enabled: makeEnabled(),
-          kind: 'audio',
-          name: makeUUID(),
-          sid: makeSid()
-        })).kind);
-      });
-    });
-
-    context('when trackState.kind is "video"', () => {
-      it('sets .kind to "video"', () => {
-        assert.equal('video', (new RemoteTrackPublicationV2({
-          enabled: makeEnabled(),
-          kind: 'video',
-          name: makeUUID(),
-          sid: makeSid()
-        })).kind);
+    [true, false].forEach(enabled => {
+      context(`when trackState.enabled is ${enabled}`, () => {
+        it(`sets .isEnabled to ${enabled}`, () => {
+          assert.equal((new RemoteTrackPublicationV2({
+            enabled,
+            kind: makeKind(),
+            name: makeUUID(),
+            priority: makeUUID(),
+            sid: makeSid()
+          })).isEnabled, enabled);
+        });
       });
     });
   });
@@ -83,6 +43,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -95,6 +56,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -108,6 +70,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -125,6 +88,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -137,6 +101,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -150,6 +115,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -169,6 +135,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -181,6 +148,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -194,6 +162,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -211,6 +180,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -223,6 +193,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -236,6 +207,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           };
           const track = new RemoteTrackPublicationV2(trackState);
@@ -259,6 +231,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: true,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         assert.equal(track, track.disable());
@@ -269,6 +242,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: true,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         track.disable();
@@ -280,6 +254,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: true,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         let isEnabled;
@@ -295,6 +270,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: false,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         assert.equal(track, track.disable());
@@ -305,6 +281,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: false,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         track.disable();
@@ -316,6 +293,7 @@ describe('RemoteTrackPublicationV2', () => {
           enabled: false,
           kind: makeKind(),
           name: makeUUID(),
+          priority: makeUUID(),
           sid: makeSid()
         });
         let updated;
@@ -334,6 +312,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(false));
@@ -344,6 +323,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable(false);
@@ -355,6 +335,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let isEnabled;
@@ -370,6 +351,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(false));
@@ -380,6 +362,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable(false);
@@ -391,6 +374,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let updated;
@@ -408,6 +392,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(true));
@@ -418,6 +403,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable(true);
@@ -429,6 +415,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let updated;
@@ -444,6 +431,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable(true));
@@ -454,6 +442,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable(true);
@@ -465,6 +454,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let isEnabled;
@@ -482,6 +472,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable());
@@ -492,6 +483,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable();
@@ -503,6 +495,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: true,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let updated;
@@ -518,6 +511,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           assert.equal(track, track.enable());
@@ -528,6 +522,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           track.enable();
@@ -539,6 +534,7 @@ describe('RemoteTrackPublicationV2', () => {
             enabled: false,
             kind: makeKind(),
             name: makeUUID(),
+            priority: makeUUID(),
             sid: makeSid()
           });
           let isEnabled;
@@ -556,6 +552,7 @@ describe('RemoteTrackPublicationV2', () => {
         enabled: makeEnabled(),
         kind: makeKind(),
         name: makeUUID(),
+        priority: makeUUID(),
         sid: makeSid()
       });
       const mediaTrackReceiver = {};
@@ -567,6 +564,7 @@ describe('RemoteTrackPublicationV2', () => {
         enabled: makeEnabled(),
         kind: makeKind(),
         name: makeUUID(),
+        priority: makeUUID(),
         sid: makeSid()
       });
       const mediaTrackReceiver = {};
