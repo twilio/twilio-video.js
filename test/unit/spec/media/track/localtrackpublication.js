@@ -23,29 +23,37 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     LocalVideoTrackPublication: 'video',
     LocalDataTrackPublication: 'data'
   }[description];
-  const mediaStreamTrack = new FakeMediaStreamTrack(kind);
-  const localTrack = kind === 'data'
-    ? new LocalTrack({ DataTrackSender })
-    : new LocalTrack(mediaStreamTrack);
+
+  let localTrack;
+  let mediaStreamTrack;
 
   describe(description, () => {
+    beforeEach(() => {
+      mediaStreamTrack = new FakeMediaStreamTrack(kind);
+      localTrack = kind === 'data'
+        ? new LocalTrack({ DataTrackSender })
+        : new LocalTrack(mediaStreamTrack);
+    });
+
     describe('constructor', () => {
       context('when called without the "options" argument', () => {
         it(`should return an instance of ${description}`, () => {
-          assert(new LocalTrackPublication('foo', localTrack, () => {}) instanceof LocalTrackPublication);
+          const localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
+          assert(localTrackPublication instanceof LocalTrackPublication);
         });
       });
 
       [
-        ['isTrackEnabled', kind === 'data' ? true : localTrack.isEnabled],
-        ['kind', kind],
-        ['track', localTrack],
-        ['trackName', localTrack.name],
-        ['trackSid', 'foo']
-      ].forEach(([prop, expectedValue]) => {
+        ['isTrackEnabled', kind === 'data' ? () => true : () => localTrack.isEnabled],
+        ['kind', () => kind],
+        ['priority', () => 'bar'],
+        ['track', () => localTrack],
+        ['trackName', () => localTrack.name],
+        ['trackSid', () => 'foo']
+      ].forEach(([prop, getExpectedValue]) => {
         it(`should populate the .${prop} property`, () => {
-          const localTrackPublication = new LocalTrackPublication('foo', localTrack, () => {});
-          assert.equal(localTrackPublication[prop], expectedValue);
+          const localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
+          assert.equal(localTrackPublication[prop], getExpectedValue());
         });
       });
     });
@@ -55,9 +63,9 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let ret;
       let unpublish;
 
-      before(() => {
+      beforeEach(() => {
         unpublish = sinon.spy();
-        localTrackPublication = new LocalTrackPublication('foo', localTrack, unpublish);
+        localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, unpublish);
         ret = localTrackPublication.unpublish();
       });
 
@@ -107,8 +115,8 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     describe('Object.keys', () => {
       let publication;
 
-      before(() => {
-        publication = new LocalTrackPublication('foo', localTrack, () => {});
+      beforeEach(() => {
+        publication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
       });
 
       it('only returns public properties', () => {
@@ -117,6 +125,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           'trackSid',
           'isTrackEnabled',
           'kind',
+          'priority',
           'track'
         ]);
       });
@@ -125,14 +134,15 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     describe('#toJSON', () => {
       let publication;
 
-      before(() => {
-        publication = new LocalTrackPublication('foo', localTrack, () => {});
+      beforeEach(() => {
+        publication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
       });
 
       it('only returns public properties', () => {
         assert.deepEqual(publication.toJSON(), {
           isTrackEnabled: publication.isTrackEnabled,
           kind: publication.kind,
+          priority: publication.priority,
           track: publication.track.toJSON(),
           trackName: publication.trackName,
           trackSid: publication.trackSid
@@ -141,3 +151,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     });
   });
 });
+
+function makeLocalTrackPublicationSignaling(sid, priority) {
+  return { sid, priority };
+}
