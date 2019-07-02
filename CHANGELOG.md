@@ -1,13 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.18.2 (in progress)
+1.18.2 (July 1, 2019)
 =====================
 
 Bug Fixes
 ---------
 
-- Fixed a bug where, in a Peer-to-Peer Room, a Firefox Participant's AudioTrack was
-  silent if it was the first to join the Room. (JSDK-2410)
+- Fixed a bug where in a Peer-to-Peer Room, a Firefox Participant's AudioTrack was
+  not audible to a Chrome or Safari Participant if the Firefox Participant was the first
+  to join the Room. (JSDK-2410)
 - Fixed a bug where Participants in a Group or Small Group Room stopped receiving
   Dominant Speaker and Network Quality updates when the media server recovered
   from a failover. (JSDK-2307)
