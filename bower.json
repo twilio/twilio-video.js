@@ -1,6 +1,6 @@
 {
   "name": "twilio-video",
-  "version": "1.18.2",
+  "version": "1.18.3-dev",
   "description": "Twilio Video JavaScript library",
   "license": "BSD",
   "authors": [
