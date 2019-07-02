@@ -1188,7 +1188,7 @@ describe('RoomV2', () => {
     });
   });
 
-  describe.only('Track switch off Signaling', () => {
+  describe('Track switch off Signaling', () => {
     describe('when update is called with an RSP message that determines Track Switch On/Off over RTCDataChannel', () => {
       let TrackSwitchOffSignaling;
       let trackSwitchOffSignaling;
@@ -1272,21 +1272,25 @@ describe('RoomV2', () => {
           assert(TrackSwitchOffSignaling.calledWith(dataTrackTransport));
         });
 
-        function getTrackSwitchPromise(room, trackSid, on) {
+        function getTrackSwitchOffPromise(room, trackSid, off) {
           const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
           const track = remoteTracks.find(track => track.sid === trackSid);
           return new Promise(resolve => {
-            track.on(on ? 'trackswitchedon' : 'trackswitchedoff', resolve);
+            track.on('trackSwitchedOff', (switchedOff) => {
+              if (switchedOff === off) {
+                resolve();
+              }
+            });
           });
         }
 
         it('fires trackSwitchOff / On events when such mesage is received on data channel', async () => {
           const trackSid = 'MT3';
-          const trackSwitchOffPromise = getTrackSwitchPromise(test.room, trackSid, false /* off */);
+          const trackSwitchOffPromise = getTrackSwitchOffPromise(test.room, trackSid, true /* off */);
           dataTrackTransport.emit('message', { type: 'track_switch_off', off: [trackSid] });
           await trackSwitchOffPromise;
 
-          const trackSwitchOnPromise = getTrackSwitchPromise(test.room, trackSid, true /* on */);
+          const trackSwitchOnPromise = getTrackSwitchOffPromise(test.room, trackSid, false /* on */);
           dataTrackTransport.emit('message', { type: 'track_switch_off', on: [trackSid] });
           await trackSwitchOnPromise;
         });
@@ -1885,7 +1889,6 @@ function makeRemoteTrack(options) {
 
 function makeTrack(options) {
   const track = new EventEmitter();
-  track.madeby = 'makarand';
   options = options || {};
   track.id = options.id || makeId();
   track.sid = options.sid || null;
