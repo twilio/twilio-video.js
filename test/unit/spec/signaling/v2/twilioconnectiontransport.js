@@ -12,8 +12,40 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 const { combinations } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
-  combinations([[true, false], [true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker, automaticSubscription]) => {
-    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'} and .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'}`, () => {
+  combinations([
+    [true, false],
+    [true, false],
+    [true, false],
+    [
+      [{}, {}],
+      [{ video: {} }, {}],
+      [{ video: { mode: 'foo' } }, { mode: 'foo' }],
+      // eslint-disable-next-line
+      [{ video: { maxSubscriptionBitrate: 2048 } }, { video: { max_subscription_bandwidth: 2 } }],
+      // eslint-disable-next-line
+      [{ video: { maxTracks: 2 } }, { video: { max_tracks: 2 } }],
+      // eslint-disable-next-line
+      [
+        {
+          video: {
+            maxSubscriptionBitrate: 4096,
+            maxTracks: 5,
+            mode: 'bar'
+          }
+        },
+        {
+          mode: 'bar',
+          video: {
+            // eslint-disable-next-line
+            max_subscription_bandwidth: 4,
+            // eslint-disable-next-line
+            max_tracks: 5
+          }
+        }
+      ]
+    ]
+  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, bandwidthProfile, expectedRspPayload]) => {
+    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'}, .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'} and .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
       beforeEach(() => {
@@ -22,6 +54,7 @@ describe('TwilioConnectionTransport', () => {
             { foo: 'bar' }
           ],
           automaticSubscription,
+          bandwidthProfile,
           networkQuality,
           dominantSpeaker
         });
@@ -32,7 +65,7 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload and the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload, the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule and the appropriate "bandwidth_profile" payload`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
@@ -57,6 +90,7 @@ describe('TwilioConnectionTransport', () => {
           }],
           revision: 1
         });
+        assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
 
         assert.equal(message.participant, test.localParticipantState);
         assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
@@ -1539,6 +1573,7 @@ class FakeTwilioConnection extends EventEmitter {
 
 function makeTest(options) {
   options = options || {};
+  options.bandwidthProfile = options.bandwidthProfile || {};
   options.reconnectBackOffJitter = options.reconnectBackOffJitter || 0;
   options.reconnectBackOffMs = options.reconnectBackOffMs || 0;
   options.name = 'name' in options ? options.name : makeName();
