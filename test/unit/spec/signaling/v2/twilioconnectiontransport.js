@@ -12,8 +12,13 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 const { combinations } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
-  combinations([[true, false], [true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker, automaticSubscription]) => {
-    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'} and .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'}`, () => {
+  combinations([[true, false], [true, false], [true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackSwitchOff]) => {
+    describe(`constructor, called with
+        .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
+        .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
+        .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'} and
+        .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'},
+        `, () => {
       let test;
 
       beforeEach(() => {
@@ -23,7 +28,8 @@ describe('TwilioConnectionTransport', () => {
           ],
           automaticSubscription,
           networkQuality,
-          dominantSpeaker
+          dominantSpeaker,
+          trackSwitchOff
         });
         test.open();
       });
@@ -48,6 +54,12 @@ describe('TwilioConnectionTransport', () => {
           assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
         } else {
           assert(!('active_speaker' in message.media_signaling));
+        }
+
+        if (trackSwitchOff) {
+          assert.deepEqual(message.media_signaling.track_switch_off.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('track_switch_off' in message.media_signaling));
         }
 
         assert.deepEqual(message.subscribe, {
