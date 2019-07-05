@@ -24,8 +24,8 @@ const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, tracksPublished } = require('../../lib/util');
-
+const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, trackSwitchedOff, tracksPublished } = require('../../lib/util');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 describe('connect', function() {
@@ -117,7 +117,6 @@ describe('connect', function() {
         let thoseRooms;
 
         before(async () => {
-
           [sid, thisRoom, thoseRooms] = await setup({
             testOptions: Object.assign({ tracks: [] }, automaticSubscriptionOptions),
             otherOptions: null,
@@ -511,7 +510,6 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-
         [sid, thisRoom, thoseRooms, peerConnections] = await setup({
           testOptions: encodingParameters,
           otherOptions: { tracks: [] },
@@ -907,7 +905,6 @@ describe('connect', function() {
         let thoseRooms;
 
         before(async () => {
-          // { name, testOptions, otherOptions, nTracks, alone, roomOptions }
           [sid, thisRoom, thoseRooms, peerConnections] = await setup({
             testOptions: { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] },
             roomOptions: { VideoCodecs: [roomCodec] }
@@ -960,13 +957,43 @@ describe('connect', function() {
     });
   });
 
-  describe('track priorities', () => {
-    it('when maxTrack is specified, only highest priority track should be on', () => {
-      // Alice creates a room with maxTracks = 1. Join with no tracks.
-      // Bob joins the room with 1 video track priority Low
-      // Charlee joins the room with 1 video track priority = High
+  if (defaults.topology !== 'peer-to-peer') {
+    describe('track priorities', () => {
+        it('when maxTracks specified low priority track gets switched off when a high priority trak joins', async () => {
+          let thisRoom;
+          let thoseRooms;
+          [, thisRoom, thoseRooms] = await setup({
+            testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
+
+          const bob = thoseRooms[0].localParticipant;
+          const charlie = thoseRooms[1].localParticipant;
+
+          // bob published a track with lo pri.
+          const loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+          await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
+          const remoteBob = thisRoom.participants.get(bob.sid);
+          await tracksSubscribed(remoteBob, 1);
+          const loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
+          const loPriTrackSwitchedOffPromise = trackSwitchedOff(loPriTrackPub.track);
+
+          // charlie publishes a track with hi pri
+          const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+          await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
+          const remoteCharlie = thisRoom.participants.get(charlie.sid);
+          await tracksSubscribed(remoteCharlie, 1);
+          const hiPriTrackPub = Array.from(remoteCharlie.tracks.values())[0];
+
+          // we should see a bob's track getting switched off.
+          await loPriTrackSwitchedOffPromise;
+
+          assert.equal(loPriTrackPub.track.isSwitchedOff, true, 'low pri tracks were not switched off');
+          assert.equal(hiPriTrackPub.track.isSwitchedOff, false, 'hi pri track were switched off');
+        });
     });
-  });
+  }
 });
 
 function getPayloadTypes(mediaSection) {
