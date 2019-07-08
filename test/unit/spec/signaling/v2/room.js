@@ -1276,8 +1276,8 @@ describe('RoomV2', () => {
           const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
           const track = remoteTracks.find(track => track.sid === trackSid);
           return new Promise(resolve => {
-            track.on('trackSwitchedOff', (switchedOff) => {
-              if (switchedOff === off) {
+            track.on('updated', () => {
+              if (track.isSwitchedOff === off) {
                 resolve();
               }
             });
