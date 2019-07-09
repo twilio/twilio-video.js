@@ -566,7 +566,6 @@ describe('connect', function() {
       };
 
       before(async () => {
-
         [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
       });
 
@@ -603,7 +602,6 @@ describe('connect', function() {
     };
 
     before(async () => {
-
       [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
     });
 
@@ -958,8 +956,8 @@ describe('connect', function() {
   });
 
   if (defaults.topology !== 'peer-to-peer') {
-    describe('track priorities', () => {
-        it('when maxTracks specified low priority track gets switched off when a high priority trak joins', async () => {
+    describe('bandwidthProfile.video.maxTracks', () => {
+      it('should switch off low priority tracks when the number of subscribed RemoteVideoTracks exceeds this value', async () => {
           let thisRoom;
           let thoseRooms;
           [, thisRoom, thoseRooms] = await setup({
@@ -986,7 +984,7 @@ describe('connect', function() {
           await tracksSubscribed(remoteCharlie, 1);
           const hiPriTrackPub = Array.from(remoteCharlie.tracks.values())[0];
 
-          // we should see a bob's track getting switched off.
+          // we should see bob's track getting switched off.
           await loPriTrackSwitchedOffPromise;
 
           assert.equal(loPriTrackPub.track.isSwitchedOff, true, 'low pri tracks were not switched off');
