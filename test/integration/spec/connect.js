@@ -401,7 +401,7 @@ describe('connect', function() {
               const publishPriorities = [...participant.tracks.values()].map(publication => publication.publishPriority);
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
-              publishPriorities.forEach(priority => assert.equal(priority, 'medium'));
+              publishPriorities.forEach(priority => assert.equal(priority, 'standard'));
             });
           });
         });
