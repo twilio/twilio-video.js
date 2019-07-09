@@ -13,10 +13,11 @@ const { combinations } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
   combinations([
-    [true, false],
-    [true, false],
-    [true, false],
-    [
+    [true, false], // networkQuality
+    [true, false], // dominantSpeaker
+    [true, false], // automaticSubscription
+    [true, false], // trackSwitchOff
+    [              // bandwidthProfile
       [{}, {}],
       [{ video: {} }, {}],
       [{ video: { mode: 'foo' } }, { mode: 'foo' }],
@@ -44,8 +45,13 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, bandwidthProfile, expectedRspPayload]) => {
-    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'}, .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'} and .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
+  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+    describe(`constructor, called with
+      .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
+      .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
+      .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
+      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'} and,
+      .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
       beforeEach(() => {
@@ -56,7 +62,8 @@ describe('TwilioConnectionTransport', () => {
           automaticSubscription,
           bandwidthProfile,
           networkQuality,
-          dominantSpeaker
+          dominantSpeaker,
+          trackSwitchOff
         });
         test.open();
       });
@@ -81,6 +88,12 @@ describe('TwilioConnectionTransport', () => {
           assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
         } else {
           assert(!('active_speaker' in message.media_signaling));
+        }
+
+        if (trackSwitchOff) {
+          assert.deepEqual(message.media_signaling.track_switch_off.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('track_switch_off' in message.media_signaling));
         }
 
         assert.deepEqual(message.subscribe, {
