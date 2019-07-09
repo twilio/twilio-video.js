@@ -123,6 +123,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'isStarted',
             'mediaStreamTrack',
             'isEnabled',
+            'isSwitchedOff',
             'sid'
           ]);
         } else {
@@ -133,6 +134,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'mediaStreamTrack',
             'dimensions',
             'isEnabled',
+            'isSwitchedOff',
             'sid'
           ]);
         }
@@ -151,6 +153,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           assert.deepEqual(track.toJSON(), {
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
+            isSwitchedOff: track.isSwitchedOff,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
@@ -161,6 +164,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             dimensions: track.dimensions,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
+            isSwitchedOff: track.isSwitchedOff,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,

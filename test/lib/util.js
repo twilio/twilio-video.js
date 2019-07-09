@@ -271,6 +271,15 @@ async function tracksUnsubscribed(participant, n) {
 }
 
 /**
+ * Wait for a {@link RemoteTrack} to get swtiched off.
+ * @param {RemoteTrack} track - the {@link RemoteTrack}
+ * @returns Promise<void>
+ */
+async function trackSwitchedOff(track) {
+  return new Promise(resolve => track.on('switchedOff', resolve));
+}
+
+/**
  * Wait for a {@link RemoteTrack} to start.
  * @param {RemoteTrack} track - the {@link RemoteTrack}
  * @returns Promise<void>
@@ -341,6 +350,7 @@ exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksSubscribed = tracksSubscribed;
+exports.trackSwitchedOff = trackSwitchedOff;
 exports.tracksPublished = tracksPublished;
 exports.tracksUnpublished = tracksUnpublished;
 exports.tracksUnsubscribed = tracksUnsubscribed;
