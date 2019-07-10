@@ -25,7 +25,7 @@ const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, trackSwitchedOff, tracksPublished } = require('../../lib/util');
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 describe('connect', function() {
@@ -401,7 +401,7 @@ describe('connect', function() {
               const publishPriorities = [...participant.tracks.values()].map(publication => publication.publishPriority);
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
-              publishPriorities.forEach(priority => assert.equal(priority, 'standard'));
+              publishPriorities.forEach(priority => assert.equal(priority, PRIORITY_STANDARD));
             });
           });
         });
