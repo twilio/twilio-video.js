@@ -154,45 +154,24 @@ describe('connect', function() {
       sid = await createRoom(randomName(), defaults.topology);
     });
 
-    // few examples of invalid regions.
-    ['invalid', '34', '$abc', 'abc!'].forEach((region) => {
-      it('should return a CancelablePromise that rejects with a SignalingConnectionError when region is: ' + region, async () => {
-        const connectOptions = Object.assign({
-          name: sid,
-          tracks: [],
-          region: region
-        }, defaults );
-        const cancelablePromise = connect(token, connectOptions);
-        assert(cancelablePromise instanceof CancelablePromise);
-
-        let error = null;
-        try {
-          await cancelablePromise;
-        } catch (error_) {
-          error = error_;
-        }
-        assert(error instanceof SignalingConnectionError);
-      });
-    });
-
-    const regions = ['invalid', 'without', 'gll'].concat(defaults.regions ? defaults.regions.split(',') : [
-      'au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'
-    ]);
+    const invalidRegions = ['foo', '34', '$abc', 'abc!'];
+    const validRegions = defaults.regions ? defaults.regions.split(',') : ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
+    const regions = ['without', 'gll', ...invalidRegions, ...validRegions];
 
     regions.forEach(region => {
-      const regionOptions = {
-        invalid: { region: 'foo' },
-        without: {}
-      }[region] || { region };
-
-      const scenario = `when called ${{
-        invalid: 'with an invalid',
-        without: 'without a',
-      }[region] || `with "${region}" as the`} signaling region`;
-
+      const isInvalidRegion = invalidRegions.includes(region);
+      const regionOptions = region === 'without' ? {} : { region };
+      let scenario = 'when called ';
+      if (isInvalidRegion) {
+        scenario += `with an invalid region : ${region}`;
+      } else if (region === 'without') {
+        scenario += 'without a region ';
+      } else {
+        scenario += `with a valid region: ${region}`;
+      }
       context(scenario, () => {
 
-        it(`should return a CancelablePromise that ${region === 'invalid' ? 'rejects with a SignalingConnectionError' : 'resolves with a Room'}`, async () => {
+        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a SignalingConnectionError' : 'resolves with a Room'}`, async () => {
           const cancelablePromise = connect(token, Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
 
@@ -207,7 +186,7 @@ describe('connect', function() {
               room.disconnect();
               await completeRoom(sid);
             }
-            if (region === 'invalid') {
+            if (isInvalidRegion) {
               assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid signaling region "${region}"`);
               assert(error instanceof SignalingConnectionError);
             } else {
