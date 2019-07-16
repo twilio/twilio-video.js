@@ -405,7 +405,7 @@ describe('LocalParticipant', () => {
                 assert(test.signaling.addTrack.args[0][0] instanceof MediaTrackSender
                   || test.signaling.addTrack.args[0][0] instanceof DataTrackSender);
                 assert.equal(test.signaling.addTrack.args[0][1], (hasLocalTrack || trackType === 'LocalTrack') ? localTrack.id : 'bar');
-                assert.equal(test.signaling.addTrack.args[0][2], priority || 'medium');
+                assert.equal(test.signaling.addTrack.args[0][2], priority || PRIORITY_STANDARD);
               });
 
               context('when the SID is set for the underlying LocalTrackPublicationSignaling', () => {
@@ -421,7 +421,7 @@ describe('LocalParticipant', () => {
                   assert.equal(localTrackPublication.trackName, (hasLocalTrack || trackType === 'LocalTrack') ? localTrack.id : 'bar');
                   assert.equal(localTrackPublication.trackSid, 'foo');
                   assert.equal(localTrackPublication.track.id, localTrack.id);
-                  assert.equal(localTrackPublication.priority, priority || 'medium');
+                  assert.equal(localTrackPublication.priority, priority || PRIORITY_STANDARD);
                 });
 
                 if (isConnected) {

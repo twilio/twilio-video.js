@@ -20,7 +20,7 @@ describe('TwilioConnectionTransport', () => {
     [              // bandwidthProfile
       [{}, {}],
       [{ video: {} }, {}],
-      [{ video: { mode: 'foo' } }, { mode: 'foo' }],
+      [{ video: { mode: 'foo' } }, { video: { mode: 'foo' } }],
       // eslint-disable-next-line
       [{ video: { maxSubscriptionBitrate: 2048 } }, { video: { max_subscription_bandwidth: 2 } }],
       // eslint-disable-next-line
@@ -35,12 +35,12 @@ describe('TwilioConnectionTransport', () => {
           }
         },
         {
-          mode: 'bar',
           video: {
             // eslint-disable-next-line
             max_subscription_bandwidth: 4,
             // eslint-disable-next-line
-            max_tracks: 5
+            max_tracks: 5,
+            mode: 'bar'
           }
         }
       ]

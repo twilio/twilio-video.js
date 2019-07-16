@@ -10,6 +10,25 @@ function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
 }
 
+const audioContext = typeof AudioContext !== 'undefined' && 'createMediaStreamDestination' in AudioContext.prototype
+  ? new AudioContext()
+  : null;
+
+/**
+ * Create a synthetic audio MediaStreamTrack, if possible.
+ * @return {?MediaStreamTrack}
+ */
+function createSyntheticAudioStreamTrack() {
+  if (!audioContext) {
+    return null;
+  }
+  const oscillator = audioContext.createOscillator();
+  const dest = audioContext.createMediaStreamDestination();
+  oscillator.connect(dest);
+  oscillator.start(0);
+  return dest.stream.getAudioTracks()[0];
+}
+
 /**
  * A {@link Tree<X, Y>} is a Rose Tree whose edges are labeled with values of
  * type `X`, and whose nodes are labeled with values of type `Y`.
@@ -199,6 +218,18 @@ function randomName() {
 }
 
 /**
+ * Wait for the given {@link RemoteParticipant} to become the Dominant Speaker.
+ * @param {Room} room
+ * @param {RemoteParticipant} participant
+ * @return {Promise<void>}
+ */
+async function dominantSpeakerChanged(room, participant) {
+  while (room.dominantSpeaker !== participant) {
+    await new Promise(resolve => room.once('dominantSpeakerChanged', resolve));
+  }
+}
+
+/**
  * Wait for {@link RemoteParticipant}s to connect to a {@link Room}.
  * @param {Room} room - the {@link Room}
  * @param {number} n - the number of {@link RemoteParticipant}s to wait for
@@ -272,12 +303,27 @@ async function tracksUnsubscribed(participant, n) {
 }
 
 /**
- * Wait for a {@link RemoteTrack} to get swtiched off.
+ * Wait for a {@link RemoteTrack} to be switched off.
  * @param {RemoteTrack} track - the {@link RemoteTrack}
  * @returns Promise<void>
  */
 async function trackSwitchedOff(track) {
-  return new Promise(resolve => track.on('switchedOff', resolve));
+  if (track.isSwitchedOff) {
+    return;
+  }
+  await new Promise(resolve => track.on('switchedOff', resolve));
+}
+
+/**
+ * Wait for a {@link RemoteTrack} to be switched on.
+ * @param {RemoteTrack} track - the {@link RemoteTrack}
+ * @returns Promise<void>
+ */
+async function trackSwitchedOn(track) {
+  if (!track.isSwitchedOff) {
+    return;
+  }
+  await new Promise(resolve => track.on('switchedOn', resolve));
 }
 
 /**
@@ -348,9 +394,11 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
 
 exports.a = a;
 exports.capitalize = capitalize;
+exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
 exports.isRTCRtpSenderParamsSupported = isRTCRtpSenderParamsSupported;
+exports.dominantSpeakerChanged = dominantSpeakerChanged;
 exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
@@ -358,6 +406,7 @@ exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksSubscribed = tracksSubscribed;
 exports.trackSwitchedOff = trackSwitchedOff;
+exports.trackSwitchedOn = trackSwitchedOn;
 exports.tracksPublished = tracksPublished;
 exports.tracksUnpublished = tracksUnpublished;
 exports.tracksUnsubscribed = tracksUnsubscribed;
