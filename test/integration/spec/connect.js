@@ -1034,12 +1034,16 @@ describe('connect', function() {
             tracksSubscribed(bobRemote, 2)
           ]);
 
+          const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
+            return [...videoTracks.values()][0].track;
+          });
+
           // Bob should be the Dominant Speaker and only his RemoteVideoTracks
           // should be switched on.
           await Promise.all([
             dominantSpeakerChanged(thisRoom, bobRemote),
-            ...[...bobRemote.videoTracks.values()].map(({ track }) => trackSwitchedOn(track)),
-            ...[...aliceRemote.videoTracks.values()].map(({ track }) => trackSwitchedOff(track))
+            trackSwitchedOn(bobRemoteVideoTrack),
+            trackSwitchedOff(aliceRemoteVideoTrack)
           ]);
 
           bobRemote.videoTracks.forEach(({ track }) => {
@@ -1058,8 +1062,8 @@ describe('connect', function() {
           // should be switched on.
           await Promise.all([
             dominantSpeakerChanged(thisRoom, aliceRemote),
-            ...[...aliceRemote.videoTracks.values()].map(({ track }) => trackSwitchedOn(track)),
-            ...[...bobRemote.videoTracks.values()].map(({ track }) => trackSwitchedOff(track))
+            trackSwitchedOn(aliceRemoteVideoTrack),
+            trackSwitchedOff(bobRemoteVideoTrack)
           ]);
 
           assert.equal(thisRoom.dominantSpeaker, aliceRemote);
