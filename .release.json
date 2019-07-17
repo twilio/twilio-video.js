@@ -1,6 +1,6 @@
 {
   "type": "JavaScript",
-  "travis": true,
+  "travis": false,
   "slug": "twilio/twilio-video.js",
   "env": {
     "GH_REF": "github.com/twilio/twilio-video.js.git"
@@ -8,8 +8,8 @@
   "plans": {
     "release": {
       "env": {
-        "GIT_USER_NAME": "twilio-ci",
-        "GIT_USER_EMAIL": "twilio-ci@twilio.com"
+        "GIT_USER_NAME": "manjeshbhargav",
+        "GIT_USER_EMAIL": "manjesh.github@gmail.com"
       },
       "commands": [
         "node ./node_modules/.bin/release --bump ${CURRENT_VERSION} ${RELEASE_VERSION}",
