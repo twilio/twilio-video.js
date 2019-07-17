@@ -1,5 +1,15 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta13 (in progress)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where connecting to a Room with a `region` containing special
+  characters in ConnectOptions failed with an Error other than
+  [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000). (JSDK-2400)
+
 2.0.0-beta12 (July 12, 2019)
 ============================
 
