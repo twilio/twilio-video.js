@@ -1,5 +1,18 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.18.3 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Worked around a minor interop issue between Chrome/Safari Participants and Firefox 68+
+  Participants in a Peer-to-Peer Room. Although this issue does no affect the normal
+  functioning of the Room, it resulted in the Chrome/Safari Participants logging cryptic
+  Error messages to the JavaScript console. Now, twilio-video.js will log warning messages
+  until Chrome ([bug](https://bugs.chromium.org/p/chromium/issues/detail?id=978582)) and Safari
+  fix this issue. (JSDK-2412)
+
 1.18.2 (July 1, 2019)
 =====================
 
