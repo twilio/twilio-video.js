@@ -64,8 +64,10 @@ describe('connect', () => {
     });
 
     [
+      [null, 'that is null', TypeError, 'object'],
       ['foo', 'that is not an object', TypeError, 'object'],
       [['bar'], 'that is an Array', TypeError, 'object'],
+      [{ video: null }, 'whose .video is null', TypeError, 'object'],
       [{ video: 'baz' }, 'whose .video is not an object', TypeError, 'object'],
       [{ video: ['zee'] }, 'whose .video is an Array', TypeError, 'object'],
       [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
@@ -82,9 +84,9 @@ describe('connect', () => {
           let error;
           let expectedErrorMessage = 'options.bandwidthProfile';
 
-          if (typeof bandwidthProfile === 'object' && !Array.isArray(bandwidthProfile)) {
+          if (bandwidthProfile && typeof bandwidthProfile === 'object' && !Array.isArray(bandwidthProfile)) {
             expectedErrorMessage += '.video';
-            if (typeof bandwidthProfile.video === 'object' && !Array.isArray(bandwidthProfile.video)) {
+            if (bandwidthProfile.video && typeof bandwidthProfile.video === 'object' && !Array.isArray(bandwidthProfile.video)) {
               expectedErrorMessage += `.${Object.keys(bandwidthProfile.video)[0]}`;
             }
           }
