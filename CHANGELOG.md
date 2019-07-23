@@ -6,13 +6,34 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- In a **Group Room**, you can now have more control over how your available bandwidth
-  is distributed among the RemoteVideoTracks that you have subscribed to. twilio-video.js
-  introduces the [Bandwidth Profile API](TODO(mmalavalli)). Note that this feature is
+- In a **Group Room**, you can now control how your available downlink bandwidth is
+  distributed among the RemoteVideoTracks that you have subscribed to. twilio-video.js
+  introduces the [Bandwidth Profile APIs](TODO(mmalavalli)). Note that this feature is
   currently in **private beta** and hence will be **opt-in**. Please reach out to
   [email@address.com](TODO(mmalavalli)) for more information about how to enable these
   APIs for your Twilio Account. **Using these APIs in a Peer-to-Peer Room will have no effect**.
-  
+
+  ### Bandwidth Profile
+
+  You can now configure how your available downlink bandwidth will be distributed
+  among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
+  parameter `bandwidthProfile`. For more details, please refer to the `BandwidthProfileOptions`
+  [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta13/docs/global.html#BandwidthProfileOptions).
+  Here is an example:
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        maxSubscriptionBitrate: 150000, // Max. bandwidth (bps) to be allocated to subscribed RemoteVideoTracks.
+        maxTracks: 3, // Max. number of visible RemoteVideoTracks. Other RemoteVideoTracks will be switched off.
+        mode: 'collaboration', // Subscription mode: "collaboration", "grid" or "presentation".
+      }
+    }
+  });  
+  ```
+
   ### Track Priority
 
   While publishing a LocalTrack, you can now optionally specify its publish priority
@@ -28,10 +49,10 @@ New Features
   assert.equal(localTrackPublication.priority, 'high');
   ```
 
-  This signals to the media server that this LocalTrack is more important than other
-  LocalTracks you may be publishing to the Room. The media server takes this into
-  account while allocating a subscribing RemoteParticipant's bandwidth to the LocalTrack.
-  If you do not specify a priority, then it defaults to `standard`.
+  This signals to the media server the relative importance of this LocalTrack with respect
+  to other Tracks that may be published to the Room. The media server takes this into
+  account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
+  RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
   
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
@@ -45,7 +66,7 @@ New Features
 
   ### Switching on/off RemoteVideoTracks
 
-  When a subscribing Participant's bandwidth is considerably low, the media server
+  When a subscribing Participant's downlink bandwidth is insufficient, the media server
   tries to preserve higher priority RemoteVideoTracks by switching off lower priority
   RemoteVideoTracks, which will stop receiving media until the media server decides
   to switch them back on. You can now get notified about these actions by listening
@@ -64,26 +85,6 @@ New Features
       console.log(`The RemoteTrack ${remoteTrack.name} was switched on`);
     });
   });
-  ```
-
-  ### Bandwidth Profile
-
-  You can now configure how your available downlink bandwidth will be distributed
-  among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
-  parameter `bandwidthProfile`.   For more details, please refer to the `BandwidthProfileOptions`
-  [documentation](TODO(mmalavalli)). Here is an example:
-
-  ```js
-  const { connect } = require('twilio-video');
-  const room = await connect(token, {
-    bandwidthProfile: {
-      video: {
-        maxSubscriptionBitrate: 150000, // Max. bandwidth (bps) to be allocated to subscribed RemoteVideoTracks.
-        maxTracks: 3, // Max. number of visible RemoteVideoTracks. Other RemoteVideoTracks will be switched off.
-        mode: 'collaboration', // Subscription mode: "collaboration", "grid" or "presentation".
-      }
-    }
-  });  
   ```
 
 2.0.0-beta12 (July 12, 2019)
