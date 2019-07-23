@@ -31,13 +31,15 @@ describe('InsightsPublisher', function() {
       let publisher;
 
       context(`when attempted with ${a(tokenType)} ${tokenType} token`, () => {
-        before(() => {
+        before( () => {
           publisher = new InsightsPublisher(tokens.get(tokenType),
             'twilio-video.js',
             '1.2.3',
             options.environment,
             'us1',
             options);
+
+          publisher.connect('roomSid', 'participantSid');
         });
 
         const description = tokenType !== 'valid'
@@ -72,6 +74,8 @@ describe('InsightsPublisher', function() {
         options.environment,
         'us1',
         options);
+
+      publisher.connect('roomSid', 'participantSid');
 
       publisher.once('connected', () => publisher.disconnect());
       const error = await new Promise(resolve => publisher.once('disconnected', resolve));
