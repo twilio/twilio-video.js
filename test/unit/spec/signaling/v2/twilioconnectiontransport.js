@@ -1150,7 +1150,11 @@ describe('TwilioConnectionTransport', () => {
             });
             test.twilioConnection.receiveMessage({
               session: 'foo',
-              type: 'connected'
+              type: 'connected',
+              sid: 'roomSid',
+              participant: {
+                sid: 'mySid'
+              }
             });
           });
 
@@ -1163,7 +1167,11 @@ describe('TwilioConnectionTransport', () => {
           it('should emit "connected"', () => {
             assert.deepEqual(connected, {
               session: 'foo',
-              type: 'connected'
+              type: 'connected',
+              sid: 'roomSid',
+              participant: {
+                sid: 'mySid'
+              }
             });
           });
 
@@ -1570,7 +1578,7 @@ function makeTest(options) {
   };
 
   options.open = () => options.twilioConnection.open();
-  options.connect = () => options.receiveMessage({ session: makeName(), type: 'connected' });
+  options.connect = () => options.receiveMessage({ session: makeName(), type: 'connected', sid: 'roomSid', participant: { sid: 'mySid' } });
   options.sync = () => options.receiveMessage({ type: 'synced' });
   return options;
 }
@@ -1596,6 +1604,7 @@ function makePeerConnectionManager() {
 function makeInsightsPublisherConstructor(testOptions) {
   return function InsightsPublisher() {
     this.disconnect = sinon.spy(() => {});
+    this.connect = sinon.spy(() => {});
     this.publish = sinon.spy(() => 'baz');
     testOptions.eventPublisher = this;
   };
