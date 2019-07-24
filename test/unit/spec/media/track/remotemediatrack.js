@@ -37,7 +37,11 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           });
 
           it('should set the .isEnabled property', () => {
-            assert(track.isEnabled);
+            assert.equal(track.isEnabled, true);
+          });
+
+          it('should set the .isSwitchedOff property', () => {
+            assert.equal(track.isSwitchedOff, false);
           });
 
           it('should set the .kind property', () => {
@@ -102,6 +106,62 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${name} with the ${name} itself`, () => {
             assert(newIsEnabled ? trackEnabled : trackDisabled);
             assert(!(newIsEnabled ? trackDisabled : trackEnabled));
+            assert.equal(arg, track);
+          });
+        });
+      });
+    });
+
+    describe('#_setSwitchedOff', () => {
+      [
+        [true, true],
+        [true, false],
+        [false, true],
+        [false, false]
+      ].forEach(([isSwitchedOff, newIsSwitchedOff]) => {
+        context(`when .isSwitchedOff is ${isSwitchedOff} and the new value is ${newIsSwitchedOff}`, () => {
+          let arg;
+          let track;
+          let trackSwitchedOff;
+          let trackSwitchedOn;
+
+          before(() => {
+            arg = null;
+            track = makeTrack('foo', 'bar', kind, true, null, RemoteTrack);
+            if (isSwitchedOff) {
+              track._setSwitchedOff(isSwitchedOff);
+            }
+            track.once('switchedOff', _arg => {
+              trackSwitchedOff = true;
+              arg = _arg;
+            });
+            track.once('switchedOn', _arg => {
+              trackSwitchedOn = true;
+              arg = _arg;
+            });
+            track._setSwitchedOff(newIsSwitchedOff);
+          });
+
+          if (isSwitchedOff === newIsSwitchedOff) {
+            it('should not change the .isSwitchedOff property', () => {
+              assert.equal(track.isSwitchedOff, isSwitchedOff);
+            });
+
+            it('should not emit any events', () => {
+              assert(!trackSwitchedOff);
+              assert(!trackSwitchedOn);
+            });
+
+            return;
+          }
+
+          it(`should set .isSwitchedOff to ${newIsSwitchedOff}`, () => {
+            assert.equal(track.isSwitchedOff, newIsSwitchedOff);
+          });
+
+          it(`should emit "${newIsSwitchedOff ? 'switchedOff' : 'switchedOn'}" on the ${name} with the ${name} itself`, () => {
+            assert(newIsSwitchedOff ? trackSwitchedOff : trackSwitchedOn);
+            assert(!(newIsSwitchedOff ? trackSwitchedOn : trackSwitchedOff));
             assert.equal(arg, track);
           });
         });
