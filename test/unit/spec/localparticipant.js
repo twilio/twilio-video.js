@@ -278,7 +278,7 @@ describe('LocalParticipant', () => {
       test = makeTest(options);
     });
 
-    context('when called with an invalid argument', () => {
+    context('when called with an invalid first argument', () => {
       [
         [
           'should return a rejected Promise with a TypeError',
@@ -294,6 +294,22 @@ describe('LocalParticipant', () => {
             await test.participant.publishTrack('invalid track argument');
           } catch (error) {
             assert(assertion(error, test.signaling.addTrack));
+            return;
+          }
+          throw new Error('Unexpected resolution');
+        });
+      });
+    });
+
+    [2, 'baz'].forEach(priority => {
+      context(`when called with a TrackPriority that is ${typeof priority === 'string' ? 'invalid' : 'not a string'}`, () => {
+        it('should return a rejected Promise with a RangeError', async () => {
+          const localTrack = new LocalVideoTrack(new FakeMediaStreamTrack('audio'));
+          try {
+            await test.participant.publishTrack(localTrack, { priority });
+          } catch (error) {
+            assert(error instanceof RangeError);
+            assert(test.signaling.addTrack.notCalled);
             return;
           }
           throw new Error('Unexpected resolution');

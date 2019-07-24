@@ -5,8 +5,9 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 const { inherits } = require('util');
 
+const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
-const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION } = require('../../../lib/util/constants');
+const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION, subscriptionMode } = require('../../../lib/util/constants');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -48,6 +49,85 @@ describe('connect', () => {
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
       assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+    });
+  });
+
+  describe('called with ConnectOptions#bandwidthProfile', () => {
+    const subscriptionModes = Object.values(subscriptionMode);
+    let mockSignaling;
+    let signaling;
+
+    beforeEach(() => {
+      mockSignaling = new Signaling();
+      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+      signaling = sinon.spy(() => mockSignaling);
+    });
+
+    [
+      [null, 'that is null', TypeError, 'object'],
+      ['foo', 'that is not an object', TypeError, 'object'],
+      [['bar'], 'that is an Array', TypeError, 'object'],
+      [{ video: null }, 'whose .video is null', TypeError, 'object'],
+      [{ video: 'baz' }, 'whose .video is not an object', TypeError, 'object'],
+      [{ video: ['zee'] }, 'whose .video is an Array', TypeError, 'object'],
+      [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
+      [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
+      [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes]
+    ].forEach(([bandwidthProfile, scenario, ExpectedError, expectedTypeOrValues]) => {
+      context(scenario, () => {
+        it(`should reject the CancelablePromise with a ${ExpectedError.name}`, async () => {
+          const cancelablePromise = connect(token, {
+            bandwidthProfile,
+            iceServers: [],
+            signaling
+          });
+          let error;
+          let expectedErrorMessage = 'options.bandwidthProfile';
+
+          if (bandwidthProfile && typeof bandwidthProfile === 'object' && !Array.isArray(bandwidthProfile)) {
+            expectedErrorMessage += '.video';
+            if (bandwidthProfile.video && typeof bandwidthProfile.video === 'object' && !Array.isArray(bandwidthProfile.video)) {
+              expectedErrorMessage += `.${Object.keys(bandwidthProfile.video)[0]}`;
+            }
+          }
+
+          if (ExpectedError === TypeError) {
+            expectedErrorMessage += ` must be ${a(expectedTypeOrValues)} ${expectedTypeOrValues}`;
+          } else {
+            expectedErrorMessage += ` must be one of ${expectedTypeOrValues.join(', ')}`;
+          }
+
+          try {
+            await cancelablePromise;
+          } catch (error_) {
+            error = error_;
+          } finally {
+            assert(error instanceof ExpectedError);
+            assert.equal(error.message, expectedErrorMessage);
+          }
+        });
+      });
+    });
+
+    ['foo', ['bar']].forEach(bandwidthProfile => {
+      context(`that is ${Array.isArray(bandwidthProfile) ? 'an Array' : 'not an object'}`, () => {
+        it('should reject the CancelablePromise with a TypeError', async () => {
+          const cancelablePromise = connect(token, {
+            bandwidthProfile,
+            iceServers: [],
+            signaling
+          });
+          let error;
+
+          try {
+            await cancelablePromise;
+          } catch (error_) {
+            error = error_;
+          } finally {
+            assert(error instanceof TypeError);
+          }
+        });
+      });
     });
   });
 
