@@ -145,7 +145,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('insights option', () => {
+  describe('insights option', () => {
     let sid = null;
     let token = null;
     let error = null;
