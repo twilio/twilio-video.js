@@ -104,7 +104,7 @@ describe('TwilioConnectionTransport', () => {
           revision: 1
         });
 
-        if (bandwidthProfile && bandwidthProfile !== 'not specified') {
+        if (bandwidthProfile) {
           assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
         } else {
           assert(!('bandwidth_profile' in message));
