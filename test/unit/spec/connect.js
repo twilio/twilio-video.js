@@ -64,7 +64,6 @@ describe('connect', () => {
     });
 
     [
-      [null, 'that is null', TypeError, 'object'],
       ['foo', 'that is not an object', TypeError, 'object'],
       [['bar'], 'that is an Array', TypeError, 'object'],
       [{ video: null }, 'whose .video is null', TypeError, 'object'],
