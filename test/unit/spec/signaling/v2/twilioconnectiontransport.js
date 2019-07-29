@@ -18,9 +18,7 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // automaticSubscription
     [true, false], // trackSwitchOff
     [              // bandwidthProfile
-      ['not specified'],
       [undefined],
-      [null],
       [{}, {}],
       [{ video: {} }, {}],
       [{ video: { mode: 'foo' } }, { video: { mode: 'foo' } }],
@@ -58,7 +56,7 @@ describe('TwilioConnectionTransport', () => {
       let test;
 
       beforeEach(() => {
-        test = makeTest(Object.assign(bandwidthProfile === 'not specified' ? {} : { bandwidthProfile }, {
+        test = makeTest(Object.assign(bandwidthProfile ? { bandwidthProfile } : {}, {
           iceServerSourceStatus: [
             { foo: 'bar' }
           ],
@@ -74,7 +72,7 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload, the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule and ${bandwidthProfile && bandwidthProfile !== 'not specified' ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload, the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule and ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
