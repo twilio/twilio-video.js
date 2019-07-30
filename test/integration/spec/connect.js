@@ -410,6 +410,10 @@ describe('connect', function() {
   });
 
   describe('called with EncodingParameters', () => {
+    const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
+      && typeof RTCRtpSender.prototype.getParameters === 'function'
+      && typeof RTCRtpSender.prototype.setParameters === 'function';
+
     combinationContext([
       [
         [undefined, null, 20000],
@@ -448,6 +452,16 @@ describe('connect', function() {
 
       ['audio', 'video'].forEach(kind => {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track);
+            }).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(peerConnections, pc => {
             assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');

@@ -1003,6 +1003,10 @@ describe('LocalParticipant', function() {
       maxVideoBitrate: 40000
     };
 
+    const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
+      && typeof RTCRtpSender.prototype.getParameters === 'function'
+      && typeof RTCRtpSender.prototype.setParameters === 'function';
+
     combinationContext([
       [
         [undefined, null, 25000],
@@ -1030,6 +1034,7 @@ describe('LocalParticipant', function() {
 
       let peerConnections;
       let remoteDescriptions;
+      let senders;
       let thisRoom;
       let thoseRooms;
 
@@ -1055,6 +1060,11 @@ describe('LocalParticipant', function() {
         }));
         peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
         thisRoom.localParticipant.setParameters(encodingParameters);
+
+        if (isRTCRtpSenderParamsSupported) {
+          senders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
+          return;
+        }
 
         function getRemoteDescription(pc) {
           return Object.keys(encodingParameters).length > 0
@@ -1083,6 +1093,16 @@ describe('LocalParticipant', function() {
           : 'existing';
 
         it(`should ${action} the ${newOrExisting} .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            senders.filter(({ track }) => track.kind === kind).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, action === 'preserve'
+                ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
+                : maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(remoteDescriptions, description => {
             return getMediaSections(description.sdp, kind, '(recvonly|sendrecv)');
           }).forEach(section => {
