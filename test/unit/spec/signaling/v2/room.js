@@ -103,9 +103,7 @@ describe('RoomV2', () => {
           'quality',
           'stats-report',
           {
-            participantSid: test.localParticipant.sid,
             peerConnectionId: 'foo',
-            roomSid: test.sid,
             audioTrackStats: reports.foo.remoteAudioTrackStats,
             localAudioTrackStats: reports.foo.localAudioTrackStats,
             localVideoTrackStats: reports.foo.localVideoTrackStats,
@@ -124,9 +122,7 @@ describe('RoomV2', () => {
           'quality',
           'stats-report',
           {
-            participantSid: test.localParticipant.sid,
             peerConnectionId: 'bar',
-            roomSid: test.sid,
             audioTrackStats: reports.bar.remoteAudioTrackStats,
             localAudioTrackStats: reports.bar.localAudioTrackStats,
             localVideoTrackStats: reports.bar.localVideoTrackStats,

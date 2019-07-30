@@ -108,6 +108,34 @@ describe('connect', function() {
     });
   });
 
+  describe('insights option', () => {
+    [true, false].forEach((insights) => {
+      it(`when set to  ${insights}`, async () => {
+        const token = getToken(randomName());
+        let cancelablePromise = null;
+        let room = null;
+        let error = null;
+        const regionOptions = {
+          insights
+        };
+
+        try {
+          const connectOptions = Object.assign({}, defaults, regionOptions, { tracks: [] });
+          cancelablePromise = connect(token, connectOptions);
+          assert(cancelablePromise instanceof CancelablePromise);
+          room = await cancelablePromise;
+        } catch (error_) {
+          error = error_;
+        } finally {
+          if (room) {
+            room.disconnect();
+          }
+        }
+        assert.equal(error, null);
+      });
+    });
+  });
+
   describe('called with an incorrect RTCIceServer url', () => {
     let cancelablePromise;
 
