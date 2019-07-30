@@ -145,6 +145,43 @@ describe('connect', function() {
     });
   });
 
+  describe('insights option', () => {
+    let sid = null;
+    let token = null;
+    let error = null;
+
+    beforeEach(async () => {
+      const identity = randomName();
+      token = getToken(identity);
+      sid = await createRoom(randomName(), defaults.topology);
+    });
+
+    [true, false].forEach((insights) => {
+      it(`when set to  ${insights}`, async () => {
+        let cancelablePromise = null;
+        let room = null;
+        const regionOptions = {
+          insights
+        };
+
+        try {
+          const connectOptions = Object.assign({ name: sid }, defaults, regionOptions, { tracks: [] });
+          cancelablePromise = connect(token, connectOptions);
+          assert(cancelablePromise instanceof CancelablePromise);
+          room = await cancelablePromise;
+        } catch (error_) {
+          error = error_;
+        } finally {
+          if (room) {
+            room.disconnect();
+            await completeRoom(sid);
+          }
+        }
+        assert.equal(error, null);
+      });
+    });
+  });
+
   describe('signaling region', async () => {
     let sid;
     let token;
