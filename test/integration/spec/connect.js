@@ -119,6 +119,34 @@ describe('connect', function() {
     });
   });
 
+  describe('insights option', () => {
+    [true, false].forEach((insights) => {
+      it(`when set to  ${insights}`, async () => {
+        const token = getToken(randomName());
+        let cancelablePromise = null;
+        let room = null;
+        let error = null;
+        const regionOptions = {
+          insights
+        };
+
+        try {
+          const connectOptions = Object.assign({}, defaults, regionOptions, { tracks: [] });
+          cancelablePromise = connect(token, connectOptions);
+          assert(cancelablePromise instanceof CancelablePromise);
+          room = await cancelablePromise;
+        } catch (error_) {
+          error = error_;
+        } finally {
+          if (room) {
+            room.disconnect();
+          }
+        }
+        assert.equal(error, null);
+      });
+    });
+  });
+
   describe('called with an incorrect RTCIceServer url', () => {
     let cancelablePromise;
 
@@ -381,18 +409,20 @@ describe('connect', function() {
   });
 
   [true, false].forEach(insights => {
-    describe(`called with isInsightsEnabled = ${insights}`, () => {
+    describe.only(`called with isInsightsEnabled = ${insights}`, () => {
       let InsightsPublisher;
       let NullInsightsPublisher;
       let room;
 
       before(async () => {
         InsightsPublisher = sinon.spy(function InsightsPublisher() {
+          this.connect = sinon.spy();
           this.disconnect = sinon.spy();
           this.publish = sinon.spy();
         });
 
         NullInsightsPublisher = sinon.spy(function NullInsightsPublisher() {
+          this.connect = sinon.spy();
           this.disconnect = sinon.spy();
           this.publish = sinon.spy();
         });

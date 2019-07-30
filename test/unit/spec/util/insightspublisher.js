@@ -7,8 +7,12 @@ const EventTarget = require('../../../../lib/eventtarget');
 const { defer } = require('../../../../lib/util');
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 
+let fakeWebSocketConstructed = 0;
+let socketCreationDeferred = null;
 class FakeWebSocket extends EventTarget {
   constructor(arg) {
+    fakeWebSocketConstructed++;
+    socketCreationDeferred.resolve();
     super();
 
     this.readyState = FakeWebSocket.OPEN;
@@ -26,24 +30,39 @@ class FakeWebSocket extends EventTarget {
 });
 
 describe('InsightsPublisher', () => {
+  let publisher;
+  beforeEach(() => {
+    socketCreationDeferred = defer();
+    publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
+      WebSocket: FakeWebSocket
+    });
+  });
+
   describe('constructor', () => {
     context('when called with the "new" keyword', () => {
       it('should return an instance of InsightsPublisher', () => {
-        const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-          WebSocket: FakeWebSocket
-        });
         assert(publisher instanceof InsightsPublisher);
+      });
+
+      it('does not construct an WebSocket', () => {
+        assert(fakeWebSocketConstructed === 0);
       });
     });
   });
 
-  describe('#disconnect', () => {
-    let publisher;
+  describe('connect', () => {
+    it('should result in web socket being created', async () => {
+      assert(fakeWebSocketConstructed === 0);
+      publisher.connect('roomSid', 'participantSid');
+      await socketCreationDeferred.promise;
+      assert(fakeWebSocketConstructed === 1);
+    });
+  });
 
-    beforeEach(() => {
-      publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-        WebSocket: FakeWebSocket
-      });
+  describe('#disconnect', () => {
+    beforeEach(async () => {
+      publisher.connect('roomSid', 'participantSid');
+      await socketCreationDeferred.promise;
     });
 
     ['CLOSING', 'CLOSED'].forEach(readyState => {
@@ -82,12 +101,12 @@ describe('InsightsPublisher', () => {
   });
 
   describe('#publish', () => {
-    let publisher;
-
-    beforeEach(() => {
+    beforeEach(async () => {
       publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
         WebSocket: FakeWebSocket
       });
+      publisher.connect('roomSid', 'participantSid');
+      await socketCreationDeferred.promise;
     });
 
     it('should return false if the underlying WebSocket is CLOSING or CLOSED', () => {
@@ -174,16 +193,8 @@ describe('InsightsPublisher', () => {
   });
 
   describe('connect/reconnect', () => {
-    it('should throw when the WebSocket constructor throws', () => {
-      assert.throws(() => new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-        WebSocket: customizedWebSocket(FakeWebSocket, () => {
-          throw new Error('test');
-        })
-      }));
-    });
-
     context('when the WebSocket gateway is specified in the options', () => {
-      it('should call the WebSocket constructor with the provided gateway', () => {
+      it('should call the WebSocket constructor with the provided gateway', async () => {
         let wsUrl;
         const options = {
           gateway: 'somegateway',
@@ -191,29 +202,35 @@ describe('InsightsPublisher', () => {
             wsUrl = url;
           })
         };
-        new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        const pub = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        pub.connect('roomSid', 'partcipantSid');
+        await socketCreationDeferred.promise;
         assert.equal(wsUrl, 'somegateway');
       });
     });
 
     context('when the WebSocket gateway is not specified in the options', () => {
-      it('should call the WebSocket constructor with the gateway created from environment and realm', () => {
+      it('should call the WebSocket constructor with the gateway created from environment and realm', async () => {
         let wsUrl;
         const options = {
           WebSocket: customizedWebSocket(FakeWebSocket, url => {
             wsUrl = url;
           })
         };
-        new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        const pub = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
+        pub.connect('roomSid', 'partcipantSid');
+        await socketCreationDeferred.promise;
         assert.equal(wsUrl, 'wss://sdkgw.baz-zee.twilio.com/v1/VideoEvents');
       });
     });
 
     context('when WebSocket emits an "open" event', () => {
-      it('should call .send() with a "connect" RSP message', () => {
+      it('should call .send() with a "connect" RSP message', async () => {
         const connectRequest = {
           publisher: {
             name: 'foo',
+            participantSid: 'partcipantSid',
+            roomSid: 'roomSid',
             sdkVersion: 'bar',
             userAgent: 'baz'
           },
@@ -225,6 +242,8 @@ describe('InsightsPublisher', () => {
           userAgent: 'baz',
           WebSocket: FakeWebSocket
         });
+        publisher.connect('roomSid', 'partcipantSid');
+        await socketCreationDeferred.promise;
 
         publisher._ws.dispatchEvent({ type: 'open' });
         assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
@@ -235,13 +254,17 @@ describe('InsightsPublisher', () => {
       let publisher;
       let connectedEmitted;
 
-      before(() => {
+      before(async () => {
         publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
           maxReconnectAttempts: 10,
           WebSocket: FakeWebSocket
         });
 
         publisher.once('connected', () => { connectedEmitted = true; });
+
+        publisher.connect('roomSid', 'partcipantSid');
+        await socketCreationDeferred.promise;
+
         publisher._eventQueue.push({ foo: 1 });
         publisher._eventQueue.push({ bar: 'baz' });
         publisher._reconnectAttemptsLeft = 1;
@@ -294,7 +317,7 @@ describe('InsightsPublisher', () => {
         let reconnectedDeferredsIdx = 0;
 
         context(`when the ._reconnectAttemptsLeft ${scenario}`, () => {
-          before(() => {
+          before(async () => {
             publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
               maxReconnectAttempts: 10,
               reconnectIntervalMs: 100,
@@ -307,6 +330,10 @@ describe('InsightsPublisher', () => {
 
             publisher.once('disconnected', error => { disconnectedError = error; });
             publisher.once('reconnecting', () => { reconnectingEmitted = true; });
+
+            publisher.connect('roomSid', 'partcipantSid');
+            await socketCreationDeferred.promise;
+
             publisher._reconnectAttemptsLeft = i === 1 ? 0 : 10;
             reconnectAttemptsLeft = publisher._reconnectAttemptsLeft;
             publisher._ws.readyState = FakeWebSocket.OPEN;
