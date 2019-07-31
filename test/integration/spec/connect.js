@@ -458,7 +458,7 @@ describe('connect', function() {
         // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
         // which is an asynchronous operation, wait for a little while until the changes are applied.
         if (isRTCRtpSenderParamsSupported) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
       });
 
