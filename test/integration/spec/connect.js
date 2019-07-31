@@ -409,7 +409,7 @@ describe('connect', function() {
   });
 
   [true, false].forEach(insights => {
-    describe.only(`called with isInsightsEnabled = ${insights}`, () => {
+    describe(`called with isInsightsEnabled = ${insights}`, () => {
       let InsightsPublisher;
       let NullInsightsPublisher;
       let room;
