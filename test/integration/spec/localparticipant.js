@@ -26,7 +26,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { smallVideoConstraints } = require('../../lib/util');
+const { isRTCRtpSenderParamsSupported, smallVideoConstraints } = require('../../lib/util');
 
 const {
   capitalize,
@@ -1003,10 +1003,6 @@ describe('LocalParticipant', function() {
       maxVideoBitrate: 40000
     };
 
-    const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
-      && typeof RTCRtpSender.prototype.getParameters === 'function'
-      && typeof RTCRtpSender.prototype.setParameters === 'function';
-
     combinationContext([
       [
         [undefined, null, 25000],
@@ -1062,6 +1058,9 @@ describe('LocalParticipant', function() {
         thisRoom.localParticipant.setParameters(encodingParameters);
 
         if (isRTCRtpSenderParamsSupported) {
+          // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
+          // which is an asynchronous operation, wait for a little while until the changes are applied.
+          await new Promise(resolve => setTimeout(resolve, 5000));
           senders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
           return;
         }
