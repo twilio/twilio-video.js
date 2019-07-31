@@ -420,6 +420,48 @@ describe('connect', function() {
     });
   });
 
+  (isRTCRtpSenderParamsSupported ? describe.only : describe.skip)('dscpTagging', () => {
+    // eslint-disable-next-line no-undefined
+    [true, false, undefined].forEach((dscpTagging) => {
+      context(`when dscpTagging is ${typeof dscpTagging === 'undefined' ? 'not set' : dscpTagging ? 'set to true' : 'set to false'}`, () => {
+        const connectOptions = {};
+        if (dscpTagging !== undefined) {
+          connectOptions.dscpTagging = dscpTagging;
+        }
+
+        let peerConnections;
+        let thisRoom;
+        let thoseRooms;
+
+        before(async () => {
+          [thisRoom, thoseRooms, peerConnections] = await setup(connectOptions, { tracks: [] }, 0);
+          // RTCRtpSender.setParameters() is an asynchronous operation,
+          // wait for a little while until the changes are applied.
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        });
+
+        ['audio', 'video'].forEach(kind => {
+          let expectedNetworkPriority = 'low';
+          if (dscpTagging === true && kind === 'audio') {
+            expectedNetworkPriority = 'high';
+          }
+          it(`networkPriority should be set to ${expectedNetworkPriority} for ${kind} track`, () => {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track.kind === kind);
+            }).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ networkPriority }) => assert.equal(networkPriority, expectedNetworkPriority));
+            });
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        });
+      });
+    });
+  });
+
   describe('called with EncodingParameters', () => {
     combinationContext([
       [
