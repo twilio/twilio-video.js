@@ -23,7 +23,18 @@ const {
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksAdded, tracksPublished } = require('../../lib/util');
+
+const {
+  capitalize,
+  combinationContext,
+  isRTCRtpSenderParamsSupported,
+  participantsConnected,
+  pairs,
+  randomName,
+  smallVideoConstraints,
+  tracksAdded,
+  tracksPublished
+} = require('../../lib/util');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
@@ -444,10 +455,25 @@ describe('connect', function() {
 
       before(async () => {
         [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters, { tracks: [] }, 0);
+        // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
+        // which is an asynchronous operation, wait for a little while until the changes are applied.
+        if (isRTCRtpSenderParamsSupported) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
       });
 
       ['audio', 'video'].forEach(kind => {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track);
+            }).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(peerConnections, pc => {
             assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
