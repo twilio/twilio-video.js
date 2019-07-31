@@ -1060,7 +1060,7 @@ describe('LocalParticipant', function() {
         if (isRTCRtpSenderParamsSupported) {
           // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
           // which is an asynchronous operation, wait for a little while until the changes are applied.
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 1000));
           senders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
           return;
         }
