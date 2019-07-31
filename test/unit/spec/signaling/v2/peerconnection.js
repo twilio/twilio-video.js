@@ -780,8 +780,12 @@ describe('PeerConnectionV2', () => {
       [
         [true, false],
         x => `when the remote peer is ${x ? '' : 'not '}an ICE-lite agent`
+      ],
+      [
+        [true, false],
+        x => `When RTCRtpSenderParameters is ${x ? '' : 'not '}supported by WebRTC`
       ]
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite]) => {
+    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported]) => {
       // The Test
       let test;
 
@@ -811,7 +815,8 @@ describe('PeerConnectionV2', () => {
           offers: 3,
           answers: 2,
           maxAudioBitrate: 40,
-          maxVideoBitrate: 50
+          maxVideoBitrate: 50,
+          isRTCRtpSenderParamsSupported
         });
         descriptions = [];
         const ufrag = 'foo';
@@ -950,6 +955,18 @@ describe('PeerConnectionV2', () => {
 
       function itShouldApplyBandwidthConstraints() {
         it('should apply the specified bandwidth constraints to the remote description', () => {
+          if (isRTCRtpSenderParamsSupported) {
+            test.pc.getSenders().forEach(sender => {
+              assert.deepEqual(sender.setParameters.args[0][0], {
+                encodings: [{
+                  maxBitrate: sender.track.kind === 'audio'
+                    ? test.maxAudioBitrate
+                    : test.maxVideoBitrate
+                }]
+              });
+            });
+            return;
+          }
           const maxVideoBitrate = test.setBitrateParameters.args[0].pop();
           const maxAudioBitrate = test.setBitrateParameters.args[0].pop();
           assert.equal(maxAudioBitrate, test.maxAudioBitrate);
@@ -1954,7 +1971,11 @@ class MockPeerConnection extends EventEmitter {
   }
 
   addTrack(track) {
-    const sender = { track };
+    const sender = {
+      getParameters: sinon.spy(() => ({ encodings: [{}] })),
+      setParameters: sinon.spy(() => Promise.resolve()),
+      track
+    };
     this.senders.push(sender);
     return sender;
   }
@@ -2023,6 +2044,9 @@ function makePeerConnectionV2(options) {
   options.id = options.id || makeId();
 
   const pc = options.pc || makePeerConnection(options);
+  pc.addTrack({ kind: 'audio' });
+  pc.addTrack({ kind: 'video' });
+
   function RTCPeerConnection() {
     return pc;
   }
@@ -2036,6 +2060,7 @@ function makePeerConnectionV2(options) {
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
+    isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
     setBitrateParameters: options.setBitrateParameters,
     setCodecPreferences: options.setCodecPreferences
   });

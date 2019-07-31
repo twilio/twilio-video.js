@@ -331,10 +331,15 @@ const smallVideoConstraints = isSafari ? {} : {
   height: 120
 };
 
+const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
+  && typeof RTCRtpSender.prototype.getParameters === 'function'
+  && typeof RTCRtpSender.prototype.setParameters === 'function';
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
+exports.isRTCRtpSenderParamsSupported = isRTCRtpSenderParamsSupported;
 exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
