@@ -435,7 +435,7 @@ describe('connect', function() {
 
         before(async () => {
           [thisRoom, thoseRooms, peerConnections] = await setup(connectOptions, { tracks: [] }, 0);
-          // RTCRtpSender.setParameters() is an asynchronous operation,
+          // NOTE(mpatwardhan):RTCRtpSender.setParameters() is an asynchronous operation,
           // wait for a little while until the changes are applied.
           await new Promise(resolve => setTimeout(resolve, 5000));
         });

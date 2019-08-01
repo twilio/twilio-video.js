@@ -678,8 +678,8 @@ describe('PeerConnectionV2', () => {
         x => `When RTCRtpSenderParameters is ${x ? '' : 'not '}supported by WebRTC`
       ],
       [
-        [true, false],
-        x => `When dscpTagging is ${x ? 'requested' : 'not requested'}`
+        [true, false, undefined],
+        x => `When dscpTagging is set to ${x}`
       ],
     ], ([initial, signalingState, type, newerEqualOrOlder, matching, isRTCRtpSenderParamsSupported, dscpTagging]) => {
       // The Test
@@ -1904,16 +1904,21 @@ function makePeerConnectionV2(options) {
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
   options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
-  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, {
+  options.options = {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
-    dscpTagging: options.dscpTagging,
     isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
     setBitrateParameters: options.setBitrateParameters,
     setCodecPreferences: options.setCodecPreferences
-  });
+  };
+
+  if (options.dscpTagging !== undefined) {
+    options.options.dscpTagging = options.dscpTagging;
+  }
+
+  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, options.options);
 }
 
 /**
