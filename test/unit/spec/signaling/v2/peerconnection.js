@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -675,8 +676,12 @@ describe('PeerConnectionV2', () => {
       [
         [true, false],
         x => `When RTCRtpSenderParameters is ${x ? '' : 'not '}supported by WebRTC`
-      ]
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, isRTCRtpSenderParamsSupported]) => {
+      ],
+      [
+        [true, false, undefined],
+        x => `When dscpTagging is set to ${x}`
+      ],
+    ], ([initial, signalingState, type, newerEqualOrOlder, matching, isRTCRtpSenderParamsSupported, dscpTagging]) => {
       // The Test
       let test;
 
@@ -707,6 +712,7 @@ describe('PeerConnectionV2', () => {
           answers: 2,
           maxAudioBitrate: 40,
           maxVideoBitrate: 50,
+          dscpTagging,
           isRTCRtpSenderParamsSupported
         });
         descriptions = [];
@@ -848,13 +854,8 @@ describe('PeerConnectionV2', () => {
         it('should apply the specified bandwidth constraints to the remote description', () => {
           if (isRTCRtpSenderParamsSupported) {
             test.pc.getSenders().forEach(sender => {
-              assert.deepEqual(sender.setParameters.args[0][0], {
-                encodings: [{
-                  maxBitrate: sender.track.kind === 'audio'
-                    ? test.maxAudioBitrate
-                    : test.maxVideoBitrate
-                }]
-              });
+              const experctedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
+              sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', experctedMaxBitRate));
             });
             return;
           }
@@ -863,6 +864,20 @@ describe('PeerConnectionV2', () => {
           assert.equal(maxAudioBitrate, test.maxAudioBitrate);
           assert.equal(maxVideoBitrate, test.maxVideoBitrate);
         });
+      }
+
+      function itShouldSetNetworkPriority() {
+        if (isRTCRtpSenderParamsSupported) {
+          it('should set networkPriority to high for audio track senders', () => {
+            test.pc.getSenders().forEach(sender => {
+              if (sender.track.kind === 'audio' && dscpTagging) {
+                  sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
+              } else {
+                  sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
+              }
+            });
+          });
+        }
       }
 
       // NOTE(mroberts): This test should really be extended. Instead of popping
@@ -906,6 +921,7 @@ describe('PeerConnectionV2', () => {
 
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
+        itShouldSetNetworkPriority();
       }
 
       function itMightEventuallyAnswer() {
@@ -1888,7 +1904,7 @@ function makePeerConnectionV2(options) {
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
   options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
-  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, {
+  options.options = {
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
@@ -1896,7 +1912,13 @@ function makePeerConnectionV2(options) {
     isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
     setBitrateParameters: options.setBitrateParameters,
     setCodecPreferences: options.setCodecPreferences
-  });
+  };
+
+  if (options.dscpTagging !== undefined) {
+    options.options.dscpTagging = options.dscpTagging;
+  }
+
+  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, options.options);
 }
 
 /**
