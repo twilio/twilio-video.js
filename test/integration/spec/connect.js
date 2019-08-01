@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -420,8 +421,7 @@ describe('connect', function() {
     });
   });
 
-  (isRTCRtpSenderParamsSupported ? describe.only : describe.skip)('dscpTagging', () => {
-    // eslint-disable-next-line no-undefined
+  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('dscpTagging', () => {
     [true, false, undefined].forEach((dscpTagging) => {
       context(`when dscpTagging is ${typeof dscpTagging === 'undefined' ? 'not set' : dscpTagging ? 'set to true' : 'set to false'}`, () => {
         const connectOptions = {};
