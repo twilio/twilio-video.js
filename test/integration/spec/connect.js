@@ -969,7 +969,7 @@ describe('connect', function() {
       });
 
       if (roomCodec === 'VP8' && defaults.topology !== 'peer-to-peer') {
-        describe('JSDK-2463', () => {
+        describe('JSDK-2463: two simulcast groups in SDP instead of one after a rollback (glare)', () => {
           let peerConnections;
           let sid;
           let thisRoom;
