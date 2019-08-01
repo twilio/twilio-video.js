@@ -35,6 +35,7 @@ describe('InsightsPublisher', function() {
             'prod',
             'us1',
             options);
+          publisher.connect('roomSid', 'participantSid');
         });
 
         const description = tokenType !== 'valid'
@@ -70,6 +71,7 @@ describe('InsightsPublisher', function() {
         'us1',
         options);
 
+      publisher.connect('roomSid', 'participantSid');
       publisher.once('connected', () => publisher.disconnect());
       const error = await new Promise(resolve => publisher.once('disconnected', resolve));
       assert(!error);

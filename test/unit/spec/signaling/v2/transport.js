@@ -900,7 +900,11 @@ describe('Transport', () => {
         context('"connected"', () => {
           const message = {
             type: 'connected',
-            foo: 'bar'
+            foo: 'bar',
+            sid: 'roomSid',
+            participant: {
+              sid: 'userSid',
+            }
           };
 
           let connectedEvent;
@@ -1077,7 +1081,7 @@ describe('Transport', () => {
           context('when the Transport\'s .state transitions to', () => {
             context('"connected"', () => {
               beforeEach(() => {
-                test.receiveRequest({ type: 'connected' });
+                test.receiveRequest({ type: 'connected', sid: 'roomSid', participant: { sid: 'userSid' } });
               });
 
               it('emits an "message" event with the RSP message with type "synced"', () => {
@@ -1128,7 +1132,7 @@ describe('Transport', () => {
           context('when the Transport\'s .state transitions to', () => {
             context('"connected"', () => {
               beforeEach(() => {
-                test.receiveRequest({ type: 'connected' });
+                test.receiveRequest({ type: 'connected', sid: 'roomSid', participant: { sid: 'userSid' } });
               });
 
               it('emits an "message" event with the RSP message with type "update"', () => {
@@ -1451,7 +1455,11 @@ describe('Transport', () => {
 
         context('"connected"', () => {
           const message = {
-            type: 'connected'
+            type: 'connected',
+            sid: 'roomSid',
+            participant: {
+              sid: 'userSid'
+            }
           };
 
           let emittedEvent;
@@ -1623,7 +1631,11 @@ describe('Transport', () => {
       context('"connecting", and the request contains an RSP message with type', () => {
         context('"connected"', () => {
           const message = {
-            type: 'connected'
+            type: 'connected',
+            sid: 'roomSid',
+            participant: {
+              sid: 'userSid'
+            }
           };
 
           let connectedEvent;
@@ -1764,7 +1776,7 @@ describe('Transport', () => {
           context('when the Transport\'s .state transitions to', () => {
             context('"connected"', () => {
               beforeEach(() => {
-                test.receiveRequest({ type: 'connected' });
+                test.receiveRequest({ type: 'connected', sid: 'roomSid', participant: { sid: 'userSid' } });
               });
 
               it('emits an "message" event with the RSP message with type "synced"', () => {
@@ -1809,7 +1821,7 @@ describe('Transport', () => {
           context('when the Transport\'s .state transitions to', () => {
             context('"connected"', () => {
               beforeEach(() => {
-                test.receiveRequest({ type: 'connected' });
+                test.receiveRequest({ type: 'connected', sid: 'roomSid', participant: { sid: 'userSid' } });
               });
 
               it('emits an "message" event with the RSP message with type "update"', () => {
@@ -2465,7 +2477,7 @@ function makeTest(options) {
   };
   options.accepted = message => options.receiveRequest(message, 'accepted');
   options.failed = () => options.session.emit('failed');
-  options.connect = () => options.accepted({ type: 'connected' });
+  options.connect = () => options.accepted({ type: 'connected', sid: 'roomSid', participant: { sid: 'userSid' } });
   options.sync = () => options.receiveRequest({ type: 'synced' });
   return options;
 }
@@ -2507,6 +2519,7 @@ function makeUA(options) {
 
 function makeInsightsPublisherConstructor(testOptions) {
   return function InsightsPublisher() {
+    this.connect = sinon.spy(() => {});
     this.disconnect = sinon.spy(() => {});
     this.publish = sinon.spy(() => 'baz');
     testOptions.eventPublisher = this;
