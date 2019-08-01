@@ -440,18 +440,13 @@ describe('connect', function() {
           await new Promise(resolve => setTimeout(resolve, 5000));
         });
 
-        ['audio', 'video'].forEach(kind => {
-          let expectedNetworkPriority = 'low';
-          if (dscpTagging === true && kind === 'audio') {
-            expectedNetworkPriority = 'high';
-          }
-          it(`networkPriority should be set to ${expectedNetworkPriority} for ${kind} track`, () => {
-            flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track.kind === kind);
-            }).forEach(sender => {
-              const { encodings } = sender.getParameters();
-              encodings.forEach(({ networkPriority }) => assert.equal(networkPriority, expectedNetworkPriority));
-            });
+        const expectedNetworkPriority = dscpTagging === true ? 'high' : 'low';
+        it(`networkPriority should be set to ${expectedNetworkPriority} for audio tracks`, () => {
+          flatMap(peerConnections, pc => {
+            return pc.getSenders().filter(sender => sender.track.kind === 'audio');
+          }).forEach(sender => {
+            const { encodings } = sender.getParameters();
+            encodings.forEach(({ networkPriority }) => assert.equal(networkPriority, expectedNetworkPriority));
           });
         });
 
