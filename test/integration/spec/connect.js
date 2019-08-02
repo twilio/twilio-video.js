@@ -967,6 +967,66 @@ describe('connect', function() {
           return completeRoom(sid);
         });
       });
+
+      if (roomCodec === 'VP8' && defaults.topology !== 'peer-to-peer') {
+        describe('JSDK-2463: two simulcast groups in SDP instead of one after a rollback (glare)', () => {
+          let peerConnections;
+          let sid;
+          let thisRoom;
+
+          before(async () => {
+            const localVideoTrack = await createLocalVideoTrack(smallVideoConstraints);
+
+            [sid, thisRoom] = await setup({
+              alone: true,
+              testOptions: { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }], video: false },
+              roomOptions: { VideoCodecs: [roomCodec] }
+            });
+
+            peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+            // NOTE(mmalavalli): Glare is induced by publishing the LocalVideoTrack
+            // soon after joining the Room.
+            await thisRoom.localParticipant.publishTrack(localVideoTrack);
+
+            // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
+            // before verifying that simulcast has been enabled. This was added to remove
+            // flakiness of this test in Travis.
+            await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+              pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+            })));
+          });
+
+          it('is fixed', () => {
+            flatMap(peerConnections, pc => {
+              assert(pc.localDescription.sdp);
+              return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
+            }).forEach(section => {
+              const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
+                return line.split(' ').slice(1);
+              }));
+
+              const trackSSRCs = new Set(section.match(/^a=ssrc:.+$/gm).map(line => {
+                return line.match(/a=ssrc:([0-9]+)/)[1];
+              }));
+
+              // NOTE(mmalavalli): The bug manifests itself as 2 "a=ssrc-group:SIM..." lines in
+              // the m= section as follows:
+              // 1. a=ssrc-group:SIM <ssrc1> <ssrc4> <ssrc3>
+              // 2. a=ssrc-group:SIM <ssrc1> <ssrc2> <ssrc3>
+              // This results in 4 unique simulcast SSRCs as opposed to the expected 3.
+              assert.equal(simSSRCs.size, 3);
+              simSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+            });
+          });
+
+          after(() => {
+            if (thisRoom) {
+              thisRoom.disconnect();
+            }
+            return completeRoom(sid);
+          });
+        });
+      }
     });
   });
 
