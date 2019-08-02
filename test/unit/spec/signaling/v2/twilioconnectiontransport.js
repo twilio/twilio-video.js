@@ -27,9 +27,12 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { maxTracks: 2 } }, { video: { max_tracks: 2 } }],
       // eslint-disable-next-line
+      [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
+      // eslint-disable-next-line
       [
         {
           video: {
+            dominantSpeakerPriority: 'baz',
             maxSubscriptionBitrate: 4096,
             maxTracks: 5,
             mode: 'bar'
@@ -37,6 +40,8 @@ describe('TwilioConnectionTransport', () => {
         },
         {
           video: {
+            // eslint-disable-next-line
+            active_speaker_priority: 'baz',
             // eslint-disable-next-line
             max_subscription_bandwidth: 4,
             // eslint-disable-next-line

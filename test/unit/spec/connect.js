@@ -7,7 +7,15 @@ const { inherits } = require('util');
 
 const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
-const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION, subscriptionMode } = require('../../../lib/util/constants');
+
+const {
+  DEFAULT_LOG_LEVEL,
+  WS_SERVER,
+  DEFAULT_REGION,
+  subscriptionMode,
+  trackPriority
+} = require('../../../lib/util/constants');
+
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -54,6 +62,7 @@ describe('connect', () => {
 
   describe('called with ConnectOptions#bandwidthProfile', () => {
     const subscriptionModes = Object.values(subscriptionMode);
+    const trackPriorities = Object.values(trackPriority);
     let mockSignaling;
     let signaling;
 
@@ -70,6 +79,7 @@ describe('connect', () => {
       [{ video: null }, 'whose .video is null', TypeError, 'object'],
       [{ video: 'baz' }, 'whose .video is not an object', TypeError, 'object'],
       [{ video: ['zee'] }, 'whose .video is an Array', TypeError, 'object'],
+      [{ video: { dominantSpeakerPriority: 2 } }, `whose .video.dominantSpeakerPriority is not one of ${trackPriorities.join(', ')}`, RangeError, trackPriorities],
       [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
       [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
       [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes]
