@@ -517,31 +517,38 @@ describe('connect', function() {
   });
 
   (isRTCRtpSenderParamsSupported ? describe : describe.skip)('dscpTagging', () => {
-    [true, false, undefined].forEach((dscpTagging) => {
-      context(`when dscpTagging is ${typeof dscpTagging === 'undefined' ? 'not set' : dscpTagging ? 'set to true' : 'set to false'}`, () => {
-        const connectOptions = {};
-        if (dscpTagging !== undefined) {
-          connectOptions.dscpTagging = dscpTagging;
-        }
-
+    [true, false, undefined].forEach(dscpTagging => {
+      context(`when dscpTagging is ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
         let peerConnections;
         let thisRoom;
         let thoseRooms;
 
         before(async () => {
+          const connectOptions = typeof dscpTagging === 'boolean' ? { dscpTagging } : {};
           [thisRoom, thoseRooms, peerConnections] = await setup(connectOptions, { tracks: [] }, 0);
-          // NOTE(mpatwardhan):RTCRtpSender.setParameters() is an asynchronous operation,
-          // wait for a little while until the changes are applied.
+          // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
+          // so wait for a little while until the changes are applied.
           await new Promise(resolve => setTimeout(resolve, 5000));
         });
 
-        const expectedNetworkPriority = dscpTagging === true ? 'high' : 'low';
-        it(`networkPriority should be set to ${expectedNetworkPriority} for audio tracks`, () => {
-          flatMap(peerConnections, pc => {
-            return pc.getSenders().filter(sender => sender.track.kind === 'audio');
-          }).forEach(sender => {
-            const { encodings } = sender.getParameters();
-            encodings.forEach(({ networkPriority }) => assert.equal(networkPriority, expectedNetworkPriority));
+        ['audio', 'video'].forEach(kind => {
+          const expectedNetworkPriority = isChrome ? {
+            audio: { true: 'high', false: 'low' },
+            video: { true: 'low', false: 'low' }
+          }[kind][dscpTagging || false] : undefined;
+
+          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for ${kind} RTCRtpEncodingParameters`, () => {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track && sender.track.kind === kind);
+            }).forEach(sender => {
+              sender.getParameters().encodings.forEach(encoding => {
+                if (typeof expectedNetworkPriority === 'string') {
+                  assert.equal(encoding.networkPriority, expectedNetworkPriority);
+                } else {
+                  assert(!('networkPriority' in encoding));
+                }
+              });
+            });
           });
         });
 
