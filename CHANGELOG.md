@@ -1,17 +1,16 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.18.3 (in progress)
+1.19.0 (in progress)
 ====================
 
 New Features
 ------------
 
-- You can now enable [dscp tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for audio
-  packets by specifying new ConnectOptions property `dscpTagging` and setting it to `true`.
-  DSCP tagging allows you to request enhanced QoS treatment for audio packets from any firewall/routers
-  that support this feature. Setting this option to `true` will request DSCP tagging
-  for audio packets on supported browsers (only Chrome supports this as of now). Audio packets will be
-  sent with DSCP header value set to (0xb8) which corrosponds to EF = Expediated Forwarding.
+- You can now enable [DSCP tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for audio
+  packets on supported browsers (only Chrome supports this as of now) by setting a new ConnectOptions property
+  `dscpTagging` to `true`. This will request enhanced QoS treatment for audio packets from any firewalls or
+  routers that support this feature. Audio packets will be sent with DSCP header value set to (0xb8) which
+  corrosponds to EF (Expediated Forwarding). (JSDK-2440)
 
   ```js
   const { connect } = require('twilio-video');
