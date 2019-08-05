@@ -29,13 +29,27 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
       // eslint-disable-next-line
+      [{ video: { renderDimensions: { dominantSpeaker: { width: 200, height: 400 } } } }, { video: { render_dimensions: { active_speaker: { width: 200, height: 400 } } } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { low: { width: 600, height: 800 } } } }, { video: { render_dimensions: { low: { width: 600, height: 800 } } } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { standard: { width: 1000, height: 1200 } } } }, { video: { render_dimensions: { standard: { width: 1000, height: 1200 } } } }],
+      // eslint-disable-next-line
       [
         {
           video: {
             dominantSpeakerPriority: 'baz',
             maxSubscriptionBitrate: 4096,
             maxTracks: 5,
-            mode: 'bar'
+            mode: 'bar',
+            renderDimensions: {
+              dominantSpeaker: { width: 0, height: 1 },
+              high: { width: 2, height: 3 },
+              low: { width: 4, height: 5 },
+              standard: { width: 6, height: 7 }
+            }
           }
         },
         {
@@ -46,7 +60,15 @@ describe('TwilioConnectionTransport', () => {
             max_subscription_bandwidth: 4,
             // eslint-disable-next-line
             max_tracks: 5,
-            mode: 'bar'
+            mode: 'bar',
+            // eslint-disable-next-line
+            render_dimensions: {
+              // eslint-disable-next-line
+              active_speaker: { width: 0, height: 1 },
+              high: { width: 2, height: 3 },
+              low: { width: 4, height: 5 },
+              standard: { width: 6, height: 7 }
+            }
           }
         }
       ]
