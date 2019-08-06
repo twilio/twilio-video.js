@@ -20,7 +20,7 @@ describe('TwilioConnectionTransport', () => {
     [              // bandwidthProfile
       [undefined],
       [{}, {}],
-      [{ video: {} }, {}],
+      [{ video: {} }, { video: {} }],
       [{ video: { mode: 'foo' } }, { video: { mode: 'foo' } }],
       // eslint-disable-next-line
       [{ video: { maxSubscriptionBitrate: 2048 } }, { video: { max_subscription_bandwidth: 2 } }],
