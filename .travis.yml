@@ -8,6 +8,7 @@ node_js:
 sudo: required
 
 addons:
+  artifacts: true
   apt:
     packages:
       - pulseaudio
@@ -109,5 +110,3 @@ notifications:
     on_pull_requests: false
     secure: jxmuMo2n/OCaUg6DMZ/fahcxoCmkyOt4eD5pWgIqinxL0INyByZhw3EyAItueuXo4+7oh2KZj78ryf2bChSMsGGXXF25Vdy154bGsFXS7xPH/ars7yTo2Cjry8j3ki0ve7aqH3GjMlBVuJRA3ps2w/bJjw9oq4JDiibDRsDPawcS3Xda0tHqc022lJer9jHaF+zBrjobo2xAZ8dFhMmx50wsY5tALq5xoiiAAfmARm8ZIZu6hZpwdbpC6pM9SBd1RNMxnzQrlFPqA25FYPZSaD4/5wjKDEHTO+dfOEW79sgZUuohE/AC+zKd3wiYxxDaxrkPkzijmYs39LyDqm5Vr6eS9OSrZptgGni6G/2J/dBW52MLlxCDB+SqpbaPuLVKsvPdVAwydMTYo02fJpxa3purUdNM9GFPZCZC4KGvht2cSvM1txUNFkpkAp8RCxyUGpVw58S4gnAp2sYmRR22i42nZJunR7myXiMV+KZcaS7BJ2Mf6Wo1YwSnHSP4xwuaBPBY0L86w/gyd9tABpEIamOwKkFiLmOKr1l8aCcuGrEHnBB2L5EpiNfxl93DjrApzwR3FqCeSzfwHgaZ6EIGtRqPPXUJgM4DtYt9udGO4c9fLr6QbDgyS4swn3uUiUmeI3i9UUg92jvv7OCYoe80DfsF5RVjZxXcQM+WMMsJ7os=
 
-addons:
-  artifacts: true
