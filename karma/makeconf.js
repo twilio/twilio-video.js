@@ -1,6 +1,7 @@
 /* eslint no-process-env:0 */
 'use strict';
 
+let testRun = 0;
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
   return function conf(config) {
@@ -35,6 +36,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
 
+    const strTestRun = (testRun++).toString();
+    const htmlReport = `../logs/testresults_${strTestRun}.html`;
+    const subTitle = 'BROWSER: ' + process.env.BROWSER + ', BVER: ' + process.env.BVER + ', TOPOLOGY: ' + process.env.TOPOLOGY;
     config.set({
       basePath: '',
       frameworks: ['browserify', 'mocha'],
@@ -46,11 +50,33 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       files,
       preprocessors,
       browserify: {
+        debug: !!process.env.DEBUG,
         transform: [
           'envify'
         ]
       },
-      reporters: ['spec'],
+      reporters: ['spec', 'junit', 'html'],
+      htmlReporter: { // configuration for karma-htmlfile-reporter
+        outputFile: htmlReport,
+
+        // Optional
+        pageTitle: 'Twilio-Video Integration Tests',
+        subPageTitle: subTitle,
+        groupSuites: true,
+        useCompactStyle: true,
+        useLegacyStyle: true,
+        showOnlyFailed: true
+      },
+      junitReporter: {
+        outputDir: `../logs/${strTestRun}`, // results will be saved as $outputDir/$browserName.xml
+        outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
+        suite: '', // suite will become the package name attribute in xml testsuite element
+        useBrowserName: true, // add browser name to report and classes names
+        nameFormatter: undefined, // function (browser, result) to customize the name attribute in xml testcase element
+        classNameFormatter: undefined, // function (browser, result) to customize the classname attribute in xml testcase element
+        properties: {}, // key value pair of properties to add to the <properties> section of the report
+        xmlVersion: null // use '1' if reporting to be per SonarQube 6.2 XML format
+      },
       port: 9876,
       colors: true,
       autoWatch: true,
