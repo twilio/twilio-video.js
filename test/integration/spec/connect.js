@@ -558,7 +558,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('called with EncodingParameters', () => {
+  describe('called with EncodingParameters', () => {
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
