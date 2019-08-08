@@ -33,7 +33,6 @@ const {
   pairs,
   randomName,
   smallVideoConstraints,
-  tracksAdded,
   tracksSubscribed,
   tracksPublished
 } = require('../../lib/util');
@@ -525,7 +524,7 @@ describe('connect', function() {
 
         before(async () => {
           const connectOptions = typeof dscpTagging === 'boolean' ? { dscpTagging } : {};
-          [thisRoom, thoseRooms, peerConnections] = await setup(connectOptions, { tracks: [] }, 0);
+          [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), connectOptions, { tracks: [] }, 0);
           // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
           // so wait for a little while until the changes are applied.
           await new Promise(resolve => setTimeout(resolve, 5000));
@@ -559,7 +558,7 @@ describe('connect', function() {
     });
   });
 
-  describe('called with EncodingParameters', () => {
+  describe.only('called with EncodingParameters', () => {
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
@@ -596,7 +595,7 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters, { tracks: [] }, 0);
+        [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), encodingParameters, { tracks: [] }, 0);
         // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
         // which is an asynchronous operation, wait for a little while until the changes are applied.
         if (isRTCRtpSenderParamsSupported) {
