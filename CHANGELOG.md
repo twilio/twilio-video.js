@@ -11,7 +11,7 @@ New Features
   DSCP tagging allows you to request enhanced QoS treatment for audio packets from any firewall/routers
   that support this feature. Setting this option to `true` will request DSCP tagging
   for audio packets on supported browsers (only Chrome supports this as of now). Audio packets will be
-  sent with DSCP header value set to (0xb8) which corrosponds to EF = Expediated Forwarding.
+  sent with DSCP header value set to (0xb8) which corrosponds to EF = Expedited Forwarding. (JSDK-2456)
 
   ```js
   const { connect } = require('twilio-video');
