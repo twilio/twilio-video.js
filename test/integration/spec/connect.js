@@ -1154,50 +1154,60 @@ describe('connect', function() {
   });
 
   if (defaults.topology !== 'peer-to-peer') {
-    describe('bandwidthProfile.video.maxTracks', () => {
-      let thisRoom;
-      let thoseRooms;
+    describe('bandwidthProfile.video', () => {
+      combinationContext([
+        [
+          [1],
+          x => `.maxTracks = ${x}`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `.dominantSpeakerPriority = "${x}"`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `and the publish priority of the Dominant Speaker's LocalVideoTrack is "${x}"`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `and the publish priority of the Passive Speaker's LocalVideoTrack is "${x}"`
+        ]
+      ], ([maxTracks, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
+        const priorityRanks = {
+          [PRIORITY_HIGH]: 1,
+          [PRIORITY_STANDARD]: 2,
+          [PRIORITY_LOW]: 3
+        };
 
-      beforeEach(async () => {
-        [, thisRoom, thoseRooms] = await setup({
-          testOptions: {
-            bandwidthProfile: { video: { maxTracks: 1 } },
-            dominantSpeaker: true,
-            tracks: []
-          },
-          otherOptions: { tracks: [] },
-          nTracks: 0
+        // NOTE(mmalavalli): Since "dominantSpeakerPriority" only upgrades the publish priority of the Dominant Speaker's
+        // LocalVideoTrack and does not downgrade it, the effective subscribe priority will be the greater of the
+        // two priorities.
+        const effectiveDominantSpeakerPriority = priorityRanks[dominantSpeakerPriority] <= priorityRanks[dominantSpeakerPublishPriority]
+          ? dominantSpeakerPriority
+          : dominantSpeakerPublishPriority;
+
+        const switchOffParticipant = priorityRanks[effectiveDominantSpeakerPriority] <= priorityRanks[passiveSpeakerPublishPriority]
+          ? 'passive'
+          : 'dominant';
+
+        let thisRoom;
+        let thoseRooms;
+
+        beforeEach(async () => {
+          [, thisRoom, thoseRooms] = await setup({
+            testOptions: {
+              bandwidthProfile: {
+                video: { dominantSpeakerPriority, maxTracks }
+              },
+              dominantSpeaker: true,
+              tracks: []
+            },
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
         });
-      });
 
-      context('when set to 1', () => {
-        it('should switch off low priority RemoteVideoTracks', async () => {
-          const bob = thoseRooms[0].localParticipant;
-          const charlie = thoseRooms[1].localParticipant;
-
-          // bob published a track with lo pri.
-          const loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-          await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
-          const remoteBob = thisRoom.participants.get(bob.sid);
-          await tracksSubscribed(remoteBob, 1);
-          const loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
-          const loPriTrackSwitchedOffPromise = trackSwitchedOff(loPriTrackPub.track);
-
-          // charlie publishes a track with hi pri
-          const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-          await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
-          const remoteCharlie = thisRoom.participants.get(charlie.sid);
-          await tracksSubscribed(remoteCharlie, 1);
-          const hiPriTrackPub = Array.from(remoteCharlie.tracks.values())[0];
-
-          // we should see bob's track getting switched off.
-          await loPriTrackSwitchedOffPromise;
-
-          assert.equal(loPriTrackPub.track.isSwitchedOff, true, 'low pri tracks were not switched off');
-          assert.equal(hiPriTrackPub.track.isSwitchedOff, false, 'hi pri track were switched off');
-        });
-
-        it('should switch off RemoteVideoTracks that are not published by the Dominant Speaker', async () => {
+        it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
           const [aliceTracks, bobTracks] = await Promise.all([1, 2].map(async () => [
             createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
             await createLocalVideoTrack(smallVideoConstraints)
@@ -1211,8 +1221,8 @@ describe('connect', function() {
 
           // Alice and Bob publish their LocalTracks
           await Promise.all([
-            aliceLocal.publishTracks(aliceTracks),
-            bobLocal.publishTracks(bobTracks),
+            ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: passiveSpeakerPublishPriority })),
+            ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: dominantSpeakerPublishPriority })),
             tracksSubscribed(aliceRemote, 2),
             tracksSubscribed(bobRemote, 2)
           ]);
@@ -1221,51 +1231,39 @@ describe('connect', function() {
             return [...videoTracks.values()][0].track;
           });
 
-          // Bob should be the Dominant Speaker and only his RemoteVideoTracks
-          // should be switched on.
+          let switched = {
+            dominant: {
+              off: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack },
+              on: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack }
+            },
+            passive: {
+              off: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack },
+              on: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack }
+            }
+          }[switchOffParticipant];
+
+          // Bob should be the Dominant Speaker
           await Promise.all([
             dominantSpeakerChanged(thisRoom, bobRemote),
-            trackSwitchedOn(bobRemoteVideoTrack),
-            trackSwitchedOff(aliceRemoteVideoTrack)
+            trackSwitchedOn(switched.on.remoteVideoTrack),
+            trackSwitchedOff(switched.off.remoteVideoTrack)
           ]);
 
-          bobRemote.videoTracks.forEach(({ track }) => {
+          switched.on.participant.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, false);
           });
 
-          aliceRemote.videoTracks.forEach(({ track }) => {
+          switched.off.participant.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, true);
-          });
-
-          // Disable Bob's audio and enable Alice's audio
-          bobLocal.audioTracks.forEach(({ track }) => track.disable());
-          aliceLocal.audioTracks.forEach(({ track }) => track.enable());
-
-          // Alice should be the Dominant Speaker and only her  RemoteVideoTracks
-          // should be switched on.
-          await Promise.all([
-            dominantSpeakerChanged(thisRoom, aliceRemote),
-            trackSwitchedOn(aliceRemoteVideoTrack),
-            trackSwitchedOff(bobRemoteVideoTrack)
-          ]);
-
-          assert.equal(thisRoom.dominantSpeaker, aliceRemote);
-
-          bobRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, true);
-          });
-
-          aliceRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, false);
           });
         });
-      });
 
-      afterEach(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        if (thisRoom) {
-          return completeRoom(thisRoom.sid);
-        }
+        afterEach(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          if (thisRoom) {
+            return completeRoom(thisRoom.sid);
+          }
+        });
       });
     });
   }
