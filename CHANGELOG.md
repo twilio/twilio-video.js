@@ -26,9 +26,28 @@ New Features
   const room = await connect(token, {
     bandwidthProfile: {
       video: {
+        dominantSpeakerPriority: 'high', // Min. subscribe priority of Dominant Speaker's RemoteVideoTracks.
         maxSubscriptionBitrate: 150000, // Max. bandwidth (bps) to be allocated to subscribed RemoteVideoTracks.
         maxTracks: 3, // Max. number of visible RemoteVideoTracks. Other RemoteVideoTracks will be switched off.
         mode: 'collaboration', // Subscription mode: "collaboration", "grid" or "presentation".
+        renderDimensions: {
+          dominantSpeaker: {  // Desired render dimensions of Dominant Speaker's RemoteVideoTracks.
+            width: 640,
+            height: 480
+          },
+          low: { // Desired render dimensions of RemoteVideoTracks with priority "low".
+            width: 320,
+            height: 240
+          },
+          standard: { // Desired render dimensions of RemoteVideoTracks with priority "standard".
+            width: 640,
+            height: 480
+          },
+          high: { // Desired render dimensions of RemoteVideoTracks with priority "high".
+            width: 1080,
+            height: 720
+          }
+        }
       }
     }
   });  
