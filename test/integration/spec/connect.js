@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -24,7 +25,17 @@ const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksSubscribed, tracksPublished } = require('../../lib/util');
+const {
+  capitalize,
+  combinationContext,
+  isRTCRtpSenderParamsSupported,
+  participantsConnected,
+  pairs,
+  randomName,
+  smallVideoConstraints,
+  tracksSubscribed,
+  tracksPublished
+} = require('../../lib/util');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
@@ -504,6 +515,49 @@ describe('connect', function() {
     });
   });
 
+  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('dscpTagging', () => {
+    [true, false, undefined].forEach(dscpTagging => {
+      context(`when dscpTagging is ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
+        let peerConnections;
+        let thisRoom;
+        let thoseRooms;
+
+        before(async () => {
+          const connectOptions = typeof dscpTagging === 'boolean' ? { dscpTagging } : {};
+          [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), connectOptions, { tracks: [] }, 0);
+          // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
+          // so wait for a little while until the changes are applied.
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        });
+
+        ['audio', 'video'].forEach(kind => {
+          const expectedNetworkPriority = isChrome ? {
+            audio: { true: 'high', false: 'low' },
+            video: { true: 'low', false: 'low' }
+          }[kind][dscpTagging || false] : undefined;
+
+          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for ${kind} RTCRtpEncodingParameters`, () => {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track && sender.track.kind === kind);
+            }).forEach(sender => {
+              sender.getParameters().encodings.forEach(encoding => {
+                if (typeof expectedNetworkPriority === 'string') {
+                  assert.equal(encoding.networkPriority, expectedNetworkPriority);
+                } else {
+                  assert(!('networkPriority' in encoding));
+                }
+              });
+            });
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        });
+      });
+    });
+  });
+
   describe('called with EncodingParameters', () => {
     combinationContext([
       [
@@ -542,10 +596,25 @@ describe('connect', function() {
 
       before(async () => {
         [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), encodingParameters, { tracks: [] }, 0);
+        // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
+        // which is an asynchronous operation, wait for a little while until the changes are applied.
+        if (isRTCRtpSenderParamsSupported) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
       });
 
       ['audio', 'video'].forEach(kind => {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track);
+            }).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(peerConnections, pc => {
             assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
