@@ -10,6 +10,9 @@ const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 
 function getTestPaths(path) {
+  if (process.env.FILE) {
+    return [process.env.FILE];
+  }
   var stat = statSync(path);
   if (stat && stat.isDirectory()) {
     return readdirSync(path).reduce((files, file) => {
