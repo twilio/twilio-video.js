@@ -131,7 +131,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
             'media.autoplay.enabled.user-gestures-needed': false,
-            'media.block-autoplay-until-in-foreground': false
+            'media.block-autoplay-until-in-foreground': false,
+            'media.getusermedia.insecure.enabled': true,
+            'media.devices.insecure.enabled': true
           }
         },
         FirefoxWebRTC: {
@@ -141,7 +143,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
             'media.autoplay.enabled.user-gestures-needed': false,
-            'media.block-autoplay-until-in-foreground': false
+            'media.block-autoplay-until-in-foreground': false,
+            'media.getusermedia.insecure.enabled': true,
+            'media.devices.insecure.enabled': true
           }
         }
       }

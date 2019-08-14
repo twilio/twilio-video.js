@@ -1,6 +1,6 @@
 version: '3'
-# to run test in docer:
-# run docker-compose run test npm run test:docker
+# to run test in docker execute:
+# docker-compose run test npm run test:docker
 services:
   test:
     environment:
@@ -8,6 +8,7 @@ services:
     - API_KEY_SID=${API_KEY_SID}
     - API_KEY_SECRET=${API_KEY_SECRET}
     - TOPOLOGY=${TOPOLOGY}
+    image: twilio-video-js-test-${BROWSER}-${BVER}
     build:
       args:
       - USE_BROWSER=${BROWSER}
@@ -15,7 +16,7 @@ services:
       context: .
       dockerfile: docker/test/Dockerfile
     working_dir: /opt/app
-    container_name: "test"
+    container_name: "test-${BROWSER}-${BVER}"
     volumes:
       - "./:/opt/app"
       - /var/run/docker.sock:/var/run/docker.sock
