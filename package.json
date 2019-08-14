@@ -31,6 +31,7 @@
     "browserify": "^14.3.0",
     "cheerio": "^0.22.0",
     "chromedriver": "2.28.0",
+    "cors": "^2.8.5",
     "electron": "^5.0.1",
     "envify": "^4.0.0",
     "eslint": "^4.9.0",
