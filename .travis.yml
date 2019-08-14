@@ -94,5 +94,3 @@ notifications:
 
 addons:
   artifacts: true
-
-

@@ -15,6 +15,7 @@ function getTestFiles(config, defaultFile) {
 }
 
 let testRun = 0;
+
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
   return function conf(config) {
@@ -74,7 +75,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       reporters: ['spec', 'junit', 'html'],
       htmlReporter: { // configuration for karma-htmlfile-reporter
         outputFile: htmlReport,
-        pageTitle: 'Twilio-Video Integration Tests',
+        pageTitle: 'twilio-video.js Integration Tests',
         subPageTitle: strReportName,
         groupSuites: true,
         useCompactStyle: true,
