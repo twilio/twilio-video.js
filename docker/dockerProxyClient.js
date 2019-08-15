@@ -6,7 +6,6 @@
 const http = require('http');
 const defaultServerUrl = 'http://localhost:3032/';
 
-// borrowed from: https://github.com/twilio/rtc-cpp/blob/feature/5.0.0/common/test/support/net_handoff_utils.cpp
 class DockerProxyClient {
 
   constructor(serverUrl) {
@@ -77,12 +76,29 @@ class DockerProxyClient {
     return this.makeRequest(this._serverUrl + 'getContainers');
   }
 
-  connectToNetwork({ networkId, containerId }) {
-    return this.makeRequest(this._serverUrl + `connect/${networkId}/${containerId}`);
+  inspectCurrentContainer() {
+    return this.makeRequest(this._serverUrl + 'inspectCurrentContainer');
   }
 
-  disconnectFromNetwok({ networkId, containerId }) {
-    return this.makeRequest(this._serverUrl + `disconnect/${networkId}/${containerId}`);
+  connectToNetwork(networkId) {
+    return this.makeRequest(this._serverUrl + `connect/${networkId}`);
+  }
+
+  disconnectFromNetwok(networkId) {
+    return this.makeRequest(this._serverUrl + `disconnect/${networkId}`);
+  }
+
+  disconnectFromAllNetworks() {
+    return this.makeRequest(this._serverUrl + 'disconnectFromAllNetworks');
+  }
+
+  createNetwork( networkName ) {
+    networkName = networkName || 'random-' + (new Date()).toISOString();
+    return this.makeRequest(this._serverUrl + `createNetwork/${networkName}`);
+  }
+
+  resetNetwork() {
+    return this.makeRequest(this._serverUrl + 'resetNetwork');
   }
 }
 
@@ -102,17 +118,20 @@ if (module.parent === null) {
     'getVersion',
     'getContainers',
     'getActiveInterface',
-    'getCurrentContainerId'
+    'getCurrentContainerId',
+    'createNetwork',
+    'inspectCurrentContainer',
+    'resetNetwork'
   ].map(func => {
-    return client[func]().then(( result ) => {
-      console.info(`${func} returned:`, result);
+    return client[func]({}).then(( result ) => {
+      console.info(`${func} returned:`, JSON.stringify(result, null, 4));
     }).catch((err) => {
       console.error(`${func} failed with:`, err);
     });
   });
 
   Promise.all(promises).then(() => {
-    console.log("done with all client calls.")
+    console.log("done with all client calls.");
   });
 }
 

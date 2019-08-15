@@ -1,6 +1,9 @@
-version: '3'
+version: '3.7'
 # to run test in docker execute:
 # docker-compose run test npm run test:docker
+networks:
+  default:
+    name: twilio-video-default-network
 services:
   test:
     environment:
@@ -13,6 +16,7 @@ services:
       args:
       - USE_BROWSER=${BROWSER}
       - USE_BVER=${BVER}
+      - USE_NETWORK=twilio-video-default-network
       context: .
       dockerfile: docker/test/Dockerfile
     working_dir: /opt/app
