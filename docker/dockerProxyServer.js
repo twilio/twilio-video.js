@@ -65,7 +65,19 @@ class DockerProxyServer {
   // default state is "twilio-video-default-network" as
   // only connected network.
   resetNetwork() {
-    return this.disconnectFromAllNetworks().then(() => this.connectToDefaultNetwork());
+    return this.disconnectFromAllNetworks()
+        .then(() => this.connectToDefaultNetwork())
+        .then(() => this._pruneNetworks());
+  }
+
+  // removes all unused networks.
+  _pruneNetworks() {
+    return this._makeRequest({
+      socketPath: '/var/run/docker.sock',
+      path: '/v1.26/networks/prune',
+      method: 'POST',
+    });
+
   }
 
   getCurrentContainerId() {
@@ -156,7 +168,6 @@ class DockerProxyServer {
         'Content-Length': postData.length
       }
     }, postData).then((res) => {
-      console.log("newwork create returned:", res);
       return res;
     });
   }
@@ -222,8 +233,9 @@ class DockerProxyServer {
     const thisRequest = this._requestId++;
     return new Promise((resolve, reject) => {
       let clientRequest = http.request(options, (res) => {
-        if (res.statusCode !== 200) {
-          console.warn(`${thisRequest}: request returned:`, options, postdata, res.statusCode);
+        const requestFailed = res.statusCode !== 200 && res.statusCode !== 201;
+        if (requestFailed) {
+          console.warn(`${thisRequest}: request returned:`, res.statusCode, options, postdata);
         }
         res.setEncoding('utf8');
         let rawData = '';
@@ -235,6 +247,9 @@ class DockerProxyServer {
             let parsedData;
             if (rawData) {
               parsedData = JSON.parse(rawData);
+            }
+            if (requestFailed) {
+              console.warn(`${thisRequest}: request failed with:`, res.statusCode, parsedData);
             }
             resolve(parsedData);
           } catch (e) {

@@ -1,9 +1,10 @@
-version: '3.7'
+version: '3.5'
 # to run test in docker execute:
 # docker-compose run test npm run test:docker
+
 networks:
   default:
-    name: twilio-video-default-network
+   name: twilio-video-default-network
 services:
   test:
     environment:

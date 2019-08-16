@@ -6,42 +6,39 @@ const assert = require('assert');
 const DockerProxyClient = require('../../../docker/DockerProxyClient');
 
 // wait to go online or offline.
-// param: online - if true waits to go online, if false waits to go offline.
+// param: onlineOrOffline (string) 'online|offline'
 let callNumber = 0;
-function waitToGoOnline(online) {
+function waitToGo(onlineOrOffline) {
   const thisCallNumber = callNumber++;
-  const onlineOrOffline = online ? 'online' : 'offline';
-  console.log(`${thisCallNumber}]: Waiting for network to go: ${onlineOrOffline}`);
+  const wantonline = onlineOrOffline === 'online';
   return Promise.resolve().then(() => {
-    if (window.navigator.onLine !== online) {
+    if (window.navigator.onLine !== wantonline) {
       return new Promise((resolve) => {
-        setTimeout(function _waitforIt() {
-          console.log('window.navigator.onLine =  ', window.navigator.onLine);
-          if (window.navigator.onLine === online) {
-            resolve();
-          }
-          setTimeout(_waitforIt, 100);
-        }, 100);
+        console.log(`${thisCallNumber}]: Waiting for network to go: ${onlineOrOffline}`);
         window.addEventListener(onlineOrOffline, () => {
-          console.log(`${thisCallNumber}]: Done, went ${onlineOrOffline}`);
+          console.log(`${thisCallNumber}]: Done, now ${onlineOrOffline}`);
           resolve();
         }, { once: true });
       });
-    } else {
-      console.log(`${thisCallNumber}]: Done, already ${onlineOrOffline}`);
-      // eslint-disable-next-line consistent-return
-      return;
     }
   });
 }
 
-describe('docker tests', function() {
+function waitToGoOnline() {
+  return waitToGo('online');
+}
+
+function waitToGoOffline() {
+  return waitToGo('offline');
+}
+
+describe('dockerProxy tests', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
   let dockerAPI = new DockerProxyClient();
   let isRunningInsideDocker = false;
-  before(async function () {
+  before(async () => {
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 
@@ -56,7 +53,7 @@ describe('docker tests', function() {
     }
   });
 
-  afterEach(async function () {
+  afterEach(async () => {
     if (isRunningInsideDocker) {
       // reset to original network settings.
       await dockerAPI.resetNetwork();
@@ -82,9 +79,14 @@ describe('docker tests', function() {
     assert(containers.length > 0);
 
     const idObj = await dockerAPI.getCurrentContainerId();
-
     const thisContainer = containers.find(container => container.Id === idObj.containerId);
     assert(thisContainer);
+  });
+
+  it('can disconnect from networks', async () => {
+    await waitToGoOnline();
+    await dockerAPI.disconnectFromAllNetworks();
+    await waitToGoOffline();
   });
 
   it('can inspectCurrentContainer', async () => {
@@ -96,26 +98,21 @@ describe('docker tests', function() {
   });
 
   it('can create network and connect to it', async () => {
-    await waitToGoOnline(true /* online */);
-
+    await waitToGoOnline();
     const newNetwork = await dockerAPI.createNetwork();
     await dockerAPI.disconnectFromAllNetworks();
 
-    await waitToGoOnline(false /* offline */);
-
+    await waitToGoOffline();
     await dockerAPI.connectToNetwork(newNetwork.Id);
-    await waitToGoOnline(true /* online */);
+    await waitToGoOnline();
   });
 
   it('can disconnect and reconnect from networks', async () => {
-    await waitToGoOnline(true /* online */);
-
-
+    await waitToGoOnline();
     const containers = await dockerAPI.getContainers();
     assert(containers.length > 0);
 
     const idObj = await dockerAPI.getCurrentContainerId();
-
     const thisContainer = containers.find(container => container.Id === idObj.containerId);
     const networks = Object.keys(thisContainer.NetworkSettings.Networks);
     const networkIds = networks.map((network) => thisContainer.NetworkSettings.Networks[network].NetworkID);
@@ -125,7 +122,7 @@ describe('docker tests', function() {
     });
     await Promise.all(disconnectPromises);
 
-    await waitToGoOnline(false /* offline */);
+    await waitToGoOffline();
 
     const activeInterfaceAfterDisconnect = await dockerAPI.getActiveInterface();
     assert(!activeInterfaceAfterDisconnect.activeInterface);
@@ -141,7 +138,7 @@ describe('docker tests', function() {
     const activeInterfaceAfterReconnect = await  dockerAPI.getActiveInterface();
     assert(activeInterfaceAfterReconnect.activeInterface.length > 0);
 
-    await waitToGoOnline(true /* online */);
+    await waitToGoOnline();
   });
 
   it('during network handoff receives a reconnecting message', () => {
