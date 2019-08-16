@@ -1,10 +1,12 @@
-version: '3.5'
+version: '3'
 # to run test in docker execute:
 # docker-compose run test npm run test:docker
 
-networks:
-  default:
-   name: twilio-video-default-network
+# Travis has Docker Engine Version: 17.09.0-ce
+# which does not support naming default networks.
+# networks:
+#   default:
+#    name: twilio-videojs_default
 services:
   test:
     environment:
@@ -17,7 +19,7 @@ services:
       args:
       - USE_BROWSER=${BROWSER}
       - USE_BVER=${BVER}
-      - USE_NETWORK=twilio-video-default-network
+      - USE_NETWORK=twilio-videojs_default
       context: .
       dockerfile: docker/test/Dockerfile
     working_dir: /opt/app

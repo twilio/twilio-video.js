@@ -8,7 +8,11 @@ const DEFAULT_SERVER_PORT = 3032;
 const cors = require('cors');
 const isDocker = require('is-docker')();
 const version = 0.01;
-const defaultNetwork = 'twilio-video-default-network';
+const defaultNetwork = 'twilio-videojs_default';
+
+// TODO: move to api version 1.32
+// Travis supports API version:  1.32 (minimum version 1.12)
+
 // borrowed from: https://github.com/twilio/rtc-cpp/blob/feature/5.0.0/common/test/support/net_handoff_utils.cpp
 class DockerProxyServer {
 
@@ -17,6 +21,7 @@ class DockerProxyServer {
     this._requestId = 4000;
     this._containerId = null;
     this._server = null;
+    this._instanceLabel = 'dockerProxy' + (new Date()).toISOString();
   }
 
   stopServer() {
@@ -70,14 +75,16 @@ class DockerProxyServer {
         .then(() => this._pruneNetworks());
   }
 
-  // removes all unused networks.
+  // removes all unused networks (created by this instance)
   _pruneNetworks() {
+    const filters = encodeURIComponent(JSON.stringify({
+      'label': { [this._instanceLabel]: true }
+    }));
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.26/networks/prune',
+      path: `/v1.26/networks/prune?filters=${filters}`,
       method: 'POST',
     });
-
   }
 
   getCurrentContainerId() {
@@ -156,8 +163,16 @@ class DockerProxyServer {
     //   "Driver": "bridge",
     //   ...
     // }
+
+    // Note: we tag the networks created by this instance of proxy
+    // with a label, so that we can prune specific networks during cleanup.
+    const instanceId = (new Date()).toDateString();
     const postData = JSON.stringify({
       "Name": networkName,
+      "Labels": {
+        'dockerProxy': instanceId,
+        [this._instanceLabel]: instanceId,
+      }
     });
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',

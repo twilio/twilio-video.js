@@ -97,12 +97,13 @@ describe('dockerProxy tests', function() {
     assert.equal(currentContainer.State.Status, 'running');
   });
 
-  it('can create network and connect to it', async () => {
-    await waitToGoOnline();
+  it('can create new networks and connect to it', async () => {
     const newNetwork = await dockerAPI.createNetwork();
-    await dockerAPI.disconnectFromAllNetworks();
 
+    await waitToGoOnline();
+    await dockerAPI.disconnectFromAllNetworks();
     await waitToGoOffline();
+
     await dockerAPI.connectToNetwork(newNetwork.Id);
     await waitToGoOnline();
   });
