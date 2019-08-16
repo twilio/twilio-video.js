@@ -32,7 +32,7 @@ function waitToGoOffline() {
   return waitToGo('offline');
 }
 
-describe('dockerProxy tests', function() {
+describe('dockerProxy', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -97,7 +97,7 @@ describe('dockerProxy tests', function() {
     assert.equal(currentContainer.State.Status, 'running');
   });
 
-  it('can create new networks and connect to it', async () => {
+  it('can create new network and connect to it', async () => {
     const newNetwork = await dockerAPI.createNetwork();
 
     await waitToGoOnline();

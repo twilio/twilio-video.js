@@ -1,6 +1,8 @@
 'use strict';
 
+console.trace("loading test/integration/index.js");
 require('./spec/connect');
+require('./spec/docker');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');

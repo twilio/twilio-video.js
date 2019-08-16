@@ -4,6 +4,7 @@ version: '3'
 
 # Travis has Docker Engine Version: 17.09.0-ce
 # which does not support naming default networks.
+# https://docs.docker.com/compose/compose-file/compose-versioning/#version-35
 # networks:
 #   default:
 #    name: twilio-videojs_default
