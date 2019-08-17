@@ -3,7 +3,7 @@
 'use strict';
 
 const assert = require('assert');
-const DockerProxyClient = require('../../../docker/DockerProxyClient');
+const DockerProxyClient = require('../../../docker/dockerProxyClient');
 
 // wait to go online or offline.
 // param: onlineOrOffline (string) 'online|offline'
@@ -143,6 +143,7 @@ describe('dockerProxy', function() {
   });
 
   it('during network handoff receives a reconnecting message', () => {
+    thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
     // bob joins a room
     // alice joins a room
 
@@ -151,5 +152,5 @@ describe('dockerProxy', function() {
     // another network connects.
 
     // expect reconnecting event.
-  })
+  });
 });

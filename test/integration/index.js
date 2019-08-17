@@ -1,6 +1,7 @@
 'use strict';
 
 console.trace("loading test/integration/index.js");
+require('./spec/handoff');
 require('./spec/connect');
 require('./spec/docker');
 require('./spec/localparticipant');
