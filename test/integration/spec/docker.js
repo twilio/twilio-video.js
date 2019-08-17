@@ -141,16 +141,4 @@ describe('dockerProxy', function() {
 
     await waitToGoOnline();
   });
-
-  it('during network handoff receives a reconnecting message', () => {
-    thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
-    // bob joins a room
-    // alice joins a room
-
-    // network disconnects
-
-    // another network connects.
-
-    // expect reconnecting event.
-  });
 });
