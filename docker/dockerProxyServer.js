@@ -22,6 +22,7 @@ class DockerProxyServer {
     this._containerId = null;
     this._server = null;
     this._instanceLabel = 'dockerProxy' + (new Date()).toISOString();
+    this._originalNetworkPromise = this.getCurrentNetworks();
   }
 
   stopServer() {
@@ -32,36 +33,42 @@ class DockerProxyServer {
   }
 
   startServer() {
-    return new Promise(resolve => {
-      const express = require('express');
-      const app = express();
-      app.use(cors());
+    return this.getCurrentNetworks().then((originalNetworks) => {
+      console.log("makarand: original networks = ", originalNetworks);
+      this._originalNetworks = originalNetworks;
+      return new Promise(resolve => {
+        const express = require('express');
+        const app = express();
+        app.use(cors());
 
-      [
-        { path: '/version', implfn: 'version' },
-        { path: '/isDocker', implfn: 'isDocker' },
-        { path: '/getCurrentContainerId', implfn: 'getCurrentContainerId' },
-        { path: '/getContainers', implfn: 'getContainers' },
-        { path: '/getActiveInterface', implfn: 'getActiveInterface' },
-        { path: '/disconnect/:networkId', implfn: 'disconnectFromNetwork' },
-        { path: '/disconnectFromAllNetworks', implfn: 'disconnectFromAllNetworks' },
-        { path: '/connect/:networkId', implfn: 'connectToNetwork' },
-        { path: '/createNetwork/:networkName', implfn: 'createNetwork' },
-        { path: '/resetNetwork', implfn: 'resetNetwork' },
-        { path: '/inspectCurrentContainer', implfn: 'inspectCurrentContainer' },
-        { path: '/connectToDefaultNetwork', implfn: 'connectToDefaultNetwork' },
-      ].forEach((route) => {
-        app.get(route.path, (req, res, next) => {
-          this[route.implfn](req.params).then(data => res.send(data)).catch(error => {
-            console.warn('Failed @ ' + route.path, error);
-            next(error);
+        [
+          { path: '/version', implfn: 'version' },
+          { path: '/isDocker', implfn: 'isDocker' },
+          { path: '/getCurrentContainerId', implfn: 'getCurrentContainerId' },
+          { path: '/getContainers', implfn: 'getContainers' },
+          { path: '/getActiveInterface', implfn: 'getActiveInterface' },
+          { path: '/disconnect/:networkId', implfn: 'disconnectFromNetwork' },
+          { path: '/disconnectFromAllNetworks', implfn: 'disconnectFromAllNetworks' },
+          { path: '/connect/:networkId', implfn: 'connectToNetwork' },
+          { path: '/createNetwork/:networkName', implfn: 'createNetwork' },
+          { path: '/resetNetwork', implfn: 'resetNetwork' },
+          { path: '/inspectCurrentContainer', implfn: 'inspectCurrentContainer' },
+          { path: '/connectToDefaultNetwork', implfn: 'connectToDefaultNetwork' },
+          { path: '/getAllNetworks', implfn: 'getAllNetworks' },
+          { path: '/getCurrentNetworks', implfn: 'getCurrentNetworks' },
+        ].forEach((route) => {
+          app.get(route.path, (req, res, next) => {
+            this[route.implfn](req.params).then(data => res.send(data)).catch(error => {
+              console.warn('Failed @ ' + route.path, error);
+              next(error);
+            });
           });
         });
-      });
 
-      this._server = app.listen(this._serverPort, () => {
-        console.log(`DockerProxyServer listening on port ${this._serverPort}!`);
-        resolve();
+        this._server = app.listen(this._serverPort, () => {
+          console.log(`DockerProxyServer listening on port ${this._serverPort}!`);
+          resolve();
+        });
       });
     });
   }
@@ -128,7 +135,16 @@ class DockerProxyServer {
   }
 
   connectToDefaultNetwork() {
-    return this.connectToNetwork({ networkId: defaultNetwork });
+    const connectPromises = this._originalNetworks.map(({ Id }) => this.connectToNetwork({ networkId: Id }) );
+    return Promise.all(connectPromises);
+  }
+
+  getAllNetworks() {
+    return this._makeRequest({
+      socketPath: '/var/run/docker.sock',
+      path: '/v1.26/networks',
+      method: 'GET',
+    });
   }
 
   connectToNetwork({ networkId }) {
@@ -137,15 +153,22 @@ class DockerProxyServer {
     });
   }
 
-  disconnectFromAllNetworks() {
+  // return Promise<[{networkName, networkId}]>
+  getCurrentNetworks() {
     return this.inspectCurrentContainer().then((currentContainer) => {
-      const networks = Object.keys(currentContainer.NetworkSettings.Networks);
-      const networkIds = networks.map((network) => currentContainer.NetworkSettings.Networks[network].NetworkID);
-      const disconnectPromises = [];
-      networkIds.forEach((networkId) => {
-        disconnectPromises.push(this.disconnectFromNetwork({ networkId }));
+      const networkNames = Object.keys(currentContainer.NetworkSettings.Networks);
+      return networkNames.map((networkName) => {
+        return {
+          Name: networkName,
+          Id: currentContainer.NetworkSettings.Networks[networkName].NetworkID
+        };
       });
+    });
+  }
 
+  disconnectFromAllNetworks() {
+    return this.getCurrentNetworks().then((networks) => {
+      const disconnectPromises = networks.map(({ Id }) => this.disconnectFromNetwork({ networkId: Id }));
       return Promise.all(disconnectPromises);
     });
   }

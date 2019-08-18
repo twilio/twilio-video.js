@@ -100,6 +100,14 @@ class DockerProxyClient {
   resetNetwork() {
     return this.makeRequest(this._serverUrl + 'resetNetwork');
   }
+
+  getAllNetworks() {
+    return this.makeRequest(this._serverUrl + 'getAllNetworks');
+  }
+
+  getCurrentNetworks() {
+    return this.makeRequest(this._serverUrl + 'getCurrentNetworks');
+  }
 }
 
 // To quick check this implementation
@@ -116,12 +124,14 @@ if (module.parent === null) {
   const promises = [
     'isDocker',
     'getVersion',
+    'getAllNetworks',
+    'getCurrentNetworks',
     'getContainers',
     'getActiveInterface',
     'getCurrentContainerId',
     'createNetwork',
     'inspectCurrentContainer',
-    'resetNetwork'
+    'resetNetwork',
   ].map(func => {
     return client[func]({}).then(( result ) => {
       console.info(`${func} returned:`, JSON.stringify(result, null, 4));

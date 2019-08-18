@@ -60,21 +60,21 @@ describe('dockerProxy', function() {
     }
   });
 
-  it('can return container id', async () => {
+  it('getCurrentContainerId: returns current container id', async () => {
     const resultPromise = dockerAPI.getCurrentContainerId();
     const response = await resultPromise;
     assert(typeof response.containerId === 'string' );
     assert(response.containerId.length > 5 );
   });
 
-  it('can return active interface', async () => {
+  it('getActiveInterface: returns active interface', async () => {
     const resultPromise = dockerAPI.getActiveInterface();
     const response = await resultPromise;
     assert(typeof response.activeInterface === 'string' );
     assert(response.activeInterface.length > 0);
   });
 
-  it('can enumerate containers', async () => {
+  it('getContainers: enumerates containers', async () => {
     const containers = await dockerAPI.getContainers();
     assert(containers.length > 0);
 
@@ -83,13 +83,44 @@ describe('dockerProxy', function() {
     assert(thisContainer);
   });
 
-  it('can disconnect from networks', async () => {
+  it('getAllNetworks: enumerates all networks', async () => {
+    const networks = await dockerAPI.getAllNetworks();
+    assert(networks.length > 0);
+    networks.forEach(({ Id, Name }) => {
+      assert.equal(typeof Id, 'string');
+      assert(Id.length > 0 );
+
+      assert.equal(typeof Name, 'string');
+      assert(Name.length > 0 );
+    });
+  });
+
+  it('getCurrentNetworks: enumerates networks container is connected to', async () => {
+    const networks = await dockerAPI.getCurrentNetworks();
+    assert(networks.length > 0);
+    networks.forEach(({ Id, Name }) => {
+      assert.equal(typeof Id, 'string');
+      assert(Id.length > 0 );
+
+      assert.equal(typeof Name, 'string');
+      assert(Name.length > 0 );
+    });
+  });
+
+
+  it('disconnectFromAllNetworks: disconnects from all networks', async () => {
     await waitToGoOnline();
+
+    let networks = await dockerAPI.getCurrentNetworks();
+    assert(networks.length > 0);
+
     await dockerAPI.disconnectFromAllNetworks();
+    networks = await dockerAPI.getCurrentNetworks();
+    assert.equal(networks.length, 0);
     await waitToGoOffline();
   });
 
-  it('can inspectCurrentContainer', async () => {
+  it('inspectCurrentContainer: returns details of current container', async () => {
     const idObj = await dockerAPI.getCurrentContainerId();
     const currentContainer = await dockerAPI.inspectCurrentContainer();
 
@@ -97,48 +128,50 @@ describe('dockerProxy', function() {
     assert.equal(currentContainer.State.Status, 'running');
   });
 
-  it('can create new network and connect to it', async () => {
+  it('createNetwork, connectToNetwork: creates new network and connect to it', async () => {
     const newNetwork = await dockerAPI.createNetwork();
-
     await waitToGoOnline();
     await dockerAPI.disconnectFromAllNetworks();
     await waitToGoOffline();
 
     await dockerAPI.connectToNetwork(newNetwork.Id);
     await waitToGoOnline();
+
+    const currentNetworks = await dockerAPI.getCurrentNetworks();
+    assert.equal(currentNetworks.length, 1);
+    assert.equal(currentNetworks[0].Id, newNetwork.Id);
   });
 
-  it('can disconnect and reconnect from networks', async () => {
-    await waitToGoOnline();
-    const containers = await dockerAPI.getContainers();
-    assert(containers.length > 0);
+  it('resetNetwork: can cleanup networks created', async () => {
+    // create a new network
+    const newNetwork = await dockerAPI.createNetwork();
 
-    const idObj = await dockerAPI.getCurrentContainerId();
-    const thisContainer = containers.find(container => container.Id === idObj.containerId);
-    const networks = Object.keys(thisContainer.NetworkSettings.Networks);
-    const networkIds = networks.map((network) => thisContainer.NetworkSettings.Networks[network].NetworkID);
-    const disconnectPromises = [];
-    networkIds.forEach((networkId) => {
-      disconnectPromises.push(dockerAPI.disconnectFromNetwok(networkId));
-    });
-    await Promise.all(disconnectPromises);
+    // ensure that it shows up in getAllNetworks.
+    let networks = await dockerAPI.getAllNetworks();
+    let found = networks.find(network => network.Id === newNetwork.Id);
+    assert.equal(found.name, newNetwork.name);
 
-    await waitToGoOffline();
+    // now ask dockerProxy to cleanup networks.
+    await dockerAPI.resetNetwork();
 
-    const activeInterfaceAfterDisconnect = await dockerAPI.getActiveInterface();
-    assert(!activeInterfaceAfterDisconnect.activeInterface);
+    // ensure that newNetork does not show up in list anymore.
+    networks = await dockerAPI.getAllNetworks();
+    found = networks.find(network => network.Id === newNetwork.Id);
+    assert.equal(found, undefined);
+  });
 
-    // reconnect to networks.
-    const reconnectPromises = [];
-    networkIds.forEach((networkId) => {
-      reconnectPromises.push(dockerAPI.connectToNetwork(networkId));
-    });
+  it('resetNetwork: connects back to default networks', async () => {
+    const initialNetworks = await dockerAPI.getCurrentNetworks();
+    assert(initialNetworks.length > 0);
 
-    await Promise.all(reconnectPromises);
+    await dockerAPI.disconnectFromAllNetworks();
+    const networksAfterDisconnect  = await dockerAPI.getCurrentNetworks();
+    assert(networksAfterDisconnect.length === 0);
+    waitToGoOffline();
 
-    const activeInterfaceAfterReconnect = await  dockerAPI.getActiveInterface();
-    assert(activeInterfaceAfterReconnect.activeInterface.length > 0);
-
-    await waitToGoOnline();
+    await dockerAPI.resetNetwork();
+    const networksAfterReset  = await dockerAPI.getCurrentNetworks();
+    assert.equal(initialNetworks.length, networksAfterReset.length);
+    waitToGoOnline();
   });
 });
