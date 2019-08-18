@@ -15,9 +15,11 @@ class MockLocalTrackPublicationV2 extends EventEmitter {
     super();
     this.trackTransceiver = trackSender.clone();
     this.id = trackSender.id;
+    this.isEnabled = true;
     this.name = name;
     this.priority = priority;
     this.sid = null;
+    this.enable = enabled => { this.isEnabled = enabled; };
     this.stop = () => this.trackTransceiver.stop();
   }
 }
@@ -111,6 +113,7 @@ describe('LocalParticipantV2', () => {
 
             let didEmitUpdated = false;
             localParticipant.once('updated', () => { didEmitUpdated = true; });
+            publication.enable(!publication.isEnabled);
             publication.emit('updated');
             assert(didEmitUpdated);
           });
