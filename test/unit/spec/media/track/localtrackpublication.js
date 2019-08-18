@@ -153,5 +153,5 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 });
 
 function makeLocalTrackPublicationSignaling(sid, priority) {
-  return { sid, priority };
+  return { sid, priority, updatedPriority: priority };
 }
