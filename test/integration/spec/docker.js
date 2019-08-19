@@ -5,32 +5,9 @@
 const assert = require('assert');
 const DockerProxyClient = require('../../../docker/dockerProxyClient');
 
-// wait to go online or offline.
-// param: onlineOrOffline (string) 'online|offline'
-let callNumber = 0;
-function waitToGo(onlineOrOffline) {
-  const thisCallNumber = callNumber++;
-  const wantonline = onlineOrOffline === 'online';
-  return Promise.resolve().then(() => {
-    if (window.navigator.onLine !== wantonline) {
-      return new Promise((resolve) => {
-        console.log(`${thisCallNumber}]: Waiting for network to go: ${onlineOrOffline}`);
-        window.addEventListener(onlineOrOffline, () => {
-          console.log(`${thisCallNumber}]: Done, now ${onlineOrOffline}`);
-          resolve();
-        }, { once: true });
-      });
-    }
-  });
-}
-
-function waitToGoOnline() {
-  return waitToGo('online');
-}
-
-function waitToGoOffline() {
-  return waitToGo('offline');
-}
+const {
+  waitToGoOnline, waitToGoOffline
+} = require('../../lib/util');
 
 describe('dockerProxy', function() {
   // eslint-disable-next-line no-invalid-this
@@ -42,11 +19,10 @@ describe('dockerProxy', function() {
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 
-  beforeEach(async function () {
+  beforeEach(async function() {
     if (!isRunningInsideDocker) {
+      // if not running inside docker skip the test.
       // eslint-disable-next-line no-invalid-this
-      // all tests in this file are for running inside docker.
-      // if we are not then skip them.
       this.skip();
     } else {
       await dockerAPI.resetNetwork();
@@ -61,15 +37,13 @@ describe('dockerProxy', function() {
   });
 
   it('getCurrentContainerId: returns current container id', async () => {
-    const resultPromise = dockerAPI.getCurrentContainerId();
-    const response = await resultPromise;
+    const response = await dockerAPI.getCurrentContainerId();
     assert(typeof response.containerId === 'string' );
     assert(response.containerId.length > 5 );
   });
 
   it('getActiveInterface: returns active interface', async () => {
-    const resultPromise = dockerAPI.getActiveInterface();
-    const response = await resultPromise;
+    const response = await dockerAPI.getActiveInterface();
     assert(typeof response.activeInterface === 'string' );
     assert(response.activeInterface.length > 0);
   });
@@ -107,10 +81,8 @@ describe('dockerProxy', function() {
     });
   });
 
-
   it('disconnectFromAllNetworks: disconnects from all networks', async () => {
     await waitToGoOnline();
-
     let networks = await dockerAPI.getCurrentNetworks();
     assert(networks.length > 0);
 
@@ -143,20 +115,17 @@ describe('dockerProxy', function() {
   });
 
   it('resetNetwork: can cleanup networks created', async () => {
-    // create a new network
     const newNetwork = await dockerAPI.createNetwork();
 
-    // ensure that it shows up in getAllNetworks.
     let networks = await dockerAPI.getAllNetworks();
     let found = networks.find(network => network.Id === newNetwork.Id);
     assert.equal(found.name, newNetwork.name);
 
-    // now ask dockerProxy to cleanup networks.
     await dockerAPI.resetNetwork();
 
-    // ensure that newNetork does not show up in list anymore.
     networks = await dockerAPI.getAllNetworks();
     found = networks.find(network => network.Id === newNetwork.Id);
+    // eslint-disable-next-line no-undefined
     assert.equal(found, undefined);
   });
 

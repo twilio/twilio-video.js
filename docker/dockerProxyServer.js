@@ -7,13 +7,8 @@ const http = require('http');
 const DEFAULT_SERVER_PORT = 3032;
 const cors = require('cors');
 const isDocker = require('is-docker')();
-const version = 0.01;
-const defaultNetwork = 'twilio-videojs_default';
+const version = 1.00;
 
-// TODO: move to api version 1.32
-// Travis supports API version:  1.32 (minimum version 1.12)
-
-// borrowed from: https://github.com/twilio/rtc-cpp/blob/feature/5.0.0/common/test/support/net_handoff_utils.cpp
 class DockerProxyServer {
 
   constructor(port) {
@@ -34,7 +29,6 @@ class DockerProxyServer {
 
   startServer() {
     return this.getCurrentNetworks().then((originalNetworks) => {
-      console.log("makarand: original networks = ", originalNetworks);
       this._originalNetworks = originalNetworks;
       return new Promise(resolve => {
         const express = require('express');
@@ -89,7 +83,7 @@ class DockerProxyServer {
     }));
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.26/networks/prune?filters=${filters}`,
+      path: `/v1.32/networks/prune?filters=${filters}`,
       method: 'POST',
     });
   }
@@ -99,7 +93,6 @@ class DockerProxyServer {
       const cmd = "cat /proc/self/cgroup | grep \"pids:/\" | sed 's/\\([0-9]*\\):pids:\\/docker\\///g'";
       return this._runCommand(cmd).then((output) => {
         const containerId = output.replace('\n', '');
-        console.info("container id = ", containerId);
         this._containerId = containerId;
         return { containerId };
       });
@@ -119,7 +112,7 @@ class DockerProxyServer {
   getContainers() {
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.26/containers/json',
+      path: '/v1.32/containers/json',
       method: 'GET',
     });
   }
@@ -128,7 +121,7 @@ class DockerProxyServer {
     return this.getCurrentContainerId().then(({ containerId }) => {
       return this._makeRequest({
         socketPath: '/var/run/docker.sock',
-        path: `/v1.26/containers/${containerId}/json`,
+        path: `/v1.32/containers/${containerId}/json`,
         method: 'GET',
       });
     });
@@ -142,7 +135,7 @@ class DockerProxyServer {
   getAllNetworks() {
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.26/networks',
+      path: '/v1.32/networks',
       method: 'GET',
     });
   }
@@ -180,13 +173,6 @@ class DockerProxyServer {
   }
 
   createNetwork({ networkName }) {
-    // POST /networks/create
-    // {
-    //   "Name":"NetoworkNameToCreate"
-    //   "Driver": "bridge",
-    //   ...
-    // }
-
     // Note: we tag the networks created by this instance of proxy
     // with a label, so that we can prune specific networks during cleanup.
     const instanceId = (new Date()).toDateString();
@@ -199,7 +185,7 @@ class DockerProxyServer {
     });
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.26/networks/create',
+      path: '/v1.32/networks/create',
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -219,25 +205,13 @@ class DockerProxyServer {
   }
 
   _connectToNetwork({ networkId, containerId }) {
-    // POST /v1.24/networks/22be93d5babb089c5aab8dbc369042fad48ff791584ca2da2100db837a1c7c30/connect HTTP/1.1
-    // Content-Type: application/json
-    // Content-Length: 12345
-    // {
-    //   "Container":"3613f73ba0e4",
-    //   "EndpointConfig": {
-    //     "IPAMConfig": {
-    //         "IPv4Address":"172.24.56.89",
-    //         "IPv6Address":"2001:db8::5689"
-    //     }
-    //   }
-    // }
     const postData = JSON.stringify({
       "Container": containerId,
     });
 
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.26/networks/${networkId}/connect`,
+      path: `/v1.32/networks/${networkId}/connect`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -247,18 +221,13 @@ class DockerProxyServer {
   }
 
   _disconnectFromNetwork({ networkId, containerId }) {
-    // POST /networks/(id or name)/disconnect
-    // {
-    //   "Container":"3613f73ba0e4",
-    //   "Force":false
-    // }
     const postData = JSON.stringify({
       "Container": containerId,
       "Force": false
     });
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.26/networks/${networkId}/disconnect`,
+      path: `/v1.32/networks/${networkId}/disconnect`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -320,7 +289,7 @@ class DockerProxyServer {
 // test code when called interactively.
 if (module.parent === null) {
   console.log("DockerProxy loaded interactively");
-  const server = new DockerProxyServer(/* server */);
+  const server = new DockerProxyServer();
   server.startServer().then(() => {
     console.log("started server");
   });

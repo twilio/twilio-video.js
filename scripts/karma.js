@@ -13,10 +13,10 @@ const DockerProxyServer = require('../docker/dockerProxyServer');
 
 
 function getTestPaths(path) {
-  // TODO: remove this hack
-  // const dockerTestFile = require('path').resolve('./test/integration/spec/docker.js');
-  // return [dockerTestFile];
-
+  // // TODO: remove this hack
+  // const dockerTestFile1 = require('path').resolve('./test/integration/spec/docker.js');
+  // const dockerTestFile2 = require('path').resolve('./test/integration/spec/handoff.js');
+  // return [dockerTestFile1, dockerTestFile2];
   if (process.env.FILE) {
     return [process.env.FILE];
   }

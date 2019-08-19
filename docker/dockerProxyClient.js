@@ -13,16 +13,9 @@ class DockerProxyClient {
       this._serverUrl = serverUrl || defaultServerUrl;
   }
 
-  getCurrentContainerId() {
-    return this.makeRequest(this._serverUrl + 'getCurrentContainerId');
-  }
-
-  getActiveInterface() {
-    return this.makeRequest(this._serverUrl + 'getActiveInterface');
-  }
-
+  // returns true if running inside a docker container.
   isDocker() {
-    return this.makeRequest(this._serverUrl + 'isDocker').then((isDockerResp) => {
+    return this.makeRequest('isDocker').then((isDockerResp) => {
       return isDockerResp.isDocker;
     }).catch((err) => {
       console.error('isDocker call failed..is DockerProxyServer running? ', err);
@@ -30,14 +23,60 @@ class DockerProxyClient {
     });
   }
 
-  getVersion() {
-    return this.makeRequest(this._serverUrl + 'version');
+  getCurrentContainerId() {
+    return this.makeRequest('getCurrentContainerId');
   }
 
-  makeRequest(options, postdata) {
+  getActiveInterface() {
+    return this.makeRequest('getActiveInterface');
+  }
+
+  getVersion() {
+    return this.makeRequest('version');
+  }
+
+  getContainers() {
+    return this.makeRequest('getContainers');
+  }
+
+  inspectCurrentContainer() {
+    return this.makeRequest('inspectCurrentContainer');
+  }
+
+  connectToNetwork(networkId) {
+    return this.makeRequest(`connect/${networkId}`);
+  }
+
+  disconnectFromNetwok(networkId) {
+    return this.makeRequest(`disconnect/${networkId}`);
+  }
+
+  disconnectFromAllNetworks() {
+    return this.makeRequest('disconnectFromAllNetworks');
+  }
+
+  createNetwork(networkName) {
+    networkName = networkName || 'random-' + (new Date()).toISOString();
+    return this.makeRequest(`createNetwork/${networkName}`);
+  }
+
+  resetNetwork() {
+    return this.makeRequest('resetNetwork');
+  }
+
+  getAllNetworks() {
+    return this.makeRequest('getAllNetworks');
+  }
+
+  getCurrentNetworks() {
+    return this.makeRequest('getCurrentNetworks');
+  }
+
+  makeRequest(api, postdata) {
+    const url = this._serverUrl + api;
     const thisRequest = this._requestId++;
     return new Promise((resolve, reject) => {
-      let clientRequest = http.request(options, (res) => {
+      let clientRequest = http.request(url, (res) => {
         if (res.statusCode !== 200) {
           console.warn(`${thisRequest}: request returned:`, res.statusCode);
         }
@@ -71,51 +110,14 @@ class DockerProxyClient {
       clientRequest.end();
     });
   }
-
-  getContainers() {
-    return this.makeRequest(this._serverUrl + 'getContainers');
-  }
-
-  inspectCurrentContainer() {
-    return this.makeRequest(this._serverUrl + 'inspectCurrentContainer');
-  }
-
-  connectToNetwork(networkId) {
-    return this.makeRequest(this._serverUrl + `connect/${networkId}`);
-  }
-
-  disconnectFromNetwok(networkId) {
-    return this.makeRequest(this._serverUrl + `disconnect/${networkId}`);
-  }
-
-  disconnectFromAllNetworks() {
-    return this.makeRequest(this._serverUrl + 'disconnectFromAllNetworks');
-  }
-
-  createNetwork( networkName ) {
-    networkName = networkName || 'random-' + (new Date()).toISOString();
-    return this.makeRequest(this._serverUrl + `createNetwork/${networkName}`);
-  }
-
-  resetNetwork() {
-    return this.makeRequest(this._serverUrl + 'resetNetwork');
-  }
-
-  getAllNetworks() {
-    return this.makeRequest(this._serverUrl + 'getAllNetworks');
-  }
-
-  getCurrentNetworks() {
-    return this.makeRequest(this._serverUrl + 'getCurrentNetworks');
-  }
 }
 
-// To quick check this implementation
+// To quick test the implementation
 // load this file interactively with the server url.
 if (module.parent === null) {
   console.log("DockerProxy loaded interactively");
   if (process.argv.length !== 3) {
-    console.log('Usage: node dockerProxyClient.js <serverurl>')
+    console.log('Usage: node dockerProxyClient.js <serverurl>');
     console.log('       where serverUrl is where dockerProxyServer is running');
     console.log('       Example: node dockerProxyClient.js http://localhost:3032/');
     return;

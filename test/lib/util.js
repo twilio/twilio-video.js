@@ -335,6 +335,40 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
+
+ /**
+ * Returns a promise that resolves after being connected/disconnected from network.
+ * @param {('online'|'offline')} onlineOrOffline - if online waits for connected state
+ * @returns {Promise<void>}
+ */
+function waitToGo(onlineOrOffline) {
+  const wantonline = onlineOrOffline === 'online';
+  return new Promise((resolve) => {
+    if (window.navigator.onLine !== wantonline) {
+      window.addEventListener(onlineOrOffline, resolve, { once: true });
+    } else {
+      resolve();
+    }
+  });
+}
+
+/**
+ * Returns a promise that resolves after being connected to the network.
+ * @returns {Promise<void>}
+ */
+function waitToGoOnline() {
+  return waitToGo('online');
+}
+
+/**
+ * Returns a promise that resolves after being disconneected from the network.
+ * @returns {Promise<void>}
+ */
+function waitToGoOffline() {
+  return waitToGo('offline');
+}
+
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.combinationContext = combinationContext;
@@ -352,3 +386,6 @@ exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
+exports.waitToGoOnline = waitToGoOnline;
+exports.waitToGoOffline = waitToGoOffline;
+
