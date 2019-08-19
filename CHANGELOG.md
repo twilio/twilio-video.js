@@ -10,7 +10,7 @@ New Features
   packets on supported browsers (only Chrome supports this as of now) by setting a new ConnectOptions property
   `dscpTagging` to `true`. This will request enhanced QoS treatment for audio packets from any firewalls or
   routers that support this feature. Audio packets will be sent with DSCP header value set to (0xb8) which
-  corrosponds to EF (Expediated Forwarding). (JSDK-2440)
+  corrosponds to EF (Expedited Forwarding). (JSDK-2440)
 
   ```js
   const { connect } = require('twilio-video');
@@ -18,6 +18,9 @@ New Features
     dscpTagging: true
   });
   ```
+
+- Setting bandwidth limits for media using `LocalParticipant.setParameters()` will now no longer require a
+  round of negotiation with the remote peer and will take effect instantaneously. (JSDK-2250)
 
 Bug Fixes
 ---------

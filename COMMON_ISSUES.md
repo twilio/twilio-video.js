@@ -44,6 +44,12 @@ to ensure playback:
   video.muted = true;
   ```
 
+Firefox Participants cannot constrain their audio bandwidth
+-----------------------------------------------------------
+
+Because of this [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726), Firefox
+Participants are not able to constrain their audio bandwidth using `LocalParticipant.setParameters()`.
+
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
 
