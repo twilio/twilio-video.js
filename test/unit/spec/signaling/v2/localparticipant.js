@@ -7,6 +7,7 @@ const sinon = require('sinon');
 const DataTrackSender = require('../../../../../lib/data/sender');
 const EncodingParametersImpl = require('../../../../../lib/encodingparameters');
 const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
+const TrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const NetworkQualityConfigurationImpl = require('../../../../../lib/networkqualityconfiguration');
 const { makeUUID } = require('../../../../../lib/util');
 
@@ -18,8 +19,11 @@ class MockLocalTrackPublicationV2 extends EventEmitter {
     this.isEnabled = true;
     this.name = name;
     this.priority = priority;
+    this.updatedPriority = priority;
     this.sid = null;
-    this.enable = enabled => { this.isEnabled = enabled; };
+    this.enable = enabled => { this.isEnabled = enabled; this.emit('updated'); };
+    this.setPriority = priority => { this.updatedPriority = priority; this.emit('updated' ); };
+    this.setSid = sid => { if (!this.sid) { this.sid = sid; this.emit('updated'); } };
     this.stop = () => this.trackTransceiver.stop();
   }
 }
@@ -204,6 +208,60 @@ describe('LocalParticipantV2', () => {
       localParticipant.setParameters({ maxAudioBitrate: 100, maxVideoBitrate: 50 });
       assert.equal(encodingParameters.maxAudioBitrate, 100);
       assert.equal(encodingParameters.maxVideoBitrate, 50);
+    });
+  });
+
+  describe('LocalTrackPublicationV2#updated', () => {
+    let localTrackPublication;
+    let revision;
+    let trackPrioritySignaling;
+    let updated;
+
+    beforeEach(() => {
+      localParticipant.addTrack(trackSender, name, priority);
+      localTrackPublication = localParticipant.tracks.get(trackSender.id);
+      revision = localParticipant.revision;
+      trackPrioritySignaling = sinon.createStubInstance(TrackPrioritySignaling);
+      localParticipant.setTrackPrioritySignaling(trackPrioritySignaling);
+      localParticipant.once('updated', () => { updated = true; });
+      updated = false;
+    });
+
+    [
+      ['isEnabled', 'enable', false, true],
+      ['updatedPriority', 'setPriority', makeUUID(), false],
+      ['sid', 'setSid', makeUUID(), false]
+    ].forEach(([prop, setProp, value, shouldEmitUpdated]) => {
+      context(`when emitted due to a change in .${prop}`, () => {
+        beforeEach(() => {
+          localTrackPublication[setProp](value);
+        });
+
+        if (shouldEmitUpdated) {
+          it('should increment .revision', () => {
+            assert.equal(localParticipant.revision, revision + 1);
+          });
+
+          it('should emit "updated"', () => {
+            assert(updated);
+          });
+        } else {
+          it('should not increment .revision', () => {
+            assert.equal(localParticipant.revision, revision);
+          });
+
+          it('should not emit "updated"', () => {
+            assert(!updated);
+          });
+
+          if (prop === 'updatedPriority') {
+            it('should call .sendTrackPriorityUpdate on the underlying TrackPrioritySignaling', () => {
+              localTrackPublication.setSid('foo');
+              sinon.assert.calledWith(trackPrioritySignaling.sendTrackPriorityUpdate, 'foo', 'publish', value);
+            });
+          }
+        }
+      });
     });
   });
 });
