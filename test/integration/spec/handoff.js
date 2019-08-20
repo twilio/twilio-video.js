@@ -1,5 +1,3 @@
-/* eslint-disable no-invalid-this */
-/* eslint-disable no-else-return */
 /* eslint-disable no-console */
 'use strict';
 
@@ -30,7 +28,6 @@ describe('NetworkHandoff', function() {
   beforeEach(async function() {
     if (!isRunningInsideDocker) {
       // eslint-disable-next-line no-invalid-this
-      // if not running inside docker skip the test.
       this.skip();
     } else {
       await dockerAPI.resetNetwork();
@@ -86,7 +83,10 @@ describe('NetworkHandoff', function() {
     await dockerAPI.connectToNetwork(newNetwork.Id);
     await waitToGoOnline();
 
+    // shoout attempt to reconnect
     await reconnectingPromise;
+
+    // and succeed
     await reconnectPromise;
   });
 });

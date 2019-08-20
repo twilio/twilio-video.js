@@ -1,5 +1,3 @@
-/* eslint-disable no-else-return */
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -101,11 +99,11 @@ describe('dockerProxy', function() {
   });
 
   it('createNetwork, connectToNetwork: creates new network and connect to it', async () => {
-    const newNetwork = await dockerAPI.createNetwork();
     await waitToGoOnline();
     await dockerAPI.disconnectFromAllNetworks();
     await waitToGoOffline();
 
+    const newNetwork = await dockerAPI.createNetwork();
     await dockerAPI.connectToNetwork(newNetwork.Id);
     await waitToGoOnline();
 
@@ -119,7 +117,7 @@ describe('dockerProxy', function() {
 
     let networks = await dockerAPI.getAllNetworks();
     let found = networks.find(network => network.Id === newNetwork.Id);
-    assert.equal(found.name, newNetwork.name);
+    assert(found.Name.length > 0);
 
     await dockerAPI.resetNetwork();
 
