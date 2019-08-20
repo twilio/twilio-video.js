@@ -544,7 +544,7 @@ describe('MediaTrack', () => {
       });
     });
   });
- });
+});
 
 function createMediaTrack(id, kind, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);

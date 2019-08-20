@@ -50,6 +50,7 @@ describe('LocalTrackPublication', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
       if (isFirefox && kind === 'data' && when !== 'published') {
@@ -70,6 +71,7 @@ describe('LocalTrackPublication', function() {
 
       before(async () => {
         sid = await createRoom(randomName(), defaults.topology);
+        // eslint-disable-next-line no-warning-comments
         // TODO(mroberts): Update when VIDEO-954 is fixed.
         const identities = kind === 'data'
           ? [randomName(), randomName()]
@@ -82,6 +84,7 @@ describe('LocalTrackPublication', function() {
           data() { return new LocalDataTrack(); }
         }[kind]();
 
+        // eslint-disable-next-line no-warning-comments
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
         // functionality.

@@ -10,6 +10,7 @@ describe('DataTransport', () => {
   describe('constructor', () => {
     it('sends a "ready" message over the underlying RTCDataChannel', () => {
       const dataChannel = mockRTCDataChannel();
+      // eslint-disable-next-line no-new
       new DataTransport(dataChannel);
       sinon.assert.calledWith(dataChannel.send, JSON.stringify({ type: 'ready' }));
     });

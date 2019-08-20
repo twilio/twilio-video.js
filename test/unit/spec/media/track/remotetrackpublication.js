@@ -253,6 +253,7 @@ function makeSignaling(isEnabled, kind, sid) {
 
   signaling.update = options => {
     const changedProps = ['error', 'isEnabled'].filter(prop => {
+      // eslint-disable-next-line no-prototype-builtins
       return options.hasOwnProperty(prop) && signaling[prop] !== options[prop];
     });
     if (changedProps.length > 0) {

@@ -37,7 +37,8 @@ describe('CancelablePromise', () => {
     });
 
     it('should expose an isCanceled handler to the onCreate handler that initially returns false', () => {
-      new CancelablePromise((resolve, reject, isCanceled) => {
+      // eslint-disable-next-line no-new
+      new CancelablePromise((resolve, _reject, isCanceled) => {
         assert.equal(isCanceled(), false);
         resolve();
       }, () => {});

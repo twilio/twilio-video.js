@@ -1,3 +1,4 @@
+/* eslint-disable require-atomic-updates */
 /* eslint-disable no-undefined */
 'use strict';
 
@@ -120,7 +121,7 @@ describe('PeerConnectionV2', () => {
       test.pc.emit('iceconnectionstatechange');
       assert(didStartMonitor);
       assert(!didStopMonitor);
-      assert(typeof inactiveCallback === 'function' );
+      assert(typeof inactiveCallback === 'function');
 
       // simulate connection.
       test.pc.iceConnectionState = 'connected';
@@ -398,7 +399,7 @@ describe('PeerConnectionV2', () => {
       test.pc.dispatchEvent({ type: 'track', track: mediaTrack2 });
 
       assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
-       [dataChannel1, dataChannel2, dataChannel3, mediaTrack1, mediaTrack2].map(getTrackIdOrChannelLabel));
+        [dataChannel1, dataChannel2, dataChannel3, mediaTrack1, mediaTrack2].map(getTrackIdOrChannelLabel));
 
       dataChannel1.dispatchEvent({ type: 'close' });
       mediaTrack1.dispatchEvent({ type: 'ended' });
@@ -578,6 +579,7 @@ describe('PeerConnectionV2', () => {
       }
     });
 
+    // eslint-disable-next-line no-warning-comments
     // TODO(mroberts): Would be nice to somehow consolidate this with the
     // `beforeEach` call (or move it out).
     ['createOffer', 'setLocalDescription'].forEach(errorScenario => {
@@ -790,6 +792,7 @@ describe('PeerConnectionV2', () => {
         [true, false, undefined],
         x => `When dscpTagging is set to ${x}`
       ],
+    // eslint-disable-next-line consistent-return
     ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, dscpTagging]) => {
       // The Test
       let test;
@@ -980,9 +983,9 @@ describe('PeerConnectionV2', () => {
           it('should set networkPriority to high for audio track senders', () => {
             test.pc.getSenders().forEach(sender => {
               if (sender.track.kind === 'audio' && dscpTagging) {
-                  sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
+                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
               } else {
-                  sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
+                sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
               }
             });
           });
@@ -1040,6 +1043,7 @@ describe('PeerConnectionV2', () => {
       function itMightEventuallyAnswer() {
         itDoesNothing();
 
+        // eslint-disable-next-line consistent-return
         context('then, once the initial answer is received', () => {
           beforeEach(async () => {
             const answer = makeAnswer({ iceLite });
