@@ -67,11 +67,11 @@ describe('Log', () => {
     });
 
     it('should call getLevelByName with the passed logLevel', () => {
+      // eslint-disable-next-line no-unused-vars
       const log = new Log('foo', component('bar'), {
         foo: 'debug',
         bar: 'error'
       });
-      void log.logLevel;
       assert(Log.getLevelByName.calledWith('debug'));
     });
 
@@ -260,6 +260,7 @@ describe('Log', () => {
 
       try {
         log.throw(error, 'foobar');
+      // eslint-disable-next-line no-catch-shadow
       } catch (error) {
         // Do nothing
       }

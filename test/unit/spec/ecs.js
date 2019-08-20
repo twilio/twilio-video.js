@@ -1,3 +1,4 @@
+/* eslint-disable require-await */
 'use strict';
 
 const assert = require('assert');
@@ -43,6 +44,7 @@ describe('ECS', () => {
 
       it('should make a network request with an empty body if no params are passed', () => {
         ECS.getConfiguration(fakeToken);
+        // eslint-disable-next-line no-undefined
         assert.equal(request.post.args[0][0].body, undefined);
       });
 

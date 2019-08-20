@@ -1,3 +1,5 @@
+/* eslint-disable require-atomic-updates */
+/* eslint-disable no-prototype-builtins */
 'use strict';
 
 const assert = require('assert');
