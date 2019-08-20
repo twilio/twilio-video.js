@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 'use strict';
 
-const http = require('http');
 const defaultServerUrl = 'http://localhost:3032/';
 
 /**
@@ -25,8 +24,7 @@ class DockerProxyClient {
     try {
       const isDockerResp = await this._makeRequest('isDocker');
       return isDockerResp.isDocker;
-    }
-    catch (err) {
+    } catch (err) {
       console.error('isDocker call failed..is DockerProxyServer running? ', err);
       return false;
     }
@@ -125,12 +123,12 @@ class DockerProxyClient {
     return this._makeRequest('getCurrentNetworks');
   }
 
-  _makeRequest(api, postdata) {
+  _makeRequest(api) {
     return fetch(this._serverUrl + api)
       .then(res => res.text())
       .then(text => text ? JSON.parse(text) : {})
       .catch((err) => {
-        console.error(`"fetch ${api} threw  : `, err );
+        console.error(`"fetch ${api} threw  : `, err);
         throw err;
       });
   }
@@ -144,31 +142,31 @@ if (module.parent === null) {
     console.log('Usage: node dockerProxyClient.js <serverurl>');
     console.log('       where serverUrl is where dockerProxyServer is running');
     console.log('       Example: node dockerProxyClient.js http://localhost:3032/');
-    return;
-  }
-  const client = new DockerProxyClient(process.argv[2]);
-  const promises = [
-    'isDocker',
-    'getVersion',
-    'getAllNetworks',
-    'getCurrentNetworks',
-    'getContainers',
-    'getActiveInterface',
-    'getCurrentContainerId',
-    'createNetwork',
-    'inspectCurrentContainer',
-    'resetNetwork',
-  ].map(func => {
-    return client[func]({}).then(result => {
-      console.info(`${func} returned:`, JSON.stringify(result, null, 4));
-    }).catch((err) => {
-      console.error(`${func} failed with:`, err);
+  } else {
+    const client = new DockerProxyClient(process.argv[2]);
+    const promises = [
+      'isDocker',
+      'getVersion',
+      'getAllNetworks',
+      'getCurrentNetworks',
+      'getContainers',
+      'getActiveInterface',
+      'getCurrentContainerId',
+      'createNetwork',
+      'inspectCurrentContainer',
+      'resetNetwork',
+    ].map(func => {
+      return client[func]({}).then(result => {
+        console.info(`${func} returned:`, JSON.stringify(result, null, 4));
+      }).catch((err) => {
+        console.error(`${func} failed with:`, err);
+      });
     });
-  });
 
-  Promise.all(promises).then(() => {
-    console.log('done with all client calls.');
-  });
+    Promise.all(promises).then(() => {
+      console.log('done with all client calls.');
+    });
+  }
 }
 
 module.exports = DockerProxyClient;

@@ -36,13 +36,13 @@ describe('dockerProxy', function() {
 
   it('getCurrentContainerId: returns current container id', async () => {
     const response = await dockerAPI.getCurrentContainerId();
-    assert(typeof response.containerId === 'string' );
-    assert(response.containerId.length > 5 );
+    assert(typeof response.containerId === 'string');
+    assert(response.containerId.length > 5);
   });
 
   it('getActiveInterface: returns active interface', async () => {
     const response = await dockerAPI.getActiveInterface();
-    assert(typeof response.activeInterface === 'string' );
+    assert(typeof response.activeInterface === 'string');
     assert(response.activeInterface.length > 0);
   });
 
@@ -60,10 +60,10 @@ describe('dockerProxy', function() {
     assert(networks.length > 0);
     networks.forEach(({ Id, Name }) => {
       assert.equal(typeof Id, 'string');
-      assert(Id.length > 0 );
+      assert(Id.length > 0);
 
       assert.equal(typeof Name, 'string');
-      assert(Name.length > 0 );
+      assert(Name.length > 0);
     });
   });
 
@@ -72,10 +72,10 @@ describe('dockerProxy', function() {
     assert(networks.length > 0);
     networks.forEach(({ Id, Name }) => {
       assert.equal(typeof Id, 'string');
-      assert(Id.length > 0 );
+      assert(Id.length > 0);
 
       assert.equal(typeof Name, 'string');
-      assert(Name.length > 0 );
+      assert(Name.length > 0);
     });
   });
 

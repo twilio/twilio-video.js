@@ -132,7 +132,7 @@ class DockerProxyServer {
   }
 
   connectToDefaultNetwork() {
-    const connectPromises = this._originalNetworks.map(({ Id }) => this.connectToNetwork({ networkId: Id }) );
+    const connectPromises = this._originalNetworks.map(({ Id }) => this.connectToNetwork({ networkId: Id }));
     return Promise.all(connectPromises);
   }
 
@@ -249,7 +249,7 @@ class DockerProxyServer {
         res.setEncoding('utf8');
         let rawData = '';
         res.on('data', (chunk) => {
-            rawData += chunk;
+          rawData += chunk;
         });
         res.on('end', () => {
           try {
@@ -268,8 +268,8 @@ class DockerProxyServer {
         });
       });
       clientRequest.on('error', (e) => {
-          console.warn(`${thisRequest}: request failed`, e);
-          reject(e);
+        console.warn(`${thisRequest}: request failed`, e);
+        reject(e);
       });
 
       if (postdata) {
