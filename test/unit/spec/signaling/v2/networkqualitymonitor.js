@@ -47,10 +47,12 @@ describe('NetworkQualityMonitor', () => {
 
   describe('.start()', () => {
     it('constructs a PeerConnectionReportFactory for each RTCPeerConnection contained within PeerConnectionManager', () => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): ...
     });
 
     it('.put()s summaries of each of the PeerConnectionReportFactory\'s PeerConnectionReports', () => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): ...
     });
   });

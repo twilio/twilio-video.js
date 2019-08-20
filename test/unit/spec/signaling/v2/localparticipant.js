@@ -90,6 +90,7 @@ describe('LocalParticipantV2', () => {
         });
 
         describe('when the LocalTrackPublicationV2\'s SID is set,', () => {
+          // eslint-disable-next-line no-warning-comments
           // FIXME(mroberts): This might be the source of our problems.
           it('does not emit "updated"', () => {
             let didEmitUpdated = false;
@@ -162,8 +163,6 @@ describe('LocalParticipantV2', () => {
             localParticipant.removeTrack(trackSender);
             assert(publication.trackTransceiver.stop.calledOnce);
             assert(trackSender.stop.notCalled);
-          } catch (error) {
-            throw error;
           } finally {
             delete trackSender.stop;
           }

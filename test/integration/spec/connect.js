@@ -90,6 +90,7 @@ describe('connect', function() {
     });
   });
 
+  // eslint-disable-next-line require-await
   describe('called with an invalid LogLevel', async () => {
     const logLevel = 'foo';
 
@@ -193,6 +194,7 @@ describe('connect', function() {
     });
   });
 
+  // eslint-disable-next-line require-await
   describe('signaling region', async () => {
     let sid;
     let token;
@@ -280,6 +282,7 @@ describe('connect', function() {
       x => x ? 'no LocalTracks' : 'the default, automatically-acquired LocalTracks'
     ],
     [
+      // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): Run this with 10 Participants.
       // NOTE(mroberts): It's important that we specify "with unique identities", because, in the future, we may
       // enforce uniqueness of Participant identity within a Room (and therefore, connect should fail with a well-
@@ -321,6 +324,7 @@ describe('connect', function() {
       if (withName) {
         name = randomName();
         sid = await createRoom(name, options.topology);
+        // eslint-disable-next-line require-atomic-updates
         options.name = sid;
       }
       cancelablePromises = tokens.map(token => connect(token, options));
@@ -334,11 +338,13 @@ describe('connect', function() {
       return sid ? completeRoom(sid) : Promise.resolve();
     });
 
+    // eslint-disable-next-line require-await
     it(`should return ${n === 1 ? 'a ' : ''}CancelablePromise${n === 1 ? '' : 's'} that resolve${n === 1 ? 's' : ''} to ${howManyRooms}`, async () => {
       cancelablePromises.forEach(cancelablePromise => assert(cancelablePromise instanceof CancelablePromise));
       rooms.forEach(room => assert(room instanceof Room));
     });
 
+    // eslint-disable-next-line require-await
     describe(`should return ${n === 1 ? 'a ' : ''}CancelablePromise${n === 1 ? '' : 's'} that resolve${n === 1 ? 's' : ''} to ${howManyRooms} and`, async () => {
       it(`should set ${n === 1 ? 'the' : 'each'} Room's .sid to ${n > 1 ? (withName ? 'the same' : 'a unique') : 'a'} Room SID`, () => {
         const sids = new Set(rooms.map(room => room.sid));
@@ -435,6 +441,7 @@ describe('connect', function() {
           });
         });
 
+        // eslint-disable-next-line require-await
         it('should eventually update each Participant\'s .tracks Map to contain a RemoteTrackPublication for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
           pairs(rooms).forEach(([{ participants }, otherRooms]) => {
             otherRooms.forEach(({ localParticipant }) => {
@@ -737,6 +744,7 @@ describe('connect', function() {
               source: 'createLocalTracks',
               async getTracks(names) {
                 const options = names && { audio: { name: names.audio }, video: { name: names.video } };
+                // eslint-disable-next-line no-return-await
                 return await (options ? createLocalTracks(options) : createLocalTracks());
               }
             },
@@ -913,6 +921,7 @@ describe('connect', function() {
           ({ scenario }) => `called with ${scenario}`
         ]
       ], ([{ createLocalTracks, scenario, TwilioError }]) => {
+        // eslint-disable-next-line no-void
         void scenario;
 
         let room;

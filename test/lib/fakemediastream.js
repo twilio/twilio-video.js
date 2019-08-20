@@ -39,8 +39,7 @@ class FakeMediaStream extends EventTarget {
   addTrack(track) {
     if ('audio' === track.kind) {
       this.audioTracks.push(track);
-    }
-    else if ('video' === track.kind) {
+    } else if ('video' === track.kind) {
       this.videoTracks.push(track);
     }
   }

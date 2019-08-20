@@ -29,6 +29,7 @@ describe('connect', () => {
   });
 
   describe('called with options with one or more keys explicitly set to undefined', () => {
+    // eslint-disable-next-line require-await
     it('should set those keys to their default values', async () => {
       const mockSignaling = new Signaling();
       mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -66,7 +67,7 @@ describe('connect', () => {
 
         const options = signaling.args[0][1];
         assert.equal(options.wsServer, `wss://${region === 'gll'
-            ? 'global' : region}.vss.twilio.com/signaling`);
+          ? 'global' : region}.vss.twilio.com/signaling`);
       });
     });
   });
@@ -86,7 +87,7 @@ describe('connect', () => {
 
         const options = signaling.args[0][1];
         assert.equal(options.wsServer, `wss://global.vss.${environment === 'prod' ?
-             '' : `${environment}.`}twilio.com/signaling`);
+          '' : `${environment}.`}twilio.com/signaling`);
       });
     });
   });
@@ -102,6 +103,7 @@ describe('connect', () => {
       it('calls .stop() on the LocalTracks', async () => {
         const stream = await fakeGetUserMedia({ audio: true, video: true });
         const localTracks = stream.getTracks().map(track => new FakeLocalTrack(track));
+        // eslint-disable-next-line require-await
         async function createLocalTracks() {
           return localTracks;
         }
@@ -116,6 +118,7 @@ describe('connect', () => {
       });
 
       it('never calls .start() on the IceServerSource', async () => {
+        // eslint-disable-next-line require-await
         async function createLocalTracks() {
           return [];
         }
@@ -136,6 +139,7 @@ describe('connect', () => {
       it('sets shouldStopLocalTracks on the LocalParticipant', async () => {
         const stream = await fakeGetUserMedia({ audio: true, video: true });
         const tracks = stream.getTracks().map(track => new FakeLocalTrack(track));
+        // eslint-disable-next-line require-await
         async function createLocalTracks() {
           return tracks;
         }
@@ -155,7 +159,8 @@ describe('connect', () => {
           LocalParticipant,
           createLocalTracks,
           iceServers: [],
-          signaling });
+          signaling
+        });
 
         assert.equal(shouldStopLocalTracks, true);
       });

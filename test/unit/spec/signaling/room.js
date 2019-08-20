@@ -45,8 +45,8 @@ describe('RoomSignaling', () => {
     combinations([signalingConnectionStates, mediaConnectionStates]).forEach(([signalingConnectionState, mediaConnectionState]) => {
       const roomState = signalingConnectionState === 'connected'
         ? mediaConnectionState === 'failed'
-            ? 'reconnecting'
-            : 'connected'
+          ? 'reconnecting'
+          : 'connected'
         : signalingConnectionState;
 
       const reconnectError = signalingConnectionState === 'connected'
@@ -78,6 +78,7 @@ describe('RoomSignaling', () => {
         });
 
         if (roomState === 'reconnecting') {
+          // eslint-disable-next-line require-await
           it(`emits "stateChanged" on RoomSignaling with a ${reconnectError.constructor.name}`, async () => {
             assert(error instanceof reconnectError.constructor);
           });
@@ -94,10 +95,10 @@ describe('RoomSignaling', () => {
     combinations([signalingConnectionStates, mediaConnectionStates]).forEach(([signalingConnectionState, mediaConnectionState]) => {
       const roomState = signalingConnectionState === 'connected'
         ? mediaConnectionState === 'new' || mediaConnectionState === 'checking'
+          ? 'reconnecting'
+          : mediaConnectionState === 'failed'
             ? 'reconnecting'
-            : mediaConnectionState === 'failed'
-              ? 'reconnecting'
-              : 'connected'
+            : 'connected'
         : signalingConnectionState;
 
       describe(`the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${mediaConnectionState}"`, () => {
@@ -122,6 +123,7 @@ describe('RoomSignaling', () => {
         });
 
         if (roomState === 'connected') {
+          // eslint-disable-next-line require-await
           it('emits "stateChanged" on RoomSignaling without a TwilioError', async () => {
             assert(stateChanged);
             assert.equal(typeof error, 'undefined');
