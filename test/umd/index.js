@@ -16,6 +16,7 @@ const publicVars = [
 ];
 
 describe('UMD', function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(5000);
 
   describe('RequireJS (browser)', () => {
