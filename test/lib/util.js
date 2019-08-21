@@ -338,7 +338,7 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
 
- /**
+/**
  * Returns a promise that resolves after being connected/disconnected from network.
  * @param {('online'|'offline')} onlineOrOffline - if online waits for connected state
  * @returns {Promise<void>}
