@@ -1652,7 +1652,8 @@ function makePeerConnectionManager(getRoom) {
   peerConnectionManager.setTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
 
-  peerConnectionManager.getStats =  () => {
+  // eslint-disable-next-line require-await
+  peerConnectionManager.getStats = async () => {
     const room = getRoom();
 
     // NOTE(mroberts): We're going to add bogus stats entries to represent stats
