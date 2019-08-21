@@ -1,5 +1,33 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta14 (in progress)
+==========================
+
+New Features
+------------
+
+- You can now change the priority of an already published LocalTrack using a new method
+  `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
+
+  ```js
+  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
+    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
+  });
+
+  // After a while, change the priority to "low".
+  localTrackPublication.setPriority(low);
+  ```
+
+  This will update `publishPriority` on all corresponding RemoteTrackPublications and
+  emit a new event "publishPriorityChanged" to notify the user:
+
+  ```js
+  remoteTrackPublication.on('publishPriorityChanged', priority => {
+    console.log(`The publisher has changed the priority this Track to "${priority}"`);
+    assert.equal(remoteTrackPublication.publishPriority, priority);
+  });
+  ```
+
 2.0.0-beta13 (in progress)
 ==========================
 
