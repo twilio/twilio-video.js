@@ -21,40 +21,44 @@ env:
 matrix:
   include:
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      name: "non dockerized lint and framework test"
+      env: TRAVIS_DOCKER_TESTS=false BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=group
 
     # - os: osx
     #   sudo: required
