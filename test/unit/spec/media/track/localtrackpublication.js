@@ -65,14 +65,15 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           it('should throw with a RangeError', () => {
             const localTrackPublicationSignaling = makeLocalTrackPublicationSignaling('foo', 'bar');
             const localTrackPublication = new LocalTrackPublication(localTrackPublicationSignaling, localTrack, () => {});
+            let error = null;
             try {
               localTrackPublication.setPriority(priority);
-            } catch (error) {
+            } catch (error_) {
+              error = error_;
+            } finally {
               assert(error instanceof RangeError);
               sinon.assert.notCalled(localTrackPublicationSignaling.setPriority);
-              return;
             }
-            throw new Error('Unexpected resolution');
           });
         });
       });
