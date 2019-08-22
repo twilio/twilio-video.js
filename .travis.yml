@@ -7,10 +7,8 @@ node_js:
 # https://github.com/travis-ci/travis-ci/issues/8836#issuecomment-356362524
 sudo: required
 
-addons:
-  apt:
-    packages:
-      - pulseaudio
+before_install:
+  - sudo apt-get install -y pulseaudio
 
 # https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
 dist: trusty
