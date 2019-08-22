@@ -7,9 +7,6 @@ node_js:
 # https://github.com/travis-ci/travis-ci/issues/8836#issuecomment-356362524
 sudo: required
 
-services:
-  - docker
-
 addons:
   apt:
     packages:
@@ -26,44 +23,40 @@ env:
 matrix:
   include:
     - os: linux
-      name: "non dockerized lint and framework test"
-      env: TRAVIS_DOCKER_TESTS=false BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=beta TOPOLOGY=group
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=group
+      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=group
+      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=group
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-
-    - os: linux
-      env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=group
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
 
     # - os: osx
     #   sudo: required
@@ -76,23 +69,41 @@ matrix:
     #   env: BROWSER=safari BVER=unstable TOPOLOGY=group
 
   allow_failures:
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=chrome BVER=unstable TOPOLOGY=group
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=stable TOPOLOGY=group
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=beta TOPOLOGY=group
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=firefox BVER=unstable TOPOLOGY=group
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
-    - env: TRAVIS_DOCKER_TESTS=true BROWSER=safari BVER=unstable TOPOLOGY=group
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=group
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=safari BVER=unstable TOPOLOGY=group
 
-script: ./scripts/travis-run-tests.sh
+before_script:
+  - |
+    set -e
+    cd node_modules/travis-multirunner
+    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+      BROWSER=chrome ./setup.sh
+      BROWSER=firefox ./setup.sh
+      export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
+      export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
+    else
+      BROWSER=safari ./setup.sh
+    fi
+    cd ../..
+    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+      sh -e /etc/init.d/xvfb start
+      pulseaudio --start
+    fi
+    if [ "${TOPOLOGY}" != 'peer-to-peer' ]; then
+      export ENABLE_REST_API_TESTS=1
+    fi
+
+script: npm run build:travis
 
 notifications:
   slack:
     on_pull_requests: false
     secure: jxmuMo2n/OCaUg6DMZ/fahcxoCmkyOt4eD5pWgIqinxL0INyByZhw3EyAItueuXo4+7oh2KZj78ryf2bChSMsGGXXF25Vdy154bGsFXS7xPH/ars7yTo2Cjry8j3ki0ve7aqH3GjMlBVuJRA3ps2w/bJjw9oq4JDiibDRsDPawcS3Xda0tHqc022lJer9jHaF+zBrjobo2xAZ8dFhMmx50wsY5tALq5xoiiAAfmARm8ZIZu6hZpwdbpC6pM9SBd1RNMxnzQrlFPqA25FYPZSaD4/5wjKDEHTO+dfOEW79sgZUuohE/AC+zKd3wiYxxDaxrkPkzijmYs39LyDqm5Vr6eS9OSrZptgGni6G/2J/dBW52MLlxCDB+SqpbaPuLVKsvPdVAwydMTYo02fJpxa3purUdNM9GFPZCZC4KGvht2cSvM1txUNFkpkAp8RCxyUGpVw58S4gnAp2sYmRR22i42nZJunR7myXiMV+KZcaS7BJ2Mf6Wo1YwSnHSP4xwuaBPBY0L86w/gyd9tABpEIamOwKkFiLmOKr1l8aCcuGrEHnBB2L5EpiNfxl93DjrApzwR3FqCeSzfwHgaZ6EIGtRqPPXUJgM4DtYt9udGO4c9fLr6QbDgyS4swn3uUiUmeI3i9UUg92jvv7OCYoe80DfsF5RVjZxXcQM+WMMsJ7os=
-
-addons:
-  artifacts: true
