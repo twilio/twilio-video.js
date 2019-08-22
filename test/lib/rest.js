@@ -56,7 +56,7 @@ function completeRoom(nameOrSid) {
  * @param {object} roomOptions
  * @returns {Promise<Room.SID>}
  */
- async function createRoom(name, type, roomOptions) {
+async function createRoom(name, type, roomOptions) {
   const { sid, status } = await post('/v1/Rooms', Object.assign({
     Type: type,
     UniqueName: name

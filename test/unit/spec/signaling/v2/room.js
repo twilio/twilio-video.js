@@ -1652,6 +1652,7 @@ function makePeerConnectionManager(getRoom) {
   peerConnectionManager.setTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
 
+  // eslint-disable-next-line require-await
   peerConnectionManager.getStats = async () => {
     const room = getRoom();
 

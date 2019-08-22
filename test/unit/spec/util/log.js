@@ -71,6 +71,7 @@ describe('Log', () => {
         foo: 'debug',
         bar: 'error'
       });
+      // eslint-disable-next-line no-void
       void log.logLevel;
       assert(Log.getLevelByName.calledWith('debug'));
     });
@@ -260,6 +261,7 @@ describe('Log', () => {
 
       try {
         log.throw(error, 'foobar');
+      // eslint-disable-next-line no-catch-shadow
       } catch (error) {
         // Do nothing
       }

@@ -322,6 +322,7 @@ describe('LocalParticipant', function() {
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
       if (isFirefox && kind === 'data' && when === 'previously') {
@@ -361,6 +362,7 @@ describe('LocalParticipant', function() {
           data() { return new LocalDataTrack(); }
         }[kind](localTrackOptions);
 
+        // eslint-disable-next-line no-warning-comments
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
         // functionality.
@@ -535,6 +537,7 @@ describe('LocalParticipant', function() {
           ({ scenario }) => `called with ${scenario}`
         ]
       ], ([{ createLocalTrack, scenario, TwilioError }]) => {
+        // eslint-disable-next-line no-void
         void scenario;
 
         let track;
@@ -588,6 +591,7 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
       if (isFirefox && kind === 'data' && when !== 'published') {
@@ -617,6 +621,7 @@ describe('LocalParticipant', function() {
           data() { return new LocalDataTrack(); }
         }[kind]();
 
+        // eslint-disable-next-line no-warning-comments
         // TODO(mroberts): Really this test needs to be refactored so that only
         // the LocalAudio- and LocalVideo-Track tests test the enable/disable
         // functionality.
@@ -976,10 +981,12 @@ describe('LocalParticipant', function() {
 
     combinationContext([
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 25000],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ],
       [
+        // eslint-disable-next-line no-undefined
         [undefined, null, 45000],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
       ]
@@ -1156,7 +1163,9 @@ describe('LocalParticipant', function() {
 
       try {
         for (let i = 0; i < 10; i++) {
+          // eslint-disable-next-line no-await-in-loop
           videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
+          // eslint-disable-next-line no-await-in-loop
           publication = await rooms[0].localParticipant.publishTrack(videoTrack);
           rooms[0].localParticipant.unpublishTrack(videoTrack);
         }

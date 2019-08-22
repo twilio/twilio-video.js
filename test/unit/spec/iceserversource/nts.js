@@ -155,7 +155,7 @@ describe('NTSIceServerSource', () => {
           iceServers = await nts.start();
         });
 
-        it('returns the default ICE servers', async () => {
+        it('returns the default ICE servers', () => {
           assert.deepEqual([
             {
               urls: 'stun:global.stun.twilio.com:3478?transport=udp'
@@ -183,7 +183,7 @@ describe('NTSIceServerSource', () => {
           iceServers = await nts.start();
         });
 
-        it('returns the default ICE servers', async () => {
+        it('returns the default ICE servers', () => {
           assert.deepEqual([
             {
               urls: 'stun:global.stun.twilio.com:3478?transport=udp'

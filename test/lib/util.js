@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 'use strict';
 
 const sinon = require('sinon');
@@ -312,6 +313,7 @@ async function waitForTracks(event, participant, n) {
   if (n <= 0) {
     return [];
   }
+  // eslint-disable-next-line no-return-await
   return await new Promise(resolve => {
     const tracks = [];
     participant.on(event, function onevent(track) {

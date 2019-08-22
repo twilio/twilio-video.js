@@ -373,6 +373,7 @@ describe('Room', function() {
       }));
 
       thisRoom.disconnect();
+      // eslint-disable-next-line require-atomic-updates
       thatParticipant = await participantDisconnected;
       tracksAfter = [...thatParticipant._tracks.values()];
       publicationsAfter = [...thatParticipant.tracks.values()];
@@ -418,12 +419,14 @@ describe('Room', function() {
 
   describe('"recordingStarted" event', () => {
     it.skip('is raised whenever recording is started on the Room via the REST API', () => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): POST to the REST API to start recording on the Room.
     });
   });
 
   describe('"recordingStopped" event', () => {
     it.skip('is raised whenever recording is stopped on the Room via the REST API', () => {
+      // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): POST to the REST API to stop recording on the Room.
     });
   });

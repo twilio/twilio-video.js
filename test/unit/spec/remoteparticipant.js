@@ -1,3 +1,4 @@
+/* eslint-disable require-await */
 'use strict';
 
 const assert = require('assert');

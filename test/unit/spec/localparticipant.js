@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -742,7 +743,7 @@ describe('LocalParticipant', () => {
 
     context('.tracks', () => {
       context('when the LocalParticipant .state is "connecting"', () => {
-        it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
+        it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () => {
           const track = new EventEmitter();
           track.id = 'foo';
           track._trackSender = {
@@ -764,7 +765,7 @@ describe('LocalParticipant', () => {
       });
 
       context('when the LocalParticipant .state is "connected"', () => {
-        it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
+        it('calls .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () => {
           const track = new EventEmitter();
           track.id = 'foo';
           track._trackSender = {
@@ -786,7 +787,7 @@ describe('LocalParticipant', () => {
       });
 
       context('when the LocalParticipant .state is "disconnected"', () => {
-        it('does not call .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () =>{
+        it('does not call .addTrack with each LocalTrack\'s MediaStreamTrack and name on the ParticipantSignaling', () => {
           const track = new EventEmitter();
           track.id = 'foo';
           track._trackSender = { track: { enabled: true } };
