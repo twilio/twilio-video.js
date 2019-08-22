@@ -8,7 +8,6 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
-
 Working around the browsers' autoplay policy
 --------------------------------------------
 
@@ -48,7 +47,7 @@ to ensure playback:
 Chrome 76+ DataTrack incompatibility with 2.X Mobile SDKs in P2P Rooms
 ----------------------------------------------------------------------
 
-Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a [new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for data channel negotiation. This new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with P2P Rooms. In a P2P room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s data tracks. Please refer to the upgrade paths listed in https://github.com/twilio/twilio-video-ios/issues/52 to address this issue.
+Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a [new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for data channel negotiation. This new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with P2P Rooms. In a P2P room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s data tracks. Please refer to the upgrade paths listed in [this issue](https://github.com/twilio/twilio-video-ios/issues/52) to address this.
 
 Firefox Participants are not able to recover media after network interruptions or handoffs
 ------------------------------------------------------------------------------------------
