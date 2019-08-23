@@ -31,10 +31,6 @@ New Features
         maxTracks: 3, // Max. number of visible RemoteVideoTracks. Other RemoteVideoTracks will be switched off.
         mode: 'collaboration', // Subscription mode: "collaboration", "grid" or "presentation".
         renderDimensions: {
-          dominantSpeaker: {  // Desired render dimensions of Dominant Speaker's RemoteVideoTracks.
-            width: 640,
-            height: 480
-          },
           low: { // Desired render dimensions of RemoteVideoTracks with priority "low".
             width: 320,
             height: 240
