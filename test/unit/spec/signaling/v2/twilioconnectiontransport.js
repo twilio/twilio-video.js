@@ -29,8 +29,6 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
       // eslint-disable-next-line
-      [{ video: { renderDimensions: { dominantSpeaker: { width: 200, height: 400 } } } }, { video: { render_dimensions: { active_speaker: { width: 200, height: 400 } } } }],
-      // eslint-disable-next-line
       [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],
       // eslint-disable-next-line
       [{ video: { renderDimensions: { low: { width: 600, height: 800 } } } }, { video: { render_dimensions: { low: { width: 600, height: 800 } } } }],
@@ -45,7 +43,6 @@ describe('TwilioConnectionTransport', () => {
             maxTracks: 5,
             mode: 'bar',
             renderDimensions: {
-              dominantSpeaker: { width: 0, height: 1 },
               high: { width: 2, height: 3 },
               low: { width: 4, height: 5 },
               standard: { width: 6, height: 7 }
@@ -63,8 +60,6 @@ describe('TwilioConnectionTransport', () => {
             mode: 'bar',
             // eslint-disable-next-line
             render_dimensions: {
-              // eslint-disable-next-line
-              active_speaker: { width: 0, height: 1 },
               high: { width: 2, height: 3 },
               low: { width: 4, height: 5 },
               standard: { width: 6, height: 7 }
