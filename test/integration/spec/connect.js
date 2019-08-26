@@ -537,23 +537,18 @@ describe('connect', function() {
           await new Promise(resolve => setTimeout(resolve, 5000));
         });
 
-        ['audio', 'video'].forEach(kind => {
-          const expectedNetworkPriority = isChrome ? {
-            audio: { true: 'high', false: 'low' },
-            video: { true: 'low', false: 'low' }
-          }[kind][dscpTagging || false] : undefined;
+        const expectedNetworkPriority = isChrome
+          ? { false: 'low', true: 'high' }[!!dscpTagging]
+          : undefined;
 
-          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for ${kind} RTCRtpEncodingParameters`, () => {
-            flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track && sender.track.kind === kind);
-            }).forEach(sender => {
-              sender.getParameters().encodings.forEach(encoding => {
-                if (typeof expectedNetworkPriority === 'string') {
-                  assert.equal(encoding.networkPriority, expectedNetworkPriority);
-                } else {
-                  assert(!('networkPriority' in encoding));
-                }
-              });
+        it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters`, () => {
+          flatMap(peerConnections, pc => pc.getSenders()).forEach(sender => {
+            sender.getParameters().encodings.forEach(encoding => {
+              if (typeof expectedNetworkPriority === 'string') {
+                assert.equal(encoding.networkPriority, expectedNetworkPriority);
+              } else {
+                assert(!('networkPriority' in encoding));
+              }
             });
           });
         });

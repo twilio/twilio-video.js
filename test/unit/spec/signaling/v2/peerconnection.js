@@ -790,7 +790,7 @@ describe('PeerConnectionV2', () => {
       ],
       [
         [true, false, undefined],
-        x => `When dscpTagging is set to ${x}`
+        x => `When dscpTagging is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
     // eslint-disable-next-line consistent-return
     ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, dscpTagging]) => {
@@ -978,15 +978,17 @@ describe('PeerConnectionV2', () => {
         });
       }
 
-      function itShouldSetNetworkPriority() {
-        if (isRTCRtpSenderParamsSupported) {
-          it('should set networkPriority to high for audio track senders', () => {
+      function itShouldMaybeSetNetworkPriority() {
+        if (dscpTagging && isRTCRtpSenderParamsSupported) {
+          it('should set RTCRtpEncodingParameters.networkPriority to "high" all RTCRtpSenders', () => {
             test.pc.getSenders().forEach(sender => {
-              if (sender.track.kind === 'audio' && dscpTagging) {
-                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
-              } else {
-                sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
-              }
+              sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
+            });
+          });
+        } else {
+          it('should not try to set RTCRtpEncodingParameters.networkPriority to "high" all RTCRtpSenders', () => {
+            test.pc.getSenders().forEach(sender => {
+              sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
             });
           });
         }
@@ -1037,7 +1039,7 @@ describe('PeerConnectionV2', () => {
 
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
-        itShouldSetNetworkPriority();
+        itShouldMaybeSetNetworkPriority();
       }
 
       function itMightEventuallyAnswer() {
