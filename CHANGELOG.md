@@ -1,5 +1,15 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.19.1 (in progress)
+====================
+
+New Features
+------------
+
+- Previously in 1.19.0, we introduced a new ConnectOptions flag `dscpTagging` which set the DSCP
+  header value for audio packets to `0xb8` (Expedited Forwarding - EF). Now, enabling this flag
+  will also set the DSCP header value of video packets to `0x88` (Assured Forwarding - AF41). (JSDK-2488)
+
 1.19.0 (August 21, 2019)
 ========================
 
@@ -9,7 +19,7 @@ New Features
 - You can now enable [DSCP tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for audio
   packets on supported browsers (only Chrome supports this as of now) by setting a new ConnectOptions property
   `dscpTagging` to `true`. This will request enhanced QoS treatment for audio packets from any firewalls or
-  routers that support this feature. Audio packets will be sent with DSCP header value set to (0xb8) which
+  routers that support this feature. Audio packets will be sent with DSCP header value set to `0xb8` which
   corresponds to EF (Expedited Forwarding). (JSDK-2440)
 
   ```js
