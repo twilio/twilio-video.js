@@ -6,9 +6,9 @@ For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master
 New Features
 ------------
 
-- Previously, we introduced a new ConnectOptions flag `dscpTagging` which tagged audio packets with
-  a DSCP header value to `0xb8` (Expedited Forwarding - EF). Now, enabling this flag will also tag video
-  packets with a DSCP header value of `0x88` (Assured Forwarding - AF41). (JSDK-2488)
+- Previously in 1.19.0, we introduced a new ConnectOptions flag `dscpTagging` which set the DSCP
+  header value for audio packets to `0xb8` (Expedited Forwarding - EF). Now, enabling this flag
+  will also set the DSCP header value of video packets to `0x88` (Assured Forwarding - AF41). (JSDK-2488)
 
 1.19.0 (August 21, 2019)
 ========================
