@@ -13,6 +13,8 @@ before_install:
 # https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
 dist: trusty
 
+os: linux
+
 env:
   global:
     - DBUS_SESSION_BUS_ADDRESS=/dev/null
@@ -21,86 +23,102 @@ env:
 matrix:
   include:
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=beta TOPOLOGY=group
+      env: DOCKER=true BROWSER=chrome BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+      env: DOCKER=true BROWSER=chrome BVER=unstable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=stable TOPOLOGY=group
+      env: DOCKER=true BROWSER=firefox BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=beta TOPOLOGY=group
+      env: DOCKER=true BROWSER=firefox BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
+      env: DOCKER=true BROWSER=firefox BVER=unstable TOPOLOGY=group
 
-    # - os: osx
-    #   sudo: required
-    #   osx_image: xcode8.3
-    #   env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
-    # - os: osx
-    #   sudo: required
-    #   osx_image: xcode8.3
-    #   env: BROWSER=safari BVER=unstable TOPOLOGY=group
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=stable TOPOLOGY=group
+
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=beta TOPOLOGY=group
+
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=group
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=group
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=group
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+
+    - os: linux
+      env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=group
 
   allow_failures:
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=stable TOPOLOGY=group
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=beta TOPOLOGY=group
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
-    - env: BROWSER=safari BVER=unstable TOPOLOGY=group
+    - env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+    - env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=group
+    - env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+    - env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=group
+    - env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+    - env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=group
+    - env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+    - env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=group
+    - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
+    - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=group
+    - env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=group
+    - env: DOCKER=true BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=chrome BVER=beta TOPOLOGY=group
+    - env: DOCKER=true BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=chrome BVER=unstable TOPOLOGY=group
+    - env: DOCKER=true BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=firefox BVER=stable TOPOLOGY=group
+    - env: DOCKER=true BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=firefox BVER=beta TOPOLOGY=group
+    - env: DOCKER=true BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+    - env: DOCKER=true BROWSER=firefox BVER=unstable TOPOLOGY=group
 
-before_script:
-  - |
-    set -e
-    cd node_modules/travis-multirunner
-    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
-      BROWSER=chrome ./setup.sh
-      BROWSER=firefox ./setup.sh
-      export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
-      export FIREFOX_BIN=$(pwd)/browsers/bin/firefox-$BVER
-    else
-      BROWSER=safari ./setup.sh
-    fi
-    cd ../..
-    if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
-      sh -e /etc/init.d/xvfb start
-      pulseaudio --start
-      sleep 3
-    fi
-    if [ "${TOPOLOGY}" != 'peer-to-peer' ]; then
-      export ENABLE_REST_API_TESTS=1
-    fi
-
-script: npm run build:travis
+script: ./scripts/travis-run-tests.sh
 
 notifications:
   slack:
