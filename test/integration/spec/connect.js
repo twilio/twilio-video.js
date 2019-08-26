@@ -523,7 +523,7 @@ describe('connect', function() {
   });
 
   ['dscpTagging', 'enableDscp'].forEach(dscpTaggingOption => {
-    (isRTCRtpSenderParamsSupported ? describe.only : describe.skip)(dscpTaggingOption, () => {
+    (isRTCRtpSenderParamsSupported ? describe : describe.skip)(dscpTaggingOption, () => {
       [true, false, undefined].forEach(dscpTagging => {
         context(`when dscpTagging is ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
           let peerConnections;
