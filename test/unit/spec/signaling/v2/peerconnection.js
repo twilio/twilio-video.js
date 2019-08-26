@@ -790,10 +790,10 @@ describe('PeerConnectionV2', () => {
       ],
       [
         [true, false, undefined],
-        x => `When dscpTagging is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
+        x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
     // eslint-disable-next-line consistent-return
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, dscpTagging]) => {
+    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp]) => {
       // The Test
       let test;
 
@@ -824,7 +824,7 @@ describe('PeerConnectionV2', () => {
           answers: 2,
           maxAudioBitrate: 40,
           maxVideoBitrate: 50,
-          dscpTagging,
+          enableDscp,
           isRTCRtpSenderParamsSupported
         });
         descriptions = [];
@@ -979,7 +979,7 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldMaybeSetNetworkPriority() {
-        if (dscpTagging && isRTCRtpSenderParamsSupported) {
+        if (enableDscp && isRTCRtpSenderParamsSupported) {
           it('should set RTCRtpEncodingParameters.networkPriority to "high" all RTCRtpSenders', () => {
             test.pc.getSenders().forEach(sender => {
               sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
@@ -2087,8 +2087,8 @@ function makePeerConnectionV2(options) {
     setCodecPreferences: options.setCodecPreferences
   };
 
-  if (options.dscpTagging !== undefined) {
-    options.options.dscpTagging = options.dscpTagging;
+  if (options.enableDscp !== undefined) {
+    options.options.enableDscp = options.enableDscp;
   }
 
   return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, options.options);

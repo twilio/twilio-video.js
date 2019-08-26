@@ -7,6 +7,7 @@ const { inherits } = require('util');
 
 const connect = require('../../../lib/connect');
 const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION } = require('../../../lib/util/constants');
+const Log = require('../../../lib/util/log');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -49,6 +50,63 @@ describe('connect', () => {
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
       assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+    });
+  });
+
+  describe('called with ConnectOptions#dscpTagging', () => {
+    let signaling;
+
+    before(() => {
+      const mockSignaling = new Signaling();
+      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+      signaling = sinon.spy(() => mockSignaling);
+    });
+
+    context('for the first time', () => {
+      before(() => {
+        connect(token, {
+          dscpTagging: true,
+          iceServers: [],
+          signaling,
+          Log: function() {
+            return sinon.createStubInstance(Log);
+          }
+        });
+      });
+
+      it('should set ConnectOptions#enableDscp', () => {
+        const options = signaling.args[0][1];
+        assert.equal(options.enableDscp, true);
+      });
+
+      it('should call .warn on the underlying Log with the deprecation warning message', () => {
+        const options = signaling.args[0][1];
+        sinon.assert.calledWith(options.log.warn, 'The ConnectOptions flag "dscpTagging" is '
+          + 'deprecated and scheduled for removal. Please use "enableDscp" instead.');
+      });
+    });
+
+    context('for the second time', () => {
+      before(() => {
+        connect(token, {
+          dscpTagging: false,
+          iceServers: [],
+          signaling,
+          Log: function() {
+            return sinon.createStubInstance(Log);
+          }
+        });
+      });
+
+      it('should set ConnectOptions#enableDscp', () => {
+        const options = signaling.args[1][1];
+        assert.equal(options.enableDscp, false);
+      });
+
+      it('should not call .warn on the underlying Log', () => {
+        const options = signaling.args[1][1];
+        sinon.assert.callCount(options.log.warn, 0);
+      });
     });
   });
 
