@@ -543,7 +543,7 @@ describe('connect', function() {
             : undefined;
 
           it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters`, () => {
-            flatMap(peerConnections, pc => pc.getSenders()).forEach(sender => {
+            flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
               sender.getParameters().encodings.forEach(encoding => {
                 if (typeof expectedNetworkPriority === 'string') {
                   assert.equal(encoding.networkPriority, expectedNetworkPriority);
