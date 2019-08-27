@@ -5,11 +5,11 @@ if [ "${DOCKER}" = "true" ]; then
   # when running inside docker
   echo TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+    echo Not a pull request build. Skipping docker tests and failing the job.
+    exit 126
+  else
     docker-compose build test
     docker-compose run test npm run build:docker
-  else
-    echo skipping docker tests and failing the build.
-    exit 126
   fi
 else
   # when running outside docker
