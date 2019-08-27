@@ -4,7 +4,7 @@
 const defaultServerUrl = 'http://localhost:3032/';
 
 /**
- * Provides interface to communicate with docker
+ * Provides interface to communicate with docker via DockerProxyServer
  * via {@link DockerProxyServer}
 */
 class DockerProxyClient {
@@ -18,7 +18,8 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<boolean>} promise that resolves to true if caller is running inside docker instance.
+   * @returns {Promise<boolean>} - Resolves to true if caller is running inside docker instance.
+   *   resolves to false if not running inside docker, or if it failed to connect to DockerProxyServer
    */
   async isDocker() {
     try {
@@ -31,35 +32,35 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<{containerId: string}>} - Promise that resolves to object containing containerId.
+   * @returns {Promise<{containerId: string}>} - Resolves to object containing containerId.
    */
   getCurrentContainerId() {
     return this._makeRequest('getCurrentContainerId');
   }
 
   /**
-   * @returns {Promise<{activeInterface: string}>} - Promise that resolves to object containing activeInterface.
+   * @returns {Promise<{activeInterface: string}>} - Resolves to object containing activeInterface.
    */
   getActiveInterface() {
     return this._makeRequest('getActiveInterface');
   }
 
   /**
-   * @returns {Promise<{version: string}>} - Promise that resolves to object containing containerId.
+   * @returns {Promise<{version: string}>} - Resolves to object containing version of the {@link DockerProxyServer}.
    */
   getVersion() {
     return this._makeRequest('version');
   }
 
   /**
-   * @returns {Promise<[{Id: string}]>} - Promise that resolves to an array of active currently container objects.
+   * @returns {Promise<[{Id: string}]>} - Resolves to an array of container objects.
    */
   getContainers() {
     return this._makeRequest('getContainers');
   }
 
   /**
-   * @returns {Promise<void>} - Promise that resolves to an object containing properties of
+   * @returns {Promise<void>} - Resolves to an object containing properties of
    *     container that caller is running inside.
    */
   inspectCurrentContainer() {
@@ -67,7 +68,7 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<void>} - Promise that resolves after connecting to given network
+   * @returns {Promise<void>} - Resolves after connecting to given network
    * @param {string} networkId - identifies network to be connected.
    */
   connectToNetwork(networkId) {
@@ -75,7 +76,7 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<void>} - Promise that resolves after disconnecting to given network
+   * @returns {Promise<void>} - Resolves after disconnecting to given network
    * @param {string} networkId - identifies network to be disconnected from.
    */
   disconnectFromNetwork(networkId) {
@@ -83,7 +84,7 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<void>} - Promise that resolves after disconnecting from all networks
+   * @returns {Promise<void>} - Resolves after disconnecting from all networks
    *   that current container is connected to
    */
   disconnectFromAllNetworks() {
@@ -91,8 +92,8 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<{Id:string}>} - Promise that resolves after creating a network.
-   *  returns object containing Id for the newly created network. This id can later be used to connect/disconnect
+   * @returns {Promise<{Id:string}>} - Resolves after creating a network.
+   *  returns object containing `Id` for the newly created network. This `Id` can later be used to connect/disconnect
    *  to/from the netowrk.
    * @param {string} networkName - name of the network to be created. if not provided a random name is generated.
    */
@@ -102,22 +103,22 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<void>} - disconnects for all networks,and reconnects to default (original) networks
-   *  also deletes any network created by the instance.
+   * @returns {Promise<void>} - disconnects from all networks and reconnects to default (original) networks
+   *  also deletes any network created by the instance of the {@link DockerProxyServer}.
    */
   resetNetwork() {
     return this._makeRequest('resetNetwork');
   }
 
   /**
-   * @returns {Promise<[{Id: string, Name: string}]>} - return array of all docker networks.
+   * @returns {Promise<[{Id: string, Name: string}]>} - returns an array of all docker networks.
    */
   getAllNetworks() {
     return this._makeRequest('getAllNetworks');
   }
 
   /**
-   * @returns {Promise<[{Id: string, Name: string}]>} - return array of docker networks that current container is connected to
+   * @returns {Promise<[{Id: string, Name: string}]>} - returns an array of docker networks that current container is connected to
    */
   getCurrentNetworks() {
     return this._makeRequest('getCurrentNetworks');

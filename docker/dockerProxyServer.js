@@ -8,10 +8,9 @@ const isDocker = require('is-docker')();
 const version = 1.00;
 
 /**
- * Provides webserver interface to communicate with
- * docker socket. This provides simple inteface for
- * use from browser to write network depenent tests.
- * via {@link DockerProxyServer}
+ * Provides webserver interface to communicate with the docker socket.
+ * Clients running in browser can load {@link DockerProxyServer}
+ * to use this interface.
 */
 class DockerProxyServer {
   constructor(port) {
@@ -36,27 +35,27 @@ class DockerProxyServer {
    * starts the webserver server, and starts listening for incoming requests.
    */
   async startServer() {
-    this._originalNetworks = await this.getCurrentNetworks();
+    this._originalNetworks = await this._getCurrentNetworks();
     return new Promise(resolve => {
       const express = require('express');
       const app = express();
       app.use(cors());
 
       [
-        { endpoint: '/version', handleRequest: 'version' },
-        { endpoint: '/isDocker', handleRequest: 'isDocker' },
-        { endpoint: '/getCurrentContainerId', handleRequest: 'getCurrentContainerId' },
-        { endpoint: '/getContainers', handleRequest: 'getContainers' },
-        { endpoint: '/getActiveInterface', handleRequest: 'getActiveInterface' },
-        { endpoint: '/disconnect/:networkId', handleRequest: 'disconnectFromNetwork' },
-        { endpoint: '/disconnectFromAllNetworks', handleRequest: 'disconnectFromAllNetworks' },
-        { endpoint: '/connect/:networkId', handleRequest: 'connectToNetwork' },
-        { endpoint: '/createNetwork/:networkName', handleRequest: 'createNetwork' },
-        { endpoint: '/resetNetwork', handleRequest: 'resetNetwork' },
-        { endpoint: '/inspectCurrentContainer', handleRequest: 'inspectCurrentContainer' },
-        { endpoint: '/connectToDefaultNetwork', handleRequest: 'connectToDefaultNetwork' },
-        { endpoint: '/getAllNetworks', handleRequest: 'getAllNetworks' },
-        { endpoint: '/getCurrentNetworks', handleRequest: 'getCurrentNetworks' },
+        { endpoint: '/version', handleRequest: '_version' },
+        { endpoint: '/isDocker', handleRequest: '_isDocker' },
+        { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
+        { endpoint: '/getContainers', handleRequest: '_getContainers' },
+        { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
+        { endpoint: '/disconnect/:networkId', handleRequest: '_disconnectFromNetwork' },
+        { endpoint: '/disconnectFromAllNetworks', handleRequest: '_disconnectFromAllNetworks' },
+        { endpoint: '/connect/:networkId', handleRequest: '_connectToNetwork' },
+        { endpoint: '/createNetwork/:networkName', handleRequest: '_createNetwork' },
+        { endpoint: '/resetNetwork', handleRequest: '_resetNetwork' },
+        { endpoint: '/inspectCurrentContainer', handleRequest: '_inspectCurrentContainer' },
+        { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
+        { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
+        { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
       ].forEach((route) => {
         app.get(route.endpoint, (req, res, next) => {
           this[route.handleRequest](req.params).then(data => res.send(data)).catch(error => {
@@ -74,9 +73,9 @@ class DockerProxyServer {
   }
 
   // resets network to default state
-  async resetNetwork() {
-    await this.disconnectFromAllNetworks();
-    await this.connectToDefaultNetwork();
+  async _resetNetwork() {
+    await this._disconnectFromAllNetworks();
+    await this._connectToDefaultNetwork();
     await this._pruneNetworks();
   }
 
@@ -92,7 +91,7 @@ class DockerProxyServer {
     });
   }
 
-  getCurrentContainerId() {
+  _getCurrentContainerId() {
     if (!this._containerId) {
       const cmd = 'cat /proc/self/cgroup | grep "pids:/" | sed \'s/\\([0-9]*\\):pids:\\/docker\\///g\'';
       return this._runCommand(cmd).then((output) => {
@@ -105,7 +104,7 @@ class DockerProxyServer {
 
   }
 
-  getActiveInterface() {
+  _getActiveInterface() {
     const cmd = 'ip route show default | grep default | awk {\'print $5\'}';
     return this._runCommand(cmd).then((output) => {
       const activeInterface = output.replace('\n', '');
@@ -113,7 +112,7 @@ class DockerProxyServer {
     });
   }
 
-  getContainers() {
+  _getContainers() {
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
       path: '/v1.32/containers/json',
@@ -121,8 +120,8 @@ class DockerProxyServer {
     });
   }
 
-  inspectCurrentContainer() {
-    return this.getCurrentContainerId().then(({ containerId }) => {
+  _inspectCurrentContainer() {
+    return this._getCurrentContainerId().then(({ containerId }) => {
       return this._makeRequest({
         socketPath: '/var/run/docker.sock',
         path: `/v1.32/containers/${containerId}/json`,
@@ -131,12 +130,12 @@ class DockerProxyServer {
     });
   }
 
-  connectToDefaultNetwork() {
-    const connectPromises = this._originalNetworks.map(({ Id }) => this.connectToNetwork({ networkId: Id }));
+  _connectToDefaultNetwork() {
+    const connectPromises = this._originalNetworks.map(({ Id }) => this._connectToNetwork({ networkId: Id }));
     return Promise.all(connectPromises);
   }
 
-  getAllNetworks() {
+  _getAllNetworks() {
     return this._makeRequest({
       socketPath: '/var/run/docker.sock',
       path: '/v1.32/networks',
@@ -144,15 +143,15 @@ class DockerProxyServer {
     });
   }
 
-  connectToNetwork({ networkId }) {
-    return this.getCurrentContainerId().then(({ containerId }) => {
-      return this._connectToNetwork({ networkId, containerId });
+  _connectToNetwork({ networkId }) {
+    return this._getCurrentContainerId().then(({ containerId }) => {
+      return this._internalConnectToNetwork({ networkId, containerId });
     });
   }
 
   // returns Promise<[{ Name, Id }]>
-  getCurrentNetworks() {
-    return this.inspectCurrentContainer().then((currentContainer) => {
+  _getCurrentNetworks() {
+    return this._inspectCurrentContainer().then((currentContainer) => {
       const networkNames = Object.keys(currentContainer.NetworkSettings.Networks);
       return networkNames.map((networkName) => {
         return {
@@ -163,20 +162,20 @@ class DockerProxyServer {
     });
   }
 
-  disconnectFromAllNetworks() {
-    return this.getCurrentNetworks().then((networks) => {
-      const disconnectPromises = networks.map(({ Id }) => this.disconnectFromNetwork({ networkId: Id }));
+  _disconnectFromAllNetworks() {
+    return this._getCurrentNetworks().then((networks) => {
+      const disconnectPromises = networks.map(({ Id }) => this._disconnectFromNetwork({ networkId: Id }));
       return Promise.all(disconnectPromises);
     });
   }
 
-  disconnectFromNetwork({ networkId }) {
-    return this.getCurrentContainerId().then(({ containerId }) => {
-      return this._disconnectFromNetwork({ networkId, containerId });
+  _disconnectFromNetwork({ networkId }) {
+    return this._getCurrentContainerId().then(({ containerId }) => {
+      return this._internalDisconnectFromNetwork({ networkId, containerId });
     });
   }
 
-  createNetwork({ networkName }) {
+  _createNetwork({ networkName }) {
     // Note: we tag the networks created by this instance of proxy
     // with a label, so that we can prune specific networks during cleanup.
     const instanceId = (new Date()).toDateString();
@@ -198,15 +197,15 @@ class DockerProxyServer {
     }, postData);
   }
 
-  isDocker() {
+  _isDocker() {
     return Promise.resolve({ isDocker });
   }
 
-  version() {
+  _version() {
     return Promise.resolve({ version });
   }
 
-  _connectToNetwork({ networkId, containerId }) {
+  _internalConnectToNetwork({ networkId, containerId }) {
     const postData = JSON.stringify({
       'Container': containerId,
     });
@@ -222,7 +221,7 @@ class DockerProxyServer {
     }, postData);
   }
 
-  _disconnectFromNetwork({ networkId, containerId }) {
+  _internalDisconnectFromNetwork({ networkId, containerId }) {
     const postData = JSON.stringify({
       'Container': containerId,
       'Force': false
