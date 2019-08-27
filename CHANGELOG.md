@@ -20,6 +20,9 @@ New Features
   });
   ```
 
+- Setting bandwidth limits for media using `LocalParticipant.setParameters()` will now no longer require a
+  round of negotiation with the remote peer and will take effect instantaneously. (JSDK-2460)
+
 Bug Fixes
 ---------
 
@@ -27,11 +30,10 @@ Bug Fixes
   Participants in a Peer-to-Peer Room. Although this issue does no affect the normal
   functioning of the Room, it resulted in the Chrome/Safari Participants logging cryptic
   Error messages to the JavaScript console. Now, twilio-video.js will log warning messages
-  until Chrome ([bug](https://bugs.chromium.org/p/chromium/issues/detail?id=978582)) and Safari
-  fix this issue. (JSDK-2412)
-- Fixed a bug where connecting to a Room with a `region` containing special
-  characters in ConnectOptions failed with an Error other than
-  [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000). (JSDK-2400)
+  until Chrome ([bug](https://bugs.chromium.org/p/chromium/issues/detail?id=978582)) and
+  Safari fix this issue. (JSDK-2412)
+- Fixed a bug where connecting to a Room with a `region` containing special characters in
+  ConnectOptions failed with an Error other than [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000). (JSDK-2400)
 
 2.0.0-beta12 (July 12, 2019)
 ============================

@@ -47,7 +47,12 @@ to ensure playback:
 Chrome 76+ DataTrack incompatibility with 2.X Mobile SDKs in Peer-to-Peer Rooms
 -------------------------------------------------------------------------------
 
-Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a [new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for RTCDataChannel negotiation. This new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with Peer-to-Peer Rooms. In a Peer-to-Peer room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s DataTracks. Please refer to the upgrade paths listed in [this issue](https://github.com/twilio/twilio-video-ios/issues/52) to address this.
+Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a
+[new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for RTCDataChannel negotiation. This
+new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with Peer-to-Peer Rooms. In a
+Peer-to-Peer room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s
+DataTracks. Please refer to the upgrade paths listed in [this issue](https://github.com/twilio/twilio-video-ios/issues/52)
+to address this.
 
 Firefox Participants are not able to recover media after network interruptions or handoffs
 ------------------------------------------------------------------------------------------
@@ -56,6 +61,12 @@ Because of this [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562) and
 this [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318), Firefox is not
 able to recover media connections with other Participants in a Room after network
 interruptions or handoffs.
+
+Firefox Participants cannot constrain their audio bandwidth
+-----------------------------------------------------------
+
+Because of this [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726), Firefox
+Participants are not able to constrain their audio bandwidth using `LocalParticipant.setParameters()`.
 
 Firefox 64/65 Participants may sometimes experience media loss in Group Rooms
 -----------------------------------------------------------------------------
