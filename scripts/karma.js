@@ -39,7 +39,7 @@ const files = getTestPaths(integrationTests);
 async function main(files) {
   let dockerProxy = null;
   if (isDocker) {
-    console.log("running tests inside docker!");
+    console.log('running tests inside docker!');
     dockerProxy = new DockerProxyServer();
     dockerProxy.startServer();
   }
@@ -47,6 +47,7 @@ async function main(files) {
   for (const file of files) {
     const config = parseConfig(configFile, { files: [file] });
 
+    // eslint-disable-next-line no-await-in-loop
     const exitCode = await new Promise(resolve => {
       const server = new Server(config, resolve);
       server.start();

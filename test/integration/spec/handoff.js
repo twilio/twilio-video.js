@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 'use strict';
-
+const assert = require('assert');
 const DockerProxyClient = require('../../../docker/dockerProxyClient');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
@@ -25,68 +25,77 @@ describe('NetworkHandoff', function() {
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 
-  beforeEach(async function() {
-    if (!isRunningInsideDocker) {
-      // eslint-disable-next-line no-invalid-this
-      this.skip();
-    } else {
-      await dockerAPI.resetNetwork();
-    }
+  it('DockerProxyClient can determine if running inside docker', () => {
+    // We skip docker dependent tests when not running inside docker.
+    // this test is included mainly to ensure that not all tests in this file
+    // are skipped. karma returns failures if all tests in a file were skipped :)
+    assert.equal(typeof isRunningInsideDocker, 'boolean');
   });
 
-  afterEach(async () => {
-    if (isRunningInsideDocker) {
-      // reset to original network settings.
-      await dockerAPI.resetNetwork();
-    }
-  });
+  describe('docker dependent tests', () => {
+    beforeEach(async function() {
+      if (!isRunningInsideDocker) {
+        // eslint-disable-next-line no-invalid-this
+        this.skip();
+      } else {
+        await dockerAPI.resetNetwork();
+      }
+    });
 
-  it('on network disconnect room emits a disconnected message', async () => {
-    await waitToGoOnline();
+    afterEach(async () => {
+      if (isRunningInsideDocker) {
+        // reset to original network settings.
+        await dockerAPI.resetNetwork();
+      }
+    });
 
-    const options = Object.assign({ name: randomName() }, defaults);
-    const thisRoom = await connect(getToken(randomName()), options);
-    thisRoom.on('disconnected', () => console.log('room received disconnected'));
-    thisRoom.on('reconnecting', () => console.log('room received reconnecting'));
-    thisRoom.on('reconnected', () => console.log('room received reconnected'));
+    it('on network disconnect room emits a disconnected message', async () => {
+      await waitToGoOnline();
 
-    const disconnectPromise = new Promise(resolve => thisRoom.once('disconnected', resolve));
-    const reconnectingPromise = new Promise(resolve => thisRoom.once('reconnecting', resolve));
+      const options = Object.assign({ name: randomName() }, defaults);
+      const thisRoom = await connect(getToken(randomName()), options);
+      thisRoom.on('disconnected', () => console.log('room received disconnected'));
+      thisRoom.on('reconnecting', () => console.log('room received reconnecting'));
+      thisRoom.on('reconnected', () => console.log('room received reconnected'));
 
-    await dockerAPI.disconnectFromAllNetworks();
-    await waitToGoOffline();
+      const disconnectPromise = new Promise(resolve => thisRoom.once('disconnected', resolve));
+      const reconnectingPromise = new Promise(resolve => thisRoom.once('reconnecting', resolve));
 
-    // should fire reconnecting.
-    await reconnectingPromise;
+      await dockerAPI.disconnectFromAllNetworks();
+      await waitToGoOffline();
 
-    // but end up disconnected eventually.
-    await disconnectPromise;
-  });
+      // should fire reconnecting.
+      await reconnectingPromise;
 
-  it('on network switch reconnects and emits reconnecting followed by reconnected', async () => {
-    await waitToGoOnline();
+      // but end up disconnected eventually.
+      await disconnectPromise;
+    });
 
-    const options = Object.assign({ name: randomName() }, defaults);
-    const thisRoom = await connect(getToken(randomName()), options);
-    thisRoom.on('disconnected', () => console.log('room received disconnected'));
-    thisRoom.on('reconnecting', () => console.log('room received reconnecting'));
-    thisRoom.on('reconnected', () => console.log('room received reconnected'));
+    it('on network switch reconnects and emits reconnecting followed by reconnected', async () => {
+      await waitToGoOnline();
 
-    const reconnectPromise = new Promise(resolve => thisRoom.once('reconnected', resolve));
-    const reconnectingPromise = new Promise(resolve => thisRoom.once('reconnecting', resolve));
+      const options = Object.assign({ name: randomName() }, defaults);
+      const thisRoom = await connect(getToken(randomName()), options);
+      thisRoom.on('disconnected', () => console.log('room received disconnected'));
+      thisRoom.on('reconnecting', () => console.log('room received reconnecting'));
+      thisRoom.on('reconnected', () => console.log('room received reconnected'));
 
-    await dockerAPI.disconnectFromAllNetworks();
-    await waitToGoOffline();
+      const reconnectPromise = new Promise(resolve => thisRoom.once('reconnected', resolve));
+      const reconnectingPromise = new Promise(resolve => thisRoom.once('reconnecting', resolve));
 
-    // create and connect to new network
-    const newNetwork = await dockerAPI.createNetwork();
-    await dockerAPI.connectToNetwork(newNetwork.Id);
-    await waitToGoOnline();
+      await dockerAPI.disconnectFromAllNetworks();
+      await waitToGoOffline();
 
-    // shoout attempt to reconnect
-    await reconnectingPromise;
+      // create and connect to new network
+      const newNetwork = await dockerAPI.createNetwork();
+      await dockerAPI.connectToNetwork(newNetwork.Id);
+      await waitToGoOnline();
 
-    // and succeed
-    await reconnectPromise;
+      // shoout attempt to reconnect
+      await reconnectingPromise;
+
+      // and succeed
+      await reconnectPromise;
+    });
   });
 });
