@@ -46,8 +46,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
 
     const strTestRun = (testRun++).toString();
 
-    // generate reportname like: BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
-    let strReportName = 'testresults';
+    // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
+    let strReportName = `testresults-DOCKER-${isDocker}-`;
     ['BROWSER', 'BVER', 'TOPOLOGY'].forEach((dim) => {
       if (process.env[dim]) {
         strReportName += `-${dim}-${process.env[dim]}`;

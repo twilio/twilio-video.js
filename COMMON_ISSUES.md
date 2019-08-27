@@ -26,7 +26,7 @@ to ensure playback:
 
 - Make sure that the user interacts with your application before joining a Room.
   Here is an example:
-  
+
   ```js
   document.getElementById('join_room').addEventListener('click', () => {
     Twilio.Video.connect(token, {
@@ -38,11 +38,16 @@ to ensure playback:
 - If your application needs to join a Room on page load, set the `muted` attribute
   of the \<video\> element returned by `VideoTrack.attach()` to true. The autoplay
   policy allows muted video to be automatically played.
-  
+
   ```js
   const video = videoTrack.attach();
   video.muted = true;
   ```
+
+Chrome 76+ DataTrack incompatibility with 2.X Mobile SDKs in Peer-to-Peer Rooms
+-------------------------------------------------------------------------------
+
+Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a [new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for RTCDataChannel negotiation. This new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with Peer-to-Peer Rooms. In a Peer-to-Peer room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s DataTracks. Please refer to the upgrade paths listed in [this issue](https://github.com/twilio/twilio-video-ios/issues/52) to address this.
 
 Firefox Participants are not able to recover media after network interruptions or handoffs
 ------------------------------------------------------------------------------------------
