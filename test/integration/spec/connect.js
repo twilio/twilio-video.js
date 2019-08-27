@@ -522,31 +522,28 @@ describe('connect', function() {
     });
   });
 
-  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('dscpTagging', () => {
-    [true, false, undefined].forEach(dscpTagging => {
-      context(`when dscpTagging is ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
-        let peerConnections;
-        let thisRoom;
-        let thoseRooms;
+  ['dscpTagging', 'enableDscp'].forEach(dscpTaggingOption => {
+    (isRTCRtpSenderParamsSupported ? describe : describe.skip)(dscpTaggingOption, () => {
+      [true, false, undefined].forEach(dscpTagging => {
+        context(`when ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
+          let peerConnections;
+          let thisRoom;
+          let thoseRooms;
 
-        before(async () => {
-          const connectOptions = typeof dscpTagging === 'boolean' ? { dscpTagging } : {};
-          [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), connectOptions, { tracks: [] }, 0);
-          // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
-          // so wait for a little while until the changes are applied.
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        });
+          before(async () => {
+            const connectOptions = typeof dscpTagging === 'boolean' ? { [dscpTaggingOption]: dscpTagging } : {};
+            [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), connectOptions, { tracks: [] }, 0);
+            // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
+            // so wait for a little while until the changes are applied.
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          });
 
-        ['audio', 'video'].forEach(kind => {
-          const expectedNetworkPriority = isChrome ? {
-            audio: { true: 'high', false: 'low' },
-            video: { true: 'low', false: 'low' }
-          }[kind][dscpTagging || false] : undefined;
+          const expectedNetworkPriority = isChrome
+            ? { false: 'low', true: 'high' }[!!dscpTagging]
+            : undefined;
 
-          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for ${kind} RTCRtpEncodingParameters`, () => {
-            flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track && sender.track.kind === kind);
-            }).forEach(sender => {
+          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters`, () => {
+            flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
               sender.getParameters().encodings.forEach(encoding => {
                 if (typeof expectedNetworkPriority === 'string') {
                   assert.equal(encoding.networkPriority, expectedNetworkPriority);
@@ -556,10 +553,10 @@ describe('connect', function() {
               });
             });
           });
-        });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          after(() => {
+            [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+          });
         });
       });
     });
