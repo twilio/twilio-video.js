@@ -522,42 +522,60 @@ describe('connect', function() {
     });
   });
 
-  ['dscpTagging', 'enableDscp'].forEach(dscpTaggingOption => {
-    (isRTCRtpSenderParamsSupported ? describe : describe.skip)(dscpTaggingOption, () => {
-      [true, false, undefined].forEach(dscpTagging => {
-        context(`when ${typeof dscpTagging === 'boolean' ? `set to ${dscpTagging}` : 'not set'}`, () => {
-          let peerConnections;
-          let thisRoom;
-          let thoseRooms;
+  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('DSCP tagging', () => {
+    combinationContext([
+      [
+        ['dscpTagging', 'enableDscp'],
+        x => x
+      ],
+      [
+        [true, false, undefined],
+        x => `when ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
+      ],
+      [
+        [true, false],
+        x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
+      ]
+    ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
+      let peerConnections;
+      let thisRoom;
+      let thoseRooms;
 
-          before(async () => {
-            const connectOptions = typeof dscpTagging === 'boolean' ? { [dscpTaggingOption]: dscpTagging } : {};
-            [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), connectOptions, { tracks: [] }, 0);
-            // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
-            // so wait for a little while until the changes are applied.
-            await new Promise(resolve => setTimeout(resolve, 5000));
-          });
+      before(async () => {
+        const dscpOptions = typeof shouldEnableDscp === 'boolean'
+          ? { [dscpTaggingOption]: shouldEnableDscp }
+          : {};
+        const vp8SimulcastOptions = shouldEnableVP8Simulcast
+          ? { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }
+          : {};
+        const testOptions = Object.assign({}, dscpOptions, vp8SimulcastOptions);
 
-          const expectedNetworkPriority = isChrome
-            ? { false: 'low', true: 'high' }[!!dscpTagging]
-            : undefined;
+        [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), testOptions, { tracks: [] }, 0);
+        // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
+        // so wait for a little while until the changes are applied.
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      });
 
-          it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters`, () => {
-            flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
-              sender.getParameters().encodings.forEach(encoding => {
-                if (typeof expectedNetworkPriority === 'string') {
-                  assert.equal(encoding.networkPriority, expectedNetworkPriority);
-                } else {
-                  assert(!('networkPriority' in encoding));
-                }
-              });
+      const expectedNetworkPriority = isChrome
+        ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
+        : undefined;
+
+      it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters of the first encoding layer`, () => {
+        flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
+          if (typeof expectedNetworkPriority === 'string') {
+            sender.getParameters().encodings.forEach((encoding, i) => {
+              assert.equal(encoding.networkPriority, i === 0 ? expectedNetworkPriority : 'low');
             });
-          });
-
-          after(() => {
-            [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
-          });
+          } else {
+            sender.getParameters().encodings.forEach(encoding => {
+              assert(!('networkPriority' in encoding));
+            });
+          }
         });
+      });
+
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
       });
     });
   });
