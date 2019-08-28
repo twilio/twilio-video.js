@@ -13,7 +13,7 @@ const {
 } = require('../../lib/util');
 
 
-describe('NetworkHandoff', function() {
+describe('Reconnection Tests', function() {
   // eslint-disable-next-line no-invalid-this
   const minute = 1 * 60 * 1000;
   // eslint-disable-next-line no-invalid-this

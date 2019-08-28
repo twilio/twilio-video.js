@@ -11,9 +11,11 @@ describe('dockerProxy', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  let dockerAPI = new DockerProxyClient();
+  let dockerAPI = null;
   let isRunningInsideDocker = false;
+
   before(async () => {
+    dockerAPI = new DockerProxyClient();
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 

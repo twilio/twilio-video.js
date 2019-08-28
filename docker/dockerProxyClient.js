@@ -92,7 +92,7 @@ class DockerProxyClient {
   }
 
   /**
-   * @returns {Promise<{Id:string}>} - Resolves after creating a network.
+   * @returns {Promise<{Id: string}>} - Resolves after creating a network.
    *  returns object containing `Id` for the newly created network. This `Id` can later be used to connect/disconnect
    *  to/from the netowrk.
    * @param {string} networkName - name of the network to be created. if not provided a random name is generated.
@@ -124,14 +124,16 @@ class DockerProxyClient {
     return this._makeRequest('getCurrentNetworks');
   }
 
-  _makeRequest(api) {
-    return fetch(this._serverUrl + api)
-      .then(res => res.text())
-      .then(text => text ? JSON.parse(text) : {})
-      .catch((err) => {
-        console.error(`"fetch ${api} threw  : `, err);
-        throw err;
-      });
+  async _makeRequest(api) {
+    try {
+      const res = await fetch(this._serverUrl + api);
+      const text = await res.text();
+      const json = text ? JSON.parse(text) : {};
+      return json;
+    } catch (err) {
+      console.error(`"fetch ${api} threw  : `, err);
+      throw err;
+    }
   }
 }
 

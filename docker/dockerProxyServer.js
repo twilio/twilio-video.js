@@ -36,39 +36,43 @@ class DockerProxyServer {
    */
   async startServer() {
     this._originalNetworks = await this._getCurrentNetworks();
-    return new Promise(resolve => {
-      const express = require('express');
-      const app = express();
-      app.use(cors());
+    const express = require('express');
+    const app = express();
+    app.use(cors());
 
-      [
-        { endpoint: '/version', handleRequest: '_version' },
-        { endpoint: '/isDocker', handleRequest: '_isDocker' },
-        { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
-        { endpoint: '/getContainers', handleRequest: '_getContainers' },
-        { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
-        { endpoint: '/disconnect/:networkId', handleRequest: '_disconnectFromNetwork' },
-        { endpoint: '/disconnectFromAllNetworks', handleRequest: '_disconnectFromAllNetworks' },
-        { endpoint: '/connect/:networkId', handleRequest: '_connectToNetwork' },
-        { endpoint: '/createNetwork/:networkName', handleRequest: '_createNetwork' },
-        { endpoint: '/resetNetwork', handleRequest: '_resetNetwork' },
-        { endpoint: '/inspectCurrentContainer', handleRequest: '_inspectCurrentContainer' },
-        { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
-        { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
-        { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
-      ].forEach((route) => {
-        app.get(route.endpoint, (req, res, next) => {
-          this[route.handleRequest](req.params).then(data => res.send(data)).catch(error => {
-            console.warn('Failed @ ' + route.endpoint, error);
-            next(error);
-          });
-        });
+    [
+      { endpoint: '/version', handleRequest: '_version' },
+      { endpoint: '/isDocker', handleRequest: '_isDocker' },
+      { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
+      { endpoint: '/getContainers', handleRequest: '_getContainers' },
+      { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
+      { endpoint: '/disconnect/:networkId', handleRequest: '_disconnectFromNetwork' },
+      { endpoint: '/disconnectFromAllNetworks', handleRequest: '_disconnectFromAllNetworks' },
+      { endpoint: '/connect/:networkId', handleRequest: '_connectToNetwork' },
+      { endpoint: '/createNetwork/:networkName', handleRequest: '_createNetwork' },
+      { endpoint: '/resetNetwork', handleRequest: '_resetNetwork' },
+      { endpoint: '/inspectCurrentContainer', handleRequest: '_inspectCurrentContainer' },
+      { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
+      { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
+      { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
+    ].forEach((route) => {
+      app.get(route.endpoint, async (req, res, next) => {
+        try {
+          const data = await this[route.handleRequest](req.params);
+          res.send(data);
+        } catch (err) {
+          next(err);
+          return;
+        }
       });
+    });
 
+    return new Promise((resolve, reject) => {
       this._server = app.listen(this._serverPort, () => {
         console.log(`DockerProxyServer listening on port ${this._serverPort}!`);
         resolve();
       });
+      this._server.once('error', reject);
     });
   }
 

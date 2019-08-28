@@ -11,11 +11,10 @@ const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
 
-
 function getTestPaths(path) {
   // // TODO: remove this hack
   // const dockerTestFile1 = require('path').resolve('./test/integration/spec/docker.js');
-  // const dockerTestFile2 = require('path').resolve('./test/integration/spec/handoff.js');
+  // const dockerTestFile2 = require('path').resolve('./test/integration/spec/reconnection.js');
   // return [dockerTestFile1, dockerTestFile2];
   if (process.env.FILE) {
     return [process.env.FILE];
@@ -32,7 +31,7 @@ function getTestPaths(path) {
 
 const files = getTestPaths(integrationTests);
 
-// NOTE(mroberts): We have a memory leak, either in twiliovideo.js or in
+// NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.

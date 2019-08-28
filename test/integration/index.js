@@ -1,6 +1,6 @@
 'use strict';
 
-require('./spec/handoff');
+require('./spec/reconnection');
 require('./spec/connect');
 require('./spec/docker');
 require('./spec/localparticipant');
