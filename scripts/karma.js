@@ -4,21 +4,28 @@
 const { readdirSync, statSync } = require('fs');
 const { Server, stopper } = require('karma');
 const { parseConfig } = require('karma').config;
+const { resolve: resolvePath } = require('path');
 const { join } = require('path');
 
 const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
-
+const useHack = 1;
 function getTestPaths(path) {
-  // // TODO: remove this hack
-  // const dockerTestFile1 = require('path').resolve('./test/integration/spec/docker.js');
-  // const dockerTestFile2 = require('path').resolve('./test/integration/spec/reconnection.js');
-  // return [dockerTestFile1, dockerTestFile2];
+
   if (process.env.FILE) {
-    return [process.env.FILE];
+    return [resolvePath(process.env.FILE)];
   }
+
+  // eslint-disable-next-line no-warning-comments
+  // TODO: remove this hack
+  if (useHack) {
+    const dockerTestFile1 = resolvePath('./test/integration/spec/docker.js');
+    const dockerTestFile2 = resolvePath('./test/integration/spec/reconnection.js');
+    return [dockerTestFile1, dockerTestFile2];
+  }
+
   var stat = statSync(path);
   if (stat && stat.isDirectory()) {
     return readdirSync(path).reduce((files, file) => {

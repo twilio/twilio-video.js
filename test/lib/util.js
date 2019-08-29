@@ -345,6 +345,8 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
  */
 function waitToGo(onlineOrOffline) {
   const wantonline = onlineOrOffline === 'online';
+  // eslint-disable-next-line no-console
+  console.log('makarand: waitToGoOn ' + onlineOrOffline);
   return new Promise((resolve) => {
     if (window.navigator.onLine !== wantonline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
