@@ -1,30 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta13 (August 29, 2019)
-==============================
-
-New Features
-------------
-
-- You can now enable [DSCP tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for media
-  packets by setting a new ConnectOptions property `enableDscp` to `true`. DSCP tagging allows you to request
-  enhanced QoS treatment for media packets from any firewall/routers that support this feature. Setting this
-  option to `true` will request DSCP tagging for media packets on supported browsers (only Chrome supports this as of now).
-  Audio packets will be sent with DSCP header value set to `0xb8` which corresponds to EF = Expedited Forwarding.
-  Video packets will be sent with DSCP header value set to `0x88` which corresponds to AF41 = Assured Forwarding. (JSDK-2456)
-
-  ```js
-  const { connect } = require('twilio-video');
-  const room = await connect(token, {
-    enableDscp: true
-  });
-  ```
-
-- The ConnectOptions flag `dscpTagging` which was introduced in 1.19.0 has now been renamed
-  to `enableDscp`. Using the old name still works, but is deprecated and scheduled for removal. (JSDK-2492)
-
-- Setting bandwidth limits for media using `LocalParticipant.setParameters()` will now no longer require a
-  round of negotiation with the remote peer and will take effect instantaneously. (JSDK-2460)
+2.0.0-beta14 (in progress)
+==========================
 
 New Features
 ------------
@@ -124,6 +101,32 @@ New Features
     });
   });
   ```
+
+2.0.0-beta13 (August 29, 2019)
+==============================
+
+New Features
+------------
+
+- You can now enable [DSCP tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for media
+  packets by setting a new ConnectOptions property `enableDscp` to `true`. DSCP tagging allows you to request
+  enhanced QoS treatment for media packets from any firewall/routers that support this feature. Setting this
+  option to `true` will request DSCP tagging for media packets on supported browsers (only Chrome supports this as of now).
+  Audio packets will be sent with DSCP header value set to `0xb8` which corresponds to EF = Expedited Forwarding.
+  Video packets will be sent with DSCP header value set to `0x88` which corresponds to AF41 = Assured Forwarding. (JSDK-2456)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    enableDscp: true
+  });
+  ```
+
+- The ConnectOptions flag `dscpTagging` which was introduced in 1.19.0 has now been renamed
+  to `enableDscp`. Using the old name still works, but is deprecated and scheduled for removal. (JSDK-2492)
+
+- Setting bandwidth limits for media using `LocalParticipant.setParameters()` will now no longer require a
+  round of negotiation with the remote peer and will take effect instantaneously. (JSDK-2460)
 
 Bug Fixes
 ---------
