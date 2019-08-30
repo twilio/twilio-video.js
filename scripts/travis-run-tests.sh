@@ -29,7 +29,7 @@ else
   cd ../..
   if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
     sh -e /etc/init.d/xvfb start
-    pulseaudio --start
+    echo pulseaudio --start
     sleep 3
   fi
   if [ "${TOPOLOGY}" != 'peer-to-peer' ]; then
