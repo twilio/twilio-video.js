@@ -15,6 +15,10 @@ else
   # when running outside docker
   cd node_modules/travis-multirunner
   if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+    # Upgrade to dpkg >= 1.17.5ubuntu5.8, which fixes
+    # https://bugs.launchpad.net/ubuntu/+source/dpkg/+bug/1730627
+    # (https://github.com/travis-ci/travis-ci/issues/9361)
+    sudo apt-get install -y dpkg
     BROWSER=chrome ./setup.sh
     BROWSER=firefox ./setup.sh
     export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
