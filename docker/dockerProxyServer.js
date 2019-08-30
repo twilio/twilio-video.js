@@ -244,7 +244,7 @@ class DockerProxyServer {
         }
         res.setEncoding('utf8');
         let rawData = '';
-        res.on('data', (chunk) => {
+        res.on('data', chunk => {
           rawData += chunk;
         });
         res.on('end', () => {
@@ -263,7 +263,7 @@ class DockerProxyServer {
           }
         });
       });
-      clientRequest.on('error', (e) => {
+      clientRequest.on('error', e => {
         console.warn(`${thisRequest}: request failed`, e);
         reject(e);
       });
