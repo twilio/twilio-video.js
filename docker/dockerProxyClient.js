@@ -137,40 +137,5 @@ class DockerProxyClient {
   }
 }
 
-// NOTE(mpatwardhan):To quick test the implementation
-// load this file interactively with the server url.
-if (module.parent === null) {
-  console.log('DockerProxy loaded interactively');
-  if (process.argv.length !== 3) {
-    console.log('Usage: node dockerProxyClient.js <serverurl>');
-    console.log('       where serverUrl is where dockerProxyServer is running');
-    console.log('       Example: node dockerProxyClient.js http://localhost:3032/');
-  } else {
-    const client = new DockerProxyClient(process.argv[2]);
-    const promises = [
-      'isDocker',
-      'getVersion',
-      'getAllNetworks',
-      'getCurrentNetworks',
-      'getContainers',
-      'getActiveInterface',
-      'getCurrentContainerId',
-      'createNetwork',
-      'inspectCurrentContainer',
-      'resetNetwork',
-    ].map(func => {
-      return client[func]({}).then(result => {
-        console.info(`${func} returned:`, JSON.stringify(result, null, 4));
-      }).catch((err) => {
-        console.error(`${func} failed with:`, err);
-      });
-    });
-
-    Promise.all(promises).then(() => {
-      console.log('done with all client calls.');
-    });
-  }
-}
-
 module.exports = DockerProxyClient;
 

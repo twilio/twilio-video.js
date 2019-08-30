@@ -283,17 +283,5 @@ class DockerProxyServer {
   }
 }
 
-// NOTE(mpatwardhan):To quick test the implementation
-// start server, and then dockerProxyClient.js interactively
-// 1) node dockerProxyServer.js
-// 2) node docker/dockerProxyClient.js http://localhost:3032/
-if (module.parent === null) {
-  console.log('DockerProxy loaded interactively');
-  const server = new DockerProxyServer();
-  server.startServer().then(() => {
-    console.log('started server');
-  });
-}
-
 module.exports = DockerProxyServer;
 
