@@ -95,25 +95,23 @@ class DockerProxyServer {
     });
   }
 
-  _getCurrentContainerId() {
+  async _getCurrentContainerId() {
     if (!this._containerId) {
       const cmd = 'cat /proc/self/cgroup | grep "pids:/" | sed \'s/\\([0-9]*\\):pids:\\/docker\\///g\'';
-      return this._runCommand(cmd).then((output) => {
-        const containerId = output.replace('\n', '');
-        this._containerId = containerId;
-        return { containerId };
-      });
+      const output = await this._runCommand(cmd);
+      const containerId = output.replace('\n', '');
+      this._containerId = containerId;
+      return { containerId };
     }
     return Promise.resolve({ containerId: this._containerId });
 
   }
 
-  _getActiveInterface() {
+  async _getActiveInterface() {
     const cmd = 'ip route show default | grep default | awk {\'print $5\'}';
-    return this._runCommand(cmd).then((output) => {
-      const activeInterface = output.replace('\n', '');
-      return { activeInterface };
-    });
+    const output = await this._runCommand(cmd);
+    const activeInterface = output.replace('\n', '');
+    return { activeInterface };
   }
 
   _getContainers() {
@@ -124,13 +122,12 @@ class DockerProxyServer {
     });
   }
 
-  _inspectCurrentContainer() {
-    return this._getCurrentContainerId().then(({ containerId }) => {
-      return this._makeRequest({
-        socketPath: '/var/run/docker.sock',
-        path: `/v1.32/containers/${containerId}/json`,
-        method: 'GET',
-      });
+  async _inspectCurrentContainer() {
+    const { containerId } = await this._getCurrentContainerId();
+    return this._makeRequest({
+      socketPath: '/var/run/docker.sock',
+      path: `/v1.32/containers/${containerId}/json`,
+      method: 'GET',
     });
   }
 
@@ -147,36 +144,32 @@ class DockerProxyServer {
     });
   }
 
-  _connectToNetwork({ networkId }) {
-    return this._getCurrentContainerId().then(({ containerId }) => {
-      return this._internalConnectToNetwork({ networkId, containerId });
-    });
+  async _connectToNetwork({ networkId }) {
+    const { containerId } = await this._getCurrentContainerId();
+    return this._internalConnectToNetwork({ networkId, containerId });
   }
 
   // returns Promise<[{ Name, Id }]>
-  _getCurrentNetworks() {
-    return this._inspectCurrentContainer().then((currentContainer) => {
-      const networkNames = Object.keys(currentContainer.NetworkSettings.Networks);
-      return networkNames.map((networkName) => {
-        return {
-          Name: networkName,
-          Id: currentContainer.NetworkSettings.Networks[networkName].NetworkID
-        };
-      });
+  async _getCurrentNetworks() {
+    const currentContainer = await this._inspectCurrentContainer();
+    const networkNames = Object.keys(currentContainer.NetworkSettings.Networks);
+    return networkNames.map((networkName) => {
+      return {
+        Name: networkName,
+        Id: currentContainer.NetworkSettings.Networks[networkName].NetworkID
+      };
     });
   }
 
-  _disconnectFromAllNetworks() {
-    return this._getCurrentNetworks().then((networks) => {
-      const disconnectPromises = networks.map(({ Id }) => this._disconnectFromNetwork({ networkId: Id }));
-      return Promise.all(disconnectPromises);
-    });
+  async _disconnectFromAllNetworks() {
+    const networks = await this._getCurrentNetworks();
+    const disconnectPromises = networks.map(({ Id }) => this._disconnectFromNetwork({ networkId: Id }));
+    return Promise.all(disconnectPromises);
   }
 
-  _disconnectFromNetwork({ networkId }) {
-    return this._getCurrentContainerId().then(({ containerId }) => {
-      return this._internalDisconnectFromNetwork({ networkId, containerId });
-    });
+  async _disconnectFromNetwork({ networkId }) {
+    const { containerId } = await this._getCurrentContainerId();
+    return this._internalDisconnectFromNetwork({ networkId, containerId });
   }
 
   _createNetwork({ networkName }) {
@@ -282,12 +275,11 @@ class DockerProxyServer {
     });
   }
 
-  _runCommand(cmd) {
-    return Promise.resolve().then(() => {
-      const { execSync } = require('child_process');
-      const output  = execSync(cmd);
-      return output.toString();
-    });
+  async _runCommand(cmd) {
+    await Promise.resolve();
+    const { execSync } = require('child_process');
+    const output = execSync(cmd);
+    return output.toString();
   }
 }
 

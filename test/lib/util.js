@@ -5,6 +5,8 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
+const minute = 1 * 60 * 1000;
+
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -346,7 +348,6 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
 function waitToGo(onlineOrOffline) {
   const wantonline = onlineOrOffline === 'online';
   // eslint-disable-next-line no-console
-  console.log('makarand: waitToGoOn ' + onlineOrOffline);
   return new Promise((resolve) => {
     if (window.navigator.onLine !== wantonline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
@@ -372,6 +373,43 @@ function waitToGoOffline() {
   return waitToGo('offline');
 }
 
+/**
+ * Note: when a test waits for promise that fails to settle.
+ *   1) The test fail w/o a good indication of what happend, as for Mocha the test never finished
+ *   2) This also causes subsequent tests to not get executed.
+ * So instead of using raw `await fooPromise` use `await waitFor(fooPromise)` abstraction
+ * solves above problems by limiting all waits to a finite time. It also helps fail the test
+ * with more useful `message` parameter w/o cluttering test code.
+ * Returns a promise that if not settled in timeoutMS, gets rejected.
+ * @param {Promise|Array<Promise>} promiseOrArray - Promises to wait on
+ * @param {string} message - indicates the message logged when promise rejects.
+ * @param {number} timeoutMS - time to wait in miliseconds.
+ * @returns {Promise<any>}
+ */
+
+async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
+  // eslint-disable-next-line no-console
+  console.log(`>>>> Will wait ${timeoutMS} ms for : ${message}`);
+  const startTime = new Date();
+  const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
+  let timer = null;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      // eslint-disable-next-line no-console
+      console.warn(`xxxx Timed out waiting for : ${message}`);
+      reject(new Error(`Timed out waiting for : ${message}`));
+    }, timeoutMS);
+  });
+
+  const result = await Promise.race([promise, timeoutPromise]);
+  const endTime = new Date();
+  const durationInSeconds = (endTime - startTime) / 1000;
+  // eslint-disable-next-line no-console
+  console.log(`<<<< Succeeded in waiting for: ${message} in ${durationInSeconds} seconds`);
+  clearTimeout(timer);
+  return result;
+}
+
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -390,6 +428,6 @@ exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
+exports.waitFor = waitFor;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
-

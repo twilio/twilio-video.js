@@ -18,6 +18,11 @@ let testRun = 0;
 
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
+  if (isDocker) {
+    // things go slow in docker for network tests
+    browserNoActivityTimeout = 4 * 60 * 10000;
+  }
+
   return function conf(config) {
     const files = getTestFiles(config, defaultFile);
     const preprocessors = files.reduce((preprocessors, file) => {
@@ -80,7 +85,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         groupSuites: true,
         useCompactStyle: true,
         useLegacyStyle: true,
-        showOnlyFailed: true, // only collect failures in the report file.
+        showOnlyFailed: false, // only collect failures in the report file.
       },
       junitReporter: {
         outputDir: `../logs/${strTestRun}`, // results will be saved as $outputDir/$browserName.xml
