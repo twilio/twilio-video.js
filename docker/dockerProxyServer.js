@@ -1,9 +1,9 @@
 /* eslint-disable no-console */
 'use strict';
 
-const http = require('http');
 const DEFAULT_SERVER_PORT = 3032;
 const cors = require('cors');
+const fetchRequest = require('./fetchRequest');
 const isDocker = require('is-docker')();
 const version = 1.00;
 
@@ -88,7 +88,7 @@ class DockerProxyServer {
     const filters = encodeURIComponent(JSON.stringify({
       label: { [this._instanceLabel]: true }
     }));
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: `/v1.32/networks/prune?filters=${filters}`,
       method: 'POST',
@@ -115,7 +115,7 @@ class DockerProxyServer {
   }
 
   _getContainers() {
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: '/v1.32/containers/json',
       method: 'GET',
@@ -124,7 +124,7 @@ class DockerProxyServer {
 
   async _inspectCurrentContainer() {
     const { containerId } = await this._getCurrentContainerId();
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: `/v1.32/containers/${containerId}/json`,
       method: 'GET',
@@ -137,7 +137,7 @@ class DockerProxyServer {
   }
 
   _getAllNetworks() {
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: '/v1.32/networks',
       method: 'GET',
@@ -183,7 +183,7 @@ class DockerProxyServer {
         [this._instanceLabel]: instanceId,
       }
     });
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: '/v1.32/networks/create',
       method: 'POST',
@@ -207,7 +207,7 @@ class DockerProxyServer {
       'Container': containerId,
     });
 
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: `/v1.32/networks/${networkId}/connect`,
       method: 'POST',
@@ -223,7 +223,7 @@ class DockerProxyServer {
       'Container': containerId,
       'Force': false
     });
-    return this._makeRequest({
+    return fetchRequest({
       socketPath: '/var/run/docker.sock',
       path: `/v1.32/networks/${networkId}/disconnect`,
       method: 'POST',
@@ -232,47 +232,6 @@ class DockerProxyServer {
         'Content-Length': postData.length
       }
     }, postData);
-  }
-
-  _makeRequest(options, postdata) {
-    const thisRequest = this._requestId++;
-    return new Promise((resolve, reject) => {
-      let clientRequest = http.request(options, (res) => {
-        const requestFailed = res.statusCode !== 200 && res.statusCode !== 201;
-        if (requestFailed) {
-          console.warn(`${thisRequest}: request returned:`, res.statusCode, options, postdata);
-        }
-        res.setEncoding('utf8');
-        let rawData = '';
-        res.on('data', chunk => {
-          rawData += chunk;
-        });
-        res.on('end', () => {
-          try {
-            let parsedData;
-            if (rawData) {
-              parsedData = JSON.parse(rawData);
-            }
-            if (requestFailed) {
-              console.warn(`${thisRequest}: request failed with:`, res.statusCode, parsedData);
-            }
-            resolve(parsedData);
-          } catch (e) {
-            console.warn(`${thisRequest}: error parsing data:`, rawData);
-            reject(e);
-          }
-        });
-      });
-      clientRequest.on('error', e => {
-        console.warn(`${thisRequest}: request failed`, e);
-        reject(e);
-      });
-
-      if (postdata) {
-        clientRequest.write(postdata);
-      }
-      clientRequest.end();
-    });
   }
 
   async _runCommand(cmd) {

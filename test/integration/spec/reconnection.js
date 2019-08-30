@@ -32,8 +32,7 @@ async function setup(nPeople) {
   const people = ['Alice', 'Bob', 'Charlie', 'Mak'];
   people.splice(nPeople);
 
-  const rooms = await Promise.all(people.map(userName => connect(getToken(userName), options)));
-  console.log('makarand: rooms connected:' + rooms.length);
+  const rooms = await waitFor(people.map(userName => connect(getToken(userName), options)), 'rooms to get connected');
 
   // eslint-disable-next-line no-warning-comments
   // TODO: debug only code to watch the events.
@@ -62,15 +61,16 @@ function getTotalBytesReceived(statReports) {
 
 // validates that media was flowing in given rooms.
 async function validateMediaFlow(room) {
+  const testTimeMS = 6000;
   // wait for some time.
-  await new Promise(resolve => setTimeout(resolve, 4000));
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
   const statsBefore = await room.getStats();
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore);
 
   // wait for some more time.
-  await new Promise(resolve => setTimeout(resolve, 4000));
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
@@ -81,7 +81,6 @@ async function validateMediaFlow(room) {
 }
 
 describe('Reconnection states and events', function() {
-  // eslint-disable-next-line no-invalid-this
   // eslint-disable-next-line no-invalid-this
   this.timeout(8 * minute);
 
@@ -188,8 +187,8 @@ describe('Reconnection states and events', function() {
       // NOTE: network handoff does not work Firefox because of following known issues
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
-      (isFirefox ? describe.skip : describe)('Network handoff', () => {
-        it('reconnects to new network : Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
+      (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
+        it('Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
           const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
@@ -212,7 +211,7 @@ describe('Reconnection states and events', function() {
           }
         });
 
-        it('reconnects to new network : Scenatio 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
+        it('Known Unstable: Scenatio 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 
