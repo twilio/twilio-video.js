@@ -42,13 +42,6 @@ const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  // eslint-disable-next-line no-invalid-this
-  this.beforeEach(() => {
-    if (window.performance && window.performance.memory) {
-      // eslint-disable-next-line no-console
-      console.log('usedJSHeapSize: ', window.performance.memory.usedJSHeapSize / (1024 * 1024));
-    }
-  });
 
   [
     [
