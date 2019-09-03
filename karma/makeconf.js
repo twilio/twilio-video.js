@@ -52,10 +52,11 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     const strTestRun = (testRun++).toString();
 
     // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
-    let strReportName = `testresults-DOCKER-${isDocker}-`;
-    ['BROWSER', 'BVER', 'TOPOLOGY'].forEach((dim) => {
+    let strReportName = `DO-${isDocker}-`;
+    ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach((dim) => {
       if (process.env[dim]) {
-        strReportName += `-${dim}-${process.env[dim]}`;
+        const dimAbrr = dim.substr(0, 2);
+        strReportName += `-${dimAbrr}-${process.env[dim]}`;
       }
     });
 
@@ -88,8 +89,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         showOnlyFailed: false, // switch this to true to only collect failures in the report files.
       },
       junitReporter: {
-        outputDir: `../logs/${strTestRun}`, // results will be saved as $outputDir/$browserName.xml
-        outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
+        outputDir: '../logs', // results will be saved as $outputDir/$browserName.xml
+        outputFile: strReportName, // if included, results will be saved as $outputDir/$browserName/$outputFile
         suite: '', // suite will become the package name attribute in xml testsuite element
         useBrowserName: true, // add browser name to report and classes names
         nameFormatter: undefined, // function (browser, result) to customize the name attribute in xml testcase element

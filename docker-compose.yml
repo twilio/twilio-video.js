@@ -16,6 +16,7 @@ services:
     - API_KEY_SID=${API_KEY_SID}
     - API_KEY_SECRET=${API_KEY_SECRET}
     - TOPOLOGY=${TOPOLOGY}
+    - TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER}
     image: twilio-video-js-test-${BROWSER}-${BVER}
     build:
       args:

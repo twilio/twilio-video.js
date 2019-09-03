@@ -149,7 +149,7 @@ describe('dockerProxy', function() {
       await dockerAPI.resetNetwork();
       const networksAfterReset  = await dockerAPI.getCurrentNetworks();
       assert.equal(initialNetworks.length, networksAfterReset.length);
-      waitToGoOnline();
+      await waitToGoOnline();
     });
   });
 });

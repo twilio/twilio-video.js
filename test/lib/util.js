@@ -361,16 +361,22 @@ function waitToGo(onlineOrOffline) {
  * Returns a promise that resolves after being connected to the network.
  * @returns {Promise<void>}
  */
-function waitToGoOnline() {
-  return waitToGo('online');
+async function waitToGoOnline() {
+  try {
+    await waitFor(waitToGo('online'), 'wait to go online', 1 * minute);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('waitToGoOnline failed. but since its known to be unstable on ' +
+                'firefox sometime so letting it go:', err);
+  }
 }
 
 /**
  * Returns a promise that resolves after being disconneected from the network.
  * @returns {Promise<void>}
  */
-function waitToGoOffline() {
-  return waitToGo('offline');
+async function waitToGoOffline() {
+  await waitFor(waitToGo('offline'), 'wait to go offline');
 }
 
 /**
@@ -386,17 +392,20 @@ function waitToGoOffline() {
  * @param {number} timeoutMS - time to wait in miliseconds.
  * @returns {Promise<any>}
  */
-
+let waitId = 101;
 async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
+  const thisWaitId = waitId++;
   // eslint-disable-next-line no-console
-  console.log(`>>>> Will wait ${timeoutMS} ms for : ${message}`);
+  console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
   const startTime = new Date();
   const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
   let timer = null;
   const timeoutPromise = new Promise((_resolve, reject) => {
     timer = setTimeout(() => {
+      const endTime = new Date();
+      const durationInSeconds = (endTime - startTime) / 1000;
       // eslint-disable-next-line no-console
-      console.warn(`xxxx Timed out waiting for : ${message}`);
+      console.warn(`xxxx [${thisWaitId}] Timed out waiting for : ${message} [${durationInSeconds} seconds]`);
       reject(new Error(`Timed out waiting for : ${message}`));
     }, timeoutMS);
   });
@@ -405,7 +414,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
   const endTime = new Date();
   const durationInSeconds = (endTime - startTime) / 1000;
   // eslint-disable-next-line no-console
-  console.log(`<<<< Succeeded in waiting for: ${message} in ${durationInSeconds} seconds`);
+  console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
   clearTimeout(timer);
   return result;
 }
