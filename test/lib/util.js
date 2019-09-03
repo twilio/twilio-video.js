@@ -311,7 +311,7 @@ async function trackSwitchedOff(track) {
   if (track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOff', resolve));
+  await new Promise(resolve => track.once('switchedOff', resolve));
 }
 
 /**
@@ -323,7 +323,7 @@ async function trackSwitchedOn(track) {
   if (!track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOn', resolve));
+  await new Promise(resolve => track.once('switchedOn', resolve));
 }
 
 /**

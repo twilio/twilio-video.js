@@ -1271,6 +1271,59 @@ describe('connect', function() {
         });
       });
     });
+
+    if (defaults.topology !== 'peer-to-peer') {
+      describe.only('trackSwitchOff event', () => {
+        it('fires on track, trackSubscription, participant and Room object', async () => {
+          let thisRoom;
+          let thoseRooms;
+          [, thisRoom, thoseRooms] = await setup({
+            testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
+
+          const bob = thoseRooms[0].localParticipant;
+          const charlie = thoseRooms[1].localParticipant;
+
+          // bob published a track with lo pri.
+          const loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+          await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
+          const remoteBob = thisRoom.participants.get(bob.sid);
+          await tracksSubscribed(remoteBob, 1);
+          const loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
+
+          // listen for switch off event on:
+          // Track
+          const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
+
+          // TrackPublication
+          const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', resolve));
+
+          // Participant
+          const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOff', (pub) => {
+            assert.equal(pub, loPriTrackPub);
+            resolve();
+          }));
+
+          // Room
+          const p4 = new Promise(resolve => thisRoom.once('trackSwitchedOff', (trackPub, participant) => {
+            assert.equal(participant, remoteBob);
+            assert.equal(trackPub, loPriTrackPub);
+            resolve();
+          }));
+
+          // charlie publishes a track with hi pri
+          const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+          await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
+          const remoteCharlie = thisRoom.participants.get(charlie.sid);
+          await tracksSubscribed(remoteCharlie, 1);
+
+          // we should see track switch off event on all 4 objects.
+          await Promise.all([p1, p2, p3, p4]);
+        });
+      });
+    }
   }
 });
 
