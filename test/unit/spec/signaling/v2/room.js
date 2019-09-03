@@ -1285,7 +1285,7 @@ describe('RoomV2', () => {
         context('when a "message" is received un the underlying DataTrackTransport', () => {
           it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
             const trackSignalings = new Map(flatMap([...test.room.participants.values()],
-                participant => [...participant.tracks]));
+              participant => [...participant.tracks]));
             const trackUpdatedPromises = [...trackSignalings.values()].map(trackSignaling =>
               new Promise(resolve => trackSignaling.once('updated', resolve)));
 

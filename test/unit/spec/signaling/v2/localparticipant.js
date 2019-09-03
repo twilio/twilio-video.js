@@ -22,7 +22,7 @@ class MockLocalTrackPublicationV2 extends EventEmitter {
     this.updatedPriority = priority;
     this.sid = null;
     this.enable = enabled => { this.isEnabled = enabled; this.emit('updated'); };
-    this.setPriority = priority => { this.updatedPriority = priority; this.emit('updated' ); };
+    this.setPriority = priority => { this.updatedPriority = priority; this.emit('updated'); };
     this.setSid = sid => { if (!this.sid) { this.sid = sid; this.emit('updated'); } };
     this.stop = () => this.trackTransceiver.stop();
   }
