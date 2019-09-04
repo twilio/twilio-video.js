@@ -1,5 +1,107 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta14 (in progress)
+==========================
+
+New Features
+------------
+
+- In a **Group Room**, you can now control how your available downlink bandwidth is
+  distributed among the RemoteVideoTracks that you have subscribed to. twilio-video.js
+  introduces the **Bandwidth Profile APIs**. Note that this feature is currently in
+  **private beta** and hence will be **opt-in**. Please reach out to [video-product@twilio.com](mailto:video-product@twilio.com)
+  for more information about how to enable these APIs for your Twilio Account.
+  **Using these APIs in a Peer-to-Peer Room will have no effect**.
+
+  ### Bandwidth Profile (private beta)
+
+  You can now configure how your available downlink bandwidth will be distributed
+  among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
+  parameter `bandwidthProfile`. For more details, please refer to the `BandwidthProfileOptions`
+  [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta14/docs/global.html#BandwidthProfileOptions).
+  Here is an example:
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high', // Min. subscribe priority of Dominant Speaker's RemoteVideoTracks.
+        maxSubscriptionBitrate: 150000, // Max. bandwidth (bps) to be allocated to subscribed RemoteVideoTracks.
+        maxTracks: 3, // Max. number of visible RemoteVideoTracks. Other RemoteVideoTracks will be switched off.
+        mode: 'collaboration', // Subscription mode: "collaboration", "grid" or "presentation".
+        renderDimensions: {
+          low: { // Desired render dimensions of RemoteVideoTracks with priority "low".
+            width: 320,
+            height: 240
+          },
+          standard: { // Desired render dimensions of RemoteVideoTracks with priority "standard".
+            width: 640,
+            height: 480
+          },
+          high: { // Desired render dimensions of RemoteVideoTracks with priority "high".
+            width: 1080,
+            height: 720
+          }
+        }
+      }
+    }
+  });  
+  ```
+
+  ### Track Priority (private beta)
+
+  While publishing a LocalTrack, you can now optionally specify its publish priority
+  in the following way:
+
+  ```js
+  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
+    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
+  });
+
+  // LocalTrackPublication has a new property "priority" which stores the publish
+  // priority set while publishing the corresponding LocalTrack.
+  assert.equal(localTrackPublication.priority, 'high');
+  ```
+
+  This signals to the media server the relative importance of this LocalTrack with respect
+  to other Tracks that may be published to the Room. The media server takes this into
+  account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
+  RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
+  
+  You can also find out about the priorities of RemoteTracks published by other
+  RemoteParticipants by accessing a new property `publishPriority` on the corresponding
+  RemoteTrackPublications:
+
+  ```js
+  remoteParticipant.on('trackPublished', remoteTrackPublication => {
+    console.log(`RemoteParticipant published a Track with priority ${remoteTrackPublication.publishPriority}`);
+  });
+  ```
+
+  ### Switching on/off RemoteVideoTracks (private beta)
+
+  When a subscribing Participant's downlink bandwidth is insufficient, the media server
+  tries to preserve higher priority RemoteVideoTracks by switching off lower priority
+  RemoteVideoTracks, which will stop receiving media until the media server decides
+  to switch them back on. You can now get notified about these actions by listening
+  to the `switchedOff` and `switchedOn` events on the RemoteVideoTrack:
+
+  ```js
+  remoteTrackPublication.on('subscribed', remoteTrack => {
+    remoteTrack.on('switchedOff', () => {
+      // You can now determine whether a particular RemoteTrack is switched off.
+      assert.equal(remoteTrack.isSwitchedOff, true);
+      console.log(`The RemoteTrack ${remoteTrack.name} was switched off`);
+    });
+
+    remoteTrack.on('switchedOn', () => {
+      assert.equal(remoteTrack.isSwitchedOff, false);
+      console.log(`The RemoteTrack ${remoteTrack.name} was switched on`);
+    });
+  });
+  ```
+
 2.0.0-beta13 (August 29, 2019)
 ==============================
 

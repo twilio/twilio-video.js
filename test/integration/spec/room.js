@@ -20,6 +20,8 @@ const { completeRoom, createRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
 const {
+  createSyntheticAudioStreamTrack,
+  dominantSpeakerChanged,
   participantsConnected,
   randomName,
   trackStarted,
@@ -258,34 +260,31 @@ describe('Room', function() {
   });
 
   // eslint-disable-next-line
-  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', async () => {
     let options;
     let sid;
+    let thatParticipant;
     let thisRoom;
     let thatRoom;
-    let dominantSpeaker;
 
     before(async () => {
       sid = await createRoom(randomName(), defaults.topology);
       options = Object.assign({ name: sid }, defaults);
       thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
-      const promise = new Promise(resolve => thisRoom.on('dominantSpeakerChanged', resolve));
 
-      const tracks = typeof AudioContext !== 'undefined' && 'createMediaStreamDestination' in AudioContext.prototype ? (() => {
-        const audioContext = new AudioContext();
-        const oscillator = audioContext.createOscillator();
-        const dest = audioContext.createMediaStreamDestination();
-        oscillator.connect(dest);
-        oscillator.start(0);
-        return dest.stream.getTracks();
-      })() : await createLocalTracks({ audio: true, fake: true });
+      const tracks = [createSyntheticAudioStreamTrack() || (await createLocalTracks({
+        audio: true,
+        fake: true
+      }))[0]];
 
       thatRoom = await connect(getToken(randomName()), Object.assign({ tracks }, options));
-      dominantSpeaker = await promise;
+      await participantsConnected(thisRoom, 1);
+      thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
     });
 
-    it('is raised whenever the dominant speaker in the Room changes', () => {
-      assert.equal(dominantSpeaker, thisRoom.participants.get(dominantSpeaker.sid));
+    it('is raised whenever the dominant speaker in the Room changes', async () => {
+      await dominantSpeakerChanged(thisRoom, thatParticipant);
+      assert.equal(thisRoom.dominantSpeaker, thatParticipant);
     });
 
     after(() => {

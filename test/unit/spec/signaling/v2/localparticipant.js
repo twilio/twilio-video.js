@@ -8,13 +8,15 @@ const DataTrackSender = require('../../../../../lib/data/sender');
 const EncodingParametersImpl = require('../../../../../lib/encodingparameters');
 const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
 const NetworkQualityConfigurationImpl = require('../../../../../lib/networkqualityconfiguration');
+const { makeUUID } = require('../../../../../lib/util');
 
 class MockLocalTrackPublicationV2 extends EventEmitter {
-  constructor(trackSender, name) {
+  constructor(trackSender, name, priority) {
     super();
     this.trackTransceiver = trackSender.clone();
     this.id = trackSender.id;
     this.name = name;
+    this.priority = priority;
     this.sid = null;
     this.stop = () => this.trackTransceiver.stop();
   }
@@ -27,6 +29,7 @@ describe('LocalParticipantV2', () => {
   let encodingParameters;
   let name;
   let networkQualityConfiguration;
+  let priority;
   let publication;
 
   beforeEach(() => {
@@ -42,8 +45,8 @@ describe('LocalParticipantV2', () => {
     });
 
     trackSender = new DataTrackSender();
-
-    name = `track-${Math.random() * 1000}`;
+    name = makeUUID();
+    priority = makeUUID();
   });
 
   describe('constructor', () => {
@@ -61,18 +64,18 @@ describe('LocalParticipantV2', () => {
   });
 
   describe('#addTrack', () => {
-    describe('called with a TrackSender and a name', () => {
+    describe('called with a TrackSender, name and priority', () => {
       it('returns the LocalParticipantV2 instance', () => {
-        assert.equal(localParticipant.addTrack(trackSender, name), localParticipant);
+        assert.equal(localParticipant.addTrack(trackSender, name, priority), localParticipant);
       });
 
-      it('constructs a LocalTrackPublicationV2 with the TrackSender and name', () => {
-        localParticipant.addTrack(trackSender, name);
-        sinon.assert.calledWith(LocalTrackPublicationV2Constructor, trackSender, name);
+      it('constructs a LocalTrackPublicationV2 with the TrackSender, name and priority', () => {
+        localParticipant.addTrack(trackSender, name, priority);
+        sinon.assert.calledWith(LocalTrackPublicationV2Constructor, trackSender, name, priority);
       });
 
       it('adds the LocalTrackPublicationV2 to the LocalParticipantV2\'s .tracks Map', () => {
-        localParticipant.addTrack(trackSender, name);
+        localParticipant.addTrack(trackSender, name, priority);
         assert.equal(localParticipant.tracks.get(trackSender.id), publication);
       });
 
@@ -80,13 +83,13 @@ describe('LocalParticipantV2', () => {
         const events = [];
         ['trackAdded', 'updated'].forEach(event =>
           localParticipant.once(event, () => events.push(event)));
-        localParticipant.addTrack(trackSender, name);
+        localParticipant.addTrack(trackSender, name, priority);
         assert.deepEqual(events, ['trackAdded', 'updated']);
       });
 
       describe('starts listening to the resulting LocalTrackPublicationV2\'s "updated" event and,', () => {
         beforeEach(() => {
-          localParticipant.addTrack(trackSender, name);
+          localParticipant.addTrack(trackSender, name, priority);
         });
 
         describe('when the LocalTrackPublicationV2\'s SID is set,', () => {
@@ -119,7 +122,7 @@ describe('LocalParticipantV2', () => {
   describe('#removeTrack, called with a DataTrackSedner or MediaTrackSender that is', () => {
     describe('currently added', () => {
       beforeEach(() => {
-        localParticipant.addTrack(trackSender, name);
+        localParticipant.addTrack(trackSender, name, priority);
         publication.sid = 'MT123';
         publication.emit('updated');
       });
