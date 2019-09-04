@@ -8,12 +8,12 @@ New Features
 
 - In a **Group Room**, you can now control how your available downlink bandwidth is
   distributed among the RemoteVideoTracks that you have subscribed to. twilio-video.js
-  introduces the [Bandwidth Profile APIs](TODO(mmalavalli)). Note that this feature is
-  currently in **private beta** and hence will be **opt-in**. Please reach out to
-  [email@address.com](TODO(mmalavalli)) for more information about how to enable these
-  APIs for your Twilio Account. **Using these APIs in a Peer-to-Peer Room will have no effect**.
+  introduces the **Bandwidth Profile APIs**. Note that this feature is currently in
+  **private beta** and hence will be **opt-in**. Please reach out to [video-product@twilio.com](mailto:video-product@twilio.com)
+  for more information about how to enable these APIs for your Twilio Account.
+  **Using these APIs in a Peer-to-Peer Room will have no effect**.
 
-  ### Bandwidth Profile
+  ### Bandwidth Profile (private beta)
 
   You can now configure how your available downlink bandwidth will be distributed
   among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
@@ -49,7 +49,7 @@ New Features
   });  
   ```
 
-  ### Track Priority
+  ### Track Priority (private beta)
 
   While publishing a LocalTrack, you can now optionally specify its publish priority
   in the following way:
@@ -79,7 +79,7 @@ New Features
   });
   ```
 
-  ### Switching on/off RemoteVideoTracks
+  ### Switching on/off RemoteVideoTracks (private beta)
 
   When a subscribing Participant's downlink bandwidth is insufficient, the media server
   tries to preserve higher priority RemoteVideoTracks by switching off lower priority
