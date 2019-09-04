@@ -1236,7 +1236,7 @@ describe('connect', function() {
             return [...videoTracks.values()][0].track;
           });
 
-          let switched = {
+          const switched = {
             dominant: {
               off: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack },
               on: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack }

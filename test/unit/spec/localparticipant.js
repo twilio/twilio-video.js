@@ -204,6 +204,22 @@ describe('LocalParticipant', () => {
           }
         },
         'whose properties have valid values'
+      ],
+      [
+        { video: undefined },
+        'whose .video is explicitly set to undefined'
+      ],
+      [
+        {
+          video: {
+            dominantSpeakerPriority: 'high',
+            maxSubscriptionBitrate: 5000,
+            maxTracks: 2,
+            mode: 'presentation',
+            renderDimensions: undefined
+          }
+        },
+        'whose .video.renderDimensions is explicitly set to undefined'
       ]
     ].forEach(([bandwidthProfile, scenario, ExpectedError, expectedTypeOrValues]) => {
       context(`when called with a BandwidthProfileOptions ${scenario}`, () => {
