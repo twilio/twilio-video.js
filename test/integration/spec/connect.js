@@ -35,6 +35,7 @@ const {
   participantsConnected,
   pairs,
   randomName,
+  setup,
   smallVideoConstraints,
   tracksSubscribed,
   trackSwitchedOff,
@@ -1271,92 +1272,9 @@ describe('connect', function() {
         });
       });
     });
-
-    if (defaults.topology !== 'peer-to-peer') {
-      describe('trackSwitchOff event', () => {
-        it('fires on track, trackSubscription, participant and Room object', async () => {
-          let thisRoom;
-          let thoseRooms;
-          [, thisRoom, thoseRooms] = await setup({
-            testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
-            otherOptions: { tracks: [] },
-            nTracks: 0
-          });
-
-          const bob = thoseRooms[0].localParticipant;
-          const charlie = thoseRooms[1].localParticipant;
-
-          // let bob published a track with lo pri.
-          const loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-          await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
-          const remoteBob = thisRoom.participants.get(bob.sid);
-          await tracksSubscribed(remoteBob, 1);
-          const loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
-
-          // listen for switch off event on bob's track on various objects
-          // 1) Track
-          const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
-
-          // 2) TrackPublication
-          const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', resolve));
-
-          // 3) Participant
-          const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOff', (pub) => {
-            assert.equal(pub, loPriTrackPub);
-            resolve();
-          }));
-
-          // 4) Room
-          const p4 = new Promise(resolve => thisRoom.once('trackSwitchedOff', (trackPub, participant) => {
-            assert.equal(participant, remoteBob);
-            assert.equal(trackPub, loPriTrackPub);
-            resolve();
-          }));
-
-          // induce a track switch off by having charlie publish a track with hi pri
-          const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-          await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
-          const remoteCharlie = thisRoom.participants.get(charlie.sid);
-          await tracksSubscribed(remoteCharlie, 1);
-
-          // we should see track switch off event on all 4 objects.
-          await Promise.all([p1, p2, p3, p4]);
-        });
-      });
-    }
   }
 });
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
-}
-
-async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
-  name = name || randomName();
-  const options = Object.assign({
-    audio: true,
-    video: smallVideoConstraints
-  }, testOptions, defaults);
-  const token = getToken(randomName());
-  options.name = await createRoom(name, options.topology, roomOptions);
-  const thisRoom = await connect(token, options);
-  if (alone) {
-    return [options.name, thisRoom];
-  }
-
-  otherOptions = Object.assign({
-    audio: true,
-    video: smallVideoConstraints
-  }, otherOptions);
-  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
-  const thoseTokens = [randomName(), randomName()].map(getToken);
-  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
-
-  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
-    return participantsConnected(room, thoseRooms.length);
-  }));
-  const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
-  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
-  return [options.name, thisRoom, thoseRooms, peerConnections];
 }
