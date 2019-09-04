@@ -18,7 +18,7 @@ New Features
   You can now configure how your available downlink bandwidth will be distributed
   among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
   parameter `bandwidthProfile`. For more details, please refer to the `BandwidthProfileOptions`
-  [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta13/docs/global.html#BandwidthProfileOptions).
+  [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta14/docs/global.html#BandwidthProfileOptions).
   Here is an example:
 
   ```js
