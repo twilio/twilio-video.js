@@ -1273,7 +1273,7 @@ describe('connect', function() {
     });
 
     if (defaults.topology !== 'peer-to-peer') {
-      describe.only('trackSwitchOff event', () => {
+      describe('trackSwitchOff event', () => {
         it('fires on track, trackSubscription, participant and Room object', async () => {
           let thisRoom;
           let thoseRooms;
@@ -1286,34 +1286,34 @@ describe('connect', function() {
           const bob = thoseRooms[0].localParticipant;
           const charlie = thoseRooms[1].localParticipant;
 
-          // bob published a track with lo pri.
+          // let bob published a track with lo pri.
           const loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
           await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
           const remoteBob = thisRoom.participants.get(bob.sid);
           await tracksSubscribed(remoteBob, 1);
           const loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
 
-          // listen for switch off event on:
-          // Track
+          // listen for switch off event on bob's track on various objects
+          // 1) Track
           const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
 
-          // TrackPublication
+          // 2) TrackPublication
           const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', resolve));
 
-          // Participant
+          // 3) Participant
           const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOff', (pub) => {
             assert.equal(pub, loPriTrackPub);
             resolve();
           }));
 
-          // Room
+          // 4) Room
           const p4 = new Promise(resolve => thisRoom.once('trackSwitchedOff', (trackPub, participant) => {
             assert.equal(participant, remoteBob);
             assert.equal(trackPub, loPriTrackPub);
             resolve();
           }));
 
-          // charlie publishes a track with hi pri
+          // induce a track switch off by having charlie publish a track with hi pri
           const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
           await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
           const remoteCharlie = thisRoom.participants.get(charlie.sid);
