@@ -29,9 +29,11 @@ const files = getTestPaths(integrationTests);
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.
 async function main(files) {
+  let processExitCode = 0;
   for (const file of files) {
     const config = parseConfig(configFile, { files: [file] });
 
+    // eslint-disable-next-line no-await-in-loop
     const exitCode = await new Promise(resolve => {
       const server = new Server(config, resolve);
       server.start();
@@ -39,10 +41,15 @@ async function main(files) {
       process.once('SIGINT', () => process.exit());
     });
 
-    if (exitCode) {
-      process.exit(exitCode);
+    if (exitCode && !processExitCode) {
+      // Note(mpatwardhan) if tests fail for one file,
+      // note the exitcode but continue running for rest
+      // of the files.
+      processExitCode = exitCode;
+      console.log('Failed for file:', file);
     }
   }
+  process.exit(processExitCode);
 }
 
 main(files);
