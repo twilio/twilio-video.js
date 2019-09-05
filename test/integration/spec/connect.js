@@ -11,7 +11,7 @@ const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const Room = require('../../../lib/room');
 const { flatMap } = require('../../../lib/util');
 const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../lib/util/sdp');
+const { getMediaSections } = require('../../../lib/util/sdp');
 
 const {
   TrackNameIsDuplicatedError,
@@ -19,7 +19,7 @@ const {
 } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
-const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
+const { isChrome, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
@@ -28,7 +28,6 @@ const {
   combinationContext,
   createSyntheticAudioStreamTrack,
   dominantSpeakerChanged,
-  isRTCRtpSenderParamsSupported,
   participantsConnected,
   pairs,
   randomName,
@@ -297,240 +296,6 @@ describe('connect', function() {
         assert(error instanceof Error);
         assert.equal(error.message, 'Canceled');
       }
-    });
-  });
-
-  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('DSCP tagging', () => {
-    combinationContext([
-      [
-        ['dscpTagging', 'enableDscp'],
-        x => x
-      ],
-      [
-        [true, false, undefined],
-        x => `when ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
-      ],
-      [
-        [true, false],
-        x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
-      ]
-    ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
-      let peerConnections;
-      let thisRoom;
-      let thoseRooms;
-
-      before(async () => {
-        const dscpOptions = typeof shouldEnableDscp === 'boolean'
-          ? { [dscpTaggingOption]: shouldEnableDscp }
-          : {};
-        const vp8SimulcastOptions = shouldEnableVP8Simulcast
-          ? { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }
-          : {};
-        const testOptions = Object.assign({}, dscpOptions, vp8SimulcastOptions);
-
-        [, thisRoom, thoseRooms, peerConnections] = await setup({
-          otherOptions: { tracks: [] },
-          testOptions,
-          nTracks: 0
-        });
-
-        // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
-        // so wait for a little while until the changes are applied.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      });
-
-      const expectedNetworkPriority = isChrome
-        ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
-        : undefined;
-
-      it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters of the first encoding layer`, () => {
-        flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
-          if (typeof expectedNetworkPriority === 'string') {
-            sender.getParameters().encodings.forEach((encoding, i) => {
-              assert.equal(encoding.networkPriority, i === 0 ? expectedNetworkPriority : 'low');
-            });
-          } else {
-            sender.getParameters().encodings.forEach(encoding => {
-              assert(!('networkPriority' in encoding));
-            });
-          }
-        });
-      });
-
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
-      });
-    });
-  });
-
-  describe('called with EncodingParameters', () => {
-    combinationContext([
-      [
-        // eslint-disable-next-line no-undefined
-        [undefined, null, 20000],
-        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
-      ],
-      [
-        // eslint-disable-next-line no-undefined
-        [undefined, null, 40000],
-        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
-      ]
-    ], ([maxAudioBitrate, maxVideoBitrate]) => {
-      const encodingParameters = [
-        ['maxAudioBitrate', maxAudioBitrate],
-        ['maxVideoBitrate', maxVideoBitrate]
-      ].reduce((params, [prop, value]) => {
-        if (typeof value !== 'undefined') {
-          params[prop] = value;
-        }
-        return params;
-      }, {
-        audio: true,
-        video: smallVideoConstraints
-      });
-
-      const maxBitrates = {
-        audio: encodingParameters.maxAudioBitrate,
-        video: encodingParameters.maxVideoBitrate
-      };
-
-      let peerConnections;
-      let sid;
-      let thisRoom;
-      let thoseRooms;
-
-      before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup({
-          testOptions: encodingParameters,
-          otherOptions: { tracks: [] },
-          nTracks: 0
-        });
-
-        // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
-        // which is an asynchronous operation, wait for a little while until the changes are applied.
-        if (isRTCRtpSenderParamsSupported) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
-      });
-
-      ['audio', 'video'].forEach(kind => {
-        it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
-          if (isRTCRtpSenderParamsSupported) {
-            flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track);
-            }).forEach(sender => {
-              const { encodings } = sender.getParameters();
-              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
-            });
-            return;
-          }
-
-          flatMap(peerConnections, pc => {
-            assert(pc.remoteDescription.sdp);
-            return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');
-          }).forEach(section => {
-            const modifier = isFirefox
-              ? 'TIAS'
-              : 'AS';
-            const maxBitrate = maxBitrates[kind]
-              ? isFirefox
-                ? maxBitrates[kind]
-                : Math.round((maxBitrates[kind] + 16000) / 950)
-              : null;
-            const bLinePattern = maxBitrate
-              ? new RegExp(`\r\nb=${modifier}:${maxBitrate}`)
-              : /\r\nb=(AS|TIAS)/;
-            assert(maxBitrate ? bLinePattern.test(section) : !bLinePattern.test(section));
-          });
-        });
-      });
-
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
-      });
-    });
-  });
-
-  describe('called with preferred audio and video codecs', () => {
-    combinationContext([
-      [
-        ['name', 'setting'],
-        x => `video codec ${x}s`
-      ]
-    ], ([codecType]) => {
-      let peerConnections;
-      let sid;
-      let thisRoom;
-      let thoseRooms;
-
-      const testOptions = {
-        preferredAudioCodecs: ['PCMU', 'invalid', 'PCMA'],
-        preferredVideoCodecs: codecType === 'name' ? ['invalid', 'H264', 'VP8'] : [
-          { codec: 'invalid' }, { codec: 'H264' }, { codec: 'VP8' }
-        ]
-      };
-
-      before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
-      });
-
-      it('should apply the codec preferences to all remote descriptions', () => {
-        flatMap(peerConnections, pc => {
-          assert(pc.remoteDescription.sdp);
-          return getMediaSections(pc.remoteDescription.sdp);
-        }).forEach(section => {
-          const codecMap = createCodecMapForMediaSection(section);
-          const expectedPayloadTypes = /m=audio/.test(section)
-            ? flatMap(testOptions.preferredAudioCodecs, codec => codecMap.get(codec.toLowerCase()) || [])
-            : flatMap(testOptions.preferredVideoCodecs, codec => codecMap.get((codec.codec || codec).toLowerCase()) || []);
-          const actualPayloadTypes = getPayloadTypes(section);
-          expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
-        });
-      });
-
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
-      });
-    });
-  });
-
-  describe('when called with a fixed bitrate preferred audio codec', () => {
-    let peerConnections;
-    let sid;
-    let thisRoom;
-    let thoseRooms;
-
-    const testOptions = {
-      maxAudioBitrate: 10000,
-      preferredAudioCodecs: ['PCMA', 'isac', 'opus']
-    };
-
-    before(async () => {
-      [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
-    });
-
-    it('should not apply the audio bitrate limit to the remote descriptions', () => {
-      flatMap(peerConnections, pc => {
-        assert(pc.remoteDescription.sdp);
-        return getMediaSections(pc.remoteDescription.sdp, 'audio');
-      }).forEach(section => {
-        const codecMap = createCodecMapForMediaSection(section);
-        const payloadTypes = getPayloadTypes(section);
-        const fixedBitratePayloadTypes = new Set([
-          ...(codecMap.get('pcma') || []),
-          ...(codecMap.get('pcmu') || [])
-        ]);
-        if (fixedBitratePayloadTypes.has(payloadTypes[0])) {
-          assert(!/b=(AS|TIAS):([0-9]+)/.test(section));
-        }
-      });
-    });
-
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
     });
   });
 
@@ -1039,6 +804,4 @@ describe('connect', function() {
   }
 });
 
-function getPayloadTypes(mediaSection) {
-  return [...createPtToCodecName(mediaSection).keys()];
-}
+
