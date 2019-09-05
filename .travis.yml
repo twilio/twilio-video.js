@@ -10,6 +10,9 @@ sudo: required
 services:
   - docker
 
+before_install:
+  - sudo apt-get install -y pulseaudio
+
 # https://docs.travis-ci.com/user/gui-and-headless-browsers/#using-xvfb-directly
 dist: trusty
 
