@@ -5,8 +5,17 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 const { inherits } = require('util');
 
+const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
-const { DEFAULT_LOG_LEVEL, WS_SERVER, DEFAULT_REGION } = require('../../../lib/util/constants');
+
+const {
+  DEFAULT_LOG_LEVEL,
+  WS_SERVER,
+  DEFAULT_REGION,
+  subscriptionMode,
+  trackPriority
+} = require('../../../lib/util/constants');
+
 const Log = require('../../../lib/util/log');
 const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
@@ -106,6 +115,119 @@ describe('connect', () => {
       it('should not call .warn on the underlying Log', () => {
         const options = signaling.args[1][1];
         sinon.assert.callCount(options.log.warn, 0);
+      });
+    });
+  });
+
+  describe('called with ConnectOptions#bandwidthProfile', () => {
+    const subscriptionModes = Object.values(subscriptionMode);
+    const trackPriorities = Object.values(trackPriority);
+    let mockSignaling;
+    let signaling;
+
+    beforeEach(() => {
+      mockSignaling = new Signaling();
+      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+      signaling = sinon.spy(() => mockSignaling);
+    });
+
+    [
+      [null, 'that is null', TypeError, 'object'],
+      ['foo', 'that is not an object', TypeError, 'object'],
+      [['bar'], 'that is an Array', TypeError, 'object'],
+      [{ video: null }, 'whose .video is null', TypeError, 'object'],
+      [{ video: 'baz' }, 'whose .video is not an object', TypeError, 'object'],
+      [{ video: ['zee'] }, 'whose .video is an Array', TypeError, 'object'],
+      [{ video: { dominantSpeakerPriority: 2 } }, `whose .video.dominantSpeakerPriority is not one of ${trackPriorities.join(', ')}`, RangeError, trackPriorities],
+      [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
+      [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
+      [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes],
+      [{ video: { renderDimensions: null } }, 'whose .video.renderDimensions is null', TypeError, 'object'],
+      [{ video: { renderDimensions: true } }, 'whose .video.renderDimensions is not an object', TypeError, 'object'],
+      [{ video: { renderDimensions: ['foo'] } }, 'whose .video.renderDimensions is an Array', TypeError, 'object'],
+      [{ video: { renderDimensions: { high: null } } }, 'whose .video.renderDimensions.high is null', TypeError, 'object'],
+      [{ video: { renderDimensions: { high: 2 } } }, 'whose .video.renderDimensions.high is not an object', TypeError, 'object'],
+      [{ video: { renderDimensions: { high: ['bar'] } } }, 'whose .video.renderDimensions.high is an Array', TypeError, 'object'],
+      [{ video: { renderDimensions: { low: null } } }, 'whose .video.renderDimensions.low is null', TypeError, 'object'],
+      [{ video: { renderDimensions: { low: 2 } } }, 'whose .video.renderDimensions.low is not an object', TypeError, 'object'],
+      [{ video: { renderDimensions: { low: ['bar'] } } }, 'whose .video.renderDimensions.low is an Array', TypeError, 'object'],
+      [{ video: { renderDimensions: { standard: null } } }, 'whose .video.renderDimensions.standard is null', TypeError, 'object'],
+      [{ video: { renderDimensions: { standard: 2 } } }, 'whose .video.renderDimensions.standard is not an object', TypeError, 'object'],
+      [{ video: { renderDimensions: { standard: ['bar'] } } }, 'whose .video.renderDimensions.standard is an Array', TypeError, 'object'],
+      [{ video: { renderDimensions: { high: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.high.width is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { high: { width: 200, height: false } } } }, 'whose .video.renderDimensions.high.height is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { low: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.low.width is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { low: { width: 200, height: false } } } }, 'whose .video.renderDimensions.low.height is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { standard: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.standard.width is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
+    ].forEach(([bandwidthProfile, scenario, ExpectedError, expectedTypeOrValues]) => {
+      context(scenario, () => {
+        it(`should reject the CancelablePromise with a ${ExpectedError.name}`, async () => {
+          const cancelablePromise = connect(token, {
+            bandwidthProfile,
+            iceServers: [],
+            signaling
+          });
+          let error;
+          let expectedErrorMessage = 'options.bandwidthProfile';
+
+          if (bandwidthProfile && typeof bandwidthProfile === 'object' && !Array.isArray(bandwidthProfile)) {
+            expectedErrorMessage += '.video';
+            if (bandwidthProfile.video && typeof bandwidthProfile.video === 'object' && !Array.isArray(bandwidthProfile.video)) {
+              expectedErrorMessage += `.${Object.keys(bandwidthProfile.video)[0]}`;
+              if (bandwidthProfile.video.renderDimensions
+                && typeof bandwidthProfile.video.renderDimensions === 'object'
+                && !Array.isArray(bandwidthProfile.video.renderDimensions)) {
+                const prop = Object.keys(bandwidthProfile.video.renderDimensions)[0];
+                expectedErrorMessage += `.${prop}`;
+                if (bandwidthProfile.video.renderDimensions[prop]
+                  && typeof bandwidthProfile.video.renderDimensions[prop] === 'object'
+                  && !Array.isArray(bandwidthProfile.video.renderDimensions[prop])) {
+                  const keys = Object.keys(bandwidthProfile.video.renderDimensions[prop]);
+                  expectedErrorMessage += typeof bandwidthProfile.video.renderDimensions[prop][keys[0]] === 'number'
+                    ? `.${keys[1]}`
+                    : `.${keys[0]}`;
+                }
+              }
+            }
+          }
+
+          if (ExpectedError === TypeError) {
+            expectedErrorMessage += ` must be ${a(expectedTypeOrValues)} ${expectedTypeOrValues}`;
+          } else {
+            expectedErrorMessage += ` must be one of ${expectedTypeOrValues.join(', ')}`;
+          }
+
+          try {
+            await cancelablePromise;
+          } catch (error_) {
+            error = error_;
+          } finally {
+            assert(error instanceof ExpectedError);
+            assert.equal(error.message, expectedErrorMessage);
+          }
+        });
+      });
+    });
+
+    ['foo', ['bar']].forEach(bandwidthProfile => {
+      context(`that is ${Array.isArray(bandwidthProfile) ? 'an Array' : 'not an object'}`, () => {
+        it('should reject the CancelablePromise with a TypeError', async () => {
+          const cancelablePromise = connect(token, {
+            bandwidthProfile,
+            iceServers: [],
+            signaling
+          });
+          let error;
+
+          try {
+            await cancelablePromise;
+          } catch (error_) {
+            error = error_;
+          } finally {
+            assert(error instanceof TypeError);
+          }
+        });
       });
     });
   });

@@ -25,17 +25,24 @@ const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
+
 const {
   capitalize,
   combinationContext,
+  createSyntheticAudioStreamTrack,
+  dominantSpeakerChanged,
   isRTCRtpSenderParamsSupported,
   participantsConnected,
   pairs,
   randomName,
   smallVideoConstraints,
   tracksSubscribed,
-  tracksPublished
+  trackSwitchedOff,
+  tracksPublished,
+  trackSwitchedOn
 } = require('../../lib/util');
+
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
@@ -129,7 +136,11 @@ describe('connect', function() {
         let thoseRooms;
 
         before(async () => {
-          [sid, thisRoom, thoseRooms] = await setup(randomName(), Object.assign({ tracks: [] }, automaticSubscriptionOptions), null, 0);
+          [sid, thisRoom, thoseRooms] = await setup({
+            testOptions: Object.assign({ tracks: [] }, automaticSubscriptionOptions),
+            otherOptions: null,
+            nTracks: 0
+          });
         });
 
         it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
@@ -449,8 +460,10 @@ describe('connect', function() {
               assert(participant);
               const trackSids = [...participant.tracks.values()].map(publication => publication.trackSid).sort();
               const localTrackPublicationSids = [...localParticipant.tracks.values()].map(publication => publication.trackSid).sort();
+              const publishPriorities = [...participant.tracks.values()].map(publication => publication.publishPriority);
               assert.equal(trackSids.length, localTrackPublicationSids.length);
               assert.deepEqual(trackSids, localTrackPublicationSids);
+              publishPriorities.forEach(priority => assert.equal(priority, PRIORITY_STANDARD));
             });
           });
         });
@@ -550,7 +563,12 @@ describe('connect', function() {
           : {};
         const testOptions = Object.assign({}, dscpOptions, vp8SimulcastOptions);
 
-        [, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), testOptions, { tracks: [] }, 0);
+        [, thisRoom, thoseRooms, peerConnections] = await setup({
+          otherOptions: { tracks: [] },
+          testOptions,
+          nTracks: 0
+        });
+
         // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
         // so wait for a little while until the changes are applied.
         await new Promise(resolve => setTimeout(resolve, 5000));
@@ -617,7 +635,12 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), encodingParameters, { tracks: [] }, 0);
+        [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+          testOptions: encodingParameters,
+          otherOptions: { tracks: [] },
+          nTracks: 0
+        });
+
         // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
         // which is an asynchronous operation, wait for a little while until the changes are applied.
         if (isRTCRtpSenderParamsSupported) {
@@ -684,7 +707,7 @@ describe('connect', function() {
       };
 
       before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), testOptions);
+        [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
       });
 
       it('should apply the codec preferences to all remote descriptions', () => {
@@ -720,7 +743,7 @@ describe('connect', function() {
     };
 
     before(async () => {
-      [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), testOptions);
+      [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
     });
 
     it('should not apply the audio bitrate limit to the remote descriptions', () => {
@@ -787,7 +810,11 @@ describe('connect', function() {
 
         before(async () => {
           tracks = [...await getTracks(names), names ? new LocalDataTrack({ name: names.data }) : new LocalDataTrack()];
-          [sid, thisRoom, thoseRooms] = await setup(randomName(), { tracks }, { tracks: [] }, 0);
+          [sid, thisRoom, thoseRooms] = await setup({
+            testOptions: { tracks },
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
           await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, tracks.length)));
@@ -855,7 +882,11 @@ describe('connect', function() {
             audio: names.audio ? { name: names.audio } : true,
             video: names.video ? { name: names.video } : true,
           };
-          [sid, thisRoom, thoseRooms] = await setup(randomName(), options, { tracks: [] }, 0);
+          [sid, thisRoom, thoseRooms] = await setup({
+            testOptions: options,
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
           await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant._tracks.size)));
@@ -946,7 +977,12 @@ describe('connect', function() {
 
         before(async () => {
           tracks = await createLocalTracks();
-          [sid, room] = await setup(randomName(), { tracks }, {}, 0, true);
+          [sid, room] = await setup({
+            testOptions: { tracks },
+            otherOptions: {},
+            nTracks: 0,
+            alone: true
+          });
           trackPublicationFailed = await new Promise(resolve => room.localParticipant.once('trackPublicationFailed', resolve));
         });
 
@@ -1010,10 +1046,9 @@ describe('connect', function() {
         let thoseRooms;
 
         before(async () => {
-          [sid, thisRoom, thoseRooms, peerConnections] = await setup(randomName(), {
-            preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
-          }, null, null, null, {
-            VideoCodecs: [roomCodec]
+          [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+            testOptions: { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] },
+            roomOptions: { VideoCodecs: [roomCodec] }
           });
 
           // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
@@ -1060,15 +1095,191 @@ describe('connect', function() {
           return completeRoom(sid);
         });
       });
+
+      if (roomCodec === 'VP8' && defaults.topology !== 'peer-to-peer') {
+        describe('JSDK-2463: two simulcast groups in SDP instead of one after a rollback (glare)', () => {
+          let peerConnections;
+          let sid;
+          let thisRoom;
+
+          before(async () => {
+            const localVideoTrack = await createLocalVideoTrack(smallVideoConstraints);
+
+            [sid, thisRoom] = await setup({
+              alone: true,
+              testOptions: { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }], video: false },
+              roomOptions: { VideoCodecs: [roomCodec] }
+            });
+
+            peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+            // NOTE(mmalavalli): Glare is induced by publishing the LocalVideoTrack
+            // soon after joining the Room.
+            await thisRoom.localParticipant.publishTrack(localVideoTrack);
+
+            // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
+            // before verifying that simulcast has been enabled. This was added to remove
+            // flakiness of this test in Travis.
+            await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+              pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+            })));
+          });
+
+          it('is fixed', () => {
+            flatMap(peerConnections, pc => {
+              assert(pc.localDescription.sdp);
+              return getMediaSections(pc.localDescription.sdp, 'video', '(sendonly|sendrecv)');
+            }).forEach(section => {
+              const simSSRCs = new Set(flatMap(section.match(/^a=ssrc-group:SIM .+$/gm), line => {
+                return line.split(' ').slice(1);
+              }));
+
+              const trackSSRCs = new Set(section.match(/^a=ssrc:.+$/gm).map(line => {
+                return line.match(/a=ssrc:([0-9]+)/)[1];
+              }));
+
+              // NOTE(mmalavalli): The bug manifests itself as 2 "a=ssrc-group:SIM..." lines in
+              // the m= section as follows:
+              // 1. a=ssrc-group:SIM <ssrc1> <ssrc4> <ssrc3>
+              // 2. a=ssrc-group:SIM <ssrc1> <ssrc2> <ssrc3>
+              // This results in 4 unique simulcast SSRCs as opposed to the expected 3.
+              assert.equal(simSSRCs.size, 3);
+              simSSRCs.forEach(ssrc => assert(trackSSRCs.has(ssrc)));
+            });
+          });
+
+          after(() => {
+            if (thisRoom) {
+              thisRoom.disconnect();
+            }
+            return completeRoom(sid);
+          });
+        });
+      }
     });
   });
+
+  if (defaults.topology !== 'peer-to-peer') {
+    describe('bandwidthProfile.video', () => {
+      combinationContext([
+        [
+          [1],
+          x => `.maxTracks = ${x}`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `.dominantSpeakerPriority = "${x}"`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `and the publish priority of the Dominant Speaker's LocalVideoTrack is "${x}"`
+        ],
+        [
+          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
+          x => `and the publish priority of the Passive Speaker's LocalVideoTrack is "${x}"`
+        ]
+      ], ([maxTracks, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
+        const priorityRanks = {
+          [PRIORITY_HIGH]: 1,
+          [PRIORITY_STANDARD]: 2,
+          [PRIORITY_LOW]: 3
+        };
+
+        // NOTE(mmalavalli): Since "dominantSpeakerPriority" only upgrades the publish priority of the Dominant Speaker's
+        // LocalVideoTrack and does not downgrade it, the effective subscribe priority will be the greater of the
+        // two priorities.
+        const effectiveDominantSpeakerPriority = priorityRanks[dominantSpeakerPriority] <= priorityRanks[dominantSpeakerPublishPriority]
+          ? dominantSpeakerPriority
+          : dominantSpeakerPublishPriority;
+
+        const switchOffParticipant = priorityRanks[effectiveDominantSpeakerPriority] <= priorityRanks[passiveSpeakerPublishPriority]
+          ? 'passive'
+          : 'dominant';
+
+        let thisRoom;
+        let thoseRooms;
+
+        beforeEach(async () => {
+          [, thisRoom, thoseRooms] = await setup({
+            testOptions: {
+              bandwidthProfile: {
+                video: { dominantSpeakerPriority, maxTracks }
+              },
+              dominantSpeaker: true,
+              tracks: []
+            },
+            otherOptions: { tracks: [] },
+            nTracks: 0
+          });
+        });
+
+        it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
+          const [aliceTracks, bobTracks] = await Promise.all([1, 2].map(async () => [
+            createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
+            await createLocalVideoTrack(smallVideoConstraints)
+          ]));
+
+          // Initially disable Alice's audio
+          aliceTracks[0].enabled = false;
+
+          const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
+          const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
+
+          // Alice and Bob publish their LocalTracks
+          await Promise.all([
+            ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: passiveSpeakerPublishPriority })),
+            ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: dominantSpeakerPublishPriority })),
+            tracksSubscribed(aliceRemote, 2),
+            tracksSubscribed(bobRemote, 2)
+          ]);
+
+          const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
+            return [...videoTracks.values()][0].track;
+          });
+
+          let switched = {
+            dominant: {
+              off: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack },
+              on: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack }
+            },
+            passive: {
+              off: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack },
+              on: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack }
+            }
+          }[switchOffParticipant];
+
+          // Bob should be the Dominant Speaker
+          await Promise.all([
+            dominantSpeakerChanged(thisRoom, bobRemote),
+            trackSwitchedOn(switched.on.remoteVideoTrack),
+            trackSwitchedOff(switched.off.remoteVideoTrack)
+          ]);
+
+          switched.on.participant.videoTracks.forEach(({ track }) => {
+            assert.equal(track.isSwitchedOff, false);
+          });
+
+          switched.off.participant.videoTracks.forEach(({ track }) => {
+            assert.equal(track.isSwitchedOff, true);
+          });
+        });
+
+        afterEach(async () => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          if (thisRoom) {
+            await completeRoom(thisRoom.sid);
+          }
+        });
+      });
+    });
+  }
 });
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
 }
 
-async function setup(name, testOptions, otherOptions, nTracks, alone, roomOptions) {
+async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
+  name = name || randomName();
   const options = Object.assign({
     audio: true,
     video: smallVideoConstraints

@@ -12,19 +12,81 @@ const TwilioError = require('../../../../../lib/util/twilioerror');
 const { combinations } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
-  combinations([[true, false], [true, false], [true, false]]).forEach(([networkQuality, dominantSpeaker, automaticSubscription]) => {
-    describe(`constructor, called with .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'}, .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'} and .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'}`, () => {
+  combinations([
+    [true, false], // networkQuality
+    [true, false], // dominantSpeaker
+    [true, false], // automaticSubscription
+    [true, false], // trackSwitchOff
+    [              // bandwidthProfile
+      [undefined],
+      [{}, {}],
+      [{ video: {} }, { video: {} }],
+      [{ video: { mode: 'foo' } }, { video: { mode: 'foo' } }],
+      // eslint-disable-next-line
+      [{ video: { maxSubscriptionBitrate: 2048 } }, { video: { max_subscription_bandwidth: 2 } }],
+      // eslint-disable-next-line
+      [{ video: { maxTracks: 2 } }, { video: { max_tracks: 2 } }],
+      // eslint-disable-next-line
+      [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { low: { width: 600, height: 800 } } } }, { video: { render_dimensions: { low: { width: 600, height: 800 } } } }],
+      // eslint-disable-next-line
+      [{ video: { renderDimensions: { standard: { width: 1000, height: 1200 } } } }, { video: { render_dimensions: { standard: { width: 1000, height: 1200 } } } }],
+      // eslint-disable-next-line
+      [
+        {
+          video: {
+            dominantSpeakerPriority: 'baz',
+            maxSubscriptionBitrate: 4096,
+            maxTracks: 5,
+            mode: 'bar',
+            renderDimensions: {
+              high: { width: 2, height: 3 },
+              low: { width: 4, height: 5 },
+              standard: { width: 6, height: 7 }
+            }
+          }
+        },
+        {
+          video: {
+            // eslint-disable-next-line
+            active_speaker_priority: 'baz',
+            // eslint-disable-next-line
+            max_subscription_bandwidth: 4,
+            // eslint-disable-next-line
+            max_tracks: 5,
+            mode: 'bar',
+            // eslint-disable-next-line
+            render_dimensions: {
+              high: { width: 2, height: 3 },
+              low: { width: 4, height: 5 },
+              standard: { width: 6, height: 7 }
+            }
+          }
+        }
+      ]
+    ]
+  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+    describe(`constructor, called with
+      .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
+      .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
+      .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
+      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'} and,
+      .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
       beforeEach(() => {
-        test = makeTest({
+        test = makeTest(Object.assign(bandwidthProfile ? { bandwidthProfile } : {}, {
           iceServerSourceStatus: [
             { foo: 'bar' }
           ],
           automaticSubscription,
           networkQuality,
-          dominantSpeaker
-        });
+          dominantSpeaker,
+          trackSwitchOff
+        }));
         test.open();
       });
 
@@ -32,7 +94,7 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload and the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload, the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule and ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
@@ -50,6 +112,12 @@ describe('TwilioConnectionTransport', () => {
           assert(!('active_speaker' in message.media_signaling));
         }
 
+        if (trackSwitchOff) {
+          assert.deepEqual(message.media_signaling.track_switch_off.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('track_switch_off' in message.media_signaling));
+        }
+
         assert.deepEqual(message.subscribe, {
           rules: [{
             type: automaticSubscription ? 'include' : 'exclude',
@@ -57,6 +125,12 @@ describe('TwilioConnectionTransport', () => {
           }],
           revision: 1
         });
+
+        if (bandwidthProfile) {
+          assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
+        } else {
+          assert(!('bandwidth_profile' in message));
+        }
 
         assert.equal(message.participant, test.localParticipantState);
         assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());

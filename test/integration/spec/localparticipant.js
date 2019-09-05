@@ -21,6 +21,7 @@ const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatat
 const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { flatMap } = require('../../../lib/util');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const { getMediaSections } = require('../../../lib/util/sdp');
 const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../lib/util/twilio-video-errors');
 
@@ -245,8 +246,8 @@ describe('LocalParticipant', function() {
         ]);
 
         trackPublications = await Promise.all([
-          room.localParticipant.publishTrack(tracks[0]),
-          anotherRoom.localParticipant.publishTrack(tracks[0])
+          room.localParticipant.publishTrack(tracks[0], { priority: PRIORITY_LOW }),
+          anotherRoom.localParticipant.publishTrack(tracks[0], { priority: PRIORITY_HIGH })
         ]);
       });
 
@@ -272,6 +273,15 @@ describe('LocalParticipant', function() {
 
       it('should assign different SIDs to the two LocalTrackPublications', () => {
         assert.notEqual(trackPublications[0].trackSid, trackPublications[1].trackSid);
+      });
+
+      it('should set the appropriate priority values to the two LocalTrackPublications', () => {
+        const localTrackPublication1 = [...room.localParticipant.tracks.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        const localTrackPublication2 = [...anotherRoom.localParticipant.tracks.values()].find(
+          localTrackPublication => localTrackPublication.track === tracks[0]);
+        assert.equal(localTrackPublication1.priority, PRIORITY_LOW);
+        assert.equal(localTrackPublication2.priority, PRIORITY_HIGH);
       });
 
       after(() => {
@@ -318,14 +328,26 @@ describe('LocalParticipant', function() {
         x => `with${x ? '' : 'out'} a name for the LocalTrack`
       ],
       [
+        [undefined, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD],
+        x => `with${x ? ` priority "${x}"` : 'out specifying a priority'}`
+      ],
+      [
         ['never', 'previously'],
         x => `that has ${x} been published`
       ]
-    ], ([isEnabled, kind, withName, when]) => {
+    ], ([isEnabled, kind, withName, priority, when]) => {
       // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
       if (isFirefox && kind === 'data' && when === 'previously') {
+        return;
+      }
+
+      // eslint-disable-next-line no-warning-comments
+      // TODO(mmalavalli): Until we find out why Travis is failing tests due
+      // to not being able to create enough RTCPeerConnections, we will enable
+      // testing for only when priority is set to "high". (JSDK-2417)
+      if (priority !== PRIORITY_HIGH) {
         return;
       }
 
@@ -411,7 +433,7 @@ describe('LocalParticipant', function() {
         }
 
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
-          thisParticipant.publishTrack(thisTrack),
+          thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
           ...['trackPublished', 'trackSubscribed'].map(event => {
             return Promise.all(thoseParticipants.map(async thatParticipant => {
               const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
@@ -443,10 +465,11 @@ describe('LocalParticipant', function() {
         }[kind]));
       });
 
-      ['isTrackEnabled', 'trackName', 'trackSid'].forEach(prop => {
-        it(`should set the RemoteTrackPublication's .${prop} to the LocalTrackPublication's .${prop}`, () => {
+      ['isTrackEnabled', ['publishPriority', 'priority'], 'trackName', 'trackSid'].forEach(propOrPropPair => {
+        const [remoteProp, localProp] = Array.isArray(propOrPropPair) ? propOrPropPair : [propOrPropPair, propOrPropPair];
+        it(`should set the RemoteTrackPublication's .${remoteProp} to the LocalTrackPublication's .${localProp}`, () => {
           const thoseTrackPublications = thoseTracksMap.trackPublished;
-          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[prop], thisLocalTrackPublication[prop]));
+          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[remoteProp], thisLocalTrackPublication[localProp]));
         });
       });
 
