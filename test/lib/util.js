@@ -1,7 +1,11 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
+const connect = require('../../../lib/connect');
+const defaults = require('../../lib/defaults');
+const getToken = require('../../lib/token');
 const sinon = require('sinon');
+const { createRoom } = require('../../lib/rest');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
@@ -392,6 +396,37 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
+
+async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
+  name = name || randomName();
+  const options = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, testOptions, defaults);
+  const token = getToken(randomName());
+  options.name = await createRoom(name, options.topology, roomOptions);
+  const thisRoom = await connect(token, options);
+  if (alone) {
+    return [options.name, thisRoom];
+  }
+
+  otherOptions = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, otherOptions);
+  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
+  const thoseTokens = [randomName(), randomName()].map(getToken);
+  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
+  const thoseParticipants = [...thisRoom.participants.values()];
+  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+  return [options.name, thisRoom, thoseRooms, peerConnections];
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
@@ -404,6 +439,7 @@ exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
+exports.setup = setup;
 exports.tracksSubscribed = tracksSubscribed;
 exports.trackSwitchedOff = trackSwitchedOff;
 exports.trackSwitchedOn = trackSwitchedOn;
