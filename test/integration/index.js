@@ -1,6 +1,7 @@
 'use strict';
 
 require('./spec/connect');
+require('./spec/connectoptions');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');

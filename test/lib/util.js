@@ -1,11 +1,11 @@
 /* eslint-disable no-await-in-loop */
 'use strict';
 
-const connect = require('../../../lib/connect');
-const defaults = require('../../lib/defaults');
-const getToken = require('../../lib/token');
+const connect = require('../../lib/connect');
+const defaults = require('../lib/defaults');
+const getToken = require('../lib/token');
 const sinon = require('sinon');
-const { createRoom } = require('../../lib/rest');
+const { createRoom } = require('../lib/rest');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
