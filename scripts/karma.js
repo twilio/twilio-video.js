@@ -9,6 +9,7 @@ const { join } = require('path');
 
 const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
+const dockerIntegrationTests = join(__dirname, '..', 'test', 'integration', 'spec', 'docker');
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
 function getTestPaths(path) {
@@ -27,7 +28,7 @@ function getTestPaths(path) {
   return [path];
 }
 
-const files = getTestPaths(integrationTests);
+const files = getTestPaths(isDocker ? dockerIntegrationTests : integrationTests);
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
@@ -41,6 +42,7 @@ async function main(files) {
     dockerProxy.startServer();
   }
 
+  let processExitCode = 0;
   for (const file of files) {
     const config = parseConfig(configFile, { files: [file] });
 
@@ -52,14 +54,19 @@ async function main(files) {
       process.once('SIGINT', () => process.exit());
     });
 
-    if (exitCode) {
-      process.exit(exitCode);
+    if (exitCode && !processExitCode) {
+      // Note(mpatwardhan) if tests fail for one file,
+      // note the exitcode but continue running for rest
+      // of the files.
+      processExitCode = exitCode;
+      console.log('Failed for file:', file);
     }
   }
 
   if (dockerProxy) {
     dockerProxy.stopServer();
   }
+  process.exit(processExitCode);
 }
 
 main(files);

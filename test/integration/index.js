@@ -1,8 +1,8 @@
 'use strict';
 
-require('./spec/reconnection');
+require('./spec/docker/reconnection');
+require('./spec/docker/docker');
 require('./spec/connect');
-require('./spec/docker');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');

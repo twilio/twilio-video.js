@@ -3,6 +3,7 @@
 'use strict';
 
 const isDocker = require('is-docker')();
+const { basename } = require('path');
 
 function getTestFiles(config, defaultFile) {
   let files = [];
@@ -15,6 +16,28 @@ function getTestFiles(config, defaultFile) {
 }
 
 let testRun = 0;
+function generateReportName(files) {
+  const strTestRun = (testRun++).toString();
+
+  // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
+  let strReportName = `DO-${isDocker}-`;
+  ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach((dim) => {
+    if (process.env[dim]) {
+      const dimAbrr = dim.substr(0, 2);
+      strReportName += `-${dimAbrr}-${process.env[dim]}`;
+    }
+  });
+
+  if (files.length === 1) {
+    // when testing single files include its name in the report.
+    strReportName += '-FILE-' + basename(files[0], '.js');
+  } else {
+    // otherwise include uniq test run number.
+    strReportName += '-' + strTestRun;
+  }
+
+  return strReportName;
+}
 
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
@@ -49,18 +72,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
 
-    const strTestRun = (testRun++).toString();
-
-    // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
-    let strReportName = `DO-${isDocker}-`;
-    ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach((dim) => {
-      if (process.env[dim]) {
-        const dimAbrr = dim.substr(0, 2);
-        strReportName += `-${dimAbrr}-${process.env[dim]}`;
-      }
-    });
-
-    strReportName += '-' + strTestRun;
+    const strReportName = generateReportName(files);
     const htmlReport = `../logs/${strReportName}.html`;
     config.set({
       basePath: '',

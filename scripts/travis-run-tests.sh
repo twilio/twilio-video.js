@@ -9,7 +9,7 @@ if [ "${DOCKER}" = "true" ]; then
     exit 126
   else
     docker-compose build test
-    docker-compose run test npm run build:docker
+    docker-compose run test npm run test:integration
   fi
 else
   # when running outside docker

@@ -1,14 +1,14 @@
 /* eslint-disable no-console */
 'use strict';
 const assert = require('assert');
-const DockerProxyClient = require('../../../docker/dockerProxyClient');
-const defaults = require('../../lib/defaults');
-const getToken = require('../../lib/token');
+const DockerProxyClient = require('../../../../docker/dockerProxyClient');
+const defaults = require('../../../lib/defaults');
+const getToken = require('../../../lib/token');
 const {
   connect,
   createLocalTracks,
-} = require('../../../lib');
-const { isFirefox } = require('../../lib/guessbrowser');
+} = require('../../../../lib');
+const { isFirefox } = require('../../../lib/guessbrowser');
 
 const {
   // participantsConnected,
@@ -17,7 +17,7 @@ const {
   smallVideoConstraints,
   waitFor,
   // waitToGoOffline
-} = require('../../lib/util');
+} = require('../../../lib/util');
 
 const minute = 1 * 60 * 1000;
 

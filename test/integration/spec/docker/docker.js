@@ -1,11 +1,11 @@
 'use strict';
 
 const assert = require('assert');
-const DockerProxyClient = require('../../../docker/dockerProxyClient');
+const DockerProxyClient = require('../../../../docker/dockerProxyClient');
 
 const {
   waitToGoOnline, waitToGoOffline
-} = require('../../lib/util');
+} = require('../../../lib/util');
 
 describe('dockerProxy', function() {
   // eslint-disable-next-line no-invalid-this
