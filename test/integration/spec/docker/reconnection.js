@@ -11,39 +11,56 @@ const {
 const { isFirefox } = require('../../../lib/guessbrowser');
 
 const {
-  // participantsConnected,
   randomName,
   waitToGoOnline,
   smallVideoConstraints,
   waitFor,
-  // waitToGoOffline
 } = require('../../../lib/util');
 
 const minute = 1 * 60 * 1000;
 
+// resolves when room received n track started events.
+function waitForTrackToStart(room, n) {
+  let tracksRemaining = n;
+  return new Promise((resolve) => {
+    room.on('trackStarted', function trackStarted() {
+      tracksRemaining--;
+      if (!tracksRemaining) {
+        room.removeListener('trackStarted', trackStarted);
+        resolve();
+      }
+    });
+  });
+}
+
 // returns Promise<[room]> - sets up and returns room with nPeople
 async function setup(nPeople) {
   console.log(`setting up for ${nPeople} participants`);
-
-  const constraints = { audio: true, video: smallVideoConstraints, fake: true };
-  const tracks = await createLocalTracks(constraints);
-  const options = Object.assign({ name: randomName(), tracks: tracks }, defaults);
-
   const people = ['Alice', 'Bob', 'Charlie', 'Mak'];
   people.splice(nPeople);
 
-  const rooms = await waitFor(people.map(userName => connect(getToken(userName), options)), 'rooms to get connected');
+  const roomName = randomName();
+  const rooms = await waitFor(people.map(async userName => {
+    const constraints = { audio: true, video: smallVideoConstraints, fake: true };
+    const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating local tracks`);
+    const options = Object.assign({ name: roomName, tracks: tracks }, defaults);
+    const room = await connect(getToken(userName), options);
 
-  // eslint-disable-next-line no-warning-comments
-  // TODO: debug only code to watch the events.
-  rooms.forEach((room) => {
     const roomStr = room.localParticipant.identity + ':' + room.sid;
+    // eslint-disable-next-line no-warning-comments
     console.log('connected to Room: ' + roomStr);
     room.on('disconnected', () => console.log(roomStr + ': room received disconnected'));
     room.on('reconnecting', () => console.log(roomStr + ': room received reconnecting'));
     room.on('reconnected', () => console.log(roomStr + ': room received reconnected'));
-  });
+    room.on('trackStarted', () => console.log(roomStr + ': room received trackStarted'));
+    room.on('participantConnected', () => console.log(roomStr + ': room received participantConnected'));
 
+    if (nPeople > 1) {
+      const trackStartsExpected = (nPeople - 1) * 2;
+      await waitFor(waitForTrackToStart(room, trackStartsExpected), `${roomStr}:${trackStartsExpected} tracks to start`);
+    }
+    return room;
+  }), 'rooms to get connected, and tracks started');
   return rooms;
 }
 
