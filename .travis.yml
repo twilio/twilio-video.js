@@ -26,7 +26,7 @@ env:
 matrix:
   include:
     - os: linux
-      env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
       env: DOCKER=false BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
