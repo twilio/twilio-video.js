@@ -174,7 +174,7 @@ describe('Reconnection states and events', function() {
         });
 
         context('that is longer than the session timeout', () => {
-          it('should emit "disconnected" on the Rooms', async () => {
+          (isFirefox ? it.skip : it)('should emit "disconnected" on the Rooms', async () => {
             const disconnectPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
             await waitFor(reconnectingPromises, 'reconnectingPromises');
             await waitFor(disconnectPromises, 'disconnectPromises');

@@ -83,3 +83,6 @@ ENV CHROME_BIN=/opt/app/node_modules/travis-multirunner/browsers/bin/chrome-${BV
 ENV FIREFOX_BIN=/opt/app/node_modules/travis-multirunner/browsers/bin/firefox-${BVER}
 
 ENTRYPOINT ["dumb-init"]
+
+# specify default command to run container w/o arguments.
+CMD ["bash"]
