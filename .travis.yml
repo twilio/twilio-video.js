@@ -75,7 +75,7 @@ matrix:
     - env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=group
     - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
     - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=group
-    - env: DOCKER=true BROWSER=firefox BVER=unstable TOPOLOGY=group
+    - env: DOCKER=true BROWSER=firefox BVER=stable TOPOLOGY=group
 
 script: ./scripts/travis-run-tests.sh
 
