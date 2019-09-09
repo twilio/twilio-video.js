@@ -67,6 +67,7 @@ describe('Log', () => {
     });
 
     it('should call getLevelByName with the passed logLevel', () => {
+      // eslint-disable-next-line no-unused-vars
       const log = new Log('foo', component('bar'), {
         foo: 'debug',
         bar: 'error'

@@ -9,6 +9,7 @@ const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
+const minute = 1 * 60 * 1000;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -427,6 +428,85 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
   return [options.name, thisRoom, thoseRooms, peerConnections];
 }
 
+/**
+ * Returns a promise that resolves after being connected/disconnected from network.
+ * @param {('online'|'offline')} onlineOrOffline - if online waits for connected state
+ * @returns {Promise<void>}
+ */
+function waitToGo(onlineOrOffline) {
+  const wantonline = onlineOrOffline === 'online';
+  // eslint-disable-next-line no-console
+  return new Promise((resolve) => {
+    if (window.navigator.onLine !== wantonline) {
+      window.addEventListener(onlineOrOffline, resolve, { once: true });
+    } else {
+      resolve();
+    }
+  });
+}
+
+/**
+ * Returns a promise that resolves after being connected to the network.
+ * @returns {Promise<void>}
+ */
+async function waitToGoOnline() {
+  try {
+    await waitFor(waitToGo('online'), 'wait to go online', 1 * minute);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('waitToGoOnline failed. but since its known to be unstable on ' +
+                'firefox sometime so letting it go:', err);
+  }
+}
+
+/**
+ * Returns a promise that resolves after being disconneected from the network.
+ * @returns {Promise<void>}
+ */
+async function waitToGoOffline() {
+  await waitFor(waitToGo('offline'), 'wait to go offline');
+}
+
+/**
+ * Note: when a test waits for promise that fails to settle.
+ *   1) The test fail w/o a good indication of what happend, as for Mocha the test never finished
+ *   2) This also causes subsequent tests to not get executed.
+ * So instead of using raw `await fooPromise` use `await waitFor(fooPromise)` abstraction
+ * solves above problems by limiting all waits to a finite time. It also helps fail the test
+ * with more useful `message` parameter w/o cluttering test code.
+ * Returns a promise that if not settled in timeoutMS, gets rejected.
+ * @param {Promise|Array<Promise>} promiseOrArray - Promises to wait on
+ * @param {string} message - indicates the message logged when promise rejects.
+ * @param {number} timeoutMS - time to wait in miliseconds.
+ * @returns {Promise<any>}
+ */
+let waitId = 101;
+async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
+  const thisWaitId = waitId++;
+  // eslint-disable-next-line no-console
+  console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
+  const startTime = new Date();
+  const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
+  let timer = null;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const endTime = new Date();
+      const durationInSeconds = (endTime - startTime) / 1000;
+      // eslint-disable-next-line no-console
+      console.warn(`xxxx [${thisWaitId}] Timed out waiting for : ${message} [${durationInSeconds} seconds]`);
+      reject(new Error(`Timed out waiting for : ${message}`));
+    }, timeoutMS);
+  });
+
+  const result = await Promise.race([promise, timeoutPromise]);
+  const endTime = new Date();
+  const durationInSeconds = (endTime - startTime) / 1000;
+  // eslint-disable-next-line no-console
+  console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+  clearTimeout(timer);
+  return result;
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
@@ -449,4 +529,6 @@ exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
-
+exports.waitFor = waitFor;
+exports.waitToGoOnline = waitToGoOnline;
+exports.waitToGoOffline = waitToGoOffline;
