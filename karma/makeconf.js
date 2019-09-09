@@ -3,6 +3,7 @@
 'use strict';
 
 const isDocker = require('is-docker')();
+const { basename } = require('path');
 
 function getTestFiles(config, defaultFile) {
   let files = [];
@@ -15,9 +16,36 @@ function getTestFiles(config, defaultFile) {
 }
 
 let testRun = 0;
+function generateReportName(files) {
+  const strTestRun = (testRun++).toString();
+
+  // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
+  let strReportName = `DO-${isDocker}-`;
+  ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach((dim) => {
+    if (process.env[dim]) {
+      const dimAbrr = dim.substr(0, 2);
+      strReportName += `-${dimAbrr}-${process.env[dim]}`;
+    }
+  });
+
+  if (files.length === 1) {
+    // when testing single files include its name in the report.
+    strReportName += '-FILE-' + basename(files[0], '.js');
+  } else {
+    // otherwise include uniq test run number.
+    strReportName += '-' + strTestRun;
+  }
+
+  return strReportName;
+}
 
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
+  if (isDocker) {
+    // things go slow in docker for network tests
+    browserNoActivityTimeout = 4 * 60 * 10000;
+  }
+
   return function conf(config) {
     const files = getTestFiles(config, defaultFile);
     const preprocessors = files.reduce((preprocessors, file) => {
@@ -44,17 +72,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
 
-    const strTestRun = (testRun++).toString();
-
-    // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
-    let strReportName = `testresults-DOCKER-${isDocker}-`;
-    ['BROWSER', 'BVER', 'TOPOLOGY'].forEach((dim) => {
-      if (process.env[dim]) {
-        strReportName += `-${dim}-${process.env[dim]}`;
-      }
-    });
-
-    strReportName += '-' + strTestRun;
+    const strReportName = generateReportName(files);
     const htmlReport = `../logs/${strReportName}.html`;
     config.set({
       basePath: '',
@@ -80,11 +98,11 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         groupSuites: true,
         useCompactStyle: true,
         useLegacyStyle: true,
-        showOnlyFailed: true, // only collect failures in the report file.
+        showOnlyFailed: false, // switch this to true to only collect failures in the report files.
       },
       junitReporter: {
-        outputDir: `../logs/${strTestRun}`, // results will be saved as $outputDir/$browserName.xml
-        outputFile: undefined, // if included, results will be saved as $outputDir/$browserName/$outputFile
+        outputDir: '../logs', // results will be saved as $outputDir/$browserName.xml
+        outputFile: strReportName, // if included, results will be saved as $outputDir/$browserName/$outputFile
         suite: '', // suite will become the package name attribute in xml testsuite element
         useBrowserName: true, // add browser name to report and classes names
         nameFormatter: undefined, // function (browser, result) to customize the name attribute in xml testcase element
