@@ -1001,9 +1001,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  // eslint-disable-next-line
-  // TODO(mmalavalli): Enable this test for 'prod' once Room Service is deployed.
-  (defaults.topology !== 'peer-to-peer' && defaults.environment === 'stage' ? describe : describe.skip)('#setBandwidthProfile', () => {
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('#setBandwidthProfile', () => {
     const bandwidthProfile = {
       video: {
         dominantSpeakerPriority: PRIORITY_LOW,
