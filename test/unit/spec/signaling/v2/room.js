@@ -1923,6 +1923,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
+    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 

@@ -184,6 +184,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'mediaStreamTrack',
             'isEnabled',
             'isSwitchedOff',
+            'priority',
             'sid'
           ]);
         } else {
@@ -195,6 +196,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'dimensions',
             'isEnabled',
             'isSwitchedOff',
+            'priority',
             'sid'
           ]);
         }
@@ -217,6 +219,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
+            priority: null,
             sid: track.sid
           });
         } else {
@@ -228,6 +231,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
+            priority: null,
             sid: track.sid
           });
         }
