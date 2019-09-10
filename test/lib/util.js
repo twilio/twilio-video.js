@@ -5,8 +5,11 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
+const defaults = require('../lib/defaults');
+const getToken = require('../lib/token');
+const { createRoom } = require('../lib/rest');
+const connect = require('../../lib/connect');
 const minute = 1 * 60 * 1000;
-
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -313,7 +316,7 @@ async function trackSwitchedOff(track) {
   if (track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOff', resolve));
+  await new Promise(resolve => track.once('switchedOff', resolve));
 }
 
 /**
@@ -325,7 +328,7 @@ async function trackSwitchedOn(track) {
   if (!track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOn', resolve));
+  await new Promise(resolve => track.once('switchedOn', resolve));
 }
 
 /**
@@ -383,6 +386,7 @@ async function waitForTracks(event, participant, n) {
   });
 }
 
+
 // NOTE(mmalavalli): Safari is rejecting getUserMedia()'s Promise with an
 // OverConstrainedError. So these capture dimensions are disabled.
 const smallVideoConstraints = isSafari ? {} : {
@@ -394,6 +398,35 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
+async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
+  name = name || randomName();
+  const options = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, testOptions, defaults);
+  const token = getToken(randomName());
+  options.name = await createRoom(name, options.topology, roomOptions);
+  const thisRoom = await connect(token, options);
+  if (alone) {
+    return [options.name, thisRoom];
+  }
+
+  otherOptions = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, otherOptions);
+  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
+  const thoseTokens = [randomName(), randomName()].map(getToken);
+  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
+  const thoseParticipants = [...thisRoom.participants.values()];
+  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+  return [options.name, thisRoom, thoseRooms, peerConnections];
+}
 
 /**
  * Returns a promise that resolves after being connected/disconnected from network.
@@ -474,7 +507,6 @@ async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
   return result;
 }
 
-
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
@@ -496,6 +528,7 @@ exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
+exports.setup = setup;
 exports.waitFor = waitFor;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;

@@ -2064,6 +2064,7 @@ function makeLocalParticipant(options) {
     });
   });
 
+  localParticipant.setBandwidthProfile = sinon.spy();
   localParticipant.setNetworkQualityLevel = sinon.spy();
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);

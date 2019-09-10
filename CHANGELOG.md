@@ -28,6 +28,31 @@ New Features
   });
   ```
 
+- You can now change your Bandwidth Profile settings after joining a Group Room by calling
+  `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
+  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta13/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high',
+        maxTracks: 1,
+        mode: 'collaboration'
+      }
+    }
+  });
+  
+  // Change "maxTracks" and "mode".
+  room.localParticipant.setBandwidthProfile({
+    video: {
+      maxTracks: 2,
+      mode: 'grid'
+    }
+  });
+  ```
+  
 2.0.0-beta14 (in progress)
 ==========================
 
