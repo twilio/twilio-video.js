@@ -12,18 +12,21 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
+const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
-const { flatMap } = require('../../../lib/util');
+const { flatMap, smallVideoConstraints } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
 
 const {
   createSyntheticAudioStreamTrack,
   dominantSpeakerChanged,
   participantsConnected,
   randomName,
+  setup,
   trackStarted,
   tracksSubscribed,
   tracksPublished,
@@ -427,6 +430,115 @@ describe('Room', function() {
     it.skip('is raised whenever recording is stopped on the Room via the REST API', () => {
       // eslint-disable-next-line no-warning-comments
       // TODO(mroberts): POST to the REST API to stop recording on the Room.
+    });
+  });
+
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"trackSwitched" events', () => {
+    let bob; let remoteBob; let charlie; let remoteCharlie;
+    let aliceRoom; let bobRoom; let charlieRoom;
+    let loPriTrack; let loPriTrackPub;
+
+    beforeEach(async () => {
+      let thoseRooms;
+      const BOB = 0;
+      const CHARLIE = 1;
+      [, aliceRoom, thoseRooms] = await setup({
+        testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
+        otherOptions: { tracks: [] },
+        nTracks: 0
+      });
+
+      bobRoom = thoseRooms[BOB];
+      charlieRoom = thoseRooms[CHARLIE];
+      bob = bobRoom.localParticipant;
+      charlie = charlieRoom.localParticipant;
+
+      // let bob published a track with lo pri.
+      loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+      await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
+      remoteBob = aliceRoom.participants.get(bob.sid);
+      await tracksSubscribed(remoteBob, 1);
+      loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
+      remoteCharlie = aliceRoom.participants.get(charlie.sid);
+    });
+
+    it('trackSwitchedOff fires on track, trackSubscription, participant and Room object', async () => {
+      // listen for switch off event on bob's track on various objects
+      // 1) Track
+      const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
+
+      // 2) TrackPublication
+      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', (track) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        resolve();
+      }));
+
+      // 3) Participant
+      const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOff', (track, trackPub) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
+        resolve();
+      }));
+
+      // 4) Room
+      const p4 = new Promise(resolve => aliceRoom.once('trackSwitchedOff', (track, trackPub, participant) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(participant, remoteBob, 'unexpected value for the participant');
+        assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
+        resolve();
+      }));
+
+      // induce a track switch off by having charlie publish a track with hi pri
+      const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+      await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
+      await tracksSubscribed(remoteCharlie, 1);
+
+      // we should see track switch off event on all 4 objects.
+      await Promise.all([p1, p2, p3, p4]);
+    });
+
+    it('trackSwitchedOn fires on track, trackSubscription, participant and Room object', async () => {
+      // listen for switch off event on bob's track
+      const trackSwitchoffPromise = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
+
+      // induce a track switch off by having charlie publish a track with hi pri
+      const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+      await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
+      await tracksSubscribed(remoteCharlie, 1);
+
+      // wait for Bob's track getting switched off.
+      await trackSwitchoffPromise;
+
+      // Now listen for switch on event on bob's track on various objects
+      // 1) Track
+      const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOn', resolve));
+
+      // 2) TrackPublication
+      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOn', (track) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        resolve();
+      }));
+
+      // 3) Participant
+      const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOn', (track, trackPub) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
+        resolve();
+      }));
+
+      // 4) Room
+      const p4 = new Promise(resolve => aliceRoom.once('trackSwitchedOn', (track, trackPub, participant) => {
+        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(participant, remoteBob, 'unexpected value for the participant');
+        assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
+        resolve();
+      }));
+
+      // let charlie disconnect
+      charlieRoom.disconnect();
+
+      // we should see track switch on event on all 4 objects.
+      await Promise.all([p1, p2, p3, p4]);
     });
   });
 });
