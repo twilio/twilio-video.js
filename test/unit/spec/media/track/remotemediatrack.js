@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 const log = require('../../../../lib/fakelog');
 const { capitalize } = require('../../../../lib/util');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
@@ -55,6 +56,43 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           it('should set the .sid property', () => {
             assert.equal(track.sid, 'bar');
           });
+        });
+      });
+    });
+
+    const { trackPriority } = require('../../../../../lib/util/constants');
+
+    describe('.setPriority', () => {
+      let options;
+      let track;
+      beforeEach(() => {
+        options = {
+          onPriorityChange: sinon.spy()
+        };
+        track = makeTrack('foo', 'bar', kind, true, options, RemoteTrack);
+      });
+
+      [null, ...Object.values(trackPriority)].forEach((priorityValue) => {
+        it('sets priority when called with valid priority value: ' + priorityValue, () => {
+          let originalPriority = track.priority;
+          track.setPriority(priorityValue);
+          if (originalPriority !== priorityValue) {
+            sinon.assert.calledWith(options.onPriorityChange, priorityValue);
+          }
+          assert.equal(track.priority, priorityValue);
+        });
+      });
+
+      [undefined, '', 'foo', {}, 42].forEach((priorityValue) => {
+        it('throws RangeError for invalid priority value: ' + priorityValue, () => {
+          let errorThrown = false;
+          try {
+            track.setPriority(priorityValue);
+          } catch (error) {
+            assert(error instanceof RangeError);
+            errorThrown = true;
+          }
+          assert.equal(errorThrown, true);
         });
       });
     });

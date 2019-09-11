@@ -22,7 +22,7 @@ describe('bandwidth profile', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  describe.only('RemoteTrack.setPriority', () => {
+  describe('RemoteTrack.setPriority', () => {
     let thisRoom; let thoseRooms;
     let aliceLocal; let bobLocal;
     let aliceRemote; let bobRemote;

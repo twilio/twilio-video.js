@@ -5,6 +5,7 @@ const DataTrackReceiver = require('../../../../../lib/data/receiver');
 const EventTarget = require('../../../../../lib/eventtarget');
 const RemoteDataTrack = require('../../../../../lib/media/track/remotedatatrack');
 const { makeUUID } = require('../../../../../lib/util');
+const { trackPriority } = require('../../../../../lib/util/constants');
 
 describe('RemoteDataTrack', () => {
   let dataTrackReceiver;
@@ -113,6 +114,29 @@ describe('RemoteDataTrack', () => {
     });
   });
 
+  describe('.setPriority', () => {
+    [null, ...Object.values(trackPriority)].forEach((priorityValue) => {
+      it('does not throw when called with valid priority value: ' + priorityValue, () => {
+        const track = new RemoteDataTrack('foo', dataTrackReceiver);
+        track.setPriority(priorityValue);
+      });
+    });
+
+    [undefined, '', 'foo', {}, 42].forEach((priorityValue) => {
+      it('throws RangeError for invalid priority value: ' + priorityValue, () => {
+        const track = new RemoteDataTrack('foo', dataTrackReceiver);
+        let errorThrown = false;
+        try {
+          track.setPriority(priorityValue)
+        } catch (error) {
+          assert(error instanceof RangeError);
+          errorThrown = true;
+        }
+        assert.equal(errorThrown, true);
+      });
+    });
+  });
+
   describe('"message" event, raised by the underlying DataTrackReceiver', () => {
     let dataTrack;
     let expectedData;
@@ -146,6 +170,7 @@ describe('RemoteDataTrack', () => {
         'maxPacketLifeTime',
         'maxRetransmits',
         'ordered',
+        'priority',
         'reliable',
         'sid'
       ]);
@@ -168,6 +193,7 @@ describe('RemoteDataTrack', () => {
         maxRetransmits: track.maxRetransmits,
         name: track.name,
         ordered: track.ordered,
+        priority: null,
         reliable: track.reliable,
         sid: track.sid
       });
