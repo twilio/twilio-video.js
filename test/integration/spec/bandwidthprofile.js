@@ -70,28 +70,16 @@ describe('bandwidth profile', function() {
       }
     });
 
-    const validPriorityValues = [null, ...Object.values(trackPriority)];
-    Object.values(validPriorityValues).forEach(priority => {
-      it('can set valid priority value : ' + priority, () => {
-        const aliceRoom = thoseRooms[0];
-        const aliceLocal = aliceRoom.localParticipant;
-        const aliceRemote = thisRoom.participants.get(aliceLocal.sid);
-        const aliceRemoteVideoTrack = [...aliceRemote.videoTracks.values()][0].track;
-
+    [null, ...Object.values(trackPriority)].forEach(priority => {
+      it('can set valid priority value: ' + priority, () => {
         assert.equal(aliceRemoteVideoTrack.priority, null);
         aliceRemoteVideoTrack.setPriority(priority);
         assert.equal(aliceRemoteVideoTrack.priority, priority);
-
       });
     });
 
     [undefined, 'foo', 42].forEach(priority => {
       it('throws for an invalid priority value: ' + priority, () => {
-        const aliceRoom = thoseRooms[0];
-        const aliceLocal = aliceRoom.localParticipant;
-        const aliceRemote = thisRoom.participants.get(aliceLocal.sid);
-        const aliceRemoteVideoTrack = [...aliceRemote.videoTracks.values()][0].track;
-
         let errorWasThrown = false;
         try {
           aliceRemoteVideoTrack.setPriority(priority);
@@ -105,7 +93,7 @@ describe('bandwidth profile', function() {
     });
 
     if (defaults.topology !== 'peer-to-peer') {
-      it('can elevate track\'s priority causing it to get switched on', async () => {
+      it('subscriber can update track\'s priority', async () => {
         // initially expect Bob's track to get switched on, and Alice's track to get switched off
         await Promise.all([
           trackSwitchedOn(bobRemoteVideoTrack),
@@ -122,6 +110,15 @@ describe('bandwidth profile', function() {
           await Promise.all([
             trackSwitchedOn(aliceRemoteVideoTrack),
             trackSwitchedOff(bobRemoteVideoTrack)
+          ]);
+
+          // reset subscriber priority of the Alice track
+          aliceRemoteVideoTrack.setPriority(null);
+
+          // expect Bob's track to get switched on again, and Alice's track to get switched off
+          await Promise.all([
+            trackSwitchedOn(bobRemoteVideoTrack),
+            trackSwitchedOff(aliceRemoteVideoTrack)
           ]);
         }
       });
