@@ -35,6 +35,7 @@ const {
   participantsConnected,
   pairs,
   randomName,
+  setup,
   smallVideoConstraints,
   tracksSubscribed,
   trackSwitchedOff,
@@ -1236,7 +1237,7 @@ describe('connect', function() {
             return [...videoTracks.values()][0].track;
           });
 
-          let switched = {
+          const switched = {
             dominant: {
               off: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack },
               on: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack }
@@ -1276,34 +1277,4 @@ describe('connect', function() {
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
-}
-
-async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
-  name = name || randomName();
-  const options = Object.assign({
-    audio: true,
-    video: smallVideoConstraints
-  }, testOptions, defaults);
-  const token = getToken(randomName());
-  options.name = await createRoom(name, options.topology, roomOptions);
-  const thisRoom = await connect(token, options);
-  if (alone) {
-    return [options.name, thisRoom];
-  }
-
-  otherOptions = Object.assign({
-    audio: true,
-    video: smallVideoConstraints
-  }, otherOptions);
-  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
-  const thoseTokens = [randomName(), randomName()].map(getToken);
-  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
-
-  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
-    return participantsConnected(room, thoseRooms.length);
-  }));
-  const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
-  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
-  return [options.name, thisRoom, thoseRooms, peerConnections];
 }

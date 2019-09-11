@@ -5,6 +5,11 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
+const defaults = require('../lib/defaults');
+const getToken = require('../lib/token');
+const { createRoom } = require('../lib/rest');
+const connect = require('../../lib/connect');
+const minute = 1 * 60 * 1000;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -311,7 +316,7 @@ async function trackSwitchedOff(track) {
   if (track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOff', resolve));
+  await new Promise(resolve => track.once('switchedOff', resolve));
 }
 
 /**
@@ -323,7 +328,7 @@ async function trackSwitchedOn(track) {
   if (!track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOn', resolve));
+  await new Promise(resolve => track.once('switchedOn', resolve));
 }
 
 /**
@@ -381,6 +386,7 @@ async function waitForTracks(event, participant, n) {
   });
 }
 
+
 // NOTE(mmalavalli): Safari is rejecting getUserMedia()'s Promise with an
 // OverConstrainedError. So these capture dimensions are disabled.
 const smallVideoConstraints = isSafari ? {} : {
@@ -391,6 +397,115 @@ const smallVideoConstraints = isSafari ? {} : {
 const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
+
+async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
+  name = name || randomName();
+  const options = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, testOptions, defaults);
+  const token = getToken(randomName());
+  options.name = await createRoom(name, options.topology, roomOptions);
+  const thisRoom = await connect(token, options);
+  if (alone) {
+    return [options.name, thisRoom];
+  }
+
+  otherOptions = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, otherOptions);
+  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
+  const thoseTokens = [randomName(), randomName()].map(getToken);
+  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
+  const thoseParticipants = [...thisRoom.participants.values()];
+  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+  return [options.name, thisRoom, thoseRooms, peerConnections];
+}
+
+/**
+ * Returns a promise that resolves after being connected/disconnected from network.
+ * @param {('online'|'offline')} onlineOrOffline - if online waits for connected state
+ * @returns {Promise<void>}
+ */
+function waitToGo(onlineOrOffline) {
+  const wantonline = onlineOrOffline === 'online';
+  // eslint-disable-next-line no-console
+  return new Promise((resolve) => {
+    if (window.navigator.onLine !== wantonline) {
+      window.addEventListener(onlineOrOffline, resolve, { once: true });
+    } else {
+      resolve();
+    }
+  });
+}
+
+/**
+ * Returns a promise that resolves after being connected to the network.
+ * @returns {Promise<void>}
+ */
+async function waitToGoOnline() {
+  try {
+    await waitFor(waitToGo('online'), 'wait to go online', 1 * minute);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.log('waitToGoOnline failed. but since its known to be unstable on ' +
+                'firefox sometime so letting it go:', err);
+  }
+}
+
+/**
+ * Returns a promise that resolves after being disconneected from the network.
+ * @returns {Promise<void>}
+ */
+async function waitToGoOffline() {
+  await waitFor(waitToGo('offline'), 'wait to go offline');
+}
+
+/**
+ * Note: when a test waits for promise that fails to settle.
+ *   1) The test fail w/o a good indication of what happend, as for Mocha the test never finished
+ *   2) This also causes subsequent tests to not get executed.
+ * So instead of using raw `await fooPromise` use `await waitFor(fooPromise)` abstraction
+ * solves above problems by limiting all waits to a finite time. It also helps fail the test
+ * with more useful `message` parameter w/o cluttering test code.
+ * Returns a promise that if not settled in timeoutMS, gets rejected.
+ * @param {Promise|Array<Promise>} promiseOrArray - Promises to wait on
+ * @param {string} message - indicates the message logged when promise rejects.
+ * @param {number} timeoutMS - time to wait in miliseconds.
+ * @returns {Promise<any>}
+ */
+let waitId = 101;
+async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
+  const thisWaitId = waitId++;
+  // eslint-disable-next-line no-console
+  console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
+  const startTime = new Date();
+  const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
+  let timer = null;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const endTime = new Date();
+      const durationInSeconds = (endTime - startTime) / 1000;
+      // eslint-disable-next-line no-console
+      console.warn(`xxxx [${thisWaitId}] Timed out waiting for : ${message} [${durationInSeconds} seconds]`);
+      reject(new Error(`Timed out waiting for : ${message}`));
+    }, timeoutMS);
+  });
+
+  const result = await Promise.race([promise, timeoutPromise]);
+  const endTime = new Date();
+  const durationInSeconds = (endTime - startTime) / 1000;
+  // eslint-disable-next-line no-console
+  console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+  clearTimeout(timer);
+  return result;
+}
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -413,3 +528,7 @@ exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
+exports.setup = setup;
+exports.waitFor = waitFor;
+exports.waitToGoOnline = waitToGoOnline;
+exports.waitToGoOffline = waitToGoOffline;
