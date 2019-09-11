@@ -1,6 +1,6 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.19.0 (in progress)
+1.20.0 (in progress)
 ====================
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
@@ -19,6 +19,85 @@ Bug Fixes
 
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2318)
+
+1.19.1 (August 28, 2019)
+========================
+
+New Features
+------------
+
+- Previously in 1.19.0, we introduced a new ConnectOptions flag `dscpTagging` which set the DSCP
+  header value for audio packets to `0xb8` (Expedited Forwarding - EF). Now, enabling this flag
+  will also set the DSCP header value of video packets to `0x88` (Assured Forwarding - AF41). (JSDK-2488)
+
+1.19.0 (August 21, 2019)
+========================
+
+New Features
+------------
+
+- You can now enable [DSCP tagging](https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18) for audio
+  packets on supported browsers (only Chrome supports this as of now) by setting a new ConnectOptions property
+  `dscpTagging` to `true`. This will request enhanced QoS treatment for audio packets from any firewalls or
+  routers that support this feature. Audio packets will be sent with DSCP header value set to `0xb8` which
+  corresponds to EF (Expedited Forwarding). (JSDK-2440)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    dscpTagging: true
+  });
+  ```
+
+- Setting bandwidth limits for media using `LocalParticipant.setParameters()` will now no longer require a
+  round of negotiation with the remote peer and will take effect instantaneously. (JSDK-2250)
+
+Bug Fixes
+---------
+
+- Worked around a minor interop issue between Chrome/Safari Participants and Firefox 68+
+  Participants in a Peer-to-Peer Room. Although this issue does no affect the normal
+  functioning of the Room, it resulted in the Chrome/Safari Participants logging cryptic
+  Error messages to the JavaScript console. Now, twilio-video.js will log warning messages
+  until Chrome ([bug](https://bugs.chromium.org/p/chromium/issues/detail?id=978582)) and Safari
+  fix this issue. (JSDK-2412)
+
+1.18.2 (July 1, 2019)
+=====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where in a Peer-to-Peer Room, a Firefox Participant's AudioTrack was
+  not audible to a Chrome or Safari Participant if the Firefox Participant was the first
+  to join the Room. (JSDK-2410)
+- Fixed a bug where Participants in a Group or Small Group Room stopped receiving
+  Dominant Speaker and Network Quality updates when the media server recovered
+  from a failover. (JSDK-2307)
+
+Developer Notes
+---------------
+
+- On October 12, 2018, the specification for the JavaScript Session Establishment
+  Protocol (JSEP) was [updated](https://github.com/rtcweb-wg/jsep/pull/850) to remove
+  MediaStreamTrack IDs from Unified Plan SDPs (Media Session Descriptions). twilio-video.js
+  depends on MediaStreamTrack IDs to map WebRTC MediaStreamTracks to the corresponding
+  RemoteAudioTracks and RemoteVideoTracks. With this release of twilio-video.js, we have
+  added support for the updated JSEP specification for Firefox and Safari (twilio-video.js
+  uses Plan B SDPs on Chrome). We highly recommend that you upgrade to this version so your
+  application continues to work on Firefox and Safari even after they support the updated
+  JSEP specification. We will provide a detailed advisory once we have more information
+  about when they are planning to support the updated JSEP specification. (JSDK-2383)
+
+
+1.18.1 (June 7, 2019)
+=====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Participants on Firefox 68 or above were unable to publish
+  LocalAudioTracks or LocalVideoTracks. (JSDK-2381)
 
 1.18.0 (April 23, 2019)
 =======================
@@ -54,7 +133,7 @@ New Features
   room.on('participantConnected', setupNetworkQualityStats);
 
   function logNetworkQualityStats(participant, networkQualityLevel, networkQualityStats) {
-    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);  
+    console.log(`Network quality level for ${participant.identity}:`, networkQualityLevel);
     if (networkQualityStats) {
       // Verbosity is in the range [2 - 3].
       console.log('Network quality statistics used to compute the level:', networkQualityStats);
@@ -91,7 +170,7 @@ New Features
   with H264. You will now be able to play back VP8 VideoTracks from Chrome and Firefox
   Participants in a Group Room. For more details, refer to these guides:
   [Developing for Safari](https://www.twilio.com/docs/video/developing-safari-11)
-  and [Working with VP8 Simulcast](https://www.twilio.com/docs/video/tutorials/working-with-vp8-simulcast). (JSDK-2314) 
+  and [Working with VP8 Simulcast](https://www.twilio.com/docs/video/tutorials/working-with-vp8-simulcast). (JSDK-2314)
 
 1.16.0 (March 18, 2019)
 =======================
@@ -423,7 +502,7 @@ New Features
   event is emitted on the RemoteParticipant (and subsequently on the Room) whenever
   a Track is published. A "trackUnpublished" event is emitted on the RemoteParticipant
   whenever a Track is unpublished. (JSDK-1438)
-  
+
   ```js
   participant.on('trackPublished', publication => {
     console.log('A new Track was published!', publication);
@@ -1105,13 +1184,13 @@ New Features
   LocalTacks should be stopped. If `stop` is not specified, then the removed
   LocalTracks will be stopped. This mirrors the behavior of the LocalParticicipant's
   `removeTrack` method.
-  
+
   ```js
   // Stops the removed LocalTracks
   localParticipant.removeTracks(tracks);
   localParticipant.removeTracks(tracks, true);
   ```
-  
+
   ```js
   // Does not stop the removed LocalTracks
   localParticipant.removeTracks(tracks, false);
@@ -1131,9 +1210,9 @@ Bug Fixes
 1.0.0 (April 25, 2017)
 ======================
 
-1.0.0-beta7 has been promoted to 1.0.0! 
+1.0.0-beta7 has been promoted to 1.0.0!
 
-This library uses [Semantic Versioning](http://semver.org/): We've removed the 
+This library uses [Semantic Versioning](http://semver.org/): We've removed the
 pre-release identifier, and we're proud to share the first generally available
 release of twilio-video.js.
 

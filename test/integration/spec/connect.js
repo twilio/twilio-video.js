@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -23,7 +24,18 @@ const {
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { capitalize, combinationContext, participantsConnected, pairs, randomName, smallVideoConstraints, tracksAdded, tracksPublished } = require('../../lib/util');
+
+const {
+  capitalize,
+  combinationContext,
+  isRTCRtpSenderParamsSupported,
+  participantsConnected,
+  pairs,
+  randomName,
+  smallVideoConstraints,
+  tracksAdded,
+  tracksPublished
+} = require('../../lib/util');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
@@ -105,6 +117,34 @@ describe('connect', function() {
         assert(/level must be one of/.test(error.message));
       }
       assert(cancelablePromise instanceof CancelablePromise);
+    });
+  });
+
+  describe('insights option', () => {
+    [true, false].forEach((insights) => {
+      it(`when set to  ${insights}`, async () => {
+        const token = getToken(randomName());
+        let cancelablePromise = null;
+        let room = null;
+        let error = null;
+        const regionOptions = {
+          insights
+        };
+
+        try {
+          const connectOptions = Object.assign({}, defaults, regionOptions, { tracks: [] });
+          cancelablePromise = connect(token, connectOptions);
+          assert(cancelablePromise instanceof CancelablePromise);
+          room = await cancelablePromise;
+        } catch (error_) {
+          error = error_;
+        } finally {
+          if (room) {
+            room.disconnect();
+          }
+        }
+        assert.equal(error, null);
+      });
     });
   });
 
@@ -377,11 +417,13 @@ describe('connect', function() {
 
       before(async () => {
         InsightsPublisher = sinon.spy(function InsightsPublisher() {
+          this.connect = sinon.spy();
           this.disconnect = sinon.spy();
           this.publish = sinon.spy();
         });
 
         NullInsightsPublisher = sinon.spy(function NullInsightsPublisher() {
+          this.connect = sinon.spy();
           this.disconnect = sinon.spy();
           this.publish = sinon.spy();
         });
@@ -405,6 +447,60 @@ describe('connect', function() {
         const TheOtherEventPublisher = insights ? NullInsightsPublisher : InsightsPublisher;
         sinon.assert.calledOnce(EventPublisher);
         sinon.assert.callCount(TheOtherEventPublisher, 0);
+      });
+    });
+  });
+
+  (isRTCRtpSenderParamsSupported ? describe : describe.skip)('dscpTagging', () => {
+    combinationContext([
+      [
+        [true, false, undefined],
+        x => `when ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
+      ],
+      [
+        [true, false],
+        x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
+      ]
+    ], ([shouldEnableDscp, shouldEnableVP8Simulcast]) => {
+      let peerConnections;
+      let thisRoom;
+      let thoseRooms;
+
+      before(async () => {
+        const dscpOptions = typeof shouldEnableDscp === 'boolean'
+          ? { dscpTagging: shouldEnableDscp }
+          : {};
+        const vp8SimulcastOptions = shouldEnableVP8Simulcast
+          ? { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }
+          : {};
+        const testOptions = Object.assign({}, dscpOptions, vp8SimulcastOptions);
+
+        [thisRoom, thoseRooms, peerConnections] = await setup(testOptions, { tracks: [] }, 0);
+        // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
+        // so wait for a little while until the changes are applied.
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      });
+
+      const expectedNetworkPriority = isChrome
+        ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
+        : undefined;
+
+      it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters of the first encoding layer`, () => {
+        flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {
+          if (typeof expectedNetworkPriority === 'string') {
+            sender.getParameters().encodings.forEach((encoding, i) => {
+              assert.equal(encoding.networkPriority, i === 0 ? expectedNetworkPriority : 'low');
+            });
+          } else {
+            sender.getParameters().encodings.forEach(encoding => {
+              assert(!('networkPriority' in encoding));
+            });
+          }
+        });
+      });
+
+      after(() => {
+        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
       });
     });
   });
@@ -444,10 +540,25 @@ describe('connect', function() {
 
       before(async () => {
         [thisRoom, thoseRooms, peerConnections] = await setup(encodingParameters, { tracks: [] }, 0);
+        // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
+        // which is an asynchronous operation, wait for a little while until the changes are applied.
+        if (isRTCRtpSenderParamsSupported) {
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
       });
 
       ['audio', 'video'].forEach(kind => {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            flatMap(peerConnections, pc => {
+              return pc.getSenders().filter(sender => sender.track);
+            }).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(peerConnections, pc => {
             assert(pc.remoteDescription.sdp);
             return getMediaSections(pc.remoteDescription.sdp, kind, '(recvonly|sendrecv)');

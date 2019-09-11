@@ -9,9 +9,9 @@ const {
   setBitrateParameters,
   setCodecPreferences,
   setSimulcast,
-  unifiedPlanFilterLocalCodecs,
-  unifiedPlanRewriteNewTrackIds,
-  unifiedPlanRewriteTrackIds
+  unifiedPlanAddOrRewriteNewTrackIds,
+  unifiedPlanAddOrRewriteTrackIds,
+  unifiedPlanFilterLocalCodecs
 } = require('../../../../../lib/util/sdp');
 
 const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../../lib/mocksdp');
@@ -488,24 +488,47 @@ a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
   });
 });
 
-describe('unifiedPlanRewriteNewTrackIds', () => {
-  it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with unassigned RTCRtpTransceivers', () => {
-    const sdp = makeSdpWithTracks('unified', {
-      audio: ['foo', 'bar'],
-      video: ['baz', 'zee']
+describe('unifiedPlanAddOrRewriteNewTrackIds', () => {
+  [true, false].forEach(withAppData => {
+    context(`when the Unified Plan SDP ${withAppData ? 'has' : 'does not have'} MediaStreamTrack IDs in a=msid: lines`, () => {
+      it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with unassigned RTCRtpTransceivers', () => {
+        const sdp = makeSdpWithTracks('unified', {
+          audio: ['foo', 'bar'],
+          video: ['baz', 'zee']
+        }, null, null, withAppData);
+        const activeMidsToTrackIds = new Map([['mid_baz', 'baz']]);
+        const newTrackIdsByKind = new Map([['audio', ['xxx', 'yyy']], ['video', ['zzz']]]);
+        const newSdp = unifiedPlanAddOrRewriteNewTrackIds(sdp, activeMidsToTrackIds, newTrackIdsByKind);
+        const msAttrsAndKinds = getMediaSections(newSdp).map(section => [
+          section.match(/^a=msid:(.+)/m)[1],
+          section.match(/^m=(audio|video)/)[1]
+        ]);
+        assert.deepEqual(msAttrsAndKinds, [
+          ['- xxx', 'audio'],
+          ['- yyy', 'audio'],
+          [withAppData ? '- baz' : '-', 'video'],
+          ['- zzz', 'video']
+        ]);
+      });
     });
-    const newTrackIdsByKind = new Map([['audio', ['yyy']], ['video', ['zzz']]]);
-    const newSdp = unifiedPlanRewriteNewTrackIds(sdp, newTrackIdsByKind);
-    const trackIdAndKinds = getMediaSections(newSdp).map(section => [
-      section.match(/^a=msid:.+ (.+)/m)[1],
-      section.match(/^m=(audio|video)/)[1]
-    ]);
-    assert.deepEqual(trackIdAndKinds, [
-      ['foo', 'audio'],
-      ['yyy', 'audio'],
-      ['baz', 'video'],
-      ['zzz', 'video']
-    ]);
+  });
+});
+
+describe('unifiedPlanAddOrRewriteTrackIds', () => {
+  [true, false].forEach(withAppData => {
+    context(`when the Unified Plan SDP ${withAppData ? 'has' : 'does not have'} MediaStreamTrack IDs in a=msid: lines`, () => {
+      it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with RTCRtpTransceivers', () => {
+        const sdp = makeSdpWithTracks('unified', { audio: ['foo'], video: ['bar'] }, null, null, withAppData);
+        const midsToTrackIds = new Map([['mid_foo', 'baz'], ['mid_bar', 'zee']]);
+        const newSdp = unifiedPlanAddOrRewriteTrackIds(sdp, midsToTrackIds);
+        const sections = getMediaSections(newSdp);
+        midsToTrackIds.forEach((trackId, mid) => {
+          const section = sections.find(section => new RegExp(`^a=mid:${mid}$`, 'm').test(section));
+          assert.equal(section.match(/^a=msid:.+ (.+)$/m)[1], trackId);
+          assert.equal(section.match(/^a=ssrc:.+ msid:.+ (.+)$/m)[1], trackId);
+        });
+      });
+    });
   });
 });
 
@@ -809,20 +832,6 @@ a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
       });
 
       assert.equal(filteredNewVideoSection, newVideoSection);
-    });
-  });
-});
-
-describe('unifiedPlanRewriteTrackIds', () => {
-  it('should rewrite Track IDs with the IDs of MediaStreamTracks associated with recycled RTCRtpTransceivers', () => {
-    const sdp = makeSdpWithTracks('unified', { audio: ['foo'], video: ['bar'] });
-    const midsToTrackIds = new Map([['mid_foo', 'baz'], ['mid_bar', 'zee']]);
-    const newSdp = unifiedPlanRewriteTrackIds(sdp, midsToTrackIds);
-    const sections = getMediaSections(newSdp);
-    midsToTrackIds.forEach((trackId, mid) => {
-      const section = sections.find(section => new RegExp(`^a=mid:${mid}$`, 'm').test(section));
-      assert.equal(section.match(/^a=msid:.+ (.+)$/m)[1], trackId);
-      assert.equal(section.match(/^a=ssrc:.+ msid:.+ (.+)$/m)[1], trackId);
     });
   });
 });
