@@ -127,7 +127,7 @@ describe('RemoteDataTrack', () => {
         const track = new RemoteDataTrack('foo', dataTrackReceiver);
         let errorThrown = false;
         try {
-          track.setPriority(priorityValue)
+          track.setPriority(priorityValue);
         } catch (error) {
           assert(error instanceof RangeError);
           errorThrown = true;
