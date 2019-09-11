@@ -85,6 +85,7 @@ before_script:
     set -e
     cd node_modules/travis-multirunner
     if [ "${TRAVIS_OS_NAME}" == 'linux' ]; then
+      sudo apt-get install -y dpkg
       BROWSER=chrome ./setup.sh
       BROWSER=firefox ./setup.sh
       export CHROME_BIN=$(pwd)/browsers/bin/chrome-$BVER
