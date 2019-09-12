@@ -26,7 +26,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { smallVideoConstraints } = require('../../lib/util');
+const { isRTCRtpSenderParamsSupported, smallVideoConstraints } = require('../../lib/util');
 
 const {
   capitalize,
@@ -1030,6 +1030,7 @@ describe('LocalParticipant', function() {
 
       let peerConnections;
       let remoteDescriptions;
+      let senders;
       let thisRoom;
       let thoseRooms;
 
@@ -1055,6 +1056,14 @@ describe('LocalParticipant', function() {
         }));
         peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
         thisRoom.localParticipant.setParameters(encodingParameters);
+
+        if (isRTCRtpSenderParamsSupported) {
+          // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
+          // which is an asynchronous operation, wait for a little while until the changes are applied.
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          senders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
+          return;
+        }
 
         function getRemoteDescription(pc) {
           return Object.keys(encodingParameters).length > 0
@@ -1083,6 +1092,16 @@ describe('LocalParticipant', function() {
           : 'existing';
 
         it(`should ${action} the ${newOrExisting} .max${capitalize(kind)}Bitrate`, () => {
+          if (isRTCRtpSenderParamsSupported) {
+            senders.filter(({ track }) => track.kind === kind).forEach(sender => {
+              const { encodings } = sender.getParameters();
+              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, action === 'preserve'
+                ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
+                : maxBitrates[sender.track.kind] || 0));
+            });
+            return;
+          }
+
           flatMap(remoteDescriptions, description => {
             return getMediaSections(description.sdp, kind, '(recvonly|sendrecv)');
           }).forEach(section => {
