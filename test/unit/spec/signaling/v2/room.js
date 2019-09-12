@@ -1278,8 +1278,10 @@ describe('RoomV2', () => {
           sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport1);
         });
 
-        it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with the TrackPrioritySignaling', () => {
-          sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling1);
+        it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with the TrackPrioritySignaling', () => {
+          [...test.room.participants.values()].forEach(participant => {
+            sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling1);
+          });
         });
 
         context('when a "message" is received un the underlying DataTrackTransport', () => {
@@ -1316,8 +1318,10 @@ describe('RoomV2', () => {
             test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
           });
 
-          it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with null', () => {
-            sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, null);
+          it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with null', () => {
+            [...test.room.participants.values()].forEach(participant => {
+              sinon.assert.calledWith(participant.setTrackPrioritySignaling, null);
+            });
           });
 
           describe('when an incoming connect/update RSP message contains the new RTCDataChannel ID of the TrackPriority MSP', () => {
@@ -1342,8 +1346,10 @@ describe('RoomV2', () => {
               sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
             });
 
-            it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with the new TrackPrioritySignaling', () => {
-              sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling2);
+            it('should call .setTrackPrioritySignaling on the underlying RemoteParticipantV2 with the new TrackPrioritySignaling', () => {
+              [...test.room.participants.values()].forEach(participant => {
+                sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling2);
+              });
             });
 
             context('when a "message" is received un the underlying DataTrackTransport', () => {
@@ -2055,7 +2061,6 @@ function makeLocalParticipant(options) {
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
   localParticipant.connect = () => {};
-  localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);
