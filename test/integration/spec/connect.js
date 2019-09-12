@@ -1162,8 +1162,10 @@ describe('connect', function() {
     describe('bandwidthProfile.video', () => {
       combinationContext([
         [
-          [1],
-          x => `.maxTracks = ${x}`
+          [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
+          ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
+            ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
+            : `.maxTracks = ${maxTracks}`
         ],
         [
           [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
@@ -1177,7 +1179,7 @@ describe('connect', function() {
           [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
           x => `and the publish priority of the Passive Speaker's LocalVideoTrack is "${x}"`
         ]
-      ], ([maxTracks, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
+      ], ([trackLimitOptions, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
         const priorityRanks = {
           [PRIORITY_HIGH]: 1,
           [PRIORITY_STANDARD]: 2,
@@ -1202,7 +1204,10 @@ describe('connect', function() {
           [, thisRoom, thoseRooms] = await setup({
             testOptions: {
               bandwidthProfile: {
-                video: { dominantSpeakerPriority, maxTracks }
+                video: {
+                  dominantSpeakerPriority,
+                  ...trackLimitOptions
+                }
               },
               dominantSpeaker: true,
               tracks: []
