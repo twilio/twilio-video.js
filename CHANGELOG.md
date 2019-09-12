@@ -6,27 +6,19 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- You can now change the priority of an already published LocalTrack using a new method
-  `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
+- In a **Group Room**, you can now update the priority of a `RemoteVideoTrack` using a new method
+  `setPriority`  (JSDK-2347)
 
   ```js
-  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
-    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
-  });
-
-  // After a while, change the priority to "low".
-  localTrackPublication.setPriority(low);
+    remoteTrack..setPriority('high');
   ```
 
-  This will update `publishPriority` on all corresponding RemoteTrackPublications and
-  emit a new event "publishPriorityChanged" to notify the user:
+  This will update `subscriberPriority` for this track to high. You can later revert to the original (publisher) priority by setting it to `null`.
 
   ```js
-  remoteTrackPublication.on('publishPriorityChanged', priority => {
-    console.log(`The publisher has changed the priority this Track to "${priority}"`);
-    assert.equal(remoteTrackPublication.publishPriority, priority);
-  });
+    remoteTrack..setPriority(null);
   ```
+
 
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling
   `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
@@ -43,7 +35,7 @@ New Features
       }
     }
   });
-  
+
   // Change "maxTracks" and "mode".
   room.localParticipant.setBandwidthProfile({
     video: {
@@ -52,7 +44,7 @@ New Features
     }
   });
   ```
-  
+
 2.0.0-beta14 (in progress)
 ==========================
 
@@ -99,7 +91,7 @@ New Features
         }
       }
     }
-  });  
+  });
   ```
 
   ### Track Priority (private beta)
@@ -121,7 +113,7 @@ New Features
   to other Tracks that may be published to the Room. The media server takes this into
   account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
   RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
-  
+
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
   RemoteTrackPublications:
