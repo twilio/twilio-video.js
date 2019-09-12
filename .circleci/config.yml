@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    branches:
+      only:
+        # disable builds unless the branch has circleci in its name.
+        - /.*circleci.*/
+    docker:
+      - image: circleci/node:lts
+    steps:
+      - run: echo building $CIRCLE_BRANCH !
