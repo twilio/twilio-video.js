@@ -7,7 +7,5 @@ jobs:
         - /.*circleci.*/
     docker:
       - image: circleci/node:lts
-    parallelism: 3
-    resource_class: large
     steps:
-      - run: echo Hello there!
+      - run: echo building $CIRCLE_BRANCH !
