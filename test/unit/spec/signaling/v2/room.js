@@ -1284,30 +1284,6 @@ describe('RoomV2', () => {
           });
         });
 
-        context('when a "message" is received un the underlying DataTrackTransport', () => {
-          it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
-            const trackSignalings = new Map(flatMap([...test.room.participants.values()],
-              participant => [...participant.tracks]));
-            const trackUpdatedPromises = [...trackSignalings.values()].map(trackSignaling =>
-              new Promise(resolve => trackSignaling.once('updated', resolve)));
-
-            [
-              ['MT3', 'low'],
-              ['MT4', 'high']
-            ].forEach(([trackSid, priority]) => {
-              dataTrackTransport1.emit('message', {
-                type: 'track_priority',
-                track: trackSid,
-                publish: priority
-              });
-            });
-
-            await Promise.all(trackUpdatedPromises);
-            assert.equal(trackSignalings.get('MT3').priority, 'low');
-            assert.equal(trackSignalings.get('MT4').priority, 'high');
-          });
-        });
-
         describe('when the underlying DataTrackReceiver is closed and a new one is available, and', () => {
           before(() => {
             dataTrackReceiver1.emit('close');
@@ -1349,30 +1325,6 @@ describe('RoomV2', () => {
             it('should call .setTrackPrioritySignaling on the underlying RemoteParticipantV2 with the new TrackPrioritySignaling', () => {
               [...test.room.participants.values()].forEach(participant => {
                 sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling2);
-              });
-            });
-
-            context('when a "message" is received un the underlying DataTrackTransport', () => {
-              it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
-                const trackSignalings = new Map(flatMap([...test.room.participants.values()],
-                  participant => [...participant.tracks]));
-                const trackUpdatedPromises = [...trackSignalings.values()].map(trackSignaling =>
-                  new Promise(resolve => trackSignaling.once('updated', resolve)));
-
-                [
-                  ['MT3', 'high'],
-                  ['MT4', 'low']
-                ].forEach(([trackSid, priority]) => {
-                  dataTrackTransport2.emit('message', {
-                    type: 'track_priority',
-                    track: trackSid,
-                    publish: priority
-                  });
-                });
-
-                await Promise.all(trackUpdatedPromises);
-                assert.equal(trackSignalings.get('MT3').priority, 'high');
-                assert.equal(trackSignalings.get('MT4').priority, 'low');
               });
             });
           });

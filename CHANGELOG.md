@@ -6,17 +6,17 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- In a **Group Room**, you can now update the priority of a `RemoteVideoTrack` using a new method
-  `setPriority`  (JSDK-2347)
+- In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
+   by using a new method `setPriority`. (JSDK-2347)
 
   ```js
-    remoteTrack..setPriority('high');
+    remoteTrack.setPriority('high');
   ```
 
-  This will update `subscriberPriority` for this track to high. You can later revert to the original (publisher) priority by setting it to `null`.
+- If you want to revert back to the priority set by the publisher, you can do so as shown below:
 
   ```js
-    remoteTrack..setPriority(null);
+    remoteTrack.setPriority(null);
   ```
 
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling

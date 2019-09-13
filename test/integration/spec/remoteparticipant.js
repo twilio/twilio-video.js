@@ -4,7 +4,7 @@
 const assert = require('assert');
 const { trackPriority } = require('../../../lib/util/constants');
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-
+const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
@@ -17,12 +17,15 @@ const {
   trackSwitchedOn
 } = require('../../lib/util');
 
+function getTracksOfKind(participant, kind) {
+  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
+}
 
-describe('bandwidth profile', function() {
+describe('RemoteParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  describe('RemoteTrack.setPriority', () => {
+  describe('.setPriority', () => {
     let thisRoom; let thoseRooms;
     let aliceLocal; let bobLocal;
     let aliceRemote; let bobRemote;
@@ -30,20 +33,21 @@ describe('bandwidth profile', function() {
     let aliceRemoteVideoTrack; let bobRemoteVideoTrack;
 
     beforeEach(async () => {
+      const dataTrack = new LocalDataTrack();
       [, thisRoom, thoseRooms] = await setup({
         testOptions: {
           bandwidthProfile: {
             video: { maxTracks: 1 }
           },
-          tracks: []
+          tracks: [dataTrack]
         },
-        otherOptions: { tracks: [] },
+        otherOptions: { tracks: [dataTrack] },
         nTracks: 0
       });
 
-      [aliceTracks, bobTracks] = await Promise.all([1, 2].map(async () => [
+      [aliceTracks, bobTracks] = await Promise.all([1, 2, 3].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-        await createLocalVideoTrack(smallVideoConstraints)
+        await createLocalVideoTrack(smallVideoConstraints),
       ]));
 
       [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
@@ -54,8 +58,8 @@ describe('bandwidth profile', function() {
       await Promise.all([
         ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
         ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
-        tracksSubscribed(aliceRemote, 2),
-        tracksSubscribed(bobRemote, 2)
+        tracksSubscribed(aliceRemote, 3),
+        tracksSubscribed(bobRemote, 3)
       ]);
 
       [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
@@ -68,6 +72,15 @@ describe('bandwidth profile', function() {
       if (thisRoom) {
         await completeRoom(thisRoom.sid);
       }
+    });
+
+    ['audio', 'video', 'data'].forEach(kind => {
+      it(`can set priority on ${kind} track`, () => {
+        const tracks = getTracksOfKind(aliceRemote, kind);
+        assert(tracks.length > 0, 'no tracks found of kind ' + kind);
+        tracks[0].setPriority('high');
+        assert.equal(tracks[0].priority, 'high');
+      });
     });
 
     [null, ...Object.values(trackPriority)].forEach(priority => {
@@ -93,7 +106,7 @@ describe('bandwidth profile', function() {
     });
 
     if (defaults.topology !== 'peer-to-peer') {
-      it('subscriber can update track\'s priority', async () => {
+      it('subscriber can update track\'s effective priority', async () => {
         // initially expect Bob's track to get switched on, and Alice's track to get switched off
         await Promise.all([
           trackSwitchedOn(bobRemoteVideoTrack),
@@ -104,23 +117,23 @@ describe('bandwidth profile', function() {
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
         // eslint-disable-next-line no-warning-comments
-        // TODO: remove this check once VMS changes go to prod
-        if (defaults.environment === 'dev') {
-          // expect Alice's track to get switched on, and Bob's track to get switched off
-          await Promise.all([
-            trackSwitchedOn(aliceRemoteVideoTrack),
-            trackSwitchedOff(bobRemoteVideoTrack)
-          ]);
+        // enable these check once VMS changes are available.
+        // if (defaults.environment === 'dev') {
+        //   // expect Alice's track to get switched on, and Bob's track to get switched off
+        //   await Promise.all([
+        //     trackSwitchedOn(aliceRemoteVideoTrack),
+        //     trackSwitchedOff(bobRemoteVideoTrack)
+        //   ]);
 
-          // reset subscriber priority of the Alice track
-          aliceRemoteVideoTrack.setPriority(null);
+        //   // reset subscriber priority of the Alice track
+        //   aliceRemoteVideoTrack.setPriority(null);
 
-          // expect Bob's track to get switched on again, and Alice's track to get switched off
-          await Promise.all([
-            trackSwitchedOn(bobRemoteVideoTrack),
-            trackSwitchedOff(aliceRemoteVideoTrack)
-          ]);
-        }
+        //   // expect Bob's track to get switched on again, and Alice's track to get switched off
+        //   await Promise.all([
+        //     trackSwitchedOn(bobRemoteVideoTrack),
+        //     trackSwitchedOff(aliceRemoteVideoTrack)
+        //   ]);
+        // }
       });
     }
   });
