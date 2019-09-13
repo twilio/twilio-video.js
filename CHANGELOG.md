@@ -102,6 +102,12 @@ New Features
   });
   ```
 
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
+
 2.0.0-beta13 (August 29, 2019)
 ==============================
 
