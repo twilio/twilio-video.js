@@ -110,6 +110,8 @@ describe('RemoteParticipant', function() {
         // change subscriber priority of the Alice track to high
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
+        // eslint-disable-next-line no-warning-comments
+        // TODO: enable this part when track_priority MSP is available in prod
         if (defaults.environment === 'dev') {
           // expect Alice's track to get switched on, and Bob's track to get switched off
           await waitFor([
@@ -120,6 +122,8 @@ describe('RemoteParticipant', function() {
           // reset subscriber priority of the Alice track
           aliceRemoteVideoTrack.setPriority(null);
 
+          // eslint-disable-next-line no-warning-comments
+          // TODO: this part fails. (VMS-2128)
           await waitFor([
             trackSwitchedOn(bobRemoteVideoTrack),
             trackSwitchedOff(aliceRemoteVideoTrack)
