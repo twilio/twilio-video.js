@@ -44,6 +44,14 @@ to ensure playback:
   video.muted = true;
   ```
 
+Chrome 76+ Participants downgrade outgoing video bitrate for high audio bitrate limits
+--------------------------------------------------------------------------------------
+
+Because of this [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1002875), if you
+try to set the maximum outgoing audio bitrate (`maxAudioBitrate`) for the OPUS codec to values
+greater than or equal 64000 bps, then the outgoing video bitrate gets stuck at a very low value
+resulting in degraded quality for Participants subscribing to your VideoTrack.
+
 Chrome 76+ DataTrack incompatibility with 2.X Mobile SDKs in Peer-to-Peer Rooms
 -------------------------------------------------------------------------------
 
