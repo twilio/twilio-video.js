@@ -14,7 +14,8 @@ const {
   smallVideoConstraints,
   tracksSubscribed,
   trackSwitchedOff,
-  trackSwitchedOn
+  trackSwitchedOn,
+  waitFor
 } = require('../../lib/util');
 
 function getTracksOfKind(participant, kind) {
@@ -75,19 +76,13 @@ describe('RemoteParticipant', function() {
     });
 
     ['audio', 'video', 'data'].forEach(kind => {
-      it(`can set priority on ${kind} track`, () => {
-        const tracks = getTracksOfKind(aliceRemote, kind);
-        assert(tracks.length > 0, 'no tracks found of kind ' + kind);
-        tracks[0].setPriority('high');
-        assert.equal(tracks[0].priority, 'high');
-      });
-    });
-
-    [null, ...Object.values(trackPriority)].forEach(priority => {
-      it('can set valid priority value: ' + priority, () => {
-        assert.equal(aliceRemoteVideoTrack.priority, null);
-        aliceRemoteVideoTrack.setPriority(priority);
-        assert.equal(aliceRemoteVideoTrack.priority, priority);
+      [null, ...Object.values(trackPriority)].forEach(priority => {
+        it(`can setpriority ${priority} on ${kind} track`, () => {
+          const tracks = getTracksOfKind(aliceRemote, kind);
+          assert(tracks.length > 0, 'no tracks found of kind ' + kind);
+          tracks[0].setPriority(priority);
+          assert.equal(tracks[0].priority, priority);
+        });
       });
     });
 
@@ -107,33 +102,29 @@ describe('RemoteParticipant', function() {
 
     if (defaults.topology !== 'peer-to-peer') {
       it('subscriber can update track\'s effective priority', async () => {
-        // initially expect Bob's track to get switched on, and Alice's track to get switched off
-        await Promise.all([
+        await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
-        ]);
+        ], 'Bobs track to get switched On, and Alice Switched Off');
 
         // change subscriber priority of the Alice track to high
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
-        // eslint-disable-next-line no-warning-comments
-        // enable these check once VMS changes are available.
-        // if (defaults.environment === 'dev') {
-        //   // expect Alice's track to get switched on, and Bob's track to get switched off
-        //   await Promise.all([
-        //     trackSwitchedOn(aliceRemoteVideoTrack),
-        //     trackSwitchedOff(bobRemoteVideoTrack)
-        //   ]);
+        if (defaults.environment === 'dev') {
+          // expect Alice's track to get switched on, and Bob's track to get switched off
+          await waitFor([
+            trackSwitchedOn(aliceRemoteVideoTrack),
+            trackSwitchedOff(bobRemoteVideoTrack)
+          ], 'Alice track to get switched On, and Bob Switched Off');
 
-        //   // reset subscriber priority of the Alice track
-        //   aliceRemoteVideoTrack.setPriority(null);
+          // reset subscriber priority of the Alice track
+          aliceRemoteVideoTrack.setPriority(null);
 
-        //   // expect Bob's track to get switched on again, and Alice's track to get switched off
-        //   await Promise.all([
-        //     trackSwitchedOn(bobRemoteVideoTrack),
-        //     trackSwitchedOff(aliceRemoteVideoTrack)
-        //   ]);
-        // }
+          await waitFor([
+            trackSwitchedOn(bobRemoteVideoTrack),
+            trackSwitchedOff(aliceRemoteVideoTrack)
+          ], 'Bobs track to get switched On, and Alice Switched Off');
+        }
       });
     }
   });
