@@ -44,6 +44,24 @@ to ensure playback:
   video.muted = true;
   ```
 
+Chrome 76+ Group Room Participants downgrade outgoing video bitrate for high `maxAudioBitrate` values
+-----------------------------------------------------------------------------------------------------
+
+Because of this [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1002875), if you
+set the maximum outgoing audio bitrate (`maxAudioBitrate`) to values greater than or equal to
+64000 bps in a Group Room, then the outgoing video bitrate gets stuck at a very low value
+resulting in degraded quality for Participants subscribing to your VideoTrack.
+
+Chrome 76+ DataTrack incompatibility with 2.X Mobile SDKs in Peer-to-Peer Rooms
+-------------------------------------------------------------------------------
+
+Chrome 76 [added support](https://groups.google.com/forum/#!msg/discuss-webrtc/Y7TIuNbgP8M/UoXP-RuxAwAJ) for a
+[new SDP format](https://bugs.chromium.org/p/webrtc/issues/detail?id=4612) for RTCDataChannel negotiation. This
+new SDP format is not compatible with 2.x Android and iOS Video SDKs when used with Peer-to-Peer Rooms. In a
+Peer-to-Peer room, Chrome 76+ Participants and affected mobile SDKs might not be able to subscribe to each other’s
+DataTracks. Please refer to the upgrade paths listed in [this issue](https://github.com/twilio/twilio-video-ios/issues/52)
+to address this.
+
 Firefox Participants cannot constrain their audio bandwidth
 -----------------------------------------------------------
 
