@@ -1,5 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.19.2 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
+
 1.19.1 (August 28, 2019)
 ========================
 
