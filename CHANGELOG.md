@@ -5,7 +5,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling
   `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
-  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta13/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
+  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
 
   ```js
   const { connect } = require('twilio-video');
@@ -27,9 +27,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
     }
   });
   ```
-  
-2.0.0-beta14 (in progress)
-==========================
+
+2.0.0-beta14 (September 17, 2019)
+=================================
 
 New Features
 ------------
@@ -129,6 +129,12 @@ New Features
     });
   });
   ```
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
 
 2.0.0-beta13 (August 29, 2019)
 ==============================
