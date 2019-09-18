@@ -603,13 +603,13 @@ describe('connect', function() {
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 20000],
-        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 20000, 0],
+        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 40000],
-        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 40000, 0],
+        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
     ], ([maxAudioBitrate, maxVideoBitrate]) => {
       const encodingParameters = [
@@ -653,10 +653,14 @@ describe('connect', function() {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           if (isRTCRtpSenderParamsSupported) {
             flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track);
+              return pc.getSenders().filter(({ track }) => track && track.kind === kind);
             }).forEach(sender => {
               const { encodings } = sender.getParameters();
-              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+              if (maxBitrates[kind]) {
+                encodings.forEach(encoding => assert.equal(encoding.maxBitrate, maxBitrates[kind]));
+              } else {
+                encodings.forEach(encoding => assert.equal('maxBitrate' in encoding, false));
+              }
             });
             return;
           }
@@ -1163,8 +1167,10 @@ describe('connect', function() {
     describe('bandwidthProfile.video', () => {
       combinationContext([
         [
-          [1],
-          x => `.maxTracks = ${x}`
+          [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
+          ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
+            ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
+            : `.maxTracks = ${maxTracks}`
         ],
         [
           [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
@@ -1178,7 +1184,7 @@ describe('connect', function() {
           [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
           x => `and the publish priority of the Passive Speaker's LocalVideoTrack is "${x}"`
         ]
-      ], ([maxTracks, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
+      ], ([trackLimitOptions, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
         const priorityRanks = {
           [PRIORITY_HIGH]: 1,
           [PRIORITY_STANDARD]: 2,
@@ -1203,7 +1209,10 @@ describe('connect', function() {
           [, thisRoom, thoseRooms] = await setup({
             testOptions: {
               bandwidthProfile: {
-                video: { dominantSpeakerPriority, maxTracks }
+                video: {
+                  dominantSpeakerPriority,
+                  ...trackLimitOptions
+                }
               },
               dominantSpeaker: true,
               tracks: []

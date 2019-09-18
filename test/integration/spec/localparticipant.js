@@ -1185,13 +1185,13 @@ describe('LocalParticipant', function() {
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 25000],
-        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 25000, 0],
+        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 45000],
-        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 45000, 0],
+        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
     ], ([maxAudioBitrate, maxVideoBitrate]) => {
       const encodingParameters = [
@@ -1278,9 +1278,13 @@ describe('LocalParticipant', function() {
           if (isRTCRtpSenderParamsSupported) {
             senders.filter(({ track }) => track.kind === kind).forEach(sender => {
               const { encodings } = sender.getParameters();
-              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, action === 'preserve'
-                ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
-                : maxBitrates[sender.track.kind] || 0));
+              if (action === 'preserve') {
+                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, initialEncodingParameters[`max${capitalize(kind)}Bitrate`]));
+              } else if (action === 'set') {
+                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[kind]));
+              } else {
+                encodings.forEach(encoding => assert.equal('maxBitrate' in encoding, false));
+              }
             });
             return;
           }
