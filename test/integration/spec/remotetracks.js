@@ -26,12 +26,17 @@ describe('RemoteParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  describe('.setPriority', () => {
-    let thisRoom; let thoseRooms;
-    let aliceLocal; let bobLocal;
-    let aliceRemote; let bobRemote;
-    let aliceTracks; let bobTracks;
-    let aliceRemoteVideoTrack; let bobRemoteVideoTrack;
+  describe('#setPriority', () => {
+    let thisRoom;
+    let thoseRooms;
+    let aliceLocal;
+    let bobLocal;
+    let aliceRemote;
+    let bobRemote;
+    let aliceTracks;
+    let bobTracks;
+    let aliceRemoteVideoTrack;
+    let bobRemoteVideoTrack;
 
     beforeEach(async () => {
       const dataTrack = new LocalDataTrack();
@@ -55,7 +60,7 @@ describe('RemoteParticipant', function() {
       [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
       // Alice publishes her tracks at low priority
-      // Bob publishes his tracks at medium priority
+      // Bob publishes his tracks at standard priority
       await Promise.all([
         ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
         ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
@@ -70,6 +75,7 @@ describe('RemoteParticipant', function() {
 
     afterEach(async () => {
       [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+      [...aliceTracks, ...bobTracks].forEach(track => track.stop && track.stop());
       if (thisRoom) {
         await completeRoom(thisRoom.sid);
       }
@@ -100,8 +106,10 @@ describe('RemoteParticipant', function() {
       });
     });
 
-    if (defaults.topology !== 'peer-to-peer') {
-      it('subscriber can update track\'s effective priority', async () => {
+    // eslint-disable-next-line no-warning-comments
+    // TODO: enable these tests when track_priority MSP is available in prod
+    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'dev') {
+      it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
@@ -111,24 +119,58 @@ describe('RemoteParticipant', function() {
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
         // eslint-disable-next-line no-warning-comments
-        // TODO: enable this part when track_priority MSP is available in prod
-        if (defaults.environment === 'dev') {
-          // expect Alice's track to get switched on, and Bob's track to get switched off
-          await waitFor([
-            trackSwitchedOn(aliceRemoteVideoTrack),
-            trackSwitchedOff(bobRemoteVideoTrack)
-          ], 'Alice track to get switched On, and Bob Switched Off');
+        // expect Alice's track to get switched on, and Bob's track to get switched off
+        await waitFor([
+          trackSwitchedOn(aliceRemoteVideoTrack),
+          trackSwitchedOff(bobRemoteVideoTrack)
+        ], 'Alice track to get switched On, and Bob Switched Off');
+      });
 
-          // reset subscriber priority of the Alice track
-          aliceRemoteVideoTrack.setPriority(null);
+      // eslint-disable-next-line no-warning-comments
+      // TODO: can subscriber downgrade tracks priority?
+      // https://twilio.slack.com/archives/C8HJ77RJM/p1568842297013800?thread_ts=1568405331.070800&cid=C8HJ77RJM
+      it.skip('subscriber can downgrade track\'s effective priority', async () => {
+        await waitFor([
+          trackSwitchedOn(bobRemoteVideoTrack),
+          trackSwitchedOff(aliceRemoteVideoTrack)
+        ], 'Bobs track to get switched On, and Alice Switched Off');
 
-          // eslint-disable-next-line no-warning-comments
-          // TODO: this part fails. (VMS-2128)
-          await waitFor([
-            trackSwitchedOn(bobRemoteVideoTrack),
-            trackSwitchedOff(aliceRemoteVideoTrack)
-          ], 'Bobs track to get switched On, and Alice Switched Off');
-        }
+        // change subscriber priority of the Alice track to high
+        bobRemoteVideoTrack.setPriority(PRIORITY_LOW);
+        aliceRemoteVideoTrack.setPriority(PRIORITY_STANDARD);
+
+        // eslint-disable-next-line no-warning-comments
+        // expect Alice's track to get switched on, and Bob's track to get switched off
+        await waitFor([
+          trackSwitchedOn(aliceRemoteVideoTrack),
+          trackSwitchedOff(bobRemoteVideoTrack)
+        ], 'Alice track to get switched On, and Bob Switched Off');
+      });
+
+      it.skip('VMS-2128: subscriber can revert to track\'s effective priority', async () => {
+        await waitFor([
+          trackSwitchedOn(bobRemoteVideoTrack),
+          trackSwitchedOff(aliceRemoteVideoTrack)
+        ], 'Bobs track to get switched On, and Alice Switched Off');
+
+        // change subscriber priority of the Alice track to high
+        aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
+
+        // eslint-disable-next-line no-warning-comments
+        // expect Alice's track to get switched on, and Bob's track to get switched off
+        await waitFor([
+          trackSwitchedOn(aliceRemoteVideoTrack),
+          trackSwitchedOff(bobRemoteVideoTrack)
+        ], 'Alice track to get switched On, and Bob Switched Off');
+
+        // reset subscriber priority of the Alice track
+        aliceRemoteVideoTrack.setPriority(null);
+
+        // eslint-disable-next-line no-warning-comments
+        await waitFor([
+          trackSwitchedOn(bobRemoteVideoTrack),
+          trackSwitchedOff(aliceRemoteVideoTrack)
+        ], 'Bobs track to get switched On, and Alice Switched Off');
       });
     }
   });
