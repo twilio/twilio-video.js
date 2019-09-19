@@ -1,7 +1,7 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.19.2 (in progress)
-====================
+1.19.2 (September 19, 2019)
+===========================
 
 Bug Fixes
 ---------
