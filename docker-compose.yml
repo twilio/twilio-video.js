@@ -31,3 +31,25 @@ services:
       - "./:/opt/app"
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/app/node_modules
+  test2:
+    environment:
+    - ACCOUNT_SID=${ACCOUNT_SID}
+    - API_KEY_SID=${API_KEY_SID}
+    - API_KEY_SECRET=${API_KEY_SECRET}
+    - TOPOLOGY=${TOPOLOGY}
+    - TRAVIS_JOB_NUMBER=42
+    user: root
+    image: twilio-video-js-circleci-stable
+    build:
+      args:
+      - USE_BROWSER=${BROWSER}
+      - USE_BVER=stable
+      - USE_NETWORK=twilio-videojs_default
+      context: .
+      dockerfile: docker/test2/Dockerfile
+    working_dir: /opt/app
+    container_name: "test2-${BROWSER}-stable"
+    volumes:
+      - "./:/opt/app"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/app/node_modules
