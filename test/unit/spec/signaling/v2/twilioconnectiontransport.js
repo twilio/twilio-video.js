@@ -16,6 +16,7 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
     [true, false], // automaticSubscription
+    [true, false], // trackPriority
     [true, false], // trackSwitchOff
     [              // bandwidthProfile
       [undefined],
@@ -68,12 +69,13 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
     describe(`constructor, called with
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
       .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
-      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'} and,
+      .trackPriority flag ${trackPriority ? 'enabled' : 'disabled'},
+      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'}, and
       .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
@@ -85,6 +87,7 @@ describe('TwilioConnectionTransport', () => {
           automaticSubscription,
           networkQuality,
           dominantSpeaker,
+          trackPriority,
           trackSwitchOff
         }));
         test.open();
@@ -94,7 +97,13 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload and ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload, the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule and ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
+      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that
+        ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
+        ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
+        the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
+        ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
+        ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
+        ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
         const message = test.twilioConnection.sendMessage.args[0][0];
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
@@ -110,6 +119,12 @@ describe('TwilioConnectionTransport', () => {
           assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
         } else {
           assert(!('active_speaker' in message.media_signaling));
+        }
+
+        if (trackPriority) {
+          assert.deepEqual(message.media_signaling.track_priority.transports, [{ type: 'data-channel' }]);
+        } else {
+          assert(!('track_priority' in message.media_signaling));
         }
 
         if (trackSwitchOff) {

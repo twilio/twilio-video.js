@@ -3,6 +3,22 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.0.0-beta15 (in progress)
 ==========================
 
+New Features
+------------
+
+- In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
+   by using a new method `setPriority`. (JSDK-2347)
+
+  ```js
+    remoteTrack.setPriority('high');
+  ```
+
+- If you want to revert back to the priority set by the publisher, you can do so as shown below:
+
+  ```js
+    remoteTrack.setPriority(null);
+  ```
+
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling
   `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
   LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
@@ -18,7 +34,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
       }
     }
   });
-  
+
   // Change "maxTracks" and "mode".
   room.localParticipant.setBandwidthProfile({
     video: {
@@ -74,7 +90,7 @@ New Features
         }
       }
     }
-  });  
+  });
   ```
 
   ### Track Priority (private beta)
@@ -96,7 +112,7 @@ New Features
   to other Tracks that may be published to the Room. The media server takes this into
   account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
   RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
-  
+
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
   RemoteTrackPublications:
