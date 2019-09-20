@@ -1,0 +1,34 @@
+version: '3'
+# to run test in docker execute:
+# docker-compose run test npm run test:docker
+
+# Travis has Docker Engine Version: 17.09.0-ce
+# which does not support naming default networks.
+# https://docs.docker.com/compose/compose-file/compose-versioning/#version-35
+# networks:
+#   default:
+#    name: twilio-videojs_default
+
+services:
+  test2:
+    environment:
+    - ACCOUNT_SID=${ACCOUNT_SID}
+    - API_KEY_SID=${API_KEY_SID}
+    - API_KEY_SECRET=${API_KEY_SECRET}
+    - TOPOLOGY=${TOPOLOGY}
+    - TRAVIS_JOB_NUMBER=42
+    user: root
+    image: twilio-video-js-circleci-stable
+    build:
+      args:
+      - USE_BROWSER=${BROWSER}
+      - USE_BVER=stable
+      - USE_NETWORK=twilio-videojs_default
+      context: .
+      dockerfile: ./Dockerfile
+    working_dir: /opt/app
+    container_name: "test2-${BROWSER}-stable"
+    volumes:
+      - "./:/opt/app"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/app/node_modules
