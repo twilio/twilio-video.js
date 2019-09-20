@@ -1,14 +1,14 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta15 (In Progress)
+2.0.0-beta15 (In progress)
 ==========================
 
 Bug Fixes
 ---------
 
-- Worked around an [issue](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
-  in Chrome and Safari where browser continued to play WebRTC-based MediaStreamTrack even
-  after corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
+- Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
+  and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
+  corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
   now disables any RemoteMediaTrack when it's not attached to any media elements. (JSDK-2490)
 
 2.0.0-beta14 (September 17, 2019)
