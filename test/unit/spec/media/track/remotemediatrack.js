@@ -298,6 +298,5 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 function makeTrack(id, sid, kind, isEnabled, options, RemoteTrack) {
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  let track = new RemoteTrack(sid, mediaTrackReceiver, isEnabled, options);
-  return track;
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, options);
 }
