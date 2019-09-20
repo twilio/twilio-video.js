@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta14 (in progress)
-==========================
+2.0.0-beta14 (September 17, 2019)
+=================================
 
 New Features
 ------------
