@@ -1,5 +1,16 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta15 (In progress)
+==========================
+
+Bug Fixes
+---------
+
+- Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
+  and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
+  corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
+  now disables any RemoteMediaTrack when it's not attached to any media elements. (JSDK-2490)
+
 2.0.0-beta14 (September 17, 2019)
 =================================
 
@@ -46,7 +57,7 @@ New Features
         }
       }
     }
-  });  
+  });
   ```
 
   ### Track Priority (private beta)
@@ -68,7 +79,7 @@ New Features
   to other Tracks that may be published to the Room. The media server takes this into
   account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
   RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
-  
+
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
   RemoteTrackPublications:
