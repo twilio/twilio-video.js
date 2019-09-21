@@ -6,8 +6,8 @@ FROM circleci/node:lts-browsers
 # ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 /usr/local/bin/dumb-init
 # RUN chmod +x /usr/local/bin/dumb-init
 
-ADD ./ /opt/app
-WORKDIR /opt/app
+# ADD ./ /opt/app
+# WORKDIR /opt/app
 # RUN npm install
 
 # Build Args

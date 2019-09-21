@@ -1,6 +1,8 @@
 version: '3'
-# to run test in docker execute:
-# docker-compose run test npm run test:docker
+# to build image
+# BROWSER=chrome BVER=stable docker-compose build circleci
+# to run image
+# BROWSER=chrome BVER=stable docker-compose run circleci
 
 # Travis has Docker Engine Version: 17.09.0-ce
 # which does not support naming default networks.
@@ -10,25 +12,30 @@ version: '3'
 #    name: twilio-videojs_default
 
 services:
-  test2:
+  circleci:
     environment:
+    - ENVIRONMENT=${ENVIRONMENT}
     - ACCOUNT_SID=${ACCOUNT_SID}
     - API_KEY_SID=${API_KEY_SID}
     - API_KEY_SECRET=${API_KEY_SECRET}
     - TOPOLOGY=${TOPOLOGY}
+    # TODO fix this travis job number thing.
     - TRAVIS_JOB_NUMBER=42
+    - BVER=stable
     user: root
-    image: twilio-video-js-circleci-stable
+    image: makarandp/twilio-video:${BROWSER}-${BVER}
     build:
       args:
       - USE_BROWSER=${BROWSER}
-      - USE_BVER=stable
+      - USE_BVER=${BVER}
       - USE_NETWORK=twilio-videojs_default
       context: .
       dockerfile: ./Dockerfile
     working_dir: /opt/app
-    container_name: "test2-${BROWSER}-stable"
+    container_name: "twilio-video-${BROWSER}-${BVER}"
     volumes:
-      - "./:/opt/app"
+      # enable following for quick tests.
+      # - "./:/opt/app"
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/app/node_modules
+      # enable following for quick tests
+      # - /opt/app/node_modules

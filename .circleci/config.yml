@@ -1,39 +1,66 @@
+# to test any changes to job
+# you can use
+# circleci config process .circleci/config.yml > config_processed.yml
+# followed by
+# circleci local execute -c config_processed.yml --job Build-in-CircleImage
 version: 2.1
 jobs:
-  build:
-    machine: true
-    environment:
-      BROWSER: chrome
-      TOPOLOGY: group
-      ENVIRONMENT: prod
-      BVER: stable
+  Build-in-CircleImage:
+    docker:
+      - image: circleci/node:lts-browsers
     steps:
       - run: echo building $CIRCLE_BRANCH !
-      - checkout
-      - run: scripts/circleci-run-tests.sh
-      # Save artifacts
-      - store_test_results:
-          path: ./logs
-          destination: build
-  Hello-World:
-    docker:
-      - image: alpine:3.7
-    steps:
-      - run:
-          name: Hello World
-          command: |
-            echo 'Hello World!'
-            echo 'This is the delivery pipeline'
-  I-Have-Code:
-    docker:
-      - image: alpine:3.7
-    steps:
       - checkout
       - run:
           name: Code Has Arrived
           command: |
             ls -al
-            echo '^^^That should look familiar^^^'
+            echo '^^^After Checkout^^^'
+      - run: scripts/circleci-run-tests.sh
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^After circleci-build^^^'
+      - store_test_results:
+          path: ./logs
+  Build-in-customImage:
+    docker:
+      - image: makarandp/twilio-video:chrome-stable
+    steps:
+      - run: echo building $CIRCLE_BRANCH !
+      - checkout
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^After Checkout^^^'
+      - run: scripts/circleci-run-tests.sh
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^After circleci-build^^^'
+      - store_test_results:
+          path: ./logs
+  Build-on-machine:
+    machine: true
+    steps:
+      - run: echo building $CIRCLE_BRANCH !
+      - checkout
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^After Checkout^^^'
+      - run: scripts/circleci-run-tests.sh
+      - run:
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^After circleci-build^^^'
+      - store_test_results:
+          path: ./logs
   Run-With-Node:
     docker:
       - image: circleci/node:10-browsers
@@ -53,20 +80,17 @@ jobs:
 
 workflows:
  version: 2
- Example_Workflow:
+ Pull_Request_Workflow:
    jobs:
-     - Hello-World
-     - I-Have-Code:
-         requires:
-           - Hello-World
-     - Run-With-Node:
-         requires:
-           - Hello-World
+     - Build-in-CircleImage
+     - Build-in-customImage
+     - Build-on-machine:
+        requires:
+          - Build-in-CircleImage
      - Hold-For-Approval:
-         type: approval
-         requires:
-           - Run-With-Node
-           - I-Have-Code
+        type: approval
+        requires:
+           - Build-on-machine
      - Now-Complete:
-         requires:
-           - Hold-For-Approval
+        requires:
+          - Hold-For-Approval
