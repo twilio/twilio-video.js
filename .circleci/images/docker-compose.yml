@@ -34,8 +34,6 @@ services:
     working_dir: /opt/app
     container_name: "twilio-video-${BROWSER}-${BVER}"
     volumes:
-      # enable following for quick tests.
-      # - "./:/opt/app"
+      - "../../:/opt/app"
       - /var/run/docker.sock:/var/run/docker.sock
-      # enable following for quick tests
-      # - /opt/app/node_modules
+      - /opt/app/node_modules

@@ -2,95 +2,91 @@
 # you can use
 # circleci config process .circleci/config.yml > config_processed.yml
 # followed by
-# circleci local execute -c config_processed.yml --job Build-in-CircleImage
+# circleci local execute -c config_processed.yml --job chrome-stable-tests
 version: 2.1
-jobs:
-  Build-in-CircleImage:
-    docker:
-      - image: circleci/node:lts-browsers
-    steps:
-      - run: echo building $CIRCLE_BRANCH !
-      - checkout
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After Checkout^^^'
-      - run: scripts/circleci-run-tests.sh
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After circleci-build^^^'
-      - store_test_results:
-          path: ./logs
-  Build-in-customImage:
+executors:
+  docker-chrome-stable:
     docker:
       - image: makarandp/twilio-video:chrome-stable
-    steps:
-      - run: echo building $CIRCLE_BRANCH !
-      - checkout
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After Checkout^^^'
-      - run: scripts/circleci-run-tests.sh
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After circleci-build^^^'
-      - store_test_results:
-          path: ./logs
-  Build-on-machine:
+    environment:
+      BROWSER: "chrome"
+      BVER: "stable"
+      ENVIRONMENT: "prod"
+      TOPOLOGY: "group"
+  docker-ff-stable:
+    docker:
+      - image: makarandp/twilio-video:chrome-stable
+    environment:
+      BROWSER: "firefox"
+      BVER: "stable"
+      ENVIRONMENT: "prod"
+      TOPOLOGY: "group"
+  machine-executor:
     machine: true
+    environment:
+      BROWSER: "chrome"
+      BVER: "stable"
+      ENVIRONMENT: "prod"
+      TOPOLOGY: "group"
+      # indicate that we want to run docker networking tests.
+      DOCKER: "true"
+
+commands: # a reusable command with parameters
+  runtests:
     steps:
-      - run: echo building $CIRCLE_BRANCH !
+      - run: echo checking out $CIRCLE_BRANCH !
       - checkout
       - run:
           name: Code Has Arrived
           command: |
             ls -al
             echo '^^^After Checkout^^^'
-      - run: scripts/circleci-run-tests.sh
+      - restore_cache: # special step to restore the dependency cache
+          # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
+          key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After circleci-build^^^'
+          name: install-npm-wee
+          command: npm install
+      - save_cache: # special step to save the dependency cache
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: quick build
+          command: npm run build:quick
+      - run:
+          name: run unit tests
+          command: npm run cover
+      - store_artifacts:
+          path: ./coverage
+          prefix: coverage
+      - run: scripts/circleci-run-tests.sh
       - store_test_results:
           path: ./logs
-  Run-With-Node:
-    docker:
-      - image: circleci/node:10-browsers
-    steps:
-      - run:
-          name: Running In A Container With Node
-          command: |
-            node -v
-  Now-Complete:
-    docker:
-      - image: alpine:3.7
-    steps:
-      - run:
-          name: Approval Complete
-          command: |
-            echo 'Do work once the approval has completed'
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
 
+jobs:
+  chrome-stable-tests:
+    executor: docker-chrome-stable
+    steps:
+      - runtests
+  ff-stable-tests:
+    executor: docker-ff-stable
+    steps:
+      - runtests
+  Build-on-machine:
+    executor: machine-executor
+    steps:
+      - runtests
 workflows:
  version: 2
  Pull_Request_Workflow:
    jobs:
-     - Build-in-CircleImage
-     - Build-in-customImage
+     - chrome-stable-tests
+     - ff-stable-tests
      - Build-on-machine:
         requires:
-          - Build-in-CircleImage
-     - Hold-For-Approval:
-        type: approval
-        requires:
-           - Build-on-machine
-     - Now-Complete:
-        requires:
-          - Hold-For-Approval
+          - chrome-stable-tests
+          - ff-stable-tests

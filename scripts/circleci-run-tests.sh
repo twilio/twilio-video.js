@@ -11,9 +11,16 @@ uname -a
 echo "directory:"
 ls -alt
 echo "printenv"
-printenv
-# docker-compose build test
-# docker-compose run test npm run test:integration
+printenv | grep -v SID | grep -v KEY
+echo "running tests"
+
+if [ "${DOCKER}" = "true" ];
+then
+    docker-compose --file=.circleci/images/docker-compose.yml build circleci
+    docker-compose --file=.circleci/images/docker-compose.yml run circleci npm run build:installandTest
+else
+    npm run test:integration
+fi
 
 mkdir logs
 echo 'test results go here!' >> logs/results.txt

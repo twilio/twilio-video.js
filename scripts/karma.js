@@ -28,19 +28,24 @@ function getTestPaths(path) {
   return [path];
 }
 
-const files = getTestPaths(isDocker ? dockerIntegrationTests : integrationTests);
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.
-async function main(files) {
+async function main() {
   let dockerProxy = null;
   if (isDocker) {
-    console.log('running tests inside docker!');
-    dockerProxy = new DockerProxyServer();
-    dockerProxy.startServer();
+    try {
+      console.log('running tests inside docker!');
+      dockerProxy = new DockerProxyServer();
+      dockerProxy.startServer();
+    } catch (err) {
+      console.log('Error excuting dockerProxy:', err);
+    }
   }
+
+  const files = getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests);
 
   let processExitCode = 0;
   for (const file of files) {
@@ -69,4 +74,4 @@ async function main(files) {
   process.exit(processExitCode);
 }
 
-main(files);
+main();
