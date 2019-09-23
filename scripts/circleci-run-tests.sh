@@ -22,7 +22,7 @@ else
     npm run test:integration
 fi
 
-mkdir logs
+mkdir -p logs
 echo 'test results go here!' >> logs/results.txt
 
 

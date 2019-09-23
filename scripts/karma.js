@@ -39,9 +39,10 @@ async function main() {
     try {
       console.log('running tests inside docker!');
       dockerProxy = new DockerProxyServer();
-      dockerProxy.startServer();
+      await dockerProxy.startServer();
     } catch (err) {
       console.log('Error excuting dockerProxy:', err);
+      dockerProxy = null;
     }
   }
 

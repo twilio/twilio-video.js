@@ -32,61 +32,88 @@ executors:
       DOCKER: "true"
 
 commands: # a reusable command with parameters
-  runtests:
+  get-code-and-dependancies:
     steps:
-      - run: echo checking out $CIRCLE_BRANCH !
       - checkout
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^After Checkout^^^'
       - restore_cache: # special step to restore the dependency cache
           # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: install-npm-wee
+          name: install dependancies
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+  build:
+    steps:
+      - get-code-and-dependancies
       - run:
           name: quick build
           command: npm run build:quick
+  unit-tests:
+    steps:
+      - get-code-and-dependancies
       - run:
           name: run unit tests
           command: npm run cover
       - store_artifacts:
           path: ./coverage
           prefix: coverage
+  integration-tests:
+    steps:
+      - get-code-and-dependancies
       - run: scripts/circleci-run-tests.sh
       - store_test_results:
           path: ./logs
       - store_artifacts:
           path: ./logs
           prefix: tests
-
+  network-tests:
+    steps:
+      - checkout
+      - run: scripts/circleci-run-tests.sh
+      - store_test_results:
+          path: ./logs
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
 jobs:
-  chrome-stable-tests:
+  Build:
     executor: docker-chrome-stable
     steps:
-      - runtests
-  ff-stable-tests:
+      - build
+  Unittest:
+    executor: docker-chrome-stable
+    steps:
+      - unit-tests
+  Integration-tests-chrome-stable:
+    executor: docker-chrome-stable
+    steps:
+      - integration-tests
+  Integration-tests-ff-stable:
     executor: docker-ff-stable
     steps:
-      - runtests
-  Build-on-machine:
+      - integration-tests
+  Network-tests:
     executor: machine-executor
     steps:
-      - runtests
+      - network-tests
 workflows:
  version: 2
  Pull_Request_Workflow:
    jobs:
-     - chrome-stable-tests
-     - ff-stable-tests
-     - Build-on-machine:
+     - Build
+     - Unittest
+     - Integration-tests-chrome-stable:
         requires:
-          - chrome-stable-tests
-          - ff-stable-tests
+          - Build
+          - Unittest
+     - Integration-tests-ff-stable:
+        requires:
+          - Build
+          - Unittest
+     - Network-tests:
+        requires:
+          - Integration-tests-chrome-stable
+          - Integration-tests-ff-stable
