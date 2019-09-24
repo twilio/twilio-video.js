@@ -22,7 +22,6 @@ executors:
   machine-executor:
     machine: true
     environment:
-      BROWSER: "chrome"
       BVER: "stable"
       ENVIRONMENT: "prod"
       # indicate that we want to run networking tests.
@@ -108,14 +107,30 @@ jobs:
     executor: docker-ff-stable
     steps:
       - integration-tests
-  Network-tests-group:
+  Chrome-network-group:
     environment:
+      BROWSER: "chrome"
       TOPOLOGY: "group"
     executor: machine-executor
     steps:
       - network-tests
-  Network-tests-p2p:
+  Chrome-network-p2p:
     environment:
+      BROWSER: "chrome"
+      TOPOLOGY: "peer-to-peer"
+    executor: machine-executor
+    steps:
+      - network-tests
+  FF-network-group:
+    environment:
+      BROWSER: "firefox"
+      TOPOLOGY: "group"
+    executor: machine-executor
+    steps:
+      - network-tests
+  FF-network-p2p:
+    environment:
+      BROWSER: "firefox"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps:
@@ -142,11 +157,19 @@ workflows:
         requires:
           - Build
           - Unittest
-     - Network-tests-group:
+     - Chrome-network-group:
         requires:
           - Build
           - Unittest
-     - Network-tests-p2p:
+     - Chrome-network-p2p:
+        requires:
+          - Build
+          - Unittest
+     - FF-network-group:
+        requires:
+          - Build
+          - Unittest
+     - FF-network-p2p:
         requires:
           - Build
           - Unittest
