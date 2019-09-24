@@ -35,7 +35,7 @@ commands: # a reusable command with parameters
           # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: install dependancies
+          name: Installing dependancies
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
@@ -45,13 +45,13 @@ commands: # a reusable command with parameters
     steps:
       - get-code-and-dependancies
       - run:
-          name: quick build
+          name: Building Quick
           command: npm run build:quick
   unit-tests:
     steps:
       - get-code-and-dependancies
       - run:
-          name: run unit tests
+          name: Running Unit Tests
           command: npm run cover
       - store_artifacts:
           path: ./coverage
@@ -59,7 +59,9 @@ commands: # a reusable command with parameters
   integration-tests:
     steps:
       - get-code-and-dependancies
-      - run: scripts/circleci-run-tests.sh
+      - run:
+          name: Running Integration Tests
+          command: scripts/circleci-run-tests.sh
       - store_test_results:
           path: ./logs
       - store_artifacts:
@@ -68,7 +70,9 @@ commands: # a reusable command with parameters
   network-tests:
     steps:
       - checkout
-      - run: scripts/circleci-run-tests.sh
+      - run:
+          name: Running Network Tests
+          command: scripts/circleci-run-tests.sh
       - store_test_results:
           path: ./logs
       - store_artifacts:
