@@ -1,7 +1,27 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta14 (in progress)
+2.0.0-beta15 (in progress)
 ==========================
+
+New Features
+------------
+
+- twilio-video.js will now support the Unified Plan SDP format for Google Chrome. Google Chrome
+  enabled Unified Plan as the default SDP format starting from version 72. In December 2018, we
+  published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
+  recommending customers to upgrade to the latest versions of twilio-video.js in order to not be
+  affected by Google Chrome switching to Unified Plan starting from version 72. The way we ensured
+  support of newer versions of Google Chrome in the versions of twilio-video.js released between
+  December 2018 and now was by overriding the default SDP format to Plan B. Starting with this version,
+  twilio-video.js will use Unified Plan where available, while also maintaining support for earlier
+  browser versions with Plan B as the default SDP format. (JSDK-2312)
+- Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
+  and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
+  corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
+  now disables any RemoteMediaTrack when it's not attached to any media elements. (JSDK-2490)
+
+2.0.0-beta14 (September 17, 2019)
+=================================
 
 New Features
 ------------
@@ -46,7 +66,7 @@ New Features
         }
       }
     }
-  });  
+  });
   ```
 
   ### Track Priority (private beta)
@@ -68,7 +88,7 @@ New Features
   to other Tracks that may be published to the Room. The media server takes this into
   account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
   RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
-  
+
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
   RemoteTrackPublications:
@@ -101,6 +121,12 @@ New Features
     });
   });
   ```
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
 
 2.0.0-beta13 (August 29, 2019)
 ==============================
