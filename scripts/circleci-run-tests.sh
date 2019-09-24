@@ -14,7 +14,7 @@ echo "printenv"
 printenv | grep -v SID | grep -v KEY
 echo "running tests"
 
-if [ "${DOCKER}" = "true" ];
+if [ "${NETWORK_TESTS}" = "true" ];
 then
     docker-compose --file=.circleci/images/docker-compose.yml build circleci
     docker-compose --file=.circleci/images/docker-compose.yml run circleci npm run build:installandTest
@@ -22,7 +22,6 @@ else
     npm run test:integration
 fi
 
-mkdir -p logs
-echo 'test results go here!' >> logs/results.txt
+echo "Done with Tests!"
 
 

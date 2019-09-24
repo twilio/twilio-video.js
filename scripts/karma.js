@@ -28,6 +28,27 @@ function getTestPaths(path) {
   return [path];
 }
 
+// function filterTests(path) {
+//   // NOTE: to make build faster and enable more parrallal tests
+//   //  you can split test files into groups by setting
+//   //  TEST_RUN=a/b, where
+//   //    b  = number of groups to split test files into
+//   //    a  = current group to run.
+//   let currentRun = 1;
+//   let totalRuns = 1;
+//   if (process.env.TEST_RUN) {
+//     const [a, b] = process.env.TEST_RUN.split('/');
+//     currentRun = parseInt(a);
+//     totalRuns = parseInt(b);
+//     if (isNaN(currentRun) || isNaN(totalRuns) || currentRun < 1 || totalRuns < currentRun) {
+//       console.log(`Ignoring invalid TEST_RUN: ${currentRun}/${totalRuns}`);
+//       currentRun = 1;
+//       totalRuns = 1;
+//     }
+//   }
+//   return path.filter((_, index) => index / totalRuns === currentRun - 1);
+// }
+
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
@@ -37,11 +58,10 @@ async function main() {
   let dockerProxy = null;
   if (isDocker) {
     try {
-      console.log('running tests inside docker!');
       dockerProxy = new DockerProxyServer();
       await dockerProxy.startServer();
+      console.log('running tests inside docker!');
     } catch (err) {
-      console.log('Error excuting dockerProxy:', err);
       dockerProxy = null;
     }
   }

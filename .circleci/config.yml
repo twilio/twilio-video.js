@@ -12,7 +12,6 @@ executors:
       BROWSER: "chrome"
       BVER: "stable"
       ENVIRONMENT: "prod"
-      TOPOLOGY: "group"
   docker-ff-stable:
     docker:
       - image: makarandp/twilio-video:chrome-stable
@@ -20,16 +19,14 @@ executors:
       BROWSER: "firefox"
       BVER: "stable"
       ENVIRONMENT: "prod"
-      TOPOLOGY: "group"
   machine-executor:
     machine: true
     environment:
       BROWSER: "chrome"
       BVER: "stable"
       ENVIRONMENT: "prod"
-      TOPOLOGY: "group"
-      # indicate that we want to run docker networking tests.
-      DOCKER: "true"
+      # indicate that we want to run networking tests.
+      NETWORK_TESTS: "true"
 
 commands: # a reusable command with parameters
   get-code-and-dependancies:
@@ -87,15 +84,39 @@ jobs:
     executor: docker-chrome-stable
     steps:
       - unit-tests
-  Integration-tests-chrome-stable:
+  Chrome-stable-group:
+    environment:
+      TOPOLOGY: "group"
     executor: docker-chrome-stable
     steps:
       - integration-tests
-  Integration-tests-ff-stable:
+  Chrome-stable-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-chrome-stable
+    steps:
+      - integration-tests
+  FF-stable-group:
+    environment:
+      TOPOLOGY: "group"
     executor: docker-ff-stable
     steps:
       - integration-tests
-  Network-tests:
+  FF-stable-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-ff-stable
+    steps:
+      - integration-tests
+  Network-tests-group:
+    environment:
+      TOPOLOGY: "group"
+    executor: machine-executor
+    steps:
+      - network-tests
+  Network-tests-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps:
       - network-tests
@@ -105,15 +126,27 @@ workflows:
    jobs:
      - Build
      - Unittest
-     - Integration-tests-chrome-stable:
+     - Chrome-stable-group:
         requires:
           - Build
           - Unittest
-     - Integration-tests-ff-stable:
+     - Chrome-stable-p2p:
         requires:
           - Build
           - Unittest
-     - Network-tests:
+     - FF-stable-group:
         requires:
-          - Integration-tests-chrome-stable
-          - Integration-tests-ff-stable
+          - Build
+          - Unittest
+     - FF-stable-p2p:
+        requires:
+          - Build
+          - Unittest
+     - Network-tests-group:
+        requires:
+          - Build
+          - Unittest
+     - Network-tests-p2p:
+        requires:
+          - Build
+          - Unittest
