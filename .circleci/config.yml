@@ -12,7 +12,7 @@ executors:
       BROWSER: "chrome"
       BVER: "stable"
       ENVIRONMENT: "prod"
-  docker-ff-stable:
+  docker-firefox-stable:
     docker:
       - image: makarandp/twilio-video:chrome-stable
     environment:
@@ -24,10 +24,9 @@ executors:
     environment:
       BVER: "stable"
       ENVIRONMENT: "prod"
-      # indicate that we want to run networking tests.
-      NETWORK_TESTS: "true"
 
-commands: # a reusable command with parameters
+# command are meant to be reused.
+commands:
   get-code-and-dependancies:
     steps:
       - checkout
@@ -78,6 +77,20 @@ commands: # a reusable command with parameters
       - store_artifacts:
           path: ./logs
           prefix: tests
+  framework-tests:
+    steps:
+      - build
+      - run:
+          name: Running UMD Tests
+          command: npm run test:umd
+      - run:
+          name: Running Framework Tests
+          command: npm run test:framework
+      - store_test_results:
+          path: ./logs
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
 jobs:
   Build:
     executor: docker-chrome-stable
@@ -99,20 +112,21 @@ jobs:
     executor: docker-chrome-stable
     steps:
       - integration-tests
-  FF-stable-group:
+  Firefox-stable-group:
     environment:
       TOPOLOGY: "group"
-    executor: docker-ff-stable
+    executor: docker-firefox-stable
     steps:
       - integration-tests
-  FF-stable-p2p:
+  Firefox-stable-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
-    executor: docker-ff-stable
+    executor: docker-firefox-stable
     steps:
       - integration-tests
   Chrome-network-group:
     environment:
+      NETWORK_TESTS: "true"
       BROWSER: "chrome"
       TOPOLOGY: "group"
     executor: machine-executor
@@ -120,6 +134,7 @@ jobs:
       - network-tests
   Chrome-network-p2p:
     environment:
+      NETWORK_TESTS: "true"
       BROWSER: "chrome"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
@@ -127,6 +142,7 @@ jobs:
       - network-tests
   FF-network-group:
     environment:
+      NETWORK_TESTS: "true"
       BROWSER: "firefox"
       TOPOLOGY: "group"
     executor: machine-executor
@@ -134,11 +150,24 @@ jobs:
       - network-tests
   FF-network-p2p:
     environment:
+      NETWORK_TESTS: "true"
       BROWSER: "firefox"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps:
       - network-tests
+  Framework-tests-docker:
+    environment:
+      BROWSER: "chrome"
+    executor: docker-chrome-stable
+    steps:
+      - framework-tests
+  Framework-tests-machine:
+    environment:
+      BROWSER: "chrome"
+    executor: machine-executor
+    steps:
+      - framework-tests
 workflows:
  version: 2
  Pull_Request_Workflow:
@@ -153,11 +182,11 @@ workflows:
         requires:
           - Build
           - Unittest
-     - FF-stable-group:
+     - Firefox-stable-group:
         requires:
           - Build
           - Unittest
-     - FF-stable-p2p:
+     - Firefox-stable-p2p:
         requires:
           - Build
           - Unittest
@@ -174,6 +203,14 @@ workflows:
           - Build
           - Unittest
      - FF-network-p2p:
+        requires:
+          - Build
+          - Unittest
+     - Framework-tests-docker:
+        requires:
+          - Build
+          - Unittest
+     - Framework-tests-machine:
         requires:
           - Build
           - Unittest

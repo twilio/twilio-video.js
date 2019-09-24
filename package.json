@@ -123,7 +123,6 @@
     "build": "npm-run-all clean lint docs cover test:integration build:es5 build:js build:min.js test:umd",
     "build:travis": "npm-run-all clean lint docs cover test:integration:travis build:es5 build:js build:min.js test:umd test:framework",
     "build:docker": "npm-run-all clean lint docs cover test:integration:travis build:es5 build:js build:min.js",
-    "build:installandTest": "npm install && npm run test:integration",
     "build:quick": "npm-run-all clean lint docs build:es5 build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "clean": "rimraf ./coverage ./es5 ./dist",
