@@ -1,59 +1,54 @@
 'use strict';
 
 const assert = require('assert');
-// const { EventEmitter } = require('events');
-// const sinon = require('sinon');
-
 const isSupported = require('../../../../lib/util/support');
 
 describe.only('isSupported', () => {
 
   let oldAgent;
   before(() => {
-    // save useragent.
     oldAgent = navigator.userAgent;
   });
 
   after(() => {
-    // restore useragent.
     navigator.userAgent = oldAgent;
   });
 
   [
     [
-      'chrome on windows',
+      'Chrome on Windows',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
     ],
     [
-      'chrome on mac',
+      'Chrome on Mac',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
     ],
     [
-      'safari on mac',
+      'Safari on Mac',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Safari/605.1.15'
     ],
     [
-      'safari on ipad',
+      'Safari on iPad',
       'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Mobile/15E148 Safari/604.1'
     ],
     [
-      'safari on iphone touch',
+      'Safari on iPhone',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Mobile/15E148 Safari/604.1'
     ],
     [
-      'firefox on windows',
+      'Firefox on Windows',
       'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/69.0'
     ],
     [
-      'firefox on mac',
+      'Firefox on Mac',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:61.0) Gecko/20100101 Firefox/69.0'
     ],
     [
-      'firefox on linux',
+      'Firefox on Linux',
       'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/69.0'
     ],
   ].forEach(([browser, useragent]) => {
-    it('returns true for: ' + browser, () => {
+    it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
       assert.equal(isSupported(), true);
     });
@@ -77,7 +72,7 @@ describe.only('isSupported', () => {
       'Foo Edge Bar'
     ],
   ].forEach(([browser, useragent]) => {
-    it('returns false for unsupported browser : ' + browser, () => {
+    it('returns false for explicitely unsupported browser: ' + browser, () => {
       navigator.userAgent = useragent;
       assert.equal(isSupported(), false);
     });
