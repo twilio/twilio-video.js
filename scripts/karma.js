@@ -28,12 +28,15 @@ function getTestPaths(path) {
   return [path];
 }
 
-function filterTests(path) {
-  // NOTE: to make build faster and enable more parrallal tests
+function filterTests(paths) {
+  // NOTE: to enable running tests in parallel (in CI)
   //  you can split test files into groups by setting
   //  TEST_RUN=a/b, where
   //    b  = number of groups to split test files into
   //    a  = current group to run.
+  //  For example: by specifying TEST_RUN=1/5 will
+  //  cause the test files to be split in 5 groups,
+  //  with 1st group running in this instance.
   let currentRun = 1;
   let totalRuns = 1;
   if (process.env.TEST_RUN) {
@@ -45,11 +48,14 @@ function filterTests(path) {
       currentRun = 1;
       totalRuns = 1;
     }
+
+    if (paths.length < totalRuns) {
+      console.warn(`You are splitting ${paths.length} files into ${totalRuns} groups!`);
+    }
   }
 
-  return path.filter((_, index) => index % totalRuns === currentRun - 1);
+  return paths.filter((_, index) => index % totalRuns === currentRun - 1);
 }
-
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
@@ -58,11 +64,15 @@ function filterTests(path) {
 async function main() {
   let dockerProxy = null;
   if (isDocker) {
+    console.log('running tests inside docker!');
     try {
       dockerProxy = new DockerProxyServer();
       await dockerProxy.startServer();
-      console.log('running tests inside docker!');
+      console.log('DockerProxyServer started successfully. Network tests may run as part of this run!');
     } catch (err) {
+      // NOTE: This can happen in CI environment, when we run integration tests inside docker
+      // container without mapping docker socket inside the container.
+      console.log('DockerProxyServer failed to start.  Network tests will not run as part of this run!');
       dockerProxy = null;
     }
   }

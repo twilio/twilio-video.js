@@ -141,8 +141,7 @@ jobs:
     environment:
       TOPOLOGY: "group"
     executor: docker-chrome-stable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-stable-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
@@ -212,14 +211,14 @@ jobs:
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps: [network-tests]
-  FF-network-group:
+  Firefox-network-group:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
       TOPOLOGY: "group"
     executor: machine-executor
     steps: [network-tests]
-  FF-network-p2p:
+  Firefox-network-p2p:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
@@ -254,8 +253,8 @@ workflows:
      - Firefox-beta-p2p: *buildCompleteAnchor
      - Chrome-network-group: *buildCompleteAnchor
      - Chrome-network-p2p: *buildCompleteAnchor
-     - FF-network-group: *buildCompleteAnchor
-     - FF-network-p2p: *buildCompleteAnchor
+     - Firefox-network-group: *buildCompleteAnchor
+     - Firefox-network-p2p: *buildCompleteAnchor
      - Framework-tests: *buildCompleteAnchor
      - BuildPassed:
         requires:

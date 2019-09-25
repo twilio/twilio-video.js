@@ -4,9 +4,10 @@
 FROM circleci/node:10.0.0-stretch
 
 USER root
-
 ENV BROWSER='chrome'
 ENV BVER='beta'
+ENV ENABLE_REST_API_TESTS=1
+
 RUN echo $(whoami)
 RUN echo "Installing Chrome: $BVER" \
 && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
