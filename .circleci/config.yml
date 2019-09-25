@@ -37,11 +37,16 @@ executors:
       - image: makarandp/twilio-video:firefox-unstable
     environment:
       <<: *defaultEnv
+  generic-executor:
+    docker:
+      - image: alpine:3.7
+    environment:
+      <<: *defaultEnv
   machine-executor:
     machine: true
     environment:
-      BVER: "stable"
       <<: *defaultEnv
+      BVER: "stable"
 
 # TODO: https://stackoverflow.com/questions/8466223/reuse-a-block-of-code-in-yaml
 # command are meant to be reused.
@@ -123,10 +128,15 @@ jobs:
     steps:
       - unit-tests
   BuildComplete:
-    executor: docker-chrome-stable
+    executor: generic-executor
     steps:
       - echo-command:
           to: "Build Phase Complete!"
+  BuildPassed:
+    executor: generic-executor
+    steps:
+      - echo-command:
+          to: "Build Passed!"
   Chrome-stable-group:
     environment:
       TOPOLOGY: "group"
@@ -137,112 +147,90 @@ jobs:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-chrome-stable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-stable-group:
     environment:
       TOPOLOGY: "group"
     executor: docker-firefox-stable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-stable-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-firefox-stable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-beta-group:
     environment:
       TOPOLOGY: "group"
     executor: docker-chrome-beta
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-beta-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-chrome-beta
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-beta-group:
     environment:
       TOPOLOGY: "group"
     executor: docker-firefox-beta
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-beta-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-firefox-beta
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-unstable-group:
     environment:
       TOPOLOGY: "group"
     executor: docker-chrome-unstable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-unstable-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-chrome-unstable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-unstable-group:
     environment:
       TOPOLOGY: "group"
     executor: docker-firefox-unstable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Firefox-unstable-p2p:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-firefox-unstable
-    steps:
-      - integration-tests
+    steps: [integration-tests]
   Chrome-network-group:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "chrome"
       TOPOLOGY: "group"
     executor: machine-executor
-    steps:
-      - network-tests
+    steps: [network-tests]
   Chrome-network-p2p:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "chrome"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
-    steps:
-      - network-tests
+    steps: [network-tests]
   FF-network-group:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
       TOPOLOGY: "group"
     executor: machine-executor
-    steps:
-      - network-tests
+    steps: [network-tests]
   FF-network-p2p:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
-    steps:
-      - network-tests
-  Framework-tests-docker:
+    steps: [network-tests]
+  Framework-tests:
     environment:
       BROWSER: "chrome"
     executor: docker-chrome-stable
-    steps:
-      - framework-tests
-  Framework-tests-machine:
-    environment:
-      BROWSER: "chrome"
-    executor: machine-executor
-    steps:
-      - framework-tests
+    steps: [framework-tests]
 workflows:
  version: 2
  Pull_Request_Workflow:
@@ -250,60 +238,30 @@ workflows:
      - Build
      - Unittest
      - BuildComplete:
+        requires: [Build, Unittest]
+     - Chrome-stable-group: &buildCompleteAnchor
+        requires: [BuildComplete]
+     - Chrome-stable-p2p: *buildCompleteAnchor
+     - Chrome-beta-group: *buildCompleteAnchor
+     - Chrome-beta-p2p: *buildCompleteAnchor
+     - Chrome-unstable-group: *buildCompleteAnchor
+     - Chrome-unstable-p2p: *buildCompleteAnchor
+     - Firefox-stable-group: *buildCompleteAnchor
+     - Firefox-stable-p2p: *buildCompleteAnchor
+     - Firefox-unstable-group: *buildCompleteAnchor
+     - Firefox-unstable-p2p: *buildCompleteAnchor
+     - Firefox-beta-group: *buildCompleteAnchor
+     - Firefox-beta-p2p: *buildCompleteAnchor
+     - Chrome-network-group: *buildCompleteAnchor
+     - Chrome-network-p2p: *buildCompleteAnchor
+     - FF-network-group: *buildCompleteAnchor
+     - FF-network-p2p: *buildCompleteAnchor
+     - Framework-tests: *buildCompleteAnchor
+     - BuildPassed:
         requires:
-          - Build
-          - Unittest
-     - Chrome-stable-group:
-        requires:
-          - BuildComplete
-     - Chrome-stable-p2p:
-        requires:
-          - BuildComplete
-     - Firefox-stable-group:
-        requires:
-          - BuildComplete
-     - Firefox-stable-p2p:
-        requires:
-          - BuildComplete
-     - Chrome-unstable-group:
-        requires:
-          - BuildComplete
-     - Chrome-unstable-p2p:
-        requires:
-          - BuildComplete
-     - Firefox-unstable-group:
-        requires:
-          - BuildComplete
-     - Firefox-unstable-p2p:
-        requires:
-          - BuildComplete
-     - Chrome-beta-group:
-        requires:
-          - BuildComplete
-     - Chrome-beta-p2p:
-        requires:
-          - BuildComplete
-     - Firefox-beta-group:
-        requires:
-          - BuildComplete
-     - Firefox-beta-p2p:
-        requires:
-          - BuildComplete
-     - Chrome-network-group:
-        requires:
-          - BuildComplete
-     - Chrome-network-p2p:
-        requires:
-          - BuildComplete
-     - FF-network-group:
-        requires:
-          - BuildComplete
-     - FF-network-p2p:
-        requires:
-          - BuildComplete
-     - Framework-tests-docker:
-        requires:
-          - BuildComplete
-     - Framework-tests-machine:
-        requires:
-          - BuildComplete
+          - Chrome-stable-group
+          - Chrome-stable-p2p
+          - Firefox-stable-group
+          - Firefox-stable-p2p
+          - Framework-tests
+
