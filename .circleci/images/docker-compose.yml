@@ -30,7 +30,7 @@ services:
       - USE_BVER=${BVER}
       - USE_NETWORK=twilio-videojs_default
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./${BROWSER}/${BVER}/Dockerfile
     working_dir: /opt/app
     container_name: "twilio-video-${BROWSER}-${BVER}"
     volumes:

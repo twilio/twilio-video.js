@@ -4,27 +4,46 @@
 # followed by
 # circleci local execute -c config_processed.yml --job chrome-stable-tests
 version: 2.1
+defaultEnv: &defaultEnv
+  ENVIRONMENT: "prod"
 executors:
   docker-chrome-stable:
     docker:
       - image: makarandp/twilio-video:chrome-stable
     environment:
-      BROWSER: "chrome"
-      BVER: "stable"
-      ENVIRONMENT: "prod"
+      <<: *defaultEnv
   docker-firefox-stable:
     docker:
-      - image: makarandp/twilio-video:chrome-stable
+      - image: makarandp/twilio-video:firefox-stable
     environment:
-      BROWSER: "firefox"
-      BVER: "stable"
-      ENVIRONMENT: "prod"
+      <<: *defaultEnv
+  docker-chrome-beta:
+    docker:
+      - image: makarandp/twilio-video:chrome-beta
+    environment:
+      <<: *defaultEnv
+  docker-firefox-beta:
+    docker:
+      - image: makarandp/twilio-video:firefox-beta
+    environment:
+      <<: *defaultEnv
+  docker-chrome-unstable:
+    docker:
+      - image: makarandp/twilio-video:chrome-unstable
+    environment:
+      <<: *defaultEnv
+  docker-firefox-unstable:
+    docker:
+      - image: makarandp/twilio-video:firefox-unstable
+    environment:
+      <<: *defaultEnv
   machine-executor:
     machine: true
     environment:
       BVER: "stable"
-      ENVIRONMENT: "prod"
+      <<: *defaultEnv
 
+# TODO: https://stackoverflow.com/questions/8466223/reuse-a-block-of-code-in-yaml
 # command are meant to be reused.
 commands:
   get-code-and-dependancies:
@@ -40,6 +59,13 @@ commands:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
+  save-test-results:
+    steps:
+      - store_test_results:
+          path: ./logs
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
   build:
     steps:
       - get-code-and-dependancies
@@ -61,22 +87,14 @@ commands:
       - run:
           name: Running Integration Tests
           command: scripts/circleci-run-tests.sh
-      - store_test_results:
-          path: ./logs
-      - store_artifacts:
-          path: ./logs
-          prefix: tests
+      - save-test-results
   network-tests:
     steps:
       - checkout
       - run:
           name: Running Network Tests
           command: scripts/circleci-run-tests.sh
-      - store_test_results:
-          path: ./logs
-      - store_artifacts:
-          path: ./logs
-          prefix: tests
+      - save-test-results
   framework-tests:
     steps:
       - build
@@ -86,11 +104,15 @@ commands:
       - run:
           name: Running Framework Tests
           command: npm run test:framework
-      - store_test_results:
-          path: ./logs
-      - store_artifacts:
-          path: ./logs
-          prefix: tests
+      - save-test-results
+  echo-command:
+    description: "marker command"
+    parameters:
+      to:
+        type: string
+        default: "Hello World"
+    steps:
+      - run: echo << parameters.to >>
 jobs:
   Build:
     executor: docker-chrome-stable
@@ -100,6 +122,11 @@ jobs:
     executor: docker-chrome-stable
     steps:
       - unit-tests
+  BuildComplete:
+    executor: docker-chrome-stable
+    steps:
+      - echo-command:
+          to: "Build Phase Complete!"
   Chrome-stable-group:
     environment:
       TOPOLOGY: "group"
@@ -122,6 +149,54 @@ jobs:
     environment:
       TOPOLOGY: "peer-to-peer"
     executor: docker-firefox-stable
+    steps:
+      - integration-tests
+  Chrome-beta-group:
+    environment:
+      TOPOLOGY: "group"
+    executor: docker-chrome-beta
+    steps:
+      - integration-tests
+  Chrome-beta-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-chrome-beta
+    steps:
+      - integration-tests
+  Firefox-beta-group:
+    environment:
+      TOPOLOGY: "group"
+    executor: docker-firefox-beta
+    steps:
+      - integration-tests
+  Firefox-beta-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-firefox-beta
+    steps:
+      - integration-tests
+  Chrome-unstable-group:
+    environment:
+      TOPOLOGY: "group"
+    executor: docker-chrome-unstable
+    steps:
+      - integration-tests
+  Chrome-unstable-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-chrome-unstable
+    steps:
+      - integration-tests
+  Firefox-unstable-group:
+    environment:
+      TOPOLOGY: "group"
+    executor: docker-firefox-unstable
+    steps:
+      - integration-tests
+  Firefox-unstable-p2p:
+    environment:
+      TOPOLOGY: "peer-to-peer"
+    executor: docker-firefox-unstable
     steps:
       - integration-tests
   Chrome-network-group:
@@ -174,43 +249,61 @@ workflows:
    jobs:
      - Build
      - Unittest
+     - BuildComplete:
+        requires:
+          - Build
+          - Unittest
      - Chrome-stable-group:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Chrome-stable-p2p:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Firefox-stable-group:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Firefox-stable-p2p:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
+     - Chrome-unstable-group:
+        requires:
+          - BuildComplete
+     - Chrome-unstable-p2p:
+        requires:
+          - BuildComplete
+     - Firefox-unstable-group:
+        requires:
+          - BuildComplete
+     - Firefox-unstable-p2p:
+        requires:
+          - BuildComplete
+     - Chrome-beta-group:
+        requires:
+          - BuildComplete
+     - Chrome-beta-p2p:
+        requires:
+          - BuildComplete
+     - Firefox-beta-group:
+        requires:
+          - BuildComplete
+     - Firefox-beta-p2p:
+        requires:
+          - BuildComplete
      - Chrome-network-group:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Chrome-network-p2p:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - FF-network-group:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - FF-network-p2p:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Framework-tests-docker:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
      - Framework-tests-machine:
         requires:
-          - Build
-          - Unittest
+          - BuildComplete
