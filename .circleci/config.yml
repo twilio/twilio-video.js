@@ -51,14 +51,14 @@ executors:
 # TODO: https://stackoverflow.com/questions/8466223/reuse-a-block-of-code-in-yaml
 # command are meant to be reused.
 commands:
-  get-code-and-dependancies:
+  get-code-and-dependencies:
     steps:
       - checkout
       - restore_cache: # special step to restore the dependency cache
           # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Installing dependancies
+          name: Installing dependencies
           command: npm install
       - save_cache: # special step to save the dependency cache
           key: dependency-cache-{{ checksum "package.json" }}
@@ -73,13 +73,13 @@ commands:
           prefix: tests
   build:
     steps:
-      - get-code-and-dependancies
+      - get-code-and-dependencies
       - run:
           name: Building Quick
           command: npm run build:quick
   unit-tests:
     steps:
-      - get-code-and-dependancies
+      - get-code-and-dependencies
       - run:
           name: Running Unit Tests
           command: npm run cover
@@ -88,7 +88,7 @@ commands:
           prefix: coverage
   integration-tests:
     steps:
-      - get-code-and-dependancies
+      - get-code-and-dependencies
       - run:
           name: Running Integration Tests
           command: scripts/circleci-run-tests.sh
@@ -123,7 +123,7 @@ jobs:
     executor: docker-chrome-stable
     steps:
       - build
-  Unittest:
+  UnitTests:
     executor: docker-chrome-stable
     steps:
       - unit-tests
@@ -235,9 +235,9 @@ workflows:
  Pull_Request_Workflow:
    jobs:
      - Build
-     - Unittest
+     - UnitTests
      - BuildComplete:
-        requires: [Build, Unittest]
+        requires: [Build, UnitTests]
      - Chrome-stable-group: &buildCompleteAnchor
         requires: [BuildComplete]
      - Chrome-stable-p2p: *buildCompleteAnchor

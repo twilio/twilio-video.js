@@ -17,7 +17,7 @@ echo "running tests"
 if [ "${NETWORK_TESTS}" = "true" ];
 then
     # network tets run inside a container with docker socket mapped in the container.
-    docker-compose --file=.circleci/images/docker-compose.yml build integrationTestContainer
+    # docker-compose --file=.circleci/images/docker-compose.yml build integrationTestContainer
     docker-compose --file=.circleci/images/docker-compose.yml run integrationTestContainer
 else
     npm run test:integration
