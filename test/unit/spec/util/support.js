@@ -3,8 +3,7 @@
 const assert = require('assert');
 const isSupported = require('../../../../lib/util/support');
 
-describe.only('isSupported', () => {
-
+describe('isSupported', () => {
   let oldAgent;
   before(() => {
     oldAgent = navigator.userAgent;
@@ -72,7 +71,7 @@ describe.only('isSupported', () => {
       'Foo Edge Bar'
     ],
   ].forEach(([browser, useragent]) => {
-    it('returns false for explicitely unsupported browser: ' + browser, () => {
+    it('returns false for explicitly unsupported browser: ' + browser, () => {
       navigator.userAgent = useragent;
       assert.equal(isSupported(), false);
     });
