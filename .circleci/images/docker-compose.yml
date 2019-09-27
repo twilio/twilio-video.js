@@ -1,28 +1,37 @@
 version: '3'
 # Note: This file is used to build run the integration tests.
-#   for running network tests it maps sources and docker unix port inside the container
-#   to build use:
-#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml build integrationTestContainer
-#   to run use:
-#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run integrationTestContainer
+#   for running integration tests
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run integrationTests
+#   to build container with browsers that will be used by integrationTests:
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml build browserContainer
+#   to run bash for debugging the container:
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run bash
 services:
-  integrationTestContainer:
-    environment:
-    - ENVIRONMENT=${ENVIRONMENT}
-    - ACCOUNT_SID=${ACCOUNT_SID}
-    - API_KEY_SID=${API_KEY_SID}
-    - API_KEY_SECRET=${API_KEY_SECRET}
-    - TOPOLOGY=${TOPOLOGY}
-    - ENABLE_REST_API_TESTS=${ENABLE_REST_API_TESTS}
+  defaults: &defaults
     user: root
-    image: makarandp/twilio-video:${BROWSER}-${BVER}
-    command: bash -c "npm install && npm run test:integration"
-    build:
-      context: .
-      dockerfile: ./${BROWSER}/${BVER}/Dockerfile
+    image: twilio/twilio-video-browsers:${BROWSER}-${BVER}
     working_dir: /opt/app
-    container_name: "twilio-video-${BROWSER}-${BVER}"
+  runtimeDefaults: &runtimeDefaults
+    <<: *defaults
+    environment:
+    - ENVIRONMENT
+    - ACCOUNT_SID
+    - API_KEY_SID
+    - API_KEY_SECRET
+    - TOPOLOGY
+    - ENABLE_REST_API_TESTS
     volumes:
       - "../../:/opt/app"
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/app/node_modules
+  browserContainer:
+    <<: *defaults
+    build:
+      context: .
+      dockerfile: ./${BROWSER}/${BVER}/Dockerfile
+  integrationTests:
+    <<: *runtimeDefaults
+    command: bash -c "npm install && npm run test:integration"
+  bash:
+    <<: *runtimeDefaults
+    command: bash
