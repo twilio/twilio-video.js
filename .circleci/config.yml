@@ -10,32 +10,32 @@ defaultEnv: &defaultEnv
 executors:
   docker-chrome-stable:
     docker:
-      - image: makarandp/twilio-video:chrome-stable
+      - image: twilio/twilio-video-browsers:chrome-stable
     environment:
       <<: *defaultEnv
   docker-firefox-stable:
     docker:
-      - image: makarandp/twilio-video:firefox-stable
+      - image: twilio/twilio-video-browsers:firefox-stable
     environment:
       <<: *defaultEnv
   docker-chrome-beta:
     docker:
-      - image: makarandp/twilio-video:chrome-beta
+      - image: twilio/twilio-video-browsers:chrome-beta
     environment:
       <<: *defaultEnv
   docker-firefox-beta:
     docker:
-      - image: makarandp/twilio-video:firefox-beta
+      - image: twilio/twilio-video-browsers:firefox-beta
     environment:
       <<: *defaultEnv
   docker-chrome-unstable:
     docker:
-      - image: makarandp/twilio-video:chrome-unstable
+      - image: twilio/twilio-video-browsers:chrome-unstable
     environment:
       <<: *defaultEnv
   docker-firefox-unstable:
     docker:
-      - image: makarandp/twilio-video:firefox-unstable
+      - image: twilio/twilio-video-browsers:firefox-unstable
     environment:
       <<: *defaultEnv
   generic-executor:
@@ -245,7 +245,7 @@ jobs:
       - checkout
       - run:
           name: Building Docker Image
-          command: .circleci/images/buildimages.sh
+          command: .circleci/images/build_docker_image.sh
     environment:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>

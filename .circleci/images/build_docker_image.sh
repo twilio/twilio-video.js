@@ -5,14 +5,18 @@
 
 # first get the version of current image.
 echo "Checking Current version for ${BROWSER}-${BVER}"
-OLD_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run getVersion)
+# first run ensures that we do not get output from docker pull
+docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+OLD_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "Found old version for ${BROWSER}-${BVER} = ${OLD_VERSION}"
 
 echo "Building new image for ${BROWSER}-${BVER}"
 docker-compose --file=.circleci/images/docker-compose.yml build browserContainer
 
 echo "Checking New version for ${BROWSER}-${BVER}"
-NEW_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run getVersion)
+# first run ensures that we do not get output from docker pull
+docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+NEW_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 
 if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
