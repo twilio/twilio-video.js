@@ -8,7 +8,9 @@ echo "Checking Current version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
 docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
 OLD_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+echo "========================================================="
 echo "Found old version for ${BROWSER}-${BVER} = ${OLD_VERSION}"
+echo "========================================================="
 
 echo "Building new image for ${BROWSER}-${BVER}"
 docker-compose --file=.circleci/images/docker-compose.yml build browserContainer
@@ -17,10 +19,14 @@ echo "Checking New version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
 docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
 NEW_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+echo "========================================================="
 echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
+echo "========================================================="
 
 if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
+    echo "========================================================="
     echo "No version change detected. Exiting"
+    echo "========================================================="
     exit 0
 fi
 
@@ -32,3 +38,7 @@ fi
 
 echo "Pushing browserContainer image for ${BROWSER}-${BVER}"
 docker push twilio/twilio-video-browsers:${BROWSER}-${BVER}
+
+echo "========================================================="
+echo "Done Pushing browserContainer image for ${BROWSER}-${BVER}"
+echo "========================================================="

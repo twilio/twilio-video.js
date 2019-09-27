@@ -253,43 +253,36 @@ jobs:
 workflows:
   version: 2
   Build_Docker_Images_Workflow:
-    # triggers:
-    #   - schedule:
-    #       # Hourly at minute 0
-    #       cron: "0 * * * *"
-    #       filters:
-    #         branches:
-    #           only: master
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+                - makarand_circleci
     jobs:
-      - image-approval:
-          type: approval
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "chrome stable"
           browser: "chrome"
           bver: "stable"
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "chrome unstable"
           browser: "chrome"
           bver: "unstable"
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "chrome beta"
           browser: "chrome"
           bver: "beta"
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "firefox stable"
           browser: "firefox"
           bver: "stable"
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "firefox unstable"
           browser: "firefox"
           bver: "unstable"
       - Build-Docker-Test-Image:
-          requires: [image-approval]
           name: "firefox beta"
           browser: "firefox"
           bver: "beta"
