@@ -6,6 +6,7 @@
 version: 2.1
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
+  ENABLE_REST_API_TESTS: "true"
 executors:
   docker-chrome-stable:
     docker:
@@ -46,7 +47,6 @@ executors:
     machine: true
     environment:
       <<: *defaultEnv
-      BVER: "stable"
 
 # TODO: https://stackoverflow.com/questions/8466223/reuse-a-block-of-code-in-yaml
 # command are meant to be reused.
@@ -201,6 +201,7 @@ jobs:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "chrome"
+      BVER: "stable"
       TOPOLOGY: "group"
     executor: machine-executor
     steps: [network-tests]
@@ -208,6 +209,7 @@ jobs:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "chrome"
+      BVER: "stable"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps: [network-tests]
@@ -215,6 +217,7 @@ jobs:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
+      BVER: "stable"
       TOPOLOGY: "group"
     executor: machine-executor
     steps: [network-tests]
@@ -222,6 +225,7 @@ jobs:
     environment:
       NETWORK_TESTS: "true"
       BROWSER: "firefox"
+      BVER: "stable"
       TOPOLOGY: "peer-to-peer"
     executor: machine-executor
     steps: [network-tests]
@@ -230,37 +234,94 @@ jobs:
       BROWSER: "chrome"
     executor: docker-chrome-stable
     steps: [framework-tests]
+  Build-Docker-Test-Image:
+    executor: machine-executor
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Building Docker Image
+          command: .circleci/images/buildimages.sh
+    environment:
+      BROWSER: << parameters.browser >>
+      BVER: << parameters.bver >>
+
 workflows:
- version: 2
- Pull_Request_Workflow:
-   jobs:
-     - Build
-     - UnitTests
-     - BuildComplete:
-        requires: [Build, UnitTests]
-     - Chrome-stable-group: &buildCompleteAnchor
-        requires: [BuildComplete]
-     - Chrome-stable-p2p: *buildCompleteAnchor
-     - Chrome-beta-group: *buildCompleteAnchor
-     - Chrome-beta-p2p: *buildCompleteAnchor
-     - Chrome-unstable-group: *buildCompleteAnchor
-     - Chrome-unstable-p2p: *buildCompleteAnchor
-     - Firefox-stable-group: *buildCompleteAnchor
-     - Firefox-stable-p2p: *buildCompleteAnchor
-     - Firefox-unstable-group: *buildCompleteAnchor
-     - Firefox-unstable-p2p: *buildCompleteAnchor
-     - Firefox-beta-group: *buildCompleteAnchor
-     - Firefox-beta-p2p: *buildCompleteAnchor
-     - Chrome-network-group: *buildCompleteAnchor
-     - Chrome-network-p2p: *buildCompleteAnchor
-     - Firefox-network-group: *buildCompleteAnchor
-     - Firefox-network-p2p: *buildCompleteAnchor
-     - Framework-tests: *buildCompleteAnchor
-     - BuildPassed:
-        requires:
-          - Chrome-stable-group
-          - Chrome-stable-p2p
-          - Firefox-stable-group
-          - Firefox-stable-p2p
-          - Framework-tests
+  version: 2
+  Build_Docker_Images_Workflow:
+    # triggers:
+    #   - schedule:
+    #       # Hourly at minute 0
+    #       cron: "0 * * * *"
+    #       filters:
+    #         branches:
+    #           only: master
+    jobs:
+      - image-approval:
+          type: approval
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "chrome stable"
+          browser: "chrome"
+          bver: "stable"
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "chrome unstable"
+          browser: "chrome"
+          bver: "unstable"
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "chrome beta"
+          browser: "chrome"
+          bver: "beta"
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "firefox stable"
+          browser: "firefox"
+          bver: "stable"
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "firefox unstable"
+          browser: "firefox"
+          bver: "unstable"
+      - Build-Docker-Test-Image:
+          requires: [image-approval]
+          name: "firefox beta"
+          browser: "firefox"
+          bver: "beta"
+  Pull_Request_Workflow:
+    jobs:
+      - Build
+      - UnitTests
+      - BuildComplete:
+          requires: [Build, UnitTests]
+      - Chrome-stable-group: &buildCompleteAnchor
+          requires: [BuildComplete]
+      - Chrome-stable-p2p: *buildCompleteAnchor
+      - Chrome-beta-group: *buildCompleteAnchor
+      - Chrome-beta-p2p: *buildCompleteAnchor
+      - Chrome-unstable-group: *buildCompleteAnchor
+      - Chrome-unstable-p2p: *buildCompleteAnchor
+      - Firefox-stable-group: *buildCompleteAnchor
+      - Firefox-stable-p2p: *buildCompleteAnchor
+      - Firefox-unstable-group: *buildCompleteAnchor
+      - Firefox-unstable-p2p: *buildCompleteAnchor
+      - Firefox-beta-group: *buildCompleteAnchor
+      - Firefox-beta-p2p: *buildCompleteAnchor
+      - Chrome-network-group: *buildCompleteAnchor
+      - Chrome-network-p2p: *buildCompleteAnchor
+      - Firefox-network-group: *buildCompleteAnchor
+      - Firefox-network-p2p: *buildCompleteAnchor
+      - Framework-tests: *buildCompleteAnchor
+      - BuildPassed:
+          requires:
+            - Chrome-stable-group
+            - Chrome-stable-p2p
+            - Firefox-stable-group
+            - Firefox-stable-p2p
+            - Framework-tests
 

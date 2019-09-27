@@ -6,7 +6,6 @@ FROM circleci/node:10.0.0-stretch
 USER root
 ENV BROWSER='chrome'
 ENV BVER='unstable'
-ENV ENABLE_REST_API_TESTS=1
 
 RUN echo "whoami: $(whoami)"
 RUN echo "Installing Chrome: $BVER" \

@@ -13,7 +13,7 @@ services:
     - API_KEY_SID=${API_KEY_SID}
     - API_KEY_SECRET=${API_KEY_SECRET}
     - TOPOLOGY=${TOPOLOGY}
-    - BVER=${BVER}
+    - ENABLE_REST_API_TESTS=${ENABLE_REST_API_TESTS}
     user: root
     image: makarandp/twilio-video:${BROWSER}-${BVER}
     command: bash -c "npm install && npm run test:integration"

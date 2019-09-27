@@ -27,7 +27,6 @@ RUN FIREFOX_URL="https://download.mozilla.org/?product=firefox-beta-latest-ssl&o
 ENV BROWSER='firefox'
 ENV BVER='beta'
 ENV FIREFOX_BIN=/opt/firefox/firefox
-ENV ENABLE_REST_API_TESTS=1
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99

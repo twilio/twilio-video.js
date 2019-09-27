@@ -1,7 +1,8 @@
 #!/bin/bash
 set -ev
-echo PWD=$PWD
 
+echo "current directory:"
+echo $PWD
 echo "node version:"
 node --version
 echo "npm version:"
