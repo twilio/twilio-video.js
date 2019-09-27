@@ -29,9 +29,12 @@ services:
     build:
       context: .
       dockerfile: ./${BROWSER}/${BVER}/Dockerfile
-  integrationTests:
+  integrationTests: # runs integration tets. Expects that sources are mounted.
     <<: *runtimeDefaults
     command: bash -c "npm install && npm run test:integration"
-  bash:
+  bash: # runs bash shell inside container. helpful for debugging
     <<: *runtimeDefaults
     command: bash
+  getVersion: # print browser version installed in the container.
+    <<: *runtimeDefaults
+    command: /opt/app/.circleci/images/printbrowserversion.sh
