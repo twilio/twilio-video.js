@@ -1,41 +1,38 @@
-# to test any changes to job
-# you can use
+# to validate any changes
+# use:
 # circleci config process .circleci/config.yml > config_processed.yml
-# followed by
+#
+# and run any job locally with:
 # circleci local execute -c config_processed.yml --job chrome-stable-tests
 version: 2.1
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
   ENABLE_REST_API_TESTS: "true"
+p2p: &topology_p2p
+  topology: "peer-to-peer"
+group: &topology_group
+  topology: "group"
+firefox: &browser_firefox
+  browser: "firefox"
+chrome: &browser_chrome
+  browser: "chrome"
+stable: &bver_stable
+  bver: "stable"
+beta: &bver_beta
+  bver: "beta"
+unstable: &bver_unstable
+  bver: "unstable"
 executors:
-  docker-chrome-stable:
+  docker-with-browser:
+    parameters:
+      browser:
+        type: string
+        default: "chrome"
+      bver:
+        type: string
+        default: "stable"
     docker:
-      - image: twilio/twilio-video-browsers:chrome-stable
-    environment:
-      <<: *defaultEnv
-  docker-firefox-stable:
-    docker:
-      - image: twilio/twilio-video-browsers:firefox-stable
-    environment:
-      <<: *defaultEnv
-  docker-chrome-beta:
-    docker:
-      - image: twilio/twilio-video-browsers:chrome-beta
-    environment:
-      <<: *defaultEnv
-  docker-firefox-beta:
-    docker:
-      - image: twilio/twilio-video-browsers:firefox-beta
-    environment:
-      <<: *defaultEnv
-  docker-chrome-unstable:
-    docker:
-      - image: twilio/twilio-video-browsers:chrome-unstable
-    environment:
-      <<: *defaultEnv
-  docker-firefox-unstable:
-    docker:
-      - image: twilio/twilio-video-browsers:firefox-unstable
+      - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
     environment:
       <<: *defaultEnv
   generic-executor:
@@ -47,20 +44,16 @@ executors:
     machine: true
     environment:
       <<: *defaultEnv
-
-# TODO: https://stackoverflow.com/questions/8466223/reuse-a-block-of-code-in-yaml
-# command are meant to be reused.
 commands:
   get-code-and-dependencies:
     steps:
       - checkout
-      - restore_cache: # special step to restore the dependency cache
-          # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
+      - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Installing dependencies
           command: npm install
-      - save_cache: # special step to save the dependency cache
+      - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
@@ -120,11 +113,11 @@ commands:
       - run: echo << parameters.to >>
 jobs:
   Build:
-    executor: docker-chrome-stable
+    executor: docker-with-browser
     steps:
       - build
   UnitTests:
-    executor: docker-chrome-stable
+    executor: docker-with-browser
     steps:
       - unit-tests
   BuildComplete:
@@ -137,102 +130,39 @@ jobs:
     steps:
       - echo-command:
           to: "Build Passed!"
-  Chrome-stable-group:
+  run-integration-tests:
+    # name: << parameters.browser >>-<< parameters.bver >>-<< parameters.topology >>
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+      topology:
+        type: string
     environment:
-      TOPOLOGY: "group"
-    executor: docker-chrome-stable
+      TOPOLOGY: << parameters.topology >>
+    executor:
+      name: docker-with-browser
+      browser: << parameters.browser >>
+      bver: << parameters.bver >>
     steps: [integration-tests]
-  Chrome-stable-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-chrome-stable
-    steps: [integration-tests]
-  Firefox-stable-group:
-    environment:
-      TOPOLOGY: "group"
-    executor: docker-firefox-stable
-    steps: [integration-tests]
-  Firefox-stable-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-firefox-stable
-    steps: [integration-tests]
-  Chrome-beta-group:
-    environment:
-      TOPOLOGY: "group"
-    executor: docker-chrome-beta
-    steps: [integration-tests]
-  Chrome-beta-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-chrome-beta
-    steps: [integration-tests]
-  Firefox-beta-group:
-    environment:
-      TOPOLOGY: "group"
-    executor: docker-firefox-beta
-    steps: [integration-tests]
-  Firefox-beta-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-firefox-beta
-    steps: [integration-tests]
-  Chrome-unstable-group:
-    environment:
-      TOPOLOGY: "group"
-    executor: docker-chrome-unstable
-    steps: [integration-tests]
-  Chrome-unstable-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-chrome-unstable
-    steps: [integration-tests]
-  Firefox-unstable-group:
-    environment:
-      TOPOLOGY: "group"
-    executor: docker-firefox-unstable
-    steps: [integration-tests]
-  Firefox-unstable-p2p:
-    environment:
-      TOPOLOGY: "peer-to-peer"
-    executor: docker-firefox-unstable
-    steps: [integration-tests]
-  Chrome-network-group:
+  run-network-tests:
+    parameters:
+      browser:
+        type: string
+      topology:
+        type: string
     environment:
       NETWORK_TESTS: "true"
-      BROWSER: "chrome"
       BVER: "stable"
-      TOPOLOGY: "group"
-    executor: machine-executor
-    steps: [network-tests]
-  Chrome-network-p2p:
-    environment:
-      NETWORK_TESTS: "true"
-      BROWSER: "chrome"
-      BVER: "stable"
-      TOPOLOGY: "peer-to-peer"
-    executor: machine-executor
-    steps: [network-tests]
-  Firefox-network-group:
-    environment:
-      NETWORK_TESTS: "true"
-      BROWSER: "firefox"
-      BVER: "stable"
-      TOPOLOGY: "group"
-    executor: machine-executor
-    steps: [network-tests]
-  Firefox-network-p2p:
-    environment:
-      NETWORK_TESTS: "true"
-      BROWSER: "firefox"
-      BVER: "stable"
-      TOPOLOGY: "peer-to-peer"
+      BROWSER: << parameters.browser >>
+      TOPOLOGY: << parameters.topology >>
     executor: machine-executor
     steps: [network-tests]
   Framework-tests:
     environment:
       BROWSER: "chrome"
-    executor: docker-chrome-stable
+    executor: docker-with-browser
     steps: [framework-tests]
   Build-Docker-Test-Image:
     executor: machine-executor
@@ -246,6 +176,7 @@ jobs:
       - run:
           name: Building Docker Image
           command: .circleci/images/build_docker_image.sh
+      - save-test-results
     environment:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
@@ -264,57 +195,134 @@ workflows:
     jobs:
       - Build-Docker-Test-Image:
           name: "chrome stable"
-          browser: "chrome"
-          bver: "stable"
+          <<: *browser_chrome
+          <<: *bver_stable
       - Build-Docker-Test-Image:
           name: "chrome unstable"
-          browser: "chrome"
-          bver: "unstable"
+          <<: *browser_chrome
+          <<: *bver_unstable
       - Build-Docker-Test-Image:
           name: "chrome beta"
-          browser: "chrome"
-          bver: "beta"
+          <<: *browser_chrome
+          <<: *bver_beta
       - Build-Docker-Test-Image:
           name: "firefox stable"
-          browser: "firefox"
-          bver: "stable"
+          <<: *browser_firefox
+          <<: *bver_stable
       - Build-Docker-Test-Image:
           name: "firefox unstable"
-          browser: "firefox"
-          bver: "unstable"
+          <<: *browser_firefox
+          <<: *bver_unstable
       - Build-Docker-Test-Image:
           name: "firefox beta"
-          browser: "firefox"
-          bver: "beta"
+          <<: *browser_firefox
+          <<: *bver_beta
   Pull_Request_Workflow:
     jobs:
       - Build
       - UnitTests
       - BuildComplete:
           requires: [Build, UnitTests]
-      - Chrome-stable-group: &buildCompleteAnchor
+      - run-integration-tests:
+          name: "chrome stable group"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_group
           requires: [BuildComplete]
-      - Chrome-stable-p2p: *buildCompleteAnchor
-      - Chrome-beta-group: *buildCompleteAnchor
-      - Chrome-beta-p2p: *buildCompleteAnchor
-      - Chrome-unstable-group: *buildCompleteAnchor
-      - Chrome-unstable-p2p: *buildCompleteAnchor
-      - Firefox-stable-group: *buildCompleteAnchor
-      - Firefox-stable-p2p: *buildCompleteAnchor
-      - Firefox-unstable-group: *buildCompleteAnchor
-      - Firefox-unstable-p2p: *buildCompleteAnchor
-      - Firefox-beta-group: *buildCompleteAnchor
-      - Firefox-beta-p2p: *buildCompleteAnchor
-      - Chrome-network-group: *buildCompleteAnchor
-      - Chrome-network-p2p: *buildCompleteAnchor
-      - Firefox-network-group: *buildCompleteAnchor
-      - Firefox-network-p2p: *buildCompleteAnchor
-      - Framework-tests: *buildCompleteAnchor
+      - run-integration-tests:
+          name: "chrome beta group"
+          <<: *browser_chrome
+          <<: *bver_beta
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome unstable group"
+          <<: *browser_chrome
+          <<: *bver_unstable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome stable p2p"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome beta p2p"
+          <<: *browser_chrome
+          <<: *bver_beta
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome unstable p2p"
+          <<: *browser_chrome
+          <<: *bver_unstable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable group"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox beta group"
+          <<: *browser_firefox
+          <<: *bver_beta
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox unstable group"
+          <<: *browser_firefox
+          <<: *bver_unstable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable p2p"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox beta p2p"
+          <<: *browser_firefox
+          <<: *bver_beta
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox unstable p2p"
+          <<: *browser_firefox
+          <<: *bver_unstable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-network-tests:
+          name: "firefox network p2p"
+          <<: *browser_firefox
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-network-tests:
+          name: "firefox network group"
+          <<: *browser_firefox
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-network-tests:
+          name: "chrome network p2p"
+          <<: *browser_chrome
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-network-tests:
+          name: "chrome network group"
+          <<: *browser_chrome
+          <<: *topology_group
+          requires: [BuildComplete]
+      - Framework-tests:
+          name: "framework tests"
+          requires: [BuildComplete]
       - BuildPassed:
           requires:
-            - Chrome-stable-group
-            - Chrome-stable-p2p
-            - Firefox-stable-group
-            - Firefox-stable-p2p
-            - Framework-tests
+            - "framework tests"
+            - "firefox stable p2p"
+            - "firefox stable group"
+            - "chrome stable p2p"
+            - "chrome stable group"
 
