@@ -28,19 +28,56 @@ function getTestPaths(path) {
   return [path];
 }
 
-const files = getTestPaths(isDocker ? dockerIntegrationTests : integrationTests);
+function filterTests(paths) {
+  // NOTE: to enable running tests in parallel (in CI)
+  //  you can split test files into groups by setting
+  //  TEST_RUN=a/b, where
+  //    b  = number of groups to split test files into
+  //    a  = current group to run.
+  //  For example: by specifying TEST_RUN=1/5 will
+  //  cause the test files to be split in 5 groups,
+  //  with 1st group running in this instance.
+  let currentRun = 1;
+  let totalRuns = 1;
+  if (process.env.TEST_RUN) {
+    const [a, b] = process.env.TEST_RUN.split('/');
+    currentRun = parseInt(a);
+    totalRuns = parseInt(b);
+    if (isNaN(currentRun) || isNaN(totalRuns) || currentRun < 1 || totalRuns < currentRun) {
+      console.log(`Ignoring invalid TEST_RUN: ${currentRun}/${totalRuns}`);
+      currentRun = 1;
+      totalRuns = 1;
+    }
+
+    if (paths.length < totalRuns) {
+      console.warn(`You are splitting ${paths.length} files into ${totalRuns} groups!`);
+    }
+  }
+
+  return paths.filter((_, index) => index % totalRuns === currentRun - 1);
+}
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.
-async function main(files) {
+async function main() {
   let dockerProxy = null;
   if (isDocker) {
     console.log('running tests inside docker!');
-    dockerProxy = new DockerProxyServer();
-    dockerProxy.startServer();
+    try {
+      dockerProxy = new DockerProxyServer();
+      await dockerProxy.startServer();
+      console.log('DockerProxyServer started successfully. Network tests may run as part of this run!');
+    } catch (err) {
+      // NOTE(mpatwardhan): This can happen in CI environment, when we run integration tests inside docker
+      // container without mapping docker socket inside the container.
+      console.log('DockerProxyServer failed to start.  Network tests will not run as part of this run!');
+      dockerProxy = null;
+    }
   }
+
+  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests));
 
   let processExitCode = 0;
   for (const file of files) {
@@ -69,4 +106,4 @@ async function main(files) {
   process.exit(processExitCode);
 }
 
-main(files);
+main();
