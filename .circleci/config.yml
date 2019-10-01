@@ -325,4 +325,3 @@ workflows:
             - "firefox stable group"
             - "chrome stable p2p"
             - "chrome stable group"
-
