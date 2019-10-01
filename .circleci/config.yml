@@ -191,7 +191,6 @@ workflows:
             branches:
               only:
                 - master
-                - makarand_circleci
     jobs:
       - Build-Docker-Test-Image:
           name: "chrome stable"
@@ -325,4 +324,3 @@ workflows:
             - "firefox stable group"
             - "chrome stable p2p"
             - "chrome stable group"
-
