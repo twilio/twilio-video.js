@@ -70,7 +70,7 @@ async function main() {
       await dockerProxy.startServer();
       console.log('DockerProxyServer started successfully. Network tests may run as part of this run!');
     } catch (err) {
-      // NOTE: This can happen in CI environment, when we run integration tests inside docker
+      // NOTE(mpatwardhan): This can happen in CI environment, when we run integration tests inside docker
       // container without mapping docker socket inside the container.
       console.log('DockerProxyServer failed to start.  Network tests will not run as part of this run!');
       dockerProxy = null;

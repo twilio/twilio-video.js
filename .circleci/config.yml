@@ -191,7 +191,6 @@ workflows:
             branches:
               only:
                 - master
-                - makarand_circleci
     jobs:
       - Build-Docker-Test-Image:
           name: "chrome stable"
