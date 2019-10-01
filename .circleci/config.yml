@@ -131,7 +131,7 @@ jobs:
       - echo-command:
           to: "Build Passed!"
   run-integration-tests:
-    # name: << parameters.browser >>-<< parameters.bver >>-<< parameters.topology >>
+    parallelism: 4
     parameters:
       browser:
         type: string
