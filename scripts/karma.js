@@ -37,6 +37,7 @@ function filterTests(paths) {
   //  For example: by specifying TEST_RUN=1/5 will
   //  cause the test files to be split in 5 groups,
   //  with 1st group running in this instance.
+  console.log('test files provided were: ', process.env.TEST_FILES);
   let currentRun = 1;
   let totalRuns = 1;
   if (process.env.TEST_RUN) {
