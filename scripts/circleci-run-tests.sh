@@ -19,8 +19,8 @@ then
     docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
 else
     # ask circleci to split tests by timing.
-    TEST_FILES=$(circleci tests glob "test/integration/spec/**/*.js" | circleci tests split --split-by=timings)
-    echo "asking circleci to check timings"
+    echo "Asking circleci to pick tests based on timings..."
+    export TEST_FILES=$(circleci tests glob "$PWD/test/integration/spec/*.js" | circleci tests split --split-by=timings)
     echo $TEST_FILES
     npm run test:integration
 fi
