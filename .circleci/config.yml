@@ -196,6 +196,8 @@ workflows:
     jobs:
       - Build
       - UnitTests
+      - BuildComplete:
+          requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable p2p"
           <<: *browser_chrome
