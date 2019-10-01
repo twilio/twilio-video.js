@@ -131,7 +131,7 @@ jobs:
       - echo-command:
           to: "Build Passed!"
   run-integration-tests:
-    parallelism: 4
+    parallelism: 6
     parameters:
       browser:
         type: string
