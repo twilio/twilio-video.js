@@ -3,7 +3,7 @@
 # circleci config process .circleci/config.yml > config_processed.yml
 #
 # and run any job locally with:
-# circleci local execute -c config_processed.yml --job chrome-stable-tests
+# circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
@@ -131,7 +131,7 @@ jobs:
       - echo-command:
           to: "Build Passed!"
   run-integration-tests:
-    # name: << parameters.browser >>-<< parameters.bver >>-<< parameters.topology >>
+    parallelism: 6
     parameters:
       browser:
         type: string

@@ -13,11 +13,6 @@ const dockerIntegrationTests = join(__dirname, '..', 'test', 'integration', 'spe
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
 function getTestPaths(path) {
-
-  if (process.env.FILE) {
-    return [resolvePath(process.env.FILE)];
-  }
-
   var stat = statSync(path);
   if (stat && stat.isDirectory()) {
     return readdirSync(path).reduce((files, file) => {
@@ -29,32 +24,12 @@ function getTestPaths(path) {
 }
 
 function filterTests(paths) {
-  // NOTE: to enable running tests in parallel (in CI)
-  //  you can split test files into groups by setting
-  //  TEST_RUN=a/b, where
-  //    b  = number of groups to split test files into
-  //    a  = current group to run.
-  //  For example: by specifying TEST_RUN=1/5 will
-  //  cause the test files to be split in 5 groups,
-  //  with 1st group running in this instance.
-  let currentRun = 1;
-  let totalRuns = 1;
-  if (process.env.TEST_RUN) {
-    const [a, b] = process.env.TEST_RUN.split('/');
-    currentRun = parseInt(a);
-    totalRuns = parseInt(b);
-    if (isNaN(currentRun) || isNaN(totalRuns) || currentRun < 1 || totalRuns < currentRun) {
-      console.log(`Ignoring invalid TEST_RUN: ${currentRun}/${totalRuns}`);
-      currentRun = 1;
-      totalRuns = 1;
-    }
-
-    if (paths.length < totalRuns) {
-      console.warn(`You are splitting ${paths.length} files into ${totalRuns} groups!`);
-    }
+  if (process.env.TEST_FILES) {
+    let testFiles = process.env.TEST_FILES.split('\n');
+    testFiles = testFiles.map(file => resolvePath(file));
+    return paths.filter(path => testFiles.includes(path));
   }
-
-  return paths.filter((_, index) => index % totalRuns === currentRun - 1);
+  return paths;
 }
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
