@@ -537,7 +537,7 @@ describe('LocalParticipant', function() {
         });
       });
     } else {
-      it('skipped disabled tests!');
+      it('skipped unstable tests for - #publishTrack');
     }
 
     // NOTE(mroberts): Waiting on a Group Rooms deploy.
@@ -604,177 +604,181 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#unpublishTrack', () => {
-    combinationContext([
-      [
-        [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled'}`
-      ],
-      [
-        ['audio', 'video', 'data'],
-        x => `Local${capitalize(x)}Track`
-      ],
-      [
-        ['published', 'published, unpublished, and then published again'],
-        x => 'that was ' + x
-      ]
-    ], ([isEnabled, kind, when]) => {
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mmalavalli): Enable this scenario for Firefox when the following
-      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
-      if (isFirefox && kind === 'data' && when !== 'published') {
-        return;
-      }
-
-      let sid;
-      let thisRoom;
-      let thisParticipant;
-      let thisLocalTrackPublication;
-      let thisTrack;
-      let thoseRooms;
-      let thoseParticipants;
-      let thosePublicationsUnsubscribed;
-      let thoseTracksUnpublished;
-      let thoseTracksUnsubscribed;
-      let thoseTracksMap;
-
-      before(async () => {
-        sid = await createRoom(randomName(), defaults.topology);
-        const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name: sid }, defaults);
-
-        thisTrack = await {
-          audio: createLocalAudioTrack,
-          video() { return createLocalVideoTrack(smallVideoConstraints); },
-          data() { return new LocalDataTrack(); }
-        }[kind]();
-
+  if (defaults.stability === 'stable') {
+    describe('#unpublishTrack', () => {
+      combinationContext([
+        [
+          [true, false],
+          x => `called with ${x ? 'an enabled' : 'a disabled'}`
+        ],
+        [
+          ['audio', 'video', 'data'],
+          x => `Local${capitalize(x)}Track`
+        ],
+        [
+          ['published', 'published, unpublished, and then published again'],
+          x => 'that was ' + x
+        ]
+      ], ([isEnabled, kind, when]) => {
         // eslint-disable-next-line no-warning-comments
-        // TODO(mroberts): Really this test needs to be refactored so that only
-        // the LocalAudio- and LocalVideo-Track tests test the enable/disable
-        // functionality.
-        if (kind !== 'data') {
-          thisTrack.enable(isEnabled);
+        // TODO(mmalavalli): Enable this scenario for Firefox when the following
+        // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+        if (isFirefox && kind === 'data' && when !== 'published') {
+          return;
         }
 
-        const tracks = [thisTrack];
-        const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
-        const theseOptions = Object.assign({ tracks }, options);
-        thisRoom = await connect(thisToken, theseOptions);
-        thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
+        let sid;
+        let thisRoom;
+        let thisParticipant;
+        let thisLocalTrackPublication;
+        let thisTrack;
+        let thoseRooms;
+        let thoseParticipants;
+        let thosePublicationsUnsubscribed;
+        let thoseTracksUnpublished;
+        let thoseTracksUnsubscribed;
+        let thoseTracksMap;
 
-        const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
-        const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+        before(async () => {
+          sid = await createRoom(randomName(), defaults.topology);
+          const identities = [randomName(), randomName(), randomName()];
+          const options = Object.assign({ name: sid }, defaults);
 
-        await Promise.all([thisRoom].concat(thoseRooms).map(room => {
-          return participantsConnected(room, identities.length - 1);
-        }));
+          thisTrack = await {
+            audio: createLocalAudioTrack,
+            video() { return createLocalVideoTrack(smallVideoConstraints); },
+            data() { return new LocalDataTrack(); }
+          }[kind]();
 
-        thoseParticipants = thoseRooms.map(thatRoom => {
-          return thatRoom.participants.get(thisParticipant.sid);
-        });
+          // eslint-disable-next-line no-warning-comments
+          // TODO(mroberts): Really this test needs to be refactored so that only
+          // the LocalAudio- and LocalVideo-Track tests test the enable/disable
+          // functionality.
+          if (kind !== 'data') {
+            thisTrack.enable(isEnabled);
+          }
 
-        await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }));
+          const tracks = [thisTrack];
+          const thisIdentity = identities[0];
+          const thisToken = getToken(thisIdentity);
+          const theseOptions = Object.assign({ tracks }, options);
+          thisRoom = await connect(thisToken, theseOptions);
+          thisParticipant = thisRoom.localParticipant;
+          await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
-        if (when !== 'published') {
-          thisParticipant.unpublishTrack(thisTrack);
+          const thoseIdentities = identities.slice(1);
+          const thoseTokens = thoseIdentities.map(getToken);
+          const thoseOptions = Object.assign({ tracks: [] }, options);
+          thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+
+          await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+            return participantsConnected(room, identities.length - 1);
+          }));
+
+          thoseParticipants = thoseRooms.map(thatRoom => {
+            return thatRoom.participants.get(thisParticipant.sid);
+          });
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
+            return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
 
-          await Promise.all([
-            thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ]);
-        }
+          if (when !== 'published') {
+            thisParticipant.unpublishTrack(thisTrack);
 
-        thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
+            await Promise.all(thoseParticipants.map(thatParticipant => {
+              return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
+            }));
 
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
-          return new Promise(resolve => publication.once('unsubscribed', resolve));
-        });
+            await Promise.all([
+              thisParticipant.publishTrack(thisTrack),
+              ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
+            ]);
+          }
 
-        [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
-          'trackUnsubscribed',
-          'trackUnpublished'
-        ].map(event => {
-          return Promise.all(thoseParticipants.map(async thatParticipant => {
-            const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
-            return trackOrPublication;
-          }));
-        }));
+          thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
 
-        thoseTracksMap = {
-          trackUnpublished: thoseTracksUnpublished,
-          trackUnsubscribed: thoseTracksUnsubscribed
-        };
-      });
-
-      after(() => {
-        if (kind !== 'data') {
-          thisTrack.stop();
-        }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
-      });
-
-      it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
-        const thoseTracks = await Promise.all(thosePublicationsUnsubscribed);
-        assert.deepEqual(thoseTracks, thoseTracksMap.trackUnsubscribed);
-      });
-
-      it('should raise a "trackUnpublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
-        const thoseTrackPublications = thoseTracksMap.trackUnpublished;
-        thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
-          audio: RemoteAudioTrackPublication,
-          data: RemoteDataTrackPublication,
-          video: RemoteVideoTrackPublication
-        }[kind]));
-      });
-
-      ['isTrackEnabled', 'trackName', 'trackSid'].forEach(prop => {
-        it(`should set the RemoteTrackPublication's .${prop} to the LocalTrackPublication's .${prop}`, () => {
-          const thoseTrackPublications = thoseTracksMap.trackUnpublished;
-          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[prop], thisLocalTrackPublication[prop]));
-        });
-      });
-
-      it('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
-        const thoseTracks = thoseTracksMap.trackUnsubscribed;
-        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
-          audio: RemoteAudioTrack,
-          video: RemoteVideoTrack,
-          data: RemoteDataTrack
-        }[thatTrack.kind]));
-      });
-
-      describe('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
-        it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
-          const thoseTracks = thoseTracksMap.trackUnsubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
-        });
-
-        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
-          const thoseTracks = thoseTracksMap.trackUnsubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-        });
-
-        if (kind !== 'data') {
-          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-            const thoseTracks = thoseTracksMap.trackUnsubscribed;
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+          thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
+            return new Promise(resolve => publication.once('unsubscribed', resolve));
           });
-        }
+
+          [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
+            'trackUnsubscribed',
+            'trackUnpublished'
+          ].map(event => {
+            return Promise.all(thoseParticipants.map(async thatParticipant => {
+              const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
+              return trackOrPublication;
+            }));
+          }));
+
+          thoseTracksMap = {
+            trackUnpublished: thoseTracksUnpublished,
+            trackUnsubscribed: thoseTracksUnsubscribed
+          };
+        });
+
+        after(() => {
+          if (kind !== 'data') {
+            thisTrack.stop();
+          }
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
+
+        it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
+          const thoseTracks = await Promise.all(thosePublicationsUnsubscribed);
+          assert.deepEqual(thoseTracks, thoseTracksMap.trackUnsubscribed);
+        });
+
+        it('should raise a "trackUnpublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
+          const thoseTrackPublications = thoseTracksMap.trackUnpublished;
+          thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
+            audio: RemoteAudioTrackPublication,
+            data: RemoteDataTrackPublication,
+            video: RemoteVideoTrackPublication
+          }[kind]));
+        });
+
+        ['isTrackEnabled', 'trackName', 'trackSid'].forEach(prop => {
+          it(`should set the RemoteTrackPublication's .${prop} to the LocalTrackPublication's .${prop}`, () => {
+            const thoseTrackPublications = thoseTracksMap.trackUnpublished;
+            thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[prop], thisLocalTrackPublication[prop]));
+          });
+        });
+
+        it('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
+          const thoseTracks = thoseTracksMap.trackUnsubscribed;
+          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+            audio: RemoteAudioTrack,
+            video: RemoteVideoTrack,
+            data: RemoteDataTrack
+          }[thatTrack.kind]));
+        });
+
+        describe('should raise a "trackUnsubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+            const thoseTracks = thoseTracksMap.trackUnsubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
+          });
+
+          it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+            const thoseTracks = thoseTracksMap.trackUnsubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
+          });
+
+          if (kind !== 'data') {
+            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
+              const thoseTracks = thoseTracksMap.trackUnsubscribed;
+              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
+            });
+          }
+        });
       });
     });
-  });
+  } else {
+    it('skipped unstable tests for - #unpublishTrack');
+  }
 
   // NOTE(mroberts): The following test reproduces the issue described in
   //

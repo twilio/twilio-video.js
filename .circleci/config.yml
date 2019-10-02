@@ -8,10 +8,10 @@ version: 2.1
 parameters:
   run_release_steps:
     type: boolean
-    default: true
+    default: false
   stability:
     type: string
-    default: "stable"  # as against "stable"
+    default: "all"  # as against "stable"
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
   ENABLE_REST_API_TESTS: "true"
