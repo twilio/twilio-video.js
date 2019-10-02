@@ -25,10 +25,9 @@ function getTestPaths(path) {
 
 function filterTests(paths) {
   if (process.env.TEST_FILES) {
-    console.log('test files provided were: ', process.env.TEST_FILES);
     let testFiles = process.env.TEST_FILES.split('\n');
     testFiles = testFiles.map(file => resolvePath(file));
-    return paths.filter((path) => testFiles.includes(path));
+    return paths.filter(path => testFiles.includes(path));
   }
   return paths;
 }
