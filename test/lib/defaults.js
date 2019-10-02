@@ -9,6 +9,7 @@ const defaults = [
   'environment',
   'logLevel',
   'regions',
+  'stability', // possible values are: "all", "stable"
   'topology',
   'wsServer',
   'wsServerInsights'
@@ -23,7 +24,8 @@ const defaults = [
 }, {
   dominantSpeaker: true,
   networkQuality: true,
-  topology: 'peer-to-peer'
+  topology: 'peer-to-peer',
+  stability: 'all'
 });
 
 // NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows

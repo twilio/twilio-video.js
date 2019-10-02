@@ -314,226 +314,231 @@ describe('LocalParticipant', function() {
       });
     });
 
-    combinationContext([
-      [
-        [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled'}`
-      ],
-      [
-        ['audio', 'video', 'data'],
-        x => `Local${capitalize(x)}Track`
-      ],
-      [
-        [true, false],
-        x => `with${x ? '' : 'out'} a name for the LocalTrack`
-      ],
-      [
-        [undefined, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD],
-        x => `with${x ? ` priority "${x}"` : 'out specifying a priority'}`
-      ],
-      [
-        ['never', 'previously'],
-        x => `that has ${x} been published`
-      ]
-    ], ([isEnabled, kind, withName, priority, when]) => {
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mmalavalli): Enable this scenario for Firefox when the following
-      // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
-      if (isFirefox && kind === 'data' && when === 'previously') {
-        return;
-      }
-
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mmalavalli): Until we find out why Travis is failing tests due
-      // to not being able to create enough RTCPeerConnections, we will enable
-      // testing for only when priority is set to "high". (JSDK-2417)
-      if (priority !== PRIORITY_HIGH) {
-        return;
-      }
-
-      let thisRoom;
-      let thisParticipant;
-      let thisLocalTrackPublication;
-      let thisTrack;
-      let thoseRooms;
-      let thoseParticipants;
-      let thoseTracksBefore;
-      let thoseTracksPublished;
-      let thoseTracksSubscribed;
-      let thoseTracksMap;
-
-      const localTrackNameByKind = {
-        audio: 'foo',
-        video: 'bar',
-        data: 'baz'
-      }[kind];
-
-      before(async () => {
-        sid = await createRoom(randomName(), defaults.topology);
-        const identities = [randomName(), randomName(), randomName()];
-        const options = Object.assign({ name: sid }, defaults);
-        const localTrackOptions = Object.assign(
-          withName
-            ? { name: localTrackNameByKind }
-            : {},
-          smallVideoConstraints);
-
-        thisTrack = await {
-          audio: createLocalAudioTrack,
-          video: createLocalVideoTrack,
-          data() { return new LocalDataTrack(); }
-        }[kind](localTrackOptions);
+    // these tests have been flaky. disable them when asked to run only stable tests.
+    if (defaults.stability === 'stable') {
+      combinationContext([
+        [
+          [true, false],
+          x => `called with ${x ? 'an enabled' : 'a disabled'}`
+        ],
+        [
+          ['audio', 'video', 'data'],
+          x => `Local${capitalize(x)}Track`
+        ],
+        [
+          [true, false],
+          x => `with${x ? '' : 'out'} a name for the LocalTrack`
+        ],
+        [
+          [undefined, PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD],
+          x => `with${x ? ` priority "${x}"` : 'out specifying a priority'}`
+        ],
+        [
+          ['never', 'previously'],
+          x => `that has ${x} been published`
+        ]
+      ], ([isEnabled, kind, withName, priority, when]) => {
+        // eslint-disable-next-line no-warning-comments
+        // TODO(mmalavalli): Enable this scenario for Firefox when the following
+        // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
+        if (isFirefox && kind === 'data' && when === 'previously') {
+          return;
+        }
 
         // eslint-disable-next-line no-warning-comments
-        // TODO(mroberts): Really this test needs to be refactored so that only
-        // the LocalAudio- and LocalVideo-Track tests test the enable/disable
-        // functionality.
-        if (kind !== 'data') {
-          thisTrack.enable(isEnabled);
+        // TODO(mmalavalli): Until we find out why Travis is failing tests due
+        // to not being able to create enough RTCPeerConnections, we will enable
+        // testing for only when priority is set to "high". (JSDK-2417)
+        if (priority !== PRIORITY_HIGH) {
+          return;
         }
 
-        const tracks = when === 'previously'
-          ? [thisTrack]
-          : [];
+        let thisRoom;
+        let thisParticipant;
+        let thisLocalTrackPublication;
+        let thisTrack;
+        let thoseRooms;
+        let thoseParticipants;
+        let thoseTracksBefore;
+        let thoseTracksPublished;
+        let thoseTracksSubscribed;
+        let thoseTracksMap;
 
-        const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
-        const theseOptions = Object.assign({ tracks }, options);
-        thisRoom = await connect(thisToken, theseOptions);
-        thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
+        const localTrackNameByKind = {
+          audio: 'foo',
+          video: 'bar',
+          data: 'baz'
+        }[kind];
 
-        const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
-        const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+        before(async () => {
+          sid = await createRoom(randomName(), defaults.topology);
+          const identities = [randomName(), randomName(), randomName()];
+          const options = Object.assign({ name: sid }, defaults);
+          const localTrackOptions = Object.assign(
+            withName
+              ? { name: localTrackNameByKind }
+              : {},
+            smallVideoConstraints);
 
-        await Promise.all([thisRoom].concat(thoseRooms).map(room => {
-          return participantsConnected(room, identities.length - 1);
-        }));
+          thisTrack = await {
+            audio: createLocalAudioTrack,
+            video: createLocalVideoTrack,
+            data() { return new LocalDataTrack(); }
+          }[kind](localTrackOptions);
 
-        thoseParticipants = thoseRooms.map(thatRoom => {
-          return thatRoom.participants.get(thisParticipant.sid);
-        });
+          // eslint-disable-next-line no-warning-comments
+          // TODO(mroberts): Really this test needs to be refactored so that only
+          // the LocalAudio- and LocalVideo-Track tests test the enable/disable
+          // functionality.
+          if (kind !== 'data') {
+            thisTrack.enable(isEnabled);
+          }
 
-        await Promise.all(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }));
+          const tracks = when === 'previously'
+            ? [thisTrack]
+            : [];
 
-        thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
-          return [...thatParticipant._tracks.values()];
-        });
+          const thisIdentity = identities[0];
+          const thisToken = getToken(thisIdentity);
+          const theseOptions = Object.assign({ tracks }, options);
+          thisRoom = await connect(thisToken, theseOptions);
+          thisParticipant = thisRoom.localParticipant;
+          await tracksPublished(thisParticipant, thisParticipant._tracks.size);
 
-        if (when === 'previously') {
-          thisParticipant.unpublishTrack(thisTrack);
+          const thoseIdentities = identities.slice(1);
+          const thoseTokens = thoseIdentities.map(getToken);
+          const thoseOptions = Object.assign({ tracks: [] }, options);
+          thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+
+          await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+            return participantsConnected(room, identities.length - 1);
+          }));
+
+          thoseParticipants = thoseRooms.map(thatRoom => {
+            return thatRoom.participants.get(thisParticipant.sid);
+          });
 
           await Promise.all(thoseParticipants.map(thatParticipant => {
-            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
+            return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
           }));
-        }
 
-        [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
-          thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
-          ...['trackPublished', 'trackSubscribed'].map(event => {
-            return Promise.all(thoseParticipants.map(async thatParticipant => {
-              const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
-              return trackOrPublication;
+          thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
+            return [...thatParticipant._tracks.values()];
+          });
+
+          if (when === 'previously') {
+            thisParticipant.unpublishTrack(thisTrack);
+
+            await Promise.all(thoseParticipants.map(thatParticipant => {
+              return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
             }));
-          })
-        ]);
+          }
 
-        thoseTracksMap = {
-          trackPublished: thoseTracksPublished,
-          trackSubscribed: thoseTracksSubscribed
-        };
-      });
+          [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await Promise.all([
+            thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
+            ...['trackPublished', 'trackSubscribed'].map(event => {
+              return Promise.all(thoseParticipants.map(async thatParticipant => {
+                const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
+                return trackOrPublication;
+              }));
+            })
+          ]);
 
-      after(() => {
-        if (kind !== 'data') {
-          thisTrack.stop();
-        }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
-      });
+          thoseTracksMap = {
+            trackPublished: thoseTracksPublished,
+            trackSubscribed: thoseTracksSubscribed
+          };
+        });
 
-      it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
-        const thoseTrackPublications = thoseTracksMap.trackPublished;
-        thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
-          audio: RemoteAudioTrackPublication,
-          data: RemoteDataTrackPublication,
-          video: RemoteVideoTrackPublication
-        }[kind]));
-      });
+        after(() => {
+          if (kind !== 'data') {
+            thisTrack.stop();
+          }
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
 
-      ['isTrackEnabled', ['publishPriority', 'priority'], 'trackName', 'trackSid'].forEach(propOrPropPair => {
-        const [remoteProp, localProp] = Array.isArray(propOrPropPair) ? propOrPropPair : [propOrPropPair, propOrPropPair];
-        it(`should set the RemoteTrackPublication's .${remoteProp} to the LocalTrackPublication's .${localProp}`, () => {
+        it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
           const thoseTrackPublications = thoseTracksMap.trackPublished;
-          thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[remoteProp], thisLocalTrackPublication[localProp]));
+          thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
+            audio: RemoteAudioTrackPublication,
+            data: RemoteDataTrackPublication,
+            video: RemoteVideoTrackPublication
+          }[kind]));
         });
-      });
 
-      it('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
-        const thoseTracks = thoseTracksMap.trackSubscribed;
-        thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
-          audio: RemoteAudioTrack,
-          video: RemoteVideoTrack,
-          data: RemoteDataTrack
-        }[thatTrack.kind]));
-      });
+        ['isTrackEnabled', ['publishPriority', 'priority'], 'trackName', 'trackSid'].forEach(propOrPropPair => {
+          const [remoteProp, localProp] = Array.isArray(propOrPropPair) ? propOrPropPair : [propOrPropPair, propOrPropPair];
+          it(`should set the RemoteTrackPublication's .${remoteProp} to the LocalTrackPublication's .${localProp}`, () => {
+            const thoseTrackPublications = thoseTracksMap.trackPublished;
+            thoseTrackPublications.forEach(thatPublication => assert.equal(thatPublication[remoteProp], thisLocalTrackPublication[localProp]));
+          });
+        });
 
-      describe('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
-        it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+        it('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack', () => {
           const thoseTracks = thoseTracksMap.trackSubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
+          thoseTracks.forEach(thatTrack => assert(thatTrack instanceof {
+            audio: RemoteAudioTrack,
+            video: RemoteVideoTrack,
+            data: RemoteDataTrack
+          }[thatTrack.kind]));
         });
 
-        it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
-          const thoseTracks = thoseTracksMap.trackSubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
-        });
+        describe('should raise a "trackSubscribed" event on the corresponding RemoteParticipants with a RemoteTrack and', () => {
+          it('should set the RemoteTrack\'s .sid to the LocalTrackPublication\'s .trackSid', () => {
+            const thoseTracks = thoseTracksMap.trackSubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid));
+          });
 
-        it('should set each RemoteTrack\'s .name to the LocalTrackPublication\'s .trackName', () => {
-          const thoseTracks = thoseTracksMap.trackSubscribed;
-          thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
-        });
+          it(`should set each RemoteTrack's .kind to "${kind}"`, () => {
+            const thoseTracks = thoseTracksMap.trackSubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.kind, kind));
+          });
 
-        if (kind === 'data') {
-          ['string', 'arraybuffer'].forEach(dataType => {
-            it(`should transmit any ${dataType} data sent through the LocalDataTrack to the Room to each RemoteDataTrack`, async () => {
-              const data = dataType === 'string' ? 'foo' : new Uint32Array([1, 2, 3]);
+          it('should set each RemoteTrack\'s .name to the LocalTrackPublication\'s .trackName', () => {
+            const thoseTracks = thoseTracksMap.trackSubscribed;
+            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.name, thisLocalTrackPublication.trackName));
+          });
+
+          if (kind === 'data') {
+            ['string', 'arraybuffer'].forEach(dataType => {
+              it(`should transmit any ${dataType} data sent through the LocalDataTrack to the Room to each RemoteDataTrack`, async () => {
+                const data = dataType === 'string' ? 'foo' : new Uint32Array([1, 2, 3]);
+                const thoseTracks = thoseTracksMap.trackSubscribed;
+                const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
+                const dataChannelSendInterval = setInterval(() => thisTrack.send(dataType === 'string' ? data : data.buffer), 1000);
+                const receivedData = await Promise.all(thoseTracksReceivedData);
+                clearInterval(dataChannelSendInterval);
+                receivedData.forEach(item => dataType === 'string' ? assert.equal(item, data) : assert.deepEqual(new Uint32Array(item), data));
+              });
+            });
+          } else {
+            it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
               const thoseTracks = thoseTracksMap.trackSubscribed;
-              const thoseTracksReceivedData = thoseTracks.map(track => new Promise(resolve => track.once('message', resolve)));
-              const dataChannelSendInterval = setInterval(() => thisTrack.send(dataType === 'string' ? data : data.buffer), 1000);
-              const receivedData = await Promise.all(thoseTracksReceivedData);
-              clearInterval(dataChannelSendInterval);
-              receivedData.forEach(item => dataType === 'string' ? assert.equal(item, data) : assert.deepEqual(new Uint32Array(item), data));
+              thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
             });
-          });
-        } else {
-          it(`should set each RemoteTrack's .isEnabled state to ${isEnabled}`, () => {
-            const thoseTracks = thoseTracksMap.trackSubscribed;
-            thoseTracks.forEach(thatTrack => assert.equal(thatTrack.isEnabled, isEnabled));
-          });
-        }
+          }
 
-        if (when === 'previously') {
-          it('the RemoteTrack should be a new RemoteTrack instance', () => {
-            const thoseTracks = thoseTracksMap.trackSubscribed;
-            assert.equal(thoseTracksBefore.length, thoseTracks.length);
-            thoseTracksBefore.forEach((thatTrackBefore, i) => {
-              const thatTrackAfter = thoseTracks[i];
-              if (!isFirefox && !isSafari) {
-                assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
-              }
-              assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
-              assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
-              assert.notEqual(thatTrackAfter, thatTrackBefore);
+          if (when === 'previously') {
+            it('the RemoteTrack should be a new RemoteTrack instance', () => {
+              const thoseTracks = thoseTracksMap.trackSubscribed;
+              assert.equal(thoseTracksBefore.length, thoseTracks.length);
+              thoseTracksBefore.forEach((thatTrackBefore, i) => {
+                const thatTrackAfter = thoseTracks[i];
+                if (!isFirefox && !isSafari) {
+                  assert.notEqual(thatTrackAfter.sid, thatTrackBefore.sid);
+                }
+                assert.equal(thatTrackAfter.kind, thatTrackBefore.kind);
+                assert.equal(thatTrackAfter.enabled, thatTrackBefore.enabled);
+                assert.notEqual(thatTrackAfter, thatTrackBefore);
+              });
             });
-          });
-        }
+          }
+        });
       });
-    });
+    } else {
+      it('skipped disabled tests!');
+    }
 
     // NOTE(mroberts): Waiting on a Group Rooms deploy.
     describe('"trackPublicationFailed" event', () => {

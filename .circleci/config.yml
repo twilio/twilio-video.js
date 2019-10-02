@@ -6,13 +6,12 @@
 # circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
 parameters:
-  run_stable_only:
-    type: boolean
-    default: false
   run_release_steps:
     type: boolean
-    default: false
-
+    default: true
+  stability:
+    type: string
+    default: "stable"  # as against "stable"
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
   ENABLE_REST_API_TESTS: "true"
@@ -147,8 +146,12 @@ jobs:
         type: string
       topology:
         type: string
+      stability:
+        type: string
+        default: "all"
     environment:
       TOPOLOGY: << parameters.topology >>
+      STABILITY: << parameters.stability >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -203,12 +206,14 @@ workflows:
           <<: *browser_chrome
           <<: *bver_stable
           <<: *topology_p2p
+          stability: << pipeline.parameters.stability >>
           requires: [BuildComplete]
       - run-integration-tests:
           name: "chrome stable group"
           <<: *browser_chrome
           <<: *bver_stable
           <<: *topology_p2p
+          stability: << pipeline.parameters.stability >>
           requires: [BuildComplete]
       - BuildPassed:
           requires:
@@ -248,6 +253,7 @@ workflows:
           <<: *browser_firefox
           <<: *bver_beta
   Pull_Request_Workflow:
+    unless: << pipeline.parameters.run_release_steps >>
     jobs:
       - Build
       - UnitTests
