@@ -53,8 +53,7 @@ executors:
     environment:
       <<: *defaultEnv
   machine-executor:
-    machine:
-      - image: ubuntu-1604:201903-01
+    machine: true
     environment:
       <<: *defaultEnv
 
