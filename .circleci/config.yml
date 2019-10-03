@@ -238,6 +238,20 @@ workflows:
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
           requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable p2p"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_p2p
+          stability: << pipeline.parameters.stability >>
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable group"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_p2p
+          stability: << pipeline.parameters.stability >>
+          requires: [BuildComplete]
       - Framework-tests:
           name: "framework tests"
           requires: [BuildComplete]
@@ -245,16 +259,11 @@ workflows:
           name: "Release dry run"
           dryRun: true
           requires:
-            - "chrome stable p2p"
-            - "chrome stable group"
             - "framework tests"
       - hold: # <<< A job that will require manual approval in the CircleCI web application.
           type: approval # <<< This key-value pair will set your workflow to a status of "On Hold"
           requires:
             - "Release dry run"
-            - "chrome stable p2p"
-            - "chrome stable group"
-            - "framework tests"
       - ExecuteRelease: # real run for the release command
           name: "Release"
           dryRun: false

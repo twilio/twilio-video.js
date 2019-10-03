@@ -46,7 +46,7 @@ describe('LocalTrackPublication', function() {
         x => `Local${capitalize(x)}Track`
       ],
       [
-        ['published', 'published, unpublished, and then published again'],
+        defaults.stability === 'all' ? ['published', 'published, unpublished, and then published again'] : ['published'],
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
