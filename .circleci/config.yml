@@ -149,7 +149,6 @@ jobs:
         type: boolean
         default: true
     steps:
-      - build
       - when:
           condition: <<parameters.dryRun>>
           steps:
@@ -220,17 +219,13 @@ workflows:
     jobs:
       - Build
       - UnitTests
-      - MarkerJob:
-          marker: "BuildComplete"
-          name: "BuildComplete"
-          requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable p2p"
           <<: *browser_chrome
           <<: *bver_stable
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
-          requires: [BuildComplete]
+          requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable group"
           <<: *browser_chrome
@@ -244,17 +239,17 @@ workflows:
           <<: *bver_stable
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
-          requires: [BuildComplete]
+          requires: [Build, UnitTests]
       - run-integration-tests:
           name: "firefox stable group"
           <<: *browser_firefox
           <<: *bver_stable
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
-          requires: [BuildComplete]
+          requires: [Build, UnitTests]
       - Framework-tests:
           name: "framework tests"
-          requires: [BuildComplete]
+          requires: [Build, UnitTests]
       - ExecuteRelease: # dry run for the release command.
           name: "Release dry run"
           dryRun: true

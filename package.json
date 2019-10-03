@@ -60,7 +60,7 @@
     "mocha": "^3.2.0",
     "npm-run-all": "^4.0.2",
     "puppeteer": "^1.11.0",
-    "release-tool": "^0.2.2",
+    "release-tool": "github:twilio/release-tool#JSDK-2528_circleci",
     "requirejs": "^2.3.3",
     "rimraf": "^2.6.1",
     "selenium-webdriver": "3.3.0",
