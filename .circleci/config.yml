@@ -12,6 +12,10 @@ parameters:
   stability:
     type: string
     default: "all"  # as against "stable"
+  releaseCommand:
+    type: string
+    default: "ls -alt"
+
 defaultEnv: &defaultEnv
   ENVIRONMENT: "prod"
   ENABLE_REST_API_TESTS: "true"
@@ -29,6 +33,7 @@ beta: &bver_beta
   bver: "beta"
 unstable: &bver_unstable
   bver: "unstable"
+
 executors:
   docker-with-browser:
     parameters:
@@ -51,6 +56,7 @@ executors:
     machine: true
     environment:
       <<: *defaultEnv
+
 commands:
   get-code-and-dependencies:
     steps:
@@ -118,6 +124,7 @@ commands:
         default: "Hello World"
     steps:
       - run: echo << parameters.to >>
+
 jobs:
   Build:
     executor: docker-with-browser
@@ -127,16 +134,30 @@ jobs:
     executor: docker-with-browser
     steps:
       - unit-tests
-  BuildComplete:
+  MarkerJob: # this job just echos.
     executor: generic-executor
+    parameters:
+      marker:
+        type: string
     steps:
       - echo-command:
-          to: "Build Phase Complete!"
-  BuildPassed:
-    executor: generic-executor
+          to: << parameters.marker >>
+  ExecuteRelease:
+    executor: machine-executor
+    parameters:
+      dryRun:
+        type: boolean
+        default: true
     steps:
-      - echo-command:
-          to: "Build Passed!"
+      - build
+      - when:
+          condition: <<parameters.dryRun>>
+          steps:
+            - run: echo <<pipeline.parameters.releaseCommand>>
+      - unless:
+          condition: <<parameters.dryRun>>
+          steps:
+            - run: <<pipeline.parameters.releaseCommand>>
   run-integration-tests:
     parallelism: 6
     parameters:
@@ -199,7 +220,9 @@ workflows:
     jobs:
       - Build
       - UnitTests
-      - BuildComplete:
+      - MarkerJob:
+          marker: "BuildComplete"
+          name: "BuildComplete"
           requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable p2p"
@@ -215,10 +238,27 @@ workflows:
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
           requires: [BuildComplete]
-      - BuildPassed:
+      - Framework-tests:
+          name: "framework tests"
+          requires: [BuildComplete]
+      - ExecuteRelease: # dry run for the release command.
+          name: "Release dry run"
+          dryRun: true
           requires:
             - "chrome stable p2p"
             - "chrome stable group"
+            - "framework tests"
+      - hold: # <<< A job that will require manual approval in the CircleCI web application.
+          type: approval # <<< This key-value pair will set your workflow to a status of "On Hold"
+          requires:
+            - "Release dry run"
+            - "chrome stable p2p"
+            - "chrome stable group"
+            - "framework tests"
+      - ExecuteRelease: # real run for the release command
+          name: "Release"
+          dryRun: false
+          requires: [hold]
   Build_Docker_Images_Workflow:
     triggers:
       - schedule:
@@ -257,7 +297,9 @@ workflows:
     jobs:
       - Build
       - UnitTests
-      - BuildComplete:
+      - MarkerJob:
+          marker: "BuildComplete"
+          name: "BuildComplete"
           requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable group"
@@ -354,7 +396,9 @@ workflows:
       - Framework-tests:
           name: "framework tests"
           requires: [BuildComplete]
-      - BuildPassed:
+      - MarkerJob:
+          marker: "BuildPassed"
+          name: "BuildPassed"
           requires:
             - "framework tests"
             - "firefox stable p2p"
