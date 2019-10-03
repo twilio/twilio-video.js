@@ -9,6 +9,7 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
+  LocalAudioTrack,
   LocalDataTrack,
   LocalVideoTrack
 } = require('../../../lib');
@@ -29,7 +30,12 @@ const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
-const { isRTCRtpSenderParamsSupported, smallVideoConstraints } = require('../../lib/util');
+
+const {
+  createSyntheticAudioStreamTrack,
+  isRTCRtpSenderParamsSupported,
+  smallVideoConstraints
+} = require('../../lib/util');
 
 const {
   capitalize,
@@ -892,107 +898,148 @@ describe('LocalParticipant', function() {
     });
   });
 
-  // NOTE(mroberts): The following test reproduces the issue described in
-  //
-  //   https://github.com/twilio/twilio-video.js/issues/81
-  //
-  describe('#publishTrack called twice with two different LocalTracks in quick succession', () => {
-    let sid;
-    let thisRoom;
-    let thisParticipant;
-    let thisAudioTrack;
-    let thisLocalAudioTrackPublication;
-    let thisLocalVideoTrackPublication;
-    let thisVideoTrack;
-    let thatRoom;
-    let thatParticipant;
-    let thoseAudioTracks;
-    let thoseVideoTracks;
+  describe('#publishTrack called twice in quick succession', () => {
+    function kindCombonation(contextPrefix) {
+      return [
+        [
+          {
+            createLocalTrack: () => createSyntheticAudioStreamTrack() || createLocalAudioTrack({ fake: true }),
+            kind: 'audio',
+            RemoteTrackPublication: RemoteAudioTrackPublication
+          },
+          {
+            createLocalTrack: () => new LocalDataTrack(),
+            kind: 'data',
+            RemoteTrackPublication: RemoteDataTrackPublication
+          },
+          {
+            createLocalTrack: () => createLocalVideoTrack(smallVideoConstraints),
+            kind: 'video',
+            RemoteTrackPublication: RemoteVideoTrackPublication
+          }
+        ],
+        ({ kind }) => `${contextPrefix} a Local${capitalize(kind)}Track`
+      ];
+    }
 
-    before(async () => {
-      sid = await createRoom(randomName(), defaults.topology);
-      const constraints = { audio: true, video: smallVideoConstraints, fake: true };
+    combinationContext([kindCombonation('with'), kindCombonation('and')], ([kindCombination1, kindCombination2]) => {
+      const createLocalTrack1 = kindCombination1.createLocalTrack;
+      const createLocalTrack2 = kindCombination2.createLocalTrack;
+      const kind1 = kindCombination1.kind;
+      const kind2 = kindCombination2.kind;
+      const RemoteTrackPublication1 = kindCombination1.RemoteTrackPublication;
+      const RemoteTrackPublication2 = kindCombination2.RemoteTrackPublication;
 
-      // Answerer
-      const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
-      thatRoom = await connect(getToken(randomName()), thoseOptions);
+      let sid;
+      let thisRoom;
+      let thisParticipant;
+      let thisLocalTrack1;
+      let thisLocalTrack2;
+      let thisLocalTrackPublication1;
+      let thisLocalTrackPublication2;
+      let thatRoom;
+      let thatParticipant;
+      let thoseTracks1;
+      let thoseTracks2;
 
-      [thisAudioTrack, thisVideoTrack] = await createLocalTracks(constraints);
+      before(async () => {
+        sid = await createRoom(randomName(), defaults.topology);
 
-      // Offerer
-      const theseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
-      thisRoom = await connect(getToken(randomName()), theseOptions);
-      thisParticipant = thisRoom.localParticipant;
+        // Answerer
+        const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
+        thatRoom = await connect(getToken(randomName()), thoseOptions);
 
-      await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
-      thatParticipant = thatRoom.participants.get(thisParticipant.sid);
-      assert(thatParticipant);
+        [thisLocalTrack1, thisLocalTrack2] = [
+          await createLocalTrack1(),
+          await createLocalTrack2()
+        ];
 
-      // NOTE(mroberts): Wait 5 seconds.
-      await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+        thisLocalTrack1 = kind1 === 'audio' && thisLocalTrack1 instanceof MediaStreamTrack
+          ? new LocalAudioTrack(thisLocalTrack1)
+          : thisLocalTrack1;
 
-      let thoseTracksPublished;
-      let thoseTracksSubscribed;
-      [thisLocalAudioTrackPublication, thisLocalVideoTrackPublication, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
-        thisParticipant.publishTrack(thisAudioTrack),
-        thisParticipant.publishTrack(thisVideoTrack),
-        waitForTracks('trackPublished', thatParticipant, 2),
-        waitForTracks('trackSubscribed', thatParticipant, 2)
-      ]);
+        thisLocalTrack2 = kind2 === 'audio' && thisLocalTrack2 instanceof MediaStreamTrack
+          ? new LocalAudioTrack(thisLocalTrack2)
+          : thisLocalTrack2;
 
-      function findTrackOrPublication(tracksOrPublications, kind) {
-        return tracksOrPublications.find(tracksOrPublication => tracksOrPublication.kind === kind);
+        // Offerer
+        const theseOptions = Object.assign({ name: sid, tracks: [], preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }, defaults);
+        thisRoom = await connect(getToken(randomName()), theseOptions);
+        thisParticipant = thisRoom.localParticipant;
+
+        await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
+        thatParticipant = thatRoom.participants.get(thisParticipant.sid);
+        assert(thatParticipant);
+
+        // NOTE(mroberts): Wait 5 seconds.
+        await new Promise(resolve => setTimeout(resolve, 5 * 1000));
+
+        let thoseTracksPublished;
+        let thoseTracksSubscribed;
+        [thisLocalTrackPublication1, thisLocalTrackPublication2, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
+          thisParticipant.publishTrack(thisLocalTrack1),
+          thisParticipant.publishTrack(thisLocalTrack2),
+          waitForTracks('trackPublished', thatParticipant, 2),
+          waitForTracks('trackSubscribed', thatParticipant, 2)
+        ]);
+
+        function findTrackOrPublication(tracksOrPublications, trackSid1) {
+          return tracksOrPublications.find(({ sid, trackSid }) => sid === trackSid1 || trackSid === trackSid1);
+        }
+
+        thoseTracks1 = {
+          trackPublished: findTrackOrPublication(thoseTracksPublished, thisLocalTrackPublication1.trackSid),
+          trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, thisLocalTrackPublication1.trackSid)
+        };
+
+        thoseTracks2 = {
+          trackPublished: findTrackOrPublication(thoseTracksPublished, thisLocalTrackPublication2.trackSid),
+          trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, thisLocalTrackPublication2.trackSid)
+        };
+      });
+
+      after(() => {
+        [thisLocalTrack1, thisLocalTrack2].forEach(track => track.stop && track.stop());
+        [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+        return completeRoom(sid);
+      });
+
+      it(`should eventually raise "trackPublished" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
+        [
+          [thisLocalTrackPublication1, thoseTracks1, RemoteTrackPublication1],
+          [thisLocalTrackPublication2, thoseTracks2, RemoteTrackPublication2]
+        ].forEach(([thisLocalTrackPublication, thoseTracks, RemoteTrackPublication]) => {
+          const thatTrackPublication = thoseTracks.trackPublished;
+          assert(thatTrackPublication instanceof RemoteTrackPublication);
+          ['isTrackEnabled', 'kind', 'trackName', 'trackSid'].forEach(prop => {
+            assert.equal(thatTrackPublication[prop], thisLocalTrackPublication[prop]);
+          });
+        });
+      });
+
+      it(`should eventually raise a "trackSubscribed" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
+        [
+          [kind1, thisLocalTrack1, thisLocalTrackPublication1, thoseTracks1],
+          [kind2, thisLocalTrack2, thisLocalTrackPublication2, thoseTracks2]
+        ].forEach(([kind, thisLocalTrack, thisLocalTrackPublication, thoseTracks]) => {
+          const thatTrack = thoseTracks.trackSubscribed;
+          assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid);
+          assert.equal(thatTrack.kind, thisLocalTrackPublication.kind);
+          assert.equal(thatTrack.enabled, thisLocalTrackPublication.enabled);
+          if (kind !== 'data') {
+            assert.equal(thatTrack.mediaStreamTrack.readyState, thisLocalTrack.mediaStreamTrack.readyState);
+          }
+        });
+      });
+
+      const nonDataKinds = [kind1, kind2].filter(kind => kind !== 'data');
+      if (nonDataKinds.length > 0) {
+        it(`eventually raise a "trackStarted" event for the published ${nonDataKinds.map(kind => `Local${capitalize(kind)}Track`).join(' and ')}`, async () => {
+          const thatTrack1 = thoseTracks1.trackSubscribed;
+          const thatTrack2 = thoseTracks2.trackSubscribed;
+          await Promise.all([thatTrack1, thatTrack2].filter(({ kind }) => kind !== 'data').map(trackStarted));
+        });
       }
-
-      thoseAudioTracks = {
-        trackPublished: findTrackOrPublication(thoseTracksPublished, 'audio'),
-        trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, 'audio')
-      };
-      thoseVideoTracks = {
-        trackPublished: findTrackOrPublication(thoseTracksPublished, 'video'),
-        trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, 'video')
-      };
-    });
-
-    after(() => {
-      thisAudioTrack.stop();
-      thisVideoTrack.stop();
-      [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
-    });
-
-    it('should eventually raise "trackPublished" event for each published LocalTracks', () => {
-      const thatAudioTrackPublication = thoseAudioTracks.trackPublished;
-      assert(thatAudioTrackPublication instanceof RemoteAudioTrackPublication);
-      ['isTrackEnabled', 'kind', 'trackName', 'trackSid'].forEach(prop => {
-        assert.equal(thatAudioTrackPublication[prop], thisLocalAudioTrackPublication[prop]);
-      });
-
-      const thatVideoTrackPublication = thoseVideoTracks.trackPublished;
-      assert(thatVideoTrackPublication instanceof RemoteVideoTrackPublication);
-      ['isTrackEnabled', 'kind', 'trackName', 'trackSid'].forEach(prop => {
-        assert.equal(thatVideoTrackPublication[prop], thisLocalVideoTrackPublication[prop]);
-      });
-    });
-
-    it('should eventually raise a "trackSubscribed" event for each published LocalTracks', () => {
-      const thatAudioTrack = thoseAudioTracks.trackSubscribed;
-      assert.equal(thatAudioTrack.sid, thisLocalAudioTrackPublication.trackSid);
-      assert.equal(thatAudioTrack.kind, thisLocalAudioTrackPublication.kind);
-      assert.equal(thatAudioTrack.enabled, thisLocalAudioTrackPublication.enabled);
-      assert.equal(thatAudioTrack.mediaStreamTrack.readyState, thisAudioTrack.mediaStreamTrack.readyState);
-
-      const thatVideoTrack = thoseVideoTracks.trackSubscribed;
-      assert.equal(thatVideoTrack.sid, thisLocalVideoTrackPublication.trackSid);
-      assert.equal(thatVideoTrack.kind, thisLocalVideoTrackPublication.kind);
-      assert.equal(thatVideoTrack.enabled, thisLocalVideoTrackPublication.enabled);
-      assert.equal(thatVideoTrack.mediaStreamTrack.readyState, thisVideoTrack.mediaStreamTrack.readyState);
-    });
-
-    it('should eventually raise a "trackStarted" event for each published LocalTrack', async () => {
-      const thatAudioTrack = thoseAudioTracks.trackSubscribed;
-      const thatVideoTrack = thoseVideoTracks.trackSubscribed;
-      await Promise.all([thatAudioTrack, thatVideoTrack].map(trackStarted));
     });
   });
 
@@ -1169,6 +1216,45 @@ describe('LocalParticipant', function() {
           });
         });
       });
+    });
+  });
+
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('JSDK-2534', () => {
+    let localVideoTrackPublications;
+    let localVideoTracks;
+    let room;
+    let sid;
+
+    before(async () => {
+      [sid, ...localVideoTracks] = await Promise.all([
+        createRoom(randomName(), defaults.topology)
+      ].concat([
+        smallVideoConstraints,
+        smallVideoConstraints
+      ].map(createLocalVideoTrack)));
+
+      // Step 1: Connect to a Room with a LocalAudioTrack.
+      const options = Object.assign({ audio: true, fake: true, name: sid }, defaults);
+      const token = getToken(randomName());
+      room = await connect(token, options);
+
+      // Step 2: Try to publish two LocalVideoTracks.
+      // The bug is reproducible if this promise never resolves.
+      localVideoTrackPublications = await Promise.all(localVideoTracks.map(track => room.localParticipant.publishTrack(track)));
+    });
+
+    it('should be fixed', () => {
+      assert.equal(localVideoTrackPublications.length, localVideoTracks.length);
+    });
+
+    after(() => {
+      if (Array.isArray(localVideoTracks)) {
+        localVideoTracks.forEach(track => track.stop());
+      }
+      if (room) {
+        room.disconnect();
+      }
+      return completeRoom(sid);
     });
   });
 
