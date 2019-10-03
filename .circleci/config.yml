@@ -53,7 +53,8 @@ executors:
     environment:
       <<: *defaultEnv
   machine-executor:
-    machine: true
+    machine:
+      - image: ubuntu-1604:201903-01
     environment:
       <<: *defaultEnv
 
@@ -143,7 +144,7 @@ jobs:
       - echo-command:
           to: << parameters.marker >>
   ExecuteRelease:
-    executor: machine-executor
+    executor: docker-with-browser
     parameters:
       dryRun:
         type: boolean
