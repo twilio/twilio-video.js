@@ -9,7 +9,6 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalAudioTrack,
   LocalDataTrack,
   LocalVideoTrack
 } = require('../../../lib');
