@@ -67,9 +67,13 @@ describe('isSupported', () => {
       'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0'
     ],
     [
+      'Edg',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063'
+    ],
+    [
       'Just anything with Edge in it',
       'Foo Edge Bar'
-    ],
+    ]
   ].forEach(([browser, useragent]) => {
     it('returns false for explicitly unsupported browser: ' + browser, () => {
       navigator.userAgent = useragent;
