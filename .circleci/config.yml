@@ -11,7 +11,7 @@ parameters:
     default: false
   stability:
     type: string
-    default: "all"  # as against "stable"
+    default: "all"
   releaseCommand:
     type: string
     default: "ls -alt"
@@ -232,7 +232,7 @@ workflows:
           <<: *bver_stable
           <<: *topology_p2p
           stability: << pipeline.parameters.stability >>
-          requires: [BuildComplete]
+          requires: [Build, UnitTests]
       - run-integration-tests:
           name: "firefox stable p2p"
           <<: *browser_firefox
