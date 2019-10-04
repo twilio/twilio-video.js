@@ -5,7 +5,8 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
-const minute = 1 * 60 * 1000;
+const second = 1000;
+const minute = 60 * second;
 
 
 function a(word) {
@@ -427,7 +428,7 @@ async function waitToGoOnline() {
 }
 
 /**
- * Returns a promise that resolves after being disconneected from the network.
+ * Returns a promise that resolves after being disconnected from the network.
  * @returns {Promise<void>}
  */
 async function waitToGoOffline() {
@@ -436,7 +437,7 @@ async function waitToGoOffline() {
 
 /**
  * Note: when a test waits for promise that fails to settle.
- *   1) The test fail w/o a good indication of what happend, as for Mocha the test never finished
+ *   1) The test fail w/o a good indication of what happened, as for Mocha the test never finished
  *   2) This also causes subsequent tests to not get executed.
  * So instead of using raw `await fooPromise` use `await waitFor(fooPromise)` abstraction
  * solves above problems by limiting all waits to a finite time. It also helps fail the test
@@ -444,14 +445,16 @@ async function waitToGoOffline() {
  * Returns a promise that if not settled in timeoutMS, gets rejected.
  * @param {Promise|Array<Promise>} promiseOrArray - Promises to wait on
  * @param {string} message - indicates the message logged when promise rejects.
- * @param {number} timeoutMS - time to wait in miliseconds.
+ * @param {number} timeoutMS - time to wait in milliseconds.
  * @returns {Promise<any>}
  */
 let waitId = 101;
-async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
+async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose = false) {
   const thisWaitId = waitId++;
-  // eslint-disable-next-line no-console
-  console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
+  }
   const startTime = new Date();
   const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
   let timer = null;
@@ -468,8 +471,10 @@ async function waitFor(promiseOrArray, message, timeoutMS = 4 * minute) {
   const result = await Promise.race([promise, timeoutPromise]);
   const endTime = new Date();
   const durationInSeconds = (endTime - startTime) / 1000;
-  // eslint-disable-next-line no-console
-  console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+  }
   clearTimeout(timer);
   return result;
 }
