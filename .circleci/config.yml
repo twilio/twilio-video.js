@@ -149,6 +149,7 @@ jobs:
         type: boolean
         default: true
     steps:
+      - checkout # release command builds as part of the flow.
       - when:
           condition: <<parameters.dryRun>>
           steps:
