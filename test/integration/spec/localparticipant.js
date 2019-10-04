@@ -32,16 +32,12 @@ const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
 const {
-  createSyntheticAudioStreamTrack,
-  isRTCRtpSenderParamsSupported,
-  smallVideoConstraints
-} = require('../../lib/util');
-
-const {
   capitalize,
   combinationContext,
+  isRTCRtpSenderParamsSupported,
   participantsConnected,
   randomName,
+  smallVideoConstraints,
   tracksSubscribed,
   tracksPublished,
   tracksUnpublished,
@@ -899,11 +895,11 @@ describe('LocalParticipant', function() {
   });
 
   describe('#publishTrack called twice in quick succession', () => {
-    function kindCombonation(contextPrefix) {
+    function kindCombination(contextPrefix) {
       return [
         [
           {
-            createLocalTrack: () => createSyntheticAudioStreamTrack() || createLocalAudioTrack({ fake: true }),
+            createLocalTrack: () => createLocalAudioTrack({ fake: true }),
             kind: 'audio',
             RemoteTrackPublication: RemoteAudioTrackPublication
           },
@@ -922,7 +918,7 @@ describe('LocalParticipant', function() {
       ];
     }
 
-    combinationContext([kindCombonation('with'), kindCombonation('and')], ([kindCombination1, kindCombination2]) => {
+    combinationContext(['with', 'and'].map(kindCombination), ([kindCombination1, kindCombination2]) => {
       const createLocalTrack1 = kindCombination1.createLocalTrack;
       const createLocalTrack2 = kindCombination2.createLocalTrack;
       const kind1 = kindCombination1.kind;
@@ -954,16 +950,8 @@ describe('LocalParticipant', function() {
           await createLocalTrack2()
         ];
 
-        thisLocalTrack1 = kind1 === 'audio' && thisLocalTrack1 instanceof MediaStreamTrack
-          ? new LocalAudioTrack(thisLocalTrack1)
-          : thisLocalTrack1;
-
-        thisLocalTrack2 = kind2 === 'audio' && thisLocalTrack2 instanceof MediaStreamTrack
-          ? new LocalAudioTrack(thisLocalTrack2)
-          : thisLocalTrack2;
-
         // Offerer
-        const theseOptions = Object.assign({ name: sid, tracks: [], preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }, defaults);
+        const theseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
         thisRoom = await connect(getToken(randomName()), theseOptions);
         thisParticipant = thisRoom.localParticipant;
 
@@ -1226,12 +1214,11 @@ describe('LocalParticipant', function() {
     let sid;
 
     before(async () => {
-      [sid, ...localVideoTracks] = await Promise.all([
-        createRoom(randomName(), defaults.topology)
-      ].concat([
-        smallVideoConstraints,
-        smallVideoConstraints
-      ].map(createLocalVideoTrack)));
+      sid = await createRoom(randomName(), defaults.topology);
+      localVideoTracks = await Promise.all([
+        createLocalVideoTrack(smallVideoConstraints),
+        createLocalVideoTrack(smallVideoConstraints)
+      ]);
 
       // Step 1: Connect to a Room with a LocalAudioTrack.
       const options = Object.assign({ audio: true, fake: true, name: sid }, defaults);
