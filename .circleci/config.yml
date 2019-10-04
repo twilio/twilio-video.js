@@ -231,7 +231,7 @@ workflows:
           name: "chrome stable group"
           <<: *browser_chrome
           <<: *bver_stable
-          <<: *topology_p2p
+          <<: *topology_group
           stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - run-integration-tests:
@@ -245,7 +245,7 @@ workflows:
           name: "firefox stable group"
           <<: *browser_firefox
           <<: *bver_stable
-          <<: *topology_p2p
+          <<: *topology_group
           stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - Framework-tests:
