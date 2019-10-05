@@ -340,7 +340,7 @@ describe('connect', function() {
         options.name = sid;
       }
       cancelablePromises = tokens.map(token => connect(token, options));
-      rooms = waitFor(cancelablePromises, 'connecting to rooms');
+      rooms = await waitFor(cancelablePromises, 'connecting to rooms');
     });
 
     after(() => {

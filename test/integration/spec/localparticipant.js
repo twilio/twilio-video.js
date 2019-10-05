@@ -434,15 +434,30 @@ describe('LocalParticipant', function() {
           }), 'tracksUnpublished');
         }
 
-        [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await waitFor([
-          thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
-          ...['trackPublished', 'trackSubscribed'].map(event => {
-            return Promise.all(thoseParticipants.map(async thatParticipant => {
-              const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
-              return trackOrPublication;
-            }));
-          })
-        ], 'lots of things');
+        const thisLocalTrackPublicationPromise = priority ? thisParticipant.publishTrack(thisTrack, { priority }) : thisParticipant.publishTrack(thisTrack);
+        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, 'local track publish');
+        const thoseTracksPublishedPromise = Promise.all(thoseParticipants.map(thatParticipant => {
+          const [trackOrPublication] = waitForTracks('trackPublished', thatParticipant, 1);
+          return trackOrPublication;
+        }));
+
+        const thoseTracksSubscribedPromise = Promise.all(thoseParticipants.map(thatParticipant => {
+          const [trackOrPublication] = waitForTracks('trackSubscribed', thatParticipant, 1);
+          return trackOrPublication;
+        }));
+
+        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, 'thoseTracksPublishedPromise');
+        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, 'thoseTracksSubscribedPromise');
+
+        // [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await waitFor([
+        //   thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
+        //   ...['trackPublished', 'trackSubscribed'].map(event => {
+        //     return Promise.all(thoseParticipants.map(async thatParticipant => {
+        //       const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
+        //       return trackOrPublication;
+        //     }));
+        //   })
+        // ], 'lots of things');
 
         thoseTracksMap = {
           trackPublished: thoseTracksPublished,
