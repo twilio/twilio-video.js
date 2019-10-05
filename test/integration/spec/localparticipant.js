@@ -435,29 +435,15 @@ describe('LocalParticipant', function() {
         }
 
         const thisLocalTrackPublicationPromise = priority ? thisParticipant.publishTrack(thisTrack, { priority }) : thisParticipant.publishTrack(thisTrack);
-        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, 'local track publish');
-        const thoseTracksPublishedPromise = Promise.all(thoseParticipants.map(thatParticipant => {
-          const [trackOrPublication] = waitForTracks('trackPublished', thatParticipant, 1);
-          return trackOrPublication;
-        }));
+        const thoseTracksPublishedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackPublished', thatParticipant, 1));
+        const thoseTracksSubscribedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackSubscribed', thatParticipant, 1));
 
-        const thoseTracksSubscribedPromise = Promise.all(thoseParticipants.map(thatParticipant => {
-          const [trackOrPublication] = waitForTracks('trackSubscribed', thatParticipant, 1);
-          return trackOrPublication;
-        }));
+        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, 'local track to publish');
+        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, 'participants to receive trackPublished');
+        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, 'participants to receive trackSubscribed');
 
-        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, 'thoseTracksPublishedPromise');
-        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, 'thoseTracksSubscribedPromise');
-
-        // [thisLocalTrackPublication, thoseTracksPublished, thoseTracksSubscribed] = await waitFor([
-        //   thisParticipant.publishTrack.apply(thisParticipant, priority ? [thisTrack, { priority }] : [thisTrack]),
-        //   ...['trackPublished', 'trackSubscribed'].map(event => {
-        //     return Promise.all(thoseParticipants.map(async thatParticipant => {
-        //       const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
-        //       return trackOrPublication;
-        //     }));
-        //   })
-        // ], 'lots of things');
+        thoseTracksPublished = flatMap(thoseTracksPublished);
+        thoseTracksSubscribed = flatMap(thoseTracksSubscribed);
 
         thoseTracksMap = {
           trackPublished: thoseTracksPublished,
@@ -473,7 +459,7 @@ describe('LocalParticipant', function() {
         return completeRoom(sid);
       });
 
-      it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
+      it.only('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
         const thoseTrackPublications = thoseTracksMap.trackPublished;
         thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
           audio: RemoteAudioTrackPublication,
