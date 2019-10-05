@@ -459,7 +459,7 @@ describe('LocalParticipant', function() {
         return completeRoom(sid);
       });
 
-      it.only('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
+      it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
         const thoseTrackPublications = thoseTracksMap.trackPublished;
         thoseTrackPublications.forEach(thatPublication => assert(thatPublication instanceof {
           audio: RemoteAudioTrackPublication,
