@@ -1223,9 +1223,14 @@ describe('connect', function() {
         });
 
         it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
-          const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
+          // const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
+          //   createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
+          //   await createLocalVideoTrack(smallVideoConstraints)
+          // ]), 'local tracks');
+
+          const [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(async name => [
             createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-            await createLocalVideoTrack(smallVideoConstraints)
+            await createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints))
           ]), 'local tracks');
 
           // Initially disable Alice's audio
@@ -1256,6 +1261,13 @@ describe('connect', function() {
               on: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack }
             }
           }[switchOffParticipant];
+
+          Object.values(switched).forEach(({ remoteVideoTrack }) => {
+            ['switchedOff', 'switchedOn'].forEach(event => {
+              // eslint-disable-next-line no-console
+              remoteVideoTrack.on(event, () => console.log(`${event}: ${remoteVideoTrack.name}`));
+            });
+          });
 
           // Bob should be the Dominant Speaker
           await waitFor([
