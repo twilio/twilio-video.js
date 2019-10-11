@@ -1257,10 +1257,12 @@ describe('connect', function() {
             }
           }[switchOffParticipant];
 
-          Object.values(switched).forEach(({ remoteVideoTrack }) => {
+          Object.values(switched).forEach(({ participant, remoteVideoTrack }) => {
             ['switchedOff', 'switchedOn'].forEach(event => {
-              // eslint-disable-next-line no-console
-              remoteVideoTrack.on(event, () => console.log(`${event}: ${remoteVideoTrack.name}`));
+              remoteVideoTrack.on(event, () => {
+                // eslint-disable-next-line no-console
+                console.log(`${event}: ${remoteVideoTrack.name} | ${remoteVideoTrack.sid} | ${participant.sid} | ${thisRoom.sid}`);
+              });
             });
           });
 
