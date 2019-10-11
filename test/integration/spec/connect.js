@@ -1223,11 +1223,6 @@ describe('connect', function() {
         });
 
         it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
-          // const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-          //   createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-          //   await createLocalVideoTrack(smallVideoConstraints)
-          // ]), 'local tracks');
-
           const [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(async name => [
             createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
             await createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints))
