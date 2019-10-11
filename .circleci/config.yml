@@ -5,8 +5,32 @@
 # and run any job locally with:
 # circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
+parameters:
+  environment:
+    type: enum
+    enum: ["prod", "stage", "dev"]
+    default: "prod"
+  pr_workflow:
+    type: boolean
+    default: true # by default pr workflow will get executed.
+  custom_workflow:
+    type: boolean
+    default: false
+  browser:
+    type: enum
+    enum: ["chrome", "firefox"]
+    default: "chrome"
+  bver:
+    type: enum
+    enum: ["stable", "beta", "unstable"]
+    default: "stable"
+  topology:
+    type: enum
+    enum: ["group", "peer-to-peer"]
+    default: "group"
+
 defaultEnv: &defaultEnv
-  ENVIRONMENT: "prod"
+  ENVIRONMENT: << pipeline.parameters.environment >>
   ENABLE_REST_API_TESTS: "true"
 p2p: &topology_p2p
   topology: "peer-to-peer"
@@ -26,10 +50,12 @@ executors:
   docker-with-browser:
     parameters:
       browser:
-        type: string
+        type: enum
+        enum: ["chrome", "firefox"]
         default: "chrome"
       bver:
-        type: string
+        type: enum
+        enum: ["stable", "beta", "unstable"]
         default: "stable"
     docker:
       - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
@@ -138,7 +164,9 @@ jobs:
       bver:
         type: string
       topology:
-        type: string
+        type: enum
+        enum: ["group", "peer-to-peer"]
+        default: "group"
     environment:
       TOPOLOGY: << parameters.topology >>
     executor:
@@ -216,7 +244,17 @@ workflows:
           name: "firefox beta"
           <<: *browser_firefox
           <<: *bver_beta
+  Custom_Workflow:
+    when: << pipeline.parameters.custom_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: "custom integration tests"
+          browser: << pipeline.parameters.browser >>
+          bver: << pipeline.parameters.bver >>
+          topology: << pipeline.parameters.topology >>
+
   Pull_Request_Workflow:
+    when: << pipeline.parameters.pr_workflow >>
     jobs:
       - Build
       - UnitTests
