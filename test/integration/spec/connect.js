@@ -508,12 +508,12 @@ describe('connect', function() {
   describe('called with EncodingParameters', () => {
     combinationContext([
       [
-        [undefined, null, 20000],
-        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 20000, 0],
+        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
-        [undefined, null, 40000],
-        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x ? 'present' : 'null'}`
+        [undefined, null, 40000, 0],
+        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
     ], ([maxAudioBitrate, maxVideoBitrate]) => {
       const encodingParameters = [
@@ -551,10 +551,14 @@ describe('connect', function() {
         it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           if (isRTCRtpSenderParamsSupported) {
             flatMap(peerConnections, pc => {
-              return pc.getSenders().filter(sender => sender.track);
+              return pc.getSenders().filter(({ track }) => track && track.kind === kind);
             }).forEach(sender => {
               const { encodings } = sender.getParameters();
-              encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[sender.track.kind] || 0));
+              if (maxBitrates[kind]) {
+                encodings.forEach(encoding => assert.equal(encoding.maxBitrate, maxBitrates[kind]));
+              } else {
+                encodings.forEach(encoding => assert.equal('maxBitrate' in encoding, false));
+              }
             });
             return;
           }

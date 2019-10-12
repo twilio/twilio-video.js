@@ -19,6 +19,17 @@ Bug Fixes
 
 - Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2318)
+- Fixed a bug where `Video.isSupported` evaluated to `true` on Chromium-based Edge browser,
+  even though twilio-video.js does not support it at this moment. (JSDK-2515)
+
+1.19.2 (September 19, 2019)
+===========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
 
 1.19.1 (August 28, 2019)
 ========================
