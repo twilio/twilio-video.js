@@ -248,7 +248,7 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: << pipeline.parameters.environment >> + ":" + << pipeline.parameters.browser >> + ":" + << pipeline.parameters.bver >> + ":" + << pipeline.parameters.topology >>
+          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>

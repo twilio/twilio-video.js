@@ -138,6 +138,9 @@ getBranches().then(branches => {
     validate: (val) => { return typeof val === 'string' && val.length > 5; }
   };
 
+  if (process.env.CIRCLE_CI_TOKEN) {
+    tokenPrompt.default = process.env.CIRCLE_CI_TOKEN;
+  }
 
   inquirer.prompt([
     tokenPrompt,
