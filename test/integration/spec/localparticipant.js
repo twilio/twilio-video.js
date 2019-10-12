@@ -962,11 +962,11 @@ describe('LocalParticipant', function() {
         let thoseTracksPublished;
         let thoseTracksAdded;
         let thoseTracksSubscribed;
-        [thisLocalTrackPublication1, thisLocalTrackPublication2, thoseTracksAdded, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
+        [thisLocalTrackPublication1, thisLocalTrackPublication2, thoseTracksPublished, thoseTracksAdded, thoseTracksSubscribed] =  await Promise.all([
           thisParticipant.publishTrack(thisLocalTrack1),
           thisParticipant.publishTrack(thisLocalTrack2),
-          waitForTracks('trackAdded', thatParticipant, 2),
           waitForTracks('trackPublished', thatParticipant, 2),
+          waitForTracks('trackAdded', thatParticipant, 2),
           waitForTracks('trackSubscribed', thatParticipant, 2)
         ]);
 
