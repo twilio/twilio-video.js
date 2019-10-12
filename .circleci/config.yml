@@ -15,7 +15,7 @@ parameters:
     default: true # by default pr workflow will get executed.
   custom_workflow:
     type: boolean
-    default: false
+    default: true
   browser:
     type: enum
     enum: ["chrome", "firefox"]
@@ -248,7 +248,7 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: "custom integration tests"
+          name: << pipeline.parameters.environment >> + ":" + << pipeline.parameters.browser >> + ":" + << pipeline.parameters.bver >> + ":" + << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
