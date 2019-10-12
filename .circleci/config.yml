@@ -15,7 +15,7 @@ parameters:
     default: true # by default pr workflow will get executed.
   custom_workflow:
     type: boolean
-    default: true
+    default: false
   browser:
     type: enum
     enum: ["chrome", "firefox"]
