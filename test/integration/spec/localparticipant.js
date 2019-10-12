@@ -960,10 +960,12 @@ describe('LocalParticipant', function() {
         await new Promise(resolve => setTimeout(resolve, 5 * 1000));
 
         let thoseTracksPublished;
+        let thoseTracksAdded;
         let thoseTracksSubscribed;
-        [thisLocalTrackPublication1, thisLocalTrackPublication2, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
+        [thisLocalTrackPublication1, thisLocalTrackPublication2, thoseTracksAdded, thoseTracksPublished, thoseTracksSubscribed] =  await Promise.all([
           thisParticipant.publishTrack(thisLocalTrack1),
           thisParticipant.publishTrack(thisLocalTrack2),
+          waitForTracks('trackAdded', thatParticipant, 2),
           waitForTracks('trackPublished', thatParticipant, 2),
           waitForTracks('trackSubscribed', thatParticipant, 2)
         ]);
@@ -974,11 +976,13 @@ describe('LocalParticipant', function() {
 
         thoseTracks1 = {
           trackPublished: findTrackOrPublication(thoseTracksPublished, thisLocalTrackPublication1.trackSid),
+          trackAdded: findTrackOrPublication(thoseTracksAdded, thisLocalTrackPublication1.trackSid),
           trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, thisLocalTrackPublication1.trackSid)
         };
 
         thoseTracks2 = {
           trackPublished: findTrackOrPublication(thoseTracksPublished, thisLocalTrackPublication2.trackSid),
+          trackAdded: findTrackOrPublication(thoseTracksAdded, thisLocalTrackPublication2.trackSid),
           trackSubscribed: findTrackOrPublication(thoseTracksSubscribed, thisLocalTrackPublication2.trackSid)
         };
       });
@@ -1001,18 +1005,20 @@ describe('LocalParticipant', function() {
         });
       });
 
-      it(`should eventually raise a "trackSubscribed" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
-        [
-          [kind1, thisLocalTrack1, thisLocalTrackPublication1, thoseTracks1],
-          [kind2, thisLocalTrack2, thisLocalTrackPublication2, thoseTracks2]
-        ].forEach(([kind, thisLocalTrack, thisLocalTrackPublication, thoseTracks]) => {
-          const thatTrack = thoseTracks.trackSubscribed;
-          assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid);
-          assert.equal(thatTrack.kind, thisLocalTrackPublication.kind);
-          assert.equal(thatTrack.enabled, thisLocalTrackPublication.enabled);
-          if (kind !== 'data') {
-            assert.equal(thatTrack.mediaStreamTrack.readyState, thisLocalTrack.mediaStreamTrack.readyState);
-          }
+      ['trackAdded', 'trackSubscribed'].forEach(event => {
+        it(`should eventually raise a "${event}" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
+          [
+            [kind1, thisLocalTrack1, thisLocalTrackPublication1, thoseTracks1],
+            [kind2, thisLocalTrack2, thisLocalTrackPublication2, thoseTracks2]
+          ].forEach(([kind, thisLocalTrack, thisLocalTrackPublication, thoseTracks]) => {
+            const thatTrack = thoseTracks[event];
+            assert.equal(thatTrack.sid, thisLocalTrackPublication.trackSid);
+            assert.equal(thatTrack.kind, thisLocalTrackPublication.kind);
+            assert.equal(thatTrack.enabled, thisLocalTrackPublication.enabled);
+            if (kind !== 'data') {
+              assert.equal(thatTrack.mediaStreamTrack.readyState, thisLocalTrack.mediaStreamTrack.readyState);
+            }
+          });
         });
       });
 
