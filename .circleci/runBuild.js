@@ -54,8 +54,6 @@ function generateBuildRequest(program) {
 
 // sends a request using given options/body
 function triggerBuild({options, body}) {
-  console.log('options:', options);
-  console.log('body:', body);
   return new Promise((resolve, reject) => {
     const request = http.request(options, function(res) {
       const chunks = [];
@@ -71,12 +69,11 @@ function triggerBuild({options, body}) {
   });
 }
 
-
 getBranches().then(branches => {
   const branchPrompt = {
     type: 'list',
     name: 'branch',
-    message: 'Branch?',
+    message: 'Branch:',
     choices: [branches.current, new inquirer.Separator(), ...branches.all],
     default: branches.current
   };
@@ -84,7 +81,7 @@ getBranches().then(branches => {
   const environmentPrompt = {
     type: 'list',
     name: 'environment',
-    message: 'Environment?',
+    message: 'Environment:',
     choices: ['prod', 'stage', 'dev'],
     default: 'prod'
   };
@@ -92,7 +89,7 @@ getBranches().then(branches => {
   const workflowPrompt = {
     type: 'list',
     name: 'workflow',
-    message: 'Workflow?',
+    message: 'Workflow:',
     choices: ['pr', 'custom'],
     default: 'pr'
   };
@@ -101,7 +98,7 @@ getBranches().then(branches => {
     when: (answers) => answers.workflow === 'custom',
     type: 'list',
     name: 'browser',
-    message: 'Browser?',
+    message: 'Browser:',
     choices: ['chrome', 'firefox'],
     default: 'chrome'
   };
@@ -109,7 +106,7 @@ getBranches().then(branches => {
   const confirmPrompt = {
     type: 'confirm',
     name: 'confirm',
-    message: 'Confirm the build request?',
+    message: 'Confirm the build request:',
     default: true,
   };
 
@@ -117,7 +114,7 @@ getBranches().then(branches => {
     when: (answers) => answers.workflow === 'custom',
     type: 'list',
     name: 'bver',
-    message: 'Bver ?',
+    message: 'Bver:',
     choices: ['stable', 'beta', 'unstable'],
     default: 'stable'
   };
@@ -126,7 +123,7 @@ getBranches().then(branches => {
     when: (answers) => answers.workflow === 'custom',
     type: 'list',
     name: 'topology',
-    message: 'Topology ?',
+    message: 'Topology:',
     choices: ['group', 'peer-to-peer'],
     default: 'group'
   };
@@ -134,12 +131,12 @@ getBranches().then(branches => {
   const tokenPrompt = {
     type: 'input',
     name: 'token',
-    message: 'Circle CI Token ?',
+    message: 'Circle CI Token:',
     validate: (val) => { return typeof val === 'string' && val.length > 5; }
   };
 
-  if (process.env.CIRCLE_CI_TOKEN) {
-    tokenPrompt.default = process.env.CIRCLE_CI_TOKEN;
+  if (process.env.CIRCLECI_TOKEN) {
+    tokenPrompt.default = process.env.CIRCLECI_TOKEN;
   }
 
   inquirer.prompt([
@@ -157,9 +154,7 @@ getBranches().then(branches => {
       if (confirm) {
         triggerBuild({options, body}).then((result) => {
           console.log(result);
-        }).catch((e) => {
-          console.log('Failed to trigger a build:', e);
-        });
+        }).catch(e => console.log('Failed to trigger a build:', e));
       }
     });
   });
