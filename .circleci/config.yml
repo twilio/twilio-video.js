@@ -6,19 +6,44 @@
 # circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
 parameters:
-  run_release_steps:
+  pr_workflow:
+    type: boolean
+    default: true # by default pr workflow will get executed.
+  custom_workflow:
     type: boolean
     default: false
-  stability:
-    type: string
-    default: "all"
+  release_workflow:
+    type: boolean
+    default: false
   releaseCommand:
     type: string
     default: "ls -alt"
+  browser:
+    type: enum
+    enum: ["chrome", "firefox"]
+    default: "chrome"
+  bver:
+    type: enum
+    enum: ["stable", "beta", "unstable"]
+    default: "stable"
+  environment:
+    type: enum
+    enum: ["prod", "stage", "dev"]
+    default: "prod"
+  stability:
+    type: enum
+    enum: ["stable", "all"]
+    default: "all"
+  topology:
+    type: enum
+    enum: ["group", "peer-to-peer"]
+    default: "group"
 
 defaultEnv: &defaultEnv
-  ENVIRONMENT: "prod"
+  ENVIRONMENT: << pipeline.parameters.environment >>
   ENABLE_REST_API_TESTS: "true"
+  STABILITY: << pipeline.parameters.stability >>
+
 p2p: &topology_p2p
   topology: "peer-to-peer"
 group: &topology_group
@@ -38,10 +63,12 @@ executors:
   docker-with-browser:
     parameters:
       browser:
-        type: string
+        type: enum
+        enum: ["chrome", "firefox"]
         default: "chrome"
       bver:
-        type: string
+        type: enum
+        enum: ["stable", "beta", "unstable"]
         default: "stable"
     docker:
       - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
@@ -166,13 +193,11 @@ jobs:
       bver:
         type: string
       topology:
-        type: string
-      stability:
-        type: string
-        default: "all"
+        type: enum
+        enum: ["group", "peer-to-peer"]
+        default: "group"
     environment:
       TOPOLOGY: << parameters.topology >>
-      STABILITY: << parameters.stability >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -216,7 +241,7 @@ jobs:
 workflows:
   version: 2
   release_workflow:
-    when: << pipeline.parameters.run_release_steps >>
+    when: << pipeline.parameters.release_workflow >>
     jobs:
       - Build
       - UnitTests
@@ -225,28 +250,24 @@ workflows:
           <<: *browser_chrome
           <<: *bver_stable
           <<: *topology_p2p
-          stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - run-integration-tests:
           name: "chrome stable group"
           <<: *browser_chrome
           <<: *bver_stable
           <<: *topology_group
-          stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - run-integration-tests:
           name: "firefox stable p2p"
           <<: *browser_firefox
           <<: *bver_stable
           <<: *topology_p2p
-          stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - run-integration-tests:
           name: "firefox stable group"
           <<: *browser_firefox
           <<: *bver_stable
           <<: *topology_group
-          stability: << pipeline.parameters.stability >>
           requires: [Build, UnitTests]
       - Framework-tests:
           name: "framework tests"
@@ -297,8 +318,17 @@ workflows:
           name: "firefox beta"
           <<: *browser_firefox
           <<: *bver_beta
+  Custom_Workflow:
+    when: << pipeline.parameters.custom_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          bver: << pipeline.parameters.bver >>
+          topology: << pipeline.parameters.topology >>
+
   Pull_Request_Workflow:
-    unless: << pipeline.parameters.run_release_steps >>
+    when: << pipeline.parameters.pr_workflow >>
     jobs:
       - Build
       - UnitTests
