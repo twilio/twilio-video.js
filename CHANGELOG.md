@@ -26,11 +26,23 @@ New Features
     console.log(`The publisher has changed the priority this Track to "${priority}"`);
     assert.equal(remoteTrackPublication.publishPriority, priority);
   });
+
+- In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
+   by using a new method `setPriority`. (JSDK-2347)
+
+  ```js
+    remoteTrack.setPriority('high');
+  ```
+
+- If you want to revert back to the priority set by the publisher, you can do so as shown below:
+
+  ```js
+    remoteTrack.setPriority(null);
   ```
 
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling
   `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
-  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta13/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
+  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
 
   ```js
   const { connect } = require('twilio-video');
@@ -43,7 +55,7 @@ New Features
       }
     }
   });
-  
+
   // Change "maxTracks" and "mode".
   room.localParticipant.setBandwidthProfile({
     video: {
@@ -52,9 +64,9 @@ New Features
     }
   });
   ```
-  
-2.0.0-beta14 (in progress)
-==========================
+
+2.0.0-beta14 (September 17, 2019)
+=================================
 
 New Features
 ------------
@@ -99,7 +111,7 @@ New Features
         }
       }
     }
-  });  
+  });
   ```
 
   ### Track Priority (private beta)
@@ -121,7 +133,7 @@ New Features
   to other Tracks that may be published to the Room. The media server takes this into
   account while allocating a subscribing RemoteParticipant's bandwidth to the corresponding
   RemoteTrack. If you do not specify a priority, then it defaults to `standard`.
-  
+
   You can also find out about the priorities of RemoteTracks published by other
   RemoteParticipants by accessing a new property `publishPriority` on the corresponding
   RemoteTrackPublications:
@@ -154,6 +166,12 @@ New Features
     });
   });
   ```
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalVideoTracks were being published at a very low bitrate even
+  when there was sufficient bandwidth to publish at higher bitrates. (JSDK-2509)
 
 2.0.0-beta13 (August 29, 2019)
 ==============================

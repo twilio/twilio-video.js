@@ -1282,6 +1282,12 @@ describe('RoomV2', () => {
           sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling1);
         });
 
+        it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with the TrackPrioritySignaling', () => {
+          [...test.room.participants.values()].forEach(participant => {
+            sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling1);
+          });
+        });
+
         context('when a "message" is received un the underlying DataTrackTransport', () => {
           it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
             const trackSignalings = new Map(flatMap([...test.room.participants.values()],
@@ -1320,6 +1326,12 @@ describe('RoomV2', () => {
             sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, null);
           });
 
+          it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with null', () => {
+            [...test.room.participants.values()].forEach(participant => {
+              sinon.assert.calledWith(participant.setTrackPrioritySignaling, null);
+            });
+          });
+
           describe('when an incoming connect/update RSP message contains the new RTCDataChannel ID of the TrackPriority MSP', () => {
             before(async () => {
               test.transport.emit('message', {
@@ -1344,6 +1356,12 @@ describe('RoomV2', () => {
 
             it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with the new TrackPrioritySignaling', () => {
               sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling2);
+            });
+
+            it('should call .setTrackPrioritySignaling on the underlying RemoteParticipantV2 with the new TrackPrioritySignaling', () => {
+              [...test.room.participants.values()].forEach(participant => {
+                sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling2);
+              });
             });
 
             context('when a "message" is received un the underlying DataTrackTransport', () => {
@@ -1923,6 +1941,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
+    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 

@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 const log = require('../../../../lib/fakelog');
 const { capitalize } = require('../../../../lib/util');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
@@ -55,6 +56,42 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
           it('should set the .sid property', () => {
             assert.equal(track.sid, 'bar');
           });
+        });
+      });
+    });
+
+    const { trackPriority } = require('../../../../../lib/util/constants');
+
+    describe('#setPriority', () => {
+      let options;
+      let track;
+      let onPriorityChange;
+      beforeEach(() => {
+        onPriorityChange = sinon.spy();
+        track = makeTrack('foo', 'bar', kind, true, options, RemoteTrack, onPriorityChange);
+      });
+
+      [null, ...Object.values(trackPriority)].forEach((priorityValue) => {
+        it('sets priority when called with valid priority value: ' + priorityValue, () => {
+          let originalPriority = track.priority;
+          track.setPriority(priorityValue);
+          if (originalPriority !== priorityValue) {
+            sinon.assert.calledWith(onPriorityChange, priorityValue);
+          }
+          assert.equal(track.priority, priorityValue);
+        });
+      });
+
+      [undefined, '', 'foo', {}, 42, true].forEach((priorityValue) => {
+        it('throws RangeError for invalid priority value: ' + priorityValue, () => {
+          let errorThrown = false;
+          try {
+            track.setPriority(priorityValue);
+          } catch (error) {
+            assert(error instanceof RangeError);
+            errorThrown = true;
+          }
+          assert.equal(errorThrown, true);
         });
       });
     });
@@ -184,6 +221,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'mediaStreamTrack',
             'isEnabled',
             'isSwitchedOff',
+            'priority',
             'sid'
           ]);
         } else {
@@ -195,6 +233,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'dimensions',
             'isEnabled',
             'isSwitchedOff',
+            'priority',
             'sid'
           ]);
         }
@@ -217,6 +256,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
+            priority: null,
             sid: track.sid
           });
         } else {
@@ -228,6 +268,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
+            priority: null,
             sid: track.sid
           });
         }
@@ -236,8 +277,10 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   });
 });
 
-function makeTrack(id, sid, kind, isEnabled, options, RemoteTrack) {
+function makeTrack(id, sid, kind, isEnabled, options, RemoteTrack, setPriority) {
+  const emptyFn = () => undefined;
+  setPriority = setPriority || emptyFn;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, setPriority, options);
 }

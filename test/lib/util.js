@@ -332,6 +332,15 @@ async function trackSwitchedOn(track) {
 }
 
 /**
+ * Wait for a {@link RemoteTrackPublication}'s priority change event.
+ * @param {RemoteTrackPublication} trackPub - the {@link RemoteTrackPublication}
+ * @returns Promise<void>
+ */
+async function trackPublishPriorityChanged(trackPub) {
+  await new Promise(resolve => trackPub.once('publishPriorityChanged', resolve));
+}
+
+/**
  * Wait for a {@link RemoteTrack} to start.
  * @param {RemoteTrack} track - the {@link RemoteTrack}
  * @returns Promise<void>
@@ -532,3 +541,5 @@ exports.setup = setup;
 exports.waitFor = waitFor;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
+exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
+

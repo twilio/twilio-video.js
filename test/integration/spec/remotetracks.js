@@ -1,12 +1,13 @@
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
+const { trackPriority } = require('../../../lib/util/constants');
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
-const createLocalTracks = require('../../../lib/createlocaltrack');
 const {
   createSyntheticAudioStreamTrack,
   setup,
@@ -14,83 +15,14 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
-  trackPublishPriorityChanged,
   waitFor
 } = require('../../lib/util');
 
-['audio', 'video'].forEach(kind => {
-  const createLocalTrack = createLocalTracks[kind];
-  const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
+function getTracksOfKind(participant, kind) {
+  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
+}
 
-  describe(description, function() {
-    // eslint-disable-next-line no-invalid-this
-    this.timeout(10000);
-
-    let localTrack = null;
-
-    beforeEach(() => {
-      return createLocalTrack().then(_localTrack => {
-        localTrack = _localTrack;
-      });
-    });
-
-    afterEach(() => {
-      localTrack.stop();
-      localTrack = null;
-    });
-
-    describe('.isStopped', () => {
-      context('before calling #stop', () => {
-        it('.isStopped is false', () => {
-          assert(!localTrack.isStopped);
-        });
-      });
-
-      context('after calling #stop', () => {
-        beforeEach(() => {
-          localTrack.stop();
-        });
-
-        it('.isStopped is true', () => {
-          assert(localTrack.isStopped);
-        });
-      });
-
-      context('when the underlying MediaStreamTrack ends', () => {
-        beforeEach(() => {
-          localTrack.mediaStreamTrack.stop();
-        });
-
-        it('.isStopped is true', () => {
-          assert(localTrack.isStopped);
-        });
-      });
-    });
-
-    describe('"stopped" event', () => {
-      let stoppedEvent = null;
-
-      beforeEach(() => {
-        stoppedEvent = new Promise(resolve => {
-          localTrack.once('stopped', resolve);
-        });
-      });
-
-      afterEach(() => {
-        stoppedEvent = null;
-      });
-
-      context('when #stop is called', () => {
-        it('emits "stopped"', () => {
-          localTrack.stop();
-          return stoppedEvent;
-        });
-      });
-    });
-  });
-});
-
-describe('LocalParticipant', function() {
+describe('RemoteParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -105,17 +37,13 @@ describe('LocalParticipant', function() {
     let bobTracks;
     let aliceRemoteVideoTrack;
     let bobRemoteVideoTrack;
-    let aliceLocalVideoTrackPublication;
-    let bobLocalVideoTrackPublication;
-    let aliceRemoteVideoTrackPublication;
-    let bobRemoteVideoTrackPublication;
 
     beforeEach(async () => {
       const dataTrack = new LocalDataTrack();
       [, thisRoom, thoseRooms] = await setup({
         testOptions: {
           bandwidthProfile: {
-            video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
+            video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
           },
           tracks: [dataTrack]
         },
@@ -143,15 +71,6 @@ describe('LocalParticipant', function() {
       [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
         return [...videoTracks.values()][0].track;
       });
-
-      [aliceLocalVideoTrackPublication, bobLocalVideoTrackPublication] = [aliceLocal, bobLocal].map(({ videoTracks }) => {
-        return [...videoTracks.values()][0];
-      });
-
-      [aliceRemoteVideoTrackPublication, bobRemoteVideoTrackPublication] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
-        return [...videoTracks.values()][0];
-      });
-
     });
 
     afterEach(async () => {
@@ -162,46 +81,95 @@ describe('LocalParticipant', function() {
       }
     });
 
+    ['audio', 'video', 'data'].forEach(kind => {
+      [null, ...Object.values(trackPriority)].forEach(priority => {
+        it(`can setpriority ${priority} on ${kind} track`, () => {
+          const tracks = getTracksOfKind(aliceRemote, kind);
+          assert(tracks.length > 0, 'no tracks found of kind ' + kind);
+          tracks[0].setPriority(priority);
+          assert.equal(tracks[0].priority, priority);
+        });
+      });
+    });
+
+    [undefined, 'foo', 42].forEach(priority => {
+      it('throws for an invalid priority value: ' + priority, () => {
+        let errorWasThrown = false;
+        try {
+          aliceRemoteVideoTrack.setPriority(priority);
+        } catch (error) {
+          assert(error instanceof RangeError);
+          assert(/priority must be one of/.test(error.message));
+          errorWasThrown = true;
+        }
+        assert.equal(errorWasThrown, true, 'was expectiing an error to be thrown, but it was not');
+      });
+    });
+
     // eslint-disable-next-line no-warning-comments
     // TODO: enable these tests when track_priority MSP is available in prod
-    if (defaults.topology !== 'peer-to-peer') {
-      it('publisher can upgrade track\'s  priority', async () => {
+    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'stage') {
+      it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
         ], 'Bobs track to get switched On, and Alice Switched Off');
 
-        // Alice changes her track priority to high
-        aliceLocalVideoTrackPublication.setPriority(PRIORITY_HIGH);
+        // change subscriber priority of the Alice track to high
+        aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
         // eslint-disable-next-line no-warning-comments
         // expect Alice's track to get switched on, and Bob's track to get switched off
         await waitFor([
           trackSwitchedOn(aliceRemoteVideoTrack),
-          trackSwitchedOff(bobRemoteVideoTrack),
-          trackPublishPriorityChanged(aliceRemoteVideoTrackPublication)
+          trackSwitchedOff(bobRemoteVideoTrack)
         ], 'Alice track to get switched On, and Bob Switched Off');
       });
 
-      it('publisher can downgrade track\'s  priority', async () => {
+      it('subscriber can downgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
         ], 'Bobs track to get switched On, and Alice Switched Off');
 
-        // Bob changes his track priority to low
-        bobLocalVideoTrackPublication.setPriority(PRIORITY_LOW);
+        // change subscriber priority of the Alice track to high
+        bobRemoteVideoTrack.setPriority(PRIORITY_LOW);
+        aliceRemoteVideoTrack.setPriority(PRIORITY_STANDARD);
 
+        // eslint-disable-next-line no-warning-comments
         // expect Alice's track to get switched on, and Bob's track to get switched off
-        // also expect to receive publishPriorityChanged event on Bob's track.
         await waitFor([
           trackSwitchedOn(aliceRemoteVideoTrack),
-          trackSwitchedOff(bobRemoteVideoTrack),
-          trackPublishPriorityChanged(bobRemoteVideoTrackPublication)
+          trackSwitchedOff(bobRemoteVideoTrack)
         ], 'Alice track to get switched On, and Bob Switched Off');
+      });
+
+      it.skip('VMS-2128: subscriber can revert to track\'s effective priority', async () => {
+        await waitFor([
+          trackSwitchedOn(bobRemoteVideoTrack),
+          trackSwitchedOff(aliceRemoteVideoTrack)
+        ], 'Bobs track to get switched On, and Alice Switched Off');
+
+        // change subscriber priority of the Alice track to high
+        aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
+
+        // eslint-disable-next-line no-warning-comments
+        // expect Alice's track to get switched on, and Bob's track to get switched off
+        await waitFor([
+          trackSwitchedOn(aliceRemoteVideoTrack),
+          trackSwitchedOff(bobRemoteVideoTrack)
+        ], 'Alice track to get switched On, and Bob Switched Off');
+
+        // reset subscriber priority of the Alice track
+        aliceRemoteVideoTrack.setPriority(null);
+
+        // eslint-disable-next-line no-warning-comments
+        await waitFor([
+          trackSwitchedOn(bobRemoteVideoTrack),
+          trackSwitchedOff(aliceRemoteVideoTrack)
+        ], 'Bobs track to get switched On, and Alice Switched Off');
       });
     }
   });
 });
-
 
