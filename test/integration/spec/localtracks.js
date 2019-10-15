@@ -165,7 +165,7 @@ describe('LocalParticipant', function() {
     // eslint-disable-next-line no-warning-comments
     // TODO: enable these tests when track_priority MSP is available in prod
     if (defaults.topology !== 'peer-to-peer') {
-      it.only('publisher can upgrade track\'s  priority', async () => {
+      it('publisher can upgrade track\'s  priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
@@ -183,7 +183,7 @@ describe('LocalParticipant', function() {
         ], 'Alice track to get switched On, and Bob Switched Off');
       });
 
-      it.only('publisher can downgrade track\'s  priority', async () => {
+      it('publisher can downgrade track\'s  priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
