@@ -28,7 +28,8 @@ const {
   randomName,
   tracksSubscribed,
   tracksUnpublished,
-  waitForTracks
+  waitForTracks,
+  waitFor
 } = require('../../lib/util');
 
 describe('LocalTrackPublication', function() {
@@ -102,31 +103,31 @@ describe('LocalTrackPublication', function() {
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
         const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await Promise.all(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)));
+        thoseRooms = await waitFor(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)), 'rooms to connect');
 
-        await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+        await waitFor([thisRoom].concat(thoseRooms).map(room => {
           return participantsConnected(room, identities.length - 1);
-        }));
+        }), 'all participant to get connected');
 
         thoseParticipants = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
         });
 
-        await Promise.all(thoseParticipants.map(thatParticipant => {
+        await waitFor(thoseParticipants.map(thatParticipant => {
           return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }));
+        }), 'all tracks to get subscribed');
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
-          await Promise.all(thoseParticipants.map(thatParticipant => {
+          await waitFor(thoseParticipants.map(thatParticipant => {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }));
+          }), 'all tracks to get unpublished');
 
-          await Promise.all([
+          await waitFor([
             thisParticipant.publishTrack(thisTrack),
             ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ]);
+          ], 'track to get published and all tracks to get subscribe again');
         }
 
         thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
@@ -138,15 +139,15 @@ describe('LocalTrackPublication', function() {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
-        [thoseTracksUnsubscribed, thoseTracksUnpublished] = await Promise.all([
+        [thoseTracksUnsubscribed, thoseTracksUnpublished] = await waitFor([
           'trackUnsubscribed',
           'trackUnpublished'
         ].map(event => {
-          return Promise.all(thoseParticipants.map(async thatParticipant => {
+          return waitFor(thoseParticipants.map(async thatParticipant => {
             const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
             return trackOrPublication;
-          }));
-        }));
+          }), 'all participants to get ' + event);
+        }), 'tracks to get unsubscribed and unpublished.');
 
         thoseTracksMap = {
           trackUnpublished: thoseTracksUnpublished,
@@ -163,7 +164,7 @@ describe('LocalTrackPublication', function() {
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
-        const thoseTracks = await Promise.all(thosePublicationsUnsubscribed);
+        const thoseTracks = await waitFor(thosePublicationsUnsubscribed, 'thosePublicationsUnsubscribed');
         assert.deepEqual(thoseTracks, thoseTracksMap.trackUnsubscribed);
       });
 
