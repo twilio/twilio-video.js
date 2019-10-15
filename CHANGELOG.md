@@ -6,6 +6,27 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
+- You can now change the priority of an already published LocalTrack using a new method
+  `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
+
+  ```js
+  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
+    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
+  });
+
+  // After a while, change the priority to "low".
+  localTrackPublication.setPriority(low);
+  ```
+
+  This will update `publishPriority` on all corresponding RemoteTrackPublications and
+  emit a new event "publishPriorityChanged" to notify the user:
+
+  ```js
+  remoteTrackPublication.on('publishPriorityChanged', priority => {
+    console.log(`The publisher has changed the priority this Track to "${priority}"`);
+    assert.equal(remoteTrackPublication.publishPriority, priority);
+  });
+
 - In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
    by using a new method `setPriority`. (JSDK-2347)
 
