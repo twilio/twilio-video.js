@@ -22,11 +22,16 @@ function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
 }
 
-describe('RemoteParticipant', function() {
+
+describe('RemoteVideoTrack', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  describe('#setPriority', () => {
+  // eslint-disable-next-line no-warning-comments
+  // TODO: enable these tests when track_priority MSP is available in prod
+  (defaults.topology === 'peer-to-peer' || defaults.environment === 'prod'
+    ? describe.skip
+    : describe)('#setPriority', () => {
     let thisRoom;
     let thoseRooms;
     let aliceLocal;
@@ -51,7 +56,7 @@ describe('RemoteParticipant', function() {
         nTracks: 0
       });
 
-      [aliceTracks, bobTracks] = await Promise.all([1, 2, 3].map(async () => [
+      [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
         await createLocalVideoTrack(smallVideoConstraints),
       ]));
@@ -102,74 +107,70 @@ describe('RemoteParticipant', function() {
           assert(/priority must be one of/.test(error.message));
           errorWasThrown = true;
         }
-        assert.equal(errorWasThrown, true, 'was expectiing an error to be thrown, but it was not');
+        assert.equal(errorWasThrown, true, 'was expecting an error to be thrown, but it was not');
       });
     });
 
-    // eslint-disable-next-line no-warning-comments
-    // TODO: enable these tests when track_priority MSP is available in prod
-    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'stage') {
-      it('subscriber can upgrade track\'s effective priority', async () => {
-        await waitFor([
-          trackSwitchedOn(bobRemoteVideoTrack),
-          trackSwitchedOff(aliceRemoteVideoTrack)
-        ], 'Bobs track to get switched On, and Alice Switched Off');
+    it('subscriber can upgrade track\'s effective priority', async () => {
+      await waitFor([
+        trackSwitchedOn(bobRemoteVideoTrack),
+        trackSwitchedOff(aliceRemoteVideoTrack)
+      ], 'Bobs track to get switched On, and Alice Switched Off');
 
-        // change subscriber priority of the Alice track to high
-        aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
+      // change subscriber priority of the Alice track to high
+      aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
-        // eslint-disable-next-line no-warning-comments
-        // expect Alice's track to get switched on, and Bob's track to get switched off
-        await waitFor([
-          trackSwitchedOn(aliceRemoteVideoTrack),
-          trackSwitchedOff(bobRemoteVideoTrack)
-        ], 'Alice track to get switched On, and Bob Switched Off');
-      });
+      // eslint-disable-next-line no-warning-comments
+      // expect Alice's track to get switched on, and Bob's track to get switched off
+      await waitFor([
+        trackSwitchedOn(aliceRemoteVideoTrack),
+        trackSwitchedOff(bobRemoteVideoTrack)
+      ], 'Alice track to get switched On, and Bob Switched Off');
+    });
 
-      it('subscriber can downgrade track\'s effective priority', async () => {
-        await waitFor([
-          trackSwitchedOn(bobRemoteVideoTrack),
-          trackSwitchedOff(aliceRemoteVideoTrack)
-        ], 'Bobs track to get switched On, and Alice Switched Off');
+    it('subscriber can downgrade track\'s effective priority', async () => {
+      await waitFor([
+        trackSwitchedOn(bobRemoteVideoTrack),
+        trackSwitchedOff(aliceRemoteVideoTrack)
+      ], 'Bobs track to get switched On, and Alice Switched Off');
 
-        // change subscriber priority of the Alice track to high
-        bobRemoteVideoTrack.setPriority(PRIORITY_LOW);
-        aliceRemoteVideoTrack.setPriority(PRIORITY_STANDARD);
+      // change subscriber priority of the Alice track to high
+      bobRemoteVideoTrack.setPriority(PRIORITY_LOW);
+      aliceRemoteVideoTrack.setPriority(PRIORITY_STANDARD);
 
-        // eslint-disable-next-line no-warning-comments
-        // expect Alice's track to get switched on, and Bob's track to get switched off
-        await waitFor([
-          trackSwitchedOn(aliceRemoteVideoTrack),
-          trackSwitchedOff(bobRemoteVideoTrack)
-        ], 'Alice track to get switched On, and Bob Switched Off');
-      });
+      // eslint-disable-next-line no-warning-comments
+      // expect Alice's track to get switched on, and Bob's track to get switched off
+      await waitFor([
+        trackSwitchedOn(aliceRemoteVideoTrack),
+        trackSwitchedOff(bobRemoteVideoTrack)
+      ], 'Alice track to get switched On, and Bob Switched Off');
+    });
 
-      it.skip('VMS-2128: subscriber can revert to track\'s effective priority', async () => {
-        await waitFor([
-          trackSwitchedOn(bobRemoteVideoTrack),
-          trackSwitchedOff(aliceRemoteVideoTrack)
-        ], 'Bobs track to get switched On, and Alice Switched Off');
+    it.skip('VMS-2128: subscriber can revert to track\'s effective priority', async () => {
+      await waitFor([
+        trackSwitchedOn(bobRemoteVideoTrack),
+        trackSwitchedOff(aliceRemoteVideoTrack)
+      ], 'Bobs track to get switched On, and Alice Switched Off');
 
-        // change subscriber priority of the Alice track to high
-        aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
+      // change subscriber priority of the Alice track to high
+      aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
-        // eslint-disable-next-line no-warning-comments
-        // expect Alice's track to get switched on, and Bob's track to get switched off
-        await waitFor([
-          trackSwitchedOn(aliceRemoteVideoTrack),
-          trackSwitchedOff(bobRemoteVideoTrack)
-        ], 'Alice track to get switched On, and Bob Switched Off');
+      // eslint-disable-next-line no-warning-comments
+      // expect Alice's track to get switched on, and Bob's track to get switched off
+      await waitFor([
+        trackSwitchedOn(aliceRemoteVideoTrack),
+        trackSwitchedOff(bobRemoteVideoTrack)
+      ], 'Alice track to get switched On, and Bob Switched Off');
 
-        // reset subscriber priority of the Alice track
-        aliceRemoteVideoTrack.setPriority(null);
+      // reset subscriber priority of the Alice track
+      aliceRemoteVideoTrack.setPriority(null);
 
-        // eslint-disable-next-line no-warning-comments
-        await waitFor([
-          trackSwitchedOn(bobRemoteVideoTrack),
-          trackSwitchedOff(aliceRemoteVideoTrack)
-        ], 'Bobs track to get switched On, and Alice Switched Off');
-      });
-    }
+      // eslint-disable-next-line no-warning-comments
+      await waitFor([
+        trackSwitchedOn(bobRemoteVideoTrack),
+        trackSwitchedOff(aliceRemoteVideoTrack)
+      ], 'Bobs track to get switched On, and Alice Switched Off');
+    });
   });
 });
 

@@ -118,7 +118,7 @@ describe('Room', function() {
       await participantsDisconnected;
     });
 
-    it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
+    it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublication', async () => {
       await publicationsUnsubscribed;
     });
 
@@ -409,7 +409,7 @@ describe('Room', function() {
         assert.deepEqual(publicationsAfter, publicationsBefore);
       });
 
-      it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublicationss', async () => {
+      it('should raise a "unsubscribed" event on each RemoteParticipant\'s RemoteTrackPublication', async () => {
         await publicationsUnsubscribed;
       });
 
@@ -469,20 +469,20 @@ describe('Room', function() {
 
       // 2) TrackPublication
       const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', (track) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         resolve();
       }));
 
       // 3) Participant
       const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOff', (track, trackPub) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
         resolve();
       }));
 
       // 4) Room
       const p4 = new Promise(resolve => aliceRoom.once('trackSwitchedOff', (track, trackPub, participant) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         assert.equal(participant, remoteBob, 'unexpected value for the participant');
         assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
         resolve();
@@ -515,20 +515,20 @@ describe('Room', function() {
 
       // 2) TrackPublication
       const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOn', (track) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         resolve();
       }));
 
       // 3) Participant
       const p3 = new Promise(resolve => remoteBob.once('trackSwitchedOn', (track, trackPub) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
         resolve();
       }));
 
       // 4) Room
       const p4 = new Promise(resolve => aliceRoom.once('trackSwitchedOn', (track, trackPub, participant) => {
-        assert.equal(track, loPriTrackPub.track, 'unexpceted value for the track');
+        assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         assert.equal(participant, remoteBob, 'unexpected value for the participant');
         assert.equal(trackPub, loPriTrackPub, 'unexpected value for the track publication');
         resolve();
