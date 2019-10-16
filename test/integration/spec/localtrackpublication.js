@@ -30,7 +30,6 @@ const {
   randomName,
   setup,
   smallVideoConstraints,
-  trackPublishPriorityChanged,
   tracksSubscribed,
   tracksUnpublished,
   trackSwitchedOff,
@@ -224,6 +223,8 @@ describe('LocalTrackPublication', function() {
   describe('#setPriority', () => {
     let thisRoom;
     let thoseRooms;
+    let aliceRoom;
+    let bobRoom;
     let aliceLocal;
     let bobLocal;
     let aliceRemote;
@@ -250,12 +251,13 @@ describe('LocalTrackPublication', function() {
         nTracks: 0
       });
 
-      [aliceTracks, bobTracks] = await Promise.all([1, 2, 3].map(async () => [
+      [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
         await createLocalVideoTrack(smallVideoConstraints),
       ]));
 
-      [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
+      [aliceRoom, bobRoom] = thoseRooms;
+      [aliceLocal, bobLocal] = [aliceRoom, bobRoom].map(room => room.localParticipant);
       [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
       // Alice publishes her tracks at low priority
@@ -299,12 +301,35 @@ describe('LocalTrackPublication', function() {
         // Alice changes her track priority to high
         aliceLocalVideoTrackPublication.setPriority(PRIORITY_HIGH);
 
+        // track priority change event's should fire on
+        // 1. TrackPublication
+        const p1 = new Promise(resolve => aliceRemoteVideoTrackPublication.once('publishPriorityChanged', (priority) => {
+          assert.equal(priority, PRIORITY_HIGH);
+          resolve();
+        }));
+
+        // 2. Participant
+        const p2 = new Promise(resolve => aliceRemote.once('trackPublishPriorityChanged', (priority, trackPublication) => {
+          assert.equal(priority, PRIORITY_HIGH);
+          assert.equal(trackPublication, aliceRemoteVideoTrackPublication);
+          resolve();
+        }));
+
+        // 3. Room
+        const p3 = new Promise(resolve => thisRoom.once('trackPublishPriorityChanged', (priority, trackPublication, participant) => {
+          assert.equal(priority, PRIORITY_HIGH);
+          assert.equal(trackPublication, aliceRemoteVideoTrackPublication);
+          assert.equal(participant, aliceRemote);
+          resolve();
+        }));
+
         // expect Alice's track to get switched on, and Bob's track to get switched off
         await waitFor([
           trackSwitchedOn(aliceRemoteVideoTrack),
           trackSwitchedOff(bobRemoteVideoTrack),
-          trackPublishPriorityChanged(aliceRemoteVideoTrackPublication)
         ], 'Alice track to get switched On, and Bob Switched Off');
+
+        await waitFor([p1, p2, p3], 'receive the trackPublishPriorityChanged on publication, participant and room.');
       });
 
       it('publisher can downgrade track\'s priority', async () => {
@@ -316,13 +341,35 @@ describe('LocalTrackPublication', function() {
         // Bob changes his track priority to low
         bobLocalVideoTrackPublication.setPriority(PRIORITY_LOW);
 
+        // track priority change event should fire on
+        // 1. TrackPublication
+        const p1 = new Promise(resolve => bobRemoteVideoTrackPublication.once('publishPriorityChanged', (priority) => {
+          assert.equal(priority, PRIORITY_LOW);
+          resolve();
+        }));
+
+        // 2. Participant
+        const p2 = new Promise(resolve => bobRemote.once('trackPublishPriorityChanged', (priority, trackPublication) => {
+          assert.equal(priority, PRIORITY_LOW);
+          assert.equal(trackPublication, bobRemoteVideoTrackPublication);
+          resolve();
+        }));
+
+        // 3. Room
+        const p3 = new Promise(resolve => thisRoom.once('trackPublishPriorityChanged', (priority, trackPublication, participant) => {
+          assert.equal(priority, PRIORITY_LOW);
+          assert.equal(trackPublication, bobRemoteVideoTrackPublication);
+          assert.equal(participant, bobRemote);
+          resolve();
+        }));
+
         // expect Alice's track to get switched on, and Bob's track to get switched off
-        // also expect to receive publishPriorityChanged event on Bob's track.
         await waitFor([
           trackSwitchedOn(aliceRemoteVideoTrack),
           trackSwitchedOff(bobRemoteVideoTrack),
-          trackPublishPriorityChanged(bobRemoteVideoTrackPublication)
         ], 'Alice track to get switched On, and Bob Switched Off');
+
+        await waitFor([p1, p2, p3], 'receive the trackPublishPriorityChanged on publication, participant and room.');
       });
     }
   });
