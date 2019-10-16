@@ -22,7 +22,8 @@ function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
 }
 
-describe('RemoteParticipant', function() {
+
+describe('RemoteVideoTrack', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -43,7 +44,7 @@ describe('RemoteParticipant', function() {
       [, thisRoom, thoseRooms] = await setup({
         testOptions: {
           bandwidthProfile: {
-            video: { maxTracks: 1 }
+            video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
           },
           tracks: [dataTrack]
         },
@@ -51,7 +52,7 @@ describe('RemoteParticipant', function() {
         nTracks: 0
       });
 
-      [aliceTracks, bobTracks] = await Promise.all([1, 2, 3].map(async () => [
+      [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
         await createLocalVideoTrack(smallVideoConstraints),
       ]));
@@ -102,13 +103,13 @@ describe('RemoteParticipant', function() {
           assert(/priority must be one of/.test(error.message));
           errorWasThrown = true;
         }
-        assert.equal(errorWasThrown, true, 'was expectiing an error to be thrown, but it was not');
+        assert.equal(errorWasThrown, true, 'was expecting an error to be thrown, but it was not');
       });
     });
 
     // eslint-disable-next-line no-warning-comments
     // TODO: enable these tests when track_priority MSP is available in prod
-    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'dev') {
+    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'stage') {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
@@ -126,10 +127,7 @@ describe('RemoteParticipant', function() {
         ], 'Alice track to get switched On, and Bob Switched Off');
       });
 
-      // eslint-disable-next-line no-warning-comments
-      // TODO: can subscriber downgrade tracks priority?
-      // https://twilio.slack.com/archives/C8HJ77RJM/p1568842297013800?thread_ts=1568405331.070800&cid=C8HJ77RJM
-      it.skip('subscriber can downgrade track\'s effective priority', async () => {
+      it('subscriber can downgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)

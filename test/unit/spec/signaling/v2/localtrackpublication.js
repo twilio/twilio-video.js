@@ -48,6 +48,10 @@ describe('LocalTrackPublicationV2', () => {
       assert.equal(localTrackPublicationV2.priority, priority);
     });
 
+    it('should set the .updatedPriority property', () => {
+      assert.equal(localTrackPublicationV2.updatedPriority, priority);
+    });
+
     [
       ['kind', 'kind'],
       ['isEnabled', 'enabled']
@@ -355,6 +359,67 @@ describe('LocalTrackPublicationV2', () => {
         assert(!updated);
       });
     });
+  });
+
+  describe('#setPriority', () => {
+    let initialPriority;
+    let localTrackPublicationV2;
+    let updated;
+
+    beforeEach(() => {
+      const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
+      initialPriority = makePriority();
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), initialPriority);
+      updated = false;
+    });
+
+    ['same', 'different'].forEach(sameOrDifferent => {
+      let priority;
+      let ret;
+
+      context(`when called with ${sameOrDifferent} priority`, () => {
+        beforeEach(() => {
+          priority = {
+            different: makePriority(),
+            same: localTrackPublicationV2.priority
+          }[sameOrDifferent];
+          localTrackPublicationV2.once('updated', () => { updated = true; });
+          ret = localTrackPublicationV2.setPriority(priority);
+        });
+
+        it('should return the LocalTrackPublicationV2', () => {
+          assert.equal(ret, localTrackPublicationV2);
+        });
+
+        if (sameOrDifferent === 'same') {
+          it('should not change .priority', () => {
+            assert.equal(localTrackPublicationV2.priority, initialPriority);
+          });
+
+          it('should not change .updatedPriority', () => {
+            assert.equal(localTrackPublicationV2.updatedPriority, initialPriority);
+          });
+
+          it('should not emit "updated"', () => {
+            assert(!updated);
+          });
+        } else {
+          it('should not change .priority', () => {
+            assert.equal(localTrackPublicationV2.priority, initialPriority);
+          });
+
+          it('should change .updatedPriority', () => {
+            assert.equal(localTrackPublicationV2.updatedPriority, priority);
+            assert.notEqual(localTrackPublicationV2.updatedPriority, localTrackPublicationV2.priority);
+          });
+
+          it('should emit "updated"', () => {
+            assert(updated);
+          });
+        }
+      });
+    });
+
   });
 
   describe('#stop', () => {
