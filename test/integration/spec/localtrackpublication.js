@@ -220,7 +220,9 @@ describe('LocalTrackPublication', function() {
     });
   });
 
-  (defaults.topology === 'peer-to-peer' || defaults.environment === 'prod'
+  // eslint-disable-next-line no-warning-comments
+  // TODO: enable these tests when track_priority MSP is available in prod
+  (defaults.topology === 'peer-to-peer' || defaults.environment !== 'stage' || defaults.environment !== 'dev'
     ? describe.skip : describe)('#setPriority', () => {
     let thisRoom;
     let thoseRooms;
@@ -303,13 +305,13 @@ describe('LocalTrackPublication', function() {
       assert.equal(aliceLocalVideoTrackPublication.priority, PRIORITY_HIGH);
 
       // track priority change event's should fire on
-      // 1. TrackPublication
-      const p1 = new Promise(resolve => aliceRemoteVideoTrackPublication.once('publishPriorityChanged', (priority) => {
+      // 1. RemoteTrackPublication
+      const p1 = new Promise(resolve => aliceRemoteVideoTrackPublication.once('publishPriorityChanged', priority => {
         assert.equal(priority, PRIORITY_HIGH);
         resolve();
       }));
 
-      // 2. Participant
+      // 2. RemoteParticipant
       const p2 = new Promise(resolve => aliceRemote.once('trackPublishPriorityChanged', (priority, trackPublication) => {
         assert.equal(priority, PRIORITY_HIGH);
         assert.equal(trackPublication, aliceRemoteVideoTrackPublication);
@@ -345,13 +347,13 @@ describe('LocalTrackPublication', function() {
       assert.equal(bobLocalVideoTrackPublication.priority, PRIORITY_LOW);
 
       // track priority change event should fire on
-      // 1. TrackPublication
-      const p1 = new Promise(resolve => bobRemoteVideoTrackPublication.once('publishPriorityChanged', (priority) => {
+      // 1. RemoteTrackPublication
+      const p1 = new Promise(resolve => bobRemoteVideoTrackPublication.once('publishPriorityChanged', priority => {
         assert.equal(priority, PRIORITY_LOW);
         resolve();
       }));
 
-      // 2. Participant
+      // 2. RemoteParticipant
       const p2 = new Promise(resolve => bobRemote.once('trackPublishPriorityChanged', (priority, trackPublication) => {
         assert.equal(priority, PRIORITY_LOW);
         assert.equal(trackPublication, bobRemoteVideoTrackPublication);
