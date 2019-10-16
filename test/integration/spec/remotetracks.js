@@ -22,7 +22,8 @@ function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
 }
 
-describe('RemoteParticipant', function() {
+
+describe('RemoteVideoTrack', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -51,7 +52,7 @@ describe('RemoteParticipant', function() {
         nTracks: 0
       });
 
-      [aliceTracks, bobTracks] = await Promise.all([1, 2, 3].map(async () => [
+      [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
         await createLocalVideoTrack(smallVideoConstraints),
       ]));
@@ -102,7 +103,7 @@ describe('RemoteParticipant', function() {
           assert(/priority must be one of/.test(error.message));
           errorWasThrown = true;
         }
-        assert.equal(errorWasThrown, true, 'was expectiing an error to be thrown, but it was not');
+        assert.equal(errorWasThrown, true, 'was expecting an error to be thrown, but it was not');
       });
     });
 
