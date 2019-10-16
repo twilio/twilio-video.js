@@ -222,7 +222,7 @@ describe('LocalTrackPublication', function() {
 
   // eslint-disable-next-line no-warning-comments
   // TODO: enable these tests when track_priority MSP is available in prod
-  (defaults.topology === 'peer-to-peer' || defaults.environment !== 'stage' || defaults.environment !== 'dev'
+  (defaults.topology === 'peer-to-peer' || (defaults.environment !== 'stage' && defaults.environment !== 'dev')
     ? describe.skip : describe)('#setPriority', () => {
     let thisRoom;
     let thoseRooms;
