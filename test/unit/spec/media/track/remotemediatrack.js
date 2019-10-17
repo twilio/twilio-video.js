@@ -240,6 +240,64 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       });
     });
 
+    describe('#attach', () => {
+      it('enables the track if disabled', () => {
+        let track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        track._createElement = sinon.spy(() => {
+          // return a unique element.
+          return {
+            internalId: Date()
+          };
+        });
+
+        track.mediaStreamTrack.enabled = false;
+        let el1 = track.attach();
+        assert(el1);
+        assert.equal(track.mediaStreamTrack.enabled, true);
+      });
+    });
+
+    describe('#detach', () => {
+      let el1;
+      let el2;
+      let track;
+      beforeEach(() => {
+        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        track._createElement = sinon.spy(() => {
+          // return a unique element.
+          return {
+            internalId: Date()
+          };
+        });
+
+        el1 = track.attach();
+        assert.equal(track.mediaStreamTrack.enabled, true);
+        el2 = track.attach();
+      });
+
+      it('when no element specified, detaches all and disables the track', () => {
+        assert.equal(track.mediaStreamTrack.enabled, true);
+        let elements = track.detach();
+        assert.equal(elements.length, 2);
+        assert.equal(track.mediaStreamTrack.enabled, false);
+      });
+
+      it('after detaching elements does not disable track if more elements are attached', () => {
+        assert.equal(track.mediaStreamTrack.enabled, true);
+        track.detach(el1);
+        assert.equal(track.mediaStreamTrack.enabled, true);
+      });
+
+      it('after detaching last element disables the track', () => {
+        assert.equal(track.mediaStreamTrack.enabled, true);
+        track.detach(el1);
+        assert.equal(track.mediaStreamTrack.enabled, true);
+        track.detach(el2);
+        assert.equal(track.mediaStreamTrack.enabled, false);
+      });
+    });
+
+
     describe('#toJSON', () => {
       let track;
 

@@ -13,11 +13,6 @@ const dockerIntegrationTests = join(__dirname, '..', 'test', 'integration', 'spe
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
 function getTestPaths(path) {
-
-  if (process.env.FILE) {
-    return [resolvePath(process.env.FILE)];
-  }
-
   var stat = statSync(path);
   if (stat && stat.isDirectory()) {
     return readdirSync(path).reduce((files, file) => {
@@ -28,19 +23,36 @@ function getTestPaths(path) {
   return [path];
 }
 
-const files = getTestPaths(isDocker ? dockerIntegrationTests : integrationTests);
+function filterTests(paths) {
+  if (process.env.TEST_FILES) {
+    let testFiles = process.env.TEST_FILES.split('\n');
+    testFiles = testFiles.map(file => resolvePath(file));
+    return paths.filter(path => testFiles.includes(path));
+  }
+  return paths;
+}
 
 // NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
 // Firefox, that causes Firefox to slow down after running a bunch of tests that
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.
-async function main(files) {
+async function main() {
   let dockerProxy = null;
   if (isDocker) {
     console.log('running tests inside docker!');
-    dockerProxy = new DockerProxyServer();
-    dockerProxy.startServer();
+    try {
+      dockerProxy = new DockerProxyServer();
+      await dockerProxy.startServer();
+      console.log('DockerProxyServer started successfully. Network tests may run as part of this run!');
+    } catch (err) {
+      // NOTE(mpatwardhan): This can happen in CI environment, when we run integration tests inside docker
+      // container without mapping docker socket inside the container.
+      console.log('DockerProxyServer failed to start.  Network tests will not run as part of this run!');
+      dockerProxy = null;
+    }
   }
+
+  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests));
 
   let processExitCode = 0;
   for (const file of files) {
@@ -69,4 +81,4 @@ async function main(files) {
   process.exit(processExitCode);
 }
 
-main(files);
+main();
