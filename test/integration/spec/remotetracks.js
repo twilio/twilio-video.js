@@ -109,7 +109,7 @@ describe('RemoteVideoTrack', function() {
 
     // eslint-disable-next-line no-warning-comments
     // TODO: enable these tests when track_priority MSP is available in prod
-    if (defaults.topology !== 'peer-to-peer' && defaults.environment === 'stage') {
+    if (defaults.topology !== 'peer-to-peer' && (defaults.environment === 'stage' || defaults.environment === 'dev')) {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
