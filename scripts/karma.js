@@ -4,6 +4,7 @@
 const { readdirSync, statSync } = require('fs');
 const { Server, stopper } = require('karma');
 const { parseConfig } = require('karma').config;
+const { resolve: resolvePath } = require('path');
 const { join } = require('path');
 
 const configFile = join(__dirname, '..', process.argv[2]);
@@ -15,6 +16,7 @@ function getTestPaths(path) {
       return files.concat(getTestPaths(`${path}/${file}`));
     }, []);
   }
+
   return [path];
 }
 
@@ -32,12 +34,14 @@ function filterTests(paths) {
 // exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
 // test module.
 async function main() {
+
   const files = filterTests(getTestPaths(integrationTests));
 
   let processExitCode = 0;
   for (const file of files) {
     const config = parseConfig(configFile, { files: [file] });
 
+    // eslint-disable-next-line no-await-in-loop
     const exitCode = await new Promise(resolve => {
       const server = new Server(config, resolve);
       server.start();
@@ -45,10 +49,16 @@ async function main() {
       process.once('SIGINT', () => process.exit());
     });
 
-    if (exitCode) {
-      process.exit(exitCode);
+    if (exitCode && !processExitCode) {
+      // Note(mpatwardhan) if tests fail for one file,
+      // note the exitcode but continue running for rest
+      // of the files.
+      processExitCode = exitCode;
+      console.log('Failed for file:', file);
     }
   }
+
+  process.exit(processExitCode);
 }
 
 main();
