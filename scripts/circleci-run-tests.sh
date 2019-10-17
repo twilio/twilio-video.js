@@ -13,6 +13,31 @@ echo "directory:"
 ls -alt
 echo "running tests"
 
+case ${ENVIRONMENT} in
+dev)
+  echo "Testing against dev"
+  export ACCOUNT_SID=${ACCOUNT_SID_DEV}
+  export API_KEY_SECRET=${API_KEY_SECRET_DEV}
+  export API_KEY_SID=${API_KEY_SID_DEV}
+  ;;
+stage)
+  echo "Testing against stage"
+  export ACCOUNT_SID=${ACCOUNT_SID_STAGE}
+  export API_KEY_SECRET=${API_KEY_SECRET_STAGE}
+  export API_KEY_SID=${API_KEY_SID_STAGE}
+  ;;
+prod)
+  echo "Testing against prod"
+  export ACCOUNT_SID=${ACCOUNT_SID_PROD}
+  export API_KEY_SECRET=${API_KEY_SECRET_PROD}
+  export API_KEY_SID=${API_KEY_SID_PROD}
+  ;;
+*)
+  echo 'Please specify ENVIRONMENT ("dev", "stage", or "prod")'
+  exit 1
+  ;;
+esac
+
 if [ "${NETWORK_TESTS}" = "true" ];
 then
     # network tets run inside a container with docker socket mapped in the container.
