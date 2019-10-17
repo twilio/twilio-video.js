@@ -9,7 +9,8 @@ const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
-const minute = 1 * 60 * 1000;
+const second = 1000;
+const minute = 60 * second;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
