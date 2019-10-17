@@ -1,0 +1,40 @@
+version: '3'
+# Note: This file is used to build run the integration tests.
+#   for running integration tests
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run integrationTests
+#   to build container with browsers that will be used by integrationTests:
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml build browserContainer
+#   to run bash for debugging the container:
+#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run bash
+services:
+  defaults: &defaults
+    user: root
+    image: twilio/twilio-video-browsers:${BROWSER}-${BVER}
+    working_dir: /opt/app
+  runtimeDefaults: &runtimeDefaults
+    <<: *defaults
+    environment:
+    - ENVIRONMENT
+    - ACCOUNT_SID
+    - API_KEY_SID
+    - API_KEY_SECRET
+    - TOPOLOGY
+    - ENABLE_REST_API_TESTS
+    volumes:
+      - "../../:/opt/app"
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/app/node_modules
+  browserContainer:
+    <<: *defaults
+    build:
+      context: .
+      dockerfile: ./${BROWSER}/${BVER}/Dockerfile
+  integrationTests: # runs integration tets. Expects that sources are mounted.
+    <<: *runtimeDefaults
+    command: bash -c "npm install && npm run test:integration"
+  bash: # runs bash shell inside container. helpful for debugging
+    <<: *runtimeDefaults
+    command: bash
+  getVersion: # print browser version installed in the container.
+    <<: *runtimeDefaults
+    command: /opt/app/.circleci/images/printbrowserversion.sh
