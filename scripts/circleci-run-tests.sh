@@ -22,6 +22,8 @@ dev)
   export REGIONS='us1'
   export ECS_SERVER=https://ecs.dev-us1.twilio.com
   export WS_SERVER_INSIGHTS=wss://sdkgw.dev-us1.twilio.com/v1/VideoEvents
+  export CONFIGURATION_PROFILE_SID_P2P=${CONFIGURATION_PROFILE_SID_P2P_DEV}
+  export CONFIGURATION_PROFILE_SID_SFU=${CONFIGURATION_PROFILE_SID_SFU_DEV}
   ;;
 stage)
   echo "Testing against stage"
@@ -31,12 +33,16 @@ stage)
   export REGIONS='au1,ie1,us1'
   export ECS_SERVER=https://ecs.stage-us1.twilio.com
   export WS_SERVER_INSIGHTS=wss://sdkgw.stage-us1.twilio.com/v1/VideoEvents
+  export CONFIGURATION_PROFILE_SID_P2P=${CONFIGURATION_PROFILE_SID_P2P_STAGE}
+  export CONFIGURATION_PROFILE_SID_SFU=${CONFIGURATION_PROFILE_SID_SFU_STAGE}
   ;;
 prod)
   echo "Testing against prod"
   export ACCOUNT_SID=${ACCOUNT_SID_PROD}
   export API_KEY_SECRET=${API_KEY_SECRET_PROD}
   export API_KEY_SID=${API_KEY_SID_PROD}
+  export CONFIGURATION_PROFILE_SID_P2P=${CONFIGURATION_PROFILE_SID_P2P_PROD}
+  export CONFIGURATION_PROFILE_SID_SFU=${CONFIGURATION_PROFILE_SID_SFU_PROD}
   ;;
 *)
   echo 'Please specify ENVIRONMENT ("dev", "stage", or "prod")'
