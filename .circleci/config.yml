@@ -1,11 +1,344 @@
-version: 2
-jobs:
-  build:
-    branches:
-      only:
-        # disable builds unless the branch has circleci in its name.
-        - /.*circleci.*/
+# to validate any changes
+# use:
+# circleci config process .circleci/config.yml > config_processed.yml
+#
+# and run any job locally with:
+# circleci local execute -c config_processed.yml --job "firefox stable group"
+version: 2.1
+parameters:
+  environment:
+    type: enum
+    enum: ["prod", "stage", "dev"]
+    default: "prod"
+  pr_workflow:
+    type: boolean
+    default: true # by default pr workflow will get executed.
+  custom_workflow:
+    type: boolean
+    default: false
+  browser:
+    type: enum
+    enum: ["chrome", "firefox"]
+    default: "chrome"
+  bver:
+    type: enum
+    enum: ["stable", "beta", "unstable"]
+    default: "stable"
+  topology:
+    type: enum
+    enum: ["group", "peer-to-peer"]
+    default: "group"
+
+defaultEnv: &defaultEnv
+  ENVIRONMENT: << pipeline.parameters.environment >>
+  ENABLE_REST_API_TESTS: "true"
+p2p: &topology_p2p
+  topology: "peer-to-peer"
+group: &topology_group
+  topology: "group"
+firefox: &browser_firefox
+  browser: "firefox"
+chrome: &browser_chrome
+  browser: "chrome"
+stable: &bver_stable
+  bver: "stable"
+beta: &bver_beta
+  bver: "beta"
+unstable: &bver_unstable
+  bver: "unstable"
+executors:
+  docker-with-browser:
+    parameters:
+      browser:
+        type: enum
+        enum: ["chrome", "firefox"]
+        default: "chrome"
+      bver:
+        type: enum
+        enum: ["stable", "beta", "unstable"]
+        default: "stable"
     docker:
-      - image: circleci/node:lts
+      - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
+    environment:
+      <<: *defaultEnv
+  generic-executor:
+    docker:
+      - image: alpine:3.7
+    environment:
+      <<: *defaultEnv
+  machine-executor:
+    machine: true
+    environment:
+      <<: *defaultEnv
+commands:
+  get-code-and-dependencies:
     steps:
-      - run: echo building $CIRCLE_BRANCH !
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Installing dependencies
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+  save-test-results:
+    steps:
+      - store_test_results:
+          path: ./logs
+      - store_artifacts:
+          path: ./logs
+          prefix: tests
+  build:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Building Quick
+          command: npm run build:quick
+  unit-tests:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Running Unit Tests
+          command: npm run cover
+      - store_artifacts:
+          path: ./coverage
+          prefix: coverage
+  integration-tests:
+    steps:
+      - get-code-and-dependencies
+      - run:
+          name: Running Integration Tests
+          command: scripts/circleci-run-tests.sh
+      - save-test-results
+  network-tests:
+    steps:
+      - checkout
+      - run:
+          name: Running Network Tests
+          command: scripts/circleci-run-tests.sh
+      - save-test-results
+  framework-tests:
+    steps:
+      - build
+      - run:
+          name: Running UMD Tests
+          command: npm run test:umd
+      - run:
+          name: Running Framework Tests
+          command: npm run test:framework
+      - save-test-results
+  echo-command:
+    description: "marker command"
+    parameters:
+      to:
+        type: string
+        default: "Hello World"
+    steps:
+      - run: echo << parameters.to >>
+jobs:
+  Build:
+    executor: docker-with-browser
+    steps:
+      - build
+  UnitTests:
+    executor: docker-with-browser
+    steps:
+      - unit-tests
+  BuildComplete:
+    executor: generic-executor
+    steps:
+      - echo-command:
+          to: "Build Phase Complete!"
+  BuildPassed:
+    executor: generic-executor
+    steps:
+      - echo-command:
+          to: "Build Passed!"
+  run-integration-tests:
+    parallelism: 6
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+      topology:
+        type: enum
+        enum: ["group", "peer-to-peer"]
+        default: "group"
+    environment:
+      TOPOLOGY: << parameters.topology >>
+    executor:
+      name: docker-with-browser
+      browser: << parameters.browser >>
+      bver: << parameters.bver >>
+    steps: [integration-tests]
+  run-network-tests:
+    parameters:
+      browser:
+        type: string
+      topology:
+        type: string
+    environment:
+      NETWORK_TESTS: "true"
+      BVER: "stable"
+      BROWSER: << parameters.browser >>
+      TOPOLOGY: << parameters.topology >>
+    executor: machine-executor
+    steps: [network-tests]
+  Framework-tests:
+    environment:
+      BROWSER: "chrome"
+    executor: docker-with-browser
+    steps: [framework-tests]
+  Build-Docker-Test-Image:
+    executor: machine-executor
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+    steps:
+      - checkout
+      - run:
+          name: Building Docker Image
+          command: .circleci/images/build_docker_image.sh
+      - save-test-results
+    environment:
+      BROWSER: << parameters.browser >>
+      BVER: << parameters.bver >>
+
+workflows:
+  version: 2
+  Build_Docker_Images_Workflow:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - Build-Docker-Test-Image:
+          name: "chrome stable"
+          <<: *browser_chrome
+          <<: *bver_stable
+      - Build-Docker-Test-Image:
+          name: "chrome unstable"
+          <<: *browser_chrome
+          <<: *bver_unstable
+      - Build-Docker-Test-Image:
+          name: "chrome beta"
+          <<: *browser_chrome
+          <<: *bver_beta
+      - Build-Docker-Test-Image:
+          name: "firefox stable"
+          <<: *browser_firefox
+          <<: *bver_stable
+      - Build-Docker-Test-Image:
+          name: "firefox unstable"
+          <<: *browser_firefox
+          <<: *bver_unstable
+      - Build-Docker-Test-Image:
+          name: "firefox beta"
+          <<: *browser_firefox
+          <<: *bver_beta
+  Custom_Workflow:
+    when: << pipeline.parameters.custom_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          bver: << pipeline.parameters.bver >>
+          topology: << pipeline.parameters.topology >>
+
+  Pull_Request_Workflow:
+    when: << pipeline.parameters.pr_workflow >>
+    jobs:
+      - Build
+      - UnitTests
+      - BuildComplete:
+          requires: [Build, UnitTests]
+      - run-integration-tests:
+          name: "chrome stable group"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome beta group"
+          <<: *browser_chrome
+          <<: *bver_beta
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome unstable group"
+          <<: *browser_chrome
+          <<: *bver_unstable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome stable p2p"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome beta p2p"
+          <<: *browser_chrome
+          <<: *bver_beta
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "chrome unstable p2p"
+          <<: *browser_chrome
+          <<: *bver_unstable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable group"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox beta group"
+          <<: *browser_firefox
+          <<: *bver_beta
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox unstable group"
+          <<: *browser_firefox
+          <<: *bver_unstable
+          <<: *topology_group
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox stable p2p"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox beta p2p"
+          <<: *browser_firefox
+          <<: *bver_beta
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - run-integration-tests:
+          name: "firefox unstable p2p"
+          <<: *browser_firefox
+          <<: *bver_unstable
+          <<: *topology_p2p
+          requires: [BuildComplete]
+      - Framework-tests:
+          name: "framework tests"
+          requires: [BuildComplete]
+      - BuildPassed:
+          requires:
+            - "framework tests"
+            - "firefox stable p2p"
+            - "firefox stable group"
+            - "chrome stable p2p"
+            - "chrome stable group"
