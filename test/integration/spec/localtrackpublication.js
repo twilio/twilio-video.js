@@ -370,11 +370,11 @@ describe('LocalTrackPublication', function() {
 
       // expect Alice's track to get switched on, and Bob's track to get switched off
       await waitFor([
-        waitFor(trackSwitchedOn(aliceRemoteVideoTrack), 'Alice\'s track to switch on'),
-        waitFor(trackSwitchedOff(bobRemoteVideoTrack), 'Bob\'s track to get switched off'),
+        waitFor(trackSwitchedOn(aliceRemoteVideoTrack), 'Alice\'s track to switched on:' + thisRoom.sid),
+        waitFor(trackSwitchedOff(bobRemoteVideoTrack), 'Bob\'s track to get switched off:' + thisRoom.sid),
       ], 'Alice track to get switched On, and Bob Switched Off');
 
-      await waitFor([p1, p2, p3], 'receive the trackPublishPriorityChanged on publication, participant and room.');
+      await waitFor([p1, p2, p3], 'receive the trackPublishPriorityChanged on publication, participant and room:' + thisRoom.sid);
       assert.equal(bobRemoteVideoTrackPublication.publishPriority, PRIORITY_LOW);
     });
   });
