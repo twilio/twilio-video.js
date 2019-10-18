@@ -40,7 +40,8 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   tracksPublished,
-  trackSwitchedOn
+  trackSwitchedOn,
+  waitFor
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
@@ -146,7 +147,7 @@ describe('connect', function() {
 
         it(`should ${shouldSubscribe ? '' : 'not '}subscribe to the RemoteTracks in the Room`, async () => {
           const participants = [...thisRoom.participants.values()];
-          await Promise.all(participants.map(participant => tracksPublished(participant, 2)));
+          await waitFor(participants.map(participant => tracksPublished(participant, 2)), 'tracksPublished');
 
           // Wait for a second for any "trackSubscribed" events.
           await Promise.race([
@@ -340,7 +341,7 @@ describe('connect', function() {
         options.name = sid;
       }
       cancelablePromises = tokens.map(token => connect(token, options));
-      rooms = await Promise.all(cancelablePromises);
+      rooms = await waitFor(cancelablePromises, 'connecting to rooms');
     });
 
     after(() => {
@@ -418,7 +419,7 @@ describe('connect', function() {
       }
 
       it('should eventually update each Room\'s .participants Map to contain a Participant for every other Room\'s LocalParticipant', async () => {
-        await Promise.all(rooms.map(room => participantsConnected(room, n - 1)));
+        await waitFor(rooms.map(room => participantsConnected(room, n - 1)), 'participantsConnected');
         pairs(rooms).forEach(([{ participants }, otherRooms]) => {
           otherRooms.forEach(({ localParticipant }) => {
             const participant = participants.get(localParticipant.sid);
@@ -438,9 +439,9 @@ describe('connect', function() {
         }
 
         it('should eventually update each Participant\'s ._tracks Map to contain a RemoteTrack for every one of its corresponding LocalParticipant\'s LocalTracks', async () => {
-          await Promise.all(flatMap(rooms, ({ participants }) => {
+          await waitFor(flatMap(rooms, ({ participants }) => {
             return [...participants.values()].map(participant => tracksSubscribed(participant, 2));
-          }));
+          }), 'tracksSubscribed');
           pairs(rooms).forEach(([{ participants }, otherRooms]) => {
             otherRooms.forEach(({ localParticipant }) => {
               const participant = participants.get(localParticipant.sid);
@@ -483,7 +484,7 @@ describe('connect', function() {
       const options = Object.assign({ name: sid, tracks: [] }, defaults);
       const identities = [randomName(), randomName()];
       const tokens = identities.map(getToken);
-      rooms = await Promise.all(tokens.map(token => connect(token, options)));
+      rooms = await waitFor(tokens.map(token => connect(token, options)), 'rooms to connect');
       cancelablePromise = connect(getToken(randomName()), options);
       room = await cancelablePromise;
     });
@@ -822,7 +823,7 @@ describe('connect', function() {
           });
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, tracks.length)));
+          await waitFor(thisParticipants.map(participant => tracksSubscribed(participant, tracks.length)), 'tracksSubscribed');
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
@@ -894,7 +895,7 @@ describe('connect', function() {
           });
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant._tracks.size)));
+          await waitFor(thisParticipants.map(participant => tracksSubscribed(participant, thisParticipant._tracks.size)), 'tracksSubscribed');
         });
 
         ['audio', 'video'].forEach(kind => {
@@ -947,11 +948,11 @@ describe('connect', function() {
             {
               createLocalTracks() {
                 const name = 'foo';
-                return Promise.all([
+                return waitFor([
                   createLocalAudioTrack({ name }),
                   createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints)),
                   new LocalDataTrack()
-                ]);
+                ], 'local tracks');
               },
               scenario: 'Tracks whose names are the same',
               TwilioError: TrackNameIsDuplicatedError
@@ -959,11 +960,11 @@ describe('connect', function() {
             {
               createLocalTracks() {
                 const name = '0'.repeat(129);
-                return Promise.all([
+                return waitFor([
                   createLocalAudioTrack(),
                   createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints)),
                   new LocalDataTrack()
-                ]);
+                ], 'local tracks');
               },
               scenario: 'a Track whose name is too long',
               TwilioError: TrackNameTooLongError
@@ -1223,10 +1224,10 @@ describe('connect', function() {
         });
 
         it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
-          const [aliceTracks, bobTracks] = await Promise.all([1, 2].map(async () => [
+          const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
             createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
             await createLocalVideoTrack(smallVideoConstraints)
-          ]));
+          ]), 'local tracks');
 
           // Initially disable Alice's audio
           aliceTracks[0].enabled = false;
@@ -1235,12 +1236,12 @@ describe('connect', function() {
           const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
           // Alice and Bob publish their LocalTracks
-          await Promise.all([
+          await waitFor([
             ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: passiveSpeakerPublishPriority })),
             ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: dominantSpeakerPublishPriority })),
             tracksSubscribed(aliceRemote, 2),
             tracksSubscribed(bobRemote, 2)
-          ]);
+          ], 'all tracks to get published and subscribed');
 
           const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
             return [...videoTracks.values()][0].track;
@@ -1258,11 +1259,11 @@ describe('connect', function() {
           }[switchOffParticipant];
 
           // Bob should be the Dominant Speaker
-          await Promise.all([
+          await waitFor([
             dominantSpeakerChanged(thisRoom, bobRemote),
             trackSwitchedOn(switched.on.remoteVideoTrack),
             trackSwitchedOff(switched.off.remoteVideoTrack)
-          ]);
+          ], 'Bob to be dominant speaker');
 
           switched.on.participant.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, false);

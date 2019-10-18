@@ -18,6 +18,10 @@ const {
 } = require('../../../lib/util');
 
 const minute = 1 * 60 * 1000;
+const VALIDATE_MEDIA_FLOW_TIMEOUT = 1 * minute;
+const RECONNECTING_TIMEOUT = 2 * minute;
+const RECONNECTED_TIMEOUT = 2 * minute;
+const DISCONNECTED_TIMEOUT = 4 * minute;
 
 // resolves when room received n track started events.
 function waitForTrackToStart(room, n) {
@@ -125,7 +129,7 @@ describe('Reconnection states and events', function() {
 
   it('can detect media flow', async () => {
     const rooms =  await setup(2);
-    await waitFor(rooms.map(validateMediaFlow), 'validate media flow');
+    await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
     rooms.forEach(room => room.disconnect());
   });
 
@@ -170,14 +174,14 @@ describe('Reconnection states and events', function() {
         });
 
         it('should emit "reconnecting" on the Rooms', async () => {
-          await waitFor(reconnectingPromises, 'reconnectingPromises');
+          await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
         });
 
         context('that is longer than the session timeout', () => {
           (isFirefox ? it.skip : it)('should emit "disconnected" on the Rooms', async () => {
             const disconnectPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
-            await waitFor(reconnectingPromises, 'reconnectingPromises');
-            await waitFor(disconnectPromises, 'disconnectPromises');
+            await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
+            await waitFor(disconnectPromises, 'disconnectPromises', DISCONNECTED_TIMEOUT);
           });
         });
 
@@ -185,13 +189,13 @@ describe('Reconnection states and events', function() {
           it('should emit "reconnected on the Rooms', async () => {
             const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 
-            await waitFor(reconnectingPromises, 'reconnectingPromises');
+            await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
             await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.connectToNetwork(networkId)), 'reconnect to original networks');
             await readCurrentNetworks(dockerAPI);
             await waitToGoOnline();
 
             try {
-              await waitFor(reconnectedPromises, 'reconnectedPromises');
+              await waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTED_TIMEOUT);
             } catch (err) {
               console.log('rooms - Failed to Reconnect:');
               rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
@@ -203,7 +207,7 @@ describe('Reconnection states and events', function() {
               // if mroe than one person have joined room
               // validate the media flow.
               try {
-                await waitFor(rooms.map(validateMediaFlow), 'validate media flow');
+                await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
               } catch (_err) {
                 console.log('TODO(mpatwardhan) : no media detected in the room. But ignoring that for now.');
               }
@@ -226,8 +230,8 @@ describe('Reconnection states and events', function() {
           await readCurrentNetworks(dockerAPI);
 
           try {
-            await waitFor(reconnectingPromises, 'reconnectingPromises');
-            await waitFor(reconnectedPromises, 'reconnectedPromises');
+            await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
+            await waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTED_TIMEOUT);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
             rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
@@ -236,7 +240,7 @@ describe('Reconnection states and events', function() {
           }
 
           if (nPeople > 1) {
-            await waitFor(rooms.map(validateMediaFlow), 'validate media flow');
+            await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
 
@@ -256,8 +260,8 @@ describe('Reconnection states and events', function() {
           await waitToGoOnline();
 
           try {
-            await waitFor(reconnectingPromises, 'reconnectingPromises');
-            await waitFor(reconnectedPromises, 'reconnectedPromises');
+            await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
+            await waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTED_TIMEOUT);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
             rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
@@ -266,7 +270,7 @@ describe('Reconnection states and events', function() {
           }
 
           if (nPeople > 1) {
-            await waitFor(rooms.map(validateMediaFlow), 'validate media flow');
+            await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
       });

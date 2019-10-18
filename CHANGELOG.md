@@ -64,6 +64,16 @@ New Features
     }
   });
   ```
+- Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
+  and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
+  corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
+  now disables any RemoteMediaTrack when it's not attached to any media elements. (JSDK-2490)
+
+Bug Fixes
+---------
+
+- Fixed a bug where `Video.isSupported` evaluated to `true` on Chromium-based Edge browser,
+  even though twilio-video.js does not support it at this moment. (JSDK-2515)
 
 2.0.0-beta14 (September 17, 2019)
 =================================
