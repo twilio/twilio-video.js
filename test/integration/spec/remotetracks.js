@@ -113,7 +113,7 @@ describe('RemoteVideoTrack', function() {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
-          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid})`
+          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid}`)
         ], `Bob's track to get switched on, and alice switched off: ${thisRoom.sid}`);
 
         // change subscriber priority of the Alice track to high
