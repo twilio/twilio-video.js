@@ -112,24 +112,24 @@ describe('RemoteVideoTrack', function() {
     if (defaults.topology !== 'peer-to-peer' && (defaults.environment === 'stage' || defaults.environment === 'dev')) {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
-          waitFor(trackSwitchedOn(bobRemoteVideoTrack), 'Bob\'s track to get switched On:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), 'Alice\'s track to get switched off:' + thisRoom.sid)
-        ], 'Bobs track to get switched On, and Alice Switched Off:' + thisRoom.sid);
+          waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid})`
+        ], `Bob's track to get switched on, and alice switched off: ${thisRoom.sid}`);
 
         // change subscriber priority of the Alice track to high
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
         // expect Alice's track to get switched on, and Bob's track to get switched off
         await waitFor([
-          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), 'Alice\'s track to get switched on:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(bobRemoteVideoTrack), 'Bob\'s track to get switched off:' + thisRoom.sid)
+          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), `Alice's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(bobRemoteVideoTrack), `Bob's track to get switched off: ${thisRoom.sid}`)
         ], 'Alice track to get switched On, and Bob Switched Off:' + thisRoom.sid);
       });
 
       it('subscriber can downgrade track\'s effective priority', async () => {
         await waitFor([
-          waitFor(trackSwitchedOn(bobRemoteVideoTrack), 'Bob\'s track to get switched On:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), 'Alice\'s track to get switched off:' + thisRoom.sid)
+          waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid}`)
         ], 'Bobs track to get switched On, and Alice Switched Off');
 
         // change subscriber priority of the Alice track to high
@@ -138,33 +138,33 @@ describe('RemoteVideoTrack', function() {
 
         // expect Alice's track to get switched on, and Bob's track to get switched off
         await waitFor([
-          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), 'Alice\'s track to get switched on:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(bobRemoteVideoTrack), 'Bob\'s track to get switched off:' + thisRoom.sid)
-        ], 'Alice track to get switched On, and Bob Switched Off:' + thisRoom.sid);
+          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), `Alice's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(bobRemoteVideoTrack), `Bob's track to get switched off: ${thisRoom.sid}`)
+        ], `Alice track to get switched on, and Bob switched off: ${thisRoom.sid}`);
       });
 
       it('subscriber can revert to track\'s effective priority', async () => {
         await waitFor([
-          waitFor(trackSwitchedOn(bobRemoteVideoTrack), 'Bob\'s track to get switched On:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), 'Alice\'s track to get switched off:' + thisRoom.sid)
-        ], 'Bobs track to get switched On, and Alice Switched Off:' + thisRoom.sid);
+          waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid}`)
+        ], `Bob's track to get switched on, and Alice switched off: ${thisRoom.sid}`);
 
         // change subscriber priority of the Alice track to high
         aliceRemoteVideoTrack.setPriority(PRIORITY_HIGH);
 
         // expect Alice's track to get switched on, and Bob's track to get switched off
         await waitFor([
-          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), 'Alice\'s track to get switched on:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(bobRemoteVideoTrack), 'Bob\'s track to get switched off:' + thisRoom.sid)
-        ], 'Alice track to get switched On, and Bob Switched Off:' + thisRoom.sid);
+          waitFor(trackSwitchedOn(aliceRemoteVideoTrack), `Alice's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(bobRemoteVideoTrack), `Bob's track to get switched off: ${thisRoom.sid}`)
+        ], `Alice track to get switched on, and Bob switched off: ${thisRoom.sid}`);
 
         // reset subscriber priority of the Alice track
         aliceRemoteVideoTrack.setPriority(null);
 
         await waitFor([
-          waitFor(trackSwitchedOn(bobRemoteVideoTrack), 'Bob\'s track to get switched On:' + thisRoom.sid),
-          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), 'Alice\'s track to get switched off:' + thisRoom.sid)
-        ], 'Bobs track to get switched On, and Alice Switched Off:' + thisRoom.sid);
+          waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
+          waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's track to get switched off: ${thisRoom.sid}`)
+        ], `Bob's track to get switched on, and Alice switched off: ${thisRoom.sid}`);
       });
     }
   });
