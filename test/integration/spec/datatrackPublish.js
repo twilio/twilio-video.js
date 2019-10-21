@@ -15,7 +15,7 @@ const {
   waitFor
 } = require('../../lib/util');
 
-describe('JSDK-2477: data track not getting published in firefox', function() {
+describe('JSDK-2501: data track not getting published in firefox', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   [true, false].forEach((dominantSpeaker) => {
