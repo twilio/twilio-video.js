@@ -20,7 +20,7 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-const { trackSwitchOfMode: { MODE_DISABLED, MODE_PREDICTED } } = require('../../../lib/util/constants');
+const { trackSwitchOffMode: { MODE_DISABLED, MODE_PREDICTED } } = require('../../../lib/util/constants');
 
 describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
