@@ -149,7 +149,9 @@ describe('Bandwidth Management', function() {
     describe.only('bandwidthProfile.video.trackSwitchOffMode', () => {
       [MODE_DISABLED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
         const expectSwitchOff = (trackSwitchOffMode !== MODE_DISABLED);
-        it(`${expectSwitchOff ? 'Should' : 'Should not'} switch off tracks when trackSwitchOffMode = ${trackSwitchOffMode}`, async () => {
+        it(`${expectSwitchOff ? 'Should' : 'Should not'} switch off remote tracks when trackSwitchOffMode = ${trackSwitchOffMode}`, async () => {
+          console.log("expectSwitchOff = ", expectSwitchOff);
+          console.log("trackSwitchOffMode = ", trackSwitchOffMode);
           const [, thisRoom, thoseRooms] = await setup({
             testOptions: {
               bandwidthProfile: {
@@ -183,26 +185,39 @@ describe('Bandwidth Management', function() {
             ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_HIGH })),
             tracksSubscribed(aliceRemote, 2),
             tracksSubscribed(bobRemote, 2)
-          ], 'all tracks to get published and subscribed');
+          ], `all tracks to get published and subscribed: ${thisRoom.sid}`);
 
           const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
             return [...videoTracks.values()][0].track;
           });
+
+          // eslint-disable-next-line no-console
+          aliceRemoteVideoTrack.on('switchedOff', () => console.log('Alice track got switched Off'));
+          // eslint-disable-next-line no-console
+          aliceRemoteVideoTrack.on('switchedOn', () => console.log('Alice track got switched On'));
+          // eslint-disable-next-line no-console
+          bobRemoteVideoTrack.on('switchedOff', () => console.log('Bob track got switched Off'));
+          // eslint-disable-next-line no-console
+          bobRemoteVideoTrack.on('switchedOn', () => console.log('Bob track got switched On'));
 
           // Bob should be the Dominant Speaker
           await waitFor([
             dominantSpeakerChanged(thisRoom, bobRemote),
             trackSwitchedOn(bobRemoteVideoTrack),
             expectSwitchOff ? trackSwitchedOff(aliceRemoteVideoTrack) : trackSwitchedOn(aliceRemoteVideoTrack)
-          ], 'Bob to be dominant speaker');
+          ], `Bob to be dominant speaker and correct trackSwitches: ${thisRoom.sid}`);
 
+          // wait for 5 seconds, to ensure that we do not get unwanted switchOn/Offs
+
+          await waitFor(new Promise((resolve) => setTimeout(resolve, 5000)));
           bobRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, !expectSwitchOff);
+            assert.equal(track.isSwitchedOff, false, `Was expecting Bob's track to be switchedOn: ${thisRoom.sid}`);
           });
 
           aliceRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, true);
+            assert.equal(track.isSwitchedOff, expectSwitchOff, `Was expecting Alice's track to be isSwitchedOff=${expectSwitchOff} : ${thisRoom.sid}`);
           });
+
           [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
           if (thisRoom) {
             await completeRoom(thisRoom.sid);
