@@ -24,8 +24,7 @@ const { trackSwitchOfMode: { MODE_DISABLED, MODE_PREDICTED } } = require('../../
 
 describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
-  this.timeout(60000);
-
+  this.timeout(120 * 1000);
 
   if (defaults.topology !== 'peer-to-peer') {
     describe('bandwidthProfile.video', () => {
@@ -146,12 +145,14 @@ describe('Bandwidth Management', function() {
       });
     });
 
-    describe.only('bandwidthProfile.video.trackSwitchOffMode', () => {
+    describe('bandwidthProfile.video.trackSwitchOffMode', () => {
       [MODE_DISABLED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
         const expectSwitchOff = (trackSwitchOffMode !== MODE_DISABLED);
         it(`${expectSwitchOff ? 'Should' : 'Should not'} switch off remote tracks when trackSwitchOffMode = ${trackSwitchOffMode}`, async () => {
-          console.log("expectSwitchOff = ", expectSwitchOff);
-          console.log("trackSwitchOffMode = ", trackSwitchOffMode);
+          // eslint-disable-next-line no-console
+          console.log('expectSwitchOff = ', expectSwitchOff);
+          // eslint-disable-next-line no-console
+          console.log('trackSwitchOffMode = ', trackSwitchOffMode);
           const [, thisRoom, thoseRooms] = await setup({
             testOptions: {
               bandwidthProfile: {
@@ -207,8 +208,7 @@ describe('Bandwidth Management', function() {
             expectSwitchOff ? trackSwitchedOff(aliceRemoteVideoTrack) : trackSwitchedOn(aliceRemoteVideoTrack)
           ], `Bob to be dominant speaker and correct trackSwitches: ${thisRoom.sid}`);
 
-          // wait for 5 seconds, to ensure that we do not get unwanted switchOn/Offs
-
+          // wait for 5 seconds, to ensure that we do not get more switchOn/Offs
           await waitFor(new Promise((resolve) => setTimeout(resolve, 5000)));
           bobRemote.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, false, `Was expecting Bob's track to be switchedOn: ${thisRoom.sid}`);
@@ -219,9 +219,6 @@ describe('Bandwidth Management', function() {
           });
 
           [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          if (thisRoom) {
-            await completeRoom(thisRoom.sid);
-          }
         });
       });
     });
