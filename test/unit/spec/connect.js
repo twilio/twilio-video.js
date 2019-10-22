@@ -13,6 +13,7 @@ const {
   WS_SERVER,
   DEFAULT_REGION,
   subscriptionMode,
+  trackSwitchOfMode,
   trackPriority
 } = require('../../../lib/util/constants');
 
@@ -122,6 +123,8 @@ describe('connect', () => {
   describe('called with ConnectOptions#bandwidthProfile', () => {
     const subscriptionModes = Object.values(subscriptionMode);
     const trackPriorities = Object.values(trackPriority);
+    const trackSwitchOfModes = Object.values(trackSwitchOfMode);
+
     let mockSignaling;
     let signaling;
 
@@ -142,6 +145,7 @@ describe('connect', () => {
       [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
       [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
       [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes],
+      [{ video: { trackSwitchOffMode: 'foo' } }, `whose .video.trackSwitchOffMode is not one of ${trackSwitchOfModes.join(', ')}`, RangeError, trackSwitchOfModes],
       [{ video: { renderDimensions: null } }, 'whose .video.renderDimensions is null', TypeError, 'object'],
       [{ video: { renderDimensions: true } }, 'whose .video.renderDimensions is not an object', TypeError, 'object'],
       [{ video: { renderDimensions: ['foo'] } }, 'whose .video.renderDimensions is an Array', TypeError, 'object'],
