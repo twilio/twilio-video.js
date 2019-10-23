@@ -20,7 +20,7 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-const { trackSwitchOffMode: { MODE_DISABLED, MODE_PREDICTED } } = require('../../../lib/util/constants');
+const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } = require('../../../lib/util/constants');
 
 describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
@@ -145,8 +145,19 @@ describe('Bandwidth Management', function() {
       });
     });
 
-    describe('bandwidthProfile.video.trackSwitchOffMode', () => {
-      [MODE_DISABLED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
+    describe.only('bandwidthProfile.video.trackSwitchOffMode', () => {
+      combinationContext([
+        [
+          [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
+          ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
+            ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
+            : `.maxTracks = ${maxTracks}`
+        ],
+        [
+          [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED],
+          x => `.trackSwitchOffMode = "${x}"`
+        ]
+      ], ([trackLimitOptions, trackSwitchOffMode]) => {
         const expectSwitchOff = (trackSwitchOffMode !== MODE_DISABLED);
         it(`${expectSwitchOff ? 'Should' : 'Should not'} switch off remote tracks when trackSwitchOffMode = ${trackSwitchOffMode}`, async () => {
           // eslint-disable-next-line no-console
@@ -159,7 +170,7 @@ describe('Bandwidth Management', function() {
                 video: {
                   trackSwitchOffMode,
                   dominantSpeakerPriority: PRIORITY_LOW,
-                  maxTracks: 1
+                  ...trackLimitOptions
                 }
               },
               dominantSpeaker: true,
