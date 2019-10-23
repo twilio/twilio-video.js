@@ -48,6 +48,36 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('.connectionState', () => {
+    it('equals the underlying RTCPeerConnection\'s .connectionState', () => {
+      const test = makeTest();
+      test.pc.connectionState = 'connected';
+      assert.equal(test.pcv2.connectionState, 'connected');
+    });
+
+    it('equals "failed" when IceConnectionMonitor detects failures, also emits "connectionStateChanged"', async () => {
+      const test = makeTest();
+
+      // simulate disconnect.
+      test.pc.connectionState = 'disconnected';
+      test.pc.iceConnectionState = 'disconnected';
+      test.pc.emit('iceconnectionstatechange');
+      test.pc.emit('connectionstatechange');
+
+      await oneTick();
+
+      let didEmit = false;
+      test.pcv2.once('connectionStateChanged', () => { didEmit = true; });
+
+      inactiveCallback(); // invoke inactive call back.
+
+      // assert.equal(test.pcv2.connectionState, 'failed');
+      assert.equal(didEmit, true);
+      await oneTick();
+      assert.equal(test.pcv2.connectionState, 'failed');
+    });
+  });
+
   describe('.iceConnectionState', () => {
     it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
       const test = makeTest();
@@ -56,7 +86,7 @@ describe('PeerConnectionV2', () => {
       assert.equal(test.pcv2.iceConnectionState, 'failed');
     });
 
-    it('equals "failed" when IceConnectionMonitor detects failures, also emits the iceConnectionStateChanged', async () => {
+    it('equals "failed" when IceConnectionMonitor detects failures, also emits "iceConnectionStateChanged"', async () => {
       const test = makeTest();
       assert.equal(test.pcv2.iceConnectionState, test.pc.iceConnectionState);
 
@@ -99,6 +129,16 @@ describe('PeerConnectionV2', () => {
         const test = makeTest();
         assert.equal(test.pcv2.isApplicationSectionNegotiated, false);
       });
+    });
+  });
+
+  describe('"connectionStateChanged"', () => {
+    it('emits "connectionStateChanged" when the underlying RTCPeerConnection emits "connectionstatechange"', () => {
+      const test = makeTest();
+      let didEmit = false;
+      test.pcv2.once('connectionStateChanged', () => { didEmit = true; });
+      test.pc.emit('connectionstatechange');
+      assert(didEmit);
     });
   });
 

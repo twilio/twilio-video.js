@@ -16,6 +16,78 @@ const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
+  describe('.connectionState', () => {
+    describe('when there are zero RTCPeerConnections', () => {
+      const test = makeTest();
+      assert.equal(test.peerConnectionManager.connectionState, 'new');
+    });
+
+    describe('when there is one RTCPeerConnection', () => {
+      it('equals the RTCPeerConnection\'s connection state', async () => {
+        await Promise.all([
+          'new',
+          'connecting',
+          'connected',
+          'completed',
+          'disconnected',
+          'closed'
+        ].map(async state => {
+          const test = makeTest();
+          await test.peerConnectionManager.createAndOffer();
+          test.peerConnectionV2s[0].connectionState = state;
+          test.peerConnectionV2s[0].emit('connectionStateChanged');
+          assert.equal(test.peerConnectionManager.connectionState, state);
+        }));
+      });
+    });
+
+    describe('when there are 2 RTCPeerConnections', () => {
+      [
+        ['new', 'new', 'new'],
+        ['new', 'connecting', 'connecting'],
+        ['new', 'connected', 'connected'],
+        ['new', 'completed', 'completed'],
+        ['new', 'disconnected', 'new'],
+        ['new', 'failed', 'new'],
+        ['new', 'closed', 'new'],
+        ['connecting', 'connecting', 'connecting'],
+        ['connecting', 'connected', 'connected'],
+        ['connecting', 'completed', 'completed'],
+        ['connecting', 'disconnected', 'connecting'],
+        ['connecting', 'failed', 'connecting'],
+        ['connecting', 'closed', 'connecting'],
+        ['connected', 'connected', 'connected'],
+        ['connected', 'completed', 'completed'],
+        ['connected', 'disconnected', 'connected'],
+        ['connected', 'failed', 'connected'],
+        ['connected', 'closed', 'connected'],
+        ['completed', 'completed', 'completed'],
+        ['completed', 'disconnected', 'completed'],
+        ['completed', 'failed', 'completed'],
+        ['completed', 'closed', 'completed'],
+        ['disconnected', 'disconnected', 'disconnected'],
+        ['disconnected', 'failed', 'disconnected'],
+        ['disconnected', 'closed', 'disconnected'],
+        ['failed', 'failed', 'failed'],
+        ['failed', 'closed', 'failed'],
+        ['closed', 'closed', 'closed'],
+      ].forEach(([state1, state2, expected]) => {
+        describe(`with ICE connection states "${state1}" and "${state2}"`, () => {
+          it(`equals ${expected}`, async () => {
+            const test = makeTest();
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.createAndOffer();
+            test.peerConnectionV2s[0].connectionState = state1;
+            test.peerConnectionV2s[1].connectionState = state2;
+            test.peerConnectionV2s[0].emit('connectionStateChanged');
+            test.peerConnectionV2s[1].emit('connectionStateChanged');
+            assert.equal(test.peerConnectionManager.connectionState, expected);
+          });
+        });
+      });
+    });
+  });
+
   describe('.iceConnectionState', () => {
     describe('when there are zero RTCPeerConnections', () => {
       const test = makeTest();
@@ -85,6 +157,56 @@ describe('PeerConnectionManager', () => {
           });
         });
       });
+    });
+  });
+
+  describe('"connectionStateChanged"', () => {
+    it('emits only when the summarized connection state changes', async () => {
+      const test = makeTest();
+      await test.peerConnectionManager.createAndOffer();
+
+      // It should emit if a single PeerConnectionV2's .connectionState changes.
+      let didEmit = false;
+      test.peerConnectionV2s[0].connectionState = 'connecting';
+      test.peerConnectionManager.once('connectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[0].emit('connectionStateChanged');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.connectionState, 'connecting');
+
+      await test.peerConnectionManager.createAndOffer();
+
+      // It should not emit if a second PeerConnectionV2's .connectionState
+      // changes in a way that does not effect the summarized connection state.
+      didEmit = false;
+      test.peerConnectionManager.once('connectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[1].connectionState = 'connecting';
+      test.peerConnectionV2s[1].emit('connectionStateChanged');
+      assert(!didEmit);
+      assert.equal(test.peerConnectionManager.connectionState, 'connecting');
+
+      // However, if a second PeerConnectionV2's .connectionState does cause
+      // a change in the summarized connection state, it _should_ emit
+      // "connectionStateChanged".
+      test.peerConnectionV2s[1].connectionState = 'connected';
+      test.peerConnectionV2s[1].emit('connectionStateChanged');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.connectionState, 'connected');
+
+      // If a PeerConnectionV2's closing affects the summarized connection state,
+      // then it should emit.
+      didEmit = false;
+      test.peerConnectionManager.once('connectionStateChanged', () => { didEmit = true; });
+      test.peerConnectionV2s[1].state = 'closed';
+      test.peerConnectionV2s[1].emit('stateChanged', 'closed');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.connectionState, 'connecting');
+
+      // Once the last PeerConnectionV2 is closed, and the summarized
+      // connection state was not "new", it should emit in the "new" state.
+      test.peerConnectionV2s[0].state = 'closed';
+      test.peerConnectionV2s[0].emit('stateChanged', 'closed');
+      assert(didEmit);
+      assert.equal(test.peerConnectionManager.connectionState, 'new');
     });
   });
 
@@ -888,6 +1010,7 @@ function makePeerConnectionV2Constructor(testOptions) {
       fizz: 'buzz'
     });
 
+    peerConnectionV2.connectionState = 'new';
     peerConnectionV2.iceConnectionState = 'new';
 
     peerConnectionV2.isApplicationSectionNegotiated = false;
