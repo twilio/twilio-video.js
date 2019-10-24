@@ -18,11 +18,10 @@ New Features
   
   **NOTE:**
   
-  Typically, the size of a Unified Plan SDP is greater than a Plan B SDP. This will result in some
-  increased signaling traffic whenever Participants join/leave a Room or publish/unpublish Tracks.
-  Our load tests using a Group Room with a large number of Participants revealed about a 45% overall
-  increase in signaling traffic with Unified Plan SDPs as compared to Plan B SDPs. We did not notice
-  any significant change in the media traffic. We also noticed about a 20% increase in CPU usage, which
+  Since Unified Plan SDPs are usually larger than Plan B SDPs, this will lead to some increased signaling
+  traffic whenever Participants join/leave a Room or publish/unpublish Tracks. Our load tests using Group
+  Rooms with 30+ Participants revealed about a 45% increase in peak signaling traffic. We did not notice
+  any significant change in the media traffic. We also noticed about a 20% increase in peak CPU usage, which
   may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
   [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
   this release.
