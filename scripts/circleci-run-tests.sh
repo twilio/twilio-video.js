@@ -19,12 +19,14 @@ dev)
   export ACCOUNT_SID=${ACCOUNT_SID_DEV}
   export API_KEY_SECRET=${API_KEY_SECRET_DEV}
   export API_KEY_SID=${API_KEY_SID_DEV}
+  export REGIONS='us1'
   ;;
 stage)
   echo "Testing against stage"
   export ACCOUNT_SID=${ACCOUNT_SID_STAGE}
   export API_KEY_SECRET=${API_KEY_SECRET_STAGE}
   export API_KEY_SID=${API_KEY_SID_STAGE}
+  export REGIONS='au1,ie1,us1'
   ;;
 prod)
   echo "Testing against prod"

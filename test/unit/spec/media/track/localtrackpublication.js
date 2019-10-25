@@ -3,6 +3,7 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
+const { trackPriority } = require('../../../../../lib/util/constants');
 const DataTrackSender = require('../../../../../lib/data/sender');
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalAudioTrackPublication = require('../../../../../lib/media/track/localaudiotrackpublication');
@@ -54,6 +55,42 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         it(`should populate the .${prop} property`, () => {
           const localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
           assert.equal(localTrackPublication[prop], getExpectedValue());
+        });
+      });
+    });
+
+    describe('#setPriority', () => {
+      [2, 'baz'].forEach(priority => {
+        context(`when called with a TrackPriority that is ${typeof priority === 'string' ? 'invalid' : 'not a string'}`, () => {
+          it('should throw with a RangeError', () => {
+            const localTrackPublicationSignaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(localTrackPublicationSignaling, localTrack, () => {});
+            let error = null;
+            try {
+              localTrackPublication.setPriority(priority);
+            } catch (error_) {
+              error = error_;
+            } finally {
+              assert(error instanceof RangeError);
+              sinon.assert.notCalled(localTrackPublicationSignaling.setPriority);
+            }
+          });
+        });
+      });
+
+      Object.values(trackPriority).forEach(priority => {
+        context(`when called with a TrackPriority "${priority}"`, () => {
+          it('should return the LocalTrackPublication', () => {
+            const localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
+            assert.equal(localTrackPublication.setPriority(priority), localTrackPublication);
+          });
+
+          it('should call .setPriority on the underlying LocalTrackPublicationV2', () => {
+            const localTrackPublicationSignaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(localTrackPublicationSignaling, localTrack, () => {});
+            localTrackPublication.setPriority(priority);
+            sinon.assert.calledWith(localTrackPublicationSignaling.setPriority, priority);
+          });
         });
       });
     });
@@ -153,5 +190,5 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 });
 
 function makeLocalTrackPublicationSignaling(sid, priority) {
-  return { sid, priority };
+  return { sid, priority, updatedPriority: priority, setPriority: sinon.spy() };
 }
