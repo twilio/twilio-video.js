@@ -36,18 +36,6 @@ describe('', () => {
 (defaults.topology !== 'peer-to-peer' && enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  describe('recording', () => {
-    it('can create room with recording enabled', async () => {
-      const sid = await createRoom(randomName(), 'group-small', { RecordParticipantsOnConnect: true });
-      const options = Object.assign({ name: sid, tracks: [] }, defaults);
-      const [aliceRoom, bobRoom] = await Promise.all(['alice', 'bob'].map(getToken).map(token => connect(token, options)));
-      assert.equal(aliceRoom.sid, bobRoom.sid);
-      assert.equal(aliceRoom.isRecording, true);
-      aliceRoom.disconnect();
-      bobRoom.disconnect();
-      return completeRoom(sid);
-    });
-  });
 
   (defaults.topology === 'group-small' ? describe : describe.skip)('Small Group Room', () => {
     let sid;

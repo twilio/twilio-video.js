@@ -34,6 +34,32 @@ describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('.isRecording', () => {
+    [true, false].forEach(enableRecording => {
+      context(`when recording is ${enableRecording ? 'enabled' : 'disabled'}`, () => {
+        let room;
+        let sid;
+
+        before(async () => {
+          sid = await createRoom(randomName(), defaults.topology, { RecordParticipantsOnConnect: enableRecording });
+          const options = Object.assign({ name: sid, tracks: [] }, defaults);
+          room = await connect(getToken(randomName()), options);
+        });
+
+        it(`should be set to ${enableRecording}`, () => {
+          assert.equal(room.isRecording, enableRecording);
+        });
+
+        after(() => {
+          if (room) {
+            room.disconnect();
+          }
+          return completeRoom(sid);
+        });
+      });
+    });
+  });
+
   describe('disconnect', () => {
     let participants;
     let participantsBefore;
