@@ -42,7 +42,7 @@ New Features
 
 - You can now change your Bandwidth Profile settings after joining a Group Room by calling
   `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
-  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
+  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
 
   ```js
   const { connect } = require('twilio-video');
