@@ -1,7 +1,6 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta15 (in progress)
-==========================
+2.0.0-beta16 (in progress)
 
 New Features
 ------------
@@ -87,6 +86,33 @@ New Features
     }
   });
   ```
+
+2.0.0-beta15 (October 24, 2019)
+===============================
+
+New Features
+------------
+
+- twilio-video.js will now support the Unified Plan SDP format for Google Chrome. Google Chrome
+  enabled Unified Plan as the default SDP format starting from version 72. In December 2018, we
+  published an [advisory](https://support.twilio.com/hc/en-us/articles/360012782494-Breaking-Changes-in-Twilio-Video-JavaScript-SDKs-December-2018-)
+  recommending customers to upgrade to the latest versions of twilio-video.js in order to not be
+  affected by Google Chrome switching to Unified Plan starting from version 72. The way we ensured
+  support of newer versions of Google Chrome in the versions of twilio-video.js released between
+  December 2018 and now was by overriding the default SDP format to Plan B. Starting with this version,
+  twilio-video.js will use Unified Plan where available, while also maintaining support for earlier
+  browser versions with Plan B as the default SDP format. (JSDK-2312)
+
+  **NOTE:**
+
+  Since Unified Plan SDPs are usually larger than Plan B SDPs, this will lead to some increased signaling
+  traffic whenever Participants join/leave a Room or publish/unpublish Tracks. Our load tests using Group
+  Rooms with 35+ Participants revealed between 45% to 160% increase in peak signaling traffic. We did not
+  notice any significant change in the media traffic. We also noticed about a 20% increase in peak CPU usage,
+  which may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
+  [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
+  this release.
+
 - Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
   and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
   corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
