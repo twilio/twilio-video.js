@@ -85,7 +85,8 @@
     "func-names": "off",
     "func-style": [
       "error",
-      "declaration"
+      "declaration",
+      { "allowArrowFunctions": true }
     ],
     "function-call-argument-newline": "off",
     "function-paren-newline": "off",

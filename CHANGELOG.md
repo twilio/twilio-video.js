@@ -1,5 +1,70 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta16 (in progress)
+==========================
+
+New Features
+------------
+
+- You can now change the priority of an already published LocalTrack using a new method
+  `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
+
+  ```js
+  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
+    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
+  });
+
+  // After a while, change the priority to "low".
+  localTrackPublication.setPriority(low);
+  ```
+
+  This will update `publishPriority` on all corresponding RemoteTrackPublications and
+  emit a new event "publishPriorityChanged" to notify the user:
+
+  ```js
+  remoteTrackPublication.on('publishPriorityChanged', priority => {
+    console.log(`The publisher has changed the priority this Track to "${priority}"`);
+    assert.equal(remoteTrackPublication.publishPriority, priority);
+  });
+
+- In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
+   by using a new method `setPriority`. (JSDK-2347)
+
+  ```js
+    remoteTrack.setPriority('high');
+  ```
+
+- If you want to revert back to the priority set by the publisher, you can do so as shown below:
+
+  ```js
+    remoteTrack.setPriority(null);
+  ```
+
+- You can now change your Bandwidth Profile settings after joining a Group Room by calling
+  `setBandwidthProfile` on your LocalParticipant. For more details, please refer to the
+  LocalParticipant [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setBandwidthProfile__anchor). (JSDK-2464)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high',
+        maxTracks: 1,
+        mode: 'collaboration'
+      }
+    }
+  });
+
+  // Change "maxTracks" and "mode".
+  room.localParticipant.setBandwidthProfile({
+    video: {
+      maxTracks: 2,
+      mode: 'grid'
+    }
+  });
+  ```
+
 2.0.0-beta15 (October 24, 2019)
 ===============================
 
@@ -15,9 +80,9 @@ New Features
   December 2018 and now was by overriding the default SDP format to Plan B. Starting with this version,
   twilio-video.js will use Unified Plan where available, while also maintaining support for earlier
   browser versions with Plan B as the default SDP format. (JSDK-2312)
-  
+
   **NOTE:**
-  
+
   Since Unified Plan SDPs are usually larger than Plan B SDPs, this will lead to some increased signaling
   traffic whenever Participants join/leave a Room or publish/unpublish Tracks. Our load tests using Group
   Rooms with 35+ Participants revealed between 45% to 160% increase in peak signaling traffic. We did not
@@ -25,7 +90,7 @@ New Features
   which may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
   [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
   this release.
-  
+
 - Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
   and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
   corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
