@@ -361,7 +361,6 @@ describe('LocalTrackPublication', function() {
       assert.equal(aliceRemoteVideoTrackPublication.publishPriority, PRIORITY_HIGH);
     });
 
-
     it('publisher can downgrade track\'s priority', async () => {
       await waitFor([
         trackSwitchedOn(bobRemoteVideoTrack),

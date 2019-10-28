@@ -332,7 +332,7 @@ describe('LocalParticipantV2', () => {
     });
   });
 
-  describe.only('LocalTrackPublicationV2#updated', () => {
+  describe('LocalTrackPublicationV2#updated', () => {
     let localTrackPublication;
     let revision;
     let trackPrioritySignaling;
