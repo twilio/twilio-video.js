@@ -556,5 +556,3 @@ exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
-
-
