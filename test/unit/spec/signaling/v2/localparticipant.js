@@ -129,6 +129,30 @@ describe('LocalParticipantV2', () => {
             publication.emit('updated');
             assert(didEmitUpdated);
           });
+
+          it('emits "updated" for each change in enabled/disable status', () => {
+            publication.sid = 'MT123';
+            publication.emit('updated');
+
+            let updateCount = 0;
+            localParticipant.on('updated', () => updateCount++);
+
+            publication.enable(!publication.isEnabled);
+            publication.emit('updated');
+            assert.equal(updateCount, 1);
+
+            publication.enable(publication.isEnabled);
+            publication.emit('updated');
+            // should not change update count as
+            // publication enabled state was not changed.
+            assert.equal(updateCount, 1);
+
+            publication.enable(!publication.isEnabled);
+            assert.equal(updateCount, 2);
+
+            publication.enable(!publication.isEnabled);
+            assert.equal(updateCount, 3);
+          });
         });
       });
     });
@@ -308,7 +332,7 @@ describe('LocalParticipantV2', () => {
     });
   });
 
-  describe('LocalTrackPublicationV2#updated', () => {
+  describe.only('LocalTrackPublicationV2#updated', () => {
     let localTrackPublication;
     let revision;
     let trackPrioritySignaling;

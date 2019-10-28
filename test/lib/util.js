@@ -478,6 +478,14 @@ async function waitToGoOffline() {
 }
 
 /**
+ * Returns a promise that resolves after given room receives given event.
+ * @returns {Promise<void>}
+ */
+async function waitOnceForRoomEvent(room, event) {
+  await waitFor(new Promise(resolve => room.once(event, resolve)), `room to receive event:${event}`);
+}
+
+/**
  * Note: when a test waits for promise that fails to settle.
  *   1) The test fail w/o a good indication of what happened, as for Mocha the test never finished
  *   2) This also causes subsequent tests to not get executed.
@@ -544,7 +552,9 @@ exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
+
 

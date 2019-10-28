@@ -35,12 +35,36 @@ const {
   trackSwitchedOff,
   trackSwitchedOn,
   waitFor,
-  waitForTracks
+  waitForTracks,
+  waitOnceForRoomEvent
 } = require('../../lib/util');
 
 describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
+  it('JSDK-2565: Can enable, disable and re-enable the track', async () => {
+    const [, thisRoom, thoseRooms] = await waitFor(setup({}), 'rooms connected and tracks subscribed');
+    const aliceRoom = thoseRooms[0];
+    const aliceLocal = aliceRoom.localParticipant;
+
+    const aliceLocalAudioTrackPublication =  [...aliceLocal.audioTracks.values()][0];
+    const aliceLocalAudioTrack = aliceLocalAudioTrackPublication.track;
+
+    // wait for things to stabilize.
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    aliceLocalAudioTrack.disable();
+    await waitOnceForRoomEvent(thisRoom, 'trackDisabled');
+
+    aliceLocalAudioTrack.enable();
+    await waitOnceForRoomEvent(thisRoom, 'trackEnabled');
+
+    aliceLocalAudioTrack.disable();
+    await waitOnceForRoomEvent(thisRoom, 'trackDisabled');
+
+    [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+  });
 
   describe('#unpublish', () => {
     combinationContext([
@@ -220,6 +244,7 @@ describe('LocalTrackPublication', function() {
     });
   });
 
+
   // eslint-disable-next-line no-warning-comments
   // TODO: enable these tests when track_priority MSP is available in prod
   (defaults.topology === 'peer-to-peer' || (defaults.environment !== 'stage' && defaults.environment !== 'dev')
@@ -335,6 +360,7 @@ describe('LocalTrackPublication', function() {
       await waitFor([p1, p2, p3], 'receive the trackPublishPriorityChanged on publication, participant and room.');
       assert.equal(aliceRemoteVideoTrackPublication.publishPriority, PRIORITY_HIGH);
     });
+
 
     it('publisher can downgrade track\'s priority', async () => {
       await waitFor([
