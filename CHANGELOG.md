@@ -89,7 +89,6 @@ New Features
   which may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
   [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
   this release.
-
 - Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
   and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
   corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
