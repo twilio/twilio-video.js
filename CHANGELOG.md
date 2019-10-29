@@ -1,6 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
 2.0.0-beta16 (in progress)
+==========================
 
 New Features
 ------------
@@ -89,6 +90,7 @@ New Features
   which may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
   [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
   this release.
+
 - Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
   and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
   corresponding `audio` element was removed from the DOM. With this fix twilio-video.js
