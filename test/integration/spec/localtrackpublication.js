@@ -35,12 +35,36 @@ const {
   trackSwitchedOff,
   trackSwitchedOn,
   waitFor,
-  waitForTracks
+  waitForTracks,
+  waitOnceForRoomEvent
 } = require('../../lib/util');
 
 describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
+  it('JSDK-2565: Can enable, disable and re-enable the track', async () => {
+    const [, thisRoom, thoseRooms] = await waitFor(setup({}), 'rooms connected and tracks subscribed');
+    const aliceRoom = thoseRooms[0];
+    const aliceLocal = aliceRoom.localParticipant;
+
+    const aliceLocalAudioTrackPublication =  [...aliceLocal.audioTracks.values()][0];
+    const aliceLocalAudioTrack = aliceLocalAudioTrackPublication.track;
+
+    // wait for things to stabilize.
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    aliceLocalAudioTrack.disable();
+    await waitOnceForRoomEvent(thisRoom, 'trackDisabled');
+
+    aliceLocalAudioTrack.enable();
+    await waitOnceForRoomEvent(thisRoom, 'trackEnabled');
+
+    aliceLocalAudioTrack.disable();
+    await waitOnceForRoomEvent(thisRoom, 'trackDisabled');
+
+    [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+  });
 
   describe('#unpublish', () => {
     combinationContext([
