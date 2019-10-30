@@ -161,7 +161,10 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#publishTrack', () => {
+  describe('#publishTrack', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.retries(2);
+
     let room;
     let sid;
     let trackPublications = [];
@@ -609,7 +612,10 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#unpublishTrack', () => {
+  describe('#unpublishTrack', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.retries(2);
+
     combinationContext([
       [
         [true, false],
