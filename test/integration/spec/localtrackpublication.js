@@ -247,7 +247,10 @@ describe('LocalTrackPublication', function() {
 
   // eslint-disable-next-line no-warning-comments
   // TODO: enable these tests when track_priority MSP is available in prod
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', () => {
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.retries(2);
+
     describe('three participant tests', () => {
       let thisRoom;
       let thoseRooms;
@@ -406,7 +409,7 @@ describe('LocalTrackPublication', function() {
 
     it('publisher can upgrade and downgrade track priorities', async () => {
       // Alice and Bob join without tracks, Alice has maxTracks property set to 1
-      const { roomSid, bobLocal, bobRemote } = await setupAliceAndBob({
+      const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: {
           bandwidthProfile: {
             video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
@@ -461,6 +464,9 @@ describe('LocalTrackPublication', function() {
       ], `Step 3] trackA=On, trackB=Off: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
+
+      aliceRoom.disconnect();
+      bobRoom.disconnect();
     });
   });
 });

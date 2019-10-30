@@ -238,7 +238,10 @@ describe('LocalParticipant', function() {
       });
     });
 
-    context('when a LocalTrack is published to two Rooms', () => {
+    context('when a LocalTrack is published to two Rooms', function()  {
+      // eslint-disable-next-line no-invalid-this
+      this.retries(2);
+
       let anotherRoom;
       let anotherSid;
 
