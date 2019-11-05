@@ -10,12 +10,18 @@ parameters:
     type: enum
     enum: ["prod", "stage", "dev"]
     default: "prod"
-  pr_workflow:
+  pr_workflow:    # runs for every pull request.
     type: boolean
     default: true # by default pr workflow will get executed.
-  custom_workflow:
+  custom_workflow: # runs just one custom config.
     type: boolean
     default: false
+  backend_workflow: # runs JS integration.
+    type: boolean
+    default: false
+  tag:
+    type: string
+    default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
   browser:
     type: enum
     enum: ["chrome", "firefox"]
@@ -74,6 +80,10 @@ commands:
   get-code-and-dependencies:
     steps:
       - checkout
+      - when:
+          condition: << pipeline.parameters.tag >>
+          steps:
+            - run: git checkout << pipeline.parameters.tag >>
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -252,7 +262,45 @@ workflows:
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
-
+  Backend_Workflow:
+    when: << pipeline.parameters.backend_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: "chrome stable group"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_group
+      - run-integration-tests:
+          name: "chrome stable p2p"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_p2p
+      - run-network-tests:
+          name: "chrome network p2p"
+          <<: *browser_chrome
+          <<: *topology_p2p
+      - run-network-tests:
+          name: "chrome network group"
+          <<: *browser_chrome
+          <<: *topology_group
+      - run-integration-tests:
+          name: "firefox stable group"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_group
+      - run-integration-tests:
+          name: "firefox stable p2p"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_p2p
+      - run-network-tests:
+          name: "firefox network p2p"
+          <<: *browser_firefox
+          <<: *topology_p2p
+      - run-network-tests:
+          name: "firefox network group"
+          <<: *browser_firefox
+          <<: *topology_group
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
