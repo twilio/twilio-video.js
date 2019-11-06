@@ -6,6 +6,27 @@ const http = require('https');
 const inquirer = require('inquirer');
 const simpleGit = require('simple-git')();
 
+
+/*
+posts a request for a circleci workflow
+you can alternatively use a curl command like:
+
+curl -u ${CIRCLECI_TOKEN}: -X POST \
+  --header 'Content-Type: application/json' \
+  -d '{
+    "branch": "JSDK-2537_migrate_integration_tests",
+    "parameters": {
+        "pr_workflow": false,
+        "custom_workflow": false,
+        "backend_workflow": true,
+        "environment": "stage",
+        "tag": "2.0.0-beta15"
+    }
+}' \
+https://circleci.com/api/v2/project/github/twilio/twilio-video.js/pipeline
+
+*/
+
 // returns a Promise that resolves with branch information
 let branchesPromise = null;
 function getBranches() {
@@ -39,6 +60,7 @@ function generateBuildRequest(program) {
   };
 
   const body = {
+    branch: 'master',
     parameters: {
       pr_workflow: program.workflow === 'pr',
       custom_workflow: program.workflow === 'custom',
@@ -55,6 +77,7 @@ function generateBuildRequest(program) {
     body.parameters.bver = program.bver;
     body.parameters.topology = program.topology;
   } else if (program.workflow === 'backend') {
+    body.branch = program.branch;
     body.parameters.tag = program.tag;
   }
 
@@ -95,7 +118,7 @@ const workflowPrompt = {
 
 // you may pick branch for pr or custom workflow.
 const branchPrompt = {
-  when: (answers) => answers.workflow !== 'backend',
+  // when: (answers) => answers.workflow !== 'backend',
   type: 'list',
   name: 'branch',
   message: 'Branch:',

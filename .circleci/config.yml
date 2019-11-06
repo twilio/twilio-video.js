@@ -77,13 +77,16 @@ executors:
     environment:
       <<: *defaultEnv
 commands:
-  get-code-and-dependencies:
+  get-code:
     steps:
       - checkout
       - when:
           condition: << pipeline.parameters.tag >>
           steps:
             - run: git checkout << pipeline.parameters.tag >>
+  get-code-and-dependencies:
+    steps:
+      - get-code
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
@@ -124,7 +127,7 @@ commands:
       - save-test-results
   network-tests:
     steps:
-      - checkout
+      - get-code # note: network tests run inside docker - the dependencies will be fetched inside docker image.
       - run:
           name: Running Network Tests
           command: scripts/circleci-run-tests.sh
