@@ -6,17 +6,42 @@ const http = require('https');
 const inquirer = require('inquirer');
 const simpleGit = require('simple-git')();
 
+
+/*
+posts a request for a circleci workflow
+you can alternatively use a curl command like:
+
+curl -u ${CIRCLECI_TOKEN}: -X POST \
+  --header 'Content-Type: application/json' \
+  -d '{
+    "branch": "JSDK-2537_migrate_integration_tests",
+    "parameters": {
+        "pr_workflow": false,
+        "custom_workflow": false,
+        "backend_workflow": true,
+        "environment": "stage",
+        "tag": "2.0.0-beta15"
+    }
+}' \
+https://circleci.com/api/v2/project/github/twilio/twilio-video.js/pipeline
+
+*/
+
 // returns a Promise that resolves with branch information
+let branchesPromise = null;
 function getBranches() {
-  return new Promise((resolve, reject) => {
-    simpleGit.branchLocal((e, branches) => {
-      if (e) {
-        reject(e);
-      } else {
-        resolve(branches);
-      }
+  if (branchesPromise === null) {
+    branchesPromise = new Promise((resolve, reject) => {
+      simpleGit.branchLocal((e, branches) => {
+        if (e) {
+          reject(e);
+        } else {
+          resolve(branches);
+        }
+      });
     });
-  });
+  }
+  return branchesPromise;
 }
 
 // generates a circleCI request using parameters provided
@@ -35,18 +60,25 @@ function generateBuildRequest(program) {
   };
 
   const body = {
-    branch: program.branch,
+    branch: 'master',
     parameters: {
       pr_workflow: program.workflow === 'pr',
       custom_workflow: program.workflow === 'custom',
+      backend_workflow: program.workflow === 'backend',
       environment: program.environment,
     }
   };
 
-  if (program.workflow === 'custom') {
+  if (program.workflow === 'pr') {
+    body.branch = program.branch;
+  } else if (program.workflow === 'custom') {
+    body.branch = program.branch;
     body.parameters.browser = program.browser;
     body.parameters.bver = program.bver;
     body.parameters.topology = program.topology;
+  } else if (program.workflow === 'backend') {
+    body.branch = program.branch;
+    body.parameters.tag = program.tag;
   }
 
   return { options, body };
@@ -69,94 +101,107 @@ function triggerBuild({options, body}) {
   });
 }
 
-getBranches().then(branches => {
-  const branchPrompt = {
-    type: 'list',
-    name: 'branch',
-    message: 'Branch:',
-    choices: [branches.current, new inquirer.Separator(), ...branches.all],
-    default: branches.current
-  };
+const tokenPrompt = {
+  type: 'input',
+  name: 'token',
+  message: 'Circle CI Token:',
+  validate: (val) => { return typeof val === 'string' && val.length > 5; }
+};
 
-  const environmentPrompt = {
-    type: 'list',
-    name: 'environment',
-    message: 'Environment:',
-    choices: ['prod', 'stage', 'dev'],
-    default: 'prod'
-  };
+const workflowPrompt = {
+  type: 'list',
+  name: 'workflow',
+  message: 'Workflow:',
+  choices: ['pr', 'custom', 'backend'],
+  default: 'pr'
+};
 
-  const workflowPrompt = {
-    type: 'list',
-    name: 'workflow',
-    message: 'Workflow:',
-    choices: ['pr', 'custom'],
-    default: 'pr'
-  };
+// you may pick branch for pr or custom workflow.
+const branchPrompt = {
+  // when: (answers) => answers.workflow !== 'backend',
+  type: 'list',
+  name: 'branch',
+  message: 'Branch:',
+  choices: () => getBranches().then(branches => [branches.current, new inquirer.Separator(), ...branches.all]),
+  default: () => getBranches().then(branches => branches.current)
+};
 
-  const browserPrompt = {
-    when: (answers) => answers.workflow === 'custom',
-    type: 'list',
-    name: 'browser',
-    message: 'Browser:',
-    choices: ['chrome', 'firefox'],
-    default: 'chrome'
-  };
+// environment defaults to stage for backend workflow.
+const environmentPrompt = {
+  type: 'list',
+  name: 'environment',
+  message: 'Environment:',
+  choices: ['prod', 'stage', 'dev'],
+  default: (answers) => answers.workflow === 'backend' ? 'stage' :'prod'
+};
 
-  const confirmPrompt = {
-    type: 'confirm',
-    name: 'confirm',
-    message: 'Confirm the build request:',
-    default: true,
-  };
+const browserPrompt = {
+  when: (answers) => answers.workflow === 'custom',
+  type: 'list',
+  name: 'browser',
+  message: 'Browser:',
+  choices: ['chrome', 'firefox'],
+  default: 'chrome'
+};
 
-  const bverPrompt = {
-    when: (answers) => answers.workflow === 'custom',
-    type: 'list',
-    name: 'bver',
-    message: 'Bver:',
-    choices: ['stable', 'beta', 'unstable'],
-    default: 'stable'
-  };
+const bverPrompt = {
+  when: (answers) => answers.workflow === 'custom',
+  type: 'list',
+  name: 'bver',
+  message: 'Bver:',
+  choices: ['stable', 'beta', 'unstable'],
+  default: 'stable'
+};
 
-  const topologyPrompt = {
-    when: (answers) => answers.workflow === 'custom',
-    type: 'list',
-    name: 'topology',
-    message: 'Topology:',
-    choices: ['group', 'peer-to-peer'],
-    default: 'group'
-  };
+const topologyPrompt = {
+  when: (answers) => answers.workflow === 'custom',
+  type: 'list',
+  name: 'topology',
+  message: 'Topology:',
+  choices: ['group', 'peer-to-peer'],
+  default: 'group'
+};
 
-  const tokenPrompt = {
-    type: 'input',
-    name: 'token',
-    message: 'Circle CI Token:',
-    validate: (val) => { return typeof val === 'string' && val.length > 5; }
-  };
+// tag can be chosen only for backend workflow
+const tagPrompt = {
+  when: (answers) => answers.workflow === 'backend',
+  type: 'input',
+  name: 'tag',
+  message: 'Tag to use:',
+  default: '2.0.0-beta15',
+  validate: (val) => { return typeof val === 'string' && val.length > 5; }
+};
 
-  if (process.env.CIRCLECI_TOKEN) {
-    tokenPrompt.default = process.env.CIRCLECI_TOKEN;
-  }
+const confirmPrompt = {
+  type: 'confirm',
+  name: 'confirm',
+  message: 'Confirm the build request:',
+  default: true,
+};
 
-  inquirer.prompt([
-    tokenPrompt,
-    environmentPrompt,
-    workflowPrompt,
-    branchPrompt,
-    browserPrompt,
-    bverPrompt,
-    topologyPrompt,
-  ]).then(answers => {
-    const {options, body} = generateBuildRequest(answers);
-    console.log('Will make a CI request with:', options, body);
-    inquirer.prompt([confirmPrompt]).then(({ confirm }) => {
-      if (confirm) {
-        triggerBuild({options, body}).then((result) => {
-          console.log(result);
-        }).catch(e => console.log('Failed to trigger a build:', e));
-      }
-    });
+if (process.env.CIRCLECI_TOKEN) {
+  tokenPrompt.default = process.env.CIRCLECI_TOKEN;
+}
+
+inquirer.prompt([
+  tokenPrompt,
+  workflowPrompt,
+  tagPrompt,
+  environmentPrompt,
+  branchPrompt,
+  browserPrompt,
+  bverPrompt,
+  topologyPrompt,
+]).then(answers => {
+  const {options, body} = generateBuildRequest(answers);
+  console.log('Will make a CI request with:', options, body);
+  inquirer.prompt([confirmPrompt]).then(({ confirm }) => {
+    if (confirm) {
+      triggerBuild({options, body}).then((result) => {
+        console.log(result);
+      }).catch(e => console.log('Failed to trigger a build:', e));
+    }
   });
 });
+
 
