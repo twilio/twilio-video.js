@@ -11,6 +11,8 @@ echo "os info:"
 uname -a
 echo "directory:"
 ls -alt
+echo "Package.json version:"
+cat package.json | grep version
 echo "running tests"
 
 case ${ENVIRONMENT} in
