@@ -1,7 +1,7 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
-1.20.0 (in progress)
-====================
+1.20.0 (November 11, 2019)
+==========================
 
 - twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
   Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
@@ -17,7 +17,7 @@ For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master
 Bug Fixes
 ---------
 
-- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by 
+- Fixed a bug where, the local and remote AudioTracks' audioLevels returned by
   `Room.getStats()` were not in the range [0-32767]. (JSDK-2318)
 - Fixed a bug where `Video.isSupported` evaluated to `true` on Chromium-based Edge browser,
   even though twilio-video.js does not support it at this moment. (JSDK-2515)
