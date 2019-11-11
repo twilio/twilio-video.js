@@ -3,11 +3,11 @@ For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master
 1.20.0 (November 11, 2019)
 ==========================
 
-- twilio-video.js will now support the Unified Plan SDP format for Google Chrome.
-  Google Chrome enabled Unified Plan as the default SDP format starting from version 72.
-  In Q1 2020 Google will completely remove support of previous plan "Plan B". We strongly
-  recommend updating to SDK version 1.20.0+ which uses Unified plan in order to avoid
-  breaking changes related to upcoming removal of Plan B. (JSDK-2313)
+- As of this release, twilio-video.js will no longer use the deprecated Plan B SDP format when
+publishing or subscribing to tracks. It will use the [Unified Plan](https://webrtc.org/web-apis/chrome/unified-plan/)
+format. Google has advised that they will remove Plan B support from Chrome during Q1 2020. Therefore, we recommend
+updating to SDK 1.20.0+ as soon as possible. This change will not impact interoperability with existing twilio-video.js
+versions or other supported versions.
 
 Bug Fixes
 ---------
