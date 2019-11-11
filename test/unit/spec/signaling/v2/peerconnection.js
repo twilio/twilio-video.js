@@ -179,7 +179,7 @@ describe('PeerConnectionV2', () => {
         });
 
         it('returns undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         if (scenario === 'been added') {
@@ -231,7 +231,7 @@ describe('PeerConnectionV2', () => {
         });
 
         it('returns undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         if (signalingState === 'closed') {
@@ -406,7 +406,7 @@ describe('PeerConnectionV2', () => {
         }[signalingState];
 
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call createOffer on the underlying RTCPeerConnection', () => {
@@ -446,7 +446,7 @@ describe('PeerConnectionV2', () => {
 
       function itShouldEventuallyCreateOffer() {
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should not emit a "description" event', () => {
@@ -597,7 +597,7 @@ describe('PeerConnectionV2', () => {
         });
 
         it('returns undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         if (scenario === 'been added') {
@@ -896,7 +896,7 @@ describe('PeerConnectionV2', () => {
 
       function itShouldAnswer() {
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call createAnswer on the underlying RTCPeerConnection', () => {
@@ -941,7 +941,7 @@ describe('PeerConnectionV2', () => {
           }
 
           it('returns a Promise that resolves to undefined', () => {
-            assert.equal(result);
+            assert(!result);
           });
 
           it('should not emit a "description" event', () => {
@@ -965,7 +965,7 @@ describe('PeerConnectionV2', () => {
         const expectedOfferIndex = initial ? 1 : 2;
 
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call setLocalDescription on the underlying RTCPeerConnection with a rollback description', () => {
@@ -1029,7 +1029,7 @@ describe('PeerConnectionV2', () => {
 
       function itShouldApplyAnswer() {
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call setRemoteDescrption on the underlying RTCPeerConnection', () => {
@@ -1070,7 +1070,7 @@ describe('PeerConnectionV2', () => {
         expectedOfferIndex += signalingState === 'have-local-offer' ? 1 : 0;
 
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call createOffer on the underlying RTCPeerConnection', () => {
@@ -1112,7 +1112,7 @@ describe('PeerConnectionV2', () => {
           });
 
           it('returns a Promise that resolves to undefined', () => {
-            assert.equal(result);
+            assert(!result);
           });
 
           it('should call createOffer on the underlying RTCPeerConnection', () => {
@@ -1144,7 +1144,7 @@ describe('PeerConnectionV2', () => {
 
       function itShouldClose() {
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should call close on the underlying RTCPeerConnection', () => {
@@ -1166,7 +1166,7 @@ describe('PeerConnectionV2', () => {
 
       function itDoesNothing() {
         it('returns a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should not emit a "description" event', () => {
@@ -1322,7 +1322,7 @@ describe('PeerConnectionV2', () => {
         });
 
         it('should return a Promise that resolves to undefined', () => {
-          assert.equal(result);
+          assert(!result);
         });
 
         it('should called createAnswer on the underlying RTCPeerConnection', () => {
