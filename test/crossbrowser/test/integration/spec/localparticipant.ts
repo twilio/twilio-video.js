@@ -283,7 +283,7 @@ describe('LocalParticipantDriver', function() {
             const { localParticipant: { trackPublications } } = roomDrivers[0];
             const { track } = trackPublications.get(remoteTrack.sid);
 
-            assert.equal(track);
+            assert(!track);
             ['id', 'kind', 'name'].forEach(prop => {
               assert.equal(remoteTrack[prop], track[prop]);
             });
