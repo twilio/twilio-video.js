@@ -2,15 +2,20 @@
 'use strict';
 
 const assert = require('assert');
+const connect = require('../../../lib/connect');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const defaults = require('../../lib/defaults');
-const { completeRoom } = require('../../lib/rest');
+const { createRoom, completeRoom } = require('../../lib/rest');
+const getToken = require('../../lib/token');
+
+
 
 const {
   capitalize,
   combinationContext,
   createSyntheticAudioStreamTrack,
   dominantSpeakerChanged,
+  randomName,
   setup,
   smallVideoConstraints,
   tracksSubscribed,
@@ -144,8 +149,19 @@ describe('Bandwidth Management', function() {
         });
       });
     });
-
     describe.only('bandwidthProfile.video.trackSwitchOffMode', () => {
+      [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
+        it(`should accept trackSwitchOffMode=${trackSwitchOffMode}`,  async () => {
+          const sid = await createRoom(randomName(), defaults.topology);
+          try {
+            const options = Object.assign({ name: sid, bandwidthProfile: { video: { trackSwitchOffMode } } }, defaults);
+            await connect(getToken(randomName()), options);
+          } catch (err) {
+            throw new Error(err.message + ': ' + sid);
+          }
+        });
+      });
+
       combinationContext([
         [
           [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
