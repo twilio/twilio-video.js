@@ -249,8 +249,6 @@ describe('LocalTrackPublication', function() {
   // TODO: enable these tests when track_priority MSP is available in prod
   (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
     // eslint-disable-next-line no-invalid-this
-    // this.retries(2);
-
     describe('three participant tests', () => {
       let thisRoom;
       let thoseRooms;
@@ -411,7 +409,7 @@ describe('LocalTrackPublication', function() {
     [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(beforePriority => {
       [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(afterPriority => {
         if (beforePriority !== afterPriority) {
-          it.only(`subscriber gets notified when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
+          it(`VMS-2231:subscriber gets notified when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
             const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
               aliceOptions: {
                 bandwidthProfile: {
@@ -469,6 +467,10 @@ describe('LocalTrackPublication', function() {
       });
 
       const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+
+      // workaround for JSDK-2573: race condition - video SDK recycles transceivers that is in use.
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
 
       // Bob publishes video trackA with standard priority, trackB with low priority.
