@@ -8,8 +8,6 @@ const defaults = require('../../lib/defaults');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
-
-
 const {
   capitalize,
   combinationContext,
@@ -149,7 +147,8 @@ describe('Bandwidth Management', function() {
         });
       });
     });
-    describe.only('bandwidthProfile.video.trackSwitchOffMode', () => {
+
+    describe('bandwidthProfile.video.trackSwitchOffMode', () => {
       [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
         it(`should accept trackSwitchOffMode=${trackSwitchOffMode}`,  async () => {
           const sid = await createRoom(randomName(), defaults.topology);
