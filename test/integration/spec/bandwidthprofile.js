@@ -155,10 +155,12 @@ describe('Bandwidth Management', function() {
           const sid = await createRoom(randomName(), defaults.topology);
           try {
             const options = Object.assign({ name: sid, bandwidthProfile: { video: { trackSwitchOffMode } } }, defaults);
-            await connect(getToken(randomName()), options);
+            const room = await connect(getToken(randomName()), options);
+            room.disconnect();
           } catch (err) {
             throw new Error(err.message + ': ' + sid);
           }
+          await completeRoom(sid);
         });
       });
 
