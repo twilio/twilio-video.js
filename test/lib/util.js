@@ -408,6 +408,32 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
+// setup two users room
+async function setupAliceAndBob({ aliceOptions, bobOptions }) {
+  const roomName = await createRoom(randomName(), defaults.topology);
+  aliceOptions = Object.assign({
+    name: roomName,
+  }, aliceOptions, defaults);
+
+  const aliceRoom = await connect(getToken('Alice'), aliceOptions);
+
+  bobOptions = Object.assign({
+    name: roomName,
+  }, bobOptions, defaults);
+
+  const bobRoom = await connect(getToken('Bob'), bobOptions);
+
+  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'participants to connect');
+
+  const roomSid = aliceRoom.sid;
+  const aliceLocal = aliceRoom.localParticipant;
+  const bobLocal = bobRoom.localParticipant;
+  const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
+  const bobRemote = aliceRoom.participants.get(bobLocal.sid);
+
+  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid };
+}
+
 async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions }) {
   name = name || randomName();
   const options = Object.assign({
@@ -556,3 +582,4 @@ exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
+exports.setupAliceAndBob = setupAliceAndBob;
