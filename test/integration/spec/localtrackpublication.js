@@ -36,6 +36,7 @@ const {
   trackSwitchedOff,
   trackSwitchedOn,
   waitFor,
+  waitForNot,
   waitForTracks,
   waitOnceForRoomEvent
 } = require('../../lib/util');
@@ -430,49 +431,55 @@ describe('LocalTrackPublication', function() {
 
     [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(beforePriority => {
       [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(afterPriority => {
-        if (beforePriority !== afterPriority) {
-          it(`VMS-2231:subscriber gets notified when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
-            const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
-              aliceOptions: {
-                bandwidthProfile: {
-                  video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
-                },
-                tracks: []
+        const expectNotification = beforePriority !== afterPriority;
+        it(`VMS-2231:subscriber ${expectNotification ? 'gets notified' : 'does not get notified'} when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
+          const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+            aliceOptions: {
+              bandwidthProfile: {
+                video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
               },
-              bobOptions: { tracks: [] },
-            });
-
-            const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
-
-            // Bob publishes video trackA with standard priority, trackB with low priority.
-            const trackAPubLocal = await waitFor(bobLocal.publishTrack(bobVideoTrackA, { priority: beforePriority }), `Bob to publish video trackA: ${roomSid}`);
-            assert.equal(trackAPubLocal.priority, beforePriority);
-
-            await waitFor(tracksSubscribed(bobRemote, 1), `alice to subscribe to Bobs track: ${roomSid}`);
-
-            const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
-            assert(trackAPubRemote);
-
-            const priorityChangePromise = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
-              assert.equal(priority, afterPriority);
-              resolve();
-            }));
-
-            // initially Alice sees priority as beforePriority.
-            assert.equal(trackAPubRemote.publishPriority, beforePriority);
-
-            // Bob updates trackB => afterPriority
-            trackAPubLocal.setPriority(afterPriority);
-            assert.equal(trackAPubLocal.priority, afterPriority);
-            await waitFor(priorityChangePromise, `Alice to receive publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
-
-            // later Alice sees priority as afterPriority.
-            assert.equal(trackAPubRemote.publishPriority, afterPriority);
-
-            aliceRoom.disconnect();
-            bobRoom.disconnect();
+              tracks: []
+            },
+            bobOptions: { tracks: [] },
           });
-        }
+
+          const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+
+          // Bob publishes video trackA with standard priority, trackB with low priority.
+          const trackAPubLocal = await waitFor(bobLocal.publishTrack(bobVideoTrackA, { priority: beforePriority }), `Bob to publish video trackA: ${roomSid}`);
+          assert.equal(trackAPubLocal.priority, beforePriority);
+
+          await waitFor(tracksSubscribed(bobRemote, 1), `alice to subscribe to Bobs track: ${roomSid}`);
+
+          const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
+          assert(trackAPubRemote);
+
+          const priorityChangePromise = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
+            assert.equal(priority, afterPriority);
+            resolve();
+          }));
+
+          // initially Alice sees priority as beforePriority.
+          assert.equal(trackAPubRemote.publishPriority, beforePriority);
+
+          // Bob updates trackB => afterPriority
+          trackAPubLocal.setPriority(afterPriority);
+          assert.equal(trackAPubLocal.priority, afterPriority);
+
+          if (expectNotification) {
+            // Alice should receive publishPriorityChanged.
+            await waitFor(priorityChangePromise, `Alice to receive publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
+          } else {
+            // Alice should not receive publishPriorityChanged.
+            await waitForNot(priorityChangePromise, `Alice received unexpected publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
+          }
+
+          // later Alice sees priority as afterPriority.
+          assert.equal(trackAPubRemote.publishPriority, afterPriority);
+
+          aliceRoom.disconnect();
+          bobRoom.disconnect();
+        });
       });
     });
 
