@@ -71,13 +71,13 @@ describe('LocalTrackPublication', function() {
     const roomSid = await createRoom(randomName(), defaults.topology);
     const options = Object.assign({ name: roomSid }, defaults);
 
-    // Alice joins P2P/Group room
+    // Alice joins a room
     const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
 
     // Alice adds listener for trackDisabled events (e.g., in room level)
     const trackDisabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackDisabled');
 
-    // Participant 2 joins the room with audio and disabled video track
+    // Bob joins the room with a disabled track
     const bobLocalAudioTrack = await createLocalAudioTrack({ fake: true });
     bobLocalAudioTrack.disable();
     const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
