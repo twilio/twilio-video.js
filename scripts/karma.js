@@ -67,7 +67,7 @@ async function main() {
     });
 
     if (exitCode && !processExitCode) {
-      // Note(mpatwardhan) if tests fail for one file,
+      // NOTE(mpatwardhan) if tests fail for one file,
       // note the exitcode but continue running for rest
       // of the files.
       processExitCode = exitCode;
