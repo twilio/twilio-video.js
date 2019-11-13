@@ -12,6 +12,7 @@ const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
+const utils = require('../../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   let didStartMonitor;
@@ -792,8 +793,23 @@ describe('PeerConnectionV2', () => {
         [true, false, undefined],
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
+      [
+        [true],
+        x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
+      ],
     // eslint-disable-next-line consistent-return
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp]) => {
+    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+
+      beforeEach(() => {
+        sinon.stub(utils, 'isChromeScreenShareTrack').callsFake(() => {
+          return chromeScreenTrack;
+        });
+      });
+
+      afterEach(() => {
+        utils.isChromeScreenShareTrack.restore();
+      });
+
       // The Test
       let test;
 
@@ -812,20 +828,25 @@ describe('PeerConnectionV2', () => {
       // The PeerConnectionV2's state before calling `update`
       let stateBefore;
 
-      // The underlying RTCPeerConnection's signalignState before calling `update`
+      // The underlying RTCPeerConnection's signalingState before calling `update`
       let signalingStateBefore;
 
       // The result of calling `update`
       let result;
 
       async function setup() {
+        let tracks;
+        if (chromeScreenTrack) {
+          tracks = [{ kind: 'video', label: 'screen:123' }];
+        }
         test = makeTest({
           offers: 3,
           answers: 2,
           maxAudioBitrate: 40,
           maxVideoBitrate: 50,
           enableDscp,
-          isRTCRtpSenderParamsSupported
+          isRTCRtpSenderParamsSupported,
+          tracks,
         });
         descriptions = [];
         const ufrag = 'foo';
@@ -966,8 +987,12 @@ describe('PeerConnectionV2', () => {
         it('should apply the specified bandwidth constraints to the remote description', () => {
           if (isRTCRtpSenderParamsSupported) {
             test.pc.getSenders().forEach(sender => {
-              const experctedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
-              sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', experctedMaxBitRate));
+              const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
+              if (sender.track.kind === 'video' && chromeScreenTrack)  {
+                sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+              } else {
+                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+              }
             });
             return;
           }
@@ -2066,8 +2091,8 @@ function makePeerConnectionV2(options) {
   options.id = options.id || makeId();
 
   const pc = options.pc || makePeerConnection(options);
-  pc.addTrack({ kind: 'audio' });
-  pc.addTrack({ kind: 'video' });
+  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video' }];
+  tracks.forEach(track => pc.addTrack(track));
 
   function RTCPeerConnection() {
     return pc;
