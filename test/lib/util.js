@@ -508,7 +508,7 @@ async function waitToGoOffline() {
  * @returns {Promise<void>}
  */
 async function waitOnceForRoomEvent(room, event) {
-  await waitFor(new Promise(resolve => room.once(event, resolve)), `room to receive event:${event}`);
+  await waitFor(new Promise(resolve => room.once(event, resolve)), `room ${room.sid} to receive event:${event}`);
 }
 
 /**
