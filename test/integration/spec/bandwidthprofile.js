@@ -29,6 +29,7 @@ describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
 
+  it('a placeholder test', () => {});
   if (defaults.topology !== 'peer-to-peer') {
     describe('bandwidthProfile.video', () => {
       combinationContext([
