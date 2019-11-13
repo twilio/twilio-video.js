@@ -7,12 +7,12 @@ New Features
 ------------
 - You can now specify the mode to control track switch off behavior by specifying a
   property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
-  `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
+  - `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
                 is detected.
-  `predicted` - In this mode, RemoteVideoTracks are pro-actively switched off when network
+  - `predicted` - In this mode, RemoteVideoTracks are pro-actively switched off when network
                 congestion is predicted by the bandwidth estimation mechanism. This mode
                 is used by default if not specified.
-  `disabled`  - In this mode, RemoteVideoTracks will not be switched off. Instead tracks
+  - `disabled`  - In this mode, RemoteVideoTracks will not be switched off. Instead tracks
                 will be adjusted to lower quality.
 
   ```js
