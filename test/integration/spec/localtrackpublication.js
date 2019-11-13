@@ -67,6 +67,28 @@ describe('LocalTrackPublication', function() {
     [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
   });
 
+  it('JSDK-2582 trackDisabled event is not fired when participant joins room with already disabled track', async () => {
+    const roomSid = await createRoom(randomName(), defaults.topology);
+    const options = Object.assign({ name: roomSid }, defaults);
+
+    // Alice joins a room
+    const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
+
+    // Alice adds listener for trackDisabled events (e.g., in room level)
+    const trackDisabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackDisabled');
+
+    // Bob joins the room with a disabled track
+    const bobLocalAudioTrack = await createLocalAudioTrack({ fake: true });
+    bobLocalAudioTrack.disable();
+    const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
+
+    // Alice expects trackDisabled event.
+    await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
+
+    [aliceRoom, bobRoom].forEach(room => room.disconnect());
+    return completeRoom(roomSid);
+  });
+
   describe('#unpublish', () => {
     combinationContext([
       [
