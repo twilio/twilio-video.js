@@ -57,7 +57,7 @@ describe('Bandwidth Management', function() {
           [PRIORITY_LOW]: 3
         };
 
-        // NOTE(mmalavalli): Since "dominantSpeakerPriority" only upgrades the publish priority of the Dominant Speaker's
+        // NOTE(mmalavalli): Since "dominantSpeakerPriority" only upgrades the priority of the Dominant Speaker's
         // LocalVideoTrack and does not downgrade it, the effective subscribe priority will be the greater of the
         // two priorities.
         const effectiveDominantSpeakerPriority = priorityRanks[dominantSpeakerPriority] <= priorityRanks[dominantSpeakerPublishPriority]

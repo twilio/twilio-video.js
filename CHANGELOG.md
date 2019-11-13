@@ -5,7 +5,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-- You can now specify the mode to controls track switch off behavior by specifying a
+- You can now specify the mode to control track switch off behavior by specifying a
   property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
   `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
                 is detected.
