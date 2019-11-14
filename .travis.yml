@@ -26,56 +26,50 @@ env:
 matrix:
   include:
     - os: linux
-      env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=stable TOPOLOGY=group
+      env: BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=beta TOPOLOGY=group
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+      env: BROWSER=chrome BVER=unstable TOPOLOGY=group
 
     - os: linux
-      env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=group
+      env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=stable TOPOLOGY=group
 
     - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=group
+      env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+      env: BROWSER=firefox BVER=beta TOPOLOGY=group
 
     - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=group
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
 
     - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-
-    - os: linux
-      env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=group
+      env: BROWSER=firefox BVER=unstable TOPOLOGY=group
 
   allow_failures:
-    - env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
-    - env: DOCKER=false BROWSER=chrome BVER=unstable TOPOLOGY=group
-    - env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
-    - env: DOCKER=false BROWSER=firefox BVER=stable TOPOLOGY=group
-    - env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
-    - env: DOCKER=false BROWSER=firefox BVER=beta TOPOLOGY=group
-    - env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
-    - env: DOCKER=false BROWSER=firefox BVER=unstable TOPOLOGY=group
-    - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=peer-to-peer
-    - env: DOCKER=false BROWSER=safari BVER=unstable TOPOLOGY=group
-    - env: DOCKER=true BROWSER=chrome BVER=stable TOPOLOGY=group
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=chrome BVER=unstable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=stable TOPOLOGY=group
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=beta TOPOLOGY=group
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=peer-to-peer
+    - env: BROWSER=firefox BVER=unstable TOPOLOGY=group
 
 script: ./scripts/travis-run-tests.sh
 
