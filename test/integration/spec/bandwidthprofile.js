@@ -28,6 +28,8 @@ const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } =
 describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
+  // eslint-disable-next-line no-invalid-this
+  this.retries(2);
 
   it('a placeholder test', () => {});
   if (defaults.topology !== 'peer-to-peer') {
@@ -161,93 +163,6 @@ describe('Bandwidth Management', function() {
             throw new Error(err.message + ': ' + sid);
           }
           await completeRoom(sid);
-        });
-      });
-
-      combinationContext([
-        [
-          [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
-          ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
-            ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
-            : `.maxTracks = ${maxTracks}`
-        ],
-        [
-          [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED],
-          x => `.trackSwitchOffMode = "${x}"`
-        ]
-      ], ([trackLimitOptions, trackSwitchOffMode]) => {
-        const expectSwitchOff = (trackSwitchOffMode !== MODE_DISABLED);
-        it(`${expectSwitchOff ? 'Should' : 'Should not'} switch off remote tracks when trackSwitchOffMode = ${trackSwitchOffMode}`, async () => {
-          // eslint-disable-next-line no-console
-          console.log('expectSwitchOff = ', expectSwitchOff);
-          // eslint-disable-next-line no-console
-          console.log('trackSwitchOffMode = ', trackSwitchOffMode);
-          const [, thisRoom, thoseRooms] = await setup({
-            testOptions: {
-              bandwidthProfile: {
-                video: {
-                  trackSwitchOffMode,
-                  dominantSpeakerPriority: PRIORITY_LOW,
-                  ...trackLimitOptions
-                }
-              },
-              dominantSpeaker: true,
-              tracks: []
-            },
-            otherOptions: { tracks: [] },
-            nTracks: 0
-          });
-
-          const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-            createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-            await createLocalVideoTrack(smallVideoConstraints)
-          ]), 'local tracks');
-
-          // Initially disable Alice's audio
-          aliceTracks[0].enabled = false;
-
-          const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
-          const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
-
-          // Alice publishes her track at low Pri. Bob publish his at Hi Pri
-          await waitFor([
-            ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
-            ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_HIGH })),
-            tracksSubscribed(aliceRemote, 2),
-            tracksSubscribed(bobRemote, 2)
-          ], `all tracks to get published and subscribed: ${thisRoom.sid}`);
-
-          const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
-            return [...videoTracks.values()][0].track;
-          });
-
-          // eslint-disable-next-line no-console
-          aliceRemoteVideoTrack.on('switchedOff', () => console.log('Alice track got switched Off'));
-          // eslint-disable-next-line no-console
-          aliceRemoteVideoTrack.on('switchedOn', () => console.log('Alice track got switched On'));
-          // eslint-disable-next-line no-console
-          bobRemoteVideoTrack.on('switchedOff', () => console.log('Bob track got switched Off'));
-          // eslint-disable-next-line no-console
-          bobRemoteVideoTrack.on('switchedOn', () => console.log('Bob track got switched On'));
-
-          // Bob should be the Dominant Speaker
-          await waitFor([
-            dominantSpeakerChanged(thisRoom, bobRemote),
-            trackSwitchedOn(bobRemoteVideoTrack),
-            expectSwitchOff ? trackSwitchedOff(aliceRemoteVideoTrack) : trackSwitchedOn(aliceRemoteVideoTrack)
-          ], `Bob to be dominant speaker and correct trackSwitches: ${thisRoom.sid}`);
-
-          // wait for 5 seconds, to ensure that we do not get more switchOn/Offs
-          await waitFor(new Promise((resolve) => setTimeout(resolve, 5000)));
-          bobRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, false, `Was expecting Bob's track to be switchedOn: ${thisRoom.sid}`);
-          });
-
-          aliceRemote.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, expectSwitchOff, `Was expecting Alice's track to be isSwitchedOff=${expectSwitchOff} : ${thisRoom.sid}`);
-          });
-
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
         });
       });
     });
