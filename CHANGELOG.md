@@ -23,7 +23,7 @@ New Features
         dominantSpeakerPriority: 'high',
         maxTracks: 2,
         mode: 'collaboration'
-        trackSwitchOffMode: 'detected' // possible values: "predictive", "detected" or "disabled".
+        trackSwitchOffMode: 'detected' // possible values: "predicted", "detected" or "disabled".
       }
     }
   });
