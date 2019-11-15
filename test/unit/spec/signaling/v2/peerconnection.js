@@ -798,7 +798,7 @@ describe('PeerConnectionV2', () => {
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
       [
-        [true],
+        [true, false],
         x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
       ],
     // eslint-disable-next-line consistent-return
