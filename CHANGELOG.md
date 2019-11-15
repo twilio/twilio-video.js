@@ -5,6 +5,29 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
+- You can now specify the mode to control track switch off behavior by specifying a
+  property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
+  - `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
+                is detected.
+  - `predicted` - In this mode, RemoteVideoTracks are pro-actively switched off when network
+                congestion is predicted by the bandwidth estimation mechanism. This mode
+                is used by default if not specified.
+  - `disabled`  - In this mode, RemoteVideoTracks will not be switched off. Instead tracks
+                will be adjusted to lower quality.
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high',
+        maxTracks: 2,
+        mode: 'collaboration'
+        trackSwitchOffMode: 'detected' // possible values: "predictive", "detected" or "disabled".
+      }
+    }
+  });
+  ```
 
 - You can now change the priority of an already published LocalTrack using a new method
   `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
