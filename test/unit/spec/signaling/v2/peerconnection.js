@@ -759,10 +759,6 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  // @ceaglest - I think we already have very comprehensive unit-tests for overall flow.
-  // And the newly added tests (https://github.com/twilio/twilio-video.js/pull/796/files#diff-5621864bdc387556a6924c0a722195f3R884)
-  // cover this vms-failover case pretty well.
-
   describe('#update, called', () => {
     combinationContext([
       [
