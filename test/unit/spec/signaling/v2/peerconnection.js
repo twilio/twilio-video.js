@@ -759,6 +759,10 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  // @ceaglest - I think we already have very comprehensive unit-tests for overall flow.
+  // And the newly added tests (https://github.com/twilio/twilio-video.js/pull/796/files#diff-5621864bdc387556a6924c0a722195f3R884)
+  // cover this vms-failover case pretty well.
+
   describe('#update, called', () => {
     combinationContext([
       [
@@ -799,10 +803,28 @@ describe('PeerConnectionV2', () => {
       ],
       [
         [true, false],
+        // limit only to isRTCRtpSenderParamsSupported
         x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
       ],
     // eslint-disable-next-line consistent-return
     ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+
+      // these combinations grow exponentially
+      // skip the ones that do not make much sense to test.
+      if (vmsFailOver && (!initial || type !== 'offer' || signalingState !== 'have-local-offer')) {
+        // vms fail over case is only interesting before negotiation is finished
+        return;
+      }
+
+      if (!isRTCRtpSenderParamsSupported && ( chromeScreenTrack || enableDscp )) {
+        // screen share track and dscp options have special cases only when isRTCRtpSenderParamsSupported.
+        return;
+      }
+
+      if (iceLite && (isRTCRtpSenderParamsSupported || enableDscp || chromeScreenTrack)) {
+        // iceLite doe not need repeat for all combination of unrelated variables.
+        return;
+      }
 
       beforeEach(() => {
         sinon.stub(utils, 'isChromeScreenShareTrack').callsFake(() => {
