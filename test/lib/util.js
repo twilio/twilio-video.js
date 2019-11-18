@@ -508,7 +508,7 @@ async function waitToGoOffline() {
  * @returns {Promise<void>}
  */
 async function waitOnceForRoomEvent(room, event) {
-  await waitFor(new Promise(resolve => room.once(event, resolve)), `room to receive event:${event}`);
+  await waitFor(new Promise(resolve => room.once(event, resolve)), `room ${room.sid} to receive event:${event}`);
 }
 
 /**
@@ -554,6 +554,36 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
   clearTimeout(timer);
   return result;
 }
+/**
+ * sometimes our tests want to ensure that an event does *not* happen
+ * this function helps with such waits. It ensures that given promise does not resolve
+ * in given time.
+ * Returns a promise that gets rejected if input promise settled in timeoutMS.
+ * @param {Promise} promise - Promise that we do want to see resolved.
+ * @param {string} message - indicates the message logged in case of failure.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+async function waitForNot(promise, message, timeoutMS = 5 * second) {
+  let timer = null;
+  const timeoutPromise = new Promise(resolve => {
+    timer = setTimeout(() => {
+      timer = null;
+      resolve();
+    }, timeoutMS);
+  });
+
+  const notPromise = promise.then(() => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+      throw new Error(message);
+    }
+  });
+
+  const result = await Promise.race([notPromise, timeoutPromise]);
+  return result;
+}
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -578,6 +608,7 @@ exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitForNot = waitForNot;
 exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;

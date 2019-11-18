@@ -28,6 +28,13 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { maxTracks: 2 } }, { video: { max_tracks: 2 } }],
       // eslint-disable-next-line
+      [{ video: { maxTracks: 2, trackSwitchOffMode: 'predicted' } }, { video: { max_tracks: 2, track_switch_off: 'predicted' } }],
+      // eslint-disable-next-line
+      [{ video: { maxTracks: 2, trackSwitchOffMode: 'detected' } }, { video: { max_tracks: 2, track_switch_off: 'detected' } }],
+      // eslint-disable-next-line
+      [{ video: { maxTracks: 2, trackSwitchOffMode: 'disabled' } }, { video: { max_tracks: 2, track_switch_off: 'disabled' } }],
+      // eslint-disable-next-line
+      // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
       // eslint-disable-next-line
       [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],

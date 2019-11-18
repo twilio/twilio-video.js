@@ -29,8 +29,6 @@ const getToken = require('../../lib/token');
 const {
   capitalize,
   combinationContext,
-  createSyntheticAudioStreamTrack,
-  dominantSpeakerChanged,
   isRTCRtpSenderParamsSupported,
   participantsConnected,
   pairs,
@@ -38,13 +36,11 @@ const {
   setup,
   smallVideoConstraints,
   tracksSubscribed,
-  trackSwitchedOff,
   tracksPublished,
-  trackSwitchedOn,
   waitFor
 } = require('../../lib/util');
 
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
+const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
@@ -1163,126 +1159,6 @@ describe('connect', function() {
       }
     });
   });
-
-  if (defaults.topology !== 'peer-to-peer') {
-    describe('bandwidthProfile.video', () => {
-      combinationContext([
-        [
-          [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
-          ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
-            ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
-            : `.maxTracks = ${maxTracks}`
-        ],
-        [
-          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
-          x => `.dominantSpeakerPriority = "${x}"`
-        ],
-        [
-          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
-          x => `and the publish priority of the Dominant Speaker's LocalVideoTrack is "${x}"`
-        ],
-        [
-          [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH],
-          x => `and the publish priority of the Passive Speaker's LocalVideoTrack is "${x}"`
-        ]
-      ], ([trackLimitOptions, dominantSpeakerPriority, dominantSpeakerPublishPriority, passiveSpeakerPublishPriority]) => {
-        const priorityRanks = {
-          [PRIORITY_HIGH]: 1,
-          [PRIORITY_STANDARD]: 2,
-          [PRIORITY_LOW]: 3
-        };
-
-        // NOTE(mmalavalli): Since "dominantSpeakerPriority" only upgrades the publish priority of the Dominant Speaker's
-        // LocalVideoTrack and does not downgrade it, the effective subscribe priority will be the greater of the
-        // two priorities.
-        const effectiveDominantSpeakerPriority = priorityRanks[dominantSpeakerPriority] <= priorityRanks[dominantSpeakerPublishPriority]
-          ? dominantSpeakerPriority
-          : dominantSpeakerPublishPriority;
-
-        const switchOffParticipant = priorityRanks[effectiveDominantSpeakerPriority] <= priorityRanks[passiveSpeakerPublishPriority]
-          ? 'passive'
-          : 'dominant';
-
-        let thisRoom;
-        let thoseRooms;
-
-        beforeEach(async () => {
-          [, thisRoom, thoseRooms] = await setup({
-            testOptions: {
-              bandwidthProfile: {
-                video: {
-                  dominantSpeakerPriority,
-                  ...trackLimitOptions
-                }
-              },
-              dominantSpeaker: true,
-              tracks: []
-            },
-            otherOptions: { tracks: [] },
-            nTracks: 0
-          });
-        });
-
-        it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
-          const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-            createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-            await createLocalVideoTrack(smallVideoConstraints)
-          ]), 'local tracks');
-
-          // Initially disable Alice's audio
-          aliceTracks[0].enabled = false;
-
-          const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
-          const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
-
-          // Alice and Bob publish their LocalTracks
-          await waitFor([
-            ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: passiveSpeakerPublishPriority })),
-            ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: dominantSpeakerPublishPriority })),
-            tracksSubscribed(aliceRemote, 2),
-            tracksSubscribed(bobRemote, 2)
-          ], 'all tracks to get published and subscribed');
-
-          const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
-            return [...videoTracks.values()][0].track;
-          });
-
-          const switched = {
-            dominant: {
-              off: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack },
-              on: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack }
-            },
-            passive: {
-              off: { participant: aliceRemote, remoteVideoTrack: aliceRemoteVideoTrack },
-              on: { participant: bobRemote, remoteVideoTrack: bobRemoteVideoTrack }
-            }
-          }[switchOffParticipant];
-
-          // Bob should be the Dominant Speaker
-          await waitFor([
-            dominantSpeakerChanged(thisRoom, bobRemote),
-            trackSwitchedOn(switched.on.remoteVideoTrack),
-            trackSwitchedOff(switched.off.remoteVideoTrack)
-          ], 'Bob to be dominant speaker');
-
-          switched.on.participant.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, false);
-          });
-
-          switched.off.participant.videoTracks.forEach(({ track }) => {
-            assert.equal(track.isSwitchedOff, true);
-          });
-        });
-
-        afterEach(async () => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          if (thisRoom) {
-            await completeRoom(thisRoom.sid);
-          }
-        });
-      });
-    });
-  }
 });
 
 function getPayloadTypes(mediaSection) {
