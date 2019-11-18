@@ -818,7 +818,7 @@ describe('PeerConnectionV2', () => {
       }
 
       if (iceLite && (isRTCRtpSenderParamsSupported || enableDscp || chromeScreenTrack)) {
-        // iceLite doe not need repeat for all combination of unrelated variables.
+        // iceLite does not need repeat for all combination of unrelated variables.
         return;
       }
 
