@@ -804,7 +804,6 @@ describe('PeerConnectionV2', () => {
       ],
     // eslint-disable-next-line consistent-return
     ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
-
       // these combinations grow exponentially
       // skip the ones that do not make much sense to test.
       if (vmsFailOver && (!initial || type !== 'offer' || signalingState !== 'have-local-offer')) {
@@ -812,7 +811,7 @@ describe('PeerConnectionV2', () => {
         return;
       }
 
-      if (!isRTCRtpSenderParamsSupported && ( chromeScreenTrack || enableDscp )) {
+      if (!isRTCRtpSenderParamsSupported && (chromeScreenTrack || enableDscp)) {
         // screen share track and dscp options have special cases only when isRTCRtpSenderParamsSupported.
         return;
       }
