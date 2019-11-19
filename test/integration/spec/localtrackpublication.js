@@ -471,10 +471,10 @@ describe('LocalTrackPublication', function() {
     });
 
 
-    [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(beforePriority => {
-      [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(afterPriority => {
+    [PRIORITY_LOW].forEach(beforePriority => {
+      [PRIORITY_HIGH].forEach(afterPriority => {
         const expectNotification = beforePriority !== afterPriority;
-        it(`VMS-2231:subscriber ${expectNotification ? 'gets notified' : 'does not get notified'} when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
+        it.only(`VMS-2231:subscriber ${expectNotification ? 'gets notified' : 'does not get notified'} when publisher changes priority: ${beforePriority} => ${afterPriority}`, async () => {
           const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
             aliceOptions: {
               bandwidthProfile: {
