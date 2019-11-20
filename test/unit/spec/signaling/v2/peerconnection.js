@@ -766,6 +766,10 @@ describe('PeerConnectionV2', () => {
         x => `${x ? 'before' : 'after'} the initial round of negotiation`
       ],
       [
+        [false, true],
+        x => `${x ? 'after' : 'before'} vms-fail-over`
+      ],
+      [
         ['stable', 'have-local-offer', 'closed'],
         x => `in signalingState "${x}"`
       ],
@@ -794,11 +798,28 @@ describe('PeerConnectionV2', () => {
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
       [
-        [true],
+        [true, false],
+        // limit only to isRTCRtpSenderParamsSupported
         x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
       ],
     // eslint-disable-next-line consistent-return
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+    ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+      // these combinations grow exponentially
+      // skip the ones that do not make much sense to test.
+      if (vmsFailOver && (!initial || type !== 'offer' || signalingState !== 'have-local-offer')) {
+        // vms fail over case is only interesting before negotiation is finished
+        return;
+      }
+
+      if (!isRTCRtpSenderParamsSupported && (chromeScreenTrack || enableDscp)) {
+        // screen share track and dscp options have special cases only when isRTCRtpSenderParamsSupported.
+        return;
+      }
+
+      if (iceLite && (isRTCRtpSenderParamsSupported || enableDscp || chromeScreenTrack)) {
+        // iceLite does not need repeat for all combination of unrelated variables.
+        return;
+      }
 
       beforeEach(() => {
         sinon.stub(utils, 'isChromeScreenShareTrack').callsFake(() => {
@@ -821,6 +842,9 @@ describe('PeerConnectionV2', () => {
 
       // The Description's revision
       let rev;
+
+      // createOffer revision
+      let lastOfferRevision;
 
       // Description events emitted by the PeerConnectionV2
       let descriptions;
@@ -874,7 +898,18 @@ describe('PeerConnectionV2', () => {
             break;
         }
 
-        rev = test.pcv2._lastStableDescriptionRevision;
+        if (vmsFailOver && initial && type === 'offer' && signalingState === 'have-local-offer') {
+          // in case of vms fail-over, new PC get to 'have-local-offer' state
+          // by VMS sending create-offer message. Which ends up setting a
+          // test.pcv2._descriptionRevision. lets simulate that.
+          lastOfferRevision = 25; // even though its 'initial' state - last offer will not be 1.
+          test.pcv2._descriptionRevision = lastOfferRevision;
+          rev = test.pcv2._descriptionRevision + 1;
+        } else {
+          lastOfferRevision = 1;
+          rev = test.pcv2._lastStableDescriptionRevision;
+        }
+
         switch (newerEqualOrOlder) {
           case 'newer':
             rev += 2;
@@ -1074,7 +1109,7 @@ describe('PeerConnectionV2', () => {
         context('then, once the initial answer is received', () => {
           beforeEach(async () => {
             const answer = makeAnswer({ iceLite });
-            const answerDescription = test.state().setDescription(answer, 1);
+            const answerDescription = test.state().setDescription(answer, lastOfferRevision);
             await test.pcv2.update(answerDescription);
           });
 
