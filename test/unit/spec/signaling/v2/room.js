@@ -1188,7 +1188,6 @@ describe('RoomV2', () => {
   describe('TrackPrioritySignaling', () => {
     let TrackPrioritySignaling;
     let trackPrioritySignaling1;
-    let trackPrioritySignaling2;
     let test;
 
     before(() => {
@@ -1196,8 +1195,6 @@ describe('RoomV2', () => {
         const trackPrioritySignaling =  new RealTrackPrioritySignaling(param);
         if (!trackPrioritySignaling1) {
           trackPrioritySignaling1 = trackPrioritySignaling;
-        } else {
-          trackPrioritySignaling2 = trackPrioritySignaling;
         }
         return trackPrioritySignaling;
       });
