@@ -37,6 +37,7 @@ const {
   trackSwitchedOn,
   waitFor,
   waitForNot,
+  waitForSometime,
   waitForTracks,
   waitOnceForRoomEvent
 } = require('../../lib/util');
@@ -44,6 +45,47 @@ const {
 describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
+  it('JSDK-2583 late arrivals see stale priority for the tracks', async () => {
+    const roomSid = await createRoom(randomName(), defaults.topology);
+    const options = Object.assign({ name: roomSid }, defaults);
+
+    // BOB joins a room
+    const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [] }, options));
+
+    // Bob publishes a track at low priority.
+    const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+    const trackAPubLocal = await waitFor(bobRoom.localParticipant.publishTrack(bobVideoTrackA, { priority: PRIORITY_LOW }), `Bob to publish video trackA: ${roomSid}`);
+
+
+    // Bob updates trackA => PRIORITY_HIGH
+    trackAPubLocal.setPriority(PRIORITY_HIGH);
+    assert.equal(trackAPubLocal.priority, PRIORITY_HIGH);
+
+    // Alice joins a room after 10 seconds.
+    await waitForSometime(10000);
+    const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
+    const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
+
+    // Alice sees bob track.
+    await waitFor(tracksSubscribed(bobRemote, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`);
+    const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
+
+    const trackPriorityChanged = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
+      assert.equal(priority, PRIORITY_HIGH);
+      resolve();
+    }));
+
+    // alice waits for 10 seconds or for trackPriorityChanged to have been fired.
+    await Promise.race([waitForSometime(10000), trackPriorityChanged]);
+
+    // and at the end expects the priority of bob's track to be high.
+    assert(trackAPubRemote);
+    assert.equal(trackAPubRemote.publishPriority, PRIORITY_HIGH, `Alice was expecting Bob's track to have High Priority: ${roomSid}`);
+
+    aliceRoom.disconnect();
+    bobRoom.disconnect();
+  });
 
   it('JSDK-2565: Can enable, disable and re-enable the track', async () => {
     const [, thisRoom, thoseRooms] = await waitFor(setup({}), 'rooms connected and tracks subscribed');

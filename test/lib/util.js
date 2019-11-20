@@ -554,6 +554,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
   clearTimeout(timer);
   return result;
 }
+
 /**
  * sometimes our tests want to ensure that an event does *not* happen
  * this function helps with such waits. It ensures that given promise does not resolve
@@ -585,6 +586,15 @@ async function waitForNot(promise, message, timeoutMS = 5 * second) {
   return result;
 }
 
+/**
+ * Returns a promise that resolve after timeoutMS have passed.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+async function waitForSometime(timeoutMS = 10 * second) {
+  await new Promise(resolve => setTimeout(resolve, timeoutMS));
+}
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
@@ -608,6 +618,7 @@ exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitForSometime = waitForSometime;
 exports.waitForNot = waitForNot;
 exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;

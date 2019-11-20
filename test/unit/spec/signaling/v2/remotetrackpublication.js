@@ -36,6 +36,75 @@ describe('RemoteTrackPublicationV2', () => {
   });
 
   describe('#update', () => {
+    ['low', 'standard', 'high'].forEach(oldPriorityValue => {
+      ['low', 'standard', 'high'].forEach(newPriorityValue => {
+        context.only(`called with priority change: ${oldPriorityValue} => ${newPriorityValue}`, () => {
+          it('returns the RemoteTrackPublicationV2', () => {
+            const trackState = {
+              enabled: true,
+              kind: makeKind(),
+              name: makeUUID(),
+              priority: oldPriorityValue,
+              sid: makeSid()
+            };
+            const track = new RemoteTrackPublicationV2(trackState);
+            trackState.priority = newPriorityValue;
+            assert.equal(track, track.update(trackState));
+          });
+
+          it('sets .priority to new value', () => {
+            const trackState = {
+              enabled: true,
+              kind: makeKind(),
+              name: makeUUID(),
+              priority: oldPriorityValue,
+              sid: makeSid()
+            };
+            const track = new RemoteTrackPublicationV2(trackState);
+            trackState.priority = newPriorityValue;
+            track.update(trackState);
+            assert.equal(track.priority, newPriorityValue);
+          });
+
+          if (newPriorityValue !== oldPriorityValue) {
+            it('emits an "updated" event with .priority set to newValue', () => {
+              const trackState = {
+                enabled: true,
+                kind: makeKind(),
+                name: makeUUID(),
+                priority: oldPriorityValue,
+                sid: makeSid()
+              };
+
+              let priority;
+              const track = new RemoteTrackPublicationV2(trackState);
+              trackState.priority = newPriorityValue;
+              track.once('updated', () => { priority = track.priority; });
+              track.update(trackState);
+              assert.equal(priority, newPriorityValue);
+            });
+          } else {
+            it('does not emit an "updated" event', () => {
+              const trackState = {
+                enabled: true,
+                kind: makeKind(),
+                name: makeUUID(),
+                priority: oldPriorityValue,
+                sid: makeSid()
+              };
+
+              let updated = false;
+              const track = new RemoteTrackPublicationV2(trackState);
+              trackState.priority = newPriorityValue;
+              track.once('updated', () => { updated = true; });
+              track.update(trackState);
+              assert(!updated);
+            });
+          }
+        });
+      });
+    });
+
     context('called with a trackState setting .enabled to false when the RemoteTrackPublicationV2 is', () => {
       context('enabled', () => {
         it('returns the RemoteTrackPublicationV2', () => {
