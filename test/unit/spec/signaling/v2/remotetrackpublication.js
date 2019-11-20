@@ -38,7 +38,7 @@ describe('RemoteTrackPublicationV2', () => {
   describe('#update', () => {
     ['low', 'standard', 'high'].forEach(oldPriorityValue => {
       ['low', 'standard', 'high'].forEach(newPriorityValue => {
-        context.only(`called with priority change: ${oldPriorityValue} => ${newPriorityValue}`, () => {
+        context(`called with priority change: ${oldPriorityValue} => ${newPriorityValue}`, () => {
           it('returns the RemoteTrackPublicationV2', () => {
             const trackState = {
               enabled: true,

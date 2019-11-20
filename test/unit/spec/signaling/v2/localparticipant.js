@@ -350,7 +350,7 @@ describe('LocalParticipantV2', () => {
 
     [
       ['isEnabled', 'enable', false, true],
-      ['updatedPriority', 'setPriority', makeUUID(), false],
+      ['updatedPriority', 'setPriority', makeUUID(), true],
       ['sid', 'setSid', makeUUID(), false]
     ].forEach(([prop, setProp, value, shouldEmitUpdated]) => {
       context(`when emitted due to a change in .${prop}`, () => {
@@ -374,13 +374,6 @@ describe('LocalParticipantV2', () => {
           it('should not emit "updated"', () => {
             assert(!updated);
           });
-
-          if (prop === 'updatedPriority') {
-            it('should call .sendTrackPriorityUpdate on the underlying TrackPrioritySignaling', () => {
-              localTrackPublication.setSid('foo');
-              sinon.assert.calledWith(trackPrioritySignaling.sendTrackPriorityUpdate, 'foo', 'publish', value);
-            });
-          }
         }
       });
     });
