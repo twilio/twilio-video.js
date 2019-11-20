@@ -34,6 +34,10 @@ parameters:
     type: enum
     enum: ["group", "peer-to-peer"]
     default: "group"
+  test_stability: # should it run unstable tests?
+    type: enum
+    enum: ["all", "stable"]
+    default: "group"
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
@@ -182,6 +186,7 @@ jobs:
         default: "group"
     environment:
       TOPOLOGY: << parameters.topology >>
+      TEST_STABILITY: << pipeline.parameters.test_stability >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -198,6 +203,7 @@ jobs:
       BVER: "stable"
       BROWSER: << parameters.browser >>
       TOPOLOGY: << parameters.topology >>
+      TEST_STABILITY: << pipeline.parameters.test_stability >>
     executor: machine-executor
     steps: [network-tests]
   Framework-tests:

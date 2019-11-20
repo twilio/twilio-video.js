@@ -66,6 +66,7 @@ function generateBuildRequest(program) {
       custom_workflow: program.workflow === 'custom',
       backend_workflow: program.workflow === 'backend',
       environment: program.environment,
+      test_stability: program.test_stability
     }
   };
 
@@ -114,6 +115,14 @@ const workflowPrompt = {
   message: 'Workflow:',
   choices: ['pr', 'custom', 'backend'],
   default: 'pr'
+};
+
+const stableTestsPrompt = {
+  type: 'list',
+  name: 'test_stability',
+  message: 'Run Stable Tests Only:',
+  choices: ['all', 'stable', 'unstable'],
+  default: 'all'
 };
 
 // you may pick branch for pr or custom workflow.
@@ -192,6 +201,7 @@ inquirer.prompt([
   browserPrompt,
   bverPrompt,
   topologyPrompt,
+  stableTestsPrompt,
 ]).then(answers => {
   const {options, body} = generateBuildRequest(answers);
   console.log('Will make a CI request with:', options, body);
