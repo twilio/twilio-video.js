@@ -57,7 +57,6 @@ describe('LocalTrackPublication', function() {
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
     const trackAPubLocal = await waitFor(bobRoom.localParticipant.publishTrack(bobVideoTrackA, { priority: PRIORITY_LOW }), `Bob to publish video trackA: ${roomSid}`);
 
-
     // Bob updates trackA => PRIORITY_HIGH
     trackAPubLocal.setPriority(PRIORITY_HIGH);
     assert.equal(trackAPubLocal.priority, PRIORITY_HIGH);
