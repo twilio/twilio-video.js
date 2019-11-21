@@ -36,8 +36,8 @@ parameters:
     default: "group"
   test_stability: # should it run unstable tests?
     type: enum
-    enum: ["all", "stable"]
-    default: "group"
+    enum: ["all", "stable", "unstable"]
+    default: "all"
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
