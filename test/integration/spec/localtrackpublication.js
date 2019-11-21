@@ -524,6 +524,57 @@ describe('LocalTrackPublication', function() {
       });
     });
 
+    it('publisher and subscriber priority changes do not mix up', async () => {
+      // Alice and Bob join without tracks, Alice has maxTracks property set to 1
+      const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+        aliceOptions: { tracks: [] },
+        bobOptions: { tracks: [] },
+      });
+
+      // Bob publishes video trackA with low priority
+      const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+      const trackAPubLocal = await waitFor(bobLocal.publishTrack(bobVideoTrackA, { priority: PRIORITY_LOW }), `Bob to publish video trackA: ${roomSid}`);
+      assert.equal(trackAPubLocal.priority, PRIORITY_LOW);
+
+      // wait for alice to subscribe Bob's track
+      await waitFor(tracksSubscribed(bobRemote, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`);
+
+      // alice sees publish priority as low.
+      const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
+      const trackARemote = trackAPubRemote.track;
+
+      assert.equal(trackARemote.priority, null); // subscribe priority of remote track
+      assert.equal(trackAPubRemote.publishPriority, PRIORITY_LOW); // publish priority of remote track
+
+      // subscriber priority => high.
+      trackARemote.setPriority(PRIORITY_HIGH);
+      assert.equal(trackARemote.priority, PRIORITY_HIGH);
+
+      // publish priority => PRIORITY_HIGH
+      trackAPubLocal.setPriority(PRIORITY_HIGH);
+      assert.equal(trackAPubLocal.priority, PRIORITY_HIGH);
+
+      // alice gets notified of bob's track priority change.
+      const trackPriorityChanged = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
+        assert.equal(priority, PRIORITY_HIGH);
+        resolve();
+      }));
+
+      await waitFor(trackPriorityChanged, 'alice to receive publishPriorityChanged');
+
+      assert.equal(trackARemote.priority, PRIORITY_HIGH); // subscribe priority of remote track
+      assert.equal(trackAPubRemote.publishPriority, PRIORITY_HIGH); // publish priority of remote track
+
+      // subscriber priority => standard.
+      trackARemote.setPriority(PRIORITY_STANDARD);
+
+      assert.equal(trackARemote.priority, PRIORITY_STANDARD); // subscribe priority of remote track
+      assert.equal(trackAPubRemote.publishPriority, PRIORITY_HIGH); // publish priority of remote track
+
+      aliceRoom.disconnect();
+      bobRoom.disconnect();
+    });
+
     it('publisher can upgrade and downgrade track priorities', async () => {
       // Alice and Bob join without tracks, Alice has maxTracks property set to 1
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
