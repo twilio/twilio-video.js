@@ -336,6 +336,11 @@ describe('LocalParticipant', function() {
       [
         ['never', 'previously'],
         x => `that has ${x} been published`
+      ],
+      [
+        [true],
+        // eslint-disable-next-line no-unused-vars
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
       ]
     ], ([isEnabled, kind, withName, priority, when]) => {
       // eslint-disable-next-line no-warning-comments
