@@ -496,10 +496,6 @@ describe('LocalTrackPublication', function() {
       });
 
       const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
-
-      // workaround for JSDK-2573: race condition - video SDK recycles transceivers that is in use.
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
 
       // Bob publishes video trackA with standard priority, trackB with low priority.
@@ -548,5 +544,26 @@ describe('LocalTrackPublication', function() {
       aliceRoom.disconnect();
       bobRoom.disconnect();
     });
+  });
+
+  it('JSDK-2573 - race condition when recycling transceiver: ', async () => {
+    // Alice and Bob join without tracks, Alice has maxTracks property set to 1
+    const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+      aliceOptions: { tracks: [] },
+      bobOptions: { tracks: [] },
+    });
+
+    const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+    const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
+
+    // Bob publishes video trackA with standard priority, trackB with low priority.
+    await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
+    await waitFor(bobLocal.publishTrack(bobVideoTrackB), `Bob to publish video trackB: ${roomSid}`);
+
+    // wait for alice to subscribe two tracks
+    await waitFor(tracksSubscribed(bobRemote, 2), `wait for alice to subscribe to Bobs tracks: ${roomSid}`);
+
+    aliceRoom.disconnect();
+    bobRoom.disconnect();
   });
 });
