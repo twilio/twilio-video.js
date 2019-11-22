@@ -4,6 +4,12 @@ const assert = require('assert');
 
 const createLocalTracks = require('../../../lib/createlocaltrack');
 
+// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
+describe('placeholder', () => {
+  it('a stable test', () => {});
+  it('an @unstable test', () => {});
+});
+
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';

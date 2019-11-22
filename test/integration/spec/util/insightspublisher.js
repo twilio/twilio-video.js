@@ -22,6 +22,12 @@ if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
 }
 
+// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
+describe('placeholder', () => {
+  it('a stable test', () => {});
+  it('an @unstable test', () => {});
+});
+
 describe('InsightsPublisher', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
