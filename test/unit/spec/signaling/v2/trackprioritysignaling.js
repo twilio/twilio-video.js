@@ -3,7 +3,6 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const { EventEmitter } = require('events');
 const MediaSignalingTransport = require('../../../../../lib/data/transport');
 const TrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 
@@ -28,33 +27,6 @@ describe('TrackPrioritySignaling', () => {
             track: 'MT123',
             [action]: 'bar'
           });
-        });
-      });
-    });
-  });
-
-  describe('"updated" event', () => {
-    ['publish', 'subscribe'].forEach(action => {
-      context(`when the underlying MediaSignalingTransport emits a "message" event with an MSP payload with a .${action} property`, () => {
-        it(`should emit an "updated" event with the Track SID, "${action}" and the new priority`, async () => {
-          const mediaSignalingTransport = new EventEmitter();
-          const trackPrioritySignaling = new TrackPrioritySignaling(mediaSignalingTransport);
-          const updatedPromise = new Promise(resolve => trackPrioritySignaling.once('updated', (trackSid, publishOrSubscribe, priority) => resolve({
-            trackSid,
-            publishOrSubscribe,
-            priority
-          })));
-
-          mediaSignalingTransport.emit('message', {
-            type: 'track_priority',
-            track: 'MT123',
-            [action]: 'bar'
-          });
-
-          const { trackSid, publishOrSubscribe, priority } = await updatedPromise;
-          assert.equal(trackSid, 'MT123');
-          assert.equal(publishOrSubscribe, action);
-          assert.equal(priority, 'bar');
         });
       });
     });

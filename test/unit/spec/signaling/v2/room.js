@@ -1188,7 +1188,6 @@ describe('RoomV2', () => {
   describe('TrackPrioritySignaling', () => {
     let TrackPrioritySignaling;
     let trackPrioritySignaling1;
-    let trackPrioritySignaling2;
     let test;
 
     before(() => {
@@ -1196,8 +1195,6 @@ describe('RoomV2', () => {
         const trackPrioritySignaling =  new RealTrackPrioritySignaling(param);
         if (!trackPrioritySignaling1) {
           trackPrioritySignaling1 = trackPrioritySignaling;
-        } else {
-          trackPrioritySignaling2 = trackPrioritySignaling;
         }
         return trackPrioritySignaling;
       });
@@ -1278,37 +1275,9 @@ describe('RoomV2', () => {
           sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport1);
         });
 
-        it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with the TrackPrioritySignaling', () => {
-          sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling1);
-        });
-
         it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with the TrackPrioritySignaling', () => {
           [...test.room.participants.values()].forEach(participant => {
             sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling1);
-          });
-        });
-
-        context('when a "message" is received un the underlying DataTrackTransport', () => {
-          it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
-            const trackSignalings = new Map(flatMap([...test.room.participants.values()],
-              participant => [...participant.tracks]));
-            const trackUpdatedPromises = [...trackSignalings.values()].map(trackSignaling =>
-              new Promise(resolve => trackSignaling.once('updated', resolve)));
-
-            [
-              ['MT3', 'low'],
-              ['MT4', 'high']
-            ].forEach(([trackSid, priority]) => {
-              dataTrackTransport1.emit('message', {
-                type: 'track_priority',
-                track: trackSid,
-                publish: priority
-              });
-            });
-
-            await Promise.all(trackUpdatedPromises);
-            assert.equal(trackSignalings.get('MT3').priority, 'low');
-            assert.equal(trackSignalings.get('MT4').priority, 'high');
           });
         });
 
@@ -1320,10 +1289,6 @@ describe('RoomV2', () => {
             dataTrackReceiver2 = makeTrackReceiver({ id: 'bar', kind: 'data' });
             dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackTransport2);
             test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
-          });
-
-          it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with null', () => {
-            sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, null);
           });
 
           it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with null', () => {
@@ -1352,40 +1317,6 @@ describe('RoomV2', () => {
 
             it('should construct a TrackPrioritySignaling with the new DataTrackTransport,', () => {
               sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
-            });
-
-            it('should call .setTrackPrioritySignaling on the underlying LocalParticipantV2 with the new TrackPrioritySignaling', () => {
-              sinon.assert.calledWith(test.localParticipant.setTrackPrioritySignaling, trackPrioritySignaling2);
-            });
-
-            it('should call .setTrackPrioritySignaling on the underlying RemoteParticipantV2 with the new TrackPrioritySignaling', () => {
-              [...test.room.participants.values()].forEach(participant => {
-                sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling2);
-              });
-            });
-
-            context('when a "message" is received un the underlying DataTrackTransport', () => {
-              it('should update the publish priority of the relevant RemoteTrackPublicationV2s', async () => {
-                const trackSignalings = new Map(flatMap([...test.room.participants.values()],
-                  participant => [...participant.tracks]));
-                const trackUpdatedPromises = [...trackSignalings.values()].map(trackSignaling =>
-                  new Promise(resolve => trackSignaling.once('updated', resolve)));
-
-                [
-                  ['MT3', 'high'],
-                  ['MT4', 'low']
-                ].forEach(([trackSid, priority]) => {
-                  dataTrackTransport2.emit('message', {
-                    type: 'track_priority',
-                    track: trackSid,
-                    publish: priority
-                  });
-                });
-
-                await Promise.all(trackUpdatedPromises);
-                assert.equal(trackSignalings.get('MT3').priority, 'high');
-                assert.equal(trackSignalings.get('MT4').priority, 'low');
-              });
             });
           });
         });
