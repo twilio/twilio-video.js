@@ -694,19 +694,17 @@ describe('LocalParticipant', function() {
 
         await waitFor(thoseParticipants.map(thatParticipant => {
           return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }), 'all tracks to get subscribed');
+        }), `all tracks to get subscribed: ${sid}`);
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await waitFor(thoseParticipants.map(thatParticipant => {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }), 'this participants track to get unpublished');
+          }), `this participants track to get unpublished: ${sid}`);
 
-          await waitFor([
-            thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ], 'tracks to get reSubscribed');
+          await waitFor(thisParticipant.publishTrack(thisTrack), `track to get republished: ${sid}`);
+          await waitFor([...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))], `tracks to get reSubscribed: ${sid}`);
         }
 
         thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
@@ -723,7 +721,7 @@ describe('LocalParticipant', function() {
             const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
             return trackOrPublication;
           }));
-        }), 'tracks to get unsubscribed and unpublished');
+        }), `tracks to get unsubscribed and unpublished: ${sid}`);
 
         thoseTracksMap = {
           trackUnpublished: thoseTracksUnpublished,
