@@ -88,8 +88,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       case 'all':
         // when no grep specified, all tests will run.
         break;
-      default:
-        console.log('invalid value for TEST_STABILITY:', process.env.TEST_STABILITY)
     }
 
     const strReportName = generateReportName(files);

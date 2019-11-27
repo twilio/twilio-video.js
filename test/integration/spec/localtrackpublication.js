@@ -135,10 +135,10 @@ describe('LocalTrackPublication', function() {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
           }), `all tracks to get unpublished: ${sid}`);
 
+          await waitFor(thisParticipant.publishTrack(thisTrack), 'thisTrack to publish again');
           await waitFor([
-            thisParticipant.publishTrack(thisTrack),
             ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ], `track to get published and all tracks to get subscribe again: ${sid}`);
+          ], `tracks to get subscribed again: ${sid}`);
         }
 
         thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
