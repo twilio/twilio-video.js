@@ -10,12 +10,6 @@ const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../lib/util/constants
 const isChrome = guessBrowser() === 'chrome';
 const sdpFormat = getSdpFormat(DEFAULT_CHROME_SDP_SEMANTICS);
 
-// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
-describe('placeholder', () => {
-  it('a stable test', () => {});
-  it('an @unstable test', () => {});
-});
-
 describe('setSimulcast', () => {
   let answer1;
   let answer2;

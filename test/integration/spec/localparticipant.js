@@ -45,12 +45,6 @@ const {
   waitForTracks
 } = require('../../lib/util');
 
-// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
-describe('placeholder', () => {
-  it('a stable test', () => {});
-  it('an @unstable test', () => {});
-});
-
 describe('LocalParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
@@ -449,9 +443,9 @@ describe('LocalParticipant', function() {
         const thoseTracksPublishedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackPublished', thatParticipant, 1));
         const thoseTracksSubscribedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackSubscribed', thatParticipant, 1));
 
-        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, 'local track to publish');
-        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, 'participants to receive trackPublished');
-        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, 'participants to receive trackSubscribed');
+        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, `local track to publish: ${sid}`);
+        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, `participants to receive trackPublished: ${sid}`);
+        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, `participants to receive trackSubscribed: ${sid}`);
 
         thoseTracksPublished = flatMap(thoseTracksPublished);
         thoseTracksSubscribed = flatMap(thoseTracksSubscribed);

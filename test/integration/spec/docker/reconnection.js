@@ -109,12 +109,6 @@ async function readCurrentNetworks(dockerAPI) {
   return currentNetworks;
 }
 
-// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
-describe('placeholder', () => {
-  it('a stable test', () => {});
-  it('an @unstable test', () => {});
-});
-
 describe('Reconnection states and events', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(8 * minute);

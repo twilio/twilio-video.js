@@ -26,12 +26,6 @@ const {
 const connect = require('../../../lib/connect');
 const { RoomMaxParticipantsExceededError } = require('../../../lib/util/twilio-video-errors');
 
-// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
-describe('placeholder', () => {
-  it('a stable test', () => {});
-  it('an @unstable test', () => {});
-});
-
 (defaults.topology !== 'peer-to-peer' && enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);

@@ -47,12 +47,6 @@ const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = re
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
-// placeholder ensures all variations of TEST_STABILITY end up with some tests to run.
-describe('placeholder', () => {
-  it('a stable test', () => {});
-  it('an @unstable test', () => {});
-});
-
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);

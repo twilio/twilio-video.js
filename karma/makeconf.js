@@ -98,6 +98,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       client: {
         mocha: mochaOptions
       },
+      failOnEmptyTestSuite: false,
       files,
       preprocessors,
       browserify: {
