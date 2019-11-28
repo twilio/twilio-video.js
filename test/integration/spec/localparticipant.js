@@ -336,6 +336,11 @@ describe('LocalParticipant', function() {
       [
         ['never', 'previously'],
         x => `that has ${x} been published`
+      ],
+      [
+        [true],
+        // eslint-disable-next-line no-unused-vars
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
       ]
     ], ([isEnabled, kind, withName, priority, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -438,9 +443,9 @@ describe('LocalParticipant', function() {
         const thoseTracksPublishedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackPublished', thatParticipant, 1));
         const thoseTracksSubscribedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackSubscribed', thatParticipant, 1));
 
-        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, 'local track to publish');
-        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, 'participants to receive trackPublished');
-        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, 'participants to receive trackSubscribed');
+        thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, `local track to publish: ${sid}`);
+        thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, `participants to receive trackPublished: ${sid}`);
+        thoseTracksSubscribed = await waitFor(thoseTracksSubscribedPromise, `participants to receive trackSubscribed: ${sid}`);
 
         thoseTracksPublished = flatMap(thoseTracksPublished);
         thoseTracksSubscribed = flatMap(thoseTracksSubscribed);
@@ -615,6 +620,11 @@ describe('LocalParticipant', function() {
       [
         ['published', 'published, unpublished, and then published again'],
         x => 'that was ' + x
+      ],
+      [
+        [true],
+        // eslint-disable-next-line no-unused-vars
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -678,19 +688,17 @@ describe('LocalParticipant', function() {
 
         await waitFor(thoseParticipants.map(thatParticipant => {
           return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }), 'all tracks to get subscribed');
+        }), `all tracks to get subscribed: ${sid}`);
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await waitFor(thoseParticipants.map(thatParticipant => {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }), 'this participants track to get unpublished');
+          }), `this participants track to get unpublished: ${sid}`);
 
-          await waitFor([
-            thisParticipant.publishTrack(thisTrack),
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ], 'tracks to get reSubscribed');
+          await waitFor(thisParticipant.publishTrack(thisTrack), `track to get republished: ${sid}`);
+          await waitFor([...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))], `tracks to get reSubscribed: ${sid}`);
         }
 
         thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
@@ -707,7 +715,7 @@ describe('LocalParticipant', function() {
             const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
             return trackOrPublication;
           }));
-        }), 'tracks to get unsubscribed and unpublished');
+        }), `tracks to get unsubscribed and unpublished: ${sid}`);
 
         thoseTracksMap = {
           trackUnpublished: thoseTracksUnpublished,
