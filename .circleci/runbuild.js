@@ -14,17 +14,18 @@ you can alternatively use a curl command like:
 curl -u ${CIRCLECI_TOKEN}: -X POST \
   --header 'Content-Type: application/json' \
   -d '{
-    "branch": "master",             // or "support.1-x" to run against 1.x
+    "branch": "master",
     "parameters": {
         "pr_workflow": false,
         "custom_workflow": false,
         "backend_workflow": true,
-        "test_stability" : "stable" // optional to run only stable tests.
-        "environment": "stage",     // optional
-        "tag": "2.0.0-beta15"       // optional
+        "test_stability" : "stable",
+        "environment": "stage"
     }
 }' \
 https://circleci.com/api/v2/project/github/twilio/twilio-video.js/pipeline
+
+Note: environment, tag, test_stability are optional parameters.
 */
 
 // returns a Promise that resolves with branch information
