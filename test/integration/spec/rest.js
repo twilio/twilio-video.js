@@ -26,13 +26,6 @@ const {
 const connect = require('../../../lib/connect');
 const { RoomMaxParticipantsExceededError } = require('../../../lib/util/twilio-video-errors');
 
-// NOTE(mmalavalli): A dummy describe() block is declared to prevent
-// mocha from erroring out due to all tests being skipped when
-// ENABLE_REST_API_TESTS is not present in process.env.
-describe('', () => {
-  it('', () => {});
-});
-
 (defaults.topology !== 'peer-to-peer' && enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);

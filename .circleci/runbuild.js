@@ -14,17 +14,18 @@ you can alternatively use a curl command like:
 curl -u ${CIRCLECI_TOKEN}: -X POST \
   --header 'Content-Type: application/json' \
   -d '{
-    "branch": "JSDK-2537_migrate_integration_tests",
+    "branch": "master",
     "parameters": {
         "pr_workflow": false,
         "custom_workflow": false,
         "backend_workflow": true,
-        "environment": "stage",
-        "tag": "2.0.0-beta15"
+        "test_stability" : "stable",
+        "environment": "stage"
     }
 }' \
 https://circleci.com/api/v2/project/github/twilio/twilio-video.js/pipeline
 
+Note: environment, tag, test_stability are optional parameters.
 */
 
 // returns a Promise that resolves with branch information
@@ -66,6 +67,7 @@ function generateBuildRequest(program) {
       custom_workflow: program.workflow === 'custom',
       backend_workflow: program.workflow === 'backend',
       environment: program.environment,
+      test_stability: program.test_stability
     }
   };
 
@@ -114,6 +116,14 @@ const workflowPrompt = {
   message: 'Workflow:',
   choices: ['pr', 'custom', 'backend'],
   default: 'pr'
+};
+
+const stableTestsPrompt = {
+  type: 'list',
+  name: 'test_stability',
+  message: 'Run Stable Tests Only:',
+  choices: ['all', 'stable', 'unstable'],
+  default: 'all'
 };
 
 // you may pick branch for pr or custom workflow.
@@ -167,7 +177,7 @@ const tagPrompt = {
   when: (answers) => answers.workflow === 'backend',
   type: 'input',
   name: 'tag',
-  message: 'Tag to use:',
+  message: 'Tag to use (type branch name if you do not want to use tag):',
   default: '2.0.0-beta15',
   validate: (val) => { return typeof val === 'string' && val.length > 5; }
 };
@@ -186,12 +196,13 @@ if (process.env.CIRCLECI_TOKEN) {
 inquirer.prompt([
   tokenPrompt,
   workflowPrompt,
+  branchPrompt,
   tagPrompt,
   environmentPrompt,
-  branchPrompt,
   browserPrompt,
   bverPrompt,
   topologyPrompt,
+  stableTestsPrompt,
 ]).then(answers => {
   const {options, body} = generateBuildRequest(answers);
   console.log('Will make a CI request with:', options, body);

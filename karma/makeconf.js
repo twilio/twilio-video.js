@@ -72,16 +72,33 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
 
+    const mochaOptions = {
+      require: requires,
+    };
+
+    // we'll mark our unstable tests with @unstable
+    switch  (process.env.TEST_STABILITY) {
+      case 'unstable':
+        mochaOptions.grep = '@unstable';
+        break;
+      case 'stable':
+        mochaOptions.grep = '@unstable';
+        mochaOptions.invert = 1;
+        break;
+      case 'all':
+        // when no grep specified, all tests will run.
+        break;
+    }
+
     const strReportName = generateReportName(files);
     const htmlReport = `../logs/${strReportName}.html`;
     config.set({
       basePath: '',
       frameworks: ['browserify', 'mocha'],
       client: {
-        mocha: {
-          require: requires
-        }
+        mocha: mochaOptions
       },
+      failOnEmptyTestSuite: false,
       files,
       preprocessors,
       browserify: {

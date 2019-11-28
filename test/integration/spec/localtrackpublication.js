@@ -135,7 +135,7 @@ describe('LocalTrackPublication', function() {
     combinationContext([
       [
         [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled'}`
+        x => `called with ${x ? 'an enabled' : 'a disabled (@unstable)'}`
       ],
       [
         ['audio', 'video', 'data'],
@@ -144,6 +144,11 @@ describe('LocalTrackPublication', function() {
       [
         ['published', 'published, unpublished, and then published again'],
         x => 'that was ' + x
+      ],
+      [
+        [true],
+        // eslint-disable-next-line no-unused-vars
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -202,7 +207,7 @@ describe('LocalTrackPublication', function() {
 
         await waitFor([thisRoom].concat(thoseRooms).map(room => {
           return participantsConnected(room, identities.length - 1);
-        }), 'all participant to get connected');
+        }), `all participant to get connected: ${sid}`);
 
         thoseParticipants = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
@@ -210,19 +215,19 @@ describe('LocalTrackPublication', function() {
 
         await waitFor(thoseParticipants.map(thatParticipant => {
           return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }), 'all tracks to get subscribed');
+        }), `all tracks to get subscribed: ${sid}`);
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await waitFor(thoseParticipants.map(thatParticipant => {
             return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }), 'all tracks to get unpublished');
+          }), `all tracks to get unpublished: ${sid}`);
 
+          await waitFor(thisParticipant.publishTrack(thisTrack), 'thisTrack to publish again');
           await waitFor([
-            thisParticipant.publishTrack(thisTrack),
             ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ], 'track to get published and all tracks to get subscribe again');
+          ], `tracks to get subscribed again: ${sid}`);
         }
 
         thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
@@ -242,7 +247,7 @@ describe('LocalTrackPublication', function() {
             const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
             return trackOrPublication;
           }), 'all participants to get ' + event);
-        }), 'tracks to get unsubscribed and unpublished.');
+        }), `tracks to get unsubscribed and unpublished: ${sid}`);
 
         thoseTracksMap = {
           trackUnpublished: thoseTracksUnpublished,
