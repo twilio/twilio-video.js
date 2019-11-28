@@ -177,7 +177,7 @@ const tagPrompt = {
   when: (answers) => answers.workflow === 'backend',
   type: 'input',
   name: 'tag',
-  message: 'Tag to use:',
+  message: 'Tag to use (type branch name if you do not want to use tag):',
   default: '2.0.0-beta15',
   validate: (val) => { return typeof val === 'string' && val.length > 5; }
 };
@@ -196,9 +196,9 @@ if (process.env.CIRCLECI_TOKEN) {
 inquirer.prompt([
   tokenPrompt,
   workflowPrompt,
+  branchPrompt,
   tagPrompt,
   environmentPrompt,
-  branchPrompt,
   browserPrompt,
   bverPrompt,
   topologyPrompt,
