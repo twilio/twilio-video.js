@@ -12,6 +12,7 @@ const processEnv = {
   WS_SERVER_INSIGHTS: process.env.WS_SERVER_INSIGHTS,
   LOG_LEVEL: process.env.LOG_LEVEL,
   ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
+  TEST_STABILITY: process.env.TEST_STABILITY,
   REGIONS: process.env.REGIONS,
   TOPOLOGY: process.env.TOPOLOGY
 };
@@ -27,6 +28,7 @@ const env = [
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
   ['LOG_LEVEL',                 'logLevel'],
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
+  ['TEST_STABILITY',            'testStability'],
   ['REGIONS',                   'regions'],
   ['TOPOLOGY',                  'topology']
 ].reduce((env, [processEnvKey, envKey]) => {

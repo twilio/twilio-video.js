@@ -31,7 +31,6 @@ describe('Bandwidth Management', function() {
   // eslint-disable-next-line no-invalid-this
   this.retries(2);
 
-  it('a placeholder test', () => {});
   if (defaults.topology !== 'peer-to-peer') {
     describe('bandwidthProfile.video', () => {
       combinationContext([
@@ -109,7 +108,7 @@ describe('Bandwidth Management', function() {
             ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: dominantSpeakerPublishPriority })),
             tracksSubscribed(aliceRemote, 2),
             tracksSubscribed(bobRemote, 2)
-          ], 'all tracks to get published and subscribed');
+          ], `all tracks to get published and subscribed: ${thisRoom.sid}`);
 
           const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
             return [...videoTracks.values()][0].track;
@@ -131,7 +130,7 @@ describe('Bandwidth Management', function() {
             dominantSpeakerChanged(thisRoom, bobRemote),
             trackSwitchedOn(switched.on.remoteVideoTrack),
             trackSwitchedOff(switched.off.remoteVideoTrack)
-          ], 'Bob to be dominant speaker');
+          ], `Bob to be dominant speaker: ${thisRoom.sid}`);
 
           switched.on.participant.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, false);
