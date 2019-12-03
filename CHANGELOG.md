@@ -95,6 +95,9 @@ You can limit bitrates on outgoing tracks using [Localparticipant.setParameters]
 
 - Fixed a race condition, that would sometimes cause a track to not get published if multiple tracks were added in quick succession (JSDK-2573)
 
+- Fixed a bug where `publishPriorityChanged`, `trackDisabled` `trackEnabled` events were getting fired for initial track state.
+With this fix these events will fire only when the state changes. (JSDK-2603)
+
 2.0.0-beta15 (October 24, 2019)
 ===============================
 
