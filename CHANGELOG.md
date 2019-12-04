@@ -95,6 +95,8 @@ You can limit bitrates on outgoing tracks using [Localparticipant.setParameters]
 
 - Fixed a race condition, that would sometimes cause a track to not get published if multiple tracks were added in quick succession (JSDK-2573)
 
+- Fixed an issue where loading twilio-video.js in firefox with `media.peerconnection.enabled` set to false in `about:config` caused page errors. (JSDK-2591)
+
 2.0.0-beta15 (October 24, 2019)
 ===============================
 
