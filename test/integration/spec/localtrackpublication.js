@@ -109,26 +109,50 @@ describe('LocalTrackPublication', function() {
     [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
   });
 
-  it('JSDK-2582 trackDisabled event is not fired when participant joins room with already disabled track', async () => {
-    const roomSid = await createRoom(randomName(), defaults.topology);
-    const options = Object.assign({ name: roomSid }, defaults);
+  [true, false].forEach((trackInitiallyEnabled) => {
+    it(`JSDK-2603: ${trackInitiallyEnabled ? 'trackEnabled' : 'trackDisabled'} should fire only on change`, async () => {
+      const roomSid = await createRoom(randomName(), defaults.topology);
+      const options = Object.assign({ name: roomSid }, defaults);
 
-    // Alice joins a room
-    const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
+      // Alice joins a room
+      const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
 
-    // Alice adds listener for trackDisabled events (e.g., in room level)
-    const trackDisabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackDisabled');
+      // Alice adds listener for the track Enabled/Disabled events.
+      const trackDisabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackDisabled');
+      const trackEnabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackEnabled');
+      const trackStateChanged = Promise.race([trackDisabledPromise, trackEnabledPromise]);
 
-    // Bob joins the room with a disabled track
-    const bobLocalAudioTrack = await createLocalAudioTrack({ fake: true });
-    bobLocalAudioTrack.disable();
-    const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
+      // Bob joins the room
+      const bobLocalAudioTrack = await createLocalAudioTrack({ fake: true });
 
-    // Alice expects trackDisabled event.
-    await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
+      if (trackInitiallyEnabled) {
+        bobLocalAudioTrack.enable();
+      } else {
+        bobLocalAudioTrack.disable();
+      }
 
-    [aliceRoom, bobRoom].forEach(room => room.disconnect());
-    return completeRoom(roomSid);
+      const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
+
+      // wait for sometime to ensure that neither event fire.
+      await waitForNot(trackStateChanged, `Alice received unexpected trackEnabled/Disabled event: ${roomSid}`);
+
+      if (trackInitiallyEnabled) {
+        bobLocalAudioTrack.disable();
+        await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
+
+        bobLocalAudioTrack.enable();
+        await waitFor(trackEnabledPromise, `Alice to receive trackEnabled event: ${roomSid}`);
+      } else {
+        bobLocalAudioTrack.enable();
+        await waitFor(trackEnabledPromise, `Alice to receive trackEnabled event: ${roomSid}`);
+
+        bobLocalAudioTrack.disable();
+        await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
+      }
+
+      [aliceRoom, bobRoom].forEach(room => room.disconnect());
+      return completeRoom(roomSid);
+    });
   });
 
   describe('#unpublish', () => {
@@ -336,7 +360,7 @@ describe('LocalTrackPublication', function() {
       let aliceRemoteVideoTrackPublication;
       let bobRemoteVideoTrackPublication;
 
-      beforeEach(async () => {
+      async function setupParticipants({ aliceTrackPriority, bobTrackPriority }) {
         const dataTrack = new LocalDataTrack();
         [, thisRoom, thoseRooms] = await setup({
           testOptions: {
@@ -346,7 +370,8 @@ describe('LocalTrackPublication', function() {
             tracks: [dataTrack]
           },
           otherOptions: { tracks: [dataTrack] },
-          nTracks: 0
+          nTracks: 0,
+          participantNames: ['Observer', 'Alice', 'Bob']
         });
 
         [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
@@ -358,11 +383,11 @@ describe('LocalTrackPublication', function() {
         [aliceLocal, bobLocal] = [aliceRoom, bobRoom].map(room => room.localParticipant);
         [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
-        // Alice publishes her tracks at low priority
-        // Bob publishes his tracks at standard priority
+        // Alice publishes her tracks at aliceTrackPriority
+        // Bob publishes his tracks at bobTrackPriority
         await waitFor([
-          ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
-          ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
+          ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: aliceTrackPriority })),
+          ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: bobTrackPriority })),
           tracksSubscribed(aliceRemote, 3),
           tracksSubscribed(bobRemote, 3)
         ], 'tracks to get published and subscribed');
@@ -378,8 +403,7 @@ describe('LocalTrackPublication', function() {
         [aliceRemoteVideoTrackPublication, bobRemoteVideoTrackPublication] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
           return [...videoTracks.values()][0];
         });
-
-      });
+      }
 
       afterEach(async () => {
         [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
@@ -390,6 +414,7 @@ describe('LocalTrackPublication', function() {
       });
 
       it('publisher can upgrade track\'s priority', async () => {
+        await waitFor(setupParticipants({ aliceTrackPriority: PRIORITY_LOW, bobTrackPriority: PRIORITY_STANDARD }), 'Alice publishes at low pri, Bob at standard');
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
@@ -432,6 +457,7 @@ describe('LocalTrackPublication', function() {
       });
 
       it('publisher can downgrade track\'s priority', async () => {
+        await waitFor(setupParticipants({ aliceTrackPriority: PRIORITY_STANDARD, bobTrackPriority: PRIORITY_HIGH }), 'Alice publishes at standard pri, Bob at high');
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
@@ -491,6 +517,8 @@ describe('LocalTrackPublication', function() {
 
           const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
 
+          const priorityChangedEventOnRoom = waitOnceForRoomEvent(aliceRoom, 'trackPublishPriorityChanged');
+
           // Bob publishes video trackA with standard priority, trackB with low priority.
           const trackAPubLocal = await waitFor(bobLocal.publishTrack(bobVideoTrackA, { priority: beforePriority }), `Bob to publish video trackA: ${roomSid}`);
           assert.equal(trackAPubLocal.priority, beforePriority);
@@ -499,6 +527,9 @@ describe('LocalTrackPublication', function() {
 
           const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
           assert(trackAPubRemote);
+
+          // initial track publication should not raise priorityChanged event.
+          await waitForNot(priorityChangedEventOnRoom, `received unexpected 'trackPublishPriorityChanged' on room: ${roomSid}`);
 
           const priorityChangePromise = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
             assert.equal(priority, afterPriority);
@@ -514,7 +545,7 @@ describe('LocalTrackPublication', function() {
 
           if (expectNotification) {
             // Alice should receive publishPriorityChanged.
-            await waitFor(priorityChangePromise, `Alice to receive publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
+            await waitFor([priorityChangePromise, priorityChangedEventOnRoom], `Alice to receive publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
           } else {
             // Alice should not receive publishPriorityChanged.
             await waitForNot(priorityChangePromise, `Alice received unexpected publishPriorityChanged(${afterPriority}) notification: ${roomSid}`);
@@ -616,6 +647,11 @@ describe('LocalTrackPublication', function() {
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
 
+      const trackBPriorityChangedToHigh = new Promise(resolve => trackBPubRemote.once('publishPriorityChanged', priority => {
+        assert.equal(priority, PRIORITY_HIGH);
+        resolve();
+      }));
+
       // Bob updates trackB => PRIORITY_HIGH
       trackBPubLocal.setPriority(PRIORITY_HIGH);
       assert.equal(trackBPubLocal.priority, PRIORITY_HIGH);
@@ -624,8 +660,16 @@ describe('LocalTrackPublication', function() {
         trackSwitchedOn(trackBPubRemote.track),
         trackSwitchedOff(trackAPubRemote.track)
       ], `Step 2] trackA=Off, trackB=On: ${roomSid}`);
+
+      // wait for trackBPriorityChangedToHigh before checking publishPriority.
+      await waitFor(trackBPriorityChangedToHigh, `trackB priority changed to High: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_HIGH);
+
+      const trackBPriorityChangedToLow = new Promise(resolve => trackBPubRemote.once('publishPriorityChanged', priority => {
+        assert.equal(priority, PRIORITY_LOW);
+        resolve();
+      }));
 
       // Bob updates trackB => PRIORITY_LOW
       trackBPubLocal.setPriority(PRIORITY_LOW);
@@ -635,6 +679,9 @@ describe('LocalTrackPublication', function() {
         trackSwitchedOn(trackAPubRemote.track),
         trackSwitchedOff(trackBPubRemote.track)
       ], `Step 3] trackA=On, trackB=Off: ${roomSid}`);
+
+      // wait for trackBPriorityChangedToLow before checking publishPriority.
+      await waitFor(trackBPriorityChangedToLow, `trackB priority changed to Low: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
 
