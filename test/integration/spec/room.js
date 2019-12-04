@@ -576,7 +576,10 @@ describe('Room', function() {
       charlieRoom = null;
 
       // Alice should see track switch on event on all 4 objects.
-      await waitFor([p1, p2, p3, p4], `${alice.sid} to receive trackSwitchOn on track, trackPub, participant and room objects: ${aliceRoom.sid}`);
+      await waitFor(p1, `Alice to receive switchedOn on track: ${aliceRoom.sid}`);
+      await waitFor(p2, `Alice to receive trackSwitchedOn on trackPub: ${aliceRoom.sid}`);
+      await waitFor(p3, `Alice to receive trackSwitchedOn on Participant: ${aliceRoom.sid}`);
+      await waitFor(p4, `Alice to receive trackSwitchedOn on Room: ${aliceRoom.sid}`);
     });
   });
 });

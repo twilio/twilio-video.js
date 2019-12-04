@@ -220,7 +220,7 @@ describe('Reconnection states and events', function() {
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
       (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
-        it('Known Unstable JSDK-2503: Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
+        it('@unstable: Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
           const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
@@ -244,7 +244,7 @@ describe('Reconnection states and events', function() {
           }
         });
 
-        it('Known Unstable JSDK-2503: Scenatio 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
+        it('@unstable: Scenario 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 

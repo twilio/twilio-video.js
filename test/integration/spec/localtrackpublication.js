@@ -316,7 +316,7 @@ describe('LocalTrackPublication', function() {
 
   // eslint-disable-next-line no-warning-comments
   // TODO: enable these tests when track_priority MSP is available in prod
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('#setPriority', function() {
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
     // eslint-disable-next-line no-invalid-this
     describe('three participant tests', () => {
       let thisRoom;
@@ -336,7 +336,7 @@ describe('LocalTrackPublication', function() {
       let aliceRemoteVideoTrackPublication;
       let bobRemoteVideoTrackPublication;
 
-      beforeEach(async () => {
+      async function setupParticipants({ aliceTrackPriority, bobTrackPriority }) {
         const dataTrack = new LocalDataTrack();
         [, thisRoom, thoseRooms] = await setup({
           testOptions: {
@@ -359,11 +359,11 @@ describe('LocalTrackPublication', function() {
         [aliceLocal, bobLocal] = [aliceRoom, bobRoom].map(room => room.localParticipant);
         [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
-        // Alice publishes her tracks at low priority
-        // Bob publishes his tracks at standard priority
+        // Alice publishes her tracks at aliceTrackPriority
+        // Bob publishes his tracks at bobTrackPriority
         await waitFor([
-          ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
-          ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
+          ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: aliceTrackPriority })),
+          ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: bobTrackPriority })),
           tracksSubscribed(aliceRemote, 3),
           tracksSubscribed(bobRemote, 3)
         ], 'tracks to get published and subscribed');
@@ -379,8 +379,7 @@ describe('LocalTrackPublication', function() {
         [aliceRemoteVideoTrackPublication, bobRemoteVideoTrackPublication] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
           return [...videoTracks.values()][0];
         });
-
-      });
+      }
 
       afterEach(async () => {
         [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
@@ -391,6 +390,7 @@ describe('LocalTrackPublication', function() {
       });
 
       it('publisher can upgrade track\'s priority', async () => {
+        await waitFor(setupParticipants({ aliceTrackPriority: PRIORITY_LOW, bobTrackPriority: PRIORITY_STANDARD }), 'Alice publishes at low pri, Bob at standard');
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
@@ -433,6 +433,7 @@ describe('LocalTrackPublication', function() {
       });
 
       it('publisher can downgrade track\'s priority', async () => {
+        await waitFor(setupParticipants({ aliceTrackPriority: PRIORITY_STANDARD, bobTrackPriority: PRIORITY_HIGH }), 'Alice publishes at standard pri, Bob at high');
         await waitFor([
           trackSwitchedOn(bobRemoteVideoTrack),
           trackSwitchedOff(aliceRemoteVideoTrack)
