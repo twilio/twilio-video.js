@@ -582,7 +582,7 @@ describe('LocalTrackPublication', function() {
       bobRoom.disconnect();
     });
 
-    it('publisher can upgrade and downgrade track priorities', async () => {
+    it.only('publisher can upgrade and downgrade track priorities', async () => {
       // Alice and Bob join without tracks, Alice has maxTracks property set to 1
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: {
@@ -618,6 +618,11 @@ describe('LocalTrackPublication', function() {
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
 
+      const trackBPriorityChangedToHigh = new Promise(resolve => trackBPubRemote.once('publishPriorityChanged', priority => {
+        assert.equal(priority, PRIORITY_HIGH);
+        resolve();
+      }));
+
       // Bob updates trackB => PRIORITY_HIGH
       trackBPubLocal.setPriority(PRIORITY_HIGH);
       assert.equal(trackBPubLocal.priority, PRIORITY_HIGH);
@@ -626,8 +631,16 @@ describe('LocalTrackPublication', function() {
         trackSwitchedOn(trackBPubRemote.track),
         trackSwitchedOff(trackAPubRemote.track)
       ], `Step 2] trackA=Off, trackB=On: ${roomSid}`);
+
+      // wait for trackBPriorityChangedToHigh before checking publishPriority.
+      await waitFor(trackBPriorityChangedToHigh, `trackB priority changed to High: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_HIGH);
+
+      const trackBPriorityChangedToLow = new Promise(resolve => trackBPubRemote.once('publishPriorityChanged', priority => {
+        assert.equal(priority, PRIORITY_LOW);
+        resolve();
+      }));
 
       // Bob updates trackB => PRIORITY_LOW
       trackBPubLocal.setPriority(PRIORITY_LOW);
@@ -637,6 +650,9 @@ describe('LocalTrackPublication', function() {
         trackSwitchedOn(trackAPubRemote.track),
         trackSwitchedOff(trackBPubRemote.track)
       ], `Step 3] trackA=On, trackB=Off: ${roomSid}`);
+
+      // wait for trackBPriorityChangedToLow before checking publishPriority.
+      await waitFor(trackBPriorityChangedToLow, `trackB priority changed to Low: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
 
