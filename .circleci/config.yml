@@ -113,6 +113,9 @@ commands:
       - run:
           name: Building Quick
           command: npm run build:quick
+      - store_artifacts:
+          path: ./dist
+          prefix: dist
   unit-tests:
     steps:
       - get-code-and-dependencies
