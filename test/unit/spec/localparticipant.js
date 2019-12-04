@@ -169,6 +169,7 @@ describe('LocalParticipant', () => {
       [{ video: { dominantSpeakerPriority: 2 } }, `whose .video.dominantSpeakerPriority is not one of ${trackPriorities.join(', ')}`, RangeError, trackPriorities],
       [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
       [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
+      [{ video: { maxTracks: NaN } }, 'whose .video.maxTracks is NAN', TypeError, 'number'],
       [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes],
       [{ video: { renderDimensions: null } }, 'whose .video.renderDimensions is null', TypeError, 'object'],
       [{ video: { renderDimensions: true } }, 'whose .video.renderDimensions is not an object', TypeError, 'object'],
@@ -184,7 +185,9 @@ describe('LocalParticipant', () => {
       [{ video: { renderDimensions: { standard: ['bar'] } } }, 'whose .video.renderDimensions.standard is an Array', TypeError, 'object'],
       [{ video: { renderDimensions: { high: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.high.width is not a number', TypeError, 'number'],
       [{ video: { renderDimensions: { high: { width: 200, height: false } } } }, 'whose .video.renderDimensions.high.height is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { high: { width: 200, height: NaN } } } }, 'whose .video.renderDimensions.high.height is NaN', TypeError, 'number'],
       [{ video: { renderDimensions: { low: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.low.width is not a number', TypeError, 'number'],
+      [{ video: { renderDimensions: { low: { width: NaN, height: 100 } } } }, 'whose .video.renderDimensions.low.width is NaN', TypeError, 'number'],
       [{ video: { renderDimensions: { low: { width: 200, height: false } } } }, 'whose .video.renderDimensions.low.height is not a number', TypeError, 'number'],
       [{ video: { renderDimensions: { standard: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.standard.width is not a number', TypeError, 'number'],
       [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
@@ -263,7 +266,7 @@ describe('LocalParticipant', () => {
                   && typeof bandwidthProfile.video.renderDimensions[prop] === 'object'
                   && !Array.isArray(bandwidthProfile.video.renderDimensions[prop])) {
                   const keys = Object.keys(bandwidthProfile.video.renderDimensions[prop]);
-                  expectedErrorMessage += typeof bandwidthProfile.video.renderDimensions[prop][keys[0]] === 'number'
+                  expectedErrorMessage += typeof bandwidthProfile.video.renderDimensions[prop][keys[0]] === 'number' && !isNaN(bandwidthProfile.video.renderDimensions[prop][keys[0]])
                     ? `.${keys[1]}`
                     : `.${keys[0]}`;
                 }
@@ -297,7 +300,9 @@ describe('LocalParticipant', () => {
         [null, 'null'],
         ['foo', 'not an object'],
         [{ local: 'bar', remote: 1 }, 'an object that has .local which is not a number'],
+        [{ local: NaN, remote: 1 }, 'an object that has .local which is NaN'],
         [{ local: 2, remote: false }, 'an object that has .remote which is not a number'],
+        [{ local: 2, remote: NaN }, 'an object that has .remote which is NaN'],
         [{ local: 'foo', remote: null }, 'an object which has both .local and .remote which are not numbers']
       ].forEach(([networkQualityConfiguration, scenario]) => {
         context(scenario, () => itShould(networkQualityConfiguration, true));
