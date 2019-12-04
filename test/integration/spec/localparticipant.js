@@ -1130,22 +1130,22 @@ describe('LocalParticipant', function() {
         const subscriberLocal = subscriberRoom.localParticipant;
 
         // Subscriber waits until it recognizes the Dominant Speaker and subscribes to its AudioTrack.
-        await Promise.all([
+        await waitFor([
           dominantSpeakerChanged(subscriberRoom, dominantSpeakerRemote),
           tracksSubscribed(dominantSpeakerRemote, 1)
-        ]);
+        ], `dominantSpeaker change and track to subscribe: ${sid}`);
 
         const [dominantSpeakerVideoTrack, passiveSpeakerVideoTrack] = await Promise.all([1, 2].map(() =>
           createLocalVideoTrack(smallVideoConstraints)));
 
         // The Dominant Speaker and Passive Speaker publish their VideoTracks. The
         // Subscriber waits until it has subscribed to them.
-        await Promise.all([
+        await waitFor([
           dominantSpeakerLocal.publishTrack(dominantSpeakerVideoTrack, { priority: dominantSpeakerPublishPriority }),
           passiveSpeakerLocal.publishTrack(passiveSpeakerVideoTrack, { priority: passiveSpeakerPublishPriority }),
           tracksSubscribed(dominantSpeakerRemote, 2),
           tracksSubscribed(passiveSpeakerRemote, 1)
-        ]);
+        ], `tracks to get published and subscribed: ${sid}`);
 
         const dominantSpeakerRemoteVideoTrack = [...dominantSpeakerRemote.videoTracks.values()][0].track;
         const passiveSpeakerRemoteVideoTrack = [...passiveSpeakerRemote.videoTracks.values()][0].track;
@@ -1164,10 +1164,10 @@ describe('LocalParticipant', function() {
         // Since the initial .maxTracks set by the Subscriber is 1, it makes sure the
         // appropriate VideoTrack is switched off.
         const switched1 = switchedParticipants[getSwitchOffParticipant(bandwidthProfile.video.dominantSpeakerPriority)];
-        await Promise.all([
+        await waitFor([
           trackSwitchedOn(switched1.on.remoteVideoTrack),
           trackSwitchedOff(switched1.off.remoteVideoTrack)
-        ]);
+        ], `one track to switch on and other off: ${sid}`);
 
         switched1.off.participant.videoTracks.forEach(({ track }) => {
           assert.equal(track.isSwitchedOff, true);
@@ -1187,10 +1187,10 @@ describe('LocalParticipant', function() {
 
         if (maxTracks > 1) {
           // Since the updated .maxTracks > 1, all VideoTracks should be switched on.
-          await Promise.all([
+          await waitFor([
             trackSwitchedOn(dominantSpeakerRemoteVideoTrack),
             trackSwitchedOn(passiveSpeakerRemoteVideoTrack)
-          ]);
+          ], `both tracks to switch on: ${sid}`);
 
           dominantSpeakerRemote.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, false);
@@ -1203,10 +1203,10 @@ describe('LocalParticipant', function() {
           // The Subscriber makes sure that the appropriate VideoTracks are switched
           // off based on the new .dominantSpeakerPriority value.
           const switched2 = switchedParticipants[expectedSwitchOffParticipant];
-          await Promise.all([
+          await waitFor([
             trackSwitchedOn(switched2.on.remoteVideoTrack),
             trackSwitchedOff(switched2.off.remoteVideoTrack)
-          ]);
+          ], `tracks stay switched on and off: ${sid}`);
 
           switched2.off.participant.videoTracks.forEach(({ track }) => {
             assert.equal(track.isSwitchedOff, true);
