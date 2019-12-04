@@ -316,7 +316,7 @@ describe('LocalTrackPublication', function() {
 
   // eslint-disable-next-line no-warning-comments
   // TODO: enable these tests when track_priority MSP is available in prod
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('#setPriority', function() {
     // eslint-disable-next-line no-invalid-this
     describe('three participant tests', () => {
       let thisRoom;
@@ -346,7 +346,8 @@ describe('LocalTrackPublication', function() {
             tracks: [dataTrack]
           },
           otherOptions: { tracks: [dataTrack] },
-          nTracks: 0
+          nTracks: 0,
+          participantNames: ['Observer', 'Alice', 'Bob']
         });
 
         [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [

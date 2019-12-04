@@ -30,6 +30,7 @@ const {
   trackStarted,
   tracksSubscribed,
   tracksPublished,
+  waitFor,
   waitForTracks
 } = require('../../lib/util');
 
@@ -460,32 +461,42 @@ describe('Room', function() {
   });
 
   (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"trackSwitched" events', () => {
-    let bob; let remoteBob; let charlie; let remoteCharlie;
-    let aliceRoom; let bobRoom; let charlieRoom;
+    let alice; let bob; let remoteBob; let charlie; let remoteCharlie;
+    let aliceRoom = null;
+    let bobRoom = null;
+    let charlieRoom = null;
     let loPriTrack; let loPriTrackPub;
 
     beforeEach(async () => {
       let thoseRooms;
-      const BOB = 0;
-      const CHARLIE = 1;
       [, aliceRoom, thoseRooms] = await setup({
         testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
         otherOptions: { tracks: [] },
+        participantNames: ['Alice', 'Bob', 'Charlie'],
         nTracks: 0
       });
 
-      bobRoom = thoseRooms[BOB];
-      charlieRoom = thoseRooms[CHARLIE];
+      [bobRoom, charlieRoom] = thoseRooms;
+      alice = aliceRoom.localParticipant;
       bob = bobRoom.localParticipant;
       charlie = charlieRoom.localParticipant;
 
       // let bob published a track with lo pri.
       loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-      await bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
+      await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish track: ${aliceRoom.sid}`);
       remoteBob = aliceRoom.participants.get(bob.sid);
-      await tracksSubscribed(remoteBob, 1);
+
+      await waitFor(tracksSubscribed(remoteBob, 1), `${alice.sid} to subscribe to Bob's track: ${aliceRoom.sid}`);
       loPriTrackPub = Array.from(remoteBob.tracks.values())[0];
       remoteCharlie = aliceRoom.participants.get(charlie.sid);
+    });
+
+    afterEach(() => {
+      [aliceRoom, bobRoom, charlieRoom].forEach(room => {
+        if (room)  {
+          room.disconnect();
+        }
+      });
     });
 
     it('trackSwitchedOff fires on track, trackSubscription, participant and Room object', async () => {
@@ -516,16 +527,16 @@ describe('Room', function() {
 
       // induce a track switch off by having charlie publish a track with hi pri
       const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-      await charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
-      await tracksSubscribed(remoteCharlie, 1);
+      await waitFor(charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH }), `${charlie.sid} to publish a hiPri track: ${aliceRoom.sid}`);
+      await waitFor(tracksSubscribed(remoteCharlie, 1), `${alice.sid} to subscribe to ${hiPriTrack.sid}: ${aliceRoom.sid}`);
 
       // we should see track switch off event on all 4 objects.
-      await Promise.all([p1, p2, p3, p4]);
+      await waitFor([p1, p2, p3, p4], `trackSwitch off to get fired on track, trackPub, participant and room: ${aliceRoom.sid}`);
     });
 
     it('trackSwitchedOn fires on track, trackSubscription, participant and Room object', async () => {
       // listen for switch off event on bob's track
-      const trackSwitchoffPromise = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
+      const trackSwitchOffPromise = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
 
       // induce a track switch off by having charlie publish a track with hi pri
       const hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
@@ -533,7 +544,7 @@ describe('Room', function() {
       await tracksSubscribed(remoteCharlie, 1);
 
       // wait for Bob's track getting switched off.
-      await trackSwitchoffPromise;
+      await waitFor(trackSwitchOffPromise, `${alice.sid} to receive trackSwitch off: ${aliceRoom.sid}`);
 
       // Now listen for switch on event on bob's track on various objects
       // 1) Track
@@ -562,9 +573,10 @@ describe('Room', function() {
 
       // let charlie disconnect
       charlieRoom.disconnect();
+      charlieRoom = null;
 
-      // we should see track switch on event on all 4 objects.
-      await Promise.all([p1, p2, p3, p4]);
+      // Alice should see track switch on event on all 4 objects.
+      await waitFor([p1, p2, p3, p4], `${alice.sid} to receive trackSwitchOn on track, trackPub, participant and room objects: ${aliceRoom.sid}`);
     });
   });
 });

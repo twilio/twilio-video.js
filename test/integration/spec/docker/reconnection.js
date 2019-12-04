@@ -178,7 +178,7 @@ describe('Reconnection states and events', function() {
         });
 
         context('that is longer than the session timeout', () => {
-          (isFirefox ? it.skip : it)('should emit "disconnected" on the Rooms', async () => {
+          it('should emit "disconnected" on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
             const disconnectPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
             await waitFor(disconnectPromises, 'disconnectPromises', DISCONNECTED_TIMEOUT);
@@ -186,7 +186,7 @@ describe('Reconnection states and events', function() {
         });
 
         context('that recovers before the session timeout', () => {
-          it('should emit "reconnected on the Rooms', async () => {
+          it('should emit "reconnected on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
             const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
