@@ -582,7 +582,7 @@ describe('LocalTrackPublication', function() {
       bobRoom.disconnect();
     });
 
-    it.only('publisher can upgrade and downgrade track priorities', async () => {
+    it('publisher can upgrade and downgrade track priorities', async () => {
       // Alice and Bob join without tracks, Alice has maxTracks property set to 1
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: {
