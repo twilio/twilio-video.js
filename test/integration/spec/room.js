@@ -534,7 +534,7 @@ describe('Room', function() {
       await waitFor([p1, p2, p3, p4], `trackSwitch off to get fired on track, trackPub, participant and room: ${aliceRoom.sid}`);
     });
 
-    it('trackSwitchedOn fires on track, trackSubscription, participant and Room object', async () => {
+    it('trackSwitchedOn fires on track, trackSubscription, participant and Room object( @unstable ) ', async () => {
       // listen for switch off event on bob's track
       const trackSwitchOffPromise = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
 
