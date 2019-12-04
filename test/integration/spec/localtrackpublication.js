@@ -110,7 +110,7 @@ describe('LocalTrackPublication', function() {
   });
 
   [true, false].forEach((trackInitiallyEnabled) => {
-    it(`JSDK-2603: ${trackInitiallyEnabled ? 'trackDisabled' : 'trackEnabled'} should fire only on change`, async () => {
+    it(`JSDK-2603: ${trackInitiallyEnabled ? 'trackEnabled' : 'trackDisabled'} should fire only on change`, async () => {
       const roomSid = await createRoom(randomName(), defaults.topology);
       const options = Object.assign({ name: roomSid }, defaults);
 
@@ -139,9 +139,15 @@ describe('LocalTrackPublication', function() {
       if (trackInitiallyEnabled) {
         bobLocalAudioTrack.disable();
         await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
+
+        bobLocalAudioTrack.enable();
+        await waitFor(trackEnabledPromise, `Alice to receive trackEnabled event: ${roomSid}`);
       } else {
         bobLocalAudioTrack.enable();
         await waitFor(trackEnabledPromise, `Alice to receive trackEnabled event: ${roomSid}`);
+
+        bobLocalAudioTrack.disable();
+        await waitFor(trackDisabledPromise, `Alice to receive trackDisabled event: ${roomSid}`);
       }
 
       [aliceRoom, bobRoom].forEach(room => room.disconnect());
