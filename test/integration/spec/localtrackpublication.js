@@ -109,7 +109,7 @@ describe('LocalTrackPublication', function() {
     [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
   });
 
-  [true, false].forEach((trackInitiallyEnabled) => {
+  [true, false].forEach(trackInitiallyEnabled => {
     it(`JSDK-2603: ${trackInitiallyEnabled ? 'trackEnabled' : 'trackDisabled'} should fire only on change`, async () => {
       const roomSid = await createRoom(randomName(), defaults.topology);
       const options = Object.assign({ name: roomSid }, defaults);

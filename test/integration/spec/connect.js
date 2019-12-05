@@ -177,7 +177,7 @@ describe('connect', function() {
       sid = await createRoom(randomName(), defaults.topology);
     });
 
-    [true, false].forEach((insights) => {
+    [true, false].forEach(insights => {
       it(`when set to  ${insights}`, async () => {
         let cancelablePromise = null;
         let room = null;

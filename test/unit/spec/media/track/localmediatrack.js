@@ -159,7 +159,7 @@ const log = require('../../../../lib/fakelog');
         track._createElement = sinon.spy(() => dummyElement);
       });
 
-      it('should not change the value of isEnabled', (done) => {
+      it('should not change the value of isEnabled', done => {
         const startedTimeout = setTimeout(
           done.bind(null, new Error('track#started didn\'t fire')),
           1000

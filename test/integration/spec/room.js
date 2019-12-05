@@ -505,7 +505,7 @@ describe('Room', function() {
       const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOff', resolve));
 
       // 2) TrackPublication
-      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', (track) => {
+      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOff', track => {
         assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         resolve();
       }));
@@ -551,7 +551,7 @@ describe('Room', function() {
       const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOn', resolve));
 
       // 2) TrackPublication
-      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOn', (track) => {
+      const p2 = new Promise(resolve => loPriTrackPub.once('trackSwitchedOn', track => {
         assert.equal(track, loPriTrackPub.track, 'unexpected value for the track');
         resolve();
       }));

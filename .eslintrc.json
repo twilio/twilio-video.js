@@ -23,7 +23,10 @@
     "array-callback-return": "error",
     "array-element-newline": "off",
     "arrow-body-style": "off",
-    "arrow-parens": "off",
+    "arrow-parens": [
+      "error",
+      "as-needed"
+    ],
     "arrow-spacing": [
       "error",
       {
@@ -38,7 +41,10 @@
     ],
     "brace-style": [
       "error",
-      "1tbs", { "allowSingleLine": true }
+      "1tbs",
+      {
+        "allowSingleLine": true
+      }
     ],
     "callback-return": "error",
     "camelcase": "error",
@@ -75,7 +81,7 @@
     "dot-notation": [
       "error",
       {
-          "allowKeywords": true
+        "allowKeywords": true
       }
     ],
     "eol-last": "error",
@@ -86,7 +92,9 @@
     "func-style": [
       "error",
       "declaration",
-      { "allowArrowFunctions": true }
+      {
+        "allowArrowFunctions": true
+      }
     ],
     "function-call-argument-newline": "off",
     "function-paren-newline": "off",
@@ -98,7 +106,13 @@
     "id-length": "off",
     "id-match": "error",
     "implicit-arrow-linebreak": "off",
-    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
     "indent-legacy": "off",
     "init-declarations": "off",
     "jsx-quotes": "error",
@@ -144,7 +158,7 @@
     "no-else-return": [
       "error",
       {
-          "allowElseIf": true
+        "allowElseIf": true
       }
     ],
     "no-empty-function": "off",
@@ -299,7 +313,8 @@
     "sort-vars": "error",
     "space-before-blocks": "error",
     "space-before-function-paren": [
-      "error", {
+      "error",
+      {
         "anonymous": "never",
         "named": "never",
         "asyncArrow": "always"

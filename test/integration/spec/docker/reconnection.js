@@ -26,7 +26,7 @@ const DISCONNECTED_TIMEOUT = 4 * minute;
 // resolves when room received n track started events.
 function waitForTrackToStart(room, n) {
   let tracksRemaining = n;
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     room.on('trackStarted', function trackStarted() {
       tracksRemaining--;
       if (!tracksRemaining) {
@@ -70,9 +70,9 @@ async function setup(nPeople) {
 
 function getTotalBytesReceived(statReports) {
   let totalBytesReceived = 0;
-  statReports.forEach((statReport) => {
-    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach((trackType) => {
-      statReport[trackType].forEach((trackStats) => {
+  statReports.forEach(statReport => {
+    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
+      statReport[trackType].forEach(trackStats => {
         totalBytesReceived += trackStats.bytesReceived;
       });
     });
@@ -133,7 +133,7 @@ describe('Reconnection states and events', function() {
     rooms.forEach(room => room.disconnect());
   });
 
-  [1, 2].forEach((nPeople) => {
+  [1, 2].forEach(nPeople => {
     describe(`${nPeople} participant(s)`, () => {
       let rooms = [];
       let currentNetworks = null;
