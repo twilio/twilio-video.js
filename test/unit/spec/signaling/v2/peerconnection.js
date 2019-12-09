@@ -23,7 +23,7 @@ describe('PeerConnectionV2', () => {
     didStartMonitor = false;
     didStopMonitor = false;
     inactiveCallback = null;
-    sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake((callback) => {
+    sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake(callback => {
       inactiveCallback = callback;
       didStartMonitor = true;
     });

@@ -151,7 +151,7 @@ describe('Bandwidth Management', function() {
     });
 
     describe('bandwidthProfile.video.trackSwitchOffMode', () => {
-      [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED].forEach((trackSwitchOffMode) => {
+      [MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED].forEach(trackSwitchOffMode => {
         it(`should accept trackSwitchOffMode=${trackSwitchOffMode}`,  async () => {
           const sid = await createRoom(randomName(), defaults.topology);
           try {

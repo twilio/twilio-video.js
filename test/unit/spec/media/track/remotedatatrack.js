@@ -115,7 +115,7 @@ describe('RemoteDataTrack', () => {
   });
 
   describe('#setPriority', () => {
-    [null, ...Object.values(trackPriority)].forEach((priorityValue) => {
+    [null, ...Object.values(trackPriority)].forEach(priorityValue => {
       it('does not throw when called with valid priority value: ' + priorityValue, () => {
         const track = new RemoteDataTrack('foo', dataTrackReceiver);
         track.setPriority(priorityValue);
@@ -123,7 +123,7 @@ describe('RemoteDataTrack', () => {
       });
     });
 
-    [undefined, '', 'foo', {}, 42, true].forEach((priorityValue) => {
+    [undefined, '', 'foo', {}, 42, true].forEach(priorityValue => {
       it('throws RangeError for invalid priority value: ' + priorityValue, () => {
         const track = new RemoteDataTrack('foo', dataTrackReceiver);
         let errorThrown = false;

@@ -6,7 +6,7 @@ let requestId = 200;
 function fetchRequest(options, postdata) {
   const thisRequest = requestId++;
   return new Promise((resolve, reject) => {
-    let clientRequest = http.request(options, (res) => {
+    let clientRequest = http.request(options, res => {
       const requestFailed = res.statusCode !== 200 && res.statusCode !== 201;
       if (requestFailed) {
         console.warn(`${thisRequest}: request returned:`, res.statusCode, options, postdata);

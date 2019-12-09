@@ -473,7 +473,7 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
 function waitToGo(onlineOrOffline) {
   const wantonline = onlineOrOffline === 'online';
   // eslint-disable-next-line no-console
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (window.navigator.onLine !== wantonline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
     } else {

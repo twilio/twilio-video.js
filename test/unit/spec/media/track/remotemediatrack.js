@@ -71,7 +71,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         track = makeTrack('foo', 'bar', kind, true, options, RemoteTrack, onPriorityChange);
       });
 
-      [null, ...Object.values(trackPriority)].forEach((priorityValue) => {
+      [null, ...Object.values(trackPriority)].forEach(priorityValue => {
         it('sets priority when called with valid priority value: ' + priorityValue, () => {
           let originalPriority = track.priority;
           track.setPriority(priorityValue);
@@ -82,7 +82,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         });
       });
 
-      [undefined, '', 'foo', {}, 42, true].forEach((priorityValue) => {
+      [undefined, '', 'foo', {}, 42, true].forEach(priorityValue => {
         it('throws RangeError for invalid priority value: ' + priorityValue, () => {
           let errorThrown = false;
           try {

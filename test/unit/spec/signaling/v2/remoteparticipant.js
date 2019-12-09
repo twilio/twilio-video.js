@@ -892,7 +892,7 @@ function makeTest(options) {
 
   options.participant = options.participant || makeRemoteParticipantV2(options);
 
-  options.state = (revision) => {
+  options.state = revision => {
     return new RemoteParticipantStateBuilder(options.participant, revision);
   };
 
