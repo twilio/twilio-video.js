@@ -5,7 +5,8 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-- This release completes implementation of [Track Priority and Bandwidth Profiles](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta).
+- This release completes implementation of [Track Priority and Bandwidth Profiles API](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta) which gives you finer control over bandwidth
+usage by tracks
 
 - You can now specify the mode to control track switch off behavior by specifying a
   property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
@@ -75,6 +76,10 @@ You can limit bitrates on outgoing tracks using [Localparticipant.setParameters]
 - Fixed a bug where `publishPriorityChanged`, `trackDisabled` and `trackEnabled` events were getting fired for initial track state (JSDK-2603)
 
 - Fixed an issue where loading twilio-video.js in firefox with `media.peerconnection.enabled` set to false in `about:config` caused page errors. (JSDK-2591)
+
+Known Issues
+------------
+- There are some known issues in this and previous releases which may prevent subscribing to data tracks on Firefox.
 
 2.0.0-beta15 (October 24, 2019)
 ===============================
