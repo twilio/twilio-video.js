@@ -8,6 +8,7 @@ const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
+const { isFirefox } = require('../../lib/guessbrowser');
 const {
   createSyntheticAudioStreamTrack,
   setup,
@@ -15,11 +16,12 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
+  setupAliceAndBob,
   waitFor
 } = require('../../lib/util');
 
 function getTracksOfKind(participant, kind) {
-  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
+  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
 }
 
 
@@ -170,3 +172,30 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
+describe('RemoteDataTrack', function()  {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+  it(`messages can be sent and received on data tracks: ${isFirefox && defaults.topology === 'peer-to-peer' ? '@unstable' : ''}`, async () => {
+    const dataTrack = new LocalDataTrack();
+    const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+      aliceOptions: { tracks: [] },
+      bobOptions: { tracks: [] },
+    });
+
+    await waitFor(bobLocal.publishTrack(dataTrack), `Bob to publish a dataTrack: ${roomSid}`);
+    await waitFor(tracksSubscribed(bobRemote, 1), `Alice to subscribe to Bob's track: ${roomSid}`);
+
+    const tracks = getTracksOfKind(bobRemote, 'data');
+    assert.equal(tracks.length, 1, `Alice found unexpected data tracks length: ${roomSid}`);
+    const remoteDataTrack = tracks[0];
+
+    dataTrack.send('one');
+
+    const messagePromise = new Promise(resolve =>  remoteDataTrack.on('message', resolve));
+    const messageReceived = await waitFor(messagePromise, `to receive 1st message: ${roomSid}`);
+    assert.equal(messageReceived, 'one');
+
+    aliceRoom.disconnect();
+    bobRoom.disconnect();
+  });
+});
