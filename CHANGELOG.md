@@ -5,10 +5,10 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-- This release completes implementation of [Track Priority and Bandwidth Profiles API](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta) which gives you finer control over bandwidth usage by tracks
+- This release supports all the features of the [Track Priority and Bandwidth Profile APIs](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta).
 
-- You can now specify the mode to control track switch off behavior by specifying a
-  property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
+- You can now specify the mode to control Track switch off behavior by specifying a
+  property `trackSwitchOffMode` in BandwidthProfileOptions. This can be set to one of
   - `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
                 is detected.
   - `predicted` - In this mode, RemoteVideoTracks are pro-actively switched off when network
