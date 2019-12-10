@@ -4,7 +4,8 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 ================================
 
 New Features
-------------
+ ------------
+
 - This release supports all the features of the [Track Priority and Bandwidth Profile APIs](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta).
 
 - You can now specify the mode to control Track switch off behavior by specifying a
