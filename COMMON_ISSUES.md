@@ -8,6 +8,16 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+
+Mobile Safari Participants on iOS 13.0.1 sometimes fail to send audio
+------------------------------------------------------------------
+Because of this [bug](https://bugs.webkit.org/show_bug.cgi?id=202405), sometimes Mobile Safari Participants
+on iOS 13.0.1 fail to send audio.
+
+Firefox Participants sometimes fail to subscribe to DataTracks on Peer-to-Peer Rooms
+------------------------------------------------------------------
+We have seen some instances where Firefox Participants that join a Peer-to-Peer Room after a DataTrack has been published fail to subscribe to it. We have filed an internal JIRA bug (JSDK-2615) and started working on a fix, which will be available in a future release.
+
 Working around the browsers' autoplay policy
 --------------------------------------------
 
