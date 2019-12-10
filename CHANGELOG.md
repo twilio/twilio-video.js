@@ -76,10 +76,6 @@ You can limit bitrates on outgoing tracks using [Localparticipant.setParameters]
 
 - Fixed an issue where loading twilio-video.js in firefox with `media.peerconnection.enabled` set to false in `about:config` caused page errors. (JSDK-2591)
 
-Known Issues
-------------
-- There are known issues in this and previous releases which may prevent subscribing to data tracks on Firefox.
-
 2.0.0-beta15 (October 24, 2019)
 ===============================
 

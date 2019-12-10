@@ -1,12 +1,24 @@
 Common Issues
 =============
 
+
 Having an issue with twilio-video.js? Unable to see remote Participants' Tracks?
 Review this list of common issues to determine whether or not your issue is
 known or a workaround is available. Please also take a look at the
 [CHANGELOG.md](CHANGELOG.md) to see if your issue is known for a particular
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
+
+
+Participants do not receive audio from Mobile Safari on iOS 13.0.1
+------------------------------------------------------------------
+Because of this [bug](https://bugs.webkit.org/show_bug.cgi?id=202405) sometimes Safari participants connected
+from iOS 13.0.1 devices fail to send audio.
+
+Firefox participants fail to subscribe to data tracks on P2P rooms
+------------------------------------------------------------------
+We have seen some instances where firefox participant when connected after a data track was published in the room,
+fail to subscribe to or receive messages on the track. This issue was observed only in P2P rooms.
 
 Working around the browsers' autoplay policy
 --------------------------------------------
