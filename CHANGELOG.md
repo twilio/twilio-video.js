@@ -1,10 +1,12 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0-beta16 (in progress)
-==========================
+2.0.0-beta16 (December 10, 2019)
+================================
 
 New Features
 ------------
+- This release completes implementation of [Track Priority and Bandwidth Profiles](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta).
+
 - You can now specify the mode to control track switch off behavior by specifying a
   property `trackSwitchOffMode` in BandwidthProfile options. This can be set to one of
   - `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
