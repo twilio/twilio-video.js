@@ -70,7 +70,7 @@ New Features
 Bug Fixes
 ---------
 - Worked around an issue in chrome where it would sometimes stop sending updates on screen-share track if `maxVideoBitrate` was set for the track.
-You can limit bitrates on outgoing tracks using [Localparticipant.setParameters](https://media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setParameters__anchor) api. With this workaround, any bitrates set will not be applied to screen share track on chrome. (JSDK-2557)
+You can limit bitrates on outgoing tracks using [Localparticipant.setParameters](https://media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/docs/LocalParticipant.html#setParameters__anchor) api. With this workaround, any bitrates set will not be applied to screen share track on chrome. (JSDK-2557)
 
 - Fixed a race condition, that would sometimes cause a track to not get published if multiple tracks were added in quick succession (JSDK-2573)
 
