@@ -5,9 +5,12 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
+const defaults = require('../lib/defaults');
+const getToken = require('../lib/token');
+const { createRoom } = require('../lib/rest');
+const connect = require('../../lib/connect');
 const second = 1000;
 const minute = 60 * second;
-
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -314,7 +317,7 @@ async function trackSwitchedOff(track) {
   if (track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOff', resolve));
+  await new Promise(resolve => track.once('switchedOff', resolve));
 }
 
 /**
@@ -326,7 +329,16 @@ async function trackSwitchedOn(track) {
   if (!track.isSwitchedOff) {
     return;
   }
-  await new Promise(resolve => track.on('switchedOn', resolve));
+  await new Promise(resolve => track.once('switchedOn', resolve));
+}
+
+/**
+ * Wait for a {@link RemoteTrackPublication}'s priority change event.
+ * @param {RemoteTrackPublication} trackPub - the {@link RemoteTrackPublication}
+ * @returns Promise<void>
+ */
+async function trackPublishPriorityChanged(trackPub) {
+  await new Promise(resolve => trackPub.once('publishPriorityChanged', resolve));
 }
 
 /**
@@ -384,6 +396,7 @@ async function waitForTracks(event, participant, n) {
   });
 }
 
+
 // NOTE(mmalavalli): Safari is rejecting getUserMedia()'s Promise with an
 // OverConstrainedError. So these capture dimensions are disabled.
 const smallVideoConstraints = isSafari ? {} : {
@@ -395,6 +408,62 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.getParameters === 'function'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
+// setup two users room
+async function setupAliceAndBob({ aliceOptions, bobOptions }) {
+  const roomName = await createRoom(randomName(), defaults.topology);
+  aliceOptions = Object.assign({
+    name: roomName,
+  }, aliceOptions, defaults);
+
+  const aliceRoom = await connect(getToken('Alice'), aliceOptions);
+
+  bobOptions = Object.assign({
+    name: roomName,
+  }, bobOptions, defaults);
+
+  const bobRoom = await connect(getToken('Bob'), bobOptions);
+
+  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'participants to connect');
+
+  const roomSid = aliceRoom.sid;
+  const aliceLocal = aliceRoom.localParticipant;
+  const bobLocal = bobRoom.localParticipant;
+  const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
+  const bobRemote = aliceRoom.participants.get(bobLocal.sid);
+
+  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid };
+}
+
+async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions, participantNames }) {
+  participantNames = participantNames || [randomName(), randomName(), randomName()];
+  name = name || randomName();
+  const options = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, testOptions, defaults);
+  const token = getToken(participantNames[0]);
+  options.name = await createRoom(name, options.topology, roomOptions);
+  const thisRoom = await connect(token, options);
+  if (alone) {
+    return [options.name, thisRoom];
+  }
+
+  otherOptions = Object.assign({
+    audio: true,
+    video: smallVideoConstraints
+  }, otherOptions);
+  const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
+  const thoseTokens = [participantNames[1], participantNames[2]].map(getToken);
+  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+
+  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+    return participantsConnected(room, thoseRooms.length);
+  }));
+  const thoseParticipants = [...thisRoom.participants.values()];
+  await Promise.all(thoseParticipants.map(participant => tracksSubscribed(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
+  return [options.name, thisRoom, thoseRooms, peerConnections];
+}
 
 /**
  * Returns a promise that resolves after being connected/disconnected from network.
@@ -404,7 +473,7 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
 function waitToGo(onlineOrOffline) {
   const wantonline = onlineOrOffline === 'online';
   // eslint-disable-next-line no-console
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     if (window.navigator.onLine !== wantonline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
     } else {
@@ -433,6 +502,14 @@ async function waitToGoOnline() {
  */
 async function waitToGoOffline() {
   await waitFor(waitToGo('offline'), 'wait to go offline');
+}
+
+/**
+ * Returns a promise that resolves after given room receives given event.
+ * @returns {Promise<void>}
+ */
+async function waitOnceForRoomEvent(room, event) {
+  await waitFor(new Promise(resolve => room.once(event, resolve)), `room ${room.sid} to receive event:${event}`);
 }
 
 /**
@@ -479,6 +556,45 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
   return result;
 }
 
+/**
+ * sometimes our tests want to ensure that an event does *not* happen
+ * this function helps with such waits. It ensures that given promise does not resolve
+ * in given time.
+ * Returns a promise that gets rejected if input promise settled in timeoutMS.
+ * @param {Promise} promise - Promise that we do want to see resolved.
+ * @param {string} message - indicates the message logged in case of failure.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+async function waitForNot(promise, message, timeoutMS = 5 * second) {
+  let timer = null;
+  const timeoutPromise = new Promise(resolve => {
+    timer = setTimeout(() => {
+      timer = null;
+      resolve();
+    }, timeoutMS);
+  });
+
+  const notPromise = promise.then(() => {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+      throw new Error(message);
+    }
+  });
+
+  const result = await Promise.race([notPromise, timeoutPromise]);
+  return result;
+}
+
+/**
+ * Returns a promise that resolve after timeoutMS have passed.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+async function waitForSometime(timeoutMS = 10 * second) {
+  await new Promise(resolve => setTimeout(resolve, timeoutMS));
+}
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -501,6 +617,12 @@ exports.tracksUnsubscribed = tracksUnsubscribed;
 exports.trackStarted = trackStarted;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
+exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitForSometime = waitForSometime;
+exports.waitForNot = waitForNot;
+exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
+exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
+exports.setupAliceAndBob = setupAliceAndBob;

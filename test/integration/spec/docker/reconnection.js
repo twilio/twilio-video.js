@@ -26,7 +26,7 @@ const DISCONNECTED_TIMEOUT = 4 * minute;
 // resolves when room received n track started events.
 function waitForTrackToStart(room, n) {
   let tracksRemaining = n;
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     room.on('trackStarted', function trackStarted() {
       tracksRemaining--;
       if (!tracksRemaining) {
@@ -70,9 +70,9 @@ async function setup(nPeople) {
 
 function getTotalBytesReceived(statReports) {
   let totalBytesReceived = 0;
-  statReports.forEach((statReport) => {
-    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach((trackType) => {
-      statReport[trackType].forEach((trackStats) => {
+  statReports.forEach(statReport => {
+    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
+      statReport[trackType].forEach(trackStats => {
         totalBytesReceived += trackStats.bytesReceived;
       });
     });
@@ -133,7 +133,7 @@ describe('Reconnection states and events', function() {
     rooms.forEach(room => room.disconnect());
   });
 
-  [1, 2].forEach((nPeople) => {
+  [1, 2].forEach(nPeople => {
     describe(`${nPeople} participant(s)`, () => {
       let rooms = [];
       let currentNetworks = null;
@@ -178,7 +178,7 @@ describe('Reconnection states and events', function() {
         });
 
         context('that is longer than the session timeout', () => {
-          (isFirefox ? it.skip : it)('should emit "disconnected" on the Rooms', async () => {
+          it('should emit "disconnected" on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
             const disconnectPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
             await waitFor(disconnectPromises, 'disconnectPromises', DISCONNECTED_TIMEOUT);
@@ -186,7 +186,7 @@ describe('Reconnection states and events', function() {
         });
 
         context('that recovers before the session timeout', () => {
-          it('should emit "reconnected on the Rooms', async () => {
+          it('should emit "reconnected on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
             const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
@@ -220,7 +220,7 @@ describe('Reconnection states and events', function() {
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
       (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
-        it('Known Unstable JSDK-2503: Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
+        it('@unstable: Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
           const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
@@ -244,7 +244,7 @@ describe('Reconnection states and events', function() {
           }
         });
 
-        it('Known Unstable JSDK-2503: Scenatio 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
+        it('@unstable: Scenario 2 (step) : new interface switches on and then the connected interface switches off.', async () => {
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
           const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
 

@@ -132,12 +132,14 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
 
     describe('RemoteTrackSignaling updates', () => {
       [
+        ['publishPriorityChanged', { priority: 'foo' }, 'publishPriority'],
         ['subscriptionFailed', { error: new Error('foo') }],
-        ['trackDisabled', { isEnabled: false }],
-        ['trackEnabled', { isEnabled: true }],
+        ['trackDisabled', { isEnabled: false }, 'isTrackEnabled'],
+        ['trackEnabled', { isEnabled: true }, 'isTrackEnabled'],
         ['trackSwitchedOff', { isSwitchedOff: true }]
-      ].forEach(([event, options]) => {
+      ].forEach(([event, options, prop]) => {
         context(`when "updated" is emitted on the underlying RemoteTrackPublicationSignaling due to ${{
+          publishPriorityChanged: '.publishPriority being set to a new value',
           subscriptionFailed: 'a subscription error',
           trackDisabled: '.isEnabled being set to false',
           trackEnabled: '.isEnabled being set to true',
@@ -160,10 +162,6 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
               signaling.update(options);
               assert.equal(error, options.error);
             });
-            return;
-          }
-
-          if (kind === 'data') {
             return;
           }
 
@@ -192,7 +190,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
                 signaling.update(options);
               });
 
-              if (isSubscribed) {
+              if (isSubscribed && event !== 'publishPriorityChanged') {
                 it(`should emit "${trackEvent}" on the Remote${capitalize(kind)}Track`, () => {
                   assert(trackEventEmitted);
                 });
@@ -202,6 +200,13 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
                 it(`should emit "${event}" on the ${className}`, () => {
                   assert(publicationEventEmitted);
                 });
+
+                if (prop) {
+                  const [signalingProp] = Object.keys(options);
+                  it(`should set .${prop} to ${options[signalingProp]}`, () => {
+                    assert.equal(publication[prop], options[signalingProp]);
+                  });
+                }
               }
             });
           });
@@ -262,7 +267,7 @@ function makeSignaling(isEnabled, kind, sid) {
   signaling.isSwitchedOff = false;
 
   signaling.update = options => {
-    const changedProps = ['error', 'isEnabled', 'isSwitchedOff'].filter(prop => {
+    const changedProps = ['error', 'isEnabled', 'isSwitchedOff', 'priority'].filter(prop => {
       // eslint-disable-next-line no-prototype-builtins
       return options.hasOwnProperty(prop) && signaling[prop] !== options[prop];
     });

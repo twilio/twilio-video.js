@@ -10,7 +10,10 @@ const DataTrackSender = require('../../../lib/data/sender');
 const LocalParticipant = require('../../../lib/localparticipant');
 const LocalTrackPublicationSignaling = require('../../../lib/signaling/localtrackpublication');
 const MediaTrackSender = require('../../../lib/media/track/sender');
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
+
+const {
+  trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD }
+} = require('../../../lib/util/constants');
 
 const log = require('../../lib/fakelog');
 const { FakeMediaStreamTrack } = require('../../lib/fakemediastream');
@@ -160,7 +163,9 @@ describe('LocalParticipant', () => {
         [null, 'null'],
         ['foo', 'not an object'],
         [{ local: 'bar', remote: 1 }, 'an object that has .local which is not a number'],
+        [{ local: NaN, remote: 1 }, 'an object that has .local which is NaN'],
         [{ local: 2, remote: false }, 'an object that has .remote which is not a number'],
+        [{ local: 2, remote: NaN }, 'an object that has .remote which is NaN'],
         [{ local: 'foo', remote: null }, 'an object which has both .local and .remote which are not numbers']
       ].forEach(([networkQualityConfiguration, scenario]) => {
         context(scenario, () => itShould(networkQualityConfiguration, true));
@@ -1100,6 +1105,7 @@ function makeSignaling(options) {
     return signaling.tracks.get(track.id);
   });
   signaling.removeTrack = sinon.spy(() => {});
+  signaling.setBandwidthProfile = sinon.spy(() => {});
   signaling.setNetworkQualityConfiguration = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
   return signaling;

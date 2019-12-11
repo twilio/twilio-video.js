@@ -12,6 +12,7 @@ const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
+const utils = require('../../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   let didStartMonitor;
@@ -22,7 +23,7 @@ describe('PeerConnectionV2', () => {
     didStartMonitor = false;
     didStopMonitor = false;
     inactiveCallback = null;
-    sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake((callback) => {
+    sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake(callback => {
       inactiveCallback = callback;
       didStartMonitor = true;
     });
@@ -765,6 +766,10 @@ describe('PeerConnectionV2', () => {
         x => `${x ? 'before' : 'after'} the initial round of negotiation`
       ],
       [
+        [false, true],
+        x => `${x ? 'after' : 'before'} vms-fail-over`
+      ],
+      [
         ['stable', 'have-local-offer', 'closed'],
         x => `in signalingState "${x}"`
       ],
@@ -792,8 +797,40 @@ describe('PeerConnectionV2', () => {
         [true, false, undefined],
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
+      [
+        [true, false],
+        // limit only to isRTCRtpSenderParamsSupported
+        x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
+      ],
     // eslint-disable-next-line consistent-return
-    ], ([initial, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp]) => {
+    ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+      // these combinations grow exponentially
+      // skip the ones that do not make much sense to test.
+      if (vmsFailOver && (!initial || type !== 'offer' || signalingState !== 'have-local-offer')) {
+        // vms fail over case is only interesting before negotiation is finished
+        return;
+      }
+
+      if (!isRTCRtpSenderParamsSupported && (chromeScreenTrack || enableDscp)) {
+        // screen share track and dscp options have special cases only when isRTCRtpSenderParamsSupported.
+        return;
+      }
+
+      if (iceLite && (isRTCRtpSenderParamsSupported || enableDscp || chromeScreenTrack)) {
+        // iceLite does not need repeat for all combination of unrelated variables.
+        return;
+      }
+
+      beforeEach(() => {
+        sinon.stub(utils, 'isChromeScreenShareTrack').callsFake(() => {
+          return chromeScreenTrack;
+        });
+      });
+
+      afterEach(() => {
+        utils.isChromeScreenShareTrack.restore();
+      });
+
       // The Test
       let test;
 
@@ -806,26 +843,34 @@ describe('PeerConnectionV2', () => {
       // The Description's revision
       let rev;
 
+      // createOffer revision
+      let lastOfferRevision;
+
       // Description events emitted by the PeerConnectionV2
       let descriptions;
 
       // The PeerConnectionV2's state before calling `update`
       let stateBefore;
 
-      // The underlying RTCPeerConnection's signalignState before calling `update`
+      // The underlying RTCPeerConnection's signalingState before calling `update`
       let signalingStateBefore;
 
       // The result of calling `update`
       let result;
 
       async function setup() {
+        let tracks;
+        if (chromeScreenTrack) {
+          tracks = [{ kind: 'video', label: 'screen:123' }];
+        }
         test = makeTest({
           offers: 3,
           answers: 2,
           maxAudioBitrate: 40,
           maxVideoBitrate: 50,
           enableDscp,
-          isRTCRtpSenderParamsSupported
+          isRTCRtpSenderParamsSupported,
+          tracks,
         });
         descriptions = [];
         const ufrag = 'foo';
@@ -853,7 +898,18 @@ describe('PeerConnectionV2', () => {
             break;
         }
 
-        rev = test.pcv2._lastStableDescriptionRevision;
+        if (vmsFailOver && initial && type === 'offer' && signalingState === 'have-local-offer') {
+          // in case of vms fail-over, new PC get to 'have-local-offer' state
+          // by VMS sending create-offer message. Which ends up setting a
+          // test.pcv2._descriptionRevision. lets simulate that.
+          lastOfferRevision = 25; // even though its 'initial' state - last offer will not be 1.
+          test.pcv2._descriptionRevision = lastOfferRevision;
+          rev = test.pcv2._descriptionRevision + 1;
+        } else {
+          lastOfferRevision = 1;
+          rev = test.pcv2._lastStableDescriptionRevision;
+        }
+
         switch (newerEqualOrOlder) {
           case 'newer':
             rev += 2;
@@ -966,8 +1022,12 @@ describe('PeerConnectionV2', () => {
         it('should apply the specified bandwidth constraints to the remote description', () => {
           if (isRTCRtpSenderParamsSupported) {
             test.pc.getSenders().forEach(sender => {
-              const experctedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
-              sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', experctedMaxBitRate));
+              const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
+              if (sender.track.kind === 'video' && chromeScreenTrack)  {
+                sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+              } else {
+                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+              }
             });
             return;
           }
@@ -1049,7 +1109,7 @@ describe('PeerConnectionV2', () => {
         context('then, once the initial answer is received', () => {
           beforeEach(async () => {
             const answer = makeAnswer({ iceLite });
-            const answerDescription = test.state().setDescription(answer, 1);
+            const answerDescription = test.state().setDescription(answer, lastOfferRevision);
             await test.pcv2.update(answerDescription);
           });
 
@@ -2066,8 +2126,8 @@ function makePeerConnectionV2(options) {
   options.id = options.id || makeId();
 
   const pc = options.pc || makePeerConnection(options);
-  pc.addTrack({ kind: 'audio' });
-  pc.addTrack({ kind: 'video' });
+  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video' }];
+  tracks.forEach(track => pc.addTrack(track));
 
   function RTCPeerConnection() {
     return pc;

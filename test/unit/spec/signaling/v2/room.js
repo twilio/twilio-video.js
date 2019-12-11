@@ -10,6 +10,7 @@ const { flatMap } = require('../../../../../lib/util');
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
 const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
+const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const RealTrackSwitchOffSignaling = require('../../../../../lib/signaling/v2/trackswitchoffsignaling');
 const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remotetrackpublication');
 
@@ -1184,7 +1185,146 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('Track switch off Signaling', () => {
+  describe('TrackPrioritySignaling', () => {
+    let TrackPrioritySignaling;
+    let trackPrioritySignaling1;
+    let test;
+
+    before(() => {
+      TrackPrioritySignaling = sinon.spy(function(param) {
+        const trackPrioritySignaling =  new RealTrackPrioritySignaling(param);
+        if (!trackPrioritySignaling1) {
+          trackPrioritySignaling1 = trackPrioritySignaling;
+        }
+        return trackPrioritySignaling;
+      });
+
+      const mediaStreamTrack1 = { id: '3', kind: 'audio' };
+      const mediaStreamTrack2 = { id: '4', kind: 'video' };
+      const trackReceiver1 = makeTrackReceiver(mediaStreamTrack1);
+      const trackReceiver2 = makeTrackReceiver(mediaStreamTrack2);
+
+      const peerConnectionManager = makePeerConnectionManager([], []);
+      peerConnectionManager.getTrackReceivers = () => [trackReceiver1, trackReceiver2];
+
+      test = makeTest({
+        peerConnectionManager,
+        TrackPrioritySignaling,
+        localTracks: [{ id: '1', kind: 'audio' }, { id: '2', kind: 'video' }]
+      });
+
+      test.room._update({
+        published: {
+          revision: 1,
+          tracks: [{ id: '1', sid: 'MT1' }, { id: '2', sid: 'MT2' }]
+        },
+        subscribed: {
+          revision: 1,
+          tracks: [{ id: '3', sid: 'MT3' }, { id: '4', sid: 'MT4' }]
+        },
+        participants: [
+          {
+            identity: 'alice',
+            sid: 'PA1',
+            state: 'connected',
+            tracks: [makeRemoteTrack({ id: '3', kind: 'audio', priority: 'standard', sid: 'MT3' })]
+          },
+          {
+            identity: 'bob',
+            sid: 'PA2',
+            state: 'connected',
+            tracks: [makeRemoteTrack({ id: '4', kind: 'video', priority: 'standard', sid: 'MT4' })]
+          }
+        ]
+      });
+    });
+
+    describe('when an incoming connect/update RSP message contains the RTCDataChannel ID of the TrackPriority MSP', () => {
+      before(() => {
+        test.transport.emit('message', {
+          // eslint-disable-next-line
+          media_signaling: {
+            // eslint-disable-next-line
+            track_priority: {
+              transport: { type: 'data-channel', label: 'foo' }
+            }
+          }
+        });
+      });
+
+      describe('should wait for a DataTrackReceiver with the expected label to be available, and', () => {
+        let dataTrackReceiver1;
+        let dataTrackReceiver2;
+        let dataTrackTransport1;
+        let dataTrackTransport2;
+
+        before(async () => {
+          dataTrackTransport1 = new EventEmitter();
+          dataTrackTransport1.stop = sinon.spy();
+          dataTrackReceiver1 = makeTrackReceiver({ id: 'foo', kind: 'data' });
+          dataTrackReceiver1.toDataTransport = sinon.spy(() => dataTrackTransport1);
+          test.peerConnectionManager.emit('trackAdded', dataTrackReceiver1);
+          await test.room._getTrackReceiver(dataTrackReceiver1.id);
+        });
+
+        it('converts the DataTrackReciever to a DataTrackTransport,', () => {
+          sinon.assert.callCount(dataTrackReceiver1.toDataTransport, 1);
+        });
+
+        it('should construct a TrackPrioritySignaling with the DataTrackTransport,', () => {
+          sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport1);
+        });
+
+        it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with the TrackPrioritySignaling', () => {
+          [...test.room.participants.values()].forEach(participant => {
+            sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling1);
+          });
+        });
+
+        describe('when the underlying DataTrackReceiver is closed and a new one is available, and', () => {
+          before(() => {
+            dataTrackReceiver1.emit('close');
+            dataTrackTransport2 = new EventEmitter();
+            dataTrackTransport2.stop = sinon.spy();
+            dataTrackReceiver2 = makeTrackReceiver({ id: 'bar', kind: 'data' });
+            dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackTransport2);
+            test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
+          });
+
+          it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with null', () => {
+            [...test.room.participants.values()].forEach(participant => {
+              sinon.assert.calledWith(participant.setTrackPrioritySignaling, null);
+            });
+          });
+
+          describe('when an incoming connect/update RSP message contains the new RTCDataChannel ID of the TrackPriority MSP', () => {
+            before(async () => {
+              test.transport.emit('message', {
+                // eslint-disable-next-line
+                media_signaling: {
+                  // eslint-disable-next-line
+                  track_priority: {
+                    transport: { type: 'data-channel', label: 'bar' }
+                  }
+                }
+              });
+              await test.room._getTrackReceiver(dataTrackReceiver2.id);
+            });
+
+            it('converts the new DataTrackReciever to a DataTrackTransport,', () => {
+              sinon.assert.callCount(dataTrackReceiver2.toDataTransport, 1);
+            });
+
+            it('should construct a TrackPrioritySignaling with the new DataTrackTransport,', () => {
+              sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
+            });
+          });
+        });
+      });
+    });
+  });
+
+  describe('TrackSwitchOffSignaling', () => {
     describe('when update is called with an RSP message that determines Track Switch On/Off over RTCDataChannel', () => {
       let TrackSwitchOffSignaling;
       let trackSwitchOffSignaling;
@@ -1732,6 +1872,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
+    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 
@@ -1863,6 +2004,7 @@ function makeLocalParticipant(options) {
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
   localParticipant.connect = () => {};
+  localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);
@@ -1872,6 +2014,7 @@ function makeLocalParticipant(options) {
     });
   });
 
+  localParticipant.setBandwidthProfile = sinon.spy();
   localParticipant.setNetworkQualityLevel = sinon.spy();
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);

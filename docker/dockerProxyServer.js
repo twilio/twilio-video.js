@@ -55,7 +55,7 @@ class DockerProxyServer {
       { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
       { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
       { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
-    ].forEach((route) => {
+    ].forEach(route => {
       app.get(route.endpoint, async (req, res, next) => {
         try {
           const data = await this[route.handleRequest](req.params);
@@ -153,7 +153,7 @@ class DockerProxyServer {
   async _getCurrentNetworks() {
     const currentContainer = await this._inspectCurrentContainer();
     const networkNames = Object.keys(currentContainer.NetworkSettings.Networks);
-    return networkNames.map((networkName) => {
+    return networkNames.map(networkName => {
       return {
         Name: networkName,
         Id: currentContainer.NetworkSettings.Networks[networkName].NetworkID

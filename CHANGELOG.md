@@ -1,5 +1,83 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.0-beta16 (December 10, 2019)
+================================
+
+New Features
+------------
+
+- This release supports all the features of the [Track Priority and Bandwidth Profile APIs](https://www.twilio.com/docs/video/migrating-1x-2x#track-priority-and-bandwidth-profiles-group-rooms-only-private-beta).
+
+- You can now specify the mode to control Track switch off behavior by specifying a
+  property `trackSwitchOffMode` in BandwidthProfileOptions.
+  `trackSwitchOffMode` can be set to one of
+  - `detected`  - In this mode, RemoteVideoTracks are switched off only when network congestion
+                is detected.
+  - `predicted` - In this mode, RemoteVideoTracks are pro-actively switched off when network
+                congestion is predicted by the bandwidth estimation mechanism. This mode
+                is used by default if not specified.
+  - `disabled`  - In this mode, RemoteVideoTracks will not be switched off. Instead tracks
+                will be adjusted to lower quality. (JSDK-2549)
+
+  ```js
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high',
+        maxTracks: 2,
+        mode: 'collaboration'
+        trackSwitchOffMode: 'detected' // possible values: "predicted", "detected" or "disabled".
+      }
+    }
+  });
+  ```
+
+- You can now change the priority of an already published LocalTrack using a new method
+  `setPriority` on the corresponding LocalTrackPublication. (JSDK-2442)
+
+  ```js
+  const localTrackPublication = await room.localParticipant.publishTrack(localTrack, {
+    priority: 'high' // LocalTrack's publish priority - "low", "standard" or "high"
+  });
+
+  // After a while, change the priority to "low".
+  localTrackPublication.setPriority(`low`);
+  ```
+
+  This will update `publishPriority` on all corresponding RemoteTrackPublications and
+  emit a new event "publishPriorityChanged" to notify the user:
+
+  ```js
+  remoteTrackPublication.on('publishPriorityChanged', priority => {
+    console.log(`The publisher has changed the priority this Track to "${priority}"`);
+    assert.equal(remoteTrackPublication.publishPriority, priority);
+  });
+
+- In a **Group Room**, You can now override for yourself the priority of a RemoteTrack set by the publisher
+   by using a new method `setPriority`. (JSDK-2347)
+
+  ```js
+    remoteTrack.setPriority('high');
+  ```
+
+- If you want to revert back to the priority set by the publisher, you can do so as shown below:
+
+  ```js
+    remoteTrack.setPriority(null);
+  ```
+
+Bug Fixes
+---------
+- Worked around an issue in chrome where it would sometimes stop sending updates on screen-share track if `maxVideoBitrate` was set for the track.
+You can limit bitrates on outgoing tracks using [Localparticipant.setParameters](https://media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta15/docs/LocalParticipant.html#setParameters__anchor) api. With this workaround, any bitrates set will not be applied to screen share track on chrome. (JSDK-2557)
+
+- Fixed a race condition, that would sometimes cause a track to not get published if multiple tracks were added in quick succession (JSDK-2573)
+
+- Fixed a bug where `publishPriorityChanged`, `trackDisabled` and `trackEnabled` events were getting fired for initial track state (JSDK-2603)
+
+- Fixed an issue where loading twilio-video.js in firefox with `media.peerconnection.enabled` set to false in `about:config` caused page errors. (JSDK-2591)
+
 2.0.0-beta15 (October 24, 2019)
 ===============================
 
@@ -15,9 +93,9 @@ New Features
   December 2018 and now was by overriding the default SDP format to Plan B. Starting with this version,
   twilio-video.js will use Unified Plan where available, while also maintaining support for earlier
   browser versions with Plan B as the default SDP format. (JSDK-2312)
-  
+
   **NOTE:**
-  
+
   Since Unified Plan SDPs are usually larger than Plan B SDPs, this will lead to some increased signaling
   traffic whenever Participants join/leave a Room or publish/unpublish Tracks. Our load tests using Group
   Rooms with 35+ Participants revealed between 45% to 160% increase in peak signaling traffic. We did not
@@ -25,7 +103,7 @@ New Features
   which may be partly due to the browser having to process the larger Unified Plan SDPs. Please reach out to
   [support@twilio.com](mailto:support@twilio.com) to report any issues you may experience while adopting
   this release.
-  
+
 - Worked around a bug in [Chrome](https://bugs.chromium.org/p/chromium/issues/detail?id=749928)
   and Safari where browser continued to play WebRTC-based MediaStreamTrack even after
   corresponding `audio` element was removed from the DOM. With this fix twilio-video.js

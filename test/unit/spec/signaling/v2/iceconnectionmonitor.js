@@ -42,7 +42,7 @@ describe('IceConnectionMonitor', () => {
       assert.notEqual(monitor._timer, null);
     });
 
-    it('fires when it detects inactivity in bytesReceived', (done) => {
+    it('fires when it detects inactivity in bytesReceived', done => {
       monitor = new IceConnectionMonitor(pc, {
         activityCheckPeriodMs: 1,
         inactivityThresholdMs: 3
@@ -64,7 +64,7 @@ describe('IceConnectionMonitor', () => {
       });
     });
 
-    it('does not fire when it detects inactivity in bytesSent', (done) => {
+    it('does not fire when it detects inactivity in bytesSent', done => {
       monitor = new IceConnectionMonitor(pc, {
         activityCheckPeriodMs: 1,
         inactivityThresholdMs: 3
@@ -105,7 +105,7 @@ describe('IceConnectionMonitor', () => {
           return Promise.resolve();
         }
       });
-      return iceConnectionMonitor._getIceConnectionStats().then((iceStats) => {
+      return iceConnectionMonitor._getIceConnectionStats().then(iceStats => {
         assert.strictEqual(iceStats, null);
       });
     });
@@ -116,7 +116,7 @@ describe('IceConnectionMonitor', () => {
           return Promise.reject(new Error('boo'));
         }
       });
-      return iceConnectionMonitor._getIceConnectionStats().then((iceStats) => {
+      return iceConnectionMonitor._getIceConnectionStats().then(iceStats => {
         assert.strictEqual(iceStats, null);
       });
     });
