@@ -1029,34 +1029,41 @@ describe('PeerConnectionV2', () => {
             beforeEach(setup);
             if (signalingState === 'have-local-offer') {
               if (initial) {
-                return itMightEventuallyAnswer();
+                itMightEventuallyAnswer();
+              } else {
+                itShouldHandleGlare();
               }
-              return itShouldHandleGlare();
+            } else {
+              itShouldAnswer();
             }
-            return itShouldAnswer();
+            break;
           case 'answer':
             if (newerEqualOrOlder !== 'equal' || signalingState !== 'have-local-offer') {
               break;
             }
             beforeEach(setup);
-            return itShouldApplyAnswer();
+            itShouldApplyAnswer();
+            break;
           case 'create-offer':
             if (newerEqualOrOlder !== 'newer') {
               break;
             }
             beforeEach(setup);
             if (signalingState === 'have-local-offer') {
-              return itShouldEventuallyCreateOffer();
+              itShouldEventuallyCreateOffer();
+            } else {
+              itShouldCreateOffer();
             }
-            return itShouldCreateOffer();
+            break;
           default: // 'close'
             beforeEach(setup);
-            return itShouldClose();
+            itShouldClose();
+            break;
         }
+      } else {
+        beforeEach(setup);
+        itDoesNothing();
       }
-
-      beforeEach(setup);
-      itDoesNothing();
 
       function itShouldApplyBandwidthConstraints() {
         it('should apply the specified bandwidth constraints to the remote description', () => {
