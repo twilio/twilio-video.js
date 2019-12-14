@@ -177,7 +177,7 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
-describe.only('RemoteDataTrack', function() {
+describe('RemoteDataTrack', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   it('messages can be sent and received on data tracks', async () => {
