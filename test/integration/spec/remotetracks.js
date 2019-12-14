@@ -8,18 +8,26 @@ const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
+const connect = require('../../../lib/connect');
+const { createRoom } = require('../../lib/rest');
+const getToken = require('../../lib/token');
+
 const {
   createSyntheticAudioStreamTrack,
   setup,
   smallVideoConstraints,
+  randomName,
+  participantsConnected,
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
+  setupAliceAndBob,
+  waitForSometime,
   waitFor
 } = require('../../lib/util');
 
 function getTracksOfKind(participant, kind) {
-  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
+  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
 }
 
 
@@ -170,3 +178,62 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
+describe.only('RemoteDataTrack', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+  it('messages can be sent and received on data tracks', async () => {
+    const dataTrack = new LocalDataTrack();
+    const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+      aliceOptions: { tracks: [] },
+      bobOptions: { tracks: [] },
+    });
+
+    await waitFor(bobLocal.publishTrack(dataTrack), `Bob to publish a dataTrack: ${roomSid}`);
+    await waitFor(tracksSubscribed(bobRemote, 1), `Alice to subscribe to Bob's track: ${roomSid}`);
+
+    const tracks = getTracksOfKind(bobRemote, 'data');
+    assert.equal(tracks.length, 1, `Alice found unexpected data tracks length: ${roomSid}`);
+    const remoteDataTrack = tracks[0];
+
+    dataTrack.send('one');
+
+    const messagePromise = new Promise(resolve =>  remoteDataTrack.on('message', resolve));
+    const messageReceived = await waitFor(messagePromise, `to receive 1st message: ${roomSid}`);
+    assert.equal(messageReceived, 'one');
+
+    aliceRoom.disconnect();
+    bobRoom.disconnect();
+  });
+
+  it('JSDK-2615 - late arrivals should see data tracks', async () => {
+    const aliceDataTrack = new LocalDataTrack();
+    const roomName = await createRoom(randomName(), defaults.topology);
+    const options = Object.assign({
+      name: roomName,
+      tracks: [],
+      logLevel: 'warn'
+    }, defaults);
+
+    const aliceRoom = await connect(getToken('Alice'), options);
+    const roomSid = aliceRoom.sid;
+
+    await waitFor(aliceRoom.localParticipant.publishTrack(aliceDataTrack), `Alice to publish a dataTrack: ${roomSid}`);
+
+    const bobRoom = await waitFor(connect(getToken('Bob'), options), `Bob to connect to room: ${roomSid}`);
+    assert.equal(bobRoom.sid, roomSid);
+
+    await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${roomSid}`);
+    const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+    await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+
+    const tracks = getTracksOfKind(aliceRemote, 'data');
+    assert.equal(tracks.length, 1, `Bob found unexpected data tracks length: ${roomSid}`);
+    const remoteDataTrack = tracks[0];
+
+    aliceDataTrack.send('one');
+
+    const messagePromise = new Promise(resolve => remoteDataTrack.on('message', resolve));
+    const messageReceived = await waitFor(messagePromise, `to receive 1st message: ${roomSid}`);
+    assert.equal(messageReceived, 'one');
+  });
+});
