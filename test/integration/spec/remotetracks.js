@@ -22,7 +22,6 @@ const {
   trackSwitchedOff,
   trackSwitchedOn,
   setupAliceAndBob,
-  waitForSometime,
   waitFor
 } = require('../../lib/util');
 
