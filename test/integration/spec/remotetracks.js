@@ -8,10 +8,18 @@ const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
+const connect = require('../../../lib/connect');
+const { createRoom } = require('../../lib/rest');
+const getToken = require('../../lib/token');
+const { isFirefox } = require('../../lib/guessbrowser');
+
 const {
+  combinationContext,
   createSyntheticAudioStreamTrack,
   setup,
   smallVideoConstraints,
+  randomName,
+  participantsConnected,
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
@@ -19,7 +27,7 @@ const {
 } = require('../../lib/util');
 
 function getTracksOfKind(participant, kind) {
-  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind !== kind).map(({ track }) => track);
+  return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
 }
 
 
@@ -109,7 +117,7 @@ describe('RemoteVideoTrack', function() {
 
     // eslint-disable-next-line no-warning-comments
     // TODO: enable these tests when track_priority MSP is available in prod
-    if (defaults.topology !== 'peer-to-peer' && (defaults.environment === 'stage' || defaults.environment === 'dev')) {
+    if (defaults.topology !== 'peer-to-peer') {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
           waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's track to get switched on: ${thisRoom.sid}`),
@@ -170,3 +178,78 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
+(isFirefox && defaults.topology === 'peer-to-peer' ? describe.skip : describe)('RemoteDataTrack', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+
+  let aliceRoom;
+  let bobRoom;
+
+  afterEach(() => {
+    [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+  });
+
+  combinationContext([
+    [
+      [true, false],
+      x => `published by ${x ? 'first' : 'second'} participant`
+    ],
+    [
+      [true, false],
+      x => `${x ? 'during' : 'after'} connect`
+    ],
+  ], ([dataTrackCreatedByFirstParticipant, dataTrackCreatedDuringConnect]) => {
+    it('messages can be sent and received on data tracks', async () => {
+      const dataTrack = new LocalDataTrack();
+      const roomName = await createRoom(randomName(), defaults.topology);
+
+      const firstParticipantOptions = Object.assign({
+        name: roomName,
+        tracks: dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
+        logLevel: 'warn'
+      }, defaults);
+
+      // alice joins room first.
+      aliceRoom = await connect(getToken('Alice'), firstParticipantOptions);
+      const roomSid = aliceRoom.sid;
+
+      if (!dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant) {
+        await waitFor(aliceRoom.localParticipant.publishTrack(dataTrack), `Alice to publish a dataTrack: ${roomSid}`);
+      }
+
+      const secondParticipantOptions = Object.assign({
+        name: roomName,
+        tracks: dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
+        logLevel: 'warn'
+      }, defaults);
+
+      // bob joins room later.
+      bobRoom = await waitFor(connect(getToken('Bob'), secondParticipantOptions), `Bob to connect to room: ${roomSid}`);
+      assert.equal(bobRoom.sid, roomSid);
+
+      if (!dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant) {
+        await waitFor(bobRoom.localParticipant.publishTrack(dataTrack), `Bob to publish a dataTrack: ${roomSid}`);
+      }
+
+      await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${roomSid}`);
+      await waitFor(participantsConnected(aliceRoom, 1), `Alice to see Bob connected: ${roomSid}`);
+
+      const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+      const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
+
+      const remoteTrackPublisher = dataTrackCreatedByFirstParticipant ? aliceRemote : bobRemote;
+
+      await waitFor(tracksSubscribed(remoteTrackPublisher, 1), `Subscriber to see Publisher's track: ${roomSid}`);
+
+      const tracks = getTracksOfKind(remoteTrackPublisher, 'data');
+      assert.equal(tracks.length, 1);
+      const remoteDataTrack = tracks[0];
+
+      dataTrack.send('one');
+
+      const messagePromise = new Promise(resolve =>  remoteDataTrack.on('message', resolve));
+      const messageReceived = await waitFor(messagePromise, `to receive 1st message: ${roomSid}`);
+      assert.equal(messageReceived, 'one');
+    });
+  });
+});
