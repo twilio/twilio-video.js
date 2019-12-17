@@ -23,7 +23,6 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
-  setupAliceAndBob,
   waitFor
 } = require('../../lib/util');
 
