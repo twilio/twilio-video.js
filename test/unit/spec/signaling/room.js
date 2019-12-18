@@ -3,7 +3,12 @@
 const assert = require('assert');
 
 const RoomSignaling = require('../../../../lib/signaling/room');
-const { MediaConnectionError, SignalingConnectionDisconnectedError } = require('../../../../lib/util/twilio-video-errors');
+
+const {
+  MediaConnectionError,
+  MediaDTLSTransportFailedError,
+  SignalingConnectionDisconnectedError
+} = require('../../../../lib/util/twilio-video-errors');
 
 const { combinations } = require('../../../lib/util');
 
@@ -97,7 +102,7 @@ describe('RoomSignaling', () => {
 
         if (roomState === 'reconnecting' || roomState === 'disconnected') {
           const TwilioError = {
-            disconnected: MediaConnectionError,
+            disconnected: MediaDTLSTransportFailedError,
             reconnecting: reconnectError.constructor
           }[roomState];
 
