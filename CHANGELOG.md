@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.0.0 (In Progress)
-===================
+2.0.0 (December 20, 2019)
+=========================
 
 2.0.0-beta16 has been promoted to 2.0.0 GA and Network Bandwidth Profile is also GA! Thank you to all our beta users and for all the feedback you sent us during the beta period.
 
