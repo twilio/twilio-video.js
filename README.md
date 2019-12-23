@@ -150,7 +150,7 @@ See [LICENSE.md](https://github.com/twilio/twilio-video.js/blob/master/LICENSE.m
 Building
 --------
 
-Fork and clone the repository. Then, install dependencies with
+Fork and clone the repository. Then, install dependencies with the following command:
 
 ```
 npm install
