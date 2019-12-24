@@ -818,6 +818,7 @@ describe('connect', function() {
         before(async () => {
           tracks = await getTracks(names);
 
+          // eslint-disable-next-line no-warning-comments
           // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
           // bug: JSDK-2630. Re-enable once fixed.
           if (!(isFirefox && defaults.topology === 'peer-to-peer')) {
