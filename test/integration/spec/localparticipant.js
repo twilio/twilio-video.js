@@ -42,6 +42,7 @@ const {
   tracksUnpublished,
   trackStarted,
   waitFor,
+  waitForSometime,
   waitForTracks
 } = require('../../lib/util');
 
@@ -680,34 +681,46 @@ describe('LocalParticipant', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, thisParticipant._tracks.size);
+        await tracksPublished(thisParticipant, tracks.length);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
         const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await waitFor(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)), 'rooms to get connected');
+
+        thoseRooms = await waitFor(thoseTokens.map(thatToken => {
+          return connect(thatToken, thoseOptions);
+        }), `Rooms to get connected: ${sid}`);
 
         await waitFor([thisRoom].concat(thoseRooms).map(room => {
           return participantsConnected(room, identities.length - 1);
-        }), 'all participant to get connected');
+        }), `all Participants to get connected: ${sid}`);
 
         thoseParticipants = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
         });
 
         await waitFor(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }), `all tracks to get subscribed: ${sid}`);
+          return tracksSubscribed(thatParticipant, tracks.length);
+        }), `Track to get subscribed: ${sid}`);
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await waitFor(thoseParticipants.map(thatParticipant => {
-            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }), `this participants track to get unpublished: ${sid}`);
+            return tracksUnpublished(thatParticipant, tracks.length - 1);
+          }), `Track to get unpublished: ${sid}`);
 
-          await waitFor(thisParticipant.publishTrack(thisTrack), `track to get republished: ${sid}`);
-          await waitFor([...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))], `tracks to get reSubscribed: ${sid}`);
+          // NOTE(mmalavalli): Even though the "trackUnpublished" events are
+          // fired on the RemoteParticipants, we need to make sure that the
+          // SDP negotiation is complete before we re-publish the LocalTrack.
+          // Therefore we wait for 2 seconds.
+          await waitForSometime(2000);
+
+          await waitFor(thisParticipant.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
+
+          await waitFor(thoseParticipants.map(thatParticipant => {
+            return tracksSubscribed(thatParticipant, tracks.length);
+          }), `Tracks to get re-subscribed: ${sid}`);
         }
 
         thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
