@@ -816,7 +816,14 @@ describe('connect', function() {
         let tracks;
 
         before(async () => {
-          tracks = [...await getTracks(names), names ? new LocalDataTrack({ name: names.data }) : new LocalDataTrack()];
+          tracks = await getTracks(names);
+
+          // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
+          // bug: JSDK-2630. Re-enable once fixed.
+          if (!(isFirefox && defaults.topology === 'peer-to-peer')) {
+            tracks.push(names ? new LocalDataTrack({ name: names.data }) : new LocalDataTrack());
+          }
+
           [sid, thisRoom, thoseRooms] = await setup({
             testOptions: { tracks },
             otherOptions: { tracks: [] },
