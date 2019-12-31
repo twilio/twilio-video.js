@@ -23,9 +23,9 @@ const {
 
 const ONE_MINUTE = 60 * 1000;
 const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
-const RECONNECTING_TIMEOUT = 2 * ONE_MINUTE;
-const RECONNECTED_TIMEOUT = 2 * ONE_MINUTE;
-const DISCONNECTED_TIMEOUT = 4 * ONE_MINUTE;
+const RECONNECTING_TIMEOUT = 5 * ONE_MINUTE;
+const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
+const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
 
 // resolves when room received n track started events.
 function waitForTracksToStart(room, n) {
