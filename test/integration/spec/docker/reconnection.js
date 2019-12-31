@@ -42,7 +42,7 @@ function waitForTracksToStart(room, n) {
 // returns Promise<[room]> - sets up and returns room with nPeople
 function setup(nPeople) {
   const name = randomName();
-  const people = ['Alice', 'Bob', 'Charlie', 'Mak'].splice(nPeople);
+  const people = ['Alice', 'Bob', 'Charlie', 'Mak'].slice(0, nPeople);
   console.log(`Setting up for ${nPeople} Participants`);
   return waitFor(people.map(async userName => {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
