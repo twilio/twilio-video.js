@@ -1,5 +1,5 @@
-**IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid upcoming breaking changes in Firefox 68.
-See [this advisory](https://support.twilio.com/hc/en-us/articles/360024434554-Twilio-Video-JavaScript-SDK-Breaking-Changes-in-Firefox-68-July-9-2019-) for details.
+**IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid breaking changes in Chrome in early 2020 (removal of Plan B).
+See [this advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for details.
 
 twilio-video.js
 ===============
@@ -10,7 +10,7 @@ For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/docs)
+* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs)
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
 * [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md)
 
@@ -55,7 +55,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/2.0.0/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
@@ -68,7 +68,7 @@ Usage
 -----
 
 The following is a simple example for connecting to a Room. For more information, refer to the
-[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/docs).
+[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.0.0/docs).
 
 ```js
 const Video = require('twilio-video');

@@ -1,35 +1,37 @@
 /* eslint-disable no-console */
 'use strict';
+
 const assert = require('assert');
 const DockerProxyClient = require('../../../../docker/dockerProxyClient');
 const defaults = require('../../../lib/defaults');
 const getToken = require('../../../lib/token');
+
 const {
   connect,
-  createLocalTracks,
+  createLocalTracks
 } = require('../../../../lib');
+
 const { isFirefox } = require('../../../lib/guessbrowser');
 
 const {
   randomName,
+  waitToGoOffline,
   waitToGoOnline,
   smallVideoConstraints,
-  waitFor,
+  waitFor
 } = require('../../../lib/util');
 
-const minute = 1 * 60 * 1000;
-const VALIDATE_MEDIA_FLOW_TIMEOUT = 1 * minute;
-const RECONNECTING_TIMEOUT = 2 * minute;
-const RECONNECTED_TIMEOUT = 2 * minute;
-const DISCONNECTED_TIMEOUT = 4 * minute;
+const ONE_MINUTE = 60 * 1000;
+const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
+const RECONNECTING_TIMEOUT = 5 * ONE_MINUTE;
+const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
+const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
 
 // resolves when room received n track started events.
-function waitForTrackToStart(room, n) {
-  let tracksRemaining = n;
+function waitForTracksToStart(room, n) {
   return new Promise(resolve => {
     room.on('trackStarted', function trackStarted() {
-      tracksRemaining--;
-      if (!tracksRemaining) {
+      if (--n <= 0) {
         room.removeListener('trackStarted', trackStarted);
         resolve();
       }
@@ -38,34 +40,34 @@ function waitForTrackToStart(room, n) {
 }
 
 // returns Promise<[room]> - sets up and returns room with nPeople
-async function setup(nPeople) {
-  console.log(`setting up for ${nPeople} participants`);
-  const people = ['Alice', 'Bob', 'Charlie', 'Mak'];
-  people.splice(nPeople);
-
-  const roomName = randomName();
-  const rooms = await waitFor(people.map(async userName => {
+function setup(nPeople) {
+  const name = randomName();
+  const people = ['Alice', 'Bob', 'Charlie', 'Mak'].slice(0, nPeople);
+  console.log(`Setting up for ${nPeople} Participants`);
+  return waitFor(people.map(async userName => {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
-    const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating local tracks`);
-    const options = Object.assign({ name: roomName, tracks: tracks }, defaults);
+    const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
+    const options = Object.assign({ name, tracks }, defaults);
+    // NOTE(mmalavalli): Since reconnect tests are failing in Firefox due to media failure,
+    // try actually gathering ICE servers for this test to see if it helps pass the test.
+    delete options.iceServers;
     const room = await connect(getToken(userName), options);
 
-    const roomStr = room.localParticipant.identity + ':' + room.sid;
+    const roomStr = `${room.localParticipant.identity}:${room.sid}`;
     // eslint-disable-next-line no-warning-comments
-    console.log('connected to Room: ' + roomStr);
-    room.on('disconnected', () => console.log(roomStr + ': room received disconnected'));
-    room.on('reconnecting', () => console.log(roomStr + ': room received reconnecting'));
-    room.on('reconnected', () => console.log(roomStr + ': room received reconnected'));
-    room.on('trackStarted', () => console.log(roomStr + ': room received trackStarted'));
+    console.log(`Connected to Room: ${roomStr}`);
+    room.on('disconnected', () => console.log(`Disconnected from Room: ${roomStr}`));
+    room.on('reconnecting', () => console.log(`Reconnecting to Room: ${roomStr}`));
+    room.on('reconnected', () => console.log(`Reconnected to Room: ${roomStr}`));
+    room.on('trackStarted', () => console.log(`"trackStarted" emitted by Room: ${roomStr}`));
     room.on('participantConnected', () => console.log(roomStr + ': room received participantConnected'));
 
     if (nPeople > 1) {
       const trackStartsExpected = (nPeople - 1) * 2;
-      await waitFor(waitForTrackToStart(room, trackStartsExpected), `${roomStr}:${trackStartsExpected} tracks to start`);
+      await waitFor(waitForTracksToStart(room, trackStartsExpected), `${roomStr}:${trackStartsExpected} Tracks to start`);
     }
     return room;
-  }), 'rooms to get connected, and tracks started');
-  return rooms;
+  }), 'Rooms to get connected, and Tracks started');
 }
 
 function getTotalBytesReceived(statReports) {
@@ -95,7 +97,7 @@ async function validateMediaFlow(room) {
 
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
-  console.log(`Total Bytes Received in ${room.localParticipant.identity}'s Room: ${bytesReceivedBefore} => ${bytesReceivedAfter} `);
+  console.log(`Total bytes Received in ${room.localParticipant.identity}'s Room: ${bytesReceivedBefore} => ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
     throw new Error('no media flow detected');
   }
@@ -111,7 +113,7 @@ async function readCurrentNetworks(dockerAPI) {
 
 describe('Reconnection states and events', function() {
   // eslint-disable-next-line no-invalid-this
-  this.timeout(8 * minute);
+  this.timeout(8 * ONE_MINUTE);
 
   let dockerAPI = new DockerProxyClient();
   let isRunningInsideDocker = false;
@@ -134,11 +136,11 @@ describe('Reconnection states and events', function() {
   });
 
   [1, 2].forEach(nPeople => {
-    describe(`${nPeople} participant(s)`, () => {
+    describe(`${nPeople} Participant(s)`, () => {
       let rooms = [];
       let currentNetworks = null;
 
-      beforeEach('setting up the room and participants', async function() {
+      beforeEach(async function() {
         // eslint-disable-next-line no-invalid-this
         console.log('Starting: ' + this.test.fullTitle());
 
@@ -146,49 +148,50 @@ describe('Reconnection states and events', function() {
           // eslint-disable-next-line no-invalid-this
           this.skip();
         } else {
-          await waitFor(dockerAPI.resetNetwork(), 'resetNetwork');
+          await waitFor(dockerAPI.resetNetwork(), 'reset network');
           await waitToGoOnline();
           currentNetworks = await readCurrentNetworks(dockerAPI);
 
-          rooms = await waitFor(setup(nPeople), 'setup rooms');
+          rooms = await waitFor(setup(nPeople), 'setup Rooms');
         }
       });
 
-      afterEach(async () => {
+      afterEach(() => {
         if (isRunningInsideDocker) {
           rooms.forEach(room => room.disconnect());
           rooms = [];
-          await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          return waitFor(dockerAPI.resetNetwork(), 'reset network after each');
         }
       });
 
       describe('Network interruption', () => {
-        let reconnectingPromises = null;
-        beforeEach('disconnect the network', async () => {
-          if (isRunningInsideDocker) {
-            reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
+        let disconnectedPromises;
+        let reconnectedPromises;
+        let reconnectingPromises;
 
-            // disconnect from network.
+        beforeEach(async () => {
+          if (isRunningInsideDocker) {
+            disconnectedPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
+            reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
+            reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
             await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
+            return waitToGoOffline();
           }
         });
 
-        it('should emit "reconnecting" on the Rooms', async () => {
-          await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
+        it('should emit "reconnecting" on the Rooms', () => {
+          return waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
         });
 
         context('that is longer than the session timeout', () => {
           it('should emit "disconnected" on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
-            const disconnectPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
-            await waitFor(disconnectPromises, 'disconnectPromises', DISCONNECTED_TIMEOUT);
+            return waitFor(disconnectedPromises, 'disconnectPromises', DISCONNECTED_TIMEOUT);
           });
         });
 
         context('that recovers before the session timeout', () => {
-          it('should emit "reconnected on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
-            const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
-
+          it('should emit "reconnected" on the Rooms' + isFirefox ? ' @unstable ' : '', async () => {
             await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
             await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.connectToNetwork(networkId)), 'reconnect to original networks');
             await readCurrentNetworks(dockerAPI);
