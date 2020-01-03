@@ -2,12 +2,12 @@
   "name": "twilio-video-angular",
   "private": true,
   "scripts": {
-    "start": "tsc && concurrently \"tsc\" \"lite-server\" ",
+    "start": "tsc --skipLibCheck && concurrently \"tsc\" \"lite-server\" ",
     "lint": "tslint ./app/**/*.ts -t verbose",
     "lite": "lite-server",
-    "test": "tsc && concurrently \"tsc\" \"karma start karma.conf.js\"",
-    "test-once": "tsc && karma start karma.conf.js --single-run",
-    "tsc": "tsc"
+    "test": "tsc --skipLibCheck && concurrently \"tsc\" \"karma start karma.conf.js\"",
+    "test-once": "tsc --skipLibCheck && karma start karma.conf.js --single-run",
+    "tsc": "tsc --skipLibCheck"
   },
   "dependencies": {
     "@angular/common": "~4.0.0",
@@ -24,7 +24,6 @@
     "rxjs": "^5.5.8",
     "systemjs": "0.19.40",
     "twilio-video": "file:../../../",
-    "typescript": "2.6.2",
     "zone.js": "^0.8.4"
   },
   "devDependencies": {
