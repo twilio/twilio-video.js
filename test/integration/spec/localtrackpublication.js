@@ -31,6 +31,7 @@ const {
   setup,
   setupAliceAndBob,
   smallVideoConstraints,
+  tracksPublished,
   tracksSubscribed,
   tracksUnpublished,
   trackSwitchedOff,
@@ -178,7 +179,10 @@ describe('LocalTrackPublication', function() {
       // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Enable this scenario for Firefox when the following
       // bug is fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=1526253
-      if (isFirefox && kind === 'data' && when !== 'published') {
+      // eslint-disable-next-line no-warning-comments
+      // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
+      // bug: JSDK-2630. Re-enable once fixed.
+      if (isFirefox && kind === 'data' && (when !== 'published' || defaults.topology === 'peer-to-peer')) {
         return;
       }
 
@@ -223,35 +227,46 @@ describe('LocalTrackPublication', function() {
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
+        await tracksPublished(thisParticipant, tracks.length);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
         const thoseOptions = Object.assign({ tracks: [] }, options);
-        thoseRooms = await waitFor(thoseTokens.map(thatToken => connect(thatToken, thoseOptions)), 'rooms to connect');
+
+        thoseRooms = await waitFor(thoseTokens.map(thatToken => {
+          return connect(thatToken, thoseOptions);
+        }), `Rooms to connect: ${sid}`);
 
         await waitFor([thisRoom].concat(thoseRooms).map(room => {
           return participantsConnected(room, identities.length - 1);
-        }), `all participant to get connected: ${sid}`);
+        }), `all Participants to get connected: ${sid}`);
 
         thoseParticipants = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
         });
 
         await waitFor(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, thisParticipant._tracks.size);
-        }), `all tracks to get subscribed: ${sid}`);
+          return tracksSubscribed(thatParticipant, tracks.length);
+        }), `Track to get subscribed: ${sid}`);
 
         if (when !== 'published') {
           thisParticipant.unpublishTrack(thisTrack);
 
           await waitFor(thoseParticipants.map(thatParticipant => {
-            return tracksUnpublished(thatParticipant, thisParticipant._tracks.size);
-          }), `all tracks to get unpublished: ${sid}`);
+            return tracksUnpublished(thatParticipant, tracks.length - 1);
+          }), `Track to get unpublished: ${sid}`);
 
-          await waitFor(thisParticipant.publishTrack(thisTrack), 'thisTrack to publish again');
-          await waitFor([
-            ...thoseParticipants.map(thatParticipant => tracksSubscribed(thatParticipant, thisParticipant._tracks.size))
-          ], `tracks to get subscribed again: ${sid}`);
+          // NOTE(mmalavalli): Even though the "trackUnpublished" events are
+          // fired on the RemoteParticipants, we need to make sure that the
+          // SDP negotiation is complete before we re-publish the LocalTrack.
+          // Therefore we wait for 2 seconds.
+          await waitForSometime(2000);
+
+          await waitFor(thisParticipant.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
+
+          await waitFor(thoseParticipants.map(thatParticipant => {
+            return tracksSubscribed(thatParticipant, tracks.length);
+          }), `Tracks to get re-subscribed: ${sid}`);
         }
 
         thisLocalTrackPublication = [...thisParticipant.tracks.values()].find(trackPublication => {
