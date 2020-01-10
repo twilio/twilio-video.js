@@ -21,7 +21,7 @@ function generateReportName(files) {
 
   // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
   let strReportName = `DO-${isDocker}-`;
-  ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach((dim) => {
+  ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach(dim => {
     if (process.env[dim]) {
       const dimAbrr = dim.substr(0, 2);
       strReportName += `-${dimAbrr}-${process.env[dim]}`;
@@ -54,6 +54,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
 
     let browsers = {
       chrome: [isDocker ? 'ChromeInDocker' : 'ChromeWebRTC'],
+      edge: ['EdgeWebRTC'],
       electron: ['ElectronWebRTC'],
       firefox: [isDocker ? 'FirefoxInDocker' : 'FirefoxWebRTC'],
       safari: ['Safari']
@@ -67,7 +68,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     } else if (isDocker) {
       browsers = ['ChromeInDocker', 'FirefoxInDocker'];
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'ElectronWebRTC', 'FirefoxWebRTC', 'Safari'];
+      browsers = ['ChromeWebRTC', 'EdgeWebRTC', 'ElectronWebRTC', 'FirefoxWebRTC', 'Safari'];
     } else {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
@@ -146,6 +147,14 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         },
         ChromeWebRTC: {
           base: 'Chrome',
+          flags: [
+            '--autoplay-policy=no-user-gesture-required',
+            '--use-fake-device-for-media-stream',
+            '--use-fake-ui-for-media-stream'
+          ]
+        },
+        EdgeWebRTC: {
+          base: 'Edge',
           flags: [
             '--autoplay-policy=no-user-gesture-required',
             '--use-fake-device-for-media-stream',
