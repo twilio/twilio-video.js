@@ -706,7 +706,7 @@ describe('LocalTrackPublication', function() {
   });
 
   it('JSDK-2573 - race condition when recycling transceiver: ', async () => {
-    // Alice and Bob join without tracks, Alice has maxTracks property set to 1
+    // Alice and Bob join without tracks
     const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
       aliceOptions: { tracks: [] },
       bobOptions: { tracks: [] },
@@ -715,7 +715,7 @@ describe('LocalTrackPublication', function() {
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
     const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
 
-    // Bob publishes video trackA with standard priority, trackB with low priority.
+    // Bob publishes video trackA and trackB in quick succession
     await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
     await waitFor(bobLocal.publishTrack(bobVideoTrackB), `Bob to publish video trackB: ${roomSid}`);
 
