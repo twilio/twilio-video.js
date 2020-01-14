@@ -583,9 +583,10 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      // TODO(mmalavalli): Remove this once we've figured out why this test
-      // case is failing.
-      if (kind === 'data' && when !== 'published') {
+      // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
+      // bug: JSDK-2630. Re-enable once fixed.
+      // eslint-disable-next-line
+      if (isFirefox && kind === 'data' && (when !== 'published' || process.env.TOPOLOGY === 'P2P')) {
         return;
       }
 
