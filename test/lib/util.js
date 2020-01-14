@@ -292,6 +292,15 @@ function makeEncodingParameters(options) {
 }
 
 /**
+ * Wait for some time.
+ * @param {number} ms - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+function waitFor(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
  * Wait for a certain number of {@link RemoteTrack} or {@link RemoteTrackPublication} events.
  * @param {string} event - the event to wait for
  * @param {RemoteParticipant} participant - the {@link RemoteParticipant}
@@ -338,5 +347,6 @@ exports.tracksAdded = tracksAdded;
 exports.tracksPublished = tracksPublished;
 exports.tracksRemoved = tracksRemoved;
 exports.trackStarted = trackStarted;
+exports.waitFor = waitFor;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;

@@ -26,7 +26,7 @@ const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { isRTCRtpSenderParamsSupported, smallVideoConstraints } = require('../../lib/util');
+const { isRTCRtpSenderParamsSupported, smallVideoConstraints, waitFor } = require('../../lib/util');
 
 const {
   capitalize,
@@ -404,6 +404,12 @@ describe('LocalParticipant', function() {
           }));
         }
 
+        // NOTE(mmalavalli): Even though the "trackUnpublished" events are
+        // fired on the RemoteParticipants, we need to make sure that the
+        // SDP negotiation is complete before we re-publish the LocalTrack.
+        // Therefore we wait for 2 seconds.
+        await waitFor(2000);
+
         [thisLocalTrackPublication, thoseTracksPublished, thoseTracksAdded, thoseTracksSubscribed] = await Promise.all([
           thisParticipant.publishTrack(thisTrack),
           ...['trackPublished', 'trackAdded', 'trackSubscribed'].map(event => {
@@ -653,6 +659,12 @@ describe('LocalParticipant', function() {
           await Promise.all(thoseParticipants.map(thatParticipant => {
             return tracksRemoved(thatParticipant, thisParticipant.tracks.size);
           }));
+
+          // NOTE(mmalavalli): Even though the "trackUnpublished" events are
+          // fired on the RemoteParticipants, we need to make sure that the
+          // SDP negotiation is complete before we re-publish the LocalTrack.
+          // Therefore we wait for 2 seconds.
+          await waitFor(2000);
 
           await Promise.all([
             thisParticipant.publishTrack(thisTrack),
