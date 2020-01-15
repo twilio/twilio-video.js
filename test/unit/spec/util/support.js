@@ -46,14 +46,6 @@ describe('isSupported', () => {
       'Firefox on Linux',
       'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/69.0'
     ],
-  ].forEach(([browser, useragent]) => {
-    it('returns true for supported browser: ' + browser, () => {
-      navigator.userAgent = useragent;
-      assert.equal(isSupported(), true);
-    });
-  });
-
-  [
     [
       'Edge 42',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063'
@@ -69,15 +61,11 @@ describe('isSupported', () => {
     [
       'Edg',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063'
-    ],
-    [
-      'Just anything with Edge in it',
-      'Foo Edge Bar'
     ]
   ].forEach(([browser, useragent]) => {
-    it('returns false for explicitly unsupported browser: ' + browser, () => {
+    it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
-      assert.equal(isSupported(), false);
+      assert.equal(isSupported(), true);
     });
   });
 });

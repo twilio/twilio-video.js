@@ -26,9 +26,14 @@ const {
 const connect = require('../../../lib/connect');
 const { RoomMaxParticipantsExceededError } = require('../../../lib/util/twilio-video-errors');
 
-(defaults.topology !== 'peer-to-peer' && enableRestApiTests ? describe : describe.skip)('REST APIs', function() {
+describe('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
+
+  if (defaults.topology === 'peer-to-peer' || !enableRestApiTests) {
+    it('should not run', () => {});
+    return;
+  }
 
   (defaults.topology === 'group-small' ? describe : describe.skip)('Small Group Room', () => {
     let sid;

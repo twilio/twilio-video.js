@@ -3,13 +3,11 @@
 
 const assert = require('assert');
 const { trackPriority } = require('../../../lib/util/constants');
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
-const { completeRoom } = require('../../lib/rest');
+const { completeRoom, createRoom } = require('../../lib/rest');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const connect = require('../../../lib/connect');
-const { createRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { isFirefox } = require('../../lib/guessbrowser');
 
@@ -25,6 +23,12 @@ const {
   trackSwitchedOn,
   waitFor
 } = require('../../lib/util');
+
+const {
+  PRIORITY_HIGH,
+  PRIORITY_LOW,
+  PRIORITY_STANDARD
+} = trackPriority;
 
 function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
@@ -115,8 +119,6 @@ describe('RemoteVideoTrack', function() {
       });
     });
 
-    // eslint-disable-next-line no-warning-comments
-    // TODO: enable these tests when track_priority MSP is available in prod
     if (defaults.topology !== 'peer-to-peer') {
       it('subscriber can upgrade track\'s effective priority', async () => {
         await waitFor([
