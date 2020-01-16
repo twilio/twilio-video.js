@@ -3,7 +3,7 @@
 const assert = require('assert');
 const isSupported = require('../../../../lib/util/support');
 
-describe.only('isSupported', () => {
+describe('isSupported', () => {
   let oldAgent;
   before(() => {
     oldAgent = navigator.userAgent;
