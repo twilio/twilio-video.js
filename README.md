@@ -23,13 +23,13 @@ GitHub issue. If you need technical support, contact
 Browser Support
 ---------------
 
-|             | Chrome | Edge | Firefox | Safari |
-| ------------|--------|------|---------|--------|
-| **Android** | ✓      | -    | ✓       | -      |
-| **iOS**     | *      | -    | *       | ✓      |
-| **Linux**   | ✓      | -    | ✓       | -      |
-| **macOS**   | ✓      | **   | ✓       | ✓      |
-| **Windows** | ✓      | **   | ✓       | -      |
+|             | Chrome | Edge (Chromium) | Firefox | Safari |
+| ------------|--------|-----------------|---------|--------|
+| **Android** | ✓      | -               | ✓       | -      |
+| **iOS**     | *      | -               | *       | ✓      |
+| **Linux**   | ✓      | -               | ✓       | -      |
+| **macOS**   | ✓      | ✓ **            | ✓       | ✓      |
+| **Windows** | ✓      | ✓ **            | ✓       | -      |
 
 \* Chrome and Firefox for iOS do not have access to WebRTC APIs, unlike Safari
 for iOS.
