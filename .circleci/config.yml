@@ -34,6 +34,10 @@ parameters:
     type: enum
     enum: ["group", "peer-to-peer"]
     default: "group"
+  test_stability: # should it run unstable tests?
+    type: enum
+    enum: ["all", "stable", "unstable"]
+    default: "all"
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
@@ -122,15 +126,15 @@ commands:
     steps:
       - get-code-and-dependencies
       - run:
-          name: Running Integration Tests
+          name: Running Integration Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
       - save-test-results
   network-tests:
     steps:
       - get-code # note: network tests run inside docker - the dependencies will be fetched inside docker image.
       - run:
-          name: Running Network Tests
-          command: scripts/circleci-run-tests.sh
+        name: Running Network Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
+        command: scripts/circleci-run-tests.sh
       - save-test-results
   framework-tests:
     steps:
@@ -182,6 +186,7 @@ jobs:
         default: "group"
     environment:
       TOPOLOGY: << parameters.topology >>
+      TEST_STABILITY: << pipeline.parameters.test_stability >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -198,6 +203,7 @@ jobs:
       BVER: "stable"
       BROWSER: << parameters.browser >>
       TOPOLOGY: << parameters.topology >>
+      TEST_STABILITY: << pipeline.parameters.test_stability >>
     executor: machine-executor
     steps: [network-tests]
   Framework-tests:
