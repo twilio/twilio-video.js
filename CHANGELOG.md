@@ -1,12 +1,12 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.1.0 (in progress)
+2.0.1 (in progress)
 ===================
 
 New Features
 ------------
 
-- twilio-video.js now supports [Chromium-based Edge](https://www.microsoftedgeinsider.com/). (JSDK-2633)
+- `Video.isSupported` now returns `true` for [Chromium-based Edge](https://www.microsoftedgeinsider.com/). (JSDK-2633)
 - Support for Safari is no longer experimental. Hence, twilio-video.js will not log
   a console warning in Safari 12.1+. (JSDK-2635)
 
