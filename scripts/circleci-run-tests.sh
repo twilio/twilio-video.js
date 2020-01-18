@@ -59,11 +59,13 @@ esac
 case ${TOPOLOGY} in
 peer-to-peer)
   echo "Setting configuration profile for P2P"
+  export TOPOLOGY=P2P
   export CONFIGURATION_PROFILE_SID=${CONFIGURATION_PROFILE_SID_P2P}
 
   ;;
 group)
   echo "Setting configuration profile for Group"
+  export TOPOLOGY=SFU
   export CONFIGURATION_PROFILE_SID=${CONFIGURATION_PROFILE_SID_SFU}
 
   ;;
