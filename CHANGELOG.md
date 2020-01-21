@@ -1,5 +1,14 @@
 For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
 
+1.20.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Room.getStats() sometimes returned null stats in a Peer-to-Peer
+  Room on Chrome 81+. (JSDK-2640)
+
 1.20.0 (November 11, 2019)
 ==========================
 
