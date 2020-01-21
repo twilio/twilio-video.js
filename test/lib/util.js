@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
+const second = 1000;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -313,6 +314,49 @@ async function waitForTracks(event, participant, n) {
     });
   });
 }
+/**
+ * Note: when a test waits for promise that fails to settle.
+ *   1) The test fail w/o a good indication of what happened, as for Mocha the test never finished
+ *   2) This also causes subsequent tests to not get executed.
+ * So instead of using raw `await fooPromise` use `await waitFor(fooPromise)` abstraction
+ * solves above problems by limiting all waits to a finite time. It also helps fail the test
+ * with more useful `message` parameter w/o cluttering test code.
+ * Returns a promise that if not settled in timeoutMS, gets rejected.
+ * @param {Promise|Array<Promise>} promiseOrArray - Promises to wait on
+ * @param {string} message - indicates the message logged when promise rejects.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<any>}
+ */
+let waitId = 101;
+async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose = false) {
+  const thisWaitId = waitId++;
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
+  }
+  const startTime = new Date();
+  const promise = Array.isArray(promiseOrArray) ? Promise.all(promiseOrArray) : promiseOrArray;
+  let timer = null;
+  const timeoutPromise = new Promise((_resolve, reject) => {
+    timer = setTimeout(() => {
+      const endTime = new Date();
+      const durationInSeconds = (endTime - startTime) / 1000;
+      // eslint-disable-next-line no-console
+      console.warn(`xxxx [${thisWaitId}] Timed out waiting for : ${message} [${durationInSeconds} seconds]`);
+      reject(new Error(`Timed out waiting for : ${message}`));
+    }, timeoutMS);
+  });
+
+  const result = await Promise.race([promise, timeoutPromise]);
+  const endTime = new Date();
+  const durationInSeconds = (endTime - startTime) / 1000;
+  if (verbose) {
+    // eslint-disable-next-line no-console
+    console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+  }
+  clearTimeout(timer);
+  return result;
+}
 
 // NOTE(mmalavalli): Safari is rejecting getUserMedia()'s Promise with an
 // OverConstrainedError. So these capture dimensions are disabled.
@@ -338,5 +382,6 @@ exports.tracksAdded = tracksAdded;
 exports.tracksPublished = tracksPublished;
 exports.tracksRemoved = tracksRemoved;
 exports.trackStarted = trackStarted;
+exports.waitFor = waitFor;
 exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;

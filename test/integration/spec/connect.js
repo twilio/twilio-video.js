@@ -34,7 +34,8 @@ const {
   randomName,
   smallVideoConstraints,
   tracksAdded,
-  tracksPublished
+  tracksPublished,
+  waitFor
 } = require('../../lib/util');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
@@ -692,6 +693,11 @@ describe('connect', function() {
             }
           ],
           ({ source }) => `when Tracks are pre-created using ${source}`
+        ],
+        [
+          [true],
+          // eslint-disable-next-line no-unused-vars
+          _x => defaults.topology === 'peer-to-peer' && isFirefox ? '(@unstable)' : ''
         ]
       ], ([names, { source, getTracks }]) => {
         if (source === 'MediaStreamTracks from getUserMedia()' && !!names) {
@@ -711,7 +717,7 @@ describe('connect', function() {
           [thisRoom, thoseRooms] = await setup({ name, tracks }, { tracks: [] }, 0);
           thisParticipant = thisRoom.localParticipant;
           thisParticipants = thoseRooms.map(room => room.participants.get(thisParticipant.sid));
-          await Promise.all(thisParticipants.map(participant => tracksAdded(participant, tracks.length)));
+          await waitFor(thisParticipants.map(participant => tracksAdded(participant, tracks.length)), `tracks added: ${thisRoom.sid}`);
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
