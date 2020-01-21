@@ -19,6 +19,7 @@ const { flatMap } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
+const { isFirefox } = require('../../lib/guessbrowser');
 
 const {
   capitalize,
@@ -42,7 +43,7 @@ describe('LocalTrackPublication', function() {
       ],
       [
         ['audio', 'video', 'data'],
-        x => `Local${capitalize(x)}Track`
+        x => `Local${capitalize(x)}Track ${isFirefox && x === 'data' ? '(@unstable)' : ''}`,
       ],
       [
         ['published', 'published, unpublished, and then published again'],
