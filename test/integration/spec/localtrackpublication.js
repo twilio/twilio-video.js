@@ -20,7 +20,6 @@ const { flatMap } = require('../../../lib/util');
 const defaults = require('../../lib/defaults');
 const { isFirefox } = require('../../lib/guessbrowser');
 const getToken = require('../../lib/token');
-const { isFirefox } = require('../../lib/guessbrowser');
 
 const {
   capitalize,
