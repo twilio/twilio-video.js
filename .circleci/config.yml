@@ -133,8 +133,8 @@ commands:
     steps:
       - get-code # note: network tests run inside docker - the dependencies will be fetched inside docker image.
       - run:
-        name: Running Network Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
-        command: scripts/circleci-run-tests.sh
+          name: Running Network Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
+          command: scripts/circleci-run-tests.sh
       - save-test-results
   framework-tests:
     steps:
