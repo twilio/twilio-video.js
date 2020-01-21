@@ -317,9 +317,11 @@ describe('LocalParticipant', function() {
         x => `that has ${x} been published`
       ]
     ], ([isEnabled, kind, withName, when]) => {
-      // TODO(mmalavalli): Remove this once we've figured out why this test
-      // case is failing.
-      if (kind === 'data' && when === 'previously') {
+      // eslint-disable-next-line no-warning-comments
+      // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
+      // bug: JSDK-2630. Re-enable once fixed.
+      // eslint-disable-next-line no-process-env
+      if (kind === 'data' && (when === 'previously' || (isFirefox && process.env.TOPOLOGY === 'P2P'))) {
         return;
       }
 
@@ -583,9 +585,11 @@ describe('LocalParticipant', function() {
         x => 'that was ' + x
       ]
     ], ([isEnabled, kind, when]) => {
-      // TODO(mmalavalli): Remove this once we've figured out why this test
-      // case is failing.
-      if (kind === 'data' && when !== 'published') {
+      // eslint-disable-next-line no-warning-comments
+      // TODO(mmalavalli): Disabling DataTracks for Firefox P2P due to this
+      // bug: JSDK-2630. Re-enable once fixed.
+      // eslint-disable-next-line no-process-env
+      if (isFirefox && kind === 'data' && (when !== 'published' || process.env.TOPOLOGY === 'P2P')) {
         return;
       }
 
