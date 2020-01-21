@@ -16,7 +16,7 @@ on iOS 13.0.1 fail to send audio.
 
 Firefox Participants sometimes fail to subscribe to DataTracks on Peer-to-Peer Rooms
 ------------------------------------------------------------------------------------
-We have seen some instances where Firefox Participants that join a Peer-to-Peer Room after a DataTrack has been published fail to subscribe to it. We have filed an internal JIRA bug (JSDK-2615) and started working on a fix, which will be available in a future release.
+Because of this Firefox [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1603887) Participants that join a Peer-to-Peer Room after a DataTrack has been published by a Firefox Participant fail to subscribe to it. You can work around this issue by publishing a DataTrack while connecting to the Room. (JSDK-2615)
 
 Working around the browsers' autoplay policy
 --------------------------------------------

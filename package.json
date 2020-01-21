@@ -52,6 +52,7 @@
     "karma": "^1.6.0",
     "karma-browserify": "^5.1.1",
     "karma-chrome-launcher": "^2.0.0",
+    "karma-edgium-launcher": "^4.0.0-0",
     "karma-electron": "^6.1.0",
     "karma-firefox-launcher": "^1.0.1",
     "karma-htmlfile-reporter": "^0.3.8",

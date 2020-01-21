@@ -16,11 +16,13 @@ describe('isSupported', () => {
   [
     [
       'Chrome on Windows',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+      { runtime: {} }
     ],
     [
       'Chrome on Mac',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+      { runtime: {} }
     ],
     [
       'Safari on Mac',
@@ -46,9 +48,17 @@ describe('isSupported', () => {
       'Firefox on Linux',
       'Mozilla/5.0 (X11; Linux i586; rv:31.0) Gecko/20100101 Firefox/69.0'
     ],
-  ].forEach(([browser, useragent]) => {
+    [
+      'Edge (Chromium)',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063',
+      { runtime: {} }
+    ]
+  ].forEach(([browser, useragent, chrome]) => {
     it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
+      if (chrome) {
+        global.chrome = chrome;
+      }
       assert.equal(isSupported(), true);
     });
   });
@@ -56,27 +66,23 @@ describe('isSupported', () => {
   [
     [
       'Edge 42',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063'
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063',
+      {}
     ],
     [
       'Edge 25',
-      'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586'
+      'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2486.0 Safari/537.36 Edge/13.10586',
+      {}
     ],
     [
       'Another Edge',
-      'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0'
-    ],
-    [
-      'Edg',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063'
-    ],
-    [
-      'Just anything with Edge in it',
-      'Foo Edge Bar'
+      'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36 Edge/12.0',
+      {}
     ]
-  ].forEach(([browser, useragent]) => {
-    it('returns false for explicitly unsupported browser: ' + browser, () => {
+  ].forEach(([browser, useragent, chrome]) => {
+    it('returns false for unsupported browser: ' + browser, () => {
       navigator.userAgent = useragent;
+      global.chrome = chrome;
       assert.equal(isSupported(), false);
     });
   });

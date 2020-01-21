@@ -1,5 +1,21 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.0.1 (January 21, 2020)
+========================
+
+New Features
+------------
+
+- `Video.isSupported` now returns `true` for [Chromium-based Edge](https://www.microsoftedgeinsider.com/). (JSDK-2633)
+- Support for Safari is no longer experimental. Hence, twilio-video.js will not log
+  a console warning in Safari 12.1+. (JSDK-2635)
+
+Bug Fixes
+---------
+
+- Fixed a bug where Room.getStats() sometimes returned null stats in a Peer-to-Peer
+  Room on Chrome 81+. (JSDK-2639)
+
 2.0.0 (December 20, 2019)
 =========================
 
