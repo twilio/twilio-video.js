@@ -8,7 +8,8 @@ const defaults = [
   'ecsServer',
   'logLevel',
   'wsServer',
-  'wsServerInsights'
+  'wsServerInsights',
+  'testStability'
 ].reduce((defaults, option) => {
   if (typeof env[option] !== 'undefined') {
     Object.defineProperty(defaults, option, {
@@ -19,7 +20,8 @@ const defaults = [
   return defaults;
 }, {
   dominantSpeaker: true,
-  networkQuality: true
+  topology: 'peer-to-peer',
+  testStability: 'all' // other choices: 'stable', 'unstable'
 });
 
 // NOTE(mroberts): Firefox, since it doesn't support "max-bundle", really slows

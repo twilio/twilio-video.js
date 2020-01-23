@@ -306,7 +306,7 @@ describe('LocalParticipant', function() {
       ],
       [
         ['audio', 'video', 'data'],
-        x => `Local${capitalize(x)}Track`
+        x => `Local${capitalize(x)}Track ${isFirefox && x === 'data' ? '(@unstable)' : ''}`,
       ],
       [
         [true, false],
@@ -578,7 +578,7 @@ describe('LocalParticipant', function() {
       ],
       [
         ['audio', 'video', 'data'],
-        x => `Local${capitalize(x)}Track`
+        x => `Local${capitalize(x)}Track ${isFirefox && x === 'data' ? '(@unstable)' : ''}`,
       ],
       [
         ['published', 'published, unpublished, and then published again'],
