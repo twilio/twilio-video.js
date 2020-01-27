@@ -5,6 +5,7 @@ const sinon = require('sinon');
 
 const RemoteParticipantV2 = require('../../../../../lib/signaling/v2/remoteparticipant');
 const { defer } = require('../../../../../lib/util');
+const { combinationContext } = require('../../../../lib/util');
 
 describe('RemoteParticipantV2', () => {
   // RemoteParticipantV2
@@ -26,9 +27,13 @@ describe('RemoteParticipantV2', () => {
       assert.equal(test.sid, test.participant.sid);
     });
 
-    it('sets .state to "connected"', () => {
-      const test = makeTest();
-      assert.equal('connected', test.participant.state);
+    ['connected', 'reconnecting'].forEach(state => {
+      context(`when initial .state is "${state}"`, () => {
+        it(`sets .state to "${state}"`, () => {
+          const test = makeTest({ state });
+          assert.equal(state, test.participant.state);
+        });
+      });
     });
 
     context('.tracks', () => {
@@ -159,30 +164,70 @@ describe('RemoteParticipantV2', () => {
       });
 
       context('with .state set to "connected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('the .state remains "connected"', () => {
-            const test = makeTest();
+        context('"reconnecting"', () => {
+          it('should transition the .state to "connected"', () => {
+            const test = makeTest({ state: 'reconnecting' });
             const participantState = test.state(test.revision + 1).setState('connected');
             test.participant.update(participantState);
-            assert.equal(
-              'connected',
-              test.participant.state);
+            assert.equal(test.participant.state, 'connected');
           });
 
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
+          it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+            const test = makeTest({ state: 'reconnecting' });
             const participantState = test.state(test.revision + 1).setState('connected');
             let stateChanged;
             test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
-            assert(!stateChanged);
+            assert(stateChanged);
+          });
+        });
+
+        ['connected', 'disconnected'].forEach(state => {
+          context(`"${state}"`, () => {
+            it(`the .state should remain "${state}"`, () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('connected');
+              test.participant.update(participantState);
+              assert.equal(test.participant.state, state);
+            });
+
+            it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('connected');
+              let stateChanged;
+              test.participant.once('stateChanged', () => { stateChanged = true; });
+              test.participant.update(participantState);
+              assert(!stateChanged);
+            });
+          });
+        });
+      });
+
+      context('with .state set to "disconnected" when the RemoteParticipantV2\'s .state is', () => {
+        ['connected', 'reconnecting'].forEach(state => {
+          context(`"${state}"`, () => {
+            it('should transition the .state to "disconnected"', () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('disconnected');
+              test.participant.update(participantState);
+              assert.equal(test.participant.state, 'disconnected');
+            });
+
+            it('should emit "stateChanged" event on the RemoteParticipantV2"', () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('disconnected');
+              let stateChanged;
+              test.participant.once('stateChanged', () => { stateChanged = true; });
+              test.participant.update(participantState);
+              assert(stateChanged);
+            });
           });
         });
 
         context('"disconnected"', () => {
           it('the .state remains "disconnected"', () => {
             const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('connected');
+            const participantState = test.state(test.revision + 1).setState('disconnected');
             test.participant.disconnect();
             test.participant.update(participantState);
             assert.equal(
@@ -192,7 +237,7 @@ describe('RemoteParticipantV2', () => {
 
           it('does not emit the "stateChanged" event', () => {
             const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('connected');
+            const participantState = test.state(test.revision + 1).setState('disconnected');
             test.participant.disconnect();
             let stateChanged;
             test.participant.once('stateChanged', () => { stateChanged = true; });
@@ -202,48 +247,42 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "disconnected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('sets the .state to "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('disconnected');
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
-          });
+      context('with .state set to "reconnecting" when the RemoteParticipantV2\'s .state is', () => {
+        ['disconnected', 'reconnecting'].forEach(state => {
+          context(`"${state}"`, () => {
+            it(`the .state should remain "${state}"`, () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('reconnecting');
+              test.participant.update(participantState);
+              assert.equal(test.participant.state, state);
+            });
 
-          it('emits the "stateChanged" event with the new state "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('disconnected');
-            let newState;
-            test.participant.once('stateChanged', state => { newState = state; });
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              newState);
+            it('should not emit "stateChanged" event on the RemoteParticipantV2"', () => {
+              const test = makeTest({ state });
+              const participantState = test.state(test.revision + 1).setState('reconnecting');
+              let stateChanged;
+              test.participant.once('stateChanged', () => { stateChanged = true; });
+              test.participant.update(participantState);
+              assert(!stateChanged);
+            });
           });
         });
 
-        context('"disconnected"', () => {
-          it('the .state remains "disconnected"', () => {
+        context('"connected"', () => {
+          it('should transition the .state to "reconnecting"', () => {
             const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('disconnected');
-            test.participant.disconnect();
+            const participantState = test.state(test.revision + 1).setState('reconnecting');
             test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
+            assert.equal(test.participant.state, 'reconnecting');
           });
 
-          it('does not emit the "stateChanged" event', () => {
+          it('should emit "stateChanged" on the RemoteParticipantV2', () => {
             const test = makeTest();
-            const participantState = test.state(test.revision + 1).setState('disconnected');
-            test.participant.disconnect();
+            const participantState = test.state(test.revision + 1).setState('reconnecting');
             let stateChanged;
             test.participant.once('stateChanged', () => { stateChanged = true; });
             test.participant.update(participantState);
-            assert(!stateChanged);
+            assert(stateChanged);
           });
         });
       });
@@ -337,91 +376,30 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "connected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('the .state remains "connected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('connected');
-            test.participant.update(participantState);
-            assert.equal(
-              'connected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('connected');
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
+      combinationContext([
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `with .state set to "${x}" when the RemoteParticipantV2's .state is`
+        ],
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `"${x}"`
+        ]
+      ], ([nextState, state]) => {
+        it(`the .state should remain "${state}"`, () => {
+          const test = makeTest({ state });
+          const participantState = test.state(test.revision).setState(nextState);
+          test.participant.update(participantState);
+          assert.equal(test.participant.state, state);
         });
 
-        context('"disconnected"', () => {
-          it('the .state remains "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('connected');
-            test.participant.disconnect();
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('connected');
-            test.participant.disconnect();
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
-        });
-      });
-
-      context('with .state set to "disconnected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('the .state remains "connected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('disconnected');
-            test.participant.update(participantState);
-            assert.equal(
-              'connected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('disconnected');
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
-        });
-
-        context('"disconnected"', () => {
-          it('the .state remains "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('disconnected');
-            test.participant.disconnect();
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision).setState('disconnected');
-            test.participant.disconnect();
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
+        it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+          const test = makeTest({ state });
+          const participantState = test.state(test.revision).setState(nextState);
+          let stateChanged;
+          test.participant.once('stateChanged', () => { stateChanged = true; });
+          test.participant.update(participantState);
+          assert(!stateChanged);
         });
       });
 
@@ -515,91 +493,30 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "connected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('the .state remains "connected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('connected');
-            test.participant.update(participantState);
-            assert.equal(
-              'connected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('connected');
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
+      combinationContext([
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `with .state set to "${x}" when the RemoteParticipantV2's .state is`
+        ],
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `"${x}"`
+        ]
+      ], ([nextState, state]) => {
+        it(`the .state should remain "${state}"`, () => {
+          const test = makeTest({ state });
+          const participantState = test.state(test.revision).setState(nextState);
+          test.participant.update(participantState);
+          assert.equal(test.participant.state, state);
         });
 
-        context('"disconnected"', () => {
-          it('the .state remains "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('connected');
-            test.participant.disconnect();
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('connected');
-            test.participant.disconnect();
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
-        });
-      });
-
-      context('with .state set to "disconnected" when the RemoteParticipantV2\'s .state is', () => {
-        context('"connected"', () => {
-          it('the .state remains "connected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('disconnected');
-            test.participant.update(participantState);
-            assert.equal(
-              'connected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('disconnected');
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
-        });
-
-        context('"disconnected"', () => {
-          it('the .state remains "disconnected"', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('disconnected');
-            test.participant.disconnect();
-            test.participant.update(participantState);
-            assert.equal(
-              'disconnected',
-              test.participant.state);
-          });
-
-          it('does not emit the "stateChanged" event', () => {
-            const test = makeTest();
-            const participantState = test.state(test.revision - 1).setState('disconnected');
-            test.participant.disconnect();
-            let stateChanged;
-            test.participant.once('stateChanged', () => { stateChanged = true; });
-            test.participant.update(participantState);
-            assert(!stateChanged);
-          });
+        it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+          const test = makeTest({ state });
+          const participantState = test.state(test.revision).setState(nextState);
+          let stateChanged;
+          test.participant.once('stateChanged', () => { stateChanged = true; });
+          test.participant.update(participantState);
+          assert(!stateChanged);
         });
       });
 
@@ -665,6 +582,52 @@ describe('RemoteParticipantV2', () => {
   });
 
   describe('#connect', () => {
+    context('when the RemoteParticipantV2\'s .state is "reconnecting"', () => {
+      it('returns true', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        assert.equal(
+          true,
+          test.participant.connect(makeSid(), makeIdentity()));
+      });
+
+      it('the .identity remains the same', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        test.participant.connect(makeSid(), makeIdentity());
+        assert.equal(
+          test.identity,
+          test.participant.identity);
+      });
+
+      it('the .sid remains the same', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        test.participant.connect(makeSid(), makeIdentity());
+        assert.equal(
+          test.sid,
+          test.participant.sid);
+      });
+
+      it('the .state transitions "connected"', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        test.participant.connect(makeSid(), makeIdentity());
+        assert.equal(
+          'connected',
+          test.participant.state);
+      });
+
+      it('emits the "stateChanged" event', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        let stateChanged;
+        test.participant.once('stateChanged', () => { stateChanged = true; });
+        test.participant.connect(makeSid(), makeIdentity());
+        assert(stateChanged);
+      });
+    });
+
     context('when the RemoteParticipantV2\'s .state is "connected"', () => {
       it('returns false', () => {
         const test = makeTest();
@@ -754,30 +717,32 @@ describe('RemoteParticipantV2', () => {
   });
 
   describe('#disconnect', () => {
-    context('when the RemoteParticipantV2\'s .state is "connected"', () => {
-      it('returns true', () => {
-        const test = makeTest();
-        assert.equal(
-          true,
-          test.participant.disconnect());
-      });
+    ['connected', 'reconnecting'].forEach(state => {
+      context(`when the RemoteParticipantV2's .state is "${state}"`, () => {
+        it('returns true', () => {
+          const test = makeTest({ state });
+          assert.equal(
+            true,
+            test.participant.disconnect());
+        });
 
-      it('sets the .state to "disconnected"', () => {
-        const test = makeTest();
-        test.participant.disconnect();
-        assert.equal(
-          'disconnected',
-          test.participant.state);
-      });
+        it('sets the .state to "disconnected"', () => {
+          const test = makeTest({ state });
+          test.participant.disconnect();
+          assert.equal(
+            'disconnected',
+            test.participant.state);
+        });
 
-      it('emits the "stateChanged" event with the new state "disconnected"', () => {
-        const test = makeTest();
-        let newState;
-        test.participant.once('stateChanged', state => { newState = state; });
-        test.participant.disconnect();
-        assert.equal(
-          'disconnected',
-          newState);
+        it('emits the "stateChanged" event with the new state "disconnected"', () => {
+          const test = makeTest();
+          let newState;
+          test.participant.once('stateChanged', state => { newState = state; });
+          test.participant.disconnect();
+          assert.equal(
+            'disconnected',
+            newState);
+        });
       });
     });
 
@@ -806,6 +771,52 @@ describe('RemoteParticipantV2', () => {
         test.participant.once('stateChanged', () => { stateChanged = true; });
         test.participant.disconnect();
         assert(!stateChanged);
+      });
+    });
+  });
+
+  describe('#reconnecting', () => {
+    context('when the RemoteParticipantV2\'s .state is "connected"', () => {
+      it('should return true', () => {
+        const test = makeTest();
+        assert.equal(test.participant.reconnecting(), true);
+      });
+
+      it('should transition .state to "reconnecting"', () => {
+        const test = makeTest();
+        test.participant.reconnecting();
+        assert.equal(test.participant.state, 'reconnecting');
+      });
+
+      it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+        const test = makeTest();
+        let stateChanged;
+        test.participant.once('stateChanged', () => { stateChanged = true; });
+        test.participant.reconnecting();
+        assert(stateChanged);
+      });
+    });
+
+    ['reconnecting', 'disconnected'].forEach(state => {
+      context(`when the RemoteParticipantV2's .state is "${state}"`, () => {
+        it('should return false', () => {
+          const test = makeTest({ state });
+          assert.equal(test.participant.reconnecting(), false);
+        });
+
+        it('should not transition .state', () => {
+          const test = makeTest({ state });
+          test.participant.reconnecting();
+          assert.equal(test.participant.state, state);
+        });
+
+        it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+          const test = makeTest({ state });
+          let stateChanged;
+          test.participant.once('stateChanged', () => { stateChanged = true; });
+          test.participant.reconnecting();
+          assert(!stateChanged);
+        });
       });
     });
   });
@@ -881,6 +892,7 @@ function makeTest(options) {
   options.identity = options.identity || makeIdentity();
   options.revision = options.revision || makeRevision();
   options.sid = options.sid || makeSid();
+  options.state = options.state || 'connected';
   options.tracks = options.tracks || [];
   options.remoteTrackPublicationV2s = options.remoteTrackPublicationV2s || [];
 
