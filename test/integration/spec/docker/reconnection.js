@@ -52,9 +52,6 @@ function setup(nPeople) {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
     const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
     const options = Object.assign({ name, tracks }, defaults);
-    // NOTE(mmalavalli): Since reconnect tests are failing in Firefox due to media failure,
-    // try actually gathering ICE servers for this test to see if it helps pass the test.
-    delete options.iceServers;
     const room = await connect(getToken(userName), options);
 
     const roomStr = `${room.localParticipant.identity}:${room.sid}`;
@@ -160,11 +157,11 @@ describe('Reconnection states and events', function() {
         }
       });
 
-      afterEach(() => {
+      afterEach(async () => {
         if (isRunningInsideDocker) {
           rooms.forEach(room => room.disconnect());
           rooms = [];
-          return waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
         }
       });
 
@@ -185,7 +182,7 @@ describe('Reconnection states and events', function() {
             reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
             reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
             await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
-            return waitToGoOffline();
+            await waitToGoOffline();
           }
         });
 
