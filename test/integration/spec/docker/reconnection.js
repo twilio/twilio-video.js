@@ -52,6 +52,9 @@ function setup(nPeople) {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
     const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
     const options = Object.assign({ name, tracks }, defaults);
+    // NOTE(mmalavalli): Since reconnect tests are failing in Firefox due to media failure,
+    // try actually gathering ICE servers for this test to see if it helps pass the test.
+    delete options.iceServers;
     const room = await connect(getToken(userName), options);
 
     const roomStr = `${room.localParticipant.identity}:${room.sid}`;
