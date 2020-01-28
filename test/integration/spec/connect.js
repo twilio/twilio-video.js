@@ -925,9 +925,9 @@ describe('connect', function() {
     let thoseRooms;
 
     before(async () => {
-      [thisRoom, thoseRooms, peerConnections] = await setup({
+      [thisRoom, thoseRooms, peerConnections] = await waitFor(setup({
         preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
-      });
+      }), 'setup');
     });
 
     it('should add Simulcast SSRCs to the video m= section of all local descriptions', () => {
@@ -980,23 +980,23 @@ async function setup(testOptions, otherOptions, nTracks, alone) {
   }, otherOptions);
   const thoseOptions = Object.assign({ name: options.name }, otherOptions, defaults);
   const thoseTokens = [randomName(), randomName()].map(getToken);
-  const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
+  const thoseRooms = await waitFor(thoseTokens.map(token => connect(token, thoseOptions)), 'Everybody to connect to Room');
 
-  await Promise.all([thisRoom].concat(thoseRooms).map(room => {
+  await waitFor([thisRoom].concat(thoseRooms).map(room => {
     return participantsConnected(room, thoseRooms.length);
-  }));
+  }), `all participants to see each other: ${thisRoom.sid}`);
   const thoseParticipants = [...thisRoom.participants.values()];
-  await Promise.all(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)));
+  await waitFor(thoseParticipants.map(participant => tracksAdded(participant, typeof nTracks === 'number' ? nTracks : 2)), `tracks to get Added: ${thisRoom.sid}`);
   const peerConnections = [...thisRoom._signaling._peerConnectionManager._peerConnections.values()].map(pcv2 => pcv2._peerConnection);
 
-  await Promise.all(peerConnections.map(pc => pc.signalingState === 'stable' ? Promise.resolve() : new Promise(resolve => {
+  await waitFor(peerConnections.map(pc => pc.signalingState === 'stable' ? Promise.resolve() : new Promise(resolve => {
     pc.onsignalingstatechange = () => {
       if (pc.signalingState === 'stable') {
         pc.onsignalingstatechange = null;
         resolve();
       }
     };
-  })));
+  })), `All PCs to go stable: ${thisRoom.sid}`);
 
   return [thisRoom, thoseRooms, peerConnections];
 }
