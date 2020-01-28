@@ -874,6 +874,18 @@ describe('LocalParticipant', () => {
         });
       });
 
+      context('when the LocalParticipant .state is "reconnecting"', () => {
+        it('re-emits "stateChanged" event states', () => {
+          const test = makeTest({ state: 'reconnecting' });
+          let stateChanged;
+          test.participant.once('foo', participant => { stateChanged = participant; });
+          test.signaling.emit('stateChanged', 'foo');
+          assert.equal(
+            test.participant,
+            stateChanged);
+        });
+      });
+
       context('when the LocalParticipant .state is "disconnected"', () => {
         it('does not re-emit "stateChanged" event states', () => {
           const test = makeTest({ state: 'disconnected' });
@@ -1017,6 +1029,54 @@ describe('LocalParticipant', () => {
     });
   });
 
+  describe('LocalParticipantSignaling "stateChanged" events', () => {
+    describe('"reconnecting"', () => {
+      context('when the LocalParticipant .state is "connected"', () => {
+        it('should emit "reconnecting" on the LocalParticipant', () => {
+          const test = makeTest();
+          let emitted;
+          test.participant.once('reconnecting', () => { emitted = true; });
+          test.signaling.emit('stateChanged', 'reconnecting');
+          assert(emitted);
+        });
+      });
+
+      context('when the LocalParticipant .state is "disconnected"', () => {
+        it('should not emit "reconnecting" on the LocalParticipant', () => {
+          const test = makeTest();
+          let emitted;
+          test.participant.once('reconnecting', () => { emitted = true; });
+          test.signaling.disconnect();
+          test.signaling.emit('stateChanged', 'reconnecting');
+          assert(!emitted);
+        });
+      });
+    });
+
+    describe('"reconnected"', () => {
+      context('when the LocalParticipant .state is "reconnecting"', () => {
+        it('should emit "reconnected" on the LocalParticipant', () => {
+          const test = makeTest({ state: 'reconnecting' });
+          let emitted;
+          test.participant.once('reconnected', () => { emitted = true; });
+          test.signaling.emit('stateChanged', 'connected');
+          assert(emitted);
+        });
+      });
+
+      context('when the LocalParticipant .state is "disconnected"', () => {
+        it('should not emit "reconnected" on the LocalParticipant', () => {
+          const test = makeTest({ state: 'reconnecting' });
+          let emitted;
+          test.participant.once('reconnected', () => { emitted = true; });
+          test.signaling.disconnect();
+          test.signaling.emit('stateChanged', 'connected');
+          assert(!emitted);
+        });
+      });
+    });
+  });
+
   describe('Object.keys', () => {
     let participant;
 
@@ -1101,6 +1161,7 @@ function makeSignaling(options) {
     signaling.tracks.set(track.id, trackSignaling);
     return signaling;
   });
+  signaling.disconnect = sinon.spy(() => signaling.emit('stateChanged', 'disconnected'));
   signaling.getPublication = sinon.spy(track => {
     return signaling.tracks.get(track.id);
   });

@@ -6,7 +6,7 @@ const { inherits } = require('util');
 const sinon = require('sinon');
 
 const { flatMap } = require('../../../../../lib/util');
-
+const { MediaConnectionError, SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
 const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
@@ -1797,6 +1797,27 @@ describe('RoomV2', () => {
   });
 });
 
+describe('RoomSignaling reconnection states', () => {
+  describe('"reconnecting"', () => {
+    [SignalingConnectionDisconnectedError, MediaConnectionError].forEach(TwilioError => {
+      const shouldTransition = TwilioError === SignalingConnectionDisconnectedError;
+      context(`with a ${TwilioError.name}`, () => {
+        it(`should ${shouldTransition ? '' : 'not '}transition the LocalParticipantV2's .state to "reconnecting"`, () => {
+          const test = makeTest();
+          let newState;
+          test.localParticipant.once('stateChanged', state => { newState = state; });
+          test.room.emit('stateChanged', 'reconnecting', new TwilioError());
+          if (shouldTransition) {
+            assert.equal(newState, 'reconnecting');
+          } else {
+            assert(!newState);
+          }
+        });
+      });
+    });
+  });
+});
+
 function makeId() {
   return Math.floor(Math.random() * 1000 + 0.5);
 }
@@ -2004,6 +2025,7 @@ function makeLocalParticipant(options) {
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
   localParticipant.connect = () => {};
+  localParticipant.reconnecting = sinon.spy(() => localParticipant.emit('stateChanged', 'reconnecting'));
   localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
