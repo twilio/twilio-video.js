@@ -9,6 +9,8 @@ Bug Fixes
 - Fixed a bug where Room.getStats() sometimes returned null stats in a Peer-to-Peer
   Room on Chrome 81+. (JSDK-2640)
 
+- Fixed a bug where sometimes enabling simulcast prevented media flow on screen share tracks on Chrome 81+. (JSDK-2658)
+
 1.20.0 (November 11, 2019)
 ==========================
 

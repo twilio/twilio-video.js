@@ -65,6 +65,12 @@ describe('setSimulcast', () => {
         answer2 = await pc2.createAnswer();
       });
 
+      it('should add GoogleFlagConference flag to modified sdp', () => {
+        const xGoogleFlagConference = 'a=x-google-flag:conference';
+        const sdp1 = createSdp === 'createOffer' ? offer1.sdp : answer1.sdp;
+        assert(sdp1.match(xGoogleFlagConference));
+      });
+
       it('should preserve simulcast SSRCs during renegotiation', () => {
         const sdp1 = createSdp === 'createOffer' ? offer1.sdp : answer1.sdp;
         const sdp2 = createSdp === 'createOffer' ? offer2.sdp : answer2.sdp;
