@@ -80,6 +80,24 @@ describe('Room', () => {
       });
     });
 
+    it('should re-emit RemoteParticipant "participantReconnected" for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('participantReconnected', spy);
+
+      participants.foo.emit('reconnected');
+      assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(participants.foo));
+    });
+
+    it('should re-emit RemoteParticipant "participantReconnecting" for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('participantReconnecting', spy);
+
+      participants.foo.emit('reconnecting');
+      assert.equal(spy.callCount, 1);
+      assert(spy.calledWith(participants.foo));
+    });
+
     it('should re-emit RemoteParticipant trackDimensionsChanged for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackDimensionsChanged', spy);

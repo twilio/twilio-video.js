@@ -12,7 +12,7 @@ const RemoteParticipant = require('../../../lib/remoteparticipant');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
 const { makeUUID } = require('../../../lib/util');
 
-const { a, capitalize } = require('../../lib/util');
+const { a, capitalize, combinationContext } = require('../../lib/util');
 const log = require('../../lib/fakelog');
 
 describe('RemoteParticipant', () => {
@@ -593,34 +593,31 @@ describe('RemoteParticipant', () => {
 
   describe('RemoteParticipantSignaling', () => {
     context('"stateChanged" event', () => {
-      context('when the RemoteParticipant .state begins in "connected"', () => {
-        it('re-emits the "disconnected" state event', () => {
-          const test = makeTest();
-          let disconnected;
-          test.participant.once('disconnected', participant => { disconnected = participant; });
-          test.signaling.emit('stateChanged', 'disconnected');
-          assert.equal(test.participant, disconnected);
-        });
-      });
+      combinationContext([
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `"${x}"`
+        ],
+        [
+          ['connected', 'reconnecting', 'disconnected'],
+          x => `and RemoteParticipantSignaling's .state transitions to "${x}"`
+        ]
+      ], ([state, newState]) => {
+        if (state === 'disconnected' || state === newState) {
+          return;
+        }
 
-      context('when the RemoteParticipant .state transitions to "disconnected"', () => {
-        it('re-emits the "disconnected" state event', () => {
-          const test = makeTest();
-          let disconnected;
-          test.signaling.emit('stateChanged', 'disconnected');
-          test.participant.once('disconnected', () => { disconnected = true; });
-          test.signaling.emit('stateChanged', 'disconnected');
-          assert(!disconnected);
-        });
-      });
+        const participantEvent = {
+          connected: { reconnecting: 'reconnecting', disconnected: 'disconnected' },
+          reconnecting: { connected: 'reconnected', disconnected: 'disconnected' }
+        }[state][newState];
 
-      context('when the RemoteParticipant .state begins in "disconnected"', () => {
-        it('re-emits the "disconnected" state event', () => {
-          const test = makeTest({ state: 'disconnected' });
-          let disconnected;
-          test.participant.once('disconnected', () => { disconnected = true; });
-          test.signaling.emit('stateChanged', 'disconnected');
-          assert(!disconnected);
+        it(`should emit "${participantEvent}" on the Participant`, () => {
+          const test = makeTest({ state });
+          let eventEmitted;
+          test.participant.once(participantEvent, () => { eventEmitted = true; });
+          test.signaling.emit('stateChanged', newState);
+          assert(eventEmitted);
         });
       });
     });
