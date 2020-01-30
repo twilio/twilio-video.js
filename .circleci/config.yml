@@ -230,6 +230,17 @@ jobs:
     environment:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
+    trigger-qe-tests:
+      docker:
+        - image: circleci/node:latest
+      steps:
+        - run:
+            name: Trigger QE tests
+            command: |
+              curl --silent --output /dev/null -u USER_TOKEN: -X POST \
+              --header "Content-Type: application/json" \
+              -d '{"branch":"v${CIRCLE_TAG:0:1}","parameters":{"sdk_version": CIRCLE_TAG,"is_rc":true}}' \
+              $SDKS_QE_CIRCLECI_VOICE_JS_TESTS_ENDPOINT
 
 workflows:
   version: 2
@@ -422,3 +433,14 @@ workflows:
             - "firefox stable group"
             - "chrome stable p2p"
             - "chrome stable group"
+  Release-candidate:
+    jobs:
+      - trigger-qe-tests:
+          filters:
+            tags:
+              only:
+                - /^\d+\.\d+\.\d+-rc\d+$/
+                - /^\d+\.\d+\.\d+-preview\d+-rc\d+$/
+                - /^\d+\.\d+\.\d+-beta\d+-rc\d+$/
+            branches:
+              ignore: /.*/
