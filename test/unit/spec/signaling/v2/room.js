@@ -6,7 +6,6 @@ const { inherits } = require('util');
 const sinon = require('sinon');
 
 const { flatMap } = require('../../../../../lib/util');
-const { MediaConnectionError, SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
 const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
@@ -1797,23 +1796,25 @@ describe('RoomV2', () => {
   });
 });
 
-describe('RoomSignaling reconnection states', () => {
-  describe('"reconnecting"', () => {
-    [SignalingConnectionDisconnectedError, MediaConnectionError].forEach(TwilioError => {
-      const shouldTransition = TwilioError === SignalingConnectionDisconnectedError;
-      context(`with a ${TwilioError.name}`, () => {
-        it(`should ${shouldTransition ? '' : 'not '}transition the LocalParticipantV2's .state to "reconnecting"`, () => {
-          const test = makeTest();
-          let newState;
-          test.localParticipant.once('stateChanged', state => { newState = state; });
-          test.room.emit('stateChanged', 'reconnecting', new TwilioError());
-          if (shouldTransition) {
-            assert.equal(newState, 'reconnecting');
-          } else {
-            assert(!newState);
-          }
-        });
-      });
+describe('"signalingConnectionStateChanged" event', () => {
+  context('when the RoomV2\'s .signalingConnectionState is "reconnecting"', () => {
+    it('should transition the LocalParticipantV2\'s .state to "reconnecting"', () => {
+      const test = makeTest();
+      let newState;
+      test.localParticipant.once('stateChanged', state => { newState = state; });
+      test.transport.sync();
+      assert.equal(newState, 'reconnecting');
+    });
+  });
+
+  context('when the RoomV2\'s .signalingConnectionState is "connected"', () => {
+    it('should transition the LocalParticipantV2\'s .state to "connected"', () => {
+      const test = makeTest();
+      let newState;
+      test.transport.sync();
+      test.localParticipant.once('stateChanged', state => { newState = state; });
+      test.transport.synced();
+      assert.equal(newState, 'connected');
     });
   });
 });
@@ -1911,7 +1912,18 @@ function makeTransport() {
   transport.disconnect = sinon.spy(() => {});
   transport.publish = sinon.spy(() => {});
   transport.publishEvent = sinon.spy(() => {});
-  transport.sync = sinon.spy(() => {});
+
+  transport.sync = sinon.spy(() => {
+    transport.state = 'syncing';
+    transport.emit('stateChanged', 'syncing');
+  });
+
+  transport.synced = sinon.spy(() => {
+    transport.state = 'connected';
+    transport.emit('stateChanged', 'connected');
+  });
+
+  transport.state = 'connected';
   return transport;
 }
 
@@ -2024,7 +2036,7 @@ function makeLocalParticipant(options) {
   localParticipant.revision = 0;
   localParticipant.getState = sinon.spy(() => ({ revision: localParticipant.revision }));
 
-  localParticipant.connect = () => {};
+  localParticipant.connect = sinon.spy(() => localParticipant.emit('stateChanged', 'connected'));
   localParticipant.reconnecting = sinon.spy(() => localParticipant.emit('stateChanged', 'reconnecting'));
   localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
