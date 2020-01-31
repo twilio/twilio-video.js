@@ -443,5 +443,7 @@ workflows:
                 - /^\d+\.\d+\.\d+-preview\d+-rc\d+$/
                 - /^\d+\.\d+\.\d+-beta\d+-rc\d+$/
                 - /^\d+\.\d+\.\d+-rc\.\d+$/
+                - /^\d+\.\d+\.\d+-preview\d+-rc\.\d+$/
+                - /^\d+\.\d+\.\d+-beta\d+-rc\.\d+$/
             branches:
               ignore: /.*/
