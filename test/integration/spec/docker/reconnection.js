@@ -2,21 +2,11 @@
 'use strict';
 
 const assert = require('assert');
-const DockerProxyClient = require('../../../../docker/dockerProxyClient');
+
 const defaults = require('../../../lib/defaults');
-const getToken = require('../../../lib/token');
-
-const {
-  MediaConnectionError,
-  SignalingConnectionDisconnectedError
-} = require('../../../../lib/util/twilio-video-errors');
-
-const {
-  connect,
-  createLocalTracks
-} = require('../../../../lib');
-
 const { isFirefox } = require('../../../lib/guessbrowser');
+const { createRoom, completeRoom } = require('../../../lib/rest');
+const getToken = require('../../../lib/token');
 
 const {
   randomName,
@@ -25,6 +15,14 @@ const {
   smallVideoConstraints,
   waitFor
 } = require('../../../lib/util');
+
+const DockerProxyClient = require('../../../../docker/dockerProxyClient');
+const { connect, createLocalTracks } = require('../../../../lib');
+
+const {
+  MediaConnectionError,
+  SignalingConnectionDisconnectedError
+} = require('../../../../lib/util/twilio-video-errors');
 
 const ONE_MINUTE = 60 * 1000;
 const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
@@ -44,15 +42,22 @@ function waitForTracksToStart(room, n) {
   });
 }
 
-// returns Promise<[room]> - sets up and returns room with nPeople
-function setup(nPeople, extraOptions = {}) {
+/**
+ * Set up a Room for the given number of people.
+ * @param {number} nPeople - Number of people
+ * @param {object} extraOptions - Extra options for the first Participant.
+ * @returns {Promise<Array<Room>>}
+ */
+async function setup(nPeople, extraOptions = {}) {
   const name = randomName();
   const people = ['Alice', 'Bob', 'Charlie', 'Mak'].slice(0, nPeople);
   console.log(`Setting up for ${nPeople} Participants`);
-  return waitFor(people.map(async userName => {
+  const sid = await createRoom(name, defaults.topology);
+
+  return waitFor(people.map(async (userName, i) => {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
     const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
-    const options = Object.assign({ name, tracks }, extraOptions, defaults);
+    const options = Object.assign({ name: sid, tracks }, i === 0 ? extraOptions : {}, defaults);
     const room = await connect(getToken(userName), options);
 
     const roomStr = `${room.localParticipant.identity}:${room.sid}`;
@@ -142,6 +147,7 @@ describe('Reconnection states and events', function() {
     const rooms =  await setup(2);
     await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
     rooms.forEach(room => room.disconnect());
+    return completeRoom(rooms[0].sid);
   });
 
   [1, 2].forEach(nPeople => {
@@ -168,8 +174,9 @@ describe('Reconnection states and events', function() {
       afterEach(async () => {
         if (isRunningInsideDocker) {
           rooms.forEach(room => room.disconnect());
-          rooms = [];
           await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          await completeRoom(rooms[0].sid);
+          rooms = [];
         }
       });
 
@@ -403,14 +410,19 @@ describe('Reconnection states and events', function() {
   describe('ICE gathering timeout', () => {
     let room;
 
-    before(async () => {
-      // NOTE(mmalavalli): We can simulate ICE gathering timeout by forcing TURN
-      // relay and passing an empty RTCIceServers[]. This way, no relay candidates
-      // are gathered, and should force an ICE gathering timeout.
-      [room] = await waitFor(setup(defaults.topology === 'peer-to-peer' ? 2 : 1, {
-        iceServers: [],
-        iceTransportPolicy: 'relay'
-      }), 'Room setup');
+    before(async function() {
+      if (!isRunningInsideDocker) {
+        // eslint-disable-next-line no-invalid-this
+        this.skip();
+      } else {
+        // NOTE(mmalavalli): We can simulate ICE gathering timeout by forcing TURN
+        // relay and passing an empty RTCIceServers[]. This way, no relay candidates
+        // are gathered, and should force an ICE gathering timeout.
+        [room] = await waitFor(setup(defaults.topology === 'peer-to-peer' ? 2 : 1, {
+          iceServers: [],
+          iceTransportPolicy: 'relay'
+        }), 'Room setup');
+      }
     });
 
     it('should emit "reconnecting" on the Room with a MediaConnectionError for the first timeout', async () => {
@@ -423,6 +435,13 @@ describe('Reconnection states and events', function() {
       const disconnectedPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
       const error = await waitFor(disconnectedPromise, 'Room#disconnected');
       assert(error instanceof MediaConnectionError);
+    });
+
+    after(async () => {
+      if (isRunningInsideDocker && room) {
+        room.disconnect();
+        await completeRoom(room.sid);
+      }
     });
   });
 });
