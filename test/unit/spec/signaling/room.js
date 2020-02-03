@@ -21,7 +21,7 @@ const connectionStates = [
   'closed'
 ];
 
-const mediaConnectionStates = [
+const iceConnectionStates = [
   'new',
   'checking',
   'connected',
@@ -41,7 +41,7 @@ class RoomSignalingImpl extends RoomSignaling {
     super(null, null, null, { sessionTimeout });
     this.connectionState = 'new';
     this.signalingConnectionState = 'connected';
-    this.mediaConnectionState = 'new';
+    this.iceConnectionState = 'new';
   }
 
   setConnectionState(connectionState) {
@@ -49,9 +49,9 @@ class RoomSignalingImpl extends RoomSignaling {
     this.emit('connectionStateChanged');
   }
 
-  setMediaConnectionState(mediaConnectionState) {
-    this.mediaConnectionState = mediaConnectionState;
-    this.emit('mediaConnectionStateChanged');
+  setIceConnectionState(iceConnectionState) {
+    this.iceConnectionState = iceConnectionState;
+    this.emit('iceConnectionStateChanged');
   }
 
   setSignalingConnectionState(signalingConnectionState) {
@@ -62,24 +62,24 @@ class RoomSignalingImpl extends RoomSignaling {
 
 describe('RoomSignaling', () => {
   describe('when the Media Connection is not reconnecting,', () => {
-    combinations([connectionStates, signalingConnectionStates, mediaConnectionStates]).forEach(([connectionState, signalingConnectionState, mediaConnectionState]) => {
+    combinations([connectionStates, signalingConnectionStates, iceConnectionStates]).forEach(([connectionState, signalingConnectionState, iceConnectionState]) => {
       const roomState = connectionState === 'failed'
         ? 'disconnected'
         : signalingConnectionState === 'connected'
-          ? mediaConnectionState === 'failed'
+          ? iceConnectionState === 'failed'
             ? 'reconnecting'
             : 'connected'
           : signalingConnectionState;
 
       const reconnectError = signalingConnectionState === 'connected'
-        ? connectionState === 'failed' || mediaConnectionState === 'failed'
+        ? connectionState === 'failed' || iceConnectionState === 'failed'
           ? new MediaConnectionError()
           : null
         : signalingConnectionState === 'reconnecting'
           ? new SignalingConnectionDisconnectedError()
           : null;
 
-      describe(`the Connection State is "${connectionState}", the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${mediaConnectionState}"`, () => {
+      describe(`the Connection State is "${connectionState}", the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${iceConnectionState}"`, () => {
         let error;
         let room;
         let state;
@@ -90,7 +90,7 @@ describe('RoomSignaling', () => {
           room.once('stateChanged', (state_, error_) => { stateChanged = true; state = state_; error = error_; });
           room.setConnectionState(connectionState);
           room.setSignalingConnectionState(signalingConnectionState);
-          room.setMediaConnectionState(mediaConnectionState);
+          room.setIceConnectionState(iceConnectionState);
         });
 
         it(`sets the Room State to "${roomState}"`, () => {
@@ -145,16 +145,16 @@ describe('RoomSignaling', () => {
   });
 
   describe('when the Media Connection is reconnecting', () => {
-    combinations([signalingConnectionStates, mediaConnectionStates]).forEach(([signalingConnectionState, mediaConnectionState]) => {
+    combinations([signalingConnectionStates, iceConnectionStates]).forEach(([signalingConnectionState, iceConnectionState]) => {
       const roomState = signalingConnectionState === 'connected'
-        ? mediaConnectionState === 'new' || mediaConnectionState === 'checking'
+        ? iceConnectionState === 'new' || iceConnectionState === 'checking'
           ? 'reconnecting'
-          : mediaConnectionState === 'failed'
+          : iceConnectionState === 'failed'
             ? 'reconnecting'
             : 'connected'
         : signalingConnectionState;
 
-      describe(`the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${mediaConnectionState}"`, () => {
+      describe(`the Signaling Connection State is "${signalingConnectionState}", and the Media Connection State is "${iceConnectionState}"`, () => {
         let error;
         let room;
         let state;
@@ -162,10 +162,10 @@ describe('RoomSignaling', () => {
 
         before(() => {
           room = new RoomSignalingImpl();
-          room.setMediaConnectionState('failed');
+          room.setIceConnectionState('failed');
           room.once('stateChanged', (state_, error_) => { stateChanged = true; state = state_; error = error_; });
           room.setSignalingConnectionState(signalingConnectionState);
-          room.setMediaConnectionState(mediaConnectionState);
+          room.setIceConnectionState(iceConnectionState);
         });
 
         it(`sets the Room State to "${roomState}"`, () => {

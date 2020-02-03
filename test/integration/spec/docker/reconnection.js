@@ -7,6 +7,7 @@ const defaults = require('../../../lib/defaults');
 const getToken = require('../../../lib/token');
 
 const {
+  MediaConnectionError,
   SignalingConnectionDisconnectedError
 } = require('../../../../lib/util/twilio-video-errors');
 
@@ -44,14 +45,14 @@ function waitForTracksToStart(room, n) {
 }
 
 // returns Promise<[room]> - sets up and returns room with nPeople
-function setup(nPeople) {
+function setup(nPeople, extraOptions = {}) {
   const name = randomName();
   const people = ['Alice', 'Bob', 'Charlie', 'Mak'].slice(0, nPeople);
   console.log(`Setting up for ${nPeople} Participants`);
   return waitFor(people.map(async userName => {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
     const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
-    const options = Object.assign({ name, tracks }, defaults);
+    const options = Object.assign({ name, tracks }, extraOptions, defaults);
     const room = await connect(getToken(userName), options);
 
     const roomStr = `${room.localParticipant.identity}:${room.sid}`;
@@ -63,7 +64,14 @@ function setup(nPeople) {
     room.on('trackStarted', () => console.log(`"trackStarted" emitted by Room: ${roomStr}`));
     room.on('participantConnected', () => console.log(roomStr + ': room received participantConnected'));
 
-    if (nPeople > 1) {
+    const { iceServers, iceTransportPolicy } = extraOptions;
+
+    const shouldWaitForTracksToStart = nPeople > 1 && (
+      iceTransportPolicy !== 'relay'
+      || !Array.isArray(iceServers)
+      || iceServers.length > 0);
+
+    if (shouldWaitForTracksToStart) {
       const trackStartsExpected = (nPeople - 1) * 2;
       await waitFor(waitForTracksToStart(room, trackStartsExpected), `${roomStr}:${trackStartsExpected} Tracks to start`);
     }
@@ -223,7 +231,7 @@ describe('Reconnection states and events', function() {
               ]);
             } catch (err) {
               console.log('rooms - Failed to Reconnect:');
-              rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+              rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
               console.log('rooms - Failed to Reconnect Hope that helps');
               throw err;
             }
@@ -267,7 +275,7 @@ describe('Reconnection states and events', function() {
             ]);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
-            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
             console.log('rooms - Failed to Reconnect Hope that helps');
             throw err;
           }
@@ -305,7 +313,7 @@ describe('Reconnection states and events', function() {
             ]);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
-            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
             console.log('rooms - Failed to Reconnect Hope that helps');
             throw err;
           }
@@ -316,6 +324,7 @@ describe('Reconnection states and events', function() {
         });
       });
 
+      // eslint-disable-next-line no-warning-comments
       // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
       // state is available in prod version of Room Service.
       (nPeople > 1 && defaults.environment !== 'prod' ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
@@ -388,6 +397,32 @@ describe('Reconnection states and events', function() {
           });
         });
       });
+    });
+  });
+
+  describe('ICE gathering timeout', () => {
+    let room;
+
+    before(async () => {
+      // NOTE(mmalavalli): We can simulate ICE gathering timeout by forcing TURN
+      // relay and passing an empty RTCIceServers[]. This way, no relay candidates
+      // are gathered, and should force an ICE gathering timeout.
+      [room] = await waitFor(setup(defaults.topology === 'peer-to-peer' ? 2 : 1, {
+        iceServers: [],
+        iceTransportPolicy: 'relay'
+      }), 'Room setup');
+    });
+
+    it('should emit "reconnecting" on the Room with a MediaConnectionError for the first timeout', async () => {
+      const reconnectingPromise = new Promise(resolve => room.once('reconnecting', error => resolve(error)));
+      const error = await waitFor(reconnectingPromise, 'Room#reconnecting');
+      assert(error instanceof MediaConnectionError);
+    });
+
+    it('should eventually emit "disconnected" on the Room with a MediaConnectionError', async () => {
+      const disconnectedPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
+      const error = await waitFor(disconnectedPromise, 'Room#disconnected');
+      assert(error instanceof MediaConnectionError);
     });
   });
 });
