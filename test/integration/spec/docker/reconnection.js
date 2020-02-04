@@ -166,17 +166,17 @@ describe('Reconnection states and events', function() {
           await waitFor(dockerAPI.resetNetwork(), 'reset network');
           await waitToGoOnline();
           currentNetworks = await readCurrentNetworks(dockerAPI);
-
           rooms = await waitFor(setup(nPeople), 'setup Rooms');
         }
       });
 
       afterEach(async () => {
         if (isRunningInsideDocker) {
+          const sid = rooms[0].sid;
           rooms.forEach(room => room.disconnect());
-          await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
-          await completeRoom(rooms[0].sid);
           rooms = [];
+          await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          await completeRoom(sid);
         }
       });
 
@@ -425,16 +425,20 @@ describe('Reconnection states and events', function() {
       }
     });
 
-    it('should emit "reconnecting" on the Room with a MediaConnectionError for the first timeout', async () => {
-      const reconnectingPromise = new Promise(resolve => room.once('reconnecting', error => resolve(error)));
-      const error = await waitFor(reconnectingPromise, 'Room#reconnecting');
-      assert(error instanceof MediaConnectionError);
+    it('should transition Room .state to "reconnecting" for the first timeout', async () => {
+      if (room.state !== 'reconnecting') {
+        const reconnectingPromise = new Promise(resolve => room.once('reconnecting', error => resolve(error)));
+        const error = await waitFor(reconnectingPromise, 'Room#reconnecting');
+        assert(error instanceof MediaConnectionError);
+      }
     });
 
-    it('should eventually emit "disconnected" on the Room with a MediaConnectionError', async () => {
-      const disconnectedPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
-      const error = await waitFor(disconnectedPromise, 'Room#disconnected');
-      assert(error instanceof MediaConnectionError);
+    it('should eventually transition Room .state to "disconnected"', async () => {
+      if (room.state !== 'disconnected') {
+        const disconnectedPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
+        const error = await waitFor(disconnectedPromise, 'Room#disconnected');
+        assert(error instanceof MediaConnectionError);
+      }
     });
 
     after(async () => {
