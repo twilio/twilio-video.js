@@ -42,6 +42,12 @@ New Features
   });
   ```
 
+  *NOTE*: It can take up to 15 seconds for our signaling backend to detect that a
+  RemoteParticipant's connection has been disrupted due to a network degradation or
+  handoff. This is because we don't want to be too aggressive in attempting reconnections.
+  We encourage you to reach out to us with any feedback you may have in terms of the
+  effect of this delay on your application's user experience.
+
   The LocalParticipant will now also emit "reconnecting" and "reconnected" events
   when the local client is recovering/successfully recovered from a signaling connection
   disruption:
