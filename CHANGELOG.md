@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.1.0 (in progress)
-===================
+2.1.0 (February 4, 2020)
+========================
 
 New Features
 ------------
@@ -30,6 +30,15 @@ New Features
     participant.on('reconnected', () => {
       reconnected(participant);
     });
+  });
+
+  // You can also listen to these events at the Room level.
+  room.on('participantReconnecting', participant => {
+    reconnecting(participant);
+  });
+
+  room.on('participantReconnected', participant => {
+    reconnected(participant);
   });
   ```
 
