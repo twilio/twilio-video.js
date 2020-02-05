@@ -1,5 +1,69 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.1.0 (February 4, 2020)
+========================
+
+New Features
+------------
+
+- A RemoteParticipant will now emit a "reconnecting" event when it is trying to
+  re-establish its signaling connection to the Room after a network disruption/handoff.
+  Once it has successfully reconnected to the Room, it will emit a "reconnected"
+  event. (JSDK-2662)
+  
+  ```js
+  function reconnecting(participant) {
+    console.log(`${participant.identity} is rejoining the Room`);
+    assert.equal(participant.state, 'reconnecting');
+  }
+
+  function reconnected(participant) {
+    console.log(`${participant.identity} has rejoined the Room`);
+    assert.equal(participant.state, 'connected');
+  }
+
+  room.on('participantConnected', participant => {
+    participant.on('reconnecting', () => {
+      reconnecting(participant);
+    });
+
+    participant.on('reconnected', () => {
+      reconnected(participant);
+    });
+  });
+
+  // You can also listen to these events at the Room level.
+  room.on('participantReconnecting', participant => {
+    reconnecting(participant);
+  });
+
+  room.on('participantReconnected', participant => {
+    reconnected(participant);
+  });
+  ```
+
+  *NOTE*: It can take up to 15 seconds for our signaling backend to detect that a
+  RemoteParticipant's connection has been disrupted due to a network degradation or
+  handoff. This is because we don't want to be too aggressive in attempting reconnections.
+  We encourage you to reach out to us with any feedback you may have in terms of the
+  effect of this delay on your application's user experience.
+
+  The LocalParticipant will now also emit "reconnecting" and "reconnected" events
+  when the local client is recovering/successfully recovered from a signaling connection
+  disruption:
+  
+  ```js
+  const { localParticipant } = room;
+
+  localParticipant.on('reconnecting', () => {
+    reconnecting(localParticipant);
+  });
+
+  localParticipant.on('reconnected', () => {
+    reconnected(localParticipant);
+  });
+  ```
+
 2.0.1 (January 21, 2020)
 ========================
 
