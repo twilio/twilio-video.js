@@ -1010,6 +1010,8 @@ function makePeerConnectionV2Constructor(testOptions) {
       fizz: 'buzz'
     });
 
+    peerConnectionV2.setIceReconnectTimeout = sinon.spy(() => {});
+
     peerConnectionV2.connectionState = 'new';
     peerConnectionV2.iceConnectionState = 'new';
 

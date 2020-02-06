@@ -1933,6 +1933,7 @@ function makePeerConnectionManager(getRoom) {
   peerConnectionManager.dequeue = sinon.spy(() => {});
   peerConnectionManager.setTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
+  peerConnectionManager.setIceReconnectTimeout = sinon.spy(() => {});
 
   // eslint-disable-next-line require-await
   peerConnectionManager.getStats = async () => {
