@@ -6,6 +6,8 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 - Fixed a bug where switching between networks (or connecting to VPN) sometimes caused media flow to stop. (JSDK-2667)
 
+- Fixed a bug where calling `VideoTrack.attach` with `video` element that was attached to the DOM caused the video to flicker. (JSDK-2641)
+
 
 2.1.0 (February 4, 2020)
 ========================
