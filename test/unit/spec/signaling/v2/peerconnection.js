@@ -11,8 +11,7 @@ const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnect
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const { a, combinationContext, makeEncodingParameters } = require('../../../../lib/util');
-const utils = require('../../../../../lib/util');
+const { a, combinationContext, makeEncodingParameters, waitForSometime } = require('../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   let didStartMonitor;
@@ -48,6 +47,36 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('.connectionState', () => {
+    it('equals the underlying RTCPeerConnection\'s .connectionState', () => {
+      const test = makeTest();
+      test.pc.connectionState = 'connected';
+      assert.equal(test.pcv2.connectionState, 'connected');
+    });
+
+    it('equals "failed" when IceConnectionMonitor detects failures, also emits "connectionStateChanged"', async () => {
+      const test = makeTest();
+
+      // simulate disconnect.
+      test.pc.connectionState = 'disconnected';
+      test.pc.iceConnectionState = 'disconnected';
+      test.pc.emit('iceconnectionstatechange');
+      test.pc.emit('connectionstatechange');
+
+      await oneTick();
+
+      let didEmit = false;
+      test.pcv2.once('connectionStateChanged', () => { didEmit = true; });
+
+      inactiveCallback(); // invoke inactive call back.
+
+      // assert.equal(test.pcv2.connectionState, 'failed');
+      assert.equal(didEmit, true);
+      await oneTick();
+      assert.equal(test.pcv2.connectionState, 'failed');
+    });
+  });
+
   describe('.iceConnectionState', () => {
     it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
       const test = makeTest();
@@ -56,7 +85,7 @@ describe('PeerConnectionV2', () => {
       assert.equal(test.pcv2.iceConnectionState, 'failed');
     });
 
-    it('equals "failed" when IceConnectionMonitor detects failures, also emits the iceConnectionStateChanged', async () => {
+    it('equals "failed" when IceConnectionMonitor detects failures, also emits "iceConnectionStateChanged"', async () => {
       const test = makeTest();
       assert.equal(test.pcv2.iceConnectionState, test.pc.iceConnectionState);
 
@@ -99,6 +128,16 @@ describe('PeerConnectionV2', () => {
         const test = makeTest();
         assert.equal(test.pcv2.isApplicationSectionNegotiated, false);
       });
+    });
+  });
+
+  describe('"connectionStateChanged"', () => {
+    it('emits "connectionStateChanged" when the underlying RTCPeerConnection emits "connectionstatechange"', () => {
+      const test = makeTest();
+      let didEmit = false;
+      test.pcv2.once('connectionStateChanged', () => { didEmit = true; });
+      test.pc.emit('connectionstatechange');
+      assert(didEmit);
     });
   });
 
@@ -821,16 +860,6 @@ describe('PeerConnectionV2', () => {
         return;
       }
 
-      beforeEach(() => {
-        sinon.stub(utils, 'isChromeScreenShareTrack').callsFake(() => {
-          return chromeScreenTrack;
-        });
-      });
-
-      afterEach(() => {
-        utils.isChromeScreenShareTrack.restore();
-      });
-
       // The Test
       let test;
 
@@ -861,7 +890,7 @@ describe('PeerConnectionV2', () => {
       async function setup() {
         let tracks;
         if (chromeScreenTrack) {
-          tracks = [{ kind: 'video', label: 'screen:123' }];
+          tracks = [{ id: 'foo', kind: 'video', label: 'screen:123' }];
         }
         test = makeTest({
           offers: 3,
@@ -869,6 +898,7 @@ describe('PeerConnectionV2', () => {
           maxAudioBitrate: 40,
           maxVideoBitrate: 50,
           enableDscp,
+          isChromeScreenShareTrack: () => chromeScreenTrack,
           isRTCRtpSenderParamsSupported,
           tracks,
         });
@@ -989,37 +1019,44 @@ describe('PeerConnectionV2', () => {
             beforeEach(setup);
             if (signalingState === 'have-local-offer') {
               if (initial) {
-                return itMightEventuallyAnswer();
+                itMightEventuallyAnswer();
+              } else {
+                itShouldHandleGlare();
               }
-              return itShouldHandleGlare();
+            } else {
+              itShouldAnswer();
             }
-            return itShouldAnswer();
+            break;
           case 'answer':
             if (newerEqualOrOlder !== 'equal' || signalingState !== 'have-local-offer') {
               break;
             }
             beforeEach(setup);
-            return itShouldApplyAnswer();
+            itShouldApplyAnswer();
+            break;
           case 'create-offer':
             if (newerEqualOrOlder !== 'newer') {
               break;
             }
             beforeEach(setup);
             if (signalingState === 'have-local-offer') {
-              return itShouldEventuallyCreateOffer();
+              itShouldEventuallyCreateOffer();
+            } else {
+              itShouldCreateOffer();
             }
-            return itShouldCreateOffer();
+            break;
           default: // 'close'
             beforeEach(setup);
-            return itShouldClose();
+            itShouldClose();
+            break;
         }
+      } else {
+        beforeEach(setup);
+        itDoesNothing();
       }
 
-      beforeEach(setup);
-      itDoesNothing();
-
       function itShouldApplyBandwidthConstraints() {
-        it('should apply the specified bandwidth constraints to the remote description', () => {
+        it('should apply the specified bandwidth constraints for AudioTracks and non-screen VideoTracks (Chrome only)', () => {
           if (isRTCRtpSenderParamsSupported) {
             test.pc.getSenders().forEach(sender => {
               const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
@@ -1710,8 +1747,10 @@ describe('PeerConnectionV2', () => {
 
   describe('ICE restart', () => {
     describe('when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "failed",', () => {
-      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', async () => {
-        const test = makeTest({ offers: 2 });
+      let test;
+
+      beforeEach(async () => {
+        test = makeTest({ offers: 2 });
 
         // Do a first round of negotiation.
         await test.pcv2.offer();
@@ -1725,17 +1764,37 @@ describe('PeerConnectionV2', () => {
         test.pc.emit('iceconnectionstatechange');
 
         await oneTick();
+      });
 
+      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', () => {
         // Check .iceRestart equals true.
         assert(test.pc.createOffer.calledWith({
           iceRestart: true
         }));
       });
+
+      it('closes the PeerConnectionV2 after the ICE reconnection timeout expires', async () => {
+        await new Promise(resolve => test.pcv2.once('stateChanged', resolve));
+        assert.equal(test.pcv2.state, 'closed');
+      });
+
+      it('does not close the PeerConnectionV2 when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "connected"', async () => {
+        // Cause an ICE reconnect.
+        test.pc.iceConnectionState = 'connected';
+        test.pc.emit('iceconnectionstatechange');
+
+        // Wait for the session timeout period.
+        await waitForSometime(test.sessionTimeout);
+
+        assert.equal(test.pcv2.state, 'open');
+      });
     });
 
     describe('when ice connection monitor detects inactivity', () => {
-      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', async () => {
-        const test = makeTest({ offers: 2 });
+      let test;
+
+      beforeEach(async () => {
+        test = makeTest({ offers: 2 });
 
         // Do a first round of negotiation.
         await test.pcv2.offer();
@@ -1755,11 +1814,29 @@ describe('PeerConnectionV2', () => {
         await oneTick();
         inactiveCallback(); // invoke inactive call back.
         await oneTick();
+      });
 
+      it('the PeerConnectionV2 calls .createOffer on the underlying RTCPeerConnection with .iceRestart set to true', () => {
         // Check .iceRestart equals true.
         assert(test.pc.createOffer.calledWith({
           iceRestart: true
         }));
+      });
+
+      it('closes the PeerConnectionV2 after the ICE reconnection timeout expires', async () => {
+        await new Promise(resolve => test.pcv2.once('stateChanged', resolve));
+        assert.equal(test.pcv2.state, 'closed');
+      });
+
+      it('does not close the PeerConnectionV2 when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "connected"', async () => {
+        // Cause an ICE reconnect.
+        test.pc.iceConnectionState = 'connected';
+        test.pc.emit('iceconnectionstatechange');
+
+        // Wait for the session timeout period.
+        await waitForSometime(test.sessionTimeout);
+
+        assert.equal(test.pcv2.state, 'open');
       });
     });
 
@@ -2129,20 +2206,35 @@ function makePeerConnectionV2(options) {
   const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video' }];
   tracks.forEach(track => pc.addTrack(track));
 
+  const Backoff = {
+    exponential() {
+      const backoff = new EventEmitter();
+      backoff.backoff = sinon.spy(() => backoff.emit('ready'));
+      backoff.reset = sinon.spy(() => {});
+      return backoff;
+    }
+  };
+
   function RTCPeerConnection() {
     return pc;
   }
 
+  options.Backoff = options.Backoff || Backoff;
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
+  options.isChromeScreenShareTrack = options.isChromeScreenShareTrack || sinon.spy(() => false);
+  options.sessionTimeout = options.sessionTimeout || 100;
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
   options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
   options.options = {
+    Backoff: options.Backoff,
     Event: function(type) { return { type: type }; },
     RTCIceCandidate: identity,
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
+    isChromeScreenShareTrack: options.isChromeScreenShareTrack,
     isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
+    sessionTimeout: options.sessionTimeout,
     setBitrateParameters: options.setBitrateParameters,
     setCodecPreferences: options.setCodecPreferences
   };

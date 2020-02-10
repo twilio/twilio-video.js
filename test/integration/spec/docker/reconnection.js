@@ -2,20 +2,11 @@
 'use strict';
 
 const assert = require('assert');
-const DockerProxyClient = require('../../../../docker/dockerProxyClient');
+
 const defaults = require('../../../lib/defaults');
-const getToken = require('../../../lib/token');
-
-const {
-  SignalingConnectionDisconnectedError
-} = require('../../../../lib/util/twilio-video-errors');
-
-const {
-  connect,
-  createLocalTracks
-} = require('../../../../lib');
-
 const { isFirefox } = require('../../../lib/guessbrowser');
+const { createRoom, completeRoom } = require('../../../lib/rest');
+const getToken = require('../../../lib/token');
 
 const {
   randomName,
@@ -24,6 +15,14 @@ const {
   smallVideoConstraints,
   waitFor
 } = require('../../../lib/util');
+
+const DockerProxyClient = require('../../../../docker/dockerProxyClient');
+const { connect, createLocalTracks } = require('../../../../lib');
+
+const {
+  MediaConnectionError,
+  SignalingConnectionDisconnectedError
+} = require('../../../../lib/util/twilio-video-errors');
 
 const ONE_MINUTE = 60 * 1000;
 const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
@@ -43,18 +42,22 @@ function waitForTracksToStart(room, n) {
   });
 }
 
-// returns Promise<[room]> - sets up and returns room with nPeople
-function setup(nPeople) {
+/**
+ * Set up a Room for the given number of people.
+ * @param {number} nPeople - Number of people
+ * @param {object} extraOptions - Extra options for the first Participant.
+ * @returns {Promise<Array<Room>>}
+ */
+async function setup(nPeople, extraOptions = {}) {
   const name = randomName();
   const people = ['Alice', 'Bob', 'Charlie', 'Mak'].slice(0, nPeople);
   console.log(`Setting up for ${nPeople} Participants`);
-  return waitFor(people.map(async userName => {
+  const sid = await createRoom(name, defaults.topology);
+
+  return waitFor(people.map(async (userName, i) => {
     const constraints = { audio: true, video: smallVideoConstraints, fake: true };
     const tracks = await waitFor(createLocalTracks(constraints), `${userName}: creating LocalTracks`);
-    const options = Object.assign({ name, tracks }, defaults);
-    // NOTE(mmalavalli): Since reconnect tests are failing in Firefox due to media failure,
-    // try actually gathering ICE servers for this test to see if it helps pass the test.
-    delete options.iceServers;
+    const options = Object.assign({ name: sid, tracks }, i === 0 ? extraOptions : {}, defaults);
     const room = await connect(getToken(userName), options);
 
     const roomStr = `${room.localParticipant.identity}:${room.sid}`;
@@ -66,7 +69,14 @@ function setup(nPeople) {
     room.on('trackStarted', () => console.log(`"trackStarted" emitted by Room: ${roomStr}`));
     room.on('participantConnected', () => console.log(roomStr + ': room received participantConnected'));
 
-    if (nPeople > 1) {
+    const { iceServers, iceTransportPolicy } = extraOptions;
+
+    const shouldWaitForTracksToStart = nPeople > 1 && (
+      iceTransportPolicy !== 'relay'
+      || !Array.isArray(iceServers)
+      || iceServers.length > 0);
+
+    if (shouldWaitForTracksToStart) {
       const trackStartsExpected = (nPeople - 1) * 2;
       await waitFor(waitForTracksToStart(room, trackStartsExpected), `${roomStr}:${trackStartsExpected} Tracks to start`);
     }
@@ -137,6 +147,7 @@ describe('Reconnection states and events', function() {
     const rooms =  await setup(2);
     await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
     rooms.forEach(room => room.disconnect());
+    return completeRoom(rooms[0].sid);
   });
 
   [1, 2].forEach(nPeople => {
@@ -155,16 +166,17 @@ describe('Reconnection states and events', function() {
           await waitFor(dockerAPI.resetNetwork(), 'reset network');
           await waitToGoOnline();
           currentNetworks = await readCurrentNetworks(dockerAPI);
-
           rooms = await waitFor(setup(nPeople), 'setup Rooms');
         }
       });
 
-      afterEach(() => {
+      afterEach(async () => {
         if (isRunningInsideDocker) {
+          const sid = rooms[0].sid;
           rooms.forEach(room => room.disconnect());
           rooms = [];
-          return waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+          await completeRoom(sid);
         }
       });
 
@@ -185,7 +197,7 @@ describe('Reconnection states and events', function() {
             reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
             reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
             await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
-            return waitToGoOffline();
+            await waitToGoOffline();
           }
         });
 
@@ -226,7 +238,7 @@ describe('Reconnection states and events', function() {
               ]);
             } catch (err) {
               console.log('rooms - Failed to Reconnect:');
-              rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+              rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
               console.log('rooms - Failed to Reconnect Hope that helps');
               throw err;
             }
@@ -270,7 +282,7 @@ describe('Reconnection states and events', function() {
             ]);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
-            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
             console.log('rooms - Failed to Reconnect Hope that helps');
             throw err;
           }
@@ -308,7 +320,7 @@ describe('Reconnection states and events', function() {
             ]);
           } catch (err) {
             console.log('rooms - Failed to Reconnect. Checking status:');
-            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  mediaConnectionState:${room._signaling.mediaConnectionState}`));
+            rooms.forEach(room => console.log(`ConnectionStates: ${room.localParticipant.identity}: signalingConnectionState:${room._signaling.signalingConnectionState}  iceConnectionState:${room._signaling.iceConnectionState}`));
             console.log('rooms - Failed to Reconnect Hope that helps');
             throw err;
           }
@@ -319,6 +331,7 @@ describe('Reconnection states and events', function() {
         });
       });
 
+      // eslint-disable-next-line no-warning-comments
       // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
       // state is available in prod version of Room Service.
       (nPeople > 1 && defaults.environment !== 'prod' ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
@@ -391,6 +404,48 @@ describe('Reconnection states and events', function() {
           });
         });
       });
+    });
+  });
+
+  describe('ICE gathering timeout', () => {
+    let room;
+
+    before(async function() {
+      if (!isRunningInsideDocker) {
+        // eslint-disable-next-line no-invalid-this
+        this.skip();
+      } else {
+        // NOTE(mmalavalli): We can simulate ICE gathering timeout by forcing TURN
+        // relay and passing an empty RTCIceServers[]. This way, no relay candidates
+        // are gathered, and should force an ICE gathering timeout.
+        [room] = await waitFor(setup(defaults.topology === 'peer-to-peer' ? 2 : 1, {
+          iceServers: [],
+          iceTransportPolicy: 'relay'
+        }), 'Room setup');
+      }
+    });
+
+    it('should transition Room .state to "reconnecting" for the first timeout', async () => {
+      if (room.state !== 'reconnecting') {
+        const reconnectingPromise = new Promise(resolve => room.once('reconnecting', error => resolve(error)));
+        const error = await waitFor(reconnectingPromise, 'Room#reconnecting');
+        assert(error instanceof MediaConnectionError);
+      }
+    });
+
+    it('should eventually transition Room .state to "disconnected"', async () => {
+      if (room.state !== 'disconnected') {
+        const disconnectedPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
+        const error = await waitFor(disconnectedPromise, 'Room#disconnected');
+        assert(error instanceof MediaConnectionError);
+      }
+    });
+
+    after(async () => {
+      if (isRunningInsideDocker && room) {
+        room.disconnect();
+        await completeRoom(room.sid);
+      }
     });
   });
 });
