@@ -8,9 +8,10 @@ const { inherits } = require('util');
 const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
 
+const { getSignalingEndpoint } = require('../../../lib/util/endpoints');
+
 const {
   DEFAULT_LOG_LEVEL,
-  WS_SERVER,
   DEFAULT_REGION,
   subscriptionMode,
   trackSwitchOffMode,
@@ -59,7 +60,7 @@ describe('connect', () => {
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
-      assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+      assert.equal(options.wsServer, getSignalingEndpoint(options.environment, options.region));
     });
   });
 
