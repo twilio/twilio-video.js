@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use strict';
 
-const defaultServerUrl = 'http://localhost:3032/';
+const { DOCKER_PROXY_SERVER_URL } = require('./util');
 
 /**
  * Provides interface to communicate with docker via DockerProxyServer
@@ -14,7 +14,7 @@ class DockerProxyClient {
    */
   constructor(serverUrl) {
     this._requestId = 200;
-    this._serverUrl = serverUrl || defaultServerUrl;
+    this._serverUrl = serverUrl || DOCKER_PROXY_SERVER_URL;
   }
 
   /**
@@ -29,6 +29,28 @@ class DockerProxyClient {
       console.error('isDocker call failed..is DockerProxyServer running? ', err);
       return false;
     }
+  }
+
+  /**
+   * Block the given TURN regions. If none specified, then block all TURN regions.
+   * @param {Array<string>} [regions]
+   * @returns {Promise<void>}
+   */
+  blockTurnRegions(regions) {
+    return this._makeRequest(`blockTurnRegions/${Array.isArray(regions)
+      ? encodeURIComponent(regions.join(','))
+      : 'all'}`);
+  }
+
+  /**
+   * Unblock the given TURN regions. If none specified, then unblock all TURN regions.
+   * @param {Array<string>} [regions]
+   * @returns {Promise<void>}
+   */
+  unblockTurnRegions(regions) {
+    return this._makeRequest(`unblockTurnRegions/${Array.isArray(regions)
+      ? encodeURIComponent(regions.join(','))
+      : 'all'}`);
   }
 
   /**

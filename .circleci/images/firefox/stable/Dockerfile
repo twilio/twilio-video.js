@@ -28,6 +28,20 @@ ENV BROWSER='firefox'
 ENV BVER='stable'
 ENV FIREFOX_BIN=/opt/firefox/firefox
 
+# Switch to user - root
+USER root
+
+# Install and enable iptables
+RUN echo "Setting up iptables..." &&\
+apt-get update &&\
+apt-get install -y iptables &&\
+adduser user1 &&\
+adduser user1 sudo &&\
+su - user1
+
+# Switch back to user - circleci
+USER circleci
+
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
 RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \

@@ -1,11 +1,17 @@
 /* eslint-disable no-console */
 'use strict';
 
-const DEFAULT_SERVER_PORT = 3032;
 const cors = require('cors');
-const fetchRequest = require('./fetchRequest');
 const isDocker = require('is-docker')();
-const version = 1.00;
+const fetchRequest = require('./fetchRequest');
+const { flatMap } = require('../lib/util');
+
+const {
+  DOCKER_PROXY_SERVER_PORT,
+  DOCKER_PROXY_TURN_IP_RANGES,
+  DOCKER_PROXY_TURN_REGIONS,
+  DOCKER_PROXY_VERSION
+} = require('./util');
 
 /**
  * Provides webserver interface to communicate with the docker socket.
@@ -14,7 +20,7 @@ const version = 1.00;
 */
 class DockerProxyServer {
   constructor(port) {
-    this._serverPort = port || DEFAULT_SERVER_PORT;
+    this._serverPort = port || DOCKER_PROXY_SERVER_PORT;
     this._requestId = 4000;
     this._containerId = null;
     this._server = null;
@@ -43,6 +49,8 @@ class DockerProxyServer {
     [
       { endpoint: '/version', handleRequest: '_version' },
       { endpoint: '/isDocker', handleRequest: '_isDocker' },
+      { endpoint: '/blockTurnRegions/:regions', handleRequest: '_blockTurnRegions' },
+      { endpoint: '/unblockTurnRegions/:regions', handleRequest: '_unblockTurnRegions' },
       { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
       { endpoint: '/getContainers', handleRequest: '_getContainers' },
       { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
@@ -74,6 +82,39 @@ class DockerProxyServer {
       });
       this._server.once('error', reject);
     });
+  }
+
+  _ipTables(modifier, target, regions) {
+    const iptableCommands = [];
+
+    const ipAddressRanges = flatMap(
+      regions === 'all' ? DOCKER_PROXY_TURN_REGIONS : regions.split(','),
+      region => DOCKER_PROXY_TURN_IP_RANGES[region]);
+
+    ipAddressRanges.forEach(ipAddressRange =>
+      [['INPUT', 'src'], ['OUTPUT', 'dst']].forEach(([chain, direction]) =>
+        ['tcp', 'udp'].forEach(protocol =>
+          iptableCommands.push(
+            'sudo iptables'
+            + ` --${modifier} ${chain}`
+            + ` --protocol ${protocol}`
+            + ' --match iprange'
+            + ` --${direction}-range ${ipAddressRange}`
+            + ` --jump ${target}`
+          )
+        )));
+
+    return this._runCommand(iptableCommands.join(' && '));
+  }
+
+  // block the given (or all) TURN regions
+  _blockTurnRegions({ regions }) {
+    return this._ipTables('append', 'DROP', regions);
+  }
+
+  // unblock the given (or all) TURN regions
+  _unblockTurnRegions({ regions }) {
+    return this._ipTables('delete', 'DROP', regions);
   }
 
   // resets network to default state
@@ -199,7 +240,7 @@ class DockerProxyServer {
   }
 
   _version() {
-    return Promise.resolve({ version });
+    return Promise.resolve({ version: DOCKER_PROXY_VERSION });
   }
 
   _internalConnectToNetwork({ networkId, containerId }) {
