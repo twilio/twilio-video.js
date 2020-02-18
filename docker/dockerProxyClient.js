@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use strict';
 
-const { DOCKER_PROXY_SERVER_URL } = require('./util');
+const DOCKER_PROXY_SERVER_URL = 'http://localhost:3032/';
 
 /**
  * Provides interface to communicate with docker via DockerProxyServer
@@ -13,7 +13,6 @@ class DockerProxyClient {
    * @param {string} serverUrl - url pointing to an instance of {@link DockerProxyServer}
    */
   constructor(serverUrl) {
-    this._requestId = 200;
     this._serverUrl = serverUrl || DOCKER_PROXY_SERVER_URL;
   }
 
@@ -32,25 +31,21 @@ class DockerProxyClient {
   }
 
   /**
-   * Block the given TURN regions. If none specified, then block all TURN regions.
-   * @param {Array<string>} [regions]
+   * Block the given IP ranges.
+   * @param {Array<string>} ipRanges
    * @returns {Promise<void>}
    */
-  blockTurnRegions(regions) {
-    return this._makeRequest(`blockTurnRegions/${Array.isArray(regions)
-      ? encodeURIComponent(regions.join(','))
-      : 'all'}`);
+  blockIpRanges(ipRanges) {
+    return this._makeRequest(`blockIpRanges/${encodeURIComponent(ipRanges.join(','))}`);
   }
 
   /**
-   * Unblock the given TURN regions. If none specified, then unblock all TURN regions.
-   * @param {Array<string>} [regions]
+   * Unblock the given IP ranges.
+   * @param {Array<string>} ipRanges
    * @returns {Promise<void>}
    */
-  unblockTurnRegions(regions) {
-    return this._makeRequest(`unblockTurnRegions/${Array.isArray(regions)
-      ? encodeURIComponent(regions.join(','))
-      : 'all'}`);
+  unblockIpRanges(ipRanges) {
+    return this._makeRequest(`unblockIpRanges/${encodeURIComponent(ipRanges.join(','))}`);
   }
 
   /**

@@ -9,6 +9,7 @@ const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
+const NTSIceServerSource = require('../../lib/iceserversource/nts');
 const second = 1000;
 const minute = 60 * second;
 
@@ -596,6 +597,24 @@ async function waitForSometime(timeoutMS = 10 * second) {
   await new Promise(resolve => setTimeout(resolve, timeoutMS));
 }
 
+/**
+ * Get the regionalized RTCIceServers[].
+ * @param {string} token
+ * @param {string} region
+ * @param {object} options
+ * @returns {Promise<RTCIceServer[]>}
+ */
+async function getRegionalizedIceServers(token, region, options) {
+  const iceServerSource = new NTSIceServerSource(token, options);
+  const iceServers = await iceServerSource.start();
+  iceServerSource.stop();
+  iceServers.forEach(iceServer => {
+    iceServer.urls = iceServer.urls.replace(/global/, region);
+  });
+  return iceServers;
+}
+
+
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
@@ -603,6 +622,7 @@ exports.combinationContext = combinationContext;
 exports.combinations = combinations;
 exports.isRTCRtpSenderParamsSupported = isRTCRtpSenderParamsSupported;
 exports.dominantSpeakerChanged = dominantSpeakerChanged;
+exports.getRegionalizedIceServers = getRegionalizedIceServers;
 exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;

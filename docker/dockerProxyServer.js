@@ -4,14 +4,9 @@
 const cors = require('cors');
 const isDocker = require('is-docker')();
 const fetchRequest = require('./fetchRequest');
-const { flatMap } = require('../lib/util');
 
-const {
-  DOCKER_PROXY_SERVER_PORT,
-  DOCKER_PROXY_TURN_IP_RANGES,
-  DOCKER_PROXY_TURN_REGIONS,
-  DOCKER_PROXY_VERSION
-} = require('./util');
+const DOCKER_PROXY_SERVER_PORT = 3032;
+const DOCKER_PROXY_VERSION = 1.00;
 
 /**
  * Provides webserver interface to communicate with the docker socket.
@@ -21,7 +16,6 @@ const {
 class DockerProxyServer {
   constructor(port) {
     this._serverPort = port || DOCKER_PROXY_SERVER_PORT;
-    this._requestId = 4000;
     this._containerId = null;
     this._server = null;
     this._instanceLabel = 'dockerProxy' + (new Date()).toISOString();
@@ -49,8 +43,8 @@ class DockerProxyServer {
     [
       { endpoint: '/version', handleRequest: '_version' },
       { endpoint: '/isDocker', handleRequest: '_isDocker' },
-      { endpoint: '/blockTurnRegions/:regions', handleRequest: '_blockTurnRegions' },
-      { endpoint: '/unblockTurnRegions/:regions', handleRequest: '_unblockTurnRegions' },
+      { endpoint: '/blockIpRanges/:ipRanges', handleRequest: '_blockIpRanges' },
+      { endpoint: '/unblockIpRanges/:ipRanges', handleRequest: '_unblockIpRanges' },
       { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
       { endpoint: '/getContainers', handleRequest: '_getContainers' },
       { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
@@ -63,14 +57,13 @@ class DockerProxyServer {
       { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
       { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
       { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
-    ].forEach(route => {
-      app.get(route.endpoint, async (req, res, next) => {
+    ].forEach(({ endpoint, handleRequest }) => {
+      app.get(endpoint, async ({ params }, res, next) => {
         try {
-          const data = await this[route.handleRequest](req.params);
+          const data = await this[handleRequest](params);
           res.send(data);
         } catch (err) {
-          next(err);
-          return;
+          return next(err);
         }
       });
     });
@@ -84,14 +77,10 @@ class DockerProxyServer {
     });
   }
 
-  _ipTables(modifier, target, regions) {
+  _ipTables(modifier, target, ipRanges) {
     const iptableCommands = [];
 
-    const ipAddressRanges = flatMap(
-      regions === 'all' ? DOCKER_PROXY_TURN_REGIONS : regions.split(','),
-      region => DOCKER_PROXY_TURN_IP_RANGES[region]);
-
-    ipAddressRanges.forEach(ipAddressRange =>
+    ipRanges.forEach(ipRange =>
       [['INPUT', 'src'], ['OUTPUT', 'dst']].forEach(([chain, direction]) =>
         ['tcp', 'udp'].forEach(protocol =>
           iptableCommands.push(
@@ -99,7 +88,7 @@ class DockerProxyServer {
             + ` --${modifier} ${chain}`
             + ` --protocol ${protocol}`
             + ' --match iprange'
-            + ` --${direction}-range ${ipAddressRange}`
+            + ` --${direction}-range ${ipRange}`
             + ` --jump ${target}`
           )
         )));
@@ -107,14 +96,14 @@ class DockerProxyServer {
     return this._runCommand(iptableCommands.join(' && '));
   }
 
-  // block the given (or all) TURN regions
-  _blockTurnRegions({ regions }) {
-    return this._ipTables('append', 'DROP', regions);
+  // block the given IP address ranges
+  _blockIpRanges({ ipRanges }) {
+    return this._ipTables('append', 'DROP', ipRanges.split(','));
   }
 
-  // unblock the given (or all) TURN regions
-  _unblockTurnRegions({ regions }) {
-    return this._ipTables('delete', 'DROP', regions);
+  // unblock the given IP address ranges
+  _unblockIpRanges({ ipRanges }) {
+    return this._ipTables('delete', 'DROP', ipRanges.split(','));
   }
 
   // resets network to default state

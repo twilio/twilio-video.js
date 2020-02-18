@@ -8,6 +8,7 @@ const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 
 const {
+  getRegionalizedIceServers,
   randomName,
   waitToGoOffline,
   waitToGoOnline,
@@ -17,13 +18,8 @@ const {
 } = require('../../../lib/util');
 
 const DockerProxyClient = require('../../../../docker/dockerProxyClient');
-
-const {
-  getRegionalizedIceServers,
-  DOCKER_PROXY_TURN_REGIONS
-} = require('../../../../docker/util');
-
 const { connect } = require('../../../../lib');
+const { flatMap } = require('../../../../lib/util');
 
 const {
   MediaConnectionError,
@@ -35,6 +31,24 @@ const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
 const RECONNECTING_TIMEOUT = 5 * ONE_MINUTE;
 const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
 const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
+
+const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'us2'];
+const DOCKER_PROXY_TURN_IP_RANGES = {
+  au1: [
+    '13.210.2.128-13.210.2.159',
+    '54.252.254.64-54.252.254.127'
+  ],
+  us1: [
+    '34.203.254.0-34.203.254.255',
+    '54.172.60.0-54.172.61.255',
+    '34.203.250.0-34.203.251.255'
+  ],
+  us2: [
+    '34.216.110.128-34.216.110.159',
+    '54.244.51.0-54.244.51.255'
+  ]
+};
+
 
 // Resolves when room received n track started events.
 function waitForTracksToStart(room, n) {
@@ -178,23 +192,24 @@ describe('Reconnection states and events', function() {
       const reconnectingPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
       const reconnectedPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnected'));
 
-      await dockerAPI.blockTurnRegions();
+      const ipRanges = flatMap(DOCKER_PROXY_TURN_REGIONS, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
+      await dockerAPI.blockIpRanges(ipRanges);
       await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
 
-      await dockerAPI.unblockTurnRegions();
+      await dockerAPI.unblockIpRanges(ipRanges);
       return waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTED_TIMEOUT);
     });
 
     (defaults.environment === 'prod' ? it : it.skip)('block specific TURN regions', async () => {
       const turnRegionsToBlock = DOCKER_PROXY_TURN_REGIONS.slice(1);
-
+      const ipRanges = flatMap(turnRegionsToBlock, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
       const blockedRooms = rooms.slice(1);
       const reconnectingPromises = blockedRooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
       const reconnectedPromises = blockedRooms.map(room => waitOnceForRoomEvent(room, 'reconnected'));
 
-      await dockerAPI.blockTurnRegions(turnRegionsToBlock);
+      await dockerAPI.blockIpRanges(ipRanges);
       await waitFor(reconnectingPromises, 'reconnectingPromises', RECONNECTING_TIMEOUT);
-      await dockerAPI.unblockTurnRegions(turnRegionsToBlock);
+      await dockerAPI.unblockIpRanges(ipRanges);
       return waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTING_TIMEOUT);
     });
   });
