@@ -3,6 +3,15 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.2.0 (in progress)
 ===================
 
+New Features
+------------
+
+- You will now be disconnected from a Room with a `MediaDTLSTransportFailedError` (error code 53407)
+  when media cannot published to the Room due to a DTLS handshake failure. (JSDK-2552)
+- Media reconnections are now time-bound. Now, if the media connection to the Room
+  is not recovered after a certain time period, which is 30 seconds for now, then you
+  will be disconnected from the Room with a `MediaConnectionError` (error code 53405). (JSDK-2552)
+
 Bug Fixes
 ---------
 
