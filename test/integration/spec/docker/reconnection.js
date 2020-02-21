@@ -319,10 +319,8 @@ describe('Reconnection states and events', function() {
         });
       });
 
-      // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
-      // state is available in prod version of Room Service.
-      (nPeople > 1 && defaults.environment !== 'prod' ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
-        it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
+      (nPeople > 1 ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
+        it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption (@unstable: JSDK-2695) ', async () => {
           const [aliceRoom, bobRoom] = rooms;
           const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
 
