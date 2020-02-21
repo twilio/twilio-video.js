@@ -1,5 +1,23 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.2.0 (in progress)
+===================
+
+New Features
+------------
+
+- You will now be disconnected from a Room with a `MediaDTLSTransportFailedError` (error code 53407)
+  when media cannot published to the Room due to a DTLS handshake failure. (JSDK-2552)
+- Media reconnections are now time-bound. Now, if the media connection to the Room
+  is not recovered after a certain time period, which is 30 seconds for now, then you
+  will be disconnected from the Room with a `MediaConnectionError` (error code 53405). (JSDK-2552)
+
+Bug Fixes
+---------
+
+- Fixed a bug where switching between networks (or connecting to VPN) sometimes caused media flow to stop. (JSDK-2667)
+- Fixed a bug where twilio-video.js failed to load due to a TypeError on Chrome iOS. (JSDK-2670)
+
 2.1.0 (February 4, 2020)
 ========================
 
@@ -10,7 +28,7 @@ New Features
   re-establish its signaling connection to the Room after a network disruption/handoff.
   Once it has successfully reconnected to the Room, it will emit a "reconnected"
   event. (JSDK-2662)
-  
+
   ```js
   function reconnecting(participant) {
     console.log(`${participant.identity} is rejoining the Room`);
@@ -51,7 +69,7 @@ New Features
   The LocalParticipant will now also emit "reconnecting" and "reconnected" events
   when the local client is recovering/successfully recovered from a signaling connection
   disruption:
-  
+
   ```js
   const { localParticipant } = room;
 
