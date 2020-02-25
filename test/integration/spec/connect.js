@@ -258,6 +258,49 @@ describe('connect', function() {
     });
   });
 
+  describe('default(gll) signaling region on LocalParticipant', () => {
+    let cancelablePromise;
+    beforeEach(() => {
+      const identity = randomName();
+      const token = getToken(identity);
+      cancelablePromise = connect(token);
+    });
+
+    it('signalingRegion property should exist on the LocalParticipant and value is a string', async () => {
+      let room;
+      try {
+        room = await cancelablePromise;
+        const roomRegion = room.localParticipant.signalingRegion;
+        assert.equal(typeof roomRegion, 'string');
+      } catch (error) {
+        room.disconnect();
+      }
+    });
+  });
+
+  describe('signaling region on LocalParticipant with region as argument', () => {
+    const regions = ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
+    const randomRegion = regions[Math.floor(Math.random() * regions.length)];
+    let cancelablePromise;
+
+    beforeEach(() => {
+      const identity = randomName();
+      const token = getToken(identity);
+      cancelablePromise = connect(token, Object.assign({ region: randomRegion }));
+    });
+
+    it('signalingRegion property should match the signaling region passed in', async () => {
+      let room;
+      try {
+        room = await cancelablePromise;
+        const roomRegion = room.localParticipant.signalingRegion;
+        assert.equal(roomRegion, randomRegion);
+      } catch (error) {
+        room.disconnect();
+      }
+    });
+  });
+
   describe('called with an incorrect RTCIceServer url', () => {
     let cancelablePromise;
 
