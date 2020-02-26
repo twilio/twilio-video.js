@@ -332,7 +332,7 @@ describe('Reconnection states and events', function() {
       });
 
       (nPeople > 1 ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
-        it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
+        it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption (@unstable: JSDK-2695) ', async () => {
           const [aliceRoom, bobRoom] = rooms;
           const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
 
