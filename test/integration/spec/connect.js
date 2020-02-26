@@ -266,16 +266,16 @@ describe('connect', function() {
       cancelablePromise = connect(token);
     });
 
-    it('signalingRegion property should exist on the LocalParticipant and value is a string', async () => {
+    it('signalingRegion key should exist on the LocalParticipant and value is a string', async () => {
       let room;
       let roomRegion;
       try {
         room = await cancelablePromise;
         roomRegion = room.localParticipant.signalingRegion;
-        await assert.isString(roomRegion);
+        assert('signalingRegion' in roomRegion);
+        assert.equal(typeof roomRegion.signalingRegion, 'string');
       } catch (error) {
-        roomRegion = room.localParticipant.signalingRegion;
-        await assert.equal(error, roomRegion);
+        assert.throws(assert.equal(error, roomRegion));
         room.disconnect();
       } finally {
         if (room) {
@@ -302,10 +302,10 @@ describe('connect', function() {
       try {
         room = await cancelablePromise;
         roomRegion = room.localParticipant.signalingRegion;
-        await assert.equal(roomRegion, randomRegion);
+        assert.equal(roomRegion, randomRegion);
       } catch (error) {
         roomRegion = room.localParticipant.signalingRegion;
-        await assert.equal(error, roomRegion);
+        assert.throws(assert.equal(error, roomRegion));
         room.disconnect();
       } finally {
         if (room) {
