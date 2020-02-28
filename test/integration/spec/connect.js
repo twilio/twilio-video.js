@@ -250,68 +250,13 @@ describe('connect', function() {
               assert(error instanceof SignalingConnectionError);
             } else {
               assert.equal(error, null);
+              assert.equal(typeof room.localParticipant.signalingRegion, 'string');
+              assert('signalingRegion' in room.localParticipant);
               assert(room instanceof Room);
             }
           }
         });
       });
-    });
-  });
-
-  describe('default(gll) signaling region on LocalParticipant', () => {
-    let cancelablePromise;
-    beforeEach(() => {
-      const identity = randomName();
-      const token = getToken(identity);
-      cancelablePromise = connect(token);
-    });
-
-    it('signalingRegion key should exist on the LocalParticipant and value is a string', async () => {
-      let room;
-      let roomRegion;
-      try {
-        room = await cancelablePromise;
-        roomRegion = room.localParticipant;
-        assert('signalingRegion' in roomRegion);
-        assert.equal(typeof roomRegion.signalingRegion, 'string');
-      } catch (error) {
-        assert.throws(assert.equal(error, roomRegion));
-        room.disconnect();
-      } finally {
-        if (room) {
-          room.disconnect();
-        }
-      }
-    });
-  });
-
-  describe('signaling region on LocalParticipant with region as argument', () => {
-    const regions = ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
-    const randomRegion = regions[Math.floor(Math.random() * regions.length)];
-    let cancelablePromise;
-
-    beforeEach(() => {
-      const identity = randomName();
-      const token = getToken(identity);
-      cancelablePromise = connect(token, Object.assign({ region: randomRegion }));
-    });
-
-    it('signalingRegion property should match the signaling region passed in', async () => {
-      let room;
-      let roomRegion;
-      try {
-        room = await cancelablePromise;
-        roomRegion = room.localParticipant.signalingRegion;
-        assert.equal(roomRegion, randomRegion);
-      } catch (error) {
-        roomRegion = room.localParticipant.signalingRegion;
-        assert.throws(assert.equal(error, roomRegion));
-        room.disconnect();
-      } finally {
-        if (room) {
-          room.disconnect();
-        }
-      }
     });
   });
 
