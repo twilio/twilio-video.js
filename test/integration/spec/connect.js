@@ -258,7 +258,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('default(gll) signaling region on LocalParticipant', () => {
+  describe('default(gll) signaling region on LocalParticipant', () => {
     let cancelablePromise;
     beforeEach(() => {
       const identity = randomName();
@@ -271,7 +271,7 @@ describe('connect', function() {
       let roomRegion;
       try {
         room = await cancelablePromise;
-        roomRegion = room.localParticipant.signalingRegion;
+        roomRegion = room.localParticipant;
         assert('signalingRegion' in roomRegion);
         assert.equal(typeof roomRegion.signalingRegion, 'string');
       } catch (error) {
@@ -285,7 +285,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('signaling region on LocalParticipant with region as argument', () => {
+  describe('signaling region on LocalParticipant with region as argument', () => {
     const regions = ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
     const randomRegion = regions[Math.floor(Math.random() * regions.length)];
     let cancelablePromise;
