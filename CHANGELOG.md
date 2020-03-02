@@ -6,7 +6,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- twilio-video.js attempts to connect to signaling server 5 times. It used to invoke this retry logic for initial connection as well as for subsequent re-connections. Now SDK will not attempt retries if connection failed during initial connection. This ensures that it surfaces the initial connection errors faster  (JSDK-2682)
+- twilio-video.js attempts to connect to signaling server 5 times before giving up. It used to invoke this retry logic
+for initial connection as well as for subsequent re-connections. Now SDK will not attempt retries if connection failed
+during initial connection. This ensures that it surfaces the initial connection errors faster  (JSDK-2682)
 
 
 2.2.0 (February 21, 2020)
