@@ -1,5 +1,13 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.3.0 (In Progress)
+=========================
+
+New Features
+------------
+- A LocalParticipant will now have an additional `signalingRegion` property which contains the signaling region the local participant is connected to. (JSDK-2687)
+
+
 2.2.0 (February 21, 2020)
 =========================
 
