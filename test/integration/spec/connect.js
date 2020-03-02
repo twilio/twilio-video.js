@@ -250,7 +250,11 @@ describe('connect', function() {
               assert(error instanceof SignalingConnectionError);
             } else {
               assert.equal(error, null);
-              assert.equal(typeof room.localParticipant.signalingRegion, 'string');
+              if (typeof region !== 'string' || region === 'gll') {
+                assert.equal(typeof room.localParticipant.signalingRegion, 'string');
+              } else {
+                assert.equal(room.localParticipant.signalingRegion, region);
+              }
               assert('signalingRegion' in room.localParticipant);
               assert(room instanceof Room);
             }
