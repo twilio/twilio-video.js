@@ -120,6 +120,90 @@ describe('IceConnectionMonitor', () => {
         assert.strictEqual(iceStats, null);
       });
     });
+
+    it('extracts active connection pair when found', () => {
+      const chromeFakeStats = new Map(Object.entries({
+        'RTCIceCandidatePair_4OFKCmYa_Mi4ThK96': {
+          'id': 'RTCIceCandidatePair_A',
+          'timestamp': 1543863871950.097,
+          'type': 'candidate-pair',
+          'localCandidateId': 'RTCIceCandidate_4OFKCmYa',
+          'remoteCandidateId': 'RTCIceCandidate_Mi4ThK96',
+          'state': 'waiting',
+          'priority': 395789001576824300,
+          'nominated': false,
+          'writable': false,
+          'bytesSent': 10,
+          'bytesReceived': 10,
+        },
+        'RTCIceCandidatePair_4OFKCmYa_Y0FHsxUI': {
+          'id': 'RTCIceCandidatePair_B',
+          'timestamp': 1543863871950.097,
+          'type': 'candidate-pair',
+          'localCandidateId': 'RTCIceCandidate_4OFKCmYa',
+          'remoteCandidateId': 'RTCIceCandidate_Y0FHsxUI',
+          'state': 'in-progress',
+          'priority': 9114723795305643000,
+          'nominated': true,
+          'writable': false,
+          'bytesSent': 20,
+          'bytesReceived': 20,
+        },
+      }));
+
+      const iceConnectionMonitor = new IceConnectionMonitor({
+        getStats: function() {
+          return Promise.resolve(chromeFakeStats);
+        }
+      });
+      return iceConnectionMonitor._getIceConnectionStats().then(activePair => {
+        assert.equal(activePair.bytesReceived, 20);
+        assert.equal(activePair.nominated, true);
+        assert.equal(activePair.id, 'RTCIceCandidatePair_B');
+      });
+    });
+
+    it('returns fake pair with bytesReceived=0 when no active connection pair found', () => {
+      const chromeFakeStats = new Map(Object.entries({
+        'RTCIceCandidatePair_4OFKCmYa_Mi4ThK96': {
+          'id': 'RTCIceCandidatePair_A',
+          'timestamp': 1543863871950.097,
+          'type': 'candidate-pair',
+          'localCandidateId': 'RTCIceCandidate_4OFKCmYa',
+          'remoteCandidateId': 'RTCIceCandidate_Mi4ThK96',
+          'state': 'waiting',
+          'priority': 395789001576824300,
+          'nominated': false,
+          'writable': false,
+          'bytesSent': 10,
+          'bytesReceived': 10,
+        },
+        'RTCIceCandidatePair_4OFKCmYa_Y0FHsxUI': {
+          'id': 'RTCIceCandidatePair_B',
+          'timestamp': 1543863871950.097,
+          'type': 'candidate-pair',
+          'localCandidateId': 'RTCIceCandidate_4OFKCmYa',
+          'remoteCandidateId': 'RTCIceCandidate_Y0FHsxUI',
+          'state': 'in-progress',
+          'priority': 9114723795305643000,
+          'nominated': false,
+          'writable': false,
+          'bytesSent': 20,
+          'bytesReceived': 20,
+        },
+      }));
+
+      const iceConnectionMonitor = new IceConnectionMonitor({
+        getStats: function() {
+          return Promise.resolve(chromeFakeStats);
+        }
+      });
+      return iceConnectionMonitor._getIceConnectionStats().then(activePair => {
+        assert.equal(activePair.bytesReceived, 0);
+        assert.equal(activePair.id, undefined);
+        assert.equal(typeof activePair.timestamp, 'number');
+      });
+    });
   });
 
   describe('.stop', () => {
