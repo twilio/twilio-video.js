@@ -6,6 +6,7 @@ const { inherits } = require('util');
 
 class MockIceServerSource {
   constructor() {
+    console.log('makarand: MockIceServerSource');
     EventEmitter.call(this);
     this.isStarted = false;
     this.start = sinon.spy(this.start.bind(this));

@@ -12,7 +12,6 @@ const { defer } = require('../../../../../lib/util');
 const { AudioContextFactory } = require('../../../../../lib/webaudio/audiocontext');
 
 const { FakeMediaStream, FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
-const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('PeerConnectionManager', () => {
@@ -297,13 +296,6 @@ describe('PeerConnectionManager', () => {
         { id: '123' }
       ]);
       assert.equal(test.peerConnectionManager, test.peerConnectionManager.close());
-    });
-
-    it('calls stop on the IceServerSource', async () => {
-      const test = makeTest();
-      await test.iceServerSource.start();
-      test.peerConnectionManager.close();
-      assert(test.iceServerSource.stop.calledOnce);
     });
 
     it('calls close on any PeerConnectionV2s created with #createAndOffer or #update', async () => {
@@ -958,12 +950,12 @@ function makeTest(options) {
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
 
-  const mockIceServerSource = new MockIceServerSource();
-  options.iceServerSource = options.iceServerSource || mockIceServerSource;
+ //  const mockIceServerSource = new MockIceServerSource();
+ // options.iceServerSource = options.iceServerSource || mockIceServerSource;
 
   options.peerConnectionManager = options.peerConnectionManager
     || new PeerConnectionManager(
-      options.iceServerSource,
+   //   options.iceServerSource,
       makeEncodingParameters(options),
       { audio: [], video: [] },
       options);

@@ -9,7 +9,7 @@ const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 const { defer } = require('../../../../../lib/util');
 const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
 
-const MockIceServerSource = require('../../../../lib/mockiceserversource');
+// const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
@@ -21,33 +21,6 @@ describe('createCancelableRoomSignalingPromise', () => {
   it('constructs a new PeerConnectionManager', () => {
     const test = makeTest();
     assert(test.peerConnectionManager);
-  });
-
-  it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.setConfiguration.calledOnce);
-  });
-
-  it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
-    const track1 = {
-      trackTransceiver: {}
-    };
-    const track2 = {
-      trackTransceiver: {}
-    };
-    const test = makeTest({
-      tracks: [
-        track1,
-        track2
-      ]
-    });
-    assert.deepEqual([track1.trackTransceiver, track2.trackTransceiver],
-      test.peerConnectionManager.setTrackSenders.args[0][0]);
-  });
-
-  it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.createAndOffer.calledOnce);
   });
 
   context('when the CancelablePromise is canceled before .createAndOffer resolves', () => {
@@ -84,7 +57,43 @@ describe('createCancelableRoomSignalingPromise', () => {
     return test.createAndOfferDeferred.promise.then(() => {
       assert(test.transport);
     });
+  });
 
+  it('calls .setConfiguration on the PeerConnectionManager', () => {
+    const test = makeTest();
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert(test.peerConnectionManager.setConfiguration.calledOnce);
+    });
+  });
+
+  it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
+    const track1 = {
+      trackTransceiver: {}
+    };
+    const track2 = {
+      trackTransceiver: {}
+    };
+    const test = makeTest({
+      tracks: [
+        track1,
+        track2
+      ]
+    });
+
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert.deepEqual([track1.trackTransceiver, track2.trackTransceiver],
+        test.peerConnectionManager.setTrackSenders.args[0][0]);
+    });
+  });
+
+  it('calls .createAndOffer on PeerConnectionManager', () => {
+    const test = makeTest();
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert(test.peerConnectionManager.createAndOffer.calledOnce);
+    });
   });
 
   context('when the Transport emits a "connected" event with an initial Room state', () => {
@@ -381,14 +390,16 @@ function makeTest(options) {
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
-  const mockIceServerSource = new MockIceServerSource();
-  options.iceServerSource = options.iceServerSource || mockIceServerSource;
+  options.iceServers = options.iceServers || [1, 2];
+
+  // const mockIceServerSource = new MockIceServerSource();
+  // options.iceServerSource = options.iceServerSource || mockIceServerSource;
 
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
     options.ua,
     options.localParticipant,
-    options.iceServerSource,
+    // options.iceServerSource,
     makeEncodingParameters(options),
     { audio: [], video: [] },
     options);
