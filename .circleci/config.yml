@@ -231,13 +231,14 @@ jobs:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
     trigger-qe-tests:
+      executor: generic-executor
       docker:
         - image: circleci/node:latest
       steps:
         - run:
             name: Trigger QE tests
             command: |
-              curl --silent --output /dev/null -u USER_TOKEN: -X POST \
+              curl --silent --output /dev/null -u SDKSQE_CIRCLECI_API_TOKEN: -X POST \
               --header "Content-Type: application/json" \
               -d '{"branch":"'v${CIRCLE_TAG:0:1}'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
               $SDKS_QE_CIRCLECI_VIDEO_JS_TESTS_ENDPOINT
