@@ -674,9 +674,9 @@ describe('TwilioConnectionTransport', () => {
 
   describe('the underlying TwilioConnection emits', () => {
     let test;
-
+    const MAX_RECONNECT_ATTEMPTS = 3;
     beforeEach(() => {
-      test = makeTest();
+      test = makeTest({ autoOpen: true, maxReconnectAttempts: MAX_RECONNECT_ATTEMPTS  });
     });
 
     context('a "close" event, and the Transport\'s .state is', () => {
@@ -685,7 +685,6 @@ describe('TwilioConnectionTransport', () => {
         let disconnectedError;
 
         beforeEach(() => {
-          test.open();
           test.connect();
           test.transport.once('connected', () => {
             connectedOrMessageEventEmitted = true;
@@ -699,37 +698,33 @@ describe('TwilioConnectionTransport', () => {
         });
 
         context('when closed with an Error', () => {
-          context('when the re-connect attempts haven\'t been exhausted', () => {
-            beforeEach(() => {
-              test.transport._reconnectAttemptsLeft = 1;
-              test.twilioConnection.close(new Error('foo'));
-            });
-
-            it('should transition .state to "syncing"', () => {
-              assert.deepEqual([
-                'connected',
-                'syncing'
-              ], test.transitions);
-            });
+          let reconnectAttempted = 0;
+          beforeEach(() => {
+            test.twilioConnection.close(new Error('foo'));
           });
 
-          context('when the re-connect attempts have been exhausted', () => {
-            beforeEach(() => {
-              test.transport._reconnectAttemptsLeft = 0;
-              test.twilioConnection.close(new Error('foo'));
-            });
+          it('should transition .state to "syncing"', () => {
+            assert.deepEqual([
+              'connected',
+              'syncing'
+            ], test.transitions);
+          });
 
-            it('should transition .state to "disconnected"', () => {
-              assert.deepEqual([
-                'connected',
-                'disconnected'
-              ], test.transitions);
-              assert(disconnectedError instanceof SignalingConnectionError);
-            });
+          it('should not emit either "connected" or "message" events', () => {
+            assert(!connectedOrMessageEventEmitted);
+          });
 
-            it('should not emit either "connected" or "message" events', () => {
-              assert(!connectedOrMessageEventEmitted);
-            });
+          it('should attempt to reconnect until re-connect attempts have been exhausted', () => {
+            test.onSendMessage = () => {
+              reconnectAttempted++;
+              setTimeout(() => test.twilioConnection.close(new Error('foo')), 0);
+            };
+            return new Promise(resolve => test.transport.on('stateChanged', state => {
+              if (state === 'disconnected') {
+                assert.equal(reconnectAttempted, MAX_RECONNECT_ATTEMPTS);
+                resolve();
+              }
+            }));
           });
         });
 
@@ -755,9 +750,13 @@ describe('TwilioConnectionTransport', () => {
       context('"connecting"', () => {
         let connectedOrMessageEventEmitted;
         let disconnectedError;
-
+        let reconnectAttempted = 0;
         beforeEach(() => {
           test.open();
+          test.onSendMessage = () => {
+            reconnectAttempted++;
+            setTimeout(() => test.twilioConnection.close(new Error('foo')), 0);
+          };
           test.transport.once('connected', () => {
             connectedOrMessageEventEmitted = true;
           });
@@ -773,11 +772,13 @@ describe('TwilioConnectionTransport', () => {
           beforeEach(() => {
             test.twilioConnection.close(new Error('foo'));
           });
+
           it('should transition .state to "disconnected"', () => {
             assert.deepEqual([
               'disconnected'
             ], test.transitions);
             assert(disconnectedError instanceof SignalingConnectionError);
+            assert.equal(reconnectAttempted, 1);
           });
 
           it('should not emit either "connected" or "message" events', () => {
@@ -1621,14 +1622,30 @@ describe('TwilioConnectionTransport', () => {
   });
 });
 
-class FakeTwilioConnection extends EventEmitter {
-  constructor() {
-    super();
-    this.close = sinon.spy(error => this.emit('close', error));
-    this.open = () => this.emit('open');
-    this.receiveMessage = message => this.emit('message', message);
-    this.sendMessage = sinon.spy(() => {});
+let instanceId = 1;
+function createFakeTwilioConnection(options) {
+  class FakeTwilioConnection extends EventEmitter {
+    constructor() {
+      super();
+      this.instance = instanceId++;
+      this.close = sinon.spy(error => {
+        this.emit('close', error);
+      });
+      this.open = () => this.emit('open');
+      this.receiveMessage = message => this.emit('message', message);
+      this.sendMessage = sinon.spy(message => {
+        if (options.onSendMessage) {
+          options.onSendMessage(message);
+        }
+      });
+      if (options.autoOpen) {
+        setTimeout(() => this.open(), 0);
+      }
+      options.twilioConnection = this;
+    }
   }
+
+  return FakeTwilioConnection;
 }
 
 function makeTest(options) {
@@ -1649,7 +1666,7 @@ function makeTest(options) {
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
   options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
-  options.TwilioConnection = options.TwilioConnection || FakeTwilioConnection;
+  options.TwilioConnection = options.TwilioConnection || createFakeTwilioConnection(options);
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
     options.accessToken,
@@ -1657,7 +1674,6 @@ function makeTest(options) {
     options.peerConnectionManager,
     options.wsServer,
     options);
-  options.twilioConnection = options.transport._twilioConnection;
   options.transitions = [];
   options.transport.on('stateChanged', state => {
     options.transitions.push(state);
@@ -1666,9 +1682,6 @@ function makeTest(options) {
 
   options.close = error => {
     options.twilioConnection.close(error);
-    setTimeout(() => {
-      options.twilioConnection = options.transport._twilioConnection;
-    });
   };
 
   options.open = () => options.twilioConnection.open();
