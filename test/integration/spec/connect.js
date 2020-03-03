@@ -207,6 +207,7 @@ describe('connect', function() {
   describe.only('media region', () => {
     let sid = null;
     let token = null;
+    let roomName = null;
 
     beforeEach(async () => {
       const identity = randomName();
@@ -256,6 +257,47 @@ describe('connect', function() {
           }
         });
       });
+    });
+
+    it('should allow the first participant to set the Room\'s media region', async () => {
+      let room;
+      let roomRegion;
+      const cancelablePromise = connect(token, Object.assign({ name: sid, mediaRegion: 'us1' }, defaults, { tracks: [] }));
+
+      try {
+        room = await cancelablePromise;
+        roomRegion = room.mediaRegion;
+        roomName = room.name;
+        assert.equal(roomRegion, 'us1');
+      } catch (error) {
+        roomRegion = room.mediaRegion;
+        assert.throws(assert.equal(error, roomRegion));
+        room.disconnect();
+      } finally {
+        if (room) {
+          room.disconnect();
+        }
+      }
+    });
+
+    it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
+      let room;
+      let roomRegion;
+      const cancelablePromise = connect(token, Object.assign({ name: roomName, mediaRegion: 'au1' }, defaults, { tracks: [] }));
+
+      try {
+        room = await cancelablePromise;
+        roomRegion = room.mediaRegion;
+        assert.equal(roomRegion, 'us1');
+      } catch (error) {
+        roomRegion = room.mediaRegion;
+        assert.throws(assert.equal(error, roomRegion));
+        room.disconnect();
+      } finally {
+        if (room) {
+          room.disconnect();
+        }
+      }
     });
   });
 
@@ -315,14 +357,6 @@ describe('connect', function() {
             }
           }
         });
-      });
-
-      it('should allow the first participant to set the Room\'s media region', async () => {
-
-      });
-
-      it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
-
       });
     });
   });
