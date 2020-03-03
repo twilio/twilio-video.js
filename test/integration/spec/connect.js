@@ -18,7 +18,8 @@ const {
   MediaConnectionError,
   SignalingConnectionError,
   TrackNameIsDuplicatedError,
-  TrackNameTooLongError
+  TrackNameTooLongError,
+  RoomMediaRegionInvalidError
 } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
@@ -203,6 +204,61 @@ describe('connect', function() {
     });
   });
 
+  describe.only('media region', () => {
+    let sid = null;
+    let token = null;
+
+    beforeEach(async () => {
+      const identity = randomName();
+      token = getToken(identity);
+      sid = await createRoom(randomName(), defaults.topology);
+    });
+
+    const invalidRegions = ['foo', '34', '$abc', 'abc!'];
+    const validRegions = defaults.regions ? defaults.regions.split(',') : ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
+    const mediaRegions = ['without', 'gll', ...invalidRegions, ...validRegions];
+
+    mediaRegions.forEach(mediaRegion => {
+      const isInvalidRegion = invalidRegions.includes(mediaRegion);
+      const mediaRegionOptions = mediaRegion === 'without' ? {} : { mediaRegion };
+      let scenario = 'when called ';
+      if (isInvalidRegion) {
+        scenario += `with an invalid mediaRegion : ${mediaRegion}`;
+      } else if (mediaRegion === 'without') {
+        scenario += 'without a mediaRegion ';
+      } else {
+        scenario += `with a valid mediaRegion: ${mediaRegion}`;
+      }
+
+      context(scenario, () => {
+        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaConnectionError' : 'resolves with a Room'}`, async () => {
+          const cancelablePromise = connect(token, Object.assign({ name: sid, mediaRegion: mediaRegionOptions }, defaults, { tracks: [] }));
+          assert(cancelablePromise instanceof CancelablePromise);
+
+          let error = null;
+          let room = null;
+          try {
+            room = await cancelablePromise;
+          } catch (error_) {
+            error = error_;
+          } finally {
+            if (room) {
+              room.disconnect();
+              await completeRoom(sid);
+            }
+            if (isInvalidRegion) {
+              assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
+              assert(error instanceof RoomMediaRegionInvalidError);
+            } else {
+              assert.equal(error, null);
+              assert(room instanceof Room);
+            }
+          }
+        });
+      });
+    });
+  });
+
   // eslint-disable-next-line require-await
   describe('signaling region', async () => {
     let sid;
@@ -259,6 +315,14 @@ describe('connect', function() {
             }
           }
         });
+      });
+
+      it('should allow the first participant to set the Room\'s media region', async () => {
+
+      });
+
+      it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
+
       });
     });
   });
