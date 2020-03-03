@@ -672,7 +672,7 @@ describe('TwilioConnectionTransport', () => {
     });
   });
 
-  describe('the underlying TwilioConnection emits', () => {
+  describe.only('the underlying TwilioConnection emits', () => {
     let test;
     const MAX_RECONNECT_ATTEMPTS = 3;
     beforeEach(() => {
@@ -809,9 +809,11 @@ describe('TwilioConnectionTransport', () => {
         let disconnectedError;
 
         beforeEach(() => {
-          test.open();
+          console.log('TRANSITIONS:', test.transitions);
           test.connect();
+          console.log('TRANSITIONS:', test.transitions);
           test.transport.disconnect();
+          console.log('TRANSITIONS:', test.transitions);
 
           test.transport.once('connected', () => {
             connectedOrMessageEventEmitted = true;
