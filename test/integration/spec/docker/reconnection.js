@@ -7,7 +7,6 @@ const defaults = require('../../../lib/defaults');
 const { isFirefox } = require('../../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
-const { SignalingConnectionError } = require('../../../../lib/util/twilio-video-errors');
 
 const {
   randomName,
@@ -21,6 +20,7 @@ const DockerProxyClient = require('../../../../docker/dockerProxyClient');
 const { connect, createLocalTracks } = require('../../../../lib');
 
 const {
+  SignalingConnectionError,
   MediaConnectionError,
   SignalingConnectionDisconnectedError
 } = require('../../../../lib/util/twilio-video-errors');
@@ -174,11 +174,9 @@ describe('Reconnection states and events', function() {
       room = await connect(getToken('Alice'), options);
     } catch (error) {
       // this exception is expected.
-      const expectedCode = 53000;
       const end   = new Date();
       const seconds = (end.getTime() - start.getTime()) / 1000;
-      assert(error instanceof SignalingConnectionError);
-      assert.equal(error.code, expectedCode);
+      assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
       console.log(`Connect rejected after ${seconds} seconds:`, error.message);
       return;
     } finally {
