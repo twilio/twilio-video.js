@@ -7,9 +7,9 @@ const { capitalize } = require('../../lib/util');
 const { isSafari } = require('./guessbrowser');
 const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
+const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
-const NTSIceServerSource = require('../../lib/iceserversource/nts');
 const second = 1000;
 const minute = 60 * second;
 
@@ -601,13 +601,13 @@ async function waitForSometime(timeoutMS = 10 * second) {
  * Get the regionalized RTCIceServers[].
  * @param {string} token
  * @param {string} region
- * @param {object} options
  * @returns {Promise<RTCIceServer[]>}
  */
-async function getRegionalizedIceServers(token, region, options) {
-  const iceServerSource = new NTSIceServerSource(token, options);
-  const iceServers = await iceServerSource.start();
-  iceServerSource.stop();
+async function getRegionalizedIceServers(token, region) {
+  const config = await ecs(token);
+  const videoConfig = config.video || {};
+  const nts = videoConfig.network_traversal_service || {};
+  const iceServers = nts.ice_servers || [];
   iceServers.forEach(iceServer => {
     iceServer.urls = iceServer.urls.replace(/global/, region);
   });
