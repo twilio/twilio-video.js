@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 'use strict';
 
-const defaultServerUrl = 'http://localhost:3032/';
+const DOCKER_PROXY_SERVER_URL = 'http://localhost:3032/';
 
 /**
  * Provides interface to communicate with docker via DockerProxyServer
@@ -13,8 +13,7 @@ class DockerProxyClient {
    * @param {string} serverUrl - url pointing to an instance of {@link DockerProxyServer}
    */
   constructor(serverUrl) {
-    this._requestId = 200;
-    this._serverUrl = serverUrl || defaultServerUrl;
+    this._serverUrl = serverUrl || DOCKER_PROXY_SERVER_URL;
   }
 
   /**
@@ -29,6 +28,34 @@ class DockerProxyClient {
       console.error('isDocker call failed..is DockerProxyServer running? ', err);
       return false;
     }
+  }
+
+  /**
+   * Block the given IP ranges.
+   * @param {Array<string>} ipRanges - ex: ['1.2.3.4-1.2.3.8', '15.16.17.18-15.17.0.0']
+   * @param {Array<string>} [protocols=['tcp', 'udp']]
+   * @returns {Promise<void>}
+   */
+  blockIpRanges(ipRanges, protocols = ['tcp', 'udp']) {
+    return this._makeRequest([
+      'blockIpRanges',
+      protocols.join(','),
+      ipRanges.join(',')
+    ].map(encodeURIComponent).join('/'));
+  }
+
+  /**
+   * Unblock the given IP ranges.
+   * @param {Array<string>} ipRanges - ex: ['1.2.3.4-1.2.3.8', '15.16.17.18-15.17.0.0']
+   * @param {Array<string>} [protocols=['tcp', 'udp']]
+   * @returns {Promise<void>}
+   */
+  unblockIpRanges(ipRanges, protocols = ['tcp', 'udp']) {
+    return this._makeRequest([
+      'unblockIpRanges',
+      protocols.join(','),
+      ipRanges.join(',')
+    ].map(encodeURIComponent).join('/'));
   }
 
   /**
