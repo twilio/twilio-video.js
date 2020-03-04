@@ -1,42 +1,6 @@
 'use strict';
 
-const https = require('https');
-
-const {
-  apiKeySecret,
-  apiKeySid,
-  environment
-} = require('../env');
-
-const hostname = environment && environment !== 'prod'
-  ? `video.${environment}.twilio.com`
-  : 'video.twilio.com';
-
-function post(resource, data) {
-  return new Promise((resolve, reject) => {
-    const request = https.request({
-      auth: `${apiKeySid}:${apiKeySecret}`,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      hostname,
-      method: 'POST',
-      path: resource
-    }, response => {
-      response.setEncoding('utf8');
-      const data = [];
-      response.on('data', chunk => data.push(chunk));
-      response.on('end', () => {
-        try {
-          resolve(JSON.parse(data.join('')));
-        } catch (e) {
-          resolve({ status: 'ok' });
-        }
-      });
-    });
-    request.once('error', reject);
-    request.write(Object.keys(data).map(key => `${key}=${data[key]}`).join('&'));
-    request.end();
-  });
-}
+const { rest } = require('./post');
 
 /**
  * Complete a Room using the REST API.
@@ -44,7 +8,7 @@ function post(resource, data) {
  * @returns {Promise<void>}
  */
 function completeRoom(nameOrSid) {
-  return post(`/v1/Rooms/${nameOrSid}`, {
+  return rest(`/v1/Rooms/${nameOrSid}`, {
     Status: 'completed'
   });
 }
@@ -57,7 +21,7 @@ function completeRoom(nameOrSid) {
  * @returns {Promise<Room.SID>}
  */
 async function createRoom(name, type, roomOptions) {
-  const { sid, status } = await post('/v1/Rooms', Object.assign({
+  const { sid, status } = await rest('/v1/Rooms', Object.assign({
     Type: type,
     UniqueName: name
   }, roomOptions));
@@ -75,7 +39,7 @@ async function createRoom(name, type, roomOptions) {
  */
 function subscribedTracks(publication, room, trackAction) {
   const { localParticipant, sid } = room;
-  return post(`/v1/Rooms/${sid}/Participants/${localParticipant.sid}/SubscribedTracks`, {
+  return rest(`/v1/Rooms/${sid}/Participants/${localParticipant.sid}/SubscribedTracks`, {
     Status: trackAction,
     Track: publication.trackSid
   });
