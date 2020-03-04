@@ -7,6 +7,7 @@ const defaults = require('../../../lib/defaults');
 const { isFirefox } = require('../../../lib/guessbrowser');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
+const { SignalingConnectionError } = require('../../../../lib/util/twilio-video-errors');
 
 const {
   randomName,
@@ -148,6 +149,44 @@ describe('Reconnection states and events', function() {
     await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
     rooms.forEach(room => room.disconnect());
     return completeRoom(rooms[0].sid);
+  });
+
+  it('connect rejects when network is down', async () => {
+    if (!isRunningInsideDocker) {
+      console.log('skipping for not running inside docker');
+      // eslint-disable-next-line no-invalid-this
+      this.skip();
+    }
+
+    await waitFor(dockerAPI.resetNetwork(), 'reset network');
+    await waitToGoOnline();
+    let currentNetworks = await readCurrentNetworks(dockerAPI);
+    const sid = await createRoom(name, defaults.topology);
+    const constraints = { audio: true, video: smallVideoConstraints, fake: true };
+    const tracks = await waitFor(createLocalTracks(constraints), 'creating LocalTracks');
+    const options = Object.assign({ name: sid, tracks }, defaults);
+
+    await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
+    await waitToGoOffline();
+
+    const start = new Date();
+    let room = null;
+    try {
+      room = await connect(getToken('Alice'), options);
+    } catch (error) {
+      // this exception is expected.
+      const expectedCode = 53000;
+      const end   = new Date();
+      const seconds = (end.getTime() - start.getTime()) / 1000;
+      assert(error instanceof SignalingConnectionError);
+      assert.equal(error.code, expectedCode);
+      console.log(`Connect rejected after ${seconds} seconds:`, error.message);
+      return;
+    } finally {
+      console.log('resetting network');
+      await waitFor(dockerAPI.resetNetwork(), 'resetting network');
+    }
+    throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
 
   [1, 2].forEach(nPeople => {
