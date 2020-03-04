@@ -64,28 +64,26 @@ function waitForTracksToStart(room, n) {
 
 /**
  * Set up a Room for the given number of people.
- * @param {string[]} identities - Identities
- * @param {object} [extraOptions={}] - Optional extra options for the first Participant.
- * @param {boolean} [regions=null] - Optional TURN region for each identity.
+ * @param {Array<{identity: string, options?: object, region?: string}>} setupOptions
  * @returns {Promise<Room[]>}
  */
-async function setup(identities, extraOptions = {}, regions = null) {
+async function setup(setupOptions) {
   const name = randomName();
   const sid = await waitFor(createRoom(name, defaults.topology), `${name}: created Room`);
-  return waitFor(identities.map(async (identity, i) => {
-    const options = Object.assign({
+  return waitFor(setupOptions.map(async ({ identity, options = {}, region = null }) => {
+    options = Object.assign({
       audio: true,
       fake: true,
       name: sid,
       video: smallVideoConstraints
-    }, i === 0 ? extraOptions : {}, defaults);
+    }, options, defaults);
 
     const token = getToken(identity);
 
-    if (regions && regions[i]) {
+    if (region) {
       options.iceServers = await waitFor(
-        getRegionalizedIceServers(token, regions[i], options),
-        `${sid}: get TURN servers regionalized to ${regions[i]}`);
+        getRegionalizedIceServers(token, region, options),
+        `${sid}: get TURN servers regionalized to ${region}`);
       options.iceTransportPolicy = 'relay';
     }
 
@@ -96,7 +94,7 @@ async function setup(identities, extraOptions = {}, regions = null) {
       || !Array.isArray(iceServers)
       || iceServers.length > 0;
 
-    const nTracks = (identities.length - 1) * 2;
+    const nTracks = (setupOptions.length - 1) * 2;
     if (shouldWaitForTracksStarted) {
       await waitFor(waitForTracksToStart(room, nTracks), `${sid}: ${nTracks} Tracks started`);
     }
@@ -170,9 +168,9 @@ describe('Reconnection states and events', function() {
         // eslint-disable-next-line no-invalid-this
         this.skip();
       } else {
-        rooms = await setup(['Alice', 'Bob', 'Charlie'], {
-          iceTransportPolicy: 'relay'
-        }, DOCKER_PROXY_TURN_REGIONS);
+        rooms = await setup(['Alice', 'Bob', 'Charlie'].map((identity, i) => {
+          return { identity, region: DOCKER_PROXY_TURN_REGIONS[i] };
+        }));
       }
     });
 
@@ -185,7 +183,7 @@ describe('Reconnection states and events', function() {
     });
 
     it('validate media flow', () => {
-      return waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
+      return waitFor(rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
     (defaults.environment === 'prod' ? it : it.skip)('block all TURN regions', async () => {
@@ -227,7 +225,8 @@ describe('Reconnection states and events', function() {
           await waitFor(dockerAPI.resetNetwork(), 'reset network');
           await waitToGoOnline();
           currentNetworks = await readCurrentNetworks(dockerAPI);
-          rooms = await waitFor(setup(identities), 'setup Rooms');
+          const setupOptions = identities.map(identity => ({ identity }));
+          rooms = await waitFor(setup(setupOptions), 'setup Rooms');
         }
       });
 
@@ -299,7 +298,7 @@ describe('Reconnection states and events', function() {
             ]);
 
             if (identities.length > 1) {
-              await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
+              await waitFor(rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
             }
           });
         });
@@ -330,7 +329,7 @@ describe('Reconnection states and events', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitFor(rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
 
@@ -361,7 +360,7 @@ describe('Reconnection states and events', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitFor(rooms.map(validateMediaFlow), 'validate media flow', VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitFor(rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
       });
@@ -450,13 +449,18 @@ describe('Reconnection states and events', function() {
         // eslint-disable-next-line no-invalid-this
         this.skip();
       } else {
+        const identities = defaults.topology === 'peer-to-peer'
+          ? ['Alice', 'Bob']
+          : ['Alice'];
+
+        const setupOptions = identities.map((identity, i) => i === 0
+          ? { identity, options: { iceServers: [], iceTransportPolicy: 'relay' } }
+          : { identity });
+
         // NOTE(mmalavalli): We can simulate ICE gathering timeout by forcing TURN
         // relay and passing an empty RTCIceServers[]. This way, no relay candidates
         // are gathered, and should force an ICE gathering timeout.
-        [room] = await waitFor(setup(defaults.topology === 'peer-to-peer' ? ['Alice', 'Bob'] : ['Alice'], {
-          iceServers: [],
-          iceTransportPolicy: 'relay'
-        }), 'Room setup');
+        [room] = await waitFor(setup(setupOptions), 'Room setup');
       }
     });
 

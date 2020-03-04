@@ -43,8 +43,8 @@ class DockerProxyServer {
     [
       { endpoint: '/version', handleRequest: '_version' },
       { endpoint: '/isDocker', handleRequest: '_isDocker' },
-      { endpoint: '/blockIpRanges/:ipRanges', handleRequest: '_blockIpRanges' },
-      { endpoint: '/unblockIpRanges/:ipRanges', handleRequest: '_unblockIpRanges' },
+      { endpoint: '/blockIpRanges/:protocols/:ipRanges', handleRequest: '_blockIpRanges' },
+      { endpoint: '/unblockIpRanges/:protocols/:ipRanges', handleRequest: '_unblockIpRanges' },
       { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
       { endpoint: '/getContainers', handleRequest: '_getContainers' },
       { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
@@ -61,7 +61,7 @@ class DockerProxyServer {
       app.get(endpoint, async ({ params }, res, next) => {
         try {
           const data = await this[handleRequest](params);
-          res.send(data);
+          return res.send(data);
         } catch (err) {
           return next(err);
         }
@@ -77,12 +77,12 @@ class DockerProxyServer {
     });
   }
 
-  _ipTables(modifier, target, ipRanges) {
+  _ipTables(modifier, target, protocols, ipRanges) {
     const iptableCommands = [];
 
     ipRanges.forEach(ipRange =>
       [['INPUT', 'src'], ['OUTPUT', 'dst']].forEach(([chain, direction]) =>
-        ['tcp', 'udp'].forEach(protocol =>
+        protocols.forEach(protocol =>
           iptableCommands.push(
             'sudo iptables'
             + ` --${modifier} ${chain}`
@@ -97,13 +97,21 @@ class DockerProxyServer {
   }
 
   // block the given IP address ranges
-  _blockIpRanges({ ipRanges }) {
-    return this._ipTables('append', 'DROP', ipRanges.split(','));
+  _blockIpRanges({ ipRanges, protocols }) {
+    return this._ipTables(
+      'append',
+      'DROP',
+      protocols.split(','),
+      ipRanges.split(','));
   }
 
   // unblock the given IP address ranges
-  _unblockIpRanges({ ipRanges }) {
-    return this._ipTables('delete', 'DROP', ipRanges.split(','));
+  _unblockIpRanges({ ipRanges, protocols }) {
+    return this._ipTables(
+      'delete',
+      'DROP',
+      protocols.split(','),
+      ipRanges.split(','));
   }
 
   // resets network to default state

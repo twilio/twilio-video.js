@@ -32,20 +32,30 @@ class DockerProxyClient {
 
   /**
    * Block the given IP ranges.
-   * @param {Array<string>} ipRanges
+   * @param {Array<string>} ipRanges - ex: ['1.2.3.4-1.2.3.8', '15.16.17.18-15.17.0.0']
+   * @param {Array<string>} [protocols=['tcp', 'udp']]
    * @returns {Promise<void>}
    */
-  blockIpRanges(ipRanges) {
-    return this._makeRequest(`blockIpRanges/${encodeURIComponent(ipRanges.join(','))}`);
+  blockIpRanges(ipRanges, protocols = ['tcp', 'udp']) {
+    return this._makeRequest([
+      'blockIpRanges',
+      protocols.join(','),
+      ipRanges.join(',')
+    ].map(encodeURIComponent).join('/'));
   }
 
   /**
    * Unblock the given IP ranges.
-   * @param {Array<string>} ipRanges
+   * @param {Array<string>} ipRanges - ex: ['1.2.3.4-1.2.3.8', '15.16.17.18-15.17.0.0']
+   * @param {Array<string>} [protocols=['tcp', 'udp']]
    * @returns {Promise<void>}
    */
-  unblockIpRanges(ipRanges) {
-    return this._makeRequest(`unblockIpRanges/${encodeURIComponent(ipRanges.join(','))}`);
+  unblockIpRanges(ipRanges, protocols = ['tcp', 'udp']) {
+    return this._makeRequest([
+      'unblockIpRanges',
+      protocols.join(','),
+      ipRanges.join(',')
+    ].map(encodeURIComponent).join('/'));
   }
 
   /**
