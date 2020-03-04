@@ -950,12 +950,8 @@ function makeTest(options) {
   options.peerConnectionV2s = options.peerConnectionV2s || [];
   options.PeerConnectionV2 = options.PeerConnectionV2 || makePeerConnectionV2Constructor(options);
 
- //  const mockIceServerSource = new MockIceServerSource();
- // options.iceServerSource = options.iceServerSource || mockIceServerSource;
-
   options.peerConnectionManager = options.peerConnectionManager
     || new PeerConnectionManager(
-   //   options.iceServerSource,
       makeEncodingParameters(options),
       { audio: [], video: [] },
       options);
