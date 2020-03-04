@@ -154,8 +154,7 @@ describe('Reconnection states and events', function() {
   it('connect rejects when network is down', async () => {
     if (!isRunningInsideDocker) {
       console.log('skipping for not running inside docker');
-      // eslint-disable-next-line no-invalid-this
-      this.skip();
+      return;
     }
 
     await waitFor(dockerAPI.resetNetwork(), 'reset network');
