@@ -186,7 +186,7 @@ describe('Reconnection states and events', function() {
       return waitFor(rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
-    (defaults.environment === 'prod' ? it : it.skip)('block all TURN regions', async () => {
+    (defaults.environment === 'prod' ? it : it.skip)('block all TURN regions: @unstable', async () => {
       const reconnectingPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
       const reconnectedPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnected'));
 
@@ -198,7 +198,7 @@ describe('Reconnection states and events', function() {
       return waitFor(reconnectedPromises, 'reconnectedPromises', RECONNECTED_TIMEOUT);
     });
 
-    (defaults.environment === 'prod' ? it : it.skip)('block specific TURN regions', async () => {
+    (defaults.environment === 'prod' ? it : it.skip)('block specific TURN regions: @unstable', async () => {
       const turnRegionsToBlock = DOCKER_PROXY_TURN_REGIONS.slice(1);
       const ipRanges = flatMap(turnRegionsToBlock, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
       const blockedRooms = rooms.slice(1);
