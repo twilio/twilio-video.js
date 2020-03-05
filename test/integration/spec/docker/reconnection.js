@@ -224,9 +224,13 @@ describe('Reconnection states and events', function() {
     await waitToGoOnline();
     let currentNetworks = await readCurrentNetworks(dockerAPI);
     const sid = await createRoom(name, defaults.topology);
-    const constraints = { audio: true, video: smallVideoConstraints, fake: true };
-    const tracks = await waitFor(createLocalTracks(constraints), 'creating LocalTracks');
-    const options = Object.assign({ name: sid, tracks }, defaults);
+    const options = Object.assign({
+      audio: true,
+      fake: true,
+      name: sid,
+      video: smallVideoConstraints
+    }, defaults);
+
 
     await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
     await waitToGoOffline();
