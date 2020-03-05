@@ -28,6 +28,9 @@ ENV BROWSER='firefox'
 ENV BVER='unstable'
 ENV FIREFOX_BIN=/opt/firefox/firefox
 
+# TODO(mmalavalli): Add iptables support once network tests are configured
+# to run here.
+
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
 RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \

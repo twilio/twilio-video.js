@@ -1,11 +1,12 @@
 /* eslint-disable no-console */
 'use strict';
 
-const DEFAULT_SERVER_PORT = 3032;
 const cors = require('cors');
-const fetchRequest = require('./fetchRequest');
 const isDocker = require('is-docker')();
-const version = 1.00;
+const fetchRequest = require('./fetchRequest');
+
+const DOCKER_PROXY_SERVER_PORT = 3032;
+const DOCKER_PROXY_VERSION = 1.00;
 
 /**
  * Provides webserver interface to communicate with the docker socket.
@@ -14,8 +15,7 @@ const version = 1.00;
 */
 class DockerProxyServer {
   constructor(port) {
-    this._serverPort = port || DEFAULT_SERVER_PORT;
-    this._requestId = 4000;
+    this._serverPort = port || DOCKER_PROXY_SERVER_PORT;
     this._containerId = null;
     this._server = null;
     this._instanceLabel = 'dockerProxy' + (new Date()).toISOString();
@@ -43,6 +43,8 @@ class DockerProxyServer {
     [
       { endpoint: '/version', handleRequest: '_version' },
       { endpoint: '/isDocker', handleRequest: '_isDocker' },
+      { endpoint: '/blockIpRanges/:protocols/:ipRanges', handleRequest: '_blockIpRanges' },
+      { endpoint: '/unblockIpRanges/:protocols/:ipRanges', handleRequest: '_unblockIpRanges' },
       { endpoint: '/getCurrentContainerId', handleRequest: '_getCurrentContainerId' },
       { endpoint: '/getContainers', handleRequest: '_getContainers' },
       { endpoint: '/getActiveInterface', handleRequest: '_getActiveInterface' },
@@ -55,14 +57,13 @@ class DockerProxyServer {
       { endpoint: '/connectToDefaultNetwork', handleRequest: '_connectToDefaultNetwork' },
       { endpoint: '/getAllNetworks', handleRequest: '_getAllNetworks' },
       { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
-    ].forEach(route => {
-      app.get(route.endpoint, async (req, res, next) => {
+    ].forEach(({ endpoint, handleRequest }) => {
+      app.get(endpoint, async ({ params }, res, next) => {
         try {
-          const data = await this[route.handleRequest](req.params);
-          res.send(data);
+          const data = await this[handleRequest](params);
+          return res.send(data);
         } catch (err) {
-          next(err);
-          return;
+          return next(err);
         }
       });
     });
@@ -74,6 +75,43 @@ class DockerProxyServer {
       });
       this._server.once('error', reject);
     });
+  }
+
+  _ipTables(modifier, target, protocols, ipRanges) {
+    const iptableCommands = [];
+
+    ipRanges.forEach(ipRange =>
+      [['INPUT', 'src'], ['OUTPUT', 'dst']].forEach(([chain, direction]) =>
+        protocols.forEach(protocol =>
+          iptableCommands.push(
+            'sudo iptables'
+            + ` --${modifier} ${chain}`
+            + ` --protocol ${protocol}`
+            + ' --match iprange'
+            + ` --${direction}-range ${ipRange}`
+            + ` --jump ${target}`
+          )
+        )));
+
+    return this._runCommand(iptableCommands.join(' && '));
+  }
+
+  // block the given IP address ranges
+  _blockIpRanges({ ipRanges, protocols }) {
+    return this._ipTables(
+      'append',
+      'DROP',
+      protocols.split(','),
+      ipRanges.split(','));
+  }
+
+  // unblock the given IP address ranges
+  _unblockIpRanges({ ipRanges, protocols }) {
+    return this._ipTables(
+      'delete',
+      'DROP',
+      protocols.split(','),
+      ipRanges.split(','));
   }
 
   // resets network to default state
@@ -199,7 +237,7 @@ class DockerProxyServer {
   }
 
   _version() {
-    return Promise.resolve({ version });
+    return Promise.resolve({ version: DOCKER_PROXY_VERSION });
   }
 
   _internalConnectToNetwork({ networkId, containerId }) {

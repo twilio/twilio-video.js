@@ -127,6 +127,10 @@ describe('TwilioConnectionTransport', () => {
         });
       }
 
+      it('should set the reconnectAttempts to zero initially', () => {
+        assert.equal(0, test.transport._reconnectAttemptsLeft);
+      });
+
       it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that
       ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
       ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
@@ -727,6 +731,7 @@ describe('TwilioConnectionTransport', () => {
         context('when closed with an Error', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
+              test.transport._reconnectAttemptsLeft = 1;
               test.twilioConnection.close(new Error('foo'));
             });
 
@@ -795,32 +800,18 @@ describe('TwilioConnectionTransport', () => {
         });
 
         context('when closed with an Error', () => {
-          context('when the re-connect attempts haven\'t been exhausted', () => {
-            beforeEach(() => {
-              test.twilioConnection.close(new Error('foo'));
-            });
-
-            it('should not transition states', () => {
-              assert.deepEqual([], test.transitions);
-            });
+          beforeEach(() => {
+            test.twilioConnection.close(new Error('foo'));
+          });
+          it('should transition .state to "disconnected"', () => {
+            assert.deepEqual([
+              'disconnected'
+            ], test.transitions);
+            assert(disconnectedError instanceof SignalingConnectionError);
           });
 
-          context('when the re-connect attempts have been exhausted', () => {
-            beforeEach(() => {
-              test.transport._reconnectAttemptsLeft = 0;
-              test.twilioConnection.close(new Error('foo'));
-            });
-
-            it('should transition .state to "disconnected"', () => {
-              assert.deepEqual([
-                'disconnected'
-              ], test.transitions);
-              assert(disconnectedError instanceof SignalingConnectionError);
-            });
-
-            it('should not emit either "connected" or "message" events', () => {
-              assert(!connectedOrMessageEventEmitted);
-            });
+          it('should not emit either "connected" or "message" events', () => {
+            assert(!connectedOrMessageEventEmitted);
           });
         });
 
@@ -1257,10 +1248,12 @@ describe('TwilioConnectionTransport', () => {
 
       context('"connecting", and the message\'s .type is', () => {
         let test;
+        const MAX_RECONNECT_ATTEMPTS = 2;
 
         beforeEach(() => {
-          test = makeTest();
+          test = makeTest({ maxReconnectAttempts: MAX_RECONNECT_ATTEMPTS });
           test.open();
+          assert.equal(0, test.transport._reconnectAttemptsLeft);
         });
 
         context('"connected"', () => {
@@ -1290,6 +1283,10 @@ describe('TwilioConnectionTransport', () => {
             ]);
           });
 
+          it('should set _reconnectAttemptsLeft', () => {
+            assert.equal(MAX_RECONNECT_ATTEMPTS, test.transport._reconnectAttemptsLeft);
+          });
+
           it('should emit "connected"', () => {
             assert.deepEqual(connected, {
               session: 'foo',
@@ -1304,6 +1301,7 @@ describe('TwilioConnectionTransport', () => {
           it('should not emit "message"', () => {
             assert(!message);
           });
+
         });
 
         [
