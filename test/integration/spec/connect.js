@@ -250,6 +250,11 @@ describe('connect', function() {
               assert(error instanceof SignalingConnectionError);
             } else {
               assert.equal(error, null);
+              if (['without', 'gll'].includes(region)) {
+                assert.equal(typeof room.localParticipant.signalingRegion, 'string');
+              } else {
+                assert.equal(room.localParticipant.signalingRegion, region);
+              }
               assert(room instanceof Room);
             }
           }

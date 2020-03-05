@@ -187,6 +187,10 @@ describe('createCancelableRoomSignalingPromise', () => {
               participant: {
                 sid: sid,
                 identity: identity
+              },
+              options: {
+                // eslint-disable-next-line camelcase
+                signaling_region: 'foo'
               }
             });
             assert(test.RoomV2.calledOnce);
@@ -204,6 +208,10 @@ describe('createCancelableRoomSignalingPromise', () => {
                 participant: {
                   sid: sid,
                   identity: identity
+                },
+                options: {
+                  // eslint-disable-next-line camelcase
+                  signaling_region: 'foo'
                 }
               });
             });
@@ -224,6 +232,10 @@ describe('createCancelableRoomSignalingPromise', () => {
                 participant: {
                   sid: sid,
                   identity: identity
+                },
+                options: {
+                  // eslint-disable-next-line camelcase
+                  signaling_region: 'foo'
                 }
               });
               test.cancelableRoomSignalingPromise.cancel();
@@ -247,6 +259,10 @@ describe('createCancelableRoomSignalingPromise', () => {
                 participant: {
                   sid: sid,
                   identity: identity
+                },
+                options: {
+                  // eslint-disable-next-line camelcase
+                  signaling_region: 'foo'
                 }
               });
               test.cancelableRoomSignalingPromise.cancel();
@@ -268,6 +284,10 @@ describe('createCancelableRoomSignalingPromise', () => {
                 participant: {
                   sid: sid,
                   identity: identity
+                },
+                options: {
+                  // eslint-disable-next-line camelcase
+                  signaling_region: 'foo'
                 }
               });
               test.cancelableRoomSignalingPromise.cancel();
@@ -289,6 +309,10 @@ describe('createCancelableRoomSignalingPromise', () => {
                 participant: {
                   sid: sid,
                   identity: identity
+                },
+                options: {
+                  // eslint-disable-next-line camelcase
+                  signaling_region: 'foo'
                 }
               });
               test.cancelableRoomSignalingPromise.cancel();
@@ -421,6 +445,7 @@ function makeLocalParticipantSignaling(options) {
   localParticipant.update = sinon.spy(() => localParticipant.revision++);
   localParticipant.tracks = options.tracks;
   localParticipant.disconnect = sinon.spy(() => {});
+  localParticipant.setSignalingRegion = sinon.spy(() => {});
   localParticipant.connect = sinon.spy((sid, identity) => {
     localParticipant.sid = sid;
     localParticipant.identity = identity;
