@@ -162,6 +162,44 @@ describe('Reconnection states and events', function() {
     assert.equal(typeof isRunningInsideDocker, 'boolean');
   });
 
+  it('connect rejects when network is down', async () => {
+    if (!isRunningInsideDocker) {
+      console.log('skipping for not running inside docker');
+      return;
+    }
+
+    await waitFor(dockerAPI.resetNetwork(), 'reset network');
+    await waitToGoOnline();
+    let currentNetworks = await readCurrentNetworks(dockerAPI);
+    const sid = await createRoom(name, defaults.topology);
+    const options = Object.assign({
+      audio: true,
+      fake: true,
+      name: sid,
+      video: smallVideoConstraints
+    }, defaults);
+
+    await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
+    await waitToGoOffline();
+
+    const start = new Date();
+    let room = null;
+    try {
+      room = await connect(getToken('Alice'), options);
+    } catch (error) {
+      // this exception is expected.
+      const end = new Date();
+      const seconds = (end.getTime() - start.getTime()) / 1000;
+      assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
+      console.log(`Connect rejected after ${seconds} seconds:`, error.message);
+      return;
+    } finally {
+      console.log('resetting network');
+      await waitFor(dockerAPI.resetNetwork(), 'resetting network');
+    }
+    throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
+  });
+
   context('should be able to', () => {
     let rooms;
 
@@ -214,44 +252,6 @@ describe('Reconnection states and events', function() {
     });
   });
 
-  it('connect rejects when network is down', async () => {
-    if (!isRunningInsideDocker) {
-      console.log('skipping for not running inside docker');
-      return;
-    }
-
-    await waitFor(dockerAPI.resetNetwork(), 'reset network');
-    await waitToGoOnline();
-    let currentNetworks = await readCurrentNetworks(dockerAPI);
-    const sid = await createRoom(name, defaults.topology);
-    const options = Object.assign({
-      audio: true,
-      fake: true,
-      name: sid,
-      video: smallVideoConstraints
-    }, defaults);
-
-
-    await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
-    await waitToGoOffline();
-
-    const start = new Date();
-    let room = null;
-    try {
-      room = await connect(getToken('Alice'), options);
-    } catch (error) {
-      // this exception is expected.
-      const end = new Date();
-      const seconds = (end.getTime() - start.getTime()) / 1000;
-      assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
-      console.log(`Connect rejected after ${seconds} seconds:`, error.message);
-      return;
-    } finally {
-      console.log('resetting network');
-      await waitFor(dockerAPI.resetNetwork(), 'resetting network');
-    }
-    throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
-  });
 
   [['Alice'], ['Alice', 'Bob']].forEach(identities => {
     describe(`${identities.length} Participant(s)`, () => {
