@@ -204,7 +204,7 @@ describe('connect', function() {
   });
 
   // eslint-disable-next-line require-await
-  describe.only('signaling region', async () => {
+  describe('signaling region', async () => {
     let sid;
     let token;
     beforeEach(async () => {
