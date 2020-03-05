@@ -5,7 +5,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 New Features
 ------------
-- A LocalParticipant will now have an additional `signalingRegion` property which contains the signaling region the local participant is connected to. (JSDK-2687)
+- A LocalParticipant will now have an additional `signalingRegion` property which contains the geographical region of the signaling edge LocalParticipant is connected to. (JSDK-2687)
 
 
 2.2.0 (February 21, 2020)

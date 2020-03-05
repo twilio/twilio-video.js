@@ -204,7 +204,7 @@ describe('connect', function() {
   });
 
   // eslint-disable-next-line require-await
-  describe('signaling region', async () => {
+  describe.only('signaling region', async () => {
     let sid;
     let token;
     beforeEach(async () => {
@@ -250,12 +250,11 @@ describe('connect', function() {
               assert(error instanceof SignalingConnectionError);
             } else {
               assert.equal(error, null);
-              if (typeof region !== 'string' || region === 'gll') {
+              if (['without', 'gll'].includes(region)) {
                 assert.equal(typeof room.localParticipant.signalingRegion, 'string');
               } else {
                 assert.equal(room.localParticipant.signalingRegion, region);
               }
-              assert('signalingRegion' in room.localParticipant);
               assert(room instanceof Room);
             }
           }
