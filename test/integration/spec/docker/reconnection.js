@@ -241,7 +241,7 @@ describe('Reconnection states and events', function() {
       room = await connect(getToken('Alice'), options);
     } catch (error) {
       // this exception is expected.
-      const end   = new Date();
+      const end = new Date();
       const seconds = (end.getTime() - start.getTime()) / 1000;
       assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
       console.log(`Connect rejected after ${seconds} seconds:`, error.message);
