@@ -222,6 +222,7 @@ describe('connect', function() {
     mediaRegions.forEach(mediaRegion => {
       const isInvalidRegion = invalidRegions.includes(mediaRegion);
       const mediaRegionOptions = mediaRegion === 'without' ? {} : { mediaRegion };
+
       let scenario = 'when called ';
       if (isInvalidRegion) {
         scenario += `with an invalid mediaRegion : ${mediaRegion}`;
@@ -233,7 +234,7 @@ describe('connect', function() {
 
       context(scenario, () => {
         it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaConnectionError' : 'resolves with a Room'}`, async () => {
-          const cancelablePromise = connect(token, Object.assign({ name: sid, mediaRegion: mediaRegionOptions }, defaults, { tracks: [] }));
+          const cancelablePromise = connect(token, Object.assign({ name: sid }, mediaRegionOptions, defaults, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
 
           let error = null;
