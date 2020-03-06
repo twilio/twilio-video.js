@@ -1094,6 +1094,7 @@ describe('LocalParticipant', () => {
         'state',
         'tracks',
         'videoTracks',
+        'signalingRegion'
       ]);
     });
   });
@@ -1113,6 +1114,7 @@ describe('LocalParticipant', () => {
         networkQualityLevel: participant.networkQualityLevel,
         networkQualityStats: participant.networkQualityStats,
         sid: participant.sid,
+        signalingRegion: participant.signalingRegion,
         state: participant.state,
         tracks: {},
         videoTracks: {}

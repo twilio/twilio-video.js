@@ -21,6 +21,7 @@ const defaults = [
   return defaults;
 }, {
   dominantSpeaker: true,
+  environment: 'prod',
   networkQuality: true,
   topology: 'peer-to-peer',
   testStability: 'all' // other choices: 'stable', 'unstable'
