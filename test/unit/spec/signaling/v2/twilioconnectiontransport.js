@@ -8,6 +8,7 @@ const { name, version } = require('../../../../../package.json');
 const TwilioConnectionTransport = require('../../../../../lib/signaling/v2/twilioconnectiontransport');
 const { RoomCompletedError, SignalingConnectionError } = require('../../../../../lib/util/twilio-video-errors');
 const TwilioError = require('../../../../../lib/util/twilioerror');
+const { defer } = require('../../../../../lib/util');
 
 const { combinations } = require('../../../../lib/util');
 
@@ -918,7 +919,7 @@ describe('TwilioConnectionTransport', () => {
           context(`when ${!isReconnecting ? 'not ' : ''}re-connecting`, () => {
             let connectedOrMessageEventEmitted;
 
-            beforeEach(done => {
+            beforeEach(() => {
               test.open();
               test.connect();
               test.transport.once('connected', () => {
@@ -927,13 +928,19 @@ describe('TwilioConnectionTransport', () => {
               test.transport.once('message', () => {
                 connectedOrMessageEventEmitted = true;
               });
+
+              const deferred = defer();
               if (isReconnecting) {
+                test.autoOpen = true;
+                test.sendMessageSpy = message => {
+                  deferred.resolve(message);
+                };
+                // this should kick off reconnect attempt async
                 test.close(new Error('foo'));
+              } else {
+                deferred.resolve();
               }
-              setTimeout(() => {
-                test.open();
-                done();
-              });
+              return deferred.promise;
             });
 
             it('should not emit either "connected" or "message" events', () => {
@@ -948,8 +955,8 @@ describe('TwilioConnectionTransport', () => {
                 ], test.transitions);
               });
 
-              // TODO: debug this test.
-              it.skip('should call .sendMessage on the underlying TwilioConnection with a Sync RSP message', () => {
+              it('should call .sendMessage on the underlying TwilioConnection with a Sync RSP message', () => {
+                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
                 sinon.assert.calledWith(test.twilioConnection.sendMessage, {
                   name: test.name,
                   participant: test.localParticipantState,
@@ -1619,14 +1626,26 @@ describe('TwilioConnectionTransport', () => {
   });
 });
 
-class FakeTwilioConnection extends EventEmitter {
-  constructor() {
-    super();
-    this.close = sinon.spy(error => this.emit('close', error));
-    this.open = () => this.emit('open');
-    this.receiveMessage = message => this.emit('message', message);
-    this.sendMessage = sinon.spy(() => {});
+function createTwilioConnection(options) {
+  class FakeTwilioConnection extends EventEmitter {
+    constructor() {
+      super();
+      this.close = sinon.spy(error => this.emit('close', error));
+      this.open = () => this.emit('open');
+      this.receiveMessage = message => this.emit('message', message);
+      this.sendMessage =  sinon.spy(message => {
+        if (options.sendMessageSpy) {
+          options.sendMessageSpy(message);
+        }
+      });
+      options.twilioConnection = this;
+
+      if (options.autoOpen) {
+        setTimeout(() => this.open(), 0);
+      }
+    }
   }
+  return FakeTwilioConnection;
 }
 
 function makeTest(options) {
@@ -1647,7 +1666,7 @@ function makeTest(options) {
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
   options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
-  options.TwilioConnection = options.TwilioConnection || FakeTwilioConnection;
+  options.TwilioConnection = options.TwilioConnection || createTwilioConnection(options);
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
     options.accessToken,
@@ -1664,9 +1683,6 @@ function makeTest(options) {
 
   options.close = error => {
     options.twilioConnection.close(error);
-    setTimeout(() => {
-      options.twilioConnection = options.transport._twilioConnection;
-    });
   };
 
   options.open = () => options.twilioConnection.open();
