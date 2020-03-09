@@ -8,8 +8,7 @@ const createCancelableRoomSignalingPromise = require('../../../../../lib/signali
 const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 const { defer } = require('../../../../../lib/util');
 const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
-
-// const MockIceServerSource = require('../../../../lib/mockiceserversource');
+const log = require('../../../../lib/fakelog');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
@@ -411,19 +410,17 @@ function makeTest(options) {
   options.room = options.room || {
     disconnect: sinon.spy(() => {})
   };
+  options.log = log;
+
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
   options.iceServers = options.iceServers || [1, 2];
 
-  // const mockIceServerSource = new MockIceServerSource();
-  // options.iceServerSource = options.iceServerSource || mockIceServerSource;
-
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
     options.ua,
     options.localParticipant,
-    // options.iceServerSource,
     makeEncodingParameters(options),
     { audio: [], video: [] },
     options);
