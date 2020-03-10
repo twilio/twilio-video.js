@@ -8,6 +8,7 @@ New Features
 
 - twilio-video.js now raises `connect()` errors due to network disruptions quicker by not retrying after the first connection attempt fails. (JSDK-2682)
 - A LocalParticipant will now have an additional `signalingRegion` property which contains the geographical region of the signaling edge LocalParticipant is connected to. (JSDK-2687)
+- A Room will now have an additional `mediaRegion` property, it has also been added to the `connectOptions` which allows the Participant to choose the region that is used for media processing in a Group Room. This property is not set for Peer-to-Peer Rooms because they do not use a central media server for routing and/or recording. (JSDK-2685)
 
 2.2.0 (February 21, 2020)
 =========================
