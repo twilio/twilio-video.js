@@ -9,6 +9,11 @@ New Features
 - twilio-video.js now raises `connect()` errors due to network disruptions quicker by not retrying after the first connection attempt fails. (JSDK-2682)
 - A LocalParticipant will now have an additional `signalingRegion` property which contains the geographical region of the signaling edge LocalParticipant is connected to. (JSDK-2687)
 
+Bug Fixes
+---------
+
+- Fixed an issue which caused subscriber priority not get updated when calling `setPriority` on `RemoteVideoTrack` on tracks for later joining participants. (JSDK-2707)
+
 2.2.0 (February 21, 2020)
 =========================
 
