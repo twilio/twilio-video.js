@@ -204,7 +204,7 @@ describe('connect', function() {
     });
   });
 
-  describe('media region', () => {
+  describe.only('media region', () => {
     let sid = null;
     let token = null;
     let roomName = null;
@@ -233,7 +233,7 @@ describe('connect', function() {
       }
 
       context(scenario, () => {
-        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaServerRemoteDescFailedError' : 'resolves with a Room'}`, async () => {
+        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaServerRemoteDescFailedError if the room is not p2p' : 'resolves with a Room'}`, async () => {
           const cancelablePromise = connect(token, Object.assign({ name: sid }, mediaRegionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
 
@@ -249,7 +249,11 @@ describe('connect', function() {
               await completeRoom(sid);
             }
             if (isInvalidRegion) {
-              assert(error instanceof MediaServerRemoteDescFailedError, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
+              if (defaults.topology !== 'peer-to-peer') {
+                assert(error instanceof MediaServerRemoteDescFailedError, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
+              } else {
+                assert.equal(room.mediaRegion, null);
+              }
             } else {
               assert.equal(error, null);
               if (defaults.topology === 'peer-to-peer') {
@@ -269,7 +273,7 @@ describe('connect', function() {
       });
     });
 
-    if (defaults.topology !== 'peet-to-peer') {
+    if (defaults.topology !== 'peer-to-peer') {
       it('should allow the first participant to set the Room\'s media region', async () => {
         let room;
         let roomRegion;
