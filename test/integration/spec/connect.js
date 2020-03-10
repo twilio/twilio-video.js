@@ -19,7 +19,7 @@ const {
   SignalingConnectionError,
   TrackNameIsDuplicatedError,
   TrackNameTooLongError,
-  RoomMediaRegionInvalidError
+  MediaServerRemoteDescFailedError
 } = require('../../../lib/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
@@ -204,7 +204,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('media region', () => {
+  describe('media region', () => {
     let sid = null;
     let token = null;
     let roomName = null;
@@ -212,12 +212,12 @@ describe('connect', function() {
     beforeEach(async () => {
       const identity = randomName();
       token = getToken(identity);
-      sid = await createRoom(randomName(), defaults.topology);
+      sid = await createRoom(randomName(), defaults.topology, { MediaRegion: 'gll' });
     });
 
     const invalidRegions = ['foo', '34', '$abc', 'abc!'];
     const validRegions = defaults.regions ? defaults.regions.split(',') : ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
-    const mediaRegions = ['without', 'gll', ...invalidRegions, ...validRegions];
+    const mediaRegions = ['without', ...invalidRegions, ...validRegions];
 
     mediaRegions.forEach(mediaRegion => {
       const isInvalidRegion = invalidRegions.includes(mediaRegion);
@@ -233,8 +233,8 @@ describe('connect', function() {
       }
 
       context(scenario, () => {
-        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaConnectionError' : 'resolves with a Room'}`, async () => {
-          const cancelablePromise = connect(token, Object.assign({ name: sid }, mediaRegionOptions, defaults, { tracks: [] }));
+        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaServerRemoteDescFailedError' : 'resolves with a Room'}`, async () => {
+          const cancelablePromise = connect(token, Object.assign({ name: sid }, mediaRegionOptions, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
 
           let error = null;
@@ -249,10 +249,19 @@ describe('connect', function() {
               await completeRoom(sid);
             }
             if (isInvalidRegion) {
-              assert.equal(room, null, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
-              assert(error instanceof RoomMediaRegionInvalidError);
+              assert(error instanceof MediaServerRemoteDescFailedError, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
             } else {
               assert.equal(error, null);
+              if (defaults.topology === 'peer-to-peer') {
+                assert.equal(room.mediaRegion, null);
+              }
+              if (defaults.topology !== 'peer-to-peer') {
+                if (['without'].includes(mediaRegion)) {
+                  assert.equal(typeof room.mediaRegion, 'string');
+                } else {
+                  assert.equal(room.mediaRegion, mediaRegion);
+                }
+              }
               assert(room instanceof Room);
             }
           }
@@ -260,46 +269,48 @@ describe('connect', function() {
       });
     });
 
-    it('should allow the first participant to set the Room\'s media region', async () => {
-      let room;
-      let roomRegion;
-      const cancelablePromise = connect(token, Object.assign({ name: sid, mediaRegion: 'us1' }, defaults, { tracks: [] }));
+    if (defaults.topology !== 'peet-to-peer') {
+      it('should allow the first participant to set the Room\'s media region', async () => {
+        let room;
+        let roomRegion;
+        const cancelablePromise = connect(token, Object.assign({ name: sid }, { mediaRegion: 'us2' }, defaults, { tracks: [] }));
 
-      try {
-        room = await cancelablePromise;
-        roomRegion = room.mediaRegion;
-        roomName = room.name;
-        assert.equal(roomRegion, 'us1');
-      } catch (error) {
-        roomRegion = room.mediaRegion;
-        assert.throws(assert.equal(error, roomRegion));
-        room.disconnect();
-      } finally {
-        if (room) {
+        try {
+          room = await cancelablePromise;
+          roomRegion = room.mediaRegion;
+          roomName = room.name;
+          assert.equal(roomRegion, 'us2');
+        } catch (error) {
+          roomRegion = room.mediaRegion;
+          assert.throws(assert.equal(error, roomRegion));
           room.disconnect();
+        } finally {
+          if (room) {
+            room.disconnect();
+          }
         }
-      }
-    });
+      });
 
-    it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
-      let room;
-      let roomRegion;
-      const cancelablePromise = connect(token, Object.assign({ name: roomName, mediaRegion: 'au1' }, defaults, { tracks: [] }));
+      it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
+        let room;
+        let roomRegion;
+        const cancelablePromise = connect(token, Object.assign({ name: roomName }, { mediaRegion: 'au1' }, defaults, { tracks: [] }));
 
-      try {
-        room = await cancelablePromise;
-        roomRegion = room.mediaRegion;
-        assert.equal(roomRegion, 'us1');
-      } catch (error) {
-        roomRegion = room.mediaRegion;
-        assert.throws(assert.equal(error, roomRegion));
-        room.disconnect();
-      } finally {
-        if (room) {
+        try {
+          room = await cancelablePromise;
+          roomRegion = room.mediaRegion;
+          assert.equal(roomRegion, 'us2');
+        } catch (error) {
+          roomRegion = room.mediaRegion;
+          assert.throws(assert.equal(error, roomRegion));
           room.disconnect();
+        } finally {
+          if (room) {
+            room.disconnect();
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   // eslint-disable-next-line require-await
