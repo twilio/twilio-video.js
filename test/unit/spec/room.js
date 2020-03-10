@@ -301,7 +301,8 @@ describe('Room', () => {
         'name',
         'participants',
         'sid',
-        'state'
+        'state',
+        'mediaRegion'
       ]);
     });
   });
@@ -324,7 +325,8 @@ describe('Room', () => {
         name: room.name,
         participants: {},
         sid: room.sid,
-        state: room.state
+        state: room.state,
+        mediaRegion: room.mediaRegion
       });
     });
   });
