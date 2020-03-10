@@ -181,7 +181,7 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
-(defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('JSDK-2707', function() {
+(defaults.topology === 'peer-to-peer' ? describe.skip : describe)('JSDK-2707', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   let aliceRoom;
