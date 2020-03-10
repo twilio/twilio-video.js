@@ -181,7 +181,7 @@ describe('RemoteVideoTrack', function() {
   });
 });
 
-(defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('RemoteDataTrack', function() {
+(defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('JSDK-2707', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   let aliceRoom;
@@ -192,11 +192,9 @@ describe('RemoteVideoTrack', function() {
   });
 
   ['Alice', 'Bob'].forEach(subscriber => {
-    it(`(JSDK-2707) ${subscriber} can can control subscriber priority`, async () => {
+    it(`${subscriber} can can control subscriber priority`, async () => {
       const [trackA, trackB] = await Promise.all(['trackA', 'trackB'].map(name => createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints))));
-
       const roomName = await createRoom(randomName(), defaults.topology);
-
       const connectOptions = Object.assign({
         name: roomName,
         tracks: [],
@@ -212,7 +210,6 @@ describe('RemoteVideoTrack', function() {
       // JSDK-2707 caused track signaling to not get setup for late RemoteParticipant.
       // to force the repro this wait is needed.
       await waitForSometime(5000);
-
       const roomSid = aliceRoom.sid;
 
       // Bob joins room later.
@@ -220,7 +217,6 @@ describe('RemoteVideoTrack', function() {
 
       const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
       const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
-
       const publisherLocal = subscriber === 'Alice' ? bobRoom.localParticipant : aliceRoom.localParticipant;
       const publisherRemote =  subscriber === 'Alice' ? bobRemote : aliceRemote;
 
