@@ -12,7 +12,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed an issue which caused subscriber priority changes not take effect when `RemoteVideoTrack.setpriority` was called for tracks on participants that joined later (JSDK-2707)
+- Fixed a bug where calling `setPriority` on RemoteVideoTracks of RemoteParticipants that joined after the LocalParticipant had no effect. (JSDK-2707)
 
 2.2.0 (February 21, 2020)
 =========================
