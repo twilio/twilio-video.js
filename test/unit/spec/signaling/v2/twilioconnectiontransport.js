@@ -702,7 +702,7 @@ describe('TwilioConnectionTransport', () => {
         context('when closed with an Error', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
-              test.transport._sessionTimeoutMS = 1;
+              test.transport._sessionTimeoutMS = 1000;
               test.twilioConnection.close(new Error('foo'));
             });
 
@@ -711,6 +711,25 @@ describe('TwilioConnectionTransport', () => {
                 'connected',
                 'syncing'
               ], test.transitions);
+            });
+
+            it('should attempt multiple times before transitioning to disconnected', () => {
+              let connectRequests  = 0;
+              // set reasonable timeout so that,
+              // it ends up in multiple attempts.
+              test.autoOpen = true;
+              test.sendMessageSpy = () => {
+                connectRequests++;
+                setTimeout(() => test.twilioConnection.close(new Error('foo')));
+              };
+              return new Promise(resolve => {
+                test.transport.on('stateChanged', state => {
+                  if ('disconnected' === state) {
+                    assert(connectRequests > 2);
+                    resolve();
+                  }
+                });
+              });
             });
           });
 
