@@ -215,6 +215,10 @@ describe('RemoteVideoTrack', function() {
       // Bob joins room later.
       bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `Bob to join room: ${roomSid}`);
 
+      // wait for Bob and alice to see each other connected.
+      await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${roomSid}`);
+      await waitFor(participantsConnected(aliceRoom, 1), `Alice to see Bob connected: ${roomSid}`);
+
       const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
       const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
       const publisherLocal = subscriber === 'Alice' ? bobRoom.localParticipant : aliceRoom.localParticipant;
