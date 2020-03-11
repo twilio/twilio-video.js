@@ -614,10 +614,9 @@ describe('RemoteParticipant', () => {
 
         it(`should emit "${participantEvent}" on the Participant`, () => {
           const test = makeTest({ state });
-          let eventEmitted;
-          test.participant.once(participantEvent, () => { eventEmitted = true; });
+          const eventPromise = new Promise(resolve => test.participant.once(participantEvent, resolve));
           test.signaling.emit('stateChanged', newState);
-          assert(eventEmitted);
+          return eventPromise;
         });
       });
     });

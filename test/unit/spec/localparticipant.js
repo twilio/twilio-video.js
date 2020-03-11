@@ -1057,10 +1057,9 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "reconnecting"', () => {
         it('should emit "reconnected" on the LocalParticipant', () => {
           const test = makeTest({ state: 'reconnecting' });
-          let emitted;
-          test.participant.once('reconnected', () => { emitted = true; });
+          const reconnectingPromise = new Promise(resolve => test.participant.once('reconnected', resolve));
           test.signaling.emit('stateChanged', 'connected');
-          assert(emitted);
+          return reconnectingPromise;
         });
       });
 

@@ -259,14 +259,13 @@ describe('Room', () => {
     ].forEach(ReconnectingError => {
       context(`with a ${ReconnectingError.name}`, () => {
         const error = new ReconnectingError();
-        it(`should trigger the same event on the Room with the ${ReconnectingError.name} (${error.code}, "${error.message}")`, () => {
-          const spy = sinon.spy();
-          room.on('reconnecting', spy);
+        it(`should trigger the same event on the Room asynchronously with the ${ReconnectingError.name} (${error.code}, "${error.message}")`, () => {
+          const reconnectingPromise = new Promise(resolve => room.once('reconnecting', error => {
+            assert(error instanceof ReconnectingError);
+            resolve();
+          }));
           signaling.preempt('reconnecting', null, [error]);
-          assert.equal(spy.callCount, 1);
-          assert(spy.args[0][0] instanceof ReconnectingError);
-          assert.equal(spy.args[0][0], error);
-          assert.equal(room.state, 'reconnecting');
+          return reconnectingPromise;
         });
       });
     });
@@ -275,11 +274,9 @@ describe('Room', () => {
   describe('RoomSignaling state changed to "connected"', () => {
     it('should trigger the "reconnected" event on the Room', () => {
       signaling.preempt('reconnecting');
-      const spy = sinon.spy();
-      room.on('reconnected', spy);
+      var connectedPromise = new Promise(resolve => room.once('reconnected', resolve));
       signaling.preempt('connected');
-      assert.equal(spy.callCount, 1);
-      assert.equal(room.state, 'connected');
+      return connectedPromise;
     });
   });
 
