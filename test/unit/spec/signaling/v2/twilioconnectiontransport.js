@@ -726,6 +726,7 @@ describe('TwilioConnectionTransport', () => {
                 test.transport.on('stateChanged', state => {
                   if ('disconnected' === state) {
                     assert(connectRequests > 2);
+                    test.sendMessageSpy = null;
                     resolve();
                   }
                 });
