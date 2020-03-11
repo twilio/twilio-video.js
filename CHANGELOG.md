@@ -8,6 +8,7 @@ New Features
 
 - `reconnecting` and `reconnected` events on Room and LocalParticipant are now fired asynchronously. (JSDK-2696)
 - twilio-video.js now raises `connect()` errors due to network disruptions quicker by not retrying after the first connection attempt fails. (JSDK-2682)
+- twilio-video.js now uses server supplied timeout value to determine reconnect attempts in case of loss of signaling connection.
 - A LocalParticipant will now have an additional `signalingRegion` property which contains the geographical region of the signaling edge LocalParticipant is connected to. (JSDK-2687)
 
 Bug Fixes
