@@ -204,117 +204,65 @@ describe('connect', function() {
     });
   });
 
-  describe.only('media region', () => {
+  describe('media region', () => {
     let sid = null;
     let token = null;
-    let roomName = null;
 
-    beforeEach(async () => {
-      const identity = randomName();
-      token = getToken(identity);
-      sid = await createRoom(randomName(), defaults.topology, { MediaRegion: 'gll' });
-    });
-
-    const invalidRegions = ['foo', '34', '$abc', 'abc!'];
     const validRegions = defaults.regions ? defaults.regions.split(',') : ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
-    const mediaRegions = ['without', ...invalidRegions, ...validRegions];
+    const mediaRegions = ['without', 'gll', ...validRegions];
 
     mediaRegions.forEach(mediaRegion => {
-      const isInvalidRegion = invalidRegions.includes(mediaRegion);
-      const mediaRegionOptions = mediaRegion === 'without' ? {} : { mediaRegion };
-
       let scenario = 'when called ';
-      if (isInvalidRegion) {
-        scenario += `with an invalid mediaRegion : ${mediaRegion}`;
-      } else if (mediaRegion === 'without') {
+      if (mediaRegion === 'without') {
         scenario += 'without a mediaRegion ';
       } else {
         scenario += `with a valid mediaRegion: ${mediaRegion}`;
       }
 
       context(scenario, () => {
-        it(`should return a CancelablePromise that ${isInvalidRegion ? 'rejects with a MediaServerRemoteDescFailedError if the room is not p2p' : 'resolves with a Room'}`, async () => {
-          const cancelablePromise = connect(token, Object.assign({ name: sid }, mediaRegionOptions, { tracks: [] }));
+        let room = null;
+
+        beforeEach(async () => {
+          const identity = randomName();
+          token = getToken(identity);
+          const extraOptions = {};
+          if (mediaRegion !== 'without') {
+            extraOptions.MediaRegion = mediaRegion;
+          }
+          sid = await createRoom(randomName(), defaults.topology, extraOptions);
+        });
+
+        afterEach(async () => {
+          if (room) {
+            room.disconnect();
+            await completeRoom(sid);
+          }
+        });
+        it(`should return a CancelablePromise that ${defaults.topology === 'peer-to-peer' ? 'returns null on Room.mediaRegion' : 'resolves with a Room'}`, async () => {
+          const cancelablePromise = connect(token, Object.assign({ name: sid }, { tracks: [] }));
           assert(cancelablePromise instanceof CancelablePromise);
 
           let error = null;
-          let room = null;
+
           try {
             room = await cancelablePromise;
           } catch (error_) {
             error = error_;
           } finally {
-            if (room) {
-              room.disconnect();
-              await completeRoom(sid);
-            }
-            if (isInvalidRegion) {
-              if (defaults.topology !== 'peer-to-peer') {
-                assert(error instanceof MediaServerRemoteDescFailedError, `Connected to Room ${room && room.sid} with an invalid mediaRegion "${mediaRegion}"`);
-              } else {
-                assert.equal(room.mediaRegion, null);
-              }
+            if (defaults.topology === 'peer-to-peer') {
+              assert.equal(room.mediaRegion, null);
+            } else if (error) {
+              assert(error instanceof MediaServerRemoteDescFailedError);
+            } else if (['gll', 'without'].includes(mediaRegion)) {
+              assert.equal(typeof room.mediaRegion, 'string');
             } else {
-              assert.equal(error, null);
-              if (defaults.topology === 'peer-to-peer') {
-                assert.equal(room.mediaRegion, null);
-              }
-              if (defaults.topology !== 'peer-to-peer') {
-                if (['without'].includes(mediaRegion)) {
-                  assert.equal(typeof room.mediaRegion, 'string');
-                } else {
-                  assert.equal(room.mediaRegion, mediaRegion);
-                }
-              }
-              assert(room instanceof Room);
+              assert('mediaRegion' in room);
+              assert.equal(room.mediaRegion, mediaRegion);
             }
           }
         });
       });
     });
-
-    if (defaults.topology !== 'peer-to-peer') {
-      it('should allow the first participant to set the Room\'s media region', async () => {
-        let room;
-        let roomRegion;
-        const cancelablePromise = connect(token, Object.assign({ name: sid }, { mediaRegion: 'us2' }, defaults, { tracks: [] }));
-
-        try {
-          room = await cancelablePromise;
-          roomRegion = room.mediaRegion;
-          roomName = room.name;
-          assert.equal(roomRegion, 'us2');
-        } catch (error) {
-          roomRegion = room.mediaRegion;
-          assert.throws(assert.equal(error, roomRegion));
-          room.disconnect();
-        } finally {
-          if (room) {
-            room.disconnect();
-          }
-        }
-      });
-
-      it('should have another participant match the media region of the first participant regardless of the parameter being passed in', async () => {
-        let room;
-        let roomRegion;
-        const cancelablePromise = connect(token, Object.assign({ name: roomName }, { mediaRegion: 'au1' }, defaults, { tracks: [] }));
-
-        try {
-          room = await cancelablePromise;
-          roomRegion = room.mediaRegion;
-          assert.equal(roomRegion, 'us2');
-        } catch (error) {
-          roomRegion = room.mediaRegion;
-          assert.throws(assert.equal(error, roomRegion));
-          room.disconnect();
-        } finally {
-          if (room) {
-            room.disconnect();
-          }
-        }
-      });
-    }
   });
 
   // eslint-disable-next-line require-await
@@ -329,7 +277,7 @@ describe('connect', function() {
 
     const invalidRegions = ['foo', '34', '$abc', 'abc!'];
     const validRegions = defaults.regions ? defaults.regions.split(',') : ['au1', 'br1', 'de1', 'ie1', 'in1', 'jp1', 'sg1', 'us1', 'us2'];
-    const regions = ['without', 'gll', ...invalidRegions, ...validRegions];
+    const regions = ['without', ...invalidRegions, ...validRegions];
 
     regions.forEach(region => {
       const isInvalidRegion = invalidRegions.includes(region);
