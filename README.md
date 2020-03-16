@@ -166,6 +166,23 @@ npm run build
 
 The builds and docs will be placed in the `dist/` directory.
 
+Testing
+-------
+Run unit tests with 
+
+```
+npm run test:unit
+```
+
+Run integration tests with 
+
+```
+ACCOUNT_SID=<Your account sid>
+API_KEY_SID=<Your api key sid>
+API_KEY_SECRET=<Your api key secret> BROWSER=<Browser you'd like to use> npm run test:integration
+```
+
+
 Contributing
 ------------
 
