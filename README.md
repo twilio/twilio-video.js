@@ -168,6 +168,7 @@ The builds and docs will be placed in the `dist/` directory.
 
 Testing
 -------
+
 Run unit tests with 
 
 ```
@@ -177,11 +178,23 @@ npm run test:unit
 Run integration tests with 
 
 ```
-ACCOUNT_SID=<Your account sid>
-API_KEY_SID=<Your api key sid>
-API_KEY_SECRET=<Your api key secret> BROWSER=<Browser you'd like to use> npm run test:integration
+ACCOUNT_SID=<Your account sid> \
+API_KEY_SID=<Your api key sid> \
+API_KEY_SECRET=<Your api key secret> 
+BROWSER=<Browser you'd like to use> 
+npm run test:integration
 ```
 
+You can add these optional variables to control the integration test execution :
+Topology - Decides which type of rooms to tests against
+Debug - To get better source mapping, and browser does not close after tests are run allowing you to easier step through code debugging. 
+Test Files - Allows you to limit the test to just one file.
+
+```
+TOPOLOGY=<peer-to-peer|group> 
+DEBUG=1
+TEST_FILES=<path_ to_the_file>
+```
 
 Contributing
 ------------
