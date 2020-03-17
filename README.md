@@ -186,8 +186,8 @@ npm run test:integration
 ```
 
 You can add these optional variables to control the integration test execution :
-- Topology : Decides which type of rooms to tests against
-- Debug : To get better source mapping, and browser does not close after tests are run allowing you to easier step through code debugging. 
+- Topology : Decides which type of rooms to test against.
+- Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code debugging. 
 - Test Files : Allows you to limit the test to just one file.
 
 ```
