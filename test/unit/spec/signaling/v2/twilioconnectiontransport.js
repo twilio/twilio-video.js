@@ -12,7 +12,7 @@ const { defer } = require('../../../../../lib/util');
 
 const { combinations } = require('../../../../lib/util');
 
-describe.only('TwilioConnectionTransport', () => {
+describe('TwilioConnectionTransport', () => {
   combinations([
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
