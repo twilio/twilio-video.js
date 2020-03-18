@@ -180,14 +180,14 @@ Run integration tests with
 ```
 ACCOUNT_SID=<Your account sid> \
 API_KEY_SID=<Your api key sid> \
-API_KEY_SECRET=<Your api key secret> 
-BROWSER=<Browser you'd like to use> 
+API_KEY_SECRET=<Your api key secret> \
+BROWSER=<Browser you'd like to use> \
 npm run test:integration
 ```
 
 You can add these optional variables to control the integration test execution :
 - Topology : Decides which type of rooms to test against.
-- Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code debugging. 
+- Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code to debug.
 - Test Files : Allows you to limit the test to just one file.
 
 ```
