@@ -12,7 +12,7 @@ const { defer } = require('../../../../../lib/util');
 
 const { combinations } = require('../../../../lib/util');
 
-describe('TwilioConnectionTransport', () => {
+describe.only('TwilioConnectionTransport', () => {
   combinations([
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
@@ -106,9 +106,9 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
-      it(`should set iceServerSource to ${overrideIceServers ? 'supplied value' : 'null'}`, () => {
-        const expectedIceServerSource = overrideIceServers ? { status: 'override', iceServers: test.overrideIceServers } : null;
-        assert.deepEqual(test.transport._iceServerSource, expectedIceServerSource);
+      it(`should set iceServerStatus to ${overrideIceServers ? 'supplied value' : 'null'}`, () => {
+        const expectedIceServerStatus = overrideIceServers ? 'override' : 'acquire';
+        assert.deepEqual(test.transport._iceServersStatus, expectedIceServerStatus);
       });
 
       if (!overrideIceServers) {
