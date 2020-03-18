@@ -188,7 +188,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         it('constructs a new RoomV2', () => {
           const test = makeTest();
           test.createAndOfferDeferred.resolve();
-          return test.createAndOfferDeferred.promise.then(() => {
+          test.createAndOfferDeferred.promise.then(() => {
             const identity = makeIdentity();
             const sid = makeParticipantSid();
             test.transport.emit('connected', {
@@ -201,6 +201,8 @@ describe('createCancelableRoomSignalingPromise', () => {
                 signaling_region: 'foo'
               }
             });
+          });
+          return test.cancelableRoomSignalingPromise.then(() => {
             assert(test.RoomV2.calledOnce);
           });
         });
@@ -224,13 +226,14 @@ describe('createCancelableRoomSignalingPromise', () => {
               });
             });
             return test.cancelableRoomSignalingPromise.then(room => {
+              assert(test.RoomV2.calledOnce);
               assert.equal(test.room, room);
             });
           });
         });
 
         context('when the CancelablePromise has been canceled', () => {
-          it('the CancelablePromise rejects with a cancelation error', () => {
+          it('the CancelablePromise rejects with a cancellation error', () => {
             const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
@@ -254,31 +257,6 @@ describe('createCancelableRoomSignalingPromise', () => {
               assert.equal(
                 'Canceled',
                 error.message);
-            });
-          });
-
-          it('calls .disconnect on the newly-constructed RoomV2', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, () => {
-              assert(test.room.disconnect.calledOnce);
             });
           });
 
@@ -471,6 +449,7 @@ function makeTransportConstructor(testOptions) {
     this.ua = ua;
     testOptions.transport = transport;
     transport.disconnect = sinon.spy(() => {});
+    transport.resumeConnect = sinon.spy(() => {});
     return transport;
   };
 }
