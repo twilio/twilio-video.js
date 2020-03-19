@@ -1057,10 +1057,9 @@ describe('LocalParticipant', () => {
       context('when the LocalParticipant .state is "reconnecting"', () => {
         it('should emit "reconnected" on the LocalParticipant', () => {
           const test = makeTest({ state: 'reconnecting' });
-          let emitted;
-          test.participant.once('reconnected', () => { emitted = true; });
+          const reconnectingPromise = new Promise(resolve => test.participant.once('reconnected', resolve));
           test.signaling.emit('stateChanged', 'connected');
-          assert(emitted);
+          return reconnectingPromise;
         });
       });
 
@@ -1095,6 +1094,7 @@ describe('LocalParticipant', () => {
         'state',
         'tracks',
         'videoTracks',
+        'signalingRegion'
       ]);
     });
   });
@@ -1114,6 +1114,7 @@ describe('LocalParticipant', () => {
         networkQualityLevel: participant.networkQualityLevel,
         networkQualityStats: participant.networkQualityStats,
         sid: participant.sid,
+        signalingRegion: participant.signalingRegion,
         state: participant.state,
         tracks: {},
         videoTracks: {}

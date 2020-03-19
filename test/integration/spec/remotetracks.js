@@ -21,6 +21,7 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
+  waitForSometime,
   waitFor
 } = require('../../lib/util');
 
@@ -177,6 +178,73 @@ describe('RemoteVideoTrack', function() {
         ], `Bob's track to get switched on, and Alice switched off: ${thisRoom.sid}`);
       });
     }
+  });
+});
+
+(defaults.topology === 'peer-to-peer' ? describe.skip : describe)('JSDK-2707', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+  let aliceRoom;
+  let bobRoom;
+
+  afterEach(() => {
+    [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+  });
+
+  ['Alice', 'Bob'].forEach(subscriber => {
+    it(`${subscriber} can can control subscriber priority`, async () => {
+      const [trackA, trackB] = await Promise.all(['trackA', 'trackB'].map(name => createLocalVideoTrack(Object.assign({ name }, smallVideoConstraints))));
+      const roomName = await createRoom(randomName(), defaults.topology);
+      const connectOptions = Object.assign({
+        name: roomName,
+        tracks: [],
+        logLevel: 'warn',
+        bandwidthProfile: {
+          video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
+        },
+      }, defaults);
+
+      // Alice joins room first.
+      aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
+
+      // JSDK-2707 caused track signaling to not get setup for late RemoteParticipant.
+      // to force the repro this wait is needed.
+      await waitForSometime(5000);
+      const roomSid = aliceRoom.sid;
+
+      // Bob joins room later.
+      bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `Bob to join room: ${roomSid}`);
+
+      // wait for Bob and alice to see each other connected.
+      await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${roomSid}`);
+      await waitFor(participantsConnected(aliceRoom, 1), `Alice to see Bob connected: ${roomSid}`);
+
+      const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+      const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
+      const publisherLocal = subscriber === 'Alice' ? bobRoom.localParticipant : aliceRoom.localParticipant;
+      const publisherRemote =  subscriber === 'Alice' ? bobRemote : aliceRemote;
+
+      // publisher publishes both tracks at standard priority.
+      await waitFor([
+        publisherLocal.publishTrack(trackA, { priority: PRIORITY_STANDARD }),
+        publisherLocal.publishTrack(trackB, { priority: PRIORITY_STANDARD }),
+        tracksSubscribed(publisherRemote, 2),
+      ], 'tracks to get published and subscribed');
+
+      const [remoteTrackA, remoteTrackB] = [trackA, trackB].map(t => [...publisherRemote.videoTracks.values()].find(track => track.trackName === t.name)).map(pub => pub.track);
+
+      remoteTrackA.setPriority(PRIORITY_LOW);
+      await waitFor([
+        waitFor(trackSwitchedOn(remoteTrackB), `track B switched on: ${roomSid}`),
+        waitFor(trackSwitchedOff(remoteTrackA), `track A to get switched off: ${roomSid}`)
+      ], `trackB => On, trackA => Off: ${roomSid}`);
+
+      remoteTrackA.setPriority(PRIORITY_HIGH);
+      await waitFor([
+        waitFor(trackSwitchedOn(remoteTrackA), `track A switched on: ${roomSid}`),
+        waitFor(trackSwitchedOff(remoteTrackB), `track B to get switched off: ${roomSid}`)
+      ], `trackA => On, trackB => Off: ${roomSid}`);
+    });
   });
 });
 

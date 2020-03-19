@@ -11,6 +11,9 @@ services:
     user: root
     image: twilio/twilio-video-browsers:${BROWSER}-${BVER}
     working_dir: /opt/app
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
   runtimeDefaults: &runtimeDefaults
     <<: *defaults
     environment:
