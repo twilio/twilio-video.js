@@ -63,62 +63,84 @@ describe('connect', () => {
     });
   });
 
-  describe('called with ConnectOptions#dscpTagging', () => {
-    let signaling;
+  [
+    {
+      prop: 'dscpTagging',
+      val: true,
+      expectedWarning: 'The ConnectOptions flag "dscpTagging" is deprecated and scheduled for removal. Please use "enableDscp" instead.'
+    },
+    {
+      prop: 'abortOnIceServersTimeout',
+      val: true,
+      expectedWarning: 'The ConnectOptions flag "abortOnIceServersTimeout" is deprecated and is not used anymore.'
+    },
+    {
+      prop: 'iceServersTimeout',
+      val: 2000,
+      expectedWarning: 'The ConnectOptions flag "iceServersTimeout" is deprecated and is not used anymore.'
+    }
+  ].forEach(({ prop, val, expectedWarning }) => {
+    describe(`called with ConnectOptions#${prop}`, () => {
+      let signaling;
 
-    before(() => {
-      const mockSignaling = new Signaling();
-      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
-      signaling = sinon.spy(() => mockSignaling);
-    });
-
-    context('for the first time', () => {
       before(() => {
-        connect(token, {
-          dscpTagging: true,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        signaling = sinon.spy(() => mockSignaling);
+      });
+
+      context('for the first time', () => {
+        before(() => {
+          connect(token, {
+            [prop]: val,
+            iceServers: [],
+            signaling,
+            Log: function() {
+              return sinon.createStubInstance(Log);
+            }
+          });
+        });
+
+        if (prop === 'dscpTagging') {
+          it('should set ConnectOptions#enableDscp', () => {
+            const options = signaling.args[0][1];
+            assert.equal(options.enableDscp, val);
+          });
+        }
+
+        it('should call .warn on the underlying Log with the deprecation warning message', () => {
+          const options = signaling.args[0][1];
+          sinon.assert.calledWith(options.log.warn, expectedWarning);
         });
       });
 
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[0][1];
-        assert.equal(options.enableDscp, true);
-      });
-
-      it('should call .warn on the underlying Log with the deprecation warning message', () => {
-        const options = signaling.args[0][1];
-        sinon.assert.calledWith(options.log.warn, 'The ConnectOptions flag "dscpTagging" is '
-          + 'deprecated and scheduled for removal. Please use "enableDscp" instead.');
-      });
-    });
-
-    context('for the second time', () => {
-      before(() => {
-        connect(token, {
-          dscpTagging: false,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
+      context('for the second time', () => {
+        before(() => {
+          connect(token, {
+            dscpTagging: false,
+            iceServers: [],
+            signaling,
+            Log: function() {
+              return sinon.createStubInstance(Log);
+            }
+          });
         });
-      });
 
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[1][1];
-        assert.equal(options.enableDscp, false);
-      });
+        if (prop === 'dscpTagging') {
+          it('should set ConnectOptions#enableDscp', () => {
+            const options = signaling.args[1][1];
+            assert.equal(options.enableDscp, false);
+          });
+        }
 
-      it('should not call .warn on the underlying Log', () => {
-        const options = signaling.args[1][1];
-        sinon.assert.callCount(options.log.warn, 0);
+        it('should not call .warn on the underlying Log', () => {
+          const options = signaling.args[1][1];
+          sinon.assert.callCount(options.log.warn, 0);
+        });
       });
     });
   });
+
 
   describe('called with ConnectOptions#bandwidthProfile', () => {
     const subscriptionModes = Object.values(subscriptionMode);
