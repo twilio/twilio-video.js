@@ -114,7 +114,7 @@ describe('TwilioConnectionTransport', () => {
       if (!overrideIceServers) {
         it('should send an ice message', () => {
           const message = test.twilioConnection.sendMessage.args[0][0];
-          assert.deepEqual(message, { type: 'ice', token: test.accessToken, edge: test.region, version: 1 });
+          assert.deepEqual(message, { type: 'ice', token: test.accessToken, edge: 'roaming', version: 1 });
         });
 
         it('once iced is received on underlying connection, should re-emit iced', () => {
