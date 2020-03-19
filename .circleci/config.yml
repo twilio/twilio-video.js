@@ -230,6 +230,18 @@ jobs:
     environment:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
+  trigger-qe-tests:
+    executor: generic-executor
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - run:
+          name: Trigger QE tests
+          command: |
+            curl --silent --output /dev/null -u CIRCLECI_PERSONAL_API_TOKEN: -X POST \
+            --header "Content-Type: application/json" \
+            -d '{"branch":"'v${CIRCLE_TAG:0:1}'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
+            $SDK_JS_VIDEO_SLACK_WEBHOOK
 
 workflows:
   version: 2
@@ -422,3 +434,18 @@ workflows:
             - "firefox stable group"
             - "chrome stable p2p"
             - "chrome stable group"
+  Release-candidate:
+    jobs:
+      - trigger-qe-tests:
+          context: sdks-qe
+          filters:
+            tags:
+              only:
+                - /^\d+\.\d+\.\d+-rc\d+$/
+                - /^\d+\.\d+\.\d+-preview\d+-rc\d+$/
+                - /^\d+\.\d+\.\d+-beta\d+-rc\d+$/
+                - /^\d+\.\d+\.\d+-rc\.\d+$/
+                - /^\d+\.\d+\.\d+-preview\d+-rc\.\d+$/
+                - /^\d+\.\d+\.\d+-beta\d+-rc\.\d+$/
+            branches:
+              ignore: /.*/
