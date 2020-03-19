@@ -262,7 +262,7 @@ describe('connect', () => {
   });
 
   describe('called with ConnectOptions#region', () => {
-    ['de1', 'gll'].forEach(region => {
+    ['de1', 'gll', 'roaming'].forEach(region => {
       it(`generates correct serverUrl for the region "${region}"`, () => {
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -275,8 +275,8 @@ describe('connect', () => {
         });
 
         const options = signaling.args[0][1];
-        assert.equal(options.wsServer, `wss://${region === 'gll'
-          ? 'global' : region}.vss.twilio.com/signaling`);
+        const expectGlobal = region === 'gll' || region === 'roaming';
+        assert.equal(options.wsServer, `wss://${expectGlobal ? 'global' : region}.vss.twilio.com/signaling`);
       });
     });
   });
