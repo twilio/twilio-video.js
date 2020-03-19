@@ -1,3 +1,6 @@
+**NEW:** Please check out the newly open-sourced [multi-party video application](https://github.com/twilio/twilio-video-app-react)
+built with twilio-video.js and [React.js](https://reactjs.org/).
+
 **IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid breaking changes in Chrome in early 2020 (removal of Plan B).
 See [this advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for details.
 
@@ -10,9 +13,10 @@ For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.2.0/docs)
-* [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
+* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.3.0/docs)
 * [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md)
+* [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
+* [React-based Multi-party Video App](https://github.com/twilio/twilio-video-app-react)
 
 **We want your feedback!** Email
 [video-product@twilio.com](mailto:video-product@twilio.com) with suggested
@@ -57,7 +61,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/2.2.0/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/2.3.0/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
@@ -70,7 +74,7 @@ Usage
 -----
 
 The following is a simple example for connecting to a Room. For more information, refer to the
-[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.2.0/docs).
+[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.3.0/docs).
 
 ```js
 const Video = require('twilio-video');
@@ -165,6 +169,36 @@ npm run build
 ```
 
 The builds and docs will be placed in the `dist/` directory.
+
+Testing
+-------
+
+Run unit tests with
+
+```
+npm run test:unit
+```
+
+Run integration tests with
+
+```
+ACCOUNT_SID=<Your account sid> \
+API_KEY_SID=<Your api key sid> \
+API_KEY_SECRET=<Your api key secret> \
+BROWSER=<Browser you'd like to use> \
+npm run test:integration
+```
+
+You can add these optional variables to control the integration test execution :
+- Topology : Decides which type of rooms to test against.
+- Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code to debug.
+- Test Files : Allows you to limit the test to just one file.
+
+```
+TOPOLOGY=<peer-to-peer|group>
+DEBUG=1
+TEST_FILES=<path_ to_the_file>
+```
 
 Contributing
 ------------
