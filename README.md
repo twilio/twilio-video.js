@@ -13,7 +13,7 @@ For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.2.0/docs)
+* [API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.3.0/docs)
 * [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md)
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
 * [React-based Multi-party Video App](https://github.com/twilio/twilio-video-app-react)
@@ -61,7 +61,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/2.2.0/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/2.3.0/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
@@ -74,7 +74,7 @@ Usage
 -----
 
 The following is a simple example for connecting to a Room. For more information, refer to the
-[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.2.0/docs).
+[API Docs](//media.twiliocdn.com/sdk/js/video/releases/2.3.0/docs).
 
 ```js
 const Video = require('twilio-video');
