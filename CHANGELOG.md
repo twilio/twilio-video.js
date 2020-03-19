@@ -1,5 +1,14 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.4.0 (In Progress)
+===================
+
+New Features
+------------
+
+- In-Band-Turn - Previously twilio-video used to send an http request to Endpoint Configuration Service (ECS) to get RTCIceServers before connecting to a Room. It will now get the RTCIceServers directly from the Room Service. This simplifies the connection flow and does not need these [additional connectivity requirements](https://www.twilio.com/docs/video/ip-address-whitelisting#additional-connectivity-requirements) anymore. (JSDK-2675)
+
+
 2.3.0 (In Progress)
 ===================
 
