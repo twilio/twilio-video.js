@@ -17,6 +17,7 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
     [true, false], // automaticSubscription
+    [[{ foo: 'bar' }], null], // overrideIceServers,
     [true, false], // trackPriority
     [true, false], // trackSwitchOff
     [              // bandwidthProfile
@@ -77,21 +78,21 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, overrideIceServers, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
     describe(`constructor, called with
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
       .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
+      .iceServers ${overrideIceServers ? 'supplied' : 'not supplied'},
       .trackPriority flag ${trackPriority ? 'enabled' : 'disabled'},
+      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'}, and
       .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'}, and
       .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
-      beforeEach(() => {
+      before(() => {
         test = makeTest(Object.assign(bandwidthProfile ? { bandwidthProfile } : {}, {
-          iceServerSourceStatus: [
-            { foo: 'bar' }
-          ],
+          overrideIceServers,
           automaticSubscription,
           networkQuality,
           dominantSpeaker,
@@ -105,20 +106,49 @@ describe('TwilioConnectionTransport', () => {
         assert.equal('connecting', test.transport.state);
       });
 
+      it(`should set iceServerStatus to ${overrideIceServers ? 'supplied value' : 'null'}`, () => {
+        const expectedIceServerStatus = overrideIceServers ? 'override' : 'acquire';
+        assert.deepEqual(test.transport._iceServersStatus, expectedIceServerStatus);
+      });
+
+      if (!overrideIceServers) {
+        it('should send an ice message', () => {
+          const message = test.twilioConnection.sendMessage.args[0][0];
+          assert.deepEqual(message, { type: 'ice', token: test.accessToken, edge: 'roaming', version: 1 });
+        });
+
+        it('once iced is received on underlying connection, should re-emit iced', () => {
+          const iceServersExpected = [1, 2];
+          var icedPromise = new Promise(resolve => test.transport.once('iced', resolve));
+          test.twilioConnection.receiveMessage({ 'type': 'iced', 'ice_servers': iceServersExpected });
+
+          return icedPromise.then(iceServers => {
+            assert.deepEqual(iceServersExpected, iceServers);
+          });
+        });
+      }
+
       it('should set the _sessionTimeoutMS to zero initially', () => {
         assert.equal(0, test.transport._sessionTimeoutMS);
       });
 
       it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that
-        ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
-        ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
-        the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
-        ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
-        ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
-        ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
-        const message = test.twilioConnection.sendMessage.args[0][0];
+      ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
+      ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
+      the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
+      ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
+      ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
+      ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
+
+        let connectMessageIndex = 0;
+        if (!overrideIceServers) {
+          connectMessageIndex = 1;
+          test.transport.resumeConnect();
+        }
+
+        const message = test.twilioConnection.sendMessage.args[connectMessageIndex][0];
         assert.equal(typeof message.format, 'string');
-        assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
+        assert.deepEqual(message.ice_servers, test.overrideIceServers ? 'override' : 'acquire');
         assert.equal(message.name, test.name);
 
         if (networkQuality) {
@@ -169,7 +199,6 @@ describe('TwilioConnectionTransport', () => {
         assert.equal(typeof message.publisher.user_agent, 'string');
       });
     });
-
   });
 
   describe('#disconnect, called when the Transport\'s .state is', () => {
@@ -677,7 +706,8 @@ describe('TwilioConnectionTransport', () => {
     let test;
 
     beforeEach(() => {
-      test = makeTest();
+      let overrideIceServers = [1, 2];
+      test = makeTest({ overrideIceServers });
     });
 
     context('a "close" event, and the Transport\'s .state is', () => {
@@ -1682,6 +1712,7 @@ function makeTest(options) {
       { whiz: 'bang' }
     ]
   };
+  options.region = 'fooRegion';
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);

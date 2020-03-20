@@ -1,5 +1,14 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.4.0 (In Progress)
+===================
+
+New Features
+------------
+
+- The ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` are no longer applicable and will be ignored by twilio-video.js. From now on, ICE servers
+will be obtained while joining a Room and not by requesting a separate endpoint. (JSDK-2675)
+
 
 2.3.0 (March 19, 2020)
 ======================

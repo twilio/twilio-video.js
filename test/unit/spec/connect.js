@@ -8,9 +8,10 @@ const { inherits } = require('util');
 const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
 
+const { getSignalingEndpoint } = require('../../../lib/util/endpoints');
+
 const {
   DEFAULT_LOG_LEVEL,
-  WS_SERVER,
   DEFAULT_REGION,
   subscriptionMode,
   trackSwitchOffMode,
@@ -22,7 +23,6 @@ const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
 const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemediastream');
-const MockIceServerSource = require('../../lib/mockiceserversource');
 
 const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmLTE0NzUxOTAzNDgiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJhc2QiLCJydGMiOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTM2Y3NWUwZjE0ZTdjOGIyMDkzOGZjNTA5MmU4MmYyM2EifX0sImlhdCI6MTQ3NTE5MDM0OCwiZXhwIjoxNDc1MTkzOTQ4LCJpc3MiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmIiwic3ViIjoiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyJ9.N0UuZSblqb7MknNuiRkiEVVEdmztm5AdYIhQp7zU2PI';
 
@@ -59,66 +59,88 @@ describe('connect', () => {
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
-      assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
+      assert.equal(options.wsServer, getSignalingEndpoint(options.environment, options.region));
     });
   });
 
-  describe('called with ConnectOptions#dscpTagging', () => {
-    let signaling;
+  [
+    {
+      prop: 'dscpTagging',
+      val: true,
+      expectedWarning: 'The ConnectOptions flag "dscpTagging" is deprecated and scheduled for removal. Please use "enableDscp" instead.'
+    },
+    {
+      prop: 'abortOnIceServersTimeout',
+      val: true,
+      expectedWarning: 'The ConnectOptions flag "abortOnIceServersTimeout" is deprecated and is not used anymore.'
+    },
+    {
+      prop: 'iceServersTimeout',
+      val: 2000,
+      expectedWarning: 'The ConnectOptions flag "iceServersTimeout" is deprecated and is not used anymore.'
+    }
+  ].forEach(({ prop, val, expectedWarning }) => {
+    describe(`called with ConnectOptions#${prop}`, () => {
+      let signaling;
 
-    before(() => {
-      const mockSignaling = new Signaling();
-      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
-      signaling = sinon.spy(() => mockSignaling);
-    });
-
-    context('for the first time', () => {
       before(() => {
-        connect(token, {
-          dscpTagging: true,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        signaling = sinon.spy(() => mockSignaling);
+      });
+
+      context('for the first time', () => {
+        before(() => {
+          connect(token, {
+            [prop]: val,
+            iceServers: [],
+            signaling,
+            Log: function() {
+              return sinon.createStubInstance(Log);
+            }
+          });
+        });
+
+        if (prop === 'dscpTagging') {
+          it('should set ConnectOptions#enableDscp', () => {
+            const options = signaling.args[0][1];
+            assert.equal(options.enableDscp, val);
+          });
+        }
+
+        it('should call .warn on the underlying Log with the deprecation warning message', () => {
+          const options = signaling.args[0][1];
+          sinon.assert.calledWith(options.log.warn, expectedWarning);
         });
       });
 
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[0][1];
-        assert.equal(options.enableDscp, true);
-      });
-
-      it('should call .warn on the underlying Log with the deprecation warning message', () => {
-        const options = signaling.args[0][1];
-        sinon.assert.calledWith(options.log.warn, 'The ConnectOptions flag "dscpTagging" is '
-          + 'deprecated and scheduled for removal. Please use "enableDscp" instead.');
-      });
-    });
-
-    context('for the second time', () => {
-      before(() => {
-        connect(token, {
-          dscpTagging: false,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
+      context('for the second time', () => {
+        before(() => {
+          connect(token, {
+            dscpTagging: false,
+            iceServers: [],
+            signaling,
+            Log: function() {
+              return sinon.createStubInstance(Log);
+            }
+          });
         });
-      });
 
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[1][1];
-        assert.equal(options.enableDscp, false);
-      });
+        if (prop === 'dscpTagging') {
+          it('should set ConnectOptions#enableDscp', () => {
+            const options = signaling.args[1][1];
+            assert.equal(options.enableDscp, false);
+          });
+        }
 
-      it('should not call .warn on the underlying Log', () => {
-        const options = signaling.args[1][1];
-        sinon.assert.callCount(options.log.warn, 0);
+        it('should not call .warn on the underlying Log', () => {
+          const options = signaling.args[1][1];
+          sinon.assert.callCount(options.log.warn, 0);
+        });
       });
     });
   });
+
 
   describe('called with ConnectOptions#bandwidthProfile', () => {
     const subscriptionModes = Object.values(subscriptionMode);
@@ -240,7 +262,7 @@ describe('connect', () => {
   });
 
   describe('called with ConnectOptions#region', () => {
-    ['de1', 'gll'].forEach(region => {
+    ['de1', 'gll', 'roaming'].forEach(region => {
       it(`generates correct serverUrl for the region "${region}"`, () => {
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -253,8 +275,8 @@ describe('connect', () => {
         });
 
         const options = signaling.args[0][1];
-        assert.equal(options.wsServer, `wss://${region === 'gll'
-          ? 'global' : region}.vss.twilio.com/signaling`);
+        const expectGlobal = region === 'gll' || region === 'roaming';
+        assert.equal(options.wsServer, `wss://${expectGlobal ? 'global' : region}.vss.twilio.com/signaling`);
       });
     });
   });
@@ -303,23 +325,6 @@ describe('connect', () => {
           localTracks.forEach(track => assert(track.stop.calledOnce));
         }
       });
-
-      it('never calls .start() on the IceServerSource', async () => {
-        // eslint-disable-next-line require-await
-        async function createLocalTracks() {
-          return [];
-        }
-        const iceServerSource = new MockIceServerSource();
-        const promise = connect(token, { createLocalTracks, iceServers: iceServerSource });
-        promise.cancel();
-        try {
-          await promise;
-          throw new Error('Unexpected resolution');
-        } catch (error) {
-          // Do nothing.
-        }
-        assert(!iceServerSource.start.calledOnce);
-      });
     });
 
     describe('when it succeeds', () => {
@@ -350,31 +355,6 @@ describe('connect', () => {
         });
 
         assert.equal(shouldStopLocalTracks, true);
-      });
-    });
-
-    describe('when it fails', () => {
-      it('calls .stop() on the IceServerSource', async () => {
-        const mockSignaling = new Signaling();
-        mockSignaling.connect = () => Promise.resolve(() => { throw new Error(); });
-        function signaling() {
-          return mockSignaling;
-        }
-
-        const iceServerSource = new MockIceServerSource();
-
-        try {
-          await connect(token, {
-            iceServers: iceServerSource,
-            signaling,
-            tracks: []
-          });
-          throw new Error('Unexpected resolution');
-        } catch (error) {
-          // Do nothing.
-        }
-
-        assert(iceServerSource.stop.calledOnce);
       });
     });
   });

@@ -222,7 +222,7 @@ describe('InsightsPublisher', () => {
         const pub = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', options);
         pub.connect('roomSid', 'partcipantSid');
         await socketCreationDeferred.promise;
-        assert.equal(wsUrl, 'wss://sdkgw.baz-zee.twilio.com/v1/VideoEvents');
+        assert.equal(wsUrl, 'wss://zee.vss.baz.twilio.com/insights');
       });
     });
 

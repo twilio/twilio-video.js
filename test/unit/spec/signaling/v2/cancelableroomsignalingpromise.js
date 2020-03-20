@@ -8,8 +8,7 @@ const createCancelableRoomSignalingPromise = require('../../../../../lib/signali
 const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 const { defer } = require('../../../../../lib/util');
 const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
-
-const MockIceServerSource = require('../../../../lib/mockiceserversource');
+const log = require('../../../../lib/fakelog');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
@@ -21,33 +20,6 @@ describe('createCancelableRoomSignalingPromise', () => {
   it('constructs a new PeerConnectionManager', () => {
     const test = makeTest();
     assert(test.peerConnectionManager);
-  });
-
-  it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.setConfiguration.calledOnce);
-  });
-
-  it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
-    const track1 = {
-      trackTransceiver: {}
-    };
-    const track2 = {
-      trackTransceiver: {}
-    };
-    const test = makeTest({
-      tracks: [
-        track1,
-        track2
-      ]
-    });
-    assert.deepEqual([track1.trackTransceiver, track2.trackTransceiver],
-      test.peerConnectionManager.setTrackSenders.args[0][0]);
-  });
-
-  it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.createAndOffer.calledOnce);
   });
 
   context('when the CancelablePromise is canceled before .createAndOffer resolves', () => {
@@ -84,7 +56,43 @@ describe('createCancelableRoomSignalingPromise', () => {
     return test.createAndOfferDeferred.promise.then(() => {
       assert(test.transport);
     });
+  });
 
+  it('calls .setConfiguration on the PeerConnectionManager', () => {
+    const test = makeTest();
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert(test.peerConnectionManager.setConfiguration.calledOnce);
+    });
+  });
+
+  it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
+    const track1 = {
+      trackTransceiver: {}
+    };
+    const track2 = {
+      trackTransceiver: {}
+    };
+    const test = makeTest({
+      tracks: [
+        track1,
+        track2
+      ]
+    });
+
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert.deepEqual([track1.trackTransceiver, track2.trackTransceiver],
+        test.peerConnectionManager.setTrackSenders.args[0][0]);
+    });
+  });
+
+  it('calls .createAndOffer on PeerConnectionManager', () => {
+    const test = makeTest();
+    test.createAndOfferDeferred.resolve();
+    return test.createAndOfferDeferred.promise.then(() => {
+      assert(test.peerConnectionManager.createAndOffer.calledOnce);
+    });
   });
 
   context('when the Transport emits a "connected" event with an initial Room state', () => {
@@ -180,7 +188,7 @@ describe('createCancelableRoomSignalingPromise', () => {
         it('constructs a new RoomV2', () => {
           const test = makeTest();
           test.createAndOfferDeferred.resolve();
-          return test.createAndOfferDeferred.promise.then(() => {
+          test.createAndOfferDeferred.promise.then(() => {
             const identity = makeIdentity();
             const sid = makeParticipantSid();
             test.transport.emit('connected', {
@@ -193,6 +201,8 @@ describe('createCancelableRoomSignalingPromise', () => {
                 signaling_region: 'foo'
               }
             });
+          });
+          return test.cancelableRoomSignalingPromise.then(() => {
             assert(test.RoomV2.calledOnce);
           });
         });
@@ -216,13 +226,14 @@ describe('createCancelableRoomSignalingPromise', () => {
               });
             });
             return test.cancelableRoomSignalingPromise.then(room => {
+              assert(test.RoomV2.calledOnce);
               assert.equal(test.room, room);
             });
           });
         });
 
         context('when the CancelablePromise has been canceled', () => {
-          it('the CancelablePromise rejects with a cancelation error', () => {
+          it('the CancelablePromise rejects with a cancellation error', () => {
             const test = makeTest();
             test.createAndOfferDeferred.resolve();
             test.createAndOfferDeferred.promise.then(() => {
@@ -246,31 +257,6 @@ describe('createCancelableRoomSignalingPromise', () => {
               assert.equal(
                 'Canceled',
                 error.message);
-            });
-          });
-
-          it('calls .disconnect on the newly-constructed RoomV2', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, () => {
-              assert(test.room.disconnect.calledOnce);
             });
           });
 
@@ -402,17 +388,17 @@ function makeTest(options) {
   options.room = options.room || {
     disconnect: sinon.spy(() => {})
   };
+  options.log = log;
+
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
-  const mockIceServerSource = new MockIceServerSource();
-  options.iceServerSource = options.iceServerSource || mockIceServerSource;
+  options.iceServers = options.iceServers || [1, 2];
 
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
     options.ua,
     options.localParticipant,
-    options.iceServerSource,
     makeEncodingParameters(options),
     { audio: [], video: [] },
     options);
@@ -463,6 +449,7 @@ function makeTransportConstructor(testOptions) {
     this.ua = ua;
     testOptions.transport = transport;
     transport.disconnect = sinon.spy(() => {});
+    transport.resumeConnect = sinon.spy(() => {});
     return transport;
   };
 }
