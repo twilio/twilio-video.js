@@ -6,7 +6,8 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- In-Band-Turn - Previously twilio-video used to send an http request to Endpoint Configuration Service (ECS) to get RTCIceServers before connecting to a Room. The SDK will now get the RTCIceServers directly from the Room Service. This simplifies the connection flow and does not need these [additional connectivity requirements](https://www.twilio.com/docs/video/ip-address-whitelisting#additional-connectivity-requirements) anymore. Also with this change `ConnectOptions` properties `abortOnIceServersTimeout` and `iceServersTimeout` are not needed anymore. (JSDK-2675)
+- The ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` are no longer applicable and will be ignored by twilio-video.js. From now on, ICE servers
+will be obtained while joining a Room and not by requesting a separate endpoint. (JSDK-2675)
 
 
 2.3.0 (March 19, 2020)
