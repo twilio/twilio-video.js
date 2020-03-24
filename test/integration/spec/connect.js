@@ -239,7 +239,7 @@ describe('connect', function() {
           }
         });
         it(`should return a CancelablePromise that ${defaults.topology === 'peer-to-peer' ? 'returns null on Room.mediaRegion' : 'resolves with a Room'}`, async () => {
-          const cancelablePromise = connect(token, Object.assign({ name: sid }, { tracks: [] }));
+          const cancelablePromise = connect(token, Object.assign({ name: sid, tracks: [] }, defaults));
           assert(cancelablePromise instanceof CancelablePromise);
 
           let error = null;
