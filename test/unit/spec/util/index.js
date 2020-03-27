@@ -3,12 +3,14 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
+const util = require('@twilio/webrtc/lib/util');
 
 const {
   hidePrivateProperties,
   hidePrivateAndCertainPublicPropertiesInClass,
   makeUUID,
-  promiseFromEvents
+  promiseFromEvents,
+  isChromeScreenShareTrack
 } = require('../../../../lib/util');
 
 describe('util', () => {
@@ -90,6 +92,64 @@ describe('util', () => {
       promise = promiseFromEvents(spy, emitter, 'foo');
       emitter.emit('foo');
       return promise;
+    });
+  });
+
+  describe.only('chromeScreenShare', () => {
+    const labels = ['web-contents-media-stream://1174:3', 'window:1561:0', 'screen:2077749241:0'];
+    const mediaStreamTrack = {
+      kind: 'video',
+      id: '1aaadf6e-6a4f-465b-96bf-1a35a2d3ac2b',
+      enabled: true,
+      muted: true,
+      onmute: null,
+      onunmute: null,
+      readyState: 'live',
+      onended: null,
+      contentHint: ''
+    };
+
+    // [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, bool]) => {
+    //   describe(`for ${browser}`, () => {
+    //     before(() => {
+    //       stub = sinon.stub(util, 'guessBrowser').returns(browser);
+    //     });
+
+    //     it(`should return ${bool}`, () => {
+    //       labels.forEach(label => {
+    //         mediaStreamTrack.label = label;
+    //         const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
+    //         console.log(screenShare);
+    //         assert.equal(bool, screenShare);
+    //       });
+    //     });
+
+    //     after(() => {
+    //       stub.restore();
+    //     });
+    //   });
+    // });
+
+    let stub;
+
+    beforeEach(() => {
+      stub = sinon.stub(util, 'guessBrowser');
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
+    [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool], index) => {
+      it(`should return ${expectedBool} for ${browser}`, () => {
+        stub = stub.returns(browser);
+        labels.forEach(label => {
+          mediaStreamTrack.label = label;
+          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
+          // assert.equal(expectedBool, screenShare);
+          stub.resetHistory();
+        });
+      });
     });
   });
 });
