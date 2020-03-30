@@ -95,7 +95,7 @@ describe('util', () => {
     });
   });
 
-  describe('chromeScreenShare', () => {
+  describe.only('chromeScreenShare', () => {
     const labels = ['web-contents-media-stream://1174:3', 'window:1561:0', 'screen:2077749241:0'];
     const mediaStreamTrack = {
       kind: 'video',
@@ -110,23 +110,22 @@ describe('util', () => {
     };
     let stub;
 
-    [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, bool]) => {
-      describe(`for ${browser}`, () => {
-        before(() => {
-          stub = sinon.stub(util, 'guessBrowser');
-        });
+    beforeEach(() => {
+      stub = sinon.stub(util, 'guessBrowser');
+    });
 
-        it(`should return ${bool}`, () => {
-          stub.returns(browser);
-          labels.forEach(label => {
-            mediaStreamTrack.label = label;
-            const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
-            assert.equal(bool, screenShare);
-          });
-        });
+    afterEach(() => {
+      stub.restore();
+    });
 
-        after(() => {
-          stub.restore();
+    [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool]) => {
+      it(`should return ${expectedBool} for ${browser}`, () => {
+        stub = stub.returns(browser);
+        labels.forEach(label => {
+          mediaStreamTrack.label = label;
+          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
+          assert.equal(expectedBool, screenShare);
+          stub.resetHistory();
         });
       });
     });
