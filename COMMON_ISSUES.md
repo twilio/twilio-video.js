@@ -8,6 +8,9 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Android Chrome Participants sometimes see corrupted frames for RemoteVideoTracks
+--------------------------------------------
+This happens primarily due to a [Chromium bug](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337), where the decoded video frames are corrupted when the resolution is reduced in order to accommodate bandwidth constraints.
 
 Mobile Safari Participants on iOS 13.0.1 sometimes fail to send audio
 ---------------------------------------------------------------------
@@ -200,7 +203,3 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
-
-Android Hardware Encoder and Corrupted Video
---------------------------------------------
-Android devices have issues which exist in the hardware VP8 encoder. The issue occurs when the width of the video resolution is not divisible by 16, it can also occur when the resolution is reduced in order to accomodate bandwidth constraints. There is a [WebRTC issue](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337) filed for this as well. 
