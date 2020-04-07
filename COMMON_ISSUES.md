@@ -200,3 +200,7 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
+
+Android Hardware Encoder and Corrupted Video
+--------------------------------------------
+Android devices have issues which exist in the hardware VP8 encoder. The issue occurs when the width of the video resolution is not divisible by 16, it can also occur when the resolution is reduced in order to accomodate bandwidth constraints. There is a [WebRTC issue](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337) filed for this as well. 
