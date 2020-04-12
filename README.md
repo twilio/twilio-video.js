@@ -1,4 +1,4 @@
-**NEW:** Please check out the newly open-sourced [multi-party video application](https://github.com/twilio/twilio-video-app-react)
+ **NEW:** Please check out the newly open-sourced [multi-party video application](https://github.com/twilio/twilio-video-app-react)
 built with twilio-video.js and [React.js](https://reactjs.org/).
 
 **IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid breaking changes in Chrome in early 2020 (removal of Plan B).
