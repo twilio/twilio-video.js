@@ -57,9 +57,9 @@ describe('PeerConnectionV2', () => {
     it('equals "failed" when IceConnectionMonitor detects failures, also emits "connectionStateChanged"', async () => {
       const test = makeTest();
 
-      // simulate disconnect.
-      test.pc.connectionState = 'disconnected';
-      test.pc.iceConnectionState = 'disconnected';
+      // simulate connect
+      test.pc.connectionState = 'connected';
+      test.pc.iceConnectionState = 'connected';
       test.pc.emit('iceconnectionstatechange');
       test.pc.emit('connectionstatechange');
 
@@ -89,8 +89,8 @@ describe('PeerConnectionV2', () => {
       const test = makeTest();
       assert.equal(test.pcv2.iceConnectionState, test.pc.iceConnectionState);
 
-      // simulate disconnect.
-      test.pc.iceConnectionState = 'disconnected';
+      // simulate connect.
+      test.pc.iceConnectionState = 'connected';
       test.pc.emit('iceconnectionstatechange');
 
       await oneTick();
@@ -150,21 +150,23 @@ describe('PeerConnectionV2', () => {
       assert(didEmit);
     });
 
-    it('starts IceConnectionMonitor on disconnect', () => {
+    it('starts IceConnectionMonitor on connected', () => {
       const test = makeTest();
       assert(!didStartMonitor);
       assert(!didStopMonitor);
       assert(inactiveCallback === null);
 
-      // simulate disconnect.
-      test.pc.iceConnectionState = 'disconnected';
+      // simulate connection.
+      test.pc.iceConnectionState = 'connected';
       test.pc.emit('iceconnectionstatechange');
       assert(didStartMonitor);
       assert(!didStopMonitor);
       assert(typeof inactiveCallback === 'function');
 
-      // simulate connection.
-      test.pc.iceConnectionState = 'connected';
+
+
+      // simulate failed.
+      test.pc.iceConnectionState = 'failed';
       test.pc.emit('iceconnectionstatechange');
       assert(didStartMonitor);
       assert(didStopMonitor);
@@ -175,14 +177,15 @@ describe('PeerConnectionV2', () => {
       assert(!didStartMonitor);
       assert(!didStopMonitor);
 
-      // simulate disconnect.
-      test.pc.iceConnectionState = 'disconnected';
+      // simulate connection.
+      test.pc.iceConnectionState = 'connected';
       test.pc.emit('iceconnectionstatechange');
       assert(didStartMonitor);
       assert(!didStopMonitor);
+      assert(typeof inactiveCallback === 'function');
 
-      // simulate connection.
-      test.pc.iceConnectionState = 'connected';
+      // simulate failed.
+      test.pc.iceConnectionState = 'failed';
       test.pc.emit('iceconnectionstatechange');
       assert(didStartMonitor);
       assert(didStopMonitor);
@@ -1805,8 +1808,8 @@ describe('PeerConnectionV2', () => {
 
         assert(inactiveCallback === null);
 
-        // Then, cause an ICE disconnect.
-        test.pc.iceConnectionState = 'disconnected';
+        // simulate ice connected
+        test.pc.iceConnectionState = 'connected';
         test.pc.emit('iceconnectionstatechange');
 
         assert(typeof inactiveCallback === 'function');
