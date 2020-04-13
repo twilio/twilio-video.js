@@ -163,8 +163,6 @@ describe('PeerConnectionV2', () => {
       assert(!didStopMonitor);
       assert(typeof inactiveCallback === 'function');
 
-
-
       // simulate failed.
       test.pc.iceConnectionState = 'failed';
       test.pc.emit('iceconnectionstatechange');
