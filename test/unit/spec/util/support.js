@@ -25,6 +25,11 @@ describe('isSupported', () => {
       { runtime: {} }
     ],
     [
+      'Headless Chrome',
+      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/81.0.4044.0 Safari/537.36',
+      { runtime: {} }
+    ],
+    [
       'Safari on Mac',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Safari/605.1.15'
     ],
