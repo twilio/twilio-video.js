@@ -1,5 +1,14 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.4.0 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `Video.isSupported` was returning `true` for some browsers that
+  are not officially supported by twilio-video.js. (JSDK-2756)
+
 2.3.0 (March 19, 2020)
 ======================
 

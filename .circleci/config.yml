@@ -9,7 +9,7 @@ parameters:
   environment:
     type: enum
     enum: ["prod", "stage", "dev"]
-    default: "prod"
+    default: "stage"
   pr_workflow:    # runs for every pull request.
     type: boolean
     default: true # by default pr workflow will get executed.
