@@ -10,6 +10,7 @@ const {
   setCodecPreferences,
   setSimulcast,
   unifiedPlanFilterLocalCodecs,
+  removeSSRCAttributes,
   revertSimulcastForNonVP8MediaSections,
   unifiedPlanAddOrRewriteNewTrackIds,
   unifiedPlanAddOrRewriteTrackIds
@@ -891,6 +892,97 @@ describe('unifiedPlanAddOrRewriteTrackIds', () => {
   });
 });
 
+describe('removeSSRCAttributes', () => {
+  const tests = [{
+    name: 'removes single ssrc attribute (cname)',
+    before: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r`,
+    remove: ['cname'],
+    after: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r`
+  },
+  {
+    name: 'removes specified attributes (mslabel, label)',
+    before: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      `,
+    remove: ['mslabel', 'label'],
+    after: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      `
+  },
+  {
+    name: 'does not remove non-existant attribute (foo)',
+    before: `\
+      a=ssrc:0000000000 msid:foo-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      `,
+    remove: ['FID'],
+    after: `\
+      a=ssrc:0000000000 msid:foo-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      `
+  },
+  {
+    name: 'does not remove ssrc-group attribute (FID)',
+    before: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r`,
+    remove: ['FID'],
+    after: `\
+      a=ssrc-group:FID 0000000000 1111111111\r
+      a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+      a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+      a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+      a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r`,
+  }];
+
+  tests.forEach(test => {
+    it(test.name, () => {
+      assert.equal(removeSSRCAttributes(test.before, test.remove), test.after);
+    });
+  });
+});
+
 function itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds) {
   const sdp = makeSdpWithTracks(sdpType, {
     audio: ['audio-1', 'audio-2'],
@@ -904,3 +996,5 @@ function itShouldHaveCodecOrder(sdpType, preferredAudioCodecs, preferredVideoCod
     assert.equal(codecIds.join(' '), expectedCodecIds.join(' '));
   });
 }
+
+
