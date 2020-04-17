@@ -14,13 +14,22 @@ describe.only('networkMonitor', () => {
   });
 
   [true, false].forEach(bool => {
-    it(`should be ${bool} when accessing isOnline`, () => {
+    it(`should return ${bool} when accessing isOnline`, () => {
       navigator.onLine = bool;
       const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator });
       assert.equal(networkMonitor.isOnline, bool);
     });
   });
 
-  // ['bluetooth', 'cellular', 'ethernet', 'none', 'wifi', 'wimax', 'other', 'unknown']
+  [{ connection: { type: 'wifi' } }, { connection: '' }, {}].forEach(el => {
+    it(`should return ${(el.connection && el.connection.type) || null}`, () => {
+      const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: el });
 
+      if (el.connection && el.connection.type) {
+        assert.equal(networkMonitor.type, el.connection.type);
+      } else {
+        assert.equal(networkMonitor.type, null);
+      }
+    });
+  });
 });
