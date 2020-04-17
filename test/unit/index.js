@@ -69,6 +69,7 @@ require('./spec/util/support');
 require('./spec/util/trackmatcher/mid');
 require('./spec/util/trackmatcher/ordered');
 require('./spec/util/twilioerror');
+require('./spec/util/networkmonitor');
 
 require('./spec/webaudio/audiocontext');
 
