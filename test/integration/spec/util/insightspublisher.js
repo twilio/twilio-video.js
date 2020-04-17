@@ -43,7 +43,7 @@ describe('InsightsPublisher', function() {
 
         const description = tokenType !== 'valid'
           ? 'should disconnect with an Error'
-          : 'should be successful';
+          : 'should be successful (@unstable: JSDK-2761)';
 
         const test = tokenType !== 'valid' ? async () => {
           const error = await new Promise((resolve, reject) => {
