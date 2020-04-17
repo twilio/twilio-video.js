@@ -22,6 +22,7 @@ const defaults = [
 }, {
   dominantSpeaker: true,
   environment: 'prod',
+  insights: env.environment !== 'stage', // disable insights for stage. (JSDK-2761)
   networkQuality: true,
   topology: 'peer-to-peer',
   testStability: 'all' // other choices: 'stable', 'unstable'

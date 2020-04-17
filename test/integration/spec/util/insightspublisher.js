@@ -16,7 +16,7 @@ const tokens = new Map([
 
 const options = Object.assign({
   environment: 'prod'
-}, defaults);
+}, defaults, { insights: true });
 
 if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
