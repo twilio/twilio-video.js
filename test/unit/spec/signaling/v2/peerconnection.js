@@ -17,40 +17,23 @@ describe('PeerConnectionV2', () => {
   let didStartMonitor;
   let didStopMonitor;
   let inactiveCallback;
-  let wasInactive;
   beforeEach(() => {
     // stub out IceConnectionMonitor to not have any side effects
     didStartMonitor = false;
     didStopMonitor = false;
     inactiveCallback = null;
-    wasInactive = false;
     sinon.stub(IceConnectionMonitor.prototype, 'start').callsFake(callback => {
-      inactiveCallback = () => {
-        wasInactive = true;
-        callback();
-      };
+      inactiveCallback = callback;
       didStartMonitor = true;
     });
 
     sinon.stub(IceConnectionMonitor.prototype, 'stop').callsFake(() => {
       didStopMonitor = true;
     });
-
-    sinon.stub(IceConnectionMonitor.prototype, 'clear').callsFake(() => {
-      didStopMonitor = true;
-      wasInactive = false;
-    });
-
-    sinon.stub(IceConnectionMonitor.prototype, 'wasInactive').callsFake(() => {
-      return wasInactive;
-    });
-
   });
   afterEach(() => {
     IceConnectionMonitor.prototype.start.restore();
     IceConnectionMonitor.prototype.stop.restore();
-    IceConnectionMonitor.prototype.clear.restore();
-    IceConnectionMonitor.prototype.wasInactive.restore();
   });
 
   describe('constructor', () => {
@@ -83,17 +66,15 @@ describe('PeerConnectionV2', () => {
 
       await oneTick();
 
-      inactiveCallback(); // invoke inactive call back.
-
       let didEmit = false;
       test.pcv2.once('connectionStateChanged', () => { didEmit = true; });
+      inactiveCallback(); // invoke inactive call back.
+      assert.equal(didEmit, true);
 
+      await oneTick();
       // simulate disconnect
       test.pc.iceConnectionState = 'disconnected';
       test.pc.emit('iceconnectionstatechange');
-
-      assert.equal(didEmit, true);
-      await oneTick();
       assert.equal(test.pcv2.connectionState, 'failed');
     });
   });
@@ -1840,41 +1821,33 @@ describe('PeerConnectionV2', () => {
         await oneTick();
         inactiveCallback(); // invoke inactive call back.
         await oneTick();
+
+        // simulate ice disconnected
+        test.pc.iceConnectionState = 'disconnected';
+        test.pc.emit('iceconnectionstatechange');
+        await oneTick();
       });
 
-      it('the PeerConnectionV2 does not restart ice while in connected state', () => {
-        sinon.assert.notCalled(test.pc.createOffer);
+      it('it initiates iceRestart', () => {
+        assert(test.pc.createOffer.calledWith({
+          iceRestart: true
+        }));
       });
 
-      context('once disconnected',  () => {
-        beforeEach(async () => {
-          // simulate ice disconnected
-          test.pc.iceConnectionState = 'disconnected';
-          test.pc.emit('iceconnectionstatechange');
-          await oneTick();
-        });
+      it('closes the PeerConnectionV2 after the ICE reconnection timeout expires', async () => {
+        await new Promise(resolve => test.pcv2.once('stateChanged', resolve));
+        assert.equal(test.pcv2.state, 'closed');
+      });
 
-        it('it initiates iceRestart', () => {
-          assert(test.pc.createOffer.calledWith({
-            iceRestart: true
-          }));
-        });
+      it('does not close the PeerConnectionV2 when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "connected"', async () => {
+        // Cause an ICE reconnect.
+        test.pc.iceConnectionState = 'connected';
+        test.pc.emit('iceconnectionstatechange');
 
-        it('closes the PeerConnectionV2 after the ICE reconnection timeout expires', async () => {
-          await new Promise(resolve => test.pcv2.once('stateChanged', resolve));
-          assert.equal(test.pcv2.state, 'closed');
-        });
+        // Wait for the session timeout period.
+        await waitForSometime(test.sessionTimeout);
 
-        it('does not close the PeerConnectionV2 when the underlying RTCPeerConnection\'s .iceConnectionState transitions to "connected"', async () => {
-          // Cause an ICE reconnect.
-          test.pc.iceConnectionState = 'connected';
-          test.pc.emit('iceconnectionstatechange');
-
-          // Wait for the session timeout period.
-          await waitForSometime(test.sessionTimeout);
-
-          assert.equal(test.pcv2.state, 'open');
-        });
+        assert.equal(test.pcv2.state, 'open');
       });
     });
 
