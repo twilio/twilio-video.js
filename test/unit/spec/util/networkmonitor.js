@@ -23,7 +23,7 @@ describe.only('NetworkMonitor', () => {
     });
 
     [{ connection: { type: 'wifi' } }, { connection: {} }, {}].forEach(el => {
-      it(`should return ${(el.connection && el.connection.type) || null}`, () => {
+      it(`should return ${(el.connection && el.connection.type) || null} when accessing type`, () => {
         const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: el });
 
         if (el.connection && el.connection.type) {
@@ -31,6 +31,39 @@ describe.only('NetworkMonitor', () => {
         } else {
           assert.equal(networkMonitor.type, null);
         }
+      });
+    });
+  });
+
+  describe('start and stop methods', () => {
+    const nav = {
+      connection: {
+        addEventListener: sinon.spy(),
+        removeEventListener: sinon.spy()
+      }
+    };
+
+    const win = {
+      addEventListener: sinon.spy(),
+      removeEventListener: sinon.spy()
+    };
+
+    ['change', 'typechange'].forEach(event => {
+      let networkMonitor;
+
+      beforeEach(() => {
+        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
+        nav.connection.type = event;
+      });
+
+      it(`should call start once for event ${event} on target nav`, () => {
+        networkMonitor.start();
+        // sinon.assert.calledOnce(nav.connection.addEventListener);
+      });
+
+      it(`should call stop once for event ${event} on target nav`, () => {
+        networkMonitor.stop();
+        // sinon.assert.calledOnce(nav.connection.removeEventListener);
       });
     });
   });
