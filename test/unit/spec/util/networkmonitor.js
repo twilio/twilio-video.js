@@ -39,7 +39,8 @@ describe.only('NetworkMonitor', () => {
     const nav = {
       connection: {
         addEventListener: sinon.spy(),
-        removeEventListener: sinon.spy()
+        removeEventListener: sinon.spy(),
+        type: 'change'
       }
     };
 
@@ -60,28 +61,16 @@ describe.only('NetworkMonitor', () => {
       sinon.assert.calledOnce(win.removeEventListener);
     });
 
-    ['change', 'typechange'].forEach(event => {
-      let networkMonitor;
+    it('should call start once for each event on target nav', () => {
+      const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
+      networkMonitor.start();
+      sinon.assert.calledTwice(nav.connection.addEventListener);
+    });
 
-      beforeEach(() => {
-        nav.connection.type = event;
-      });
-
-      afterEach(() => {
-        delete nav.connection.type;
-      });
-
-      it(`should call start once for event ${event} on target nav`, () => {
-        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
-        networkMonitor.start();
-        sinon.assert.calledOnce(nav.connection.addEventListener);
-      });
-
-      it(`should call stop once for event ${event} on target nav`, () => {
-        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
-        networkMonitor.stop();
-        sinon.assert.calledOnce(nav.connection.removeEventListener);
-      });
+    it('should call stop once for each event on target nav', () => {
+      const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
+      networkMonitor.stop();
+      sinon.assert.calledTwice(nav.connection.removeEventListener);
     });
   });
 });
