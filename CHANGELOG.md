@@ -3,6 +3,11 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.4.0 (in progress)
 ===================
 
+New Features
+------------
+
+- Added `NetworkMonitor` class and `networkMonitor` property to `connect.options`. This property monitors network information and reconnects participants.
+
 Bug Fixes
 ---------
 
