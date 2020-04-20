@@ -48,22 +48,39 @@ describe.only('NetworkMonitor', () => {
       removeEventListener: sinon.spy()
     };
 
+    it('should call start once for online event on target window', () => {
+      const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { window: win });
+      networkMonitor.start();
+      sinon.assert.calledOnce(win.addEventListener);
+    });
+
+    it('should call stop once for online event on target window', () => {
+      const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { window: win });
+      networkMonitor.stop();
+      sinon.assert.calledOnce(win.removeEventListener);
+    });
+
     ['change', 'typechange'].forEach(event => {
       let networkMonitor;
 
       beforeEach(() => {
-        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
         nav.connection.type = event;
       });
 
+      afterEach(() => {
+        delete nav.connection.type;
+      });
+
       it(`should call start once for event ${event} on target nav`, () => {
+        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
         networkMonitor.start();
-        // sinon.assert.calledOnce(nav.connection.addEventListener);
+        sinon.assert.calledOnce(nav.connection.addEventListener);
       });
 
       it(`should call stop once for event ${event} on target nav`, () => {
+        networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
         networkMonitor.stop();
-        // sinon.assert.calledOnce(nav.connection.removeEventListener);
+        sinon.assert.calledOnce(nav.connection.removeEventListener);
       });
     });
   });
