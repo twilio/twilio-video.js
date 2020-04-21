@@ -5,7 +5,42 @@ const sinon = require('sinon');
 
 const NetworkMonitor = require('../../../../lib/util/networkmonitor');
 
-describe.only('NetworkMonitor', () => {
+class MockConnection {
+  constructor() {
+    this.type = 'whiz';
+    this.listeners = {};
+  }
+  addEventListener(event, listener) {
+    this.listeners[event] = listener;
+  }
+  removeEventListener(event) {
+    delete this.listeners[event];
+  }
+  emit(event) {
+    if (this.listeners[event]) {
+      this.listeners[event]();
+    }
+  }
+}
+
+class MockWindow {
+  constructor() {
+    this.listeners = {};
+  }
+  addEventListener(event, listener) {
+    this.listeners[event] = listener;
+  }
+  removeEventListener(event) {
+    delete this.listeners[event];
+  }
+  emit(event) {
+    if (this.listeners[event]) {
+      this.listeners[event]();
+    }
+  }
+}
+
+describe('NetworkMonitor', () => {
   const onNetworkChangedCalled = sinon.spy();
 
   describe('constructor', () => {
@@ -40,7 +75,7 @@ describe.only('NetworkMonitor', () => {
       connection: {
         addEventListener: sinon.spy(),
         removeEventListener: sinon.spy(),
-        type: 'change'
+        type: 'wifi'
       }
     };
 
@@ -61,16 +96,50 @@ describe.only('NetworkMonitor', () => {
       sinon.assert.calledOnce(win.removeEventListener);
     });
 
-    it('should call start once for each event on target nav', () => {
+    it('should call start twice for each event on target nav', () => {
       const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
       networkMonitor.start();
       sinon.assert.calledTwice(nav.connection.addEventListener);
     });
 
-    it('should call stop once for each event on target nav', () => {
+    it('should call stop twice for each event on target nav', () => {
       const networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
       networkMonitor.stop();
       sinon.assert.calledTwice(nav.connection.removeEventListener);
+    });
+  });
+
+  describe('onNetworkChanged', () => {
+    const nav = {
+      onLine: true,
+      connection: new MockConnection(),
+    };
+
+    it('should call the function when network has typechanged on navigator', () => {
+      const networkChangedCalled = sinon.spy();
+      const networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: nav });
+      networkMonitor.start();
+      nav.connection.type = 'bang';
+      nav.connection.emit('typechange');
+      sinon.assert.calledOnce(networkChangedCalled);
+    });
+
+    it('should call the function when network has changed on navigator', () => {
+      const networkChangedCalled = sinon.spy();
+      const networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: nav });
+      networkMonitor.start();
+      nav.connection.type = 'whiz';
+      nav.connection.emit('change');
+      sinon.assert.calledOnce(networkChangedCalled);
+    });
+
+    it('should call the function when event is online on window', () => {
+      const win = new MockWindow();
+      const networkChangedCalled = sinon.spy();
+      const networkMonitor = new NetworkMonitor(networkChangedCalled, { window: win });
+      networkMonitor.start();
+      win.emit('online');
+      sinon.assert.calledOnce(networkChangedCalled);
     });
   });
 });
