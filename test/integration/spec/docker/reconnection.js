@@ -255,7 +255,7 @@ describe('Reconnection states and events', function() {
 
   [true, false].forEach(networkMonitor => {
     [['Alice'], ['Alice', 'Bob']].forEach(identities => {
-      describe(`${identities.length} Participant(s)`, () => {
+      describe(`${identities.length} Participant(s),  networkMonitor = ${networkMonitor}`, () => {
         let rooms = [];
         let currentNetworks = null;
 
