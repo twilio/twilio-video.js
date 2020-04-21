@@ -170,6 +170,38 @@ LocalTracks will fail.
 Firefox
 -------
 
+### Media Permissions Dialog in Android Firefox 68
+
+Android Firefox 68 does not reject the Promise returned by `getUserMedia` if the user
+dismisses the media permissions dialog by touching elsewhere on the application. So, we
+recommend that the application should start a timer when using `connect` or `createLocalTracks`
+to acquire local media. When it expires, and the returned Promise is still not resolved,
+notify users and ask them to reload the application.
+
+```js
+function wait(delay) {
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+async function connectToRoomOnAndroidFirefox68OrLower(token, options) {
+  const tracks = await Promise.race([
+    Twilio.Video.createLocalTracks(),
+    wait(/* A time in milliseconds of your choice */)
+  ]);
+  if (!tracks) {
+    /* Instruct the user to reload the web app */
+    return;
+  }
+  return connect(token, {
+    ...options,
+    tracks
+  });
+}
+```
+
+This issue will be fixed in [Firefox Fenix](https://play.google.com/store/apps/details?id=org.mozilla.fenix&hl=en_US),
+where the Promise will be rejected with a `NotAllowedError`.
+
 ### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
 
 Firefox has not yet implemented getter's for RTCDataChannel's
