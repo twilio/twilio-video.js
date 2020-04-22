@@ -36,7 +36,7 @@ parameters:
     default: "group"
   test_stability: # should it run flaky tests?
     type: enum
-    enum: ["all", "stable", "flaky"]
+    enum: ["all", "stable", "unstable"]
     default: "all"
 
 defaultEnv: &defaultEnv
@@ -187,9 +187,11 @@ jobs:
         type: enum
         enum: ["group", "peer-to-peer"]
         default: "group"
+      test_stability:
+        type: string
     environment:
       TOPOLOGY: << parameters.topology >>
-      TEST_STABILITY: << pipeline.parameters.test_stability >>
+      TEST_STABILITY: << parameters.test_stability >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -201,12 +203,14 @@ jobs:
         type: string
       topology:
         type: string
+      test_stability:
+        type: string
     environment:
       NETWORK_TESTS: "true"
       BVER: "stable"
       BROWSER: << parameters.browser >>
       TOPOLOGY: << parameters.topology >>
-      TEST_STABILITY: << pipeline.parameters.test_stability >>
+      TEST_STABILITY: << parameters.test_stability >>
     executor: machine-executor
     steps: [network-tests]
   Framework-tests:
@@ -263,41 +267,50 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >>
+          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >> << pipeline.parameters.test_stability >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
+          test_stability: << pipeline.parameters.test_stability >>
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
       - run-integration-tests:
+          name: << matrix.test_stability >> integration tests << matrix.browser >>(<< matrix.bver >>)<< matrix.topology >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable"]
               topology: ["group", "peer-to-peer"]
+              test_stability: ["stable"]
       - run-network-tests:
+          name: << matrix.test_stability >> network tests on << matrix.topology >> << matrix.browser >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               topology: ["group", "peer-to-peer"]
+              test_stability: ["stable"]
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
       - Build
       - UnitTests
       - run-integration-tests:
+          name: << matrix.test_stability >> integration tests on << matrix.browser >>(<< matrix.bver >>)<< matrix.topology >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
+              test_stability: ["stable", "unstable"]
           requires: [Build, UnitTests]
       - run-network-tests:
+          name: << matrix.test_stability >> network tests on << matrix.topology >> << matrix.browser >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               topology: ["group", "peer-to-peer"]
+              test_stability: ["stable", "unstable"]
           requires: [Build, UnitTests]
       - Framework-tests:
           name: "framework tests"
