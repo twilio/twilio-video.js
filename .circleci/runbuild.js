@@ -119,10 +119,12 @@ const workflowPrompt = {
 };
 
 const stableTestsPrompt = {
-  type: 'list',
+  when: (answers) => answers.workflow === 'custom',
+  validate: answer => answer.length > 0,
+  type: 'checkbox',
   name: 'test_stability',
   message: 'Run Stable Tests Only:',
-  choices: ['all', 'stable', 'unstable'],
+  choices: ['stable', 'unstable'],
   default: 'all'
 };
 
@@ -137,8 +139,19 @@ const branchPrompt = {
 };
 
 // environment defaults to stage for backend workflow.
-const environmentPrompt = {
+const environmentListPrompt = {
+  when: (answers) => answers.workflow !== 'custom',
   type: 'list',
+  name: 'environment',
+  message: 'Environment:',
+  choices: ['prod', 'stage', 'dev'],
+  default: (answers) => answers.workflow === 'backend' ? 'stage' :'prod'
+};
+
+const environmentCheckboxPrompt = {
+  when: (answers) => answers.workflow === 'custom',
+  validate: answer => answer.length > 0,
+  type: 'checkbox',
   name: 'environment',
   message: 'Environment:',
   choices: ['prod', 'stage', 'dev'],
@@ -147,7 +160,8 @@ const environmentPrompt = {
 
 const browserPrompt = {
   when: (answers) => answers.workflow === 'custom',
-  type: 'list',
+  validate: answer => answer.length > 0,
+  type: 'checkbox',
   name: 'browser',
   message: 'Browser:',
   choices: ['chrome', 'firefox'],
@@ -156,7 +170,8 @@ const browserPrompt = {
 
 const bverPrompt = {
   when: (answers) => answers.workflow === 'custom',
-  type: 'list',
+  validate: answer => answer.length > 0,
+  type: 'checkbox',
   name: 'bver',
   message: 'Bver:',
   choices: ['stable', 'beta', 'unstable'],
@@ -165,11 +180,13 @@ const bverPrompt = {
 
 const topologyPrompt = {
   when: (answers) => answers.workflow === 'custom',
-  type: 'list',
+  type: 'checkbox',
   name: 'topology',
   message: 'Topology:',
   choices: ['group', 'peer-to-peer'],
-  default: 'group'
+  validate: answer => answer.length > 0,
+  default: 'group',
+
 };
 
 // tag can be chosen only for backend workflow
@@ -198,19 +215,34 @@ inquirer.prompt([
   workflowPrompt,
   branchPrompt,
   tagPrompt,
-  environmentPrompt,
+  environmentCheckboxPrompt,
+  environmentListPrompt,
   browserPrompt,
   bverPrompt,
   topologyPrompt,
   stableTestsPrompt,
 ]).then(answers => {
-  const {options, body} = generateBuildRequest(answers);
-  console.log('Will make a CI request with:', options, body);
+  console.log('Will make a CI request with:', answers);
+
+  // get basic values from answers.
+  const { token, workflow, tag } = answers;
+
+  // make combo of possible multi-select (checkbox) values.
+  var combo = ['browser', 'bver', 'environment', 'topology', 'test_stability'].reduce( (acc, dim) => {
+    const dimValues = Array.isArray(answers[dim]) ?  answers[dim] : [answers[dim]];
+    const result = [];
+    acc.forEach(accElement => dimValues.forEach(dimValue => result.push({ ...accElement, [dim]: dimValue})));
+    return result;
+  }, [{ token, workflow, tag }]);
+
   inquirer.prompt([confirmPrompt]).then(({ confirm }) => {
     if (confirm) {
-      triggerBuild({options, body}).then((result) => {
-        console.log(result);
-      }).catch(e => console.log('Failed to trigger a build:', e));
+      combo.map(build => {
+        const {options, body} = generateBuildRequest(build);
+        triggerBuild({options, body}).then((result) => {
+          console.log(result);
+        }).catch(e => console.log('Failed to trigger a build:', e));
+      });
     }
   });
 });
