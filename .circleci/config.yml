@@ -28,15 +28,15 @@ parameters:
     default: "chrome"
   bver:
     type: enum
-    enum: ["stable", "beta", "unstable"]
+    enum: ["stable", "beta", "beta"]
     default: "stable"
   topology:
     type: enum
     enum: ["group", "peer-to-peer"]
     default: "group"
-  test_stability: # should it run unstable tests?
+  test_stability: # should it run flaky tests?
     type: enum
-    enum: ["all", "stable", "unstable"]
+    enum: ["all", "stable", "flaky"]
     default: "all"
 
 defaultEnv: &defaultEnv
@@ -255,29 +255,10 @@ workflows:
                 - master
     jobs:
       - Build-Docker-Test-Image:
-          name: "chrome stable"
-          <<: *browser_chrome
-          <<: *bver_stable
-      - Build-Docker-Test-Image:
-          name: "chrome unstable"
-          <<: *browser_chrome
-          <<: *bver_unstable
-      - Build-Docker-Test-Image:
-          name: "chrome beta"
-          <<: *browser_chrome
-          <<: *bver_beta
-      - Build-Docker-Test-Image:
-          name: "firefox stable"
-          <<: *browser_firefox
-          <<: *bver_stable
-      - Build-Docker-Test-Image:
-          name: "firefox unstable"
-          <<: *browser_firefox
-          <<: *bver_unstable
-      - Build-Docker-Test-Image:
-          name: "firefox beta"
-          <<: *browser_firefox
-          <<: *bver_beta
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
   Custom_Workflow:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
@@ -290,150 +271,37 @@ workflows:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
       - run-integration-tests:
-          name: "chrome stable group"
-          <<: *browser_chrome
-          <<: *bver_stable
-          <<: *topology_group
-      - run-integration-tests:
-          name: "chrome stable p2p"
-          <<: *browser_chrome
-          <<: *bver_stable
-          <<: *topology_p2p
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable"]
+              topology: ["group", "peer-to-peer"]
       - run-network-tests:
-          name: "chrome network p2p"
-          <<: *browser_chrome
-          <<: *topology_p2p
-      - run-network-tests:
-          name: "chrome network group"
-          <<: *browser_chrome
-          <<: *topology_group
-      - run-integration-tests:
-          name: "firefox stable group"
-          <<: *browser_firefox
-          <<: *bver_stable
-          <<: *topology_group
-      - run-integration-tests:
-          name: "firefox stable p2p"
-          <<: *browser_firefox
-          <<: *bver_stable
-          <<: *topology_p2p
-      - run-network-tests:
-          name: "firefox network p2p"
-          <<: *browser_firefox
-          <<: *topology_p2p
-      - run-network-tests:
-          name: "firefox network group"
-          <<: *browser_firefox
-          <<: *topology_group
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              topology: ["group", "peer-to-peer"]
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
       - Build
       - UnitTests
-      - BuildComplete:
+      - run-integration-tests:
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+              topology: ["group", "peer-to-peer"]
           requires: [Build, UnitTests]
-      - run-integration-tests:
-          name: "chrome stable group"
-          <<: *browser_chrome
-          <<: *bver_stable
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "chrome beta group"
-          <<: *browser_chrome
-          <<: *bver_beta
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "chrome unstable group"
-          <<: *browser_chrome
-          <<: *bver_unstable
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "chrome stable p2p"
-          <<: *browser_chrome
-          <<: *bver_stable
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "chrome beta p2p"
-          <<: *browser_chrome
-          <<: *bver_beta
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "chrome unstable p2p"
-          <<: *browser_chrome
-          <<: *bver_unstable
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox stable group"
-          <<: *browser_firefox
-          <<: *bver_stable
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox beta group"
-          <<: *browser_firefox
-          <<: *bver_beta
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox unstable group"
-          <<: *browser_firefox
-          <<: *bver_unstable
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox stable p2p"
-          <<: *browser_firefox
-          <<: *bver_stable
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox beta p2p"
-          <<: *browser_firefox
-          <<: *bver_beta
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-integration-tests:
-          name: "firefox unstable p2p"
-          <<: *browser_firefox
-          <<: *bver_unstable
-          <<: *topology_p2p
-          requires: [BuildComplete]
       - run-network-tests:
-          name: "firefox network p2p"
-          <<: *browser_firefox
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-network-tests:
-          name: "firefox network group"
-          <<: *browser_firefox
-          <<: *topology_group
-          requires: [BuildComplete]
-      - run-network-tests:
-          name: "chrome network p2p"
-          <<: *browser_chrome
-          <<: *topology_p2p
-          requires: [BuildComplete]
-      - run-network-tests:
-          name: "chrome network group"
-          <<: *browser_chrome
-          <<: *topology_group
-          requires: [BuildComplete]
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              topology: ["group", "peer-to-peer"]
+          requires: [Build, UnitTests]
       - Framework-tests:
           name: "framework tests"
-          requires: [BuildComplete]
-      - BuildPassed:
-          requires:
-            - "framework tests"
-            - "firefox stable p2p"
-            - "firefox stable group"
-            - "chrome stable p2p"
-            - "chrome stable group"
+          requires: [Build, UnitTests]
   Release-candidate:
     jobs:
       - trigger-qe-tests:
