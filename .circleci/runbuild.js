@@ -225,7 +225,7 @@ inquirer.prompt([
   console.log('Will make a CI request with:', answers);
 
   // get basic values from answers.
-  const { token, workflow, tag } = answers;
+  const { branch, token, workflow, tag } = answers;
 
   // make combo of possible multi-select (checkbox) values.
   var combo = ['browser', 'bver', 'environment', 'topology', 'test_stability'].reduce( (acc, dim) => {
@@ -233,7 +233,7 @@ inquirer.prompt([
     const result = [];
     acc.forEach(accElement => dimValues.forEach(dimValue => result.push({ ...accElement, [dim]: dimValue})));
     return result;
-  }, [{ token, workflow, tag }]);
+  }, [{ branch, token, workflow, tag }]);
 
   inquirer.prompt([confirmPrompt]).then(({ confirm }) => {
     if (confirm) {
