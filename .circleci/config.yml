@@ -129,14 +129,14 @@ commands:
     steps:
       - get-code-and-dependencies
       - run:
-          name: Running Integration Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
+          name: Running Integration Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
       - save-test-results
   network-tests:
     steps:
       - get-code # note: network tests run inside docker - the dependencies will be fetched inside docker image.
       - run:
-          name: Running Network Tests (stability = << pipeline.parameters.test_stability >>, environment = << pipeline.parameters.environment >>)
+          name: Running Network Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
       - save-test-results
   framework-tests:
@@ -267,7 +267,7 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.bver >>  << pipeline.parameters.topology >> << pipeline.parameters.test_stability >>
+          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >> << pipeline.parameters.test_stability >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
@@ -276,7 +276,7 @@ workflows:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
       - run-integration-tests:
-          name: << matrix.test_stability >> integration tests << matrix.browser >>(<< matrix.bver >>)<< matrix.topology >>
+          name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
@@ -284,7 +284,7 @@ workflows:
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
       - run-network-tests:
-          name: << matrix.test_stability >> network tests on << matrix.topology >> << matrix.browser >>
+          name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
@@ -296,7 +296,7 @@ workflows:
       - Build
       - UnitTests
       - run-integration-tests:
-          name: << matrix.test_stability >> integration tests on << matrix.browser >>(<< matrix.bver >>)<< matrix.topology >>
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
@@ -305,7 +305,7 @@ workflows:
               test_stability: ["stable", "unstable"]
           requires: [Build, UnitTests]
       - run-network-tests:
-          name: << matrix.test_stability >> network tests on << matrix.topology >> << matrix.browser >>
+          name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
