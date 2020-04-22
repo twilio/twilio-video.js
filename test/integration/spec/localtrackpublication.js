@@ -49,35 +49,37 @@ describe('LocalTrackPublication', function() {
 
   it('JSDK-2583 late arrivals see stale priority for the tracks', async () => {
     const roomSid = await createRoom(randomName(), defaults.topology);
-    const options = Object.assign({ name: roomSid }, defaults);
+    const options = Object.assign({ name: roomSid, logLevel: 'debug' }, defaults);
 
     // BOB joins a room
     const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [] }, options));
 
     // Bob publishes a track at low priority.
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
-    const trackAPubLocal = await waitFor(bobRoom.localParticipant.publishTrack(bobVideoTrackA, { priority: PRIORITY_LOW }), `Bob to publish video trackA: ${roomSid}`);
+    const trackAPubLocal = await waitFor(bobRoom.localParticipant.publishTrack(bobVideoTrackA, { priority: PRIORITY_LOW }), `Bob to publish video trackA: ${roomSid}`, 20000, true);
 
     // Bob updates trackA => PRIORITY_HIGH
     trackAPubLocal.setPriority(PRIORITY_HIGH);
     assert.equal(trackAPubLocal.priority, PRIORITY_HIGH);
 
-    // Alice joins a room after 10 seconds.
-    await waitForSometime(10000);
+    // Alice joins a room after 5 seconds.
+    await waitForSometime(5000);
     const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
     const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
 
     // Alice sees bob track.
-    await waitFor(tracksSubscribed(bobRemote, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`);
+    await waitFor(tracksSubscribed(bobRemote, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
     const trackAPubRemote = bobRemote.videoTracks.get(trackAPubLocal.trackSid);
 
     const trackPriorityChanged = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
       assert.equal(priority, PRIORITY_HIGH);
+      // eslint-disable-next-line no-console
+      console.log('alice saw track priority high');
       resolve();
     }));
 
-    // alice waits for 10 seconds or for trackPriorityChanged to have been fired.
-    await Promise.race([waitForSometime(10000), trackPriorityChanged]);
+    // alice waits for 5 seconds or for trackPriorityChanged to have been fired.
+    await Promise.race([waitForSometime(5000), trackPriorityChanged]);
 
     // and at the end expects the priority of bob's track to be high.
     assert(trackAPubRemote);
