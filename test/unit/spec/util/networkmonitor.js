@@ -7,7 +7,7 @@ const MockConnection = require('../../../lib/mockconnection');
 const EventTarget = require('../../../../lib/eventtarget');
 const NetworkMonitor = require('../../../../lib/util/networkmonitor');
 
-describe.only('NetworkMonitor', () => {
+describe('NetworkMonitor', () => {
   let onNetworkChangedCalled;
   let nav;
   let win;
