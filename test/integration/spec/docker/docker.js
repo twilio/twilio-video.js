@@ -1,11 +1,21 @@
+/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
 const DockerProxyClient = require('../../../../docker/dockerProxyClient');
 
 const {
-  waitToGoOnline, waitToGoOffline
+  waitToGoOnline, waitToGoOffline, waitFor
 } = require('../../../lib/util');
+
+
+async function testNetwork() {
+  await fetch('http://www.google.com', { mode: 'no-cors' });
+}
+
+function readCurrentNetworks(dockerAPI) {
+  return waitFor(dockerAPI.getCurrentNetworks(), 'getCurrentNetworks');
+}
 
 describe('dockerProxy', function() {
   // eslint-disable-next-line no-invalid-this
@@ -17,6 +27,10 @@ describe('dockerProxy', function() {
   before(async () => {
     dockerAPI = new DockerProxyClient();
     isRunningInsideDocker = await dockerAPI.isDocker();
+  });
+
+  it('can fetch from network', async () => {
+    await testNetwork();
   });
 
   it('DockerProxyClient can determine if running inside docker', () => {
@@ -91,6 +105,7 @@ describe('dockerProxy', function() {
 
     it('disconnectFromAllNetworks: disconnects from all networks', async () => {
       await waitToGoOnline();
+      await testNetwork();
       let networks = await dockerAPI.getCurrentNetworks();
       assert(networks.length > 0);
 
@@ -149,6 +164,28 @@ describe('dockerProxy', function() {
       await dockerAPI.resetNetwork();
       const networksAfterReset  = await dockerAPI.getCurrentNetworks();
       assert.equal(initialNetworks.length, networksAfterReset.length);
+      await waitToGoOnline();
+    });
+  });
+
+  describe('can simulate network changes', () => {
+    it('Scenario 1 (jump): connected interface switches off and then a new interface switches on', async () => {
+      const currentNetworks = await readCurrentNetworks(dockerAPI);
+      const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
+
+      await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from networks');
+      await waitToGoOffline();
+
+      await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
+      await waitToGoOnline();
+    });
+
+    it('Scenario 2 (step) : new interface switches on and then the connected interface switches off', async () => {
+      const currentNetworks = await readCurrentNetworks(dockerAPI);
+      const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
+      await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
+
+      await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from networks');
       await waitToGoOnline();
     });
   });
