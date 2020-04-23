@@ -3,6 +3,12 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.4.0 (in progress)
 ===================
 
+New Features
+------------
+
+- twilio-video.js now supports faster signaling reconnections due to network disruption or handoff. (JSDK-2739)
+- twilio-video.js now supports faster media reconnections due to network disruption or handoff. (JSDK-2742)
+
 Bug Fixes
 ---------
 
