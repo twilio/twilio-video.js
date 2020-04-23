@@ -267,11 +267,17 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >> << pipeline.parameters.test_stability >>
+          name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
+      - run-network-tests:
+          name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          topology: << pipeline.parameters.topology >>
+          test_stability: << pipeline.parameters.test_stability >>
+
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:

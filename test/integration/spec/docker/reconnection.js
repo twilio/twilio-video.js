@@ -159,7 +159,7 @@ function readCurrentNetworks(dockerAPI) {
 describe('network:', function() {
   this.timeout(8 * ONE_MINUTE);
   let dockerAPI = new DockerProxyClient();
-  before(this.title, async () => {
+  before(this.title, async function() {
     const isRunningInsideDocker = await dockerAPI.isDocker();
     if (!isRunningInsideDocker) {
       console.log('skipping tests because not running inside docker');
