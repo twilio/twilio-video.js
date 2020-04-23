@@ -93,10 +93,14 @@ describe('NetworkMonitor', () => {
     let networkMonitor;
     let networkChangedCalled;
 
-    describe('#navigator', () => {
+    describe('when navigator.connection.type is a string', () => {
       beforeEach(() => {
         networkChangedCalled = sinon.spy();
-        networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: nav });
+        networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: nav, window: win });
+      });
+
+      afterEach(() => {
+        delete nav.connection.type;
       });
 
       it('should call the function when network has typechanged on navigator', () => {
@@ -114,10 +118,27 @@ describe('NetworkMonitor', () => {
       });
     });
 
-    describe('#window', () => {
+    describe('when navigator.connection.type is not available (rely on window.ononline)', () => {
+      const navNoConnectionType = {
+        connection: {}
+      };
+
       beforeEach(() => {
         networkChangedCalled = sinon.spy();
-        networkMonitor = new NetworkMonitor(networkChangedCalled, { window: win });
+        networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: navNoConnectionType, window: win });
+      });
+
+      it('should call the function on window', () => {
+        networkMonitor.start();
+        win.dispatchEvent({ type: 'online' });
+        sinon.assert.calledOnce(networkChangedCalled);
+      });
+    });
+
+    describe('when navigator.connection is not available (rely on window.ononline)', () => {
+      beforeEach(() => {
+        networkChangedCalled = sinon.spy();
+        networkMonitor = new NetworkMonitor(networkChangedCalled, { navigator: {}, window: win });
       });
 
       it('should call the function when event is online on window', () => {
