@@ -22,7 +22,7 @@ if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
 }
 
-describe('InsightsPublisher', function() {
+describe('InsightsPublisher (@unstable: JSDK-2761)', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
 
@@ -43,7 +43,7 @@ describe('InsightsPublisher', function() {
 
         const description = tokenType !== 'valid'
           ? 'should disconnect with an Error'
-          : 'should be successful (@unstable: JSDK-2761)';
+          : 'should be successful';
 
 
         const test = tokenType !== 'valid' ? async () => {
