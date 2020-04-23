@@ -52,39 +52,47 @@ describe('NetworkMonitor', () => {
   describe('start and stop methods', () => {
     let networkMonitor;
 
-    describe('#window #start #stop', () => {
+    describe('window', () => {
       beforeEach(() => {
         networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { window: win });
       });
 
-      it('should call start once for online event on target window', () => {
-        win.addEventListener = sinon.spy();
-        networkMonitor.start();
-        sinon.assert.calledOnce(win.addEventListener);
+      describe('#start', () => {
+        it('should call start once for online event on target window', () => {
+          win.addEventListener = sinon.spy();
+          networkMonitor.start();
+          sinon.assert.calledOnce(win.addEventListener);
+        });
       });
 
-      it('should call stop once for online event on target window', () => {
-        win.removeEventListener = sinon.spy();
-        networkMonitor.stop();
-        sinon.assert.calledOnce(win.removeEventListener);
+      describe('#stop', () => {
+        it('should call stop once for online event on target window', () => {
+          win.removeEventListener = sinon.spy();
+          networkMonitor.stop();
+          sinon.assert.calledOnce(win.removeEventListener);
+        });
       });
     });
 
-    describe('#navigator #start #stop', () => {
+    describe('navigator', () => {
       beforeEach(() => {
         networkMonitor = new NetworkMonitor(onNetworkChangedCalled, { navigator: nav });
       });
 
-      it('should call start twice for each event on target nav', () => {
-        nav.connection.addEventListener = sinon.spy();
-        networkMonitor.start();
-        sinon.assert.calledTwice(nav.connection.addEventListener);
+      describe('#start', () => {
+        it('should call start twice for each event on target nav', () => {
+          nav.connection.addEventListener = sinon.spy();
+          networkMonitor.start();
+          sinon.assert.calledTwice(nav.connection.addEventListener);
+        });
       });
 
-      it('should call stop twice for each event on target nav', () => {
-        nav.connection.removeEventListener = sinon.spy();
-        networkMonitor.stop();
-        sinon.assert.calledTwice(nav.connection.removeEventListener);
+      describe('#stop', () => {
+        it('should call stop twice for each event on target nav', () => {
+          nav.connection.removeEventListener = sinon.spy();
+          networkMonitor.stop();
+          sinon.assert.calledTwice(nav.connection.removeEventListener);
+        });
       });
     });
   });
