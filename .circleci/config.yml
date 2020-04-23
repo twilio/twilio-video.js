@@ -28,7 +28,7 @@ parameters:
     default: "chrome"
   bver:
     type: enum
-    enum: ["stable", "beta", "beta"]
+    enum: ["stable", "beta", "unstable"]
     default: "stable"
   topology:
     type: enum
