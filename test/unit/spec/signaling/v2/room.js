@@ -116,6 +116,104 @@ describe('RoomV2', () => {
         ],
         [
           'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'foo',
+            baz: 'zee'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'bar',
+            zee: 'foo'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'foo',
+            baz: 'zee'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'bar',
+            zee: 'foo'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
           'stats-report',
           {
             peerConnectionId: 'bar',
@@ -123,104 +221,6 @@ describe('RoomV2', () => {
             localAudioTrackStats: reports.bar.localAudioTrackStats,
             localVideoTrackStats: reports.bar.localVideoTrackStats,
             videoTrackStats: reports.bar.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'foo',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'active-ice-candidate-pair',
-          {
-            peerConnectionId: 'foo',
-            baz: 'zee'
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'bar',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'active-ice-candidate-pair',
-          {
-            peerConnectionId: 'bar',
-            zee: 'foo'
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'foo',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'bar',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'foo',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'active-ice-candidate-pair',
-          {
-            peerConnectionId: 'foo',
-            baz: 'zee'
-          }
-        ],
-        [
-          'quality',
-          'stats-report',
-          {
-            peerConnectionId: 'bar',
-            audioTrackStats: reports.foo.remoteAudioTrackStats,
-            localAudioTrackStats: reports.foo.localAudioTrackStats,
-            localVideoTrackStats: reports.foo.localVideoTrackStats,
-            videoTrackStats: reports.foo.remoteVideoTrackStats
-          }
-        ],
-        [
-          'quality',
-          'active-ice-candidate-pair',
-          {
-            peerConnectionId: 'bar',
-            zee: 'foo'
           }
         ]
       ];
