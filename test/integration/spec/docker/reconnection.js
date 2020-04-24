@@ -159,10 +159,13 @@ function readCurrentNetworks(dockerAPI) {
 describe('network:', function() {
   this.timeout(8 * ONE_MINUTE);
   let dockerAPI = new DockerProxyClient();
+  let isRunningInsideDocker = false;
   before(this.title, async function() {
-    const isRunningInsideDocker = await dockerAPI.isDocker();
+    isRunningInsideDocker = await dockerAPI.isDocker();
+  });
+
+  this.beforeEach(function() {
     if (!isRunningInsideDocker) {
-      console.log('skipping tests because not running inside docker');
       this.skip();
     }
   });
@@ -206,6 +209,9 @@ describe('network:', function() {
     let disconnected;
 
     before(this.title, async function() {
+      if (!isRunningInsideDocker) {
+        this.skip();
+      }
       rooms = await setup(['Alice', 'Bob', 'Charlie'].map((identity, i) => {
         return { identity, region: DOCKER_PROXY_TURN_REGIONS[i] };
       }));
@@ -215,7 +221,9 @@ describe('network:', function() {
     after(async () => {
       if (rooms) {
         rooms.forEach(room => room.disconnect());
-        await completeRoom(rooms[0].sid);
+        if (rooms.length > 0) {
+          await completeRoom(rooms[0].sid);
+        }
         rooms = null;
       }
     });
@@ -258,6 +266,10 @@ describe('network:', function() {
       let disconnected;
 
       beforeEach(async function() {
+        if (!isRunningInsideDocker) {
+          this.skip();
+        }
+
         await waitFor(dockerAPI.resetNetwork(), 'reset network');
         await waitToGoOnline();
         currentNetworks = await readCurrentNetworks(dockerAPI);
@@ -276,7 +288,9 @@ describe('network:', function() {
         });
         rooms = [];
         await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
-        await completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       describe('Network interruption', () => {
@@ -287,7 +301,10 @@ describe('network:', function() {
         let reconnectedPromises;
         let reconnectingPromises;
 
-        beforeEach(async () => {
+        beforeEach(async function() {
+          if (!isRunningInsideDocker) {
+            this.skip();
+          }
           disconnectedPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
           localParticipantDisconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('disconnected', resolve)));
           localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
@@ -484,6 +501,10 @@ describe('network:', function() {
     let disconnected;
 
     before(this.title, async function() {
+      if (!isRunningInsideDocker) {
+        this.skip();
+      }
+
       const identities = defaults.topology === 'peer-to-peer'
         ? ['Alice', 'Bob']
         : ['Alice'];
