@@ -116,14 +116,6 @@ describe('RoomV2', () => {
         ],
         [
           'quality',
-          'active-ice-candidate-pair',
-          {
-            peerConnectionId: 'foo',
-            baz: 'zee'
-          }
-        ],
-        [
-          'quality',
           'stats-report',
           {
             peerConnectionId: 'bar',
@@ -135,6 +127,96 @@ describe('RoomV2', () => {
         ],
         [
           'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'foo',
+            baz: 'zee'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'bar',
+            zee: 'foo'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'foo',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
+          'active-ice-candidate-pair',
+          {
+            peerConnectionId: 'foo',
+            baz: 'zee'
+          }
+        ],
+        [
+          'quality',
+          'stats-report',
+          {
+            peerConnectionId: 'bar',
+            audioTrackStats: reports.foo.remoteAudioTrackStats,
+            localAudioTrackStats: reports.foo.localAudioTrackStats,
+            localVideoTrackStats: reports.foo.localVideoTrackStats,
+            videoTrackStats: reports.foo.remoteVideoTrackStats
+          }
+        ],
+        [
+          'quality',
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'bar',
@@ -142,8 +224,8 @@ describe('RoomV2', () => {
           }
         ]
       ];
-      await wait(175);
-      test.transport.publishEvent.args.slice(0, 4).forEach(([, name, payload], i) => {
+      await wait(225);
+      test.transport.publishEvent.args.slice(0, expectedArgs.length).forEach(([, name, payload], i) => {
         if (name === 'stats-report') {
           assert.deepEqual(payload, expectedArgs[i][2]);
           return;
