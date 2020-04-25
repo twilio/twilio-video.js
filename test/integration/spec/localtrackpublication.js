@@ -43,7 +43,7 @@ const {
   waitOnceForRoomEvent
 } = require('../../lib/util');
 
-describe('LocalTrackPublication', function() {
+describe(`LocalTrackPublication ${isFirefox ? '(@unstable)' : ''}`, function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
