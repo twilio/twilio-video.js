@@ -3,9 +3,11 @@
 const EventTarget = require('../../lib/eventtarget');
 
 class MockConnection extends EventTarget {
-  constructor() {
+  constructor(type = null) {
     super();
-    this.type = 'whiz';
+    if (type) {
+      this.type = type;
+    }
   }
 }
 
