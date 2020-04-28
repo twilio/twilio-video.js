@@ -5,8 +5,6 @@ const sinon = require('sinon');
 const fakeLog = require('../../lib/fakelog');
 const EventTarget = require('../../../lib/eventtarget');
 const TwilioConnection = require('../../../lib/twilioconnection');
-const fakeTimeout = require('../../lib/fakeTimeout');
-
 function FakeLog() {
   return fakeLog;
 }
@@ -51,15 +49,20 @@ function makeTest(serverUrl, options, testOptions) {
   }, options);
 
   if (testOptions.useFakeTimeout) {
-    test.timers = {};
-    test.options.Timeout = fakeTimeout(test.timers).Timeout;
+    test.clock = sinon.useFakeTimers();
   }
 
   test.twilioConnection = new TwilioConnection(test.serverUrl, test.options);
+
+  test.end = () => {
+    test.clock.restore();
+  };
+
   return test;
 }
 
-describe.only('TwilioConnection', function() {
+
+describe('TwilioConnection', function() {
   describe('constructor', () => {
     let twilioConnection;
 
@@ -188,19 +191,24 @@ describe.only('TwilioConnection', function() {
         test = makeTest('foo', {}, { useFakeTimeout: true });
         twilioConnection = test.twilioConnection;
       });
-      it('creates a timer to wait for socket open', () => {
-        // open timer gets created.
-        assert(test.timers.instances.length > 0);
-        assert.equal(twilioConnection.state, 'connecting');
+
+      afterEach(() => {
+        test.end();
       });
 
-      it('closes the socket if it fails to open in time', () => {
-        assert(test.timers.instances.length > 0); // open timer got created.
-        const openTimer = test.timers.instances[0];
-
-        // simulate timeout on open timer.
+      it('closes the socket if it fails to open in 15 seconds', () => {
         sinon.assert.callCount(twilioConnection._ws.close, 0);
-        openTimer._simulateTimeout();
+
+        // simulate 10 seconds have passed
+        test.clock.tick(10000);
+
+        // it should not close the socket yet.
+        sinon.assert.callCount(twilioConnection._ws.close, 0);
+
+        // simulate 5 more seconds have passed
+        test.clock.tick(5000);
+
+        // now we expect socket to have closed.
         sinon.assert.callCount(twilioConnection._ws.close, 1);
 
         // transitions to closed state.
@@ -209,19 +217,21 @@ describe.only('TwilioConnection', function() {
     });
 
     context('when the underlying WebSocket is "open"', () => {
+      let test;
       let twilioConnection;
       beforeEach(() => {
-        twilioConnection = makeTest('foo', {
+        test = makeTest('foo', {
           maxConsecutiveMissedHeartbeats: 2,
           welcomeTimeout: 500
-        }).twilioConnection;
+        });
+        twilioConnection = test.twilioConnection;
         twilioConnection._ws.open();
       });
 
-      it('should send a "hello" message with requested heartbeat timeout value of 15000 ms ', () => {
+      it('should send a "hello" message with requested heartbeat timeout value of 5000 ms ', () => {
         const hello = JSON.parse(twilioConnection._ws.send.args[0][0]);
         assert.equal(typeof hello.id, 'string');
-        assert.equal(hello.timeout, 15000);
+        assert.equal(hello.timeout, 5000);
         assert.equal(hello.type, 'hello');
       });
 
@@ -267,16 +277,12 @@ describe.only('TwilioConnection', function() {
           assert(openEmitted);
         });
 
-        context('when the TwilioConnection fails to receive the allowed number of "heartbeat" messages', () => {
+        context('when the TwilioConnection fails to receive any "heartbeat" messages', () => {
           let error;
 
           beforeEach(async () => {
             error = await new Promise(resolve => {
-              twilioConnection.once('close', error => {
-                assert.equal(twilioConnection.consecutiveHeartbeatsMissed,
-                  twilioConnection._options.maxConsecutiveMissedHeartbeats);
-                resolve(error);
-              });
+              twilioConnection.once('close', resolve);
             });
           });
 
@@ -302,6 +308,8 @@ describe.only('TwilioConnection', function() {
           context(`when the TwilioConnection receives a "${msg.type}" message`, () => {
             let error;
             let message;
+            let clearTimeoutSpy;
+            let setTimeoutSpy;
 
             beforeEach(() => {
               twilioConnection.once('error', err => {
@@ -310,12 +318,18 @@ describe.only('TwilioConnection', function() {
               twilioConnection.once('message', msg => {
                 message = msg;
               });
-              twilioConnection._consecutiveHeartbeatsMissed = 1;
+              test.clock = sinon.useFakeTimers();
+              clearTimeoutSpy = sinon.spy(test.clock, 'clearTimeout');
+              setTimeoutSpy = sinon.spy(test.clock, 'setTimeout');
+              sinon.assert.callCount(clearTimeoutSpy, 0);
+              sinon.assert.callCount(setTimeoutSpy, 0);
               twilioConnection._ws.receiveMessage(msg);
             });
+            afterEach(() => test.end());
 
-            it('should reset the missed heartbeat messages count', () => {
-              assert.equal(twilioConnection.consecutiveHeartbeatsMissed, 0);
+            it('should reset the heartbeat timer', () => {
+              sinon.assert.callCount(clearTimeoutSpy, 1);
+              sinon.assert.callCount(setTimeoutSpy, 1);
             });
 
             it({
@@ -328,11 +342,12 @@ describe.only('TwilioConnection', function() {
                 assert.equal(error.message, msg.reason);
               },
               heartbeat: () => {
-                assert.equal(twilioConnection.consecutiveHeartbeatsMissed, 0);
+                // should not emit the message or error
+                assert.equal(message, undefined);
+                assert.equal(error, undefined);
               },
               msg: () => {
                 assert.deepEqual(message, msg.body);
-                assert.equal(twilioConnection.consecutiveHeartbeatsMissed, 0);
               }
             }[msg.type]);
           });
