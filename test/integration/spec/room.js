@@ -12,6 +12,7 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
+const { isFirefox } = require('../../lib/guessbrowser');
 const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
@@ -154,7 +155,7 @@ describe('Room', function() {
     });
   });
 
-  describe('getStats', function() {
+  describe(`getStats ${isFirefox ? '(@unstable)' : ''}`, function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
