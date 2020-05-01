@@ -209,273 +209,292 @@ describe('TwilioConnection', function() {
   describe('connect', () => {
     let twilioConnection;
 
-    beforeEach(() => {
-      twilioConnection = new TwilioConnection('foo', {
-        maxConsecutiveMissedHeartbeats: 2,
-        welcomeTimeout: 500,
-        Log: FakeLog,
-        WebSocket: FakeWebSocket
-      });
-    });
-
-    context('when the underlying WebSocket is "open"', () => {
-      beforeEach(() => {
-        twilioConnection._ws.open();
-      });
-
-      it('should transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', () => {
-        assert.equal(twilioConnection.state, 'connecting');
-        const hello = JSON.parse(twilioConnection._ws.send.args[0][0]);
-        assert.equal(typeof hello.id, 'string');
-        assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
-        assert.equal(hello.type, 'hello');
-        assert(!('cookie' in hello));
-      });
-
-      context('when a "welcome" message is received within the "welcome" timeout', () => {
-        const messagesToEnqueue = [{
-          body: JSON.stringify({ foo: 'bar' }),
-          type: 'msg'
-        }, {
-          body: JSON.stringify({ baz: 'zee' }),
-          type: 'msg'
-        }];
-
-        const negotiatedTimeout = 100;
-        let openEmitted;
-
+    [{}, { helloBody: null }, { helloBody: 'bar' }].forEach(options => {
+      context(`when TwilioConnectionOptions.helloBody ${options.helloBody ? 'exists' : options.helloBody === null ? 'is null' : 'does not exist'}`, () => {
         beforeEach(() => {
-          messagesToEnqueue.forEach(message => {
-            twilioConnection._messageQueue.push(message);
-          });
-
-          twilioConnection.once('open', () => {
-            openEmitted = true;
-          });
-
-          twilioConnection._ws.receiveMessage({
-            negotiatedTimeout,
-            type: 'welcome'
-          });
+          twilioConnection = new TwilioConnection('foo', Object.assign(options, {
+            maxConsecutiveMissedHeartbeats: 2,
+            welcomeTimeout: 500,
+            Log: FakeLog,
+            WebSocket: FakeWebSocket
+          }));
         });
 
-        it('should send any enqueued messages using the underlying WebSocket', () => {
-          messagesToEnqueue.forEach(message => {
-            sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify(message));
-          });
-          assert.equal(twilioConnection._messageQueue.length, 0);
-        });
-
-        it('should set the TwilioConnection\'s .state to "open"', () => {
-          assert.equal(twilioConnection.state, 'open');
-        });
-
-        it('should emit "open" on the TwilioConnection', () => {
-          assert(openEmitted);
-        });
-
-        context('when the TwilioConnection fails to receive the allowed number of "heartbeat" messages', () => {
-          let error;
-
-          beforeEach(async () => {
-            error = await new Promise(resolve => {
-              twilioConnection.once('close', error => {
-                assert.equal(twilioConnection.consecutiveHeartbeatsMissed,
-                  twilioConnection._options.maxConsecutiveMissedHeartbeats);
-                resolve(error);
-              });
-            });
+        context('when the underlying WebSocket is "open"', () => {
+          beforeEach(() => {
+            twilioConnection._ws.open();
           });
 
-          it('should set the TwilioConnection\'s .state to "closed', () => {
-            assert.equal(twilioConnection.state, 'closed');
+          it('should transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', () => {
+            assert.equal(twilioConnection.state, 'connecting');
+            const hello = JSON.parse(twilioConnection._ws.send.args[0][0]);
+            assert.equal(typeof hello.id, 'string');
+            assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
+            assert.equal(hello.type, 'hello');
+            assert.equal('cookie' in hello, false);
+            if (options.helloBody) {
+              assert.equal(hello.body, options.helloBody);
+            } else {
+              assert.equal('body' in hello, false);
+            }
           });
 
-          it('should call .close on the underlying WebSocket', () => {
-            sinon.assert.callCount(twilioConnection._ws.close, 1);
-          });
+          context('when a "welcome" message is received within the "welcome" timeout', () => {
+            const messagesToEnqueue = [{
+              body: JSON.stringify({ foo: 'bar' }),
+              type: 'msg'
+            }, {
+              body: JSON.stringify({ baz: 'zee' }),
+              type: 'msg'
+            }];
 
-          it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-            assert(error instanceof Error);
-            assert(/^WebSocket Error 3001/.test(error.message));
-          });
-        });
-
-        [
-          { reason: 'foo', type: 'bad' },
-          { type: 'heartbeat' },
-          { body: { foo: 'bar' }, type: 'msg' }
-        ].forEach(msg => {
-          context(`when the TwilioConnection receives a "${msg.type}" message`, () => {
-            let error;
-            let message;
+            const negotiatedTimeout = 100;
+            let openEmitted;
 
             beforeEach(() => {
-              twilioConnection.once('error', err => {
-                error = err;
+              messagesToEnqueue.forEach(message => {
+                twilioConnection._messageQueue.push(message);
               });
-              twilioConnection.once('message', msg => {
-                message = msg;
+
+              twilioConnection.once('open', () => {
+                openEmitted = true;
               });
-              twilioConnection._consecutiveHeartbeatsMissed = 1;
-              twilioConnection._ws.receiveMessage(msg);
+
+              twilioConnection._ws.receiveMessage({
+                negotiatedTimeout,
+                type: 'welcome'
+              });
             });
 
-            it({
-              bad: 'should emit "error" on the TwilioConnection',
-              heartbeat: 'should reset the missed heartbeat messages count',
-              msg: 'should emit "message" on the TwilioConnection'
-            }[msg.type], {
-              bad: () => {
-                assert(error instanceof Error);
-                assert.equal(error.message, msg.reason);
-              },
-              heartbeat: () => {
-                assert.equal(twilioConnection.consecutiveHeartbeatsMissed, 0);
-              },
-              msg: () => {
-                assert.deepEqual(message, msg.body);
-              }
-            }[msg.type]);
-          });
-        });
-      });
+            it('should send any enqueued messages using the underlying WebSocket', () => {
+              messagesToEnqueue.forEach(message => {
+                sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify(message));
+              });
+              assert.equal(twilioConnection._messageQueue.length, 0);
+            });
 
-      context('when a "bad" message is received while waiting for the "welcome" message', () => {
-        let error;
+            it('should set the TwilioConnection\'s .state to "open"', () => {
+              assert.equal(twilioConnection.state, 'open');
+            });
 
-        beforeEach(async () => {
-          const promise = new Promise(resolve => {
-            twilioConnection.once('close', resolve);
-          });
-          twilioConnection._ws.receiveMessage({
-            reason: 'foo',
-            type: 'bad'
-          });
-          error = await promise;
-        });
+            it('should emit "open" on the TwilioConnection', () => {
+              assert(openEmitted);
+            });
 
-        it('should set the TwilioConnection\'s .state to "closed"', () => {
-          assert.equal(twilioConnection.state, 'closed');
-        });
-
-        it('should call .close on the underlying WebSocket', () => {
-          sinon.assert.callCount(twilioConnection._ws.close, 1);
-        });
-
-        it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-          assert(error instanceof Error);
-          assert(/^WebSocket Error 3002/.test(error.message));
-        });
-      });
-
-      context('when a "busy" message is received while waiting for the "welcome" message', () => {
-        [true, false].forEach(keepAlive => {
-          [100, -1].forEach(retryAfter => {
-            context(`with keepAlive = ${keepAlive} and retryAfter ${retryAfter < 0 ? '<' : '>='} 0`, () => {
-              let changedState;
+            context('when the TwilioConnection fails to receive the allowed number of "heartbeat" messages', () => {
               let error;
-              let waitArgs;
-              let wsCloseCallCount;
 
               beforeEach(async () => {
-                twilioConnection.once('wait', (...args) => {
-                  waitArgs = args;
-                  wsCloseCallCount = twilioConnection._ws.close.callCount;
+                error = await new Promise(resolve => {
+                  twilioConnection.once('close', error => {
+                    assert.equal(twilioConnection.consecutiveHeartbeatsMissed,
+                      twilioConnection._options.maxConsecutiveMissedHeartbeats);
+                    resolve(error);
+                  });
                 });
-                const stateChanged = new Promise(resolve => {
-                  twilioConnection.once('stateChanged', (...args) => resolve(args));
-                });
-                twilioConnection._ws.receiveMessage({
-                  cookie: 'foo',
-                  keepAlive,
-                  retryAfter,
-                  type: 'busy'
-                });
-                [changedState, error] = await stateChanged;
               });
 
-              if (retryAfter < 0) {
-                it('should set the TwilioConnection\'s .state to "closed"', () => {
-                  assert.equal(twilioConnection.state, 'closed');
-                });
+              it('should set the TwilioConnection\'s .state to "closed', () => {
+                assert.equal(twilioConnection.state, 'closed');
+              });
 
-                it('should call .close on the underlying WebSocket', () => {
-                  sinon.assert.callCount(twilioConnection._ws.close, 1);
-                });
+              it('should call .close on the underlying WebSocket', () => {
+                sinon.assert.callCount(twilioConnection._ws.close, 1);
+              });
 
-                it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-                  assert(error instanceof Error);
-                  assert(/^WebSocket Error 3002/.test(error.message));
-                });
-              } else {
-                it('should set the TwilioConnection\'s .state to "wait"', () => {
-                  assert.deepEqual(waitArgs, [keepAlive, 100]);
-                });
+              it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
+                assert(error instanceof Error);
+                assert(/^WebSocket Error 3001/.test(error.message));
+              });
+            });
 
-                it(`should ${keepAlive ? 'not ' : ''}call .close on the underlying WebSocket`, () => {
-                  assert.equal(wsCloseCallCount, keepAlive ? 0 : 1);
-                });
+            [
+              { reason: 'foo', type: 'bad' },
+              { type: 'heartbeat' },
+              { body: { foo: 'bar' }, type: 'msg' }
+            ].forEach(msg => {
+              context(`when the TwilioConnection receives a "${msg.type}" message`, () => {
+                let error;
+                let message;
 
-                if (keepAlive) {
-                  it('should eventually transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', async () => {
-                    changedState = await new Promise(resolve => twilioConnection.once('stateChanged', resolve));
-                    assert.equal(changedState, 'connecting');
-                    assert.equal(twilioConnection.state, 'connecting');
-                    const hello = JSON.parse(twilioConnection._ws.send.args[1][0]);
-                    assert.equal(typeof hello.id, 'string');
-                    assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
-                    assert.equal(hello.type, 'hello');
-                    assert.equal(hello.cookie, 'foo');
+                beforeEach(() => {
+                  twilioConnection.once('error', err => {
+                    error = err;
                   });
-                } else {
-                  context('should eventually transition to "early" state and when a new WebSocket is opened', () => {
-                    beforeEach(async () => {
-                      changedState = await new Promise(resolve => twilioConnection.once('stateChanged', resolve));
-                      assert.equal(changedState, 'early');
-                      assert.equal(twilioConnection.state, 'early');
-                      const stateChanged = new Promise(resolve => twilioConnection.once('stateChanged', resolve));
-                      twilioConnection._ws.open();
-                      changedState = await stateChanged;
-                    });
-
-                    it('should eventually transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', () => {
-                      assert.equal(changedState, 'connecting');
-                      assert.equal(twilioConnection.state, 'connecting');
-                      const hello = JSON.parse(twilioConnection._ws.send.args[0][0]);
-                      assert.equal(typeof hello.id, 'string');
-                      assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
-                      assert.equal(hello.type, 'hello');
-                      assert.equal(hello.cookie, 'foo');
-                    });
+                  twilioConnection.once('message', msg => {
+                    message = msg;
                   });
-                }
-              }
+                  twilioConnection._consecutiveHeartbeatsMissed = 1;
+                  twilioConnection._ws.receiveMessage(msg);
+                });
+
+                it({
+                  bad: 'should emit "error" on the TwilioConnection',
+                  heartbeat: 'should reset the missed heartbeat messages count',
+                  msg: 'should emit "message" on the TwilioConnection'
+                }[msg.type], {
+                  bad: () => {
+                    assert(error instanceof Error);
+                    assert.equal(error.message, msg.reason);
+                  },
+                  heartbeat: () => {
+                    assert.equal(twilioConnection.consecutiveHeartbeatsMissed, 0);
+                  },
+                  msg: () => {
+                    assert.deepEqual(message, msg.body);
+                  }
+                }[msg.type]);
+              });
             });
           });
-        });
-      });
 
-      context('when a "welcome" message is not received within the "welcome" timeout', () => {
-        let error;
+          context('when a "bad" message is received while waiting for the "welcome" message', () => {
+            let error;
 
-        beforeEach(async () => {
-          error = await new Promise(resolve => {
-            twilioConnection.once('close', resolve);
+            beforeEach(async () => {
+              const promise = new Promise(resolve => {
+                twilioConnection.once('close', resolve);
+              });
+              twilioConnection._ws.receiveMessage({
+                reason: 'foo',
+                type: 'bad'
+              });
+              error = await promise;
+            });
+
+            it('should set the TwilioConnection\'s .state to "closed"', () => {
+              assert.equal(twilioConnection.state, 'closed');
+            });
+
+            it('should call .close on the underlying WebSocket', () => {
+              sinon.assert.callCount(twilioConnection._ws.close, 1);
+            });
+
+            it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
+              assert(error instanceof Error);
+              assert(/^WebSocket Error 3002/.test(error.message));
+            });
           });
-        });
 
-        it('should set the TwilioConnection\'s .state to "closed', () => {
-          assert.equal(twilioConnection.state, 'closed');
-        });
+          context('when a "busy" message is received while waiting for the "welcome" message', () => {
+            [true, false].forEach(keepAlive => {
+              [100, -1].forEach(retryAfter => {
+                context(`with keepAlive = ${keepAlive} and retryAfter ${retryAfter < 0 ? '<' : '>='} 0`, () => {
+                  let changedState;
+                  let error;
+                  let waitArgs;
+                  let wsCloseCallCount;
 
-        it('should call .close on the underlying WebSocket', () => {
-          sinon.assert.callCount(twilioConnection._ws.close, 1);
-        });
+                  beforeEach(async () => {
+                    twilioConnection.once('wait', (...args) => {
+                      waitArgs = args;
+                      wsCloseCallCount = twilioConnection._ws.close.callCount;
+                    });
+                    const stateChanged = new Promise(resolve => {
+                      twilioConnection.once('stateChanged', (...args) => resolve(args));
+                    });
+                    twilioConnection._ws.receiveMessage({
+                      cookie: 'foo',
+                      keepAlive,
+                      retryAfter,
+                      type: 'busy'
+                    });
+                    [changedState, error] = await stateChanged;
+                  });
 
-        it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-          assert(error instanceof Error);
-          assert(/^WebSocket Error 3000/.test(error.message));
+                  if (retryAfter < 0) {
+                    it('should set the TwilioConnection\'s .state to "closed"', () => {
+                      assert.equal(twilioConnection.state, 'closed');
+                    });
+
+                    it('should call .close on the underlying WebSocket', () => {
+                      sinon.assert.callCount(twilioConnection._ws.close, 1);
+                    });
+
+                    it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
+                      assert(error instanceof Error);
+                      assert(/^WebSocket Error 3002/.test(error.message));
+                    });
+                  } else {
+                    it('should set the TwilioConnection\'s .state to "wait"', () => {
+                      assert.deepEqual(waitArgs, [keepAlive, 100]);
+                    });
+
+                    it(`should ${keepAlive ? 'not ' : ''}call .close on the underlying WebSocket`, () => {
+                      assert.equal(wsCloseCallCount, keepAlive ? 0 : 1);
+                    });
+
+                    if (keepAlive) {
+                      it('should eventually transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', async () => {
+                        changedState = await new Promise(resolve => twilioConnection.once('stateChanged', resolve));
+                        assert.equal(changedState, 'connecting');
+                        assert.equal(twilioConnection.state, 'connecting');
+                        const hello = JSON.parse(twilioConnection._ws.send.args[1][0]);
+                        assert.equal(typeof hello.id, 'string');
+                        assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
+                        assert.equal(hello.type, 'hello');
+                        assert.equal(hello.cookie, 'foo');
+                        if (options.helloBody) {
+                          assert.equal(hello.body, options.helloBody);
+                        } else {
+                          assert.equal('body' in hello, false);
+                        }
+                      });
+                    } else {
+                      context('should eventually transition to "early" state and when a new WebSocket is opened', () => {
+                        beforeEach(async () => {
+                          changedState = await new Promise(resolve => twilioConnection.once('stateChanged', resolve));
+                          assert.equal(changedState, 'early');
+                          assert.equal(twilioConnection.state, 'early');
+                          const stateChanged = new Promise(resolve => twilioConnection.once('stateChanged', resolve));
+                          twilioConnection._ws.open();
+                          changedState = await stateChanged;
+                        });
+
+                        it('should eventually transition to "connecting" state and send a "hello" message with the requested heartbeat timeout', () => {
+                          assert.equal(changedState, 'connecting');
+                          assert.equal(twilioConnection.state, 'connecting');
+                          const hello = JSON.parse(twilioConnection._ws.send.args[0][0]);
+                          assert.equal(typeof hello.id, 'string');
+                          assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
+                          assert.equal(hello.type, 'hello');
+                          assert.equal(hello.cookie, 'foo');
+                          if (options.helloBody) {
+                            assert.equal(hello.body, options.helloBody);
+                          } else {
+                            assert.equal('body' in hello, false);
+                          }
+                        });
+                      });
+                    }
+                  }
+                });
+              });
+            });
+          });
+
+          context('when a "welcome" message is not received within the "welcome" timeout', () => {
+            let error;
+
+            beforeEach(async () => {
+              error = await new Promise(resolve => {
+                twilioConnection.once('close', resolve);
+              });
+            });
+
+            it('should set the TwilioConnection\'s .state to "closed', () => {
+              assert.equal(twilioConnection.state, 'closed');
+            });
+
+            it('should call .close on the underlying WebSocket', () => {
+              sinon.assert.callCount(twilioConnection._ws.close, 1);
+            });
+
+            it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
+              assert(error instanceof Error);
+              assert(/^WebSocket Error 3000/.test(error.message));
+            });
+          });
         });
       });
     });
