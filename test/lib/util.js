@@ -12,7 +12,7 @@ const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
 const second = 1000;
-const minute = 60 * second;
+// const minute = 60 * second;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
