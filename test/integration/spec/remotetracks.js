@@ -315,11 +315,15 @@ describe('RemoteVideoTrack', function() {
       assert.equal(tracks.length, 1);
       const remoteDataTrack = tracks[0];
 
-      dataTrack.send('one');
+      const message = {
+        x: 4,
+        y: 5
+      };
+      dataTrack.send(JSON.stringify(message));
 
       const messagePromise = new Promise(resolve =>  remoteDataTrack.on('message', resolve));
       const messageReceived = await waitFor(messagePromise, `to receive 1st message: ${roomSid}`);
-      assert.equal(messageReceived, 'one');
+      assert.deepEqual(JSON.parse(messageReceived), message);
     });
   });
 });
