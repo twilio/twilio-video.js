@@ -42,12 +42,15 @@ class FakeWebSocket extends EventTarget {
 
 describe('TwilioConnection', function() {
   describe('constructor', () => {
+    let eventObserver;
     let twilioConnection;
 
     before(() => {
+      eventObserver = { emit: sinon.spy() };
       twilioConnection = new TwilioConnection('foo', {
         Log: FakeLog,
-        WebSocket: FakeWebSocket
+        WebSocket: FakeWebSocket,
+        eventObserver
       });
     });
 
@@ -58,19 +61,36 @@ describe('TwilioConnection', function() {
     it('should set the .state to "early"', () => {
       assert.equal(twilioConnection.state, 'early');
     });
+
+    it('should emit "event" on the EventObserver', () => {
+      sinon.assert.calledWith(eventObserver.emit, 'event', { name: 'early' });
+    });
   });
 
   describe('#close', () => {
     ['closed', 'connecting', 'early', 'open', ['wait', true], ['wait', false]].forEach(args => {
       const [state, keepAlive] = Array.isArray(args) ? args : [args];
+
+      const expectedEvents = {
+        closed: ['early', 'connecting', 'closed'],
+        connecting: ['early', 'connecting', 'closed'],
+        early: ['early', 'closed'],
+        open: ['early', 'connecting', 'open'],
+        wait: ['early', 'connecting', 'wait', 'closed']
+      }[state];
+
       context(`when the TwilioConnection's .state is "${state}"${state === 'wait' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
-        let twilioConnection;
         let closeEventError;
+        let eventObserver;
+        let twilioConnection;
 
         before(() => {
+          eventObserver = { emit: sinon.spy() };
+
           twilioConnection = new TwilioConnection('foo', {
             Log: FakeLog,
-            WebSocket: FakeWebSocket
+            WebSocket: FakeWebSocket,
+            eventObserver
           });
 
           if (state !== 'early') {
@@ -105,6 +125,10 @@ describe('TwilioConnection', function() {
 
         it('should set the TwilioConnection\'s .state to "closed"', () => {
           assert.equal(twilioConnection.state, 'closed');
+        });
+
+        it(`should emit "event" for each of the following states: ${expectedEvents.join(', ')}`, () => {
+          expectedEvents.forEach(name => sinon.assert.calledWith(eventObserver.emit, 'event', { name }));
         });
 
         if (state === 'open') {
@@ -148,7 +172,8 @@ describe('TwilioConnection', function() {
         before(() => {
           twilioConnection = new TwilioConnection('foo', {
             Log: FakeLog,
-            WebSocket: FakeWebSocket
+            WebSocket: FakeWebSocket,
+            eventObserver: { emit: () => {} }
           });
 
           if (state !== 'early') {
@@ -216,7 +241,8 @@ describe('TwilioConnection', function() {
             maxConsecutiveMissedHeartbeats: 2,
             welcomeTimeout: 500,
             Log: FakeLog,
-            WebSocket: FakeWebSocket
+            WebSocket: FakeWebSocket,
+            eventObserver: { emit: () => {} }
           }));
         });
 
