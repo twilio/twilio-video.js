@@ -51,7 +51,7 @@ describe('LocalParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology !== 'peer-to-peer' ? describe.only : describe.skip)('"networkQualityLevelChanged" event', () => {
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
 
     function inRange(num, low, high) {
       return typeof num === 'number' && low <= num && num <= high;
