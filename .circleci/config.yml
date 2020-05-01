@@ -309,6 +309,9 @@ workflows:
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable", "unstable"]
+            exclude:
+              - bver: "unstable"
+                test_stability: "unstable"
           requires: [Build, UnitTests]
       - run-network-tests:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
