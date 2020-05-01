@@ -12,7 +12,6 @@ const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
 const second = 1000;
-// const minute = 60 * second;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -498,7 +497,7 @@ function waitToGo(onlineOrOffline) {
  */
 async function waitToGoOnline() {
   try {
-    await waitFor(waitToGo('online'), 'wait to go online', 10000);
+    await waitFor(waitToGo('online'), 'wait to go online', 10 * second);
     await waitFor(verifyOnline(), 'verified online');
   } catch (err) {
     // eslint-disable-next-line no-console
@@ -513,7 +512,7 @@ async function waitToGoOnline() {
  */
 async function waitToGoOffline() {
   await waitFor(waitToGo('offline'), 'wait to go offline');
-  await waitForNot(verifyOnline(), 'verifyOffline', 2000);
+  await waitForNot(verifyOnline(), 'verifyOffline', 2 * second);
 }
 
 /**

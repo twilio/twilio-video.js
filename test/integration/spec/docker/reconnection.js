@@ -157,6 +157,7 @@ function readCurrentNetworks(dockerAPI) {
 }
 
 describe('network:', function() {
+  this.retries(2);
   this.timeout(8 * ONE_MINUTE);
   let dockerAPI = new DockerProxyClient();
   let isRunningInsideDocker = false;
