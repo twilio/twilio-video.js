@@ -54,6 +54,10 @@ describe('TwilioConnection', function() {
       });
     });
 
+    after(() => {
+      twilioConnection.close();
+    });
+
     it('should return an instance of TwilioConnection', () => {
       assert(twilioConnection instanceof TwilioConnection);
     });
@@ -120,6 +124,10 @@ describe('TwilioConnection', function() {
           twilioConnection.on('close', error => {
             closeEventError = error;
           });
+          twilioConnection.close();
+        });
+
+        after(() => {
           twilioConnection.close();
         });
 
@@ -199,6 +207,10 @@ describe('TwilioConnection', function() {
           twilioConnection.sendMessage(body);
         });
 
+        after(() => {
+          twilioConnection.close();
+        });
+
         it({
           closed: 'should do nothing',
           connecting: 'should enqueue the given "msg" body',
@@ -235,15 +247,22 @@ describe('TwilioConnection', function() {
     let twilioConnection;
 
     [{}, { helloBody: null }, { helloBody: 'bar' }].forEach(options => {
+      options = Object.assign({
+        maxConsecutiveFailedHellos: 3,
+        maxConsecutiveMissedHeartbeats: 2,
+        welcomeTimeout: 200,
+        Log: FakeLog,
+        WebSocket: FakeWebSocket,
+        eventObserver: { emit: () => {} }
+      }, options);
+
       context(`when TwilioConnectionOptions.helloBody ${options.helloBody ? 'exists' : options.helloBody === null ? 'is null' : 'does not exist'}`, () => {
         beforeEach(() => {
-          twilioConnection = new TwilioConnection('foo', Object.assign(options, {
-            maxConsecutiveMissedHeartbeats: 2,
-            welcomeTimeout: 500,
-            Log: FakeLog,
-            WebSocket: FakeWebSocket,
-            eventObserver: { emit: () => {} }
-          }));
+          twilioConnection = new TwilioConnection('foo', options);
+        });
+
+        afterEach(() => {
+          twilioConnection.close();
         });
 
         context('when the underlying WebSocket is "open"', () => {
@@ -257,6 +276,7 @@ describe('TwilioConnection', function() {
             assert.equal(typeof hello.id, 'string');
             assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
             assert.equal(hello.type, 'hello');
+            assert.equal(hello.version, 2);
             assert.equal('cookie' in hello, false);
             if (options.helloBody) {
               assert.equal(hello.body, options.helloBody);
@@ -459,6 +479,7 @@ describe('TwilioConnection', function() {
                         assert.equal(typeof hello.id, 'string');
                         assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
                         assert.equal(hello.type, 'hello');
+                        assert.equal(hello.version, 2);
                         assert.equal(hello.cookie, 'foo');
                         if (options.helloBody) {
                           assert.equal(hello.body, options.helloBody);
@@ -484,6 +505,7 @@ describe('TwilioConnection', function() {
                           assert.equal(typeof hello.id, 'string');
                           assert.equal(hello.timeout, twilioConnection._options.requestedHeartbeatTimeout);
                           assert.equal(hello.type, 'hello');
+                          assert.equal(hello.version, 2);
                           assert.equal(hello.cookie, 'foo');
                           if (options.helloBody) {
                             assert.equal(hello.body, options.helloBody);
@@ -500,25 +522,64 @@ describe('TwilioConnection', function() {
           });
 
           context('when a "welcome" message is not received within the "welcome" timeout', () => {
-            let error;
+            context('when all handshake attempts fail', () => {
+              let error;
 
-            beforeEach(async () => {
-              error = await new Promise(resolve => {
-                twilioConnection.once('close', resolve);
+              beforeEach(async () => {
+                error = await new Promise(resolve => {
+                  twilioConnection.once('close', resolve);
+                });
+              });
+
+              it('should set the TwilioConnection\'s .state to "closed', () => {
+                assert.equal(twilioConnection.state, 'closed');
+              });
+
+              it('should call .close on the underlying WebSocket', () => {
+                sinon.assert.callCount(twilioConnection._ws.close, 1);
+              });
+
+              it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
+                assert(error instanceof Error);
+                assert(/^WebSocket Error 3000/.test(error.message));
               });
             });
 
-            it('should set the TwilioConnection\'s .state to "closed', () => {
-              assert.equal(twilioConnection.state, 'closed');
-            });
+            context('when one of the subsequent handshake attempts result in a "welcome" message', () => {
+              const messagesToEnqueue = [{
+                body: JSON.stringify({ foo: 'bar' }),
+                type: 'msg'
+              }, {
+                body: JSON.stringify({ baz: 'zee' }),
+                type: 'msg'
+              }];
 
-            it('should call .close on the underlying WebSocket', () => {
-              sinon.assert.callCount(twilioConnection._ws.close, 1);
-            });
+              beforeEach(() => {
+                messagesToEnqueue.forEach(message => {
+                  twilioConnection._messageQueue.push(message);
+                });
 
-            it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-              assert(error instanceof Error);
-              assert(/^WebSocket Error 3000/.test(error.message));
+                const { maxConsecutiveFailedHellos, welcomeTimeout } = options;
+                setTimeout(() => {
+                  twilioConnection._ws.receiveMessage({
+                    negotiatedTimeout: welcomeTimeout,
+                    type: 'welcome'
+                  });
+                }, (maxConsecutiveFailedHellos - 1) * welcomeTimeout);
+
+                return new Promise(resolve => twilioConnection.once('open', resolve));
+              });
+
+              it('should send any enqueued messages using the underlying WebSocket', () => {
+                messagesToEnqueue.forEach(message => {
+                  sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify(message));
+                });
+                assert.equal(twilioConnection._messageQueue.length, 0);
+              });
+
+              it('should set the TwilioConnection\'s .state to "open"', () => {
+                assert.equal(twilioConnection.state, 'open');
+              });
             });
           });
         });
