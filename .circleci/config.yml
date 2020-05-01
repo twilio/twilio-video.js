@@ -42,20 +42,6 @@ parameters:
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
   ENABLE_REST_API_TESTS: "true"
-p2p: &topology_p2p
-  topology: "peer-to-peer"
-group: &topology_group
-  topology: "group"
-firefox: &browser_firefox
-  browser: "firefox"
-chrome: &browser_chrome
-  browser: "chrome"
-stable: &bver_stable
-  bver: "stable"
-beta: &bver_beta
-  bver: "beta"
-unstable: &bver_unstable
-  bver: "unstable"
 executors:
   docker-with-browser:
     parameters:
