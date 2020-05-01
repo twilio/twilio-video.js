@@ -50,7 +50,7 @@ describe('LocalParticipant', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
+  (defaults.topology !== 'peer-to-peer' ? describe.only : describe.skip)('"networkQualityLevelChanged" event', () => {
     combinationContext([
       [
         [null, 1, 2, 3],
@@ -75,15 +75,56 @@ describe('LocalParticipant', function() {
         return typeof num === 'number' && low <= num && num <= high;
       }
 
+      function verifyNetworkQualityStats(stats, nqLevel, configLevel, local) {
+        // assert.equal(remoteNqLevel, Array.from(thisRoom.participants.values())[0].networkQualityLevel);
+        switch (configLevel) {
+          case 1:
+            assert.equal(stats, null);
+            break;
+          case 2:
+            if (nqLevel === 0) {
+              assert.equal(stats, null, `${local}:assertion 1`);
+              assert.equal(stats, null, `${local}:assertion 2`);
+            } else {
+              assert.notEqual(stats.audio, null, `${local}:assertion 3`);
+              assert.notEqual(stats.video, null, `${local}:assertion 4`);
+              assert.equal(stats.audio.sendStats, null, `${local}:assertion 5`);
+              assert.equal(stats.video.sendStats, null, `${local}:assertion 6`);
+              assert.equal(stats.audio.recvStats, null, `${local}:assertion 7`);
+              assert.equal(stats.video.recvStats, null, `${local}:assertion 8`);
+            }
+            break;
+          case 3:
+            if (nqLevel === 0) {
+              assert.equal(stats, null, `${local}:assertion 11`);
+              assert.equal(stats, null, `${local}:assertion 12`);
+            } else {
+              assert.notEqual(stats.audio, null, `${local}:assertion 13`);
+              assert.notEqual(stats.video, null, `${local}:assertion 14`);
+              assert.notEqual(stats.audio.sendStats, null, `${local}:assertion 15`);
+              assert.notEqual(stats.video.sendStats, null, `${local}:assertion 16`);
+              assert.notEqual(stats.audio.recvStats, null, `${local}:assertion 17`);
+              assert.notEqual(stats.video.recvStats, null, `${local}:assertion 18`);
+            }
+        }
+        // assert.deepStrictEqual(stats, Array.from(thisRoom.participants.values())[0].networkQualityStats);
+      }
+
       async function setup() {
         const thisTracks = await createLocalTracks({ audio: true, fake: true });
         thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
-        const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged',
-          (level, stats) => resolve([level, stats])));
+        const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
+          assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
+          assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
+          resolve([level, stats]);
+        }));
         const remoteNqLevelPromise = inRange(nqConfig.remote, 1, 3)
           ? new Promise(resolve => thisRoom.on('participantConnected',
-            participant => participant.once('networkQualityLevelChanged', (level, stats) => resolve([level, stats]))))
-          : Promise.resolve([]);
+            participant => participant.once('networkQualityLevelChanged', (level, stats) => {
+              assert.equal(level, participant.networkQualityLevel);
+              assert.deepStrictEqual(stats, participant.networkQualityStats);
+              resolve([level, stats]);
+            }))) : Promise.resolve([]);
         const thatTracks = await createLocalTracks({ audio: true, fake: true });
         thatRoom = await connect(getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
         [localNqLevel, localNqStats] = await localNqLevelPromise;
@@ -95,54 +136,13 @@ describe('LocalParticipant', function() {
       });
 
       it('is raised whenever network quality level for the LocalParticipant changes', () => {
-        assert.equal(localNqLevel, thisRoom.localParticipant.networkQualityLevel);
-        switch (nqConfig.local) {
-          case 1:
-            assert.equal(localNqStats, null);
-            break;
-          case 2:
-            assert.notEqual(localNqStats.audio, null);
-            assert.notEqual(localNqStats.video, null);
-            assert.equal(localNqStats.audio.sendStats, null);
-            assert.equal(localNqStats.video.sendStats, null);
-            assert.equal(localNqStats.audio.recvStats, null);
-            assert.equal(localNqStats.video.recvStats, null);
-            break;
-          case 3:
-            assert.notEqual(localNqStats.audio, null);
-            assert.notEqual(localNqStats.video, null);
-            assert.notEqual(localNqStats.audio.sendStats, null);
-            assert.notEqual(localNqStats.video.sendStats, null);
-            assert.notEqual(localNqStats.audio.recvStats, null);
-            assert.notEqual(localNqStats.video.recvStats, null);
-        }
-        assert.deepStrictEqual(localNqStats, thisRoom.localParticipant.networkQualityStats);
+        assert.notEqual(localNqLevel, 0);
+        verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local, "local");
       });
 
       if (inRange(nqConfig.remote, 1, 3)) {
         it('is raised whenever network quality level for the RemoteParticipant changes', () => {
-          assert.equal(remoteNqLevel, Array.from(thisRoom.participants.values())[0].networkQualityLevel);
-          switch (nqConfig.remote) {
-            case 1:
-              assert.equal(remoteNqStats, null);
-              break;
-            case 2:
-              assert.notEqual(remoteNqStats.audio, null);
-              assert.notEqual(remoteNqStats.video, null);
-              assert.equal(remoteNqStats.audio.sendStats, null);
-              assert.equal(remoteNqStats.video.sendStats, null);
-              assert.equal(remoteNqStats.audio.recvStats, null);
-              assert.equal(remoteNqStats.video.recvStats, null);
-              break;
-            case 3:
-              assert.notEqual(remoteNqStats.audio, null);
-              assert.notEqual(remoteNqStats.video, null);
-              assert.notEqual(remoteNqStats.audio.sendStats, null);
-              assert.notEqual(remoteNqStats.video.sendStats, null);
-              assert.notEqual(remoteNqStats.audio.recvStats, null);
-              assert.notEqual(remoteNqStats.video.recvStats, null);
-          }
-          assert.deepStrictEqual(remoteNqStats, Array.from(thisRoom.participants.values())[0].networkQualityStats);
+          verifyNetworkQualityStats(remoteNqStats, remoteNqLevel, nqConfig.remote, "remote");
         });
       }
 
