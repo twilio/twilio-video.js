@@ -32,6 +32,7 @@
     "browserify": "^14.3.0",
     "cheerio": "^0.22.0",
     "cors": "^2.8.5",
+    "electron": "^5.0.13",
     "envify": "^4.0.0",
     "eslint": "^6.2.1",
     "eslint-config-standard": "^14.0.0",
@@ -140,8 +141,7 @@
     "xmlhttprequest": "./src/xmlhttprequest.js"
   },
   "optionalDependencies": {
-    "chromedriver": "^2.28.0",
-    "electron": "^5.0.13",
+    "chromedriver": "2.28.0",
     "puppeteer": "^1.11.0"
   }
 }
