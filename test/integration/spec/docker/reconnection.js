@@ -337,7 +337,7 @@ describe('network:', function() {
         });
 
         context('that recovers before the session timeout', () => {
-          it(`should emit "reconnected" on the Rooms and LocalParticipants${isFirefox ? ' - @unstable' : ''}`, async () => {
+          it('@unstable: should emit "reconnected" on the Rooms and LocalParticipants', async () => {
             await waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
             await waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
 
