@@ -153,15 +153,17 @@ describe('TwilioConnection', function() {
           it('should not call .close on the underlying WebSocket', () => {
             sinon.assert.callCount(twilioConnection._ws.close, 0);
           });
-
-          it('should not emit "close" on the TwilioConnection', () => {
-            assert.equal(typeof closeEventError, 'undefined');
-          });
         } else {
           it('should call .close on the underlying WebSocket', () => {
             sinon.assert.callCount(twilioConnection._ws.close, 1);
           });
+        }
 
+        if (state === 'closed') {
+          it('should not emit "close" on the TwilioConnection', () => {
+            assert.equal(typeof closeEventError, 'undefined');
+          });
+        } else {
           it('should emit "close" on the TwilioConnection with a null Error', () => {
             assert.equal(closeEventError, null);
           });
@@ -350,7 +352,7 @@ describe('TwilioConnection', function() {
 
               it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
                 assert(error instanceof Error);
-                assert(/^WebSocket Error 3001/.test(error.message));
+                assert.equal(error.code, 3001);
               });
             });
 
@@ -418,7 +420,7 @@ describe('TwilioConnection', function() {
 
             it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
               assert(error instanceof Error);
-              assert(/^WebSocket Error 3002/.test(error.message));
+              assert.equal(error.code, 3002);
             });
           });
 
@@ -459,7 +461,7 @@ describe('TwilioConnection', function() {
 
                     it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
                       assert(error instanceof Error);
-                      assert(/^WebSocket Error 3002/.test(error.message));
+                      assert.equal(error.code, 3006);
                     });
                   } else {
                     it('should set the TwilioConnection\'s .state to "wait"', () => {
@@ -541,7 +543,7 @@ describe('TwilioConnection', function() {
 
               it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
                 assert(error instanceof Error);
-                assert(/^WebSocket Error 3000/.test(error.message));
+                assert.equal(error.code, 3000);
               });
             });
 
