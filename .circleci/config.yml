@@ -294,10 +294,16 @@ workflows:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
-              test_stability: ["stable", "unstable"]
-            exclude:
-              - bver: "unstable"
-                test_stability: "unstable"
+              test_stability: ["stable"]
+          requires: [Build, UnitTests]
+      - run-integration-tests:
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable"]
+              topology: ["group", "peer-to-peer"]
+              test_stability: ["unstable"]
           requires: [Build, UnitTests]
       - run-network-tests:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
