@@ -8,6 +8,13 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Android Chrome 81+ Participants fail to subscribe to H264 VideoTracks in Group Rooms
+------------------------------------------------------------------------------------
+
+This happens primarily due to this [Chromium Bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1074421).
+We have added a workaround to the SDK in version 2.4.0. For earlier versions of the SDK,
+please apply the workaround discussed in this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/966#issuecomment-619212184).
+
 Android Chrome Participants sometimes see corrupted frames for RemoteVideoTracks
 --------------------------------------------------------------------------------
 This happens primarily due to a [Chromium bug](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337), where the decoded video frames are corrupted when the resolution is reduced in order to accommodate bandwidth constraints.
