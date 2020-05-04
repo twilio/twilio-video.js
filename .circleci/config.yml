@@ -235,17 +235,15 @@ jobs:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
   trigger-qe-tests:
-    executor: generic-executor
     docker:
       - image: circleci/node:latest
     steps:
       - run:
           name: Trigger QE tests
           command: |
-            curl --silent --output /dev/null -u CIRCLECI_PERSONAL_API_TOKEN: -X POST \
-            --header "Content-Type: application/json" \
+            curl -u $CIRCLECI_PERSONAL_API_TOKEN: -X POST --header "Content-Type: application/json" \
             -d '{"branch":"'v${CIRCLE_TAG:0:1}'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
-            $SDK_JS_VIDEO_SLACK_WEBHOOK
+            $SDKS_QE_CIRCLECI_VIDEO_JS_SLAVE_PIPELINE_ENDPOINT
 
 workflows:
   version: 2
