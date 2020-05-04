@@ -22,12 +22,12 @@ if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
 }
 
-describe('InsightsPublisher', function() {
+describe('InsightsPublisher (@unstable: JSDK-2761)', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
 
   describe('connect', () => {
-    ['expired', 'invalid', 'valid'].forEach(tokenType => {
+    ['valid', 'expired', 'invalid'].forEach(tokenType => {
       let publisher;
 
       context(`when attempted with ${a(tokenType)} ${tokenType} token`, () => {
@@ -44,6 +44,7 @@ describe('InsightsPublisher', function() {
         const description = tokenType !== 'valid'
           ? 'should disconnect with an Error'
           : 'should be successful';
+
 
         const test = tokenType !== 'valid' ? async () => {
           const error = await new Promise((resolve, reject) => {

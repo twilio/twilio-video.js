@@ -1,5 +1,23 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.4.0 (May 4, 2020)
+===================
+
+New Features
+------------
+
+- twilio-video.js now supports faster signaling reconnections due to network disruption or handoff. (JSDK-2739)
+- twilio-video.js now supports faster media reconnections due to network disruption or handoff. (JSDK-2742)
+
+Bug Fixes
+---------
+
+- Worked around this Chromium [bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1074421),
+  which causes Android Chrome 81+ Participants to not be able to subscribe to H264 RemoteVideoTracks
+  in a Group or Small Group Room. (JSDK-2779)
+- Fixed a bug where `Video.isSupported` was returning `true` for some browsers that
+  are not officially supported by twilio-video.js. (JSDK-2756)
+
 2.3.0 (March 19, 2020)
 ======================
 

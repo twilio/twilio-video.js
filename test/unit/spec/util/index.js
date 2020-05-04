@@ -3,12 +3,14 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
+const util = require('@twilio/webrtc/lib/util');
 
 const {
   hidePrivateProperties,
   hidePrivateAndCertainPublicPropertiesInClass,
   makeUUID,
-  promiseFromEvents
+  promiseFromEvents,
+  isChromeScreenShareTrack
 } = require('../../../../lib/util');
 
 describe('util', () => {
@@ -90,6 +92,55 @@ describe('util', () => {
       promise = promiseFromEvents(spy, emitter, 'foo');
       emitter.emit('foo');
       return promise;
+    });
+  });
+
+  describe('chromeScreenShare', () => {
+    const validLabels = ['web-contents-media-stream://1174:3', 'window:1561:0', 'screen:2077749241:0'];
+    const invalidLabels = ['foo:bar:12356', 'fizz:123456:78901', 'fakelabel://123456'];
+    const mediaStreamTrack = {
+      kind: 'video',
+      id: '1aaadf6e-6a4f-465b-96bf-1a35a2d3ac2b',
+      enabled: true,
+      muted: true,
+      onmute: null,
+      onunmute: null,
+      readyState: 'live',
+      onended: null,
+      contentHint: ''
+    };
+    let stub;
+
+    beforeEach(() => {
+      stub = sinon.stub(util, 'guessBrowser');
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
+    [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool]) => {
+      it(`valid labels should return ${expectedBool} for ${browser}`, () => {
+        stub = stub.returns(browser);
+        validLabels.forEach(label => {
+          mediaStreamTrack.label = label;
+          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
+          assert.equal(expectedBool, screenShare);
+          stub.resetHistory();
+        });
+      });
+    });
+
+    [['chrome', false], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool]) => {
+      it(`invalid labels should return ${expectedBool} for ${browser}`, () => {
+        stub = stub.returns(browser);
+        invalidLabels.forEach(label => {
+          mediaStreamTrack.label = label;
+          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
+          assert.equal(expectedBool, screenShare);
+          stub.resetHistory();
+        });
+      });
     });
   });
 });
