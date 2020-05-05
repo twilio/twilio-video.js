@@ -50,8 +50,9 @@ describe('EventObserver', () => {
           assert.equal(eventParams.name, name);
         });
 
-        it(`.payload ${payload ? 'set to the given payload' : 'not set'}`, () => {
-          if (payload) {
+        // TODO(mmalavalli): Remove "closed" check once TCMP CloseReason is defined.
+        it(`.payload ${name !== 'closed' && payload ? 'set to the given payload' : 'not set'}`, () => {
+          if (name !== 'closed' && payload) {
             assert.deepEqual(eventParams.payload, payload);
           } else {
             assert(!('payload' in eventParams));

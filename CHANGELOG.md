@@ -34,6 +34,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
   });
   ```
 
+- Reduced connection times by removing a round trip during the initial handshake with Twilio's
+  signaling server. (JSDK-2777)
+
 2.4.0 (May 4, 2020)
 ===================
 

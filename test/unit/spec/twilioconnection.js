@@ -41,7 +41,7 @@ class FakeWebSocket extends EventTarget {
   FakeWebSocket[readyState] = i;
 });
 
-describe.only('TwilioConnection', function() {
+describe('TwilioConnection', function() {
   describe('constructor', () => {
     let eventObserver;
     let twilioConnection;
