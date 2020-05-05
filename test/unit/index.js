@@ -61,6 +61,7 @@ require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');
+require('./spec/util/eventobserver');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/sdp');
