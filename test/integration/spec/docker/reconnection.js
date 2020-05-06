@@ -205,7 +205,7 @@ describe('network:', function() {
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
 
-  describe('turn region blocking tests (@unstable)', () => {
+  describe('turn region blocking tests (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
@@ -324,7 +324,7 @@ describe('network:', function() {
         });
 
         context('that is longer than the session timeout', () => {
-          it(`should emit "disconnected" on the Rooms and LocalParticipants${isFirefox ? ' - @unstable' : ''}`, async () => {
+          it(`should emit "disconnected" on the Rooms and LocalParticipants${isFirefox ? ' - @unstable: JSDK-2811' : ''}`, async () => {
             await Promise.all([
               waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
               waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
@@ -337,7 +337,7 @@ describe('network:', function() {
         });
 
         context('that recovers before the session timeout', () => {
-          it('@unstable: should emit "reconnected" on the Rooms and LocalParticipants', async () => {
+          it('should emit "reconnected" on the Rooms and LocalParticipants (@unstable: JSDK-2812)', async () => {
             await waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
             await waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
 
@@ -359,7 +359,7 @@ describe('network:', function() {
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
       // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
       (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
-        it('@unstable: Scenario 1 (jump): connected interface switches off and then a new interface switches on',  async () => {
+        it('Scenario 1 (jump): connected interface switches off and then a new interface switches on (@unstable: JSDK-2813)',  async () => {
           const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
           const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
@@ -386,7 +386,7 @@ describe('network:', function() {
           }
         });
 
-        it('@unstable: Scenario 2 (step) : new interface switches on and then the connected interface switches off', async () => {
+        it('Scenario 2 (step) : new interface switches on and then the connected interface switches off (@unstable: JSDK-2814) ', async () => {
           const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
           const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
           const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
@@ -419,7 +419,7 @@ describe('network:', function() {
       // eslint-disable-next-line no-warning-comments
       // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
       // state is available in prod version of Room Service.
-      (identities.length > 1 ? describe : describe.skip)('RemoteParticipant reconnection events (@unstable)', () => {
+      (identities.length > 1 ? describe : describe.skip)('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
         it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
           const [aliceRoom, bobRoom] = rooms;
           const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
@@ -497,7 +497,7 @@ describe('network:', function() {
     });
   });
 
-  describe('ICE gathering timeout (@unstable)', () => {
+  describe('ICE gathering timeout (@unstable: JSDK-2816)', () => {
     let room;
     let disconnected;
 

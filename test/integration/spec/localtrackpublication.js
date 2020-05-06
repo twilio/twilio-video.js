@@ -43,7 +43,7 @@ const {
   waitOnceForRoomEvent
 } = require('../../lib/util');
 
-describe(`LocalTrackPublication ${isFirefox ? '(@unstable)' : ''}`, function() {
+describe(`LocalTrackPublication ${isFirefox ? '(@unstable: JSDK-2804)' : ''}`, function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -162,7 +162,7 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable)' : ''}`, function() {
     combinationContext([
       [
         [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled (@unstable)'}`
+        x => `called with ${x ? 'an enabled' : 'a disabled (@unstable: JSDK-2805)'}`
       ],
       [
         ['audio', 'video', 'data'],
@@ -175,7 +175,7 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable)' : ''}`, function() {
       [
         [true],
         // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2806)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -709,7 +709,7 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable)' : ''}`, function() {
 
   // note: I have seen firefox getting disconnected after this test.
   // note: also seen and this test fail (Bob only sends TrackA in SDP) on p2p.
-  it(`JSDK-2573 - race condition when recycling transceiver: ${isFirefox || defaults.topology === 'peer-to-peer' ? '@unstable' : ''}`, async () => {
+  it(`JSDK-2573 - race condition when recycling transceiver: ${isFirefox || defaults.topology === 'peer-to-peer' ? '@unstable: JSDK-2807' : ''}`, async () => {
     // Alice and Bob join without tracks
     const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
       aliceOptions: { tracks: [] },
