@@ -156,7 +156,7 @@ describe('Room', function() {
     });
   });
 
-  describe(`getStats ${isFirefox ? '(@unstable)' : ''}`, function() {
+  describe(`getStats ${isFirefox ? '(@unstable: JSDK-2808)' : ''}`, function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
@@ -559,7 +559,7 @@ describe('Room', function() {
       await waitFor([p1, p2, p3, p4], `trackSwitchedOff to get fired on RemoteTrack, RemoteTrackPublication, participant and room: ${aliceRoom.sid}`);
     });
 
-    it('"trackSwitchedOn" fires on RemoteTrack ("switchedOn"), RemoteTrackPublication, RemoteParticipant and Room (@unstable)', async () => {
+    it('"trackSwitchedOn" fires on RemoteTrack ("switchedOn"), RemoteTrackPublication, RemoteParticipant and Room (@unstable: JSDK-2809)', async () => {
       // 1) RemoteTrack
       const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOn', resolve));
 
