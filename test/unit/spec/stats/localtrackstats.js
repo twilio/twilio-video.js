@@ -24,12 +24,12 @@ describe('LocalTrackStats', () => {
 
     ['bytesSent', 'packetsSent', 'roundTripTime'].forEach(statName => {
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
-        it(`should set the ${statName} property to null`, () => {
+        it(`should set the ${statName} property to 0`, () => {
           const statValue = stats[statName];
           delete stats[statName];
 
           const trackStats = new LocalTrackStats(stats.trackId, stats);
-          assert.equal(trackStats[statName], null);
+          assert.equal(trackStats[statName], 0);
 
           stats[statName] = statValue;
         });
