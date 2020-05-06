@@ -32,6 +32,7 @@ const {
   tracksSubscribed,
   tracksPublished,
   waitFor,
+  waitForSometime,
   waitForTracks
 } = require('../../lib/util');
 
@@ -223,6 +224,9 @@ describe('Room', function() {
         return room;
       }));
 
+      // wait for sometime before retrieving stats
+      await waitForSometime(2000);
+
       // 8. Get StatsReports.
       reports = await Promise.all(rooms.map(room => room.getStats()));
     });
@@ -238,9 +242,8 @@ describe('Room', function() {
           // 2. Ensure that, if we connected with a LocalAudioTrack, we only
           //    have an entry for localAudioTrackStats (and similarly for
           //    video).
-          const theseLocalTrackStats = localTrackPublication.kind === 'audio'
-            ? report.localAudioTrackStats
-            : report.localVideoTrackStats;
+          const localStatType = localTrackPublication.kind === 'audio' ? 'localAudioTrackStats' : 'localVideoTrackStats';
+          const theseLocalTrackStats = report[localStatType];
           const thoseLocalTrackStats = localTrackPublication.kind === 'audio'
             ? report.localVideoTrackStats
             : report.localAudioTrackStats;
@@ -248,6 +251,27 @@ describe('Room', function() {
           assert.equal(thoseLocalTrackStats.length, 0);
           assert.equal(theseLocalTrackStats[0].trackId, localTracks[i].id);
           Object.entries(theseLocalTrackStats[0]).forEach(([, value]) => assert(typeof value !== 'undefined'));
+
+          const trackStats = theseLocalTrackStats[0];
+          [
+            { key: 'ssrc', type: 'string', mustExist: true },
+            { key: 'timestamp', type: 'number', mustExist: true },
+            { key: 'bytesSent', type: 'number', mustExist: true },
+            { key: 'packetsSent', type: 'number', mustExist: true },
+            { key: 'trackId', type: 'string', mustExist: true },
+            { key: 'roundTripTime', type: 'number', mustExist: true },
+            { key: 'packetsLost', type: 'number', mustExist: false },
+            { key: 'jitter', type: 'number', mustExist: false }
+          ].forEach(({ key, type, mustExist }) => {
+            // eslint-disable-next-line no-prototype-builtins
+            const propertyExists = trackStats.hasOwnProperty(key);
+            if (mustExist) {
+              assert.equal(propertyExists, true);
+            }
+            if (propertyExists && trackStats[key] !== null) {
+              assert.equal(typeof trackStats[key], type, `typeof ${localStatType}.${key} ("${typeof trackStats[key]}") should be "${type}"`);
+            }
+          });
         });
       });
     });

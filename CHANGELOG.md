@@ -3,6 +3,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.5.0 (in progress)
 ===================
 
+New Features
+------------
+
 - Previously, twilio-video.js would reject the CancelablePromise returned by `connect` if the
   signaling server was busy with too many connection requests. Now, it will try again after a
   server specified backoff period either until it is successfully connected or the server
@@ -36,6 +39,11 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 - Reduced connection times by removing a round trip during the initial handshake with Twilio's
   signaling server. (JSDK-2777)
+
+Bug Fixes
+---------
+
+- Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for LocalTracks. (JSDK-2780, JSDK-2755)
 
 2.4.0 (May 4, 2020)
 ===================
