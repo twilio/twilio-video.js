@@ -264,10 +264,12 @@ describe('Room', function() {
             { key: 'jitter', type: 'number', mustExist: false }
           ].forEach(({ key, type, mustExist }) => {
             // eslint-disable-next-line no-prototype-builtins
-            if (trackStats.hasOwnProperty(key)) {
+            const propertyExists = trackStats.hasOwnProperty(key);
+            if (mustExist) {
+              assert.equal(propertyExists, true);
+            }
+            if (propertyExists && trackStats[key] !== null) {
               assert.equal(typeof trackStats[key], type, `typeof ${localStatType}.${key} ("${typeof trackStats[key]}") should be "${type}"`);
-            } else {
-              assert.equal(mustExist, false, `missing mustExist property ${key} in ${localStatType}`);
             }
           });
         });
