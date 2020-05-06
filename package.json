@@ -126,7 +126,6 @@
     "build:min.js": "uglifyjs ./dist/twilio-video.js -o ./dist/twilio-video.min.js --comments \"/^! twilio-video.js/\" -b beautify=false,ascii_only=true",
     "build": "npm-run-all clean lint docs cover test:integration build:es5 build:js build:min.js test:umd",
     "build:travis": "npm-run-all clean lint docs cover build:es5 build:js build:min.js test:umd test:framework",
-    "build:docker": "npm-run-all clean lint docs cover test:integration:travis build:es5 build:js build:min.js",
     "build:quick": "npm-run-all clean lint docs build:es5 build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "clean": "rimraf ./coverage ./es5 ./dist",
