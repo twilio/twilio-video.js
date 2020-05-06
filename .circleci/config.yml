@@ -129,8 +129,8 @@ commands:
     steps:
       - build
       - run:
-        name: Installing dependencies
-        command: npm install
+          name: Installing dependencies
+          command: npm install
       - run:
           name: Running UMD Tests
           command: npm run test:umd
