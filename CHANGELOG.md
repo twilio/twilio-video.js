@@ -43,7 +43,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug in `Room.getStats()` where it did not return correct values for packetsLost, roundTripTime for local tracks. (JSDK-2780, JSDK-2755)
+- Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for LocalTracks. (JSDK-2780, JSDK-2755)
 
 2.4.0 (May 4, 2020)
 ===================
