@@ -49,7 +49,7 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable: JSDK-2804)' : ''}`, f
 
   it('JSDK-2583 late arrivals see stale priority for the tracks', async () => {
     const roomSid = await createRoom(randomName(), defaults.topology);
-    const options = Object.assign({ name: roomSid, logLevel: 'debug' }, defaults);
+    const options = Object.assign({ name: roomSid }, defaults);
 
     // BOB joins a room
     const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [] }, options));
@@ -355,8 +355,6 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable: JSDK-2804)' : ''}`, f
     });
   });
 
-  // eslint-disable-next-line no-warning-comments
-  // TODO: enable these tests when track_priority MSP is available in prod
   (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
     // eslint-disable-next-line no-invalid-this
     describe('three participant tests', () => {

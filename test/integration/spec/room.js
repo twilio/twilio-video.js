@@ -488,6 +488,9 @@ describe('Room', function() {
       bob = bobRoom.localParticipant;
       charlie = charlieRoom.localParticipant;
 
+      // Create a high priority LocalTrack for charlie.
+      hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
+
       // Let bob publish a LocalTrack with low priority.
       loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
       await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish LocalTrack: ${aliceRoom.sid}`);
@@ -529,7 +532,6 @@ describe('Room', function() {
       }));
 
       // Induce a track switch off by having charlie publish a track with high priority.
-      hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
       await waitFor(charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH }), `${charlie.sid} to publish a high priority LocalTrack: ${aliceRoom.sid}`);
       await waitFor(tracksSubscribed(remoteCharlie, 1), `${alice.sid} to subscribe to charlie's RemoteTrack ${hiPriTrack.sid}: ${aliceRoom.sid}`);
 
