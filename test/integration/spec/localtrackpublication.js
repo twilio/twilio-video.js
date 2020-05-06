@@ -49,7 +49,7 @@ describe('LocalTrackPublication', function() {
 
   it('JSDK-2583 late arrivals see stale priority for the tracks', async () => {
     const roomSid = await createRoom(randomName(), defaults.topology);
-    const options = Object.assign({ name: roomSid, logLevel: 'debug' }, defaults);
+    const options = Object.assign({ name: roomSid }, defaults);
 
     // BOB joins a room
     const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [] }, options));
