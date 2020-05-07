@@ -9,8 +9,7 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalDataTrack,
-  LocalVideoTrack
+  LocalDataTrack
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
@@ -347,7 +346,7 @@ describe('LocalParticipant', function() {
       [
         [true],
         // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2802)' : ''
       ]
     ], ([isEnabled, kind, withName, priority, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -643,7 +642,7 @@ describe('LocalParticipant', function() {
       [
         [true],
         // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2803)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -1288,18 +1287,19 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+  describe('JSDK-2769 - #publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 
     before(async () => {
       const audioTrack = await createLocalAudioTrack();
       const name = randomName();
+      const tracks = [audioTrack, await createLocalVideoTrack()];
       let videoTrack;
 
-      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
+      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map((token, i) => connect(token, Object.assign({
         name,
-        tracks: [audioTrack]
+        tracks: i === 0 ? [audioTrack] : tracks
       }, defaults))));
 
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
@@ -1307,9 +1307,10 @@ describe('LocalParticipant', function() {
       try {
         for (let i = 0; i < 10; i++) {
           // eslint-disable-next-line no-await-in-loop
-          videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
+          videoTrack = await createLocalVideoTrack();
           // eslint-disable-next-line no-await-in-loop
           publication = await rooms[0].localParticipant.publishTrack(videoTrack);
+          videoTrack.stop();
           rooms[0].localParticipant.unpublishTrack(videoTrack);
         }
       } catch (e) {

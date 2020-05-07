@@ -7,6 +7,7 @@ const fetchRequest = require('./fetchRequest');
 
 const DOCKER_PROXY_SERVER_PORT = 3032;
 const DOCKER_PROXY_VERSION = 1.00;
+const DOCKER_API_VERSION = '1.40';
 
 /**
  * Provides webserver interface to communicate with the docker socket.
@@ -128,7 +129,7 @@ class DockerProxyServer {
     }));
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.32/networks/prune?filters=${filters}`,
+      path: `/v${DOCKER_API_VERSION}/networks/prune?filters=${filters}`,
       method: 'POST',
     });
   }
@@ -155,7 +156,7 @@ class DockerProxyServer {
   _getContainers() {
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.32/containers/json',
+      path: `/v${DOCKER_API_VERSION}/containers/json`,
       method: 'GET',
     });
   }
@@ -164,7 +165,7 @@ class DockerProxyServer {
     const { containerId } = await this._getCurrentContainerId();
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.32/containers/${containerId}/json`,
+      path: `/v${DOCKER_API_VERSION}/containers/${containerId}/json`,
       method: 'GET',
     });
   }
@@ -177,7 +178,7 @@ class DockerProxyServer {
   _getAllNetworks() {
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.32/networks',
+      path: `/v${DOCKER_API_VERSION}/networks`,
       method: 'GET',
     });
   }
@@ -223,7 +224,7 @@ class DockerProxyServer {
     });
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: '/v1.32/networks/create',
+      path: `/v${DOCKER_API_VERSION}/networks/create`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -247,7 +248,7 @@ class DockerProxyServer {
 
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.32/networks/${networkId}/connect`,
+      path: `/v${DOCKER_API_VERSION}/networks/${networkId}/connect`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -263,7 +264,7 @@ class DockerProxyServer {
     });
     return fetchRequest({
       socketPath: '/var/run/docker.sock',
-      path: `/v1.32/networks/${networkId}/disconnect`,
+      path: `/v${DOCKER_API_VERSION}/networks/${networkId}/disconnect`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

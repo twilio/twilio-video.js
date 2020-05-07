@@ -109,14 +109,14 @@ describe('TwilioConnectionTransport', () => {
         assert.equal(0, test.transport._sessionTimeoutMS);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that
+      it(`should set TwilioConnectionOptions.helloBody to a Connect RSP message that
         ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
         ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
         the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
         ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
         ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
         ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
-        const message = test.twilioConnection.sendMessage.args[0][0];
+        const message = test.twilioConnection.helloBody;
         assert.equal(typeof message.format, 'string');
         assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
         assert.equal(message.name, test.name);
@@ -516,7 +516,7 @@ describe('TwilioConnectionTransport', () => {
       });
 
       it('should not call .sendMessage on the underlying TwilioConnection', () => {
-        sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
+        sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
       });
 
       context('when the .state transitions to', () => {
@@ -542,7 +542,7 @@ describe('TwilioConnectionTransport', () => {
           });
 
           it('should not call .sendMessage on the TwilioConnection with the reduced Update RSP message', () => {
-            sinon.assert.callCount(test.twilioConnection.sendMessage, 3);
+            sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
           });
         });
       });
@@ -668,7 +668,7 @@ describe('TwilioConnectionTransport', () => {
       });
 
       it('should not call .sendMessage on the underlying TwilioConnection', () => {
-        sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
+        sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
       });
     });
   });
@@ -718,9 +718,9 @@ describe('TwilioConnectionTransport', () => {
               // set reasonable timeout so that,
               // it ends up in multiple attempts.
               test.autoOpen = true;
-              test.sendMessageSpy = () => {
+              test.onTwilioConnectionCreated = twilioConnection => {
                 connectRequests++;
-                setTimeout(() => test.twilioConnection.close(new Error('foo')));
+                twilioConnection.once('open', () => twilioConnection.close(new Error('foo')));
               };
               return new Promise(resolve => {
                 test.transport.on('stateChanged', state => {
@@ -952,8 +952,8 @@ describe('TwilioConnectionTransport', () => {
               const deferred = defer();
               if (isReconnecting) {
                 test.autoOpen = true;
-                test.sendMessageSpy = message => {
-                  deferred.resolve(message);
+                test.onTwilioConnectionCreated = twilioConnection => {
+                  twilioConnection.once('open', () => deferred.resolve());
                 };
                 // this should kick off reconnect attempt async
                 test.close(new Error('foo'));
@@ -975,9 +975,8 @@ describe('TwilioConnectionTransport', () => {
                 ], test.transitions);
               });
 
-              it('should call .sendMessage on the underlying TwilioConnection with a Sync RSP message', () => {
-                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
-                sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+              it('should set TwilioConnectionOptions.helloBody to a Sync RSP message', () => {
+                assert.deepEqual(test.twilioConnection.helloBody, {
                   name: test.name,
                   participant: test.localParticipantState,
                   // eslint-disable-next-line
@@ -993,10 +992,6 @@ describe('TwilioConnectionTransport', () => {
                 assert.deepEqual([
                   'connected'
                 ], test.transitions);
-              });
-
-              it('should not call .sendMessage on the underlying TwilioConnection', () => {
-                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
               });
             }
           });
@@ -1022,19 +1017,6 @@ describe('TwilioConnectionTransport', () => {
 
         it('should not emit either "connected" or "message" events', () => {
           assert(!connectedOrMessageEventEmitted);
-        });
-
-        it('should call .sendMessage on the underlying TwilioConnection with a Connect RSP message', () => {
-          const message = test.twilioConnection.sendMessage.args[0][0];
-          assert.equal(message.name, test.name);
-          assert.equal(message.participant, test.localParticipantState);
-          assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
-          assert.equal(message.token, test.accessToken);
-          assert.equal(message.type, 'connect');
-          assert.equal(message.version, 2);
-          assert.equal(message.publisher.name, `${name}.js`);
-          assert.equal(message.publisher.sdk_version, version);
-          assert.equal(typeof message.publisher.user_agent, 'string');
         });
       });
 
@@ -1648,9 +1630,10 @@ describe('TwilioConnectionTransport', () => {
 
 function createTwilioConnection(options) {
   class FakeTwilioConnection extends EventEmitter {
-    constructor() {
+    constructor(url, twilioConnectionOptions) {
       super();
       this.close = sinon.spy(error => this.emit('close', error));
+      this.helloBody = twilioConnectionOptions.helloBody;
       this.open = () => this.emit('open');
       this.receiveMessage = message => this.emit('message', message);
       this.sendMessage =  sinon.spy(message => {
@@ -1660,6 +1643,9 @@ function createTwilioConnection(options) {
       });
       options.twilioConnection = this;
 
+      if (options.onTwilioConnectionCreated) {
+        options.onTwilioConnectionCreated(this);
+      }
       if (options.autoOpen) {
         setTimeout(() => this.open(), 0);
       }

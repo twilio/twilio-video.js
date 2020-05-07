@@ -8,6 +8,13 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Android Chrome 81+ Participants fail to subscribe to H264 VideoTracks in Group Rooms
+------------------------------------------------------------------------------------
+
+This happens primarily due to this [Chromium Bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1074421).
+We have added a workaround to the SDK in version 2.4.0. For earlier versions of the SDK,
+please apply the workaround discussed in this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/966#issuecomment-619212184).
+
 Android Chrome Participants sometimes see corrupted frames for RemoteVideoTracks
 --------------------------------------------------------------------------------
 This happens primarily due to a [Chromium bug](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337), where the decoded video frames are corrupted when the resolution is reduced in order to accommodate bandwidth constraints.
@@ -172,6 +179,38 @@ LocalTracks will fail.
 
 Firefox
 -------
+
+### Media Permissions Dialog in Android Firefox 68
+
+Android Firefox 68 does not reject the Promise returned by `getUserMedia` if the user
+dismisses the media permissions dialog by touching elsewhere on the application. So, we
+recommend that the application should start a timer when using `connect` or `createLocalTracks`
+to acquire local media. When it expires, and the returned Promise is still not resolved,
+notify users and ask them to reload the application.
+
+```js
+function wait(delay) {
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+async function connectToRoomOnAndroidFirefox68OrLower(token, options) {
+  const tracks = await Promise.race([
+    Twilio.Video.createLocalTracks(),
+    wait(/* A time in milliseconds of your choice */)
+  ]);
+  if (!tracks) {
+    /* Instruct the user to reload the web app */
+    return;
+  }
+  return connect(token, {
+    ...options,
+    tracks
+  });
+}
+```
+
+This issue will be fixed in [Firefox Fenix](https://play.google.com/store/apps/details?id=org.mozilla.fenix&hl=en_US),
+where the Promise will be rejected with a `NotAllowedError`.
 
 ### RemoteDataTrack Properties (`maxPacketLifeTime` and `maxRetransmits`)
 
