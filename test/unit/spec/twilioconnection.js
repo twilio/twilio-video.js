@@ -352,6 +352,7 @@ describe('TwilioConnection', function() {
                 negotiatedTimeout,
                 type: 'welcome'
               });
+              assert.equal(twilioConnection._messageQueue.length, 0);
             });
 
             it('should send any enqueued messages using the underlying WebSocket', () => {
