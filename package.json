@@ -130,7 +130,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#JSDK-2780_missing_localtrack_stats",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#1499aa43fb200614103ef8e2556eeb97558ad4b1",
     "backoff": "^2.5.0",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
