@@ -196,7 +196,7 @@ describe('LocalParticipant', function() {
           updatedConfig: { local: 1, remote: 0 }
         }
       ].forEach(testCase => {
-        it('setNetworkQualityConfiguration can update the configuration after connect: ' + testCase.name, async () => {
+        it('setNetworkQualityConfiguration can update the configuration after connect: (@unstable: JSDK-2827)' + testCase.name, async () => {
           let nqConfig = testCase.initialConfig;
           const options = Object.assign({ name: randomName() }, defaults);
           const thisTracks = await createLocalTracks({ audio: true, fake: true });
@@ -223,6 +223,9 @@ describe('LocalParticipant', function() {
             resolve([level, stats]);
           }));
 
+          // we expect that when next networkQualityLevelChanged fires, it will have new stats.
+          // but the problem is we get networkQualityLevelChanged only if networkLevel change. And we have no way
+          // to force networkQualityLevelChanged. (JSDK-2827)
           [localNqLevel, localNqStats] = await waitFor(updatedNqLevelPromise, 'updated networkQualityLevelChanged is now expected');
           verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local);
         });
