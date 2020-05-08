@@ -1,6 +1,51 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.4.0 (in progress)
+2.5.0 (in progress)
+===================
+
+New Features
+------------
+
+- Previously, twilio-video.js would reject the CancelablePromise returned by `connect` if the
+  signaling server was busy with too many connection requests. Now, it will try again after a
+  server specified backoff period either until it is successfully connected or the server
+  asks it to stop trying. In this case, the CancelablePromise is rejected with a [SignalingServerBusyError](todo_error_link).
+  You can monitor the status of the signaling connection by passing an [EventListener](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListener__anchor)
+  in ConnectOptions as shown below. (JSDK-2777)
+  ```js
+  const { EventEmitter } = require('events');
+  const { connect } = require('twilio-video');
+
+  const sdkEvents = new EventEmitter();
+
+  // Listen to events on the EventListener in order to monitor the status
+   // of the connection to Twilio's signaling server.
+  sdkEvents.on('event', event => {
+    if (event.name === 'wait') {
+      console.log('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
+    } else if (event.name === 'connecting') {
+      console.log('Connecting to Twilio\'s signaling server.');
+    }
+  });
+
+  connect('token', { eventListener: sdkEvents }).then(room => {
+    console.log('Successfully connected to Room:', room.name);
+  }, error => {
+    if (error.code === 53006) {
+      console.error('Twilio\'s signaling server cannot accept connection requests at this time.');
+    }
+  });
+  ```
+
+- Reduced connection times by removing a round trip during the initial handshake with Twilio's
+  signaling server. (JSDK-2777)
+
+Bug Fixes
+---------
+
+- Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for LocalTracks. (JSDK-2780, JSDK-2755)
+
+2.4.0 (May 4, 2020)
 ===================
 
 New Features

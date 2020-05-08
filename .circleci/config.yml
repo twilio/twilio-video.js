@@ -42,20 +42,6 @@ parameters:
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
   ENABLE_REST_API_TESTS: "true"
-p2p: &topology_p2p
-  topology: "peer-to-peer"
-group: &topology_group
-  topology: "group"
-firefox: &browser_firefox
-  browser: "firefox"
-chrome: &browser_chrome
-  browser: "chrome"
-stable: &bver_stable
-  bver: "stable"
-beta: &bver_beta
-  bver: "beta"
-unstable: &bver_unstable
-  bver: "unstable"
 executors:
   docker-with-browser:
     parameters:
@@ -142,6 +128,9 @@ commands:
   framework-tests:
     steps:
       - build
+      - run:
+          name: Installing dependencies
+          command: npm install
       - run:
           name: Running UMD Tests
           command: npm run test:umd
@@ -235,17 +224,16 @@ jobs:
       BROWSER: << parameters.browser >>
       BVER: << parameters.bver >>
   trigger-qe-tests:
-    executor: generic-executor
     docker:
       - image: circleci/node:latest
     steps:
       - run:
           name: Trigger QE tests
           command: |
-            curl --silent --output /dev/null -u CIRCLECI_PERSONAL_API_TOKEN: -X POST \
-            --header "Content-Type: application/json" \
+            curl --fail --write-out "\nHTTP Response Code: %{http_code}\n" \
+            -u $CIRCLECI_PERSONAL_API_TOKEN: -X POST --header "Content-Type: application/json" \
             -d '{"branch":"'v${CIRCLE_TAG:0:1}'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
-            $SDK_JS_VIDEO_SLACK_WEBHOOK
+            $SDKS_QE_CIRCLECI_VIDEO_JS_SLAVE_PIPELINE_ENDPOINT
 
 workflows:
   version: 2
@@ -267,11 +255,17 @@ workflows:
     when: << pipeline.parameters.custom_workflow >>
     jobs:
       - run-integration-tests:
-          name: << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >> << pipeline.parameters.test_stability >>
+          name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
+      - run-network-tests:
+          name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          topology: << pipeline.parameters.topology >>
+          test_stability: << pipeline.parameters.test_stability >>
+
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
@@ -302,7 +296,16 @@ workflows:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
-              test_stability: ["stable", "unstable"]
+              test_stability: ["stable"]
+          requires: [Build, UnitTests]
+      - run-integration-tests:
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable"]
+              topology: ["group", "peer-to-peer"]
+              test_stability: ["unstable"]
           requires: [Build, UnitTests]
       - run-network-tests:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>

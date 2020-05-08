@@ -93,13 +93,13 @@ describe('RoomV2', () => {
           localVideoTrackStats: [{ trackId: '2', trackSid: 'MT2' }],
           remoteAudioTrackStats: [],
           remoteVideoTrackStats: []
-        }),
+        }, true),
         foo: new StatsReport('foo', {
           localAudioTrackStats: [{ trackId: '1', trackSid: 'MT1' }],
           localVideoTrackStats: [{ trackId: '2', trackSid: 'MT2' }],
           remoteAudioTrackStats: [],
           remoteVideoTrackStats: []
-        })
+        }, true)
       };
 
       const expectedArgs = [
