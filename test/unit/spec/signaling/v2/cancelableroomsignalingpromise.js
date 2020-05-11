@@ -8,8 +8,6 @@ const createCancelableRoomSignalingPromise = require('../../../../../lib/signali
 const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 const { defer } = require('../../../../../lib/util');
 const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
-
-const MockIceServerSource = require('../../../../lib/mockiceserversource');
 const { makeEncodingParameters } = require('../../../../lib/util');
 
 describe('createCancelableRoomSignalingPromise', () => {
@@ -21,11 +19,6 @@ describe('createCancelableRoomSignalingPromise', () => {
   it('constructs a new PeerConnectionManager', () => {
     const test = makeTest();
     assert(test.peerConnectionManager);
-  });
-
-  it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.setConfiguration.calledOnce);
   });
 
   it('calls .setTrackSenders with the LocalParticipantSignaling\'s Tracks\' MediaStreamTracks on the newly-constructed PeerConnectionManager', () => {
@@ -45,14 +38,30 @@ describe('createCancelableRoomSignalingPromise', () => {
       test.peerConnectionManager.setTrackSenders.args[0][0]);
   });
 
-  it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
-    const test = makeTest();
-    assert(test.peerConnectionManager.createAndOffer.calledOnce);
+  context('when the underlying Transport calls the onIced callback', () => {
+    const iceServers = [{ urls: 'foo' }];
+    let test;
+
+    beforeEach(() => {
+      test = makeTest();
+      const promise = test.onIced(iceServers);
+      test.createAndOfferDeferred.resolve();
+      return promise;
+    });
+
+    it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
+      assert.deepEqual(test.peerConnectionManager.setConfiguration.args[0][0].iceServers, iceServers);
+    });
+
+    it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
+      sinon.assert.calledOnce(test.peerConnectionManager.createAndOffer);
+    });
   });
 
   context('when the CancelablePromise is canceled before .createAndOffer resolves', () => {
     it('the CancelablePromise rejects with a cancelation Error', () => {
       const test = makeTest();
+      test.onIced();
       test.cancelableRoomSignalingPromise.cancel();
       const promise = test.cancelableRoomSignalingPromise.then(() => {
         throw new Error('Unexpected resolution');
@@ -67,6 +76,7 @@ describe('createCancelableRoomSignalingPromise', () => {
 
     it('calls .close on the PeerConnectionManager', () => {
       const test = makeTest();
+      test.onIced();
       test.cancelableRoomSignalingPromise.cancel();
       const promise = test.cancelableRoomSignalingPromise.then(() => {
         throw new Error('Unexpected resolution');
@@ -387,14 +397,14 @@ function makeToken() {
   return 'fake-token';
 }
 
-function makeUA() {
-  return {};
+function makeWsServer() {
+  return 'wss://foo/bar';
 }
 
 function makeTest(options) {
   options = options || {};
   options.token = options.token || makeToken(options);
-  options.ua = options.ua || makeUA(options);
+  options.wsServer = options.wsServer || makeWsServer(options);
   options.tracks = options.tracks || [];
   options.localParticipant = options.localParticipant || makeLocalParticipantSignaling(options);
   options.createAndOfferDeferred = defer();
@@ -405,14 +415,10 @@ function makeTest(options) {
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
-  const mockIceServerSource = new MockIceServerSource();
-  options.iceServerSource = options.iceServerSource || mockIceServerSource;
-
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(
     options.token,
-    options.ua,
+    options.wsServer,
     options.localParticipant,
-    options.iceServerSource,
     makeEncodingParameters(options),
     { audio: [], video: [] },
     options);
@@ -454,13 +460,14 @@ function makeLocalParticipantSignaling(options) {
 }
 
 function makeTransportConstructor(testOptions) {
-  return function Transport(name, accessToken, localParticipant, peerConnectionManager, ua) {
+  return function Transport(name, accessToken, localParticipant, peerConnectionManager, wsServer, options) {
     const transport = new EventEmitter();
     this.name = name;
     this.accessToken = accessToken;
     this.localParticipant = localParticipant;
     this.peerConnectionManager = peerConnectionManager;
-    this.ua = ua;
+    this.wsServer = wsServer;
+    testOptions.onIced = options.onIced;
     testOptions.transport = transport;
     transport.disconnect = sinon.spy(() => {});
     return transport;
