@@ -67,7 +67,6 @@ function makeTest(serverUrl, options, testOptions) {
   return test;
 }
 
-
 describe('TwilioConnection', function() {
   let test;
   describe('constructor', () => {
@@ -422,9 +421,11 @@ describe('TwilioConnection', function() {
                 });
                 afterEach(() => test.end());
 
-                it('should reset the heartbeat timer', () => {
-                  sinon.assert.callCount(clearTimeoutSpy, 1);
-                  sinon.assert.callCount(setTimeoutSpy, 1);
+                it('should reset the heartbeat timer for msg or heartbeat', () => {
+                  if (msg.type === 'heartbeat' || msg.type === 'msg') {
+                    sinon.assert.callCount(clearTimeoutSpy, 1);
+                    sinon.assert.callCount(setTimeoutSpy, 1);
+                  }
                 });
 
                 it({
