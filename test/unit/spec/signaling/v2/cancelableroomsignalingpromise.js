@@ -9,6 +9,7 @@ const CancelablePromise = require('../../../../../lib/util/cancelablepromise');
 const { defer } = require('../../../../../lib/util');
 const { SignalingConnectionDisconnectedError } = require('../../../../../lib/util/twilio-video-errors');
 const { makeEncodingParameters } = require('../../../../lib/util');
+const fakeLog = require('../../../../lib/fakelog');
 
 describe('createCancelableRoomSignalingPromise', () => {
   it('returns a CancelablePromise', () => {
@@ -403,6 +404,7 @@ function makeWsServer() {
 
 function makeTest(options) {
   options = options || {};
+  options.log = fakeLog;
   options.token = options.token || makeToken(options);
   options.wsServer = options.wsServer || makeWsServer(options);
   options.tracks = options.tracks || [];

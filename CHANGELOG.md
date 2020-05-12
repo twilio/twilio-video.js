@@ -39,7 +39,7 @@ New Features
 
 - Reduced connection times by acquiring RTCIceServers during the initial handshake with Twilio's
   signaling server rather than sending a HTTP POST request to a different endpoint. Because of this,
-  the ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` ar no longer
+  the ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` are no longer
   applicable, and they will be ignored. (JSDK-2676)
 
 - Reduced connection times by removing a round trip during the initial handshake with Twilio's

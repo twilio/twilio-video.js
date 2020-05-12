@@ -62,59 +62,70 @@ describe('connect', () => {
     });
   });
 
-  describe('called with ConnectOptions#dscpTagging', () => {
-    let signaling;
+  [
+    {
+      name: 'abortOnIceServersTimeout',
+      value: true
+    },
+    {
+      name: 'dscpTagging',
+      newName: 'enableDscp',
+      value: true
+    },
+    {
+      name: 'iceServersTimeout',
+      value: 2000
+    }
+  ].forEach(({ name, newName, value }) => {
+    describe(`called with the deprecated ConnectOptions flag "${name}"`, () => {
+      let signaling;
 
-    before(() => {
-      const mockSignaling = new Signaling();
-      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
-      signaling = sinon.spy(() => mockSignaling);
-    });
-
-    context('for the first time', () => {
       before(() => {
-        connect(token, {
-          dscpTagging: true,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        signaling = sinon.spy(() => mockSignaling);
+      });
+
+      ['first', 'second'].forEach(callCount => {
+        context(`for the ${callCount} time`, () => {
+          before(() => {
+            connect(token, {
+              [name]: value,
+              iceServers: [],
+              signaling,
+              Log: function() {
+                return sinon.createStubInstance(Log);
+              }
+            });
+          });
+
+          it(`should remove "${name}" from ConnectOptions`, () => {
+            const options = signaling.args[0][1];
+            assert(!(name in options));
+          });
+
+          if (newName) {
+            it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
+              const options = signaling.args[0][1];
+              assert.equal(options[newName], value);
+            });
+          }
+
+          if (callCount === 'first') {
+            it('should call .warn on the underlying Log with the deprecation warning message', () => {
+              const options = signaling.args[0][1];
+              const warning = newName
+                ? `The ConnectOptions flag "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
+                : `The ConnectOptions flag "${name}" is no longer applicable and will be ignored.`;
+              sinon.assert.calledWith(options.log.warn, warning);
+            });
+          } else {
+            it('should not call .warn on the underlying Log', () => {
+              const options = signaling.args[1][1];
+              sinon.assert.notCalled(options.log.warn);
+            });
           }
         });
-      });
-
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[0][1];
-        assert.equal(options.enableDscp, true);
-      });
-
-      it('should call .warn on the underlying Log with the deprecation warning message', () => {
-        const options = signaling.args[0][1];
-        sinon.assert.calledWith(options.log.warn, 'The ConnectOptions flag "dscpTagging" is '
-          + 'deprecated and scheduled for removal. Please use "enableDscp" instead.');
-      });
-    });
-
-    context('for the second time', () => {
-      before(() => {
-        connect(token, {
-          dscpTagging: false,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
-        });
-      });
-
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[1][1];
-        assert.equal(options.enableDscp, false);
-      });
-
-      it('should not call .warn on the underlying Log', () => {
-        const options = signaling.args[1][1];
-        sinon.assert.callCount(options.log.warn, 0);
       });
     });
   });
