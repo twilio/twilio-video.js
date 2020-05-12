@@ -9,8 +9,8 @@ New Features
 - Previously, twilio-video.js would reject the CancelablePromise returned by `connect` if the
   signaling server was busy with too many connection requests. Now, it will try again after a
   server specified backoff period either until it is successfully connected or the server
-  asks it to stop trying. In this case, the CancelablePromise is rejected with a [SignalingServerBusyError](todo_error_link).
-  You can monitor the status of the signaling connection by passing an [EventListener](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListener__anchor)
+  asks it to stop trying. In this case, the CancelablePromise is rejected with a [SignalingServerBusyError](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/SignalingServerBusyError.html).
+  You can monitor the status of the signaling connection by passing an [EventListener](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListener__anchor)
   in ConnectOptions as shown below. (JSDK-2777)
   ```js
   const { EventEmitter } = require('events');
@@ -38,14 +38,21 @@ New Features
   ```
 
 - Reduced connection times by acquiring RTCIceServers during the initial handshake with Twilio's
-  signaling server rather than sending a HTTP POST request to a different endpoint. (JSDK-2676)
+  signaling server rather than sending a HTTP POST request to a different endpoint. Because of this,
+  the ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` ar no longer
+  applicable, and they will be ignored. (JSDK-2676)
 
 - Reduced connection times by removing a round trip during the initial handshake with Twilio's
   signaling server. (JSDK-2777)
 
+- The CancelablePromise returned by `connect()` will now be rejected with a [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000)
+  if the underlying WebSocket connection to Twilio's signaling server is not open in 15 seconds. (JSDK-2684)
+
 Bug Fixes
 ---------
 
+- Fixed a bug where sometimes the publishing of a LocalTrack very quickly after another LocalTrack was unpublished
+  never completed. (JSDK-2769)
 - Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for LocalTracks. (JSDK-2780, JSDK-2755)
 
 2.4.0 (May 4, 2020)
