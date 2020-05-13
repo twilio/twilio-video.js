@@ -739,11 +739,11 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 1000;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('timeout');
             });
 
             it('should transition .state to "syncing"', () => {
@@ -760,7 +760,7 @@ describe('TwilioConnectionTransport', () => {
               test.autoOpen = true;
               test.onTwilioConnectionCreated = twilioConnection => {
                 connectRequests++;
-                twilioConnection.once('open', () => twilioConnection.close(new Error('foo')));
+                twilioConnection.once('open', () => twilioConnection.close('failed'));
               };
               return new Promise(resolve => {
                 test.transport.on('stateChanged', state => {
@@ -777,7 +777,7 @@ describe('TwilioConnectionTransport', () => {
           context('when the re-connect attempts have been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 0;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('failed');
             });
 
             it('should transition .state to "disconnected"', () => {
@@ -794,9 +794,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -830,9 +830,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           beforeEach(() => {
-            test.twilioConnection.close(new Error('foo'));
+            test.twilioConnection.close('timeout');
           });
           it('should transition .state to "disconnected"', () => {
             assert.deepEqual([
@@ -846,9 +846,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -882,7 +882,7 @@ describe('TwilioConnectionTransport', () => {
           test.transport.once('stateChanged', (state, error) => {
             disconnectedError = error;
           });
-          test.twilioConnection.close(new Error('foo'));
+          test.twilioConnection.close('failed');
         });
 
         it('should do nothing"', () => {
@@ -917,10 +917,10 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('failed');
             });
 
             it('should not transition states', () => {
@@ -934,7 +934,7 @@ describe('TwilioConnectionTransport', () => {
           context('when the re-connect attempts have been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 0;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('timeout');
             });
 
             it('should transition .state to "disconnected"', () => {
@@ -952,9 +952,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -996,7 +996,7 @@ describe('TwilioConnectionTransport', () => {
                   twilioConnection.once('open', () => deferred.resolve());
                 };
                 // this should kick off reconnect attempt async
-                test.close(new Error('foo'));
+                test.close('timeout');
               } else {
                 deferred.resolve();
               }
@@ -1672,7 +1672,7 @@ function createTwilioConnection(options) {
   class FakeTwilioConnection extends EventEmitter {
     constructor(url, twilioConnectionOptions) {
       super();
-      this.close = sinon.spy(error => this.emit('close', error));
+      this.close = sinon.spy(reason => this.emit('close', reason));
       this.helloBody = twilioConnectionOptions.helloBody;
       this.open = () => this.emit('open');
       this.receiveMessage = message => this.emit('message', message);
@@ -1691,6 +1691,12 @@ function createTwilioConnection(options) {
       }
     }
   }
+
+  FakeTwilioConnection.CloseReason = {
+    BUSY: 'busy',
+    LOCAL: 'local'
+  };
+
   return FakeTwilioConnection;
 }
 
@@ -1728,8 +1734,8 @@ function makeTest(options) {
   });
   options.receiveMessage = message => options.twilioConnection.receiveMessage(message);
 
-  options.close = error => {
-    options.twilioConnection.close(error);
+  options.close = reason => {
+    options.twilioConnection.close(reason);
   };
 
   options.open = () => options.twilioConnection.open();

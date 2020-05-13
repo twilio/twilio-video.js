@@ -107,12 +107,12 @@ describe('TwilioConnection', function() {
         closed: ['early', 'connecting', 'closed'],
         connecting: ['early', 'connecting', 'closed'],
         early: ['early', 'closed'],
-        open: ['early', 'connecting', 'open'],
+        open: ['early', 'connecting', 'open', 'closed'],
         wait: ['early', 'connecting', 'wait', 'closed']
       }[state];
 
       context(`when the TwilioConnection's .state is "${state}"${state === 'wait' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
-        let closeEventError;
+        let closeEventReason;
         let eventObserver;
         let twilioConnection;
 
@@ -143,8 +143,8 @@ describe('TwilioConnection', function() {
 
           assert.equal(twilioConnection.state, state);
 
-          twilioConnection.on('close', error => {
-            closeEventError = error;
+          twilioConnection.on('close', reason => {
+            closeEventReason = reason;
           });
           twilioConnection.close();
         });
@@ -158,7 +158,7 @@ describe('TwilioConnection', function() {
         });
 
         it(`should emit "event" for each of the following states: ${expectedEvents.join(', ')}`, () => {
-          expectedEvents.forEach(name => sinon.assert.calledWith(eventObserver.emit, 'event', { name }));
+          assert.deepEqual(expectedEvents, eventObserver.emit.args.map(([, { name }]) => name));
         });
 
         if (state === 'open') {
@@ -183,11 +183,11 @@ describe('TwilioConnection', function() {
 
         if (state === 'closed') {
           it('should not emit "close" on the TwilioConnection', () => {
-            assert.equal(typeof closeEventError, 'undefined');
+            assert.equal(typeof closeEventReason, 'undefined');
           });
         } else {
-          it('should emit "close" on the TwilioConnection with a null Error', () => {
-            assert.equal(closeEventError, null);
+          it('should emit "close" on the TwilioConnection with a "local" CloseReason', () => {
+            assert.equal(closeEventReason, 'local');
           });
         }
       });
@@ -370,14 +370,14 @@ describe('TwilioConnection', function() {
             });
 
             context('when the TwilioConnection fails to receive any "heartbeat" messages', () => {
-              let error;
+              let closeReason;
 
               beforeEach(async () => {
-                const errorPromise = new Promise(resolve => {
+                const closeReasonPromise = new Promise(resolve => {
                   twilioConnection.once('close', resolve);
                 });
                 test.clock.tick(30000);
-                error = await errorPromise;
+                closeReason = await closeReasonPromise;
               });
 
               it('should set the TwilioConnection\'s .state to "closed', () => {
@@ -388,9 +388,8 @@ describe('TwilioConnection', function() {
                 sinon.assert.callCount(twilioConnection._ws.close, 1);
               });
 
-              it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-                assert(error instanceof Error);
-                assert.equal(error.code, 3001);
+              it('should emit "close" on the TwilioConnection with the "timeout" CloseReason', () => {
+                assert.equal(closeReason, 'timeout');
               });
             });
 
@@ -451,7 +450,7 @@ describe('TwilioConnection', function() {
           });
 
           context('when a "bad" message is received while waiting for the "welcome" message', () => {
-            let error;
+            let closeReason;
 
             beforeEach(async () => {
               const promise = new Promise(resolve => {
@@ -462,7 +461,7 @@ describe('TwilioConnection', function() {
                 type: 'bad'
               });
               test.clock.tick(30000);
-              error = await promise;
+              closeReason = await promise;
             });
             afterEach(() => test.end());
 
@@ -474,9 +473,8 @@ describe('TwilioConnection', function() {
               sinon.assert.callCount(twilioConnection._ws.close, 1);
             });
 
-            it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-              assert(error instanceof Error);
-              assert.equal(error.code, 3002);
+            it('should emit "close" on the TwilioConnection with the "failed" CloseReason', () => {
+              assert.equal(closeReason, 'failed');
             });
           });
 
@@ -496,7 +494,7 @@ describe('TwilioConnection', function() {
               ]
             ], ([keepAlive, retryAfter, cookie]) => {
               let changedState;
-              let error;
+              let closeReason;
               let waitArgs;
               let wsCloseCallCount;
               let setTimeoutSpy;
@@ -520,7 +518,7 @@ describe('TwilioConnection', function() {
                 }));
 
                 test.clock.tick(1);
-                [changedState, error] = await stateChanged;
+                [changedState, closeReason] = await stateChanged;
               });
 
               if (retryAfter < 0) {
@@ -536,9 +534,8 @@ describe('TwilioConnection', function() {
                   sinon.assert.callCount(twilioConnection._ws.close, 1);
                 });
 
-                it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-                  assert(error instanceof Error);
-                  assert.equal(error.code, 3006);
+                it('should emit "close" on the TwilioConnection with the "busy" CloseReason', () => {
+                  assert.equal(closeReason, 'busy');
                 });
               } else {
                 it('should set the TwilioConnection\'s .state to "wait"', () => {
@@ -617,14 +614,14 @@ describe('TwilioConnection', function() {
 
           context('when a "welcome" message is not received within the "welcome" timeout', () => {
             context('when all handshake attempts fail', () => {
-              let error;
+              let closeReason;
 
               beforeEach(async () => {
                 const closePromise = new Promise(resolve => {
                   twilioConnection.once('close', resolve);
                 });
                 test.clock.tick(40000);
-                error = await closePromise;
+                closeReason = await closePromise;
               });
 
               it('should set the TwilioConnection\'s .state to "closed', () => {
@@ -635,9 +632,8 @@ describe('TwilioConnection', function() {
                 sinon.assert.callCount(twilioConnection._ws.close, 1);
               });
 
-              it('should emit "close" on the TwilioConnection with the appropriate Error', () => {
-                assert(error instanceof Error);
-                assert.equal(error.code, 3000);
+              it('should emit "close" on the TwilioConnection with the "timeout" CloseReason', () => {
+                assert.equal(closeReason, 'timeout');
               });
             });
 
