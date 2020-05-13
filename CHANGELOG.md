@@ -51,6 +51,7 @@ New Features
 Bug Fixes
 ---------
 
+- Fixed a bug where `isSupported` was throwing an exception in a server-side rendering application. (JSDK-2818)
 - Fixed a bug where sometimes the publishing of a LocalTrack very quickly after another LocalTrack was unpublished
   never completed. (JSDK-2769)
 - Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for LocalTracks. (JSDK-2780, JSDK-2755)
