@@ -45,9 +45,7 @@ describe('createCancelableRoomSignalingPromise', () => {
 
     beforeEach(() => {
       test = makeTest();
-      const promise = test.onIced(iceServers);
-      test.createAndOfferDeferred.resolve();
-      return promise;
+      test.onIced(iceServers);
     });
 
     it('calls .setConfiguration on the newly-constructed PeerConnectionManager', () => {
@@ -56,6 +54,23 @@ describe('createCancelableRoomSignalingPromise', () => {
 
     it('calls .createAndOffer on the newly-constructed PeerConnectionManager', () => {
       sinon.assert.calledOnce(test.peerConnectionManager.createAndOffer);
+    });
+
+    context('when the Promise returned by .createAndOffer is rejected', () => {
+      let error;
+
+      beforeEach(() => {
+        error = new Error('foo');
+        test.createAndOfferDeferred.reject(error);
+      });
+
+      it('should reject the CancelablePromise with the given Error', () => {
+        test.cancelableRoomSignalingPromise.then(() => {
+          throw new Error('Unexpected resolution');
+        }).catch(err => {
+          assert.equal(err, error);
+        });
+      });
     });
   });
 
@@ -95,7 +110,6 @@ describe('createCancelableRoomSignalingPromise', () => {
     return test.createAndOfferDeferred.promise.then(() => {
       assert(test.transport);
     });
-
   });
 
   context('when the Transport emits a "connected" event with an initial Room state', () => {
@@ -208,131 +222,25 @@ describe('createCancelableRoomSignalingPromise', () => {
           });
         });
 
-        context('when the CancelablePromise has not been canceled', () => {
-          it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-            });
-            return test.cancelableRoomSignalingPromise.then(room => {
-              assert.equal(test.room, room);
+        it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
+          const test = makeTest();
+          test.createAndOfferDeferred.resolve();
+          test.createAndOfferDeferred.promise.then(() => {
+            const identity = makeIdentity();
+            const sid = makeParticipantSid();
+            test.transport.emit('connected', {
+              participant: {
+                sid: sid,
+                identity: identity
+              },
+              options: {
+                // eslint-disable-next-line camelcase
+                signaling_region: 'foo'
+              }
             });
           });
-        });
-
-        context('when the CancelablePromise has been canceled', () => {
-          it('the CancelablePromise rejects with a cancelation error', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, error => {
-              assert.equal(
-                'Canceled',
-                error.message);
-            });
-          });
-
-          it('calls .disconnect on the newly-constructed RoomV2', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, () => {
-              assert(test.room.disconnect.calledOnce);
-            });
-          });
-
-          it('does not call .disconnect on the Transport', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, () => {
-              assert(!test.transport.disconnect.calledTwice);
-            });
-          });
-
-          it('calls .close on the PeerConnectionManager', () => {
-            const test = makeTest();
-            test.createAndOfferDeferred.resolve();
-            test.createAndOfferDeferred.promise.then(() => {
-              const identity = makeIdentity();
-              const sid = makeParticipantSid();
-              test.transport.emit('connected', {
-                participant: {
-                  sid: sid,
-                  identity: identity
-                },
-                options: {
-                  // eslint-disable-next-line camelcase
-                  signaling_region: 'foo'
-                }
-              });
-              test.cancelableRoomSignalingPromise.cancel();
-            });
-            return test.cancelableRoomSignalingPromise.then(() => {
-              throw new Error('Unexpected resolution');
-            }, () => {
-              assert(test.peerConnectionManager.close.calledOnce);
-            });
+          return test.cancelableRoomSignalingPromise.then(room => {
+            assert.equal(test.room, room);
           });
         });
       });
