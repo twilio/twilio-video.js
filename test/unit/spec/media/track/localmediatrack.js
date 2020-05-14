@@ -7,6 +7,7 @@ const { inherits } = require('util');
 
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
+const Document = require('../../../../lib/document');
 
 const log = require('../../../../lib/fakelog');
 
@@ -20,6 +21,16 @@ const log = require('../../../../lib/fakelog');
   };
 
   describe(description, () => {
+    before(() => {
+      global.document = global.document || new Document();
+    });
+
+    after(() => {
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
     let track;
 
     describe('constructor', () => {
