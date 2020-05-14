@@ -21,15 +21,28 @@ New Features
   // Listen to events on the EventListener in order to monitor the status
    // of the connection to Twilio's signaling server.
   sdkEvents.on('event', event => {
-    if (event.name === 'wait') {
-      console.log('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
-    } else if (event.name === 'connecting') {
+    const { level, name } = event;
+    if (name === 'wait') {
+      assert.equal(level, 'warning');
+      console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
+    } else if (name === 'connecting') {
+      assert.equal(level, 'info');
       console.log('Connecting to Twilio\'s signaling server.');
+    } else if (name === 'open') {
+      assert.equal(level, 'info');
+      console.log('Connected to Twilio\'s signaling server, joining the Room now.');
+    } else if (name === 'closed') {
+      if (level === 'error') {
+        const { payload: { reason } } = event;
+        console.error('Connection to Twilio\'s signaling server abruptly closed:', reason);
+      } else {
+        console.log('Connection to Twilio\'s signaling server closed.');
+      }
     }
   });
 
   connect('token', { eventListener: sdkEvents }).then(room => {
-    console.log('Successfully connected to Room:', room.name);
+    console.log('Joined the Room:', room.name);
   }, error => {
     if (error.code === 53006) {
       console.error('Twilio\'s signaling server cannot accept connection requests at this time.');

@@ -11,14 +11,19 @@ describe('EventObserver', () => {
 
   describe('"event", when emitted', () => {
     [
+      ['closed', 'error', { reason: 'busy' }],
       ['closed', 'error', { reason: 'failed' }],
       ['closed', 'info', { reason: 'local' }],
+      ['closed', 'error', { reason: 'remote' }],
+      ['closed', 'error', { reason: 'timeout' }],
       ['connecting', 'info'],
       ['early', 'info'],
       ['open', 'info'],
       ['wait', 'warning']
     ].forEach(([name, level, payload]) => {
-      context(`with .name "${name}"${payload ? ' and a .payload' : ''}, should emit an "event" on the EventListener with`, () => {
+      context(`with .name "${name}"${payload
+        ? ` and .payload ${JSON.stringify(payload)}`
+        : ''}, should emit an "event" on the EventListener with`, () => {
         let connectTimestamp;
         let eventParams;
 

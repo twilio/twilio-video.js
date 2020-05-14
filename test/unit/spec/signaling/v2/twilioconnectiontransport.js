@@ -89,7 +89,7 @@ describe('TwilioConnectionTransport', () => {
       .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
-      beforeEach(() => {
+      beforeEach(async () => {
         test = makeTest(Object.assign(iceServers ? {
           iceServers: [{ urls: 'foo' }]
         } : {}, bandwidthProfile ? {
@@ -102,7 +102,7 @@ describe('TwilioConnectionTransport', () => {
           trackSwitchOff
         }));
         if (iceServers) {
-          return waitForSometime(1);
+          await waitForSometime(1);
         }
       });
 
