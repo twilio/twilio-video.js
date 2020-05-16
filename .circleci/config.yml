@@ -41,9 +41,9 @@ parameters:
     type: enum
     enum: ["all", "stable", "unstable"]
     default: "all"
-  releaseCommand:
+  release_command:
     type: string
-    default: "" # the command to execute to release the build.
+    default: "echo no release command was specified" # release-tool specifies the real command.
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
@@ -233,13 +233,20 @@ jobs:
   ExecuteRelease:
     executor: docker-with-browser
     parameters:
-      releaseCommand:
-        type: string
-        default: ""
+      dryRun:
+        type: boolean
+        default: true
     steps:
-      - checkout # release command builds as part of the flow.
-      - run: echo <<pipeline.parameters.releaseCommand>>
-      - run: <<parameters.releaseCommand>>
+      - build
+      - when:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: echo Wait for other jobs in the workflow to finish
+            - run: echo Release will execute "<< pipeline.parameters.release_command >>"
+      - unless:
+          condition: << parameters.dryRun >>
+          steps:
+            - run: << pipeline.parameters.release_command >>
 
   trigger-qe-tests:
     docker:
@@ -350,13 +357,18 @@ workflows:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
-              test_stability: ["stable", "unstable"]
+              test_stability: ["stable"]
+          requires: [Build, UnitTests]
+      - ExecuteRelease:
+          dryRun: true
+          name: Release dry run
           requires: [Build, UnitTests]
       - hold:
           type: approval
-          requires: [Build, UnitTests]
-      - ExecuteRelease: # this job has conditional steps, no-ops when pipeline.parameters.releaseCommand not specified
-          releaseCommand: << pipeline.parameters.releaseCommand >>
+          requires: [Release dry run]
+      - ExecuteRelease:
+          dryRun: false
+          context: sdk_js
           requires: [hold]
 
   Release-candidate:
