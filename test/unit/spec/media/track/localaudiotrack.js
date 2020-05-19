@@ -11,7 +11,7 @@ const log = require('../../../../lib/fakelog');
 const { fakeGetUserMedia } = require('../../../../lib/fakemediastream');
 const { defer } = require('../../../../../lib/util');
 
-describe.only('LocalAudioTrack workaroundWebKitBug1208516', () => {
+describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
   let addEventListenerStub;
   let removeEventListenerStub;
 
