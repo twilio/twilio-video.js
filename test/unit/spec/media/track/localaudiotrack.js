@@ -136,3 +136,7 @@ MediaStreamTrack.prototype.stop = function stop() {
   // Simulating the browser-native MediaStreamTrack's 'ended' event
   this.emit('ended', { type: 'ended' });
 };
+
+MediaStreamTrack.prototype.getConstraints = function getConstraints() {
+  return {};
+};
