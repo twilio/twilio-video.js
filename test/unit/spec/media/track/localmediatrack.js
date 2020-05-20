@@ -116,6 +116,51 @@ const log = require('../../../../lib/fakelog');
       });
     });
 
+    describe('#_replaceTrack', () => {
+      let dummyElement;
+      before(() => {
+        track = createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+        track._attach = sinon.spy(el => el);
+        track._detachElement = sinon.spy();
+        track._attachments.delete = sinon.spy();
+
+        dummyElement = { oncanplay: 'bar' };
+        track._createElement = sinon.spy(() => dummyElement);
+      });
+
+      it('should not replace track id or name', async () => {
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        assert(track.id, 'foo');
+        assert(track.name, 'foo');
+
+        await track._replaceTrack(newTrack);
+        assert(track.id, 'foo');
+        assert(track.name, 'foo');
+      });
+
+      it('should update underlying mediaStreamTrack', async () => {
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        assert(track.mediaStreamTrack.id, 'foo');
+
+        await track._replaceTrack(newTrack);
+        assert(track.mediaStreamTrack.id, 'bar');
+      });
+
+      it('should fire started event after replacing track', async () => {
+        const started1Promise = new Promise(resolve => track.on('started', resolve));
+        dummyElement.oncanplay();
+        await started1Promise;
+
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        const started2Promise = new Promise(resolve => track.on('started', resolve));
+
+        await track._replaceTrack(newTrack);
+
+        dummyElement.oncanplay();
+        await started2Promise;
+      });
+    });
+
     describe('#enable', () => {
       context('when called with the same boolean value as the underlying MediaStreamTrack\'s .enabled', () => {
         let trackDisabledEmitted;

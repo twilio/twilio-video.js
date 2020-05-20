@@ -58,7 +58,7 @@ describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
         sinon.assert.callCount(document.removeEventListener, 0);
       });
 
-      it('when document becomes visible and track is ended, calls replaceTrack on all senders', async () => {
+      it('when document becomes visible and track is ended, calls setMediaStreamTrack on all senders', async () => {
         document.visibilityState = 'visible';
         localAudioTrack.mediaStreamTrack.readyState = 'ended';
 
