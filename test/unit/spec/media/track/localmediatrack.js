@@ -116,7 +116,7 @@ const log = require('../../../../lib/fakelog');
       });
     });
 
-    describe('#_replaceTrack', () => {
+    describe('#_setMediaStreamTrack', () => {
       let dummyElement;
       beforeEach(() => {
         dummyElement = { oncanplay: 'bar' };
@@ -134,7 +134,7 @@ const log = require('../../../../lib/fakelog');
         assert.equal(track.id, 'foo');
         assert.equal(track.name, 'foo');
 
-        await track._replaceTrack(newTrack);
+        await track._setMediaStreamTrack(newTrack);
         assert.equal(track.id, 'foo');
         assert.equal(track.name, 'foo');
       });
@@ -143,7 +143,7 @@ const log = require('../../../../lib/fakelog');
         const newTrack = new MediaStreamTrack('bar', kind[description]);
         assert.equal(track.mediaStreamTrack.id, 'foo');
 
-        await track._replaceTrack(newTrack);
+        await track._setMediaStreamTrack(newTrack);
         assert.equal(track.mediaStreamTrack.id, 'bar');
       });
 
@@ -155,7 +155,7 @@ const log = require('../../../../lib/fakelog');
         const newTrack = new MediaStreamTrack('bar', kind[description]);
         const started2Promise = new Promise(resolve => track.on('started', resolve));
 
-        await track._replaceTrack(newTrack);
+        await track._setMediaStreamTrack(newTrack);
 
         dummyElement.oncanplay();
         await started2Promise;
@@ -170,7 +170,7 @@ const log = require('../../../../lib/fakelog');
         assert.equal(track.isEnabled, false);
 
 
-        await track._replaceTrack(newTrack);
+        await track._setMediaStreamTrack(newTrack);
         assert.equal(track.id, 'foo');
         assert.equal(track.name, 'foo');
         assert.equal(track.isEnabled, false);
