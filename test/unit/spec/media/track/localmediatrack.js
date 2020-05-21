@@ -139,6 +139,13 @@ const log = require('../../../../lib/fakelog');
         assert.equal(track.name, 'foo');
       });
 
+      // it('track id should continue to match id of underlying mediaStreamTrack', async () => {
+      //   const newTrack = new MediaStreamTrack('bar', kind[description]);
+      //   assert.equal(track.id, track.mediaStreamTrack.id);
+      //   await track._setMediaStreamTrack(newTrack);
+      //   assert.equal(track.id, track.mediaStreamTrack.id);
+      // });
+
       it('should update underlying mediaStreamTrack', async () => {
         const newTrack = new MediaStreamTrack('bar', kind[description]);
         assert.equal(track.mediaStreamTrack.id, 'foo');
