@@ -27,7 +27,7 @@ const LocalAudioTrack = sinon.spy(function LocalAudioTrack(mediaStreamTrack, opt
   this.kind = mediaStreamTrack.kind;
   this.mediaStreamTrack = mediaStreamTrack;
   this.name = options.name || mediaStreamTrack.id;
-  this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
+  this._trackSender = new MediaTrackSender(this.id, this.mediaStreamTrack);
   this.stop = sinon.spy();
 });
 inherits(LocalAudioTrack, EventEmitter);
@@ -40,7 +40,7 @@ const LocalVideoTrack = sinon.spy(function LocalVideoTrack(mediaStreamTrack, opt
   this.kind = mediaStreamTrack.kind;
   this.mediaStreamTrack = mediaStreamTrack;
   this.name = options.name || mediaStreamTrack.id;
-  this._trackSender = new MediaTrackSender(this.mediaStreamTrack);
+  this._trackSender = new MediaTrackSender(this.id, this.mediaStreamTrack);
   this.stop = sinon.spy();
 });
 inherits(LocalVideoTrack, EventEmitter);
