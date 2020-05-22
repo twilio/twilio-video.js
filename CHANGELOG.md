@@ -1,5 +1,11 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.6.0 (in progress)
+===================
+- twilio-video now has a workaround for [webkit bug 208516](https://bugs.webkit.org/show_bug.cgi?id=208516).
+  With this workaround, the sdk will re-check the status of audio track when Safari gains foreground, and re-acquire
+  the track if its in `ended` or `muted` state. (JSDK-2828)
+
 2.5.0 (in progress)
 ===================
 
