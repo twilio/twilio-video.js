@@ -86,21 +86,6 @@ describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
       });
     });
   });
-
-  describe('#stop', () => {
-    it('stops listening for visibility change', () => {
-      document.visibilityState = 'visible';
-      const localAudioTrack = createLocalAudioTrack({ workaroundWebKitBug1208516: true });
-      assert(localAudioTrack instanceof LocalAudioTrack);
-
-      sinon.assert.callCount(document.removeEventListener, 0);
-
-      localAudioTrack.stop();
-
-      sinon.assert.callCount(document.removeEventListener, 1);
-      sinon.assert.calledWith(document.removeEventListener, 'visibilitychange');
-    });
-  });
 });
 
 
