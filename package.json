@@ -61,7 +61,7 @@
     "karma-spec-reporter": "0.0.32",
     "mocha": "^3.2.0",
     "npm-run-all": "^4.0.2",
-    "release-tool": "^0.2.2",
+    "twilio-release-tool": "^1.0.0",
     "requirejs": "^2.3.3",
     "rimraf": "^2.6.1",
     "selenium-webdriver": "3.3.0",
@@ -130,7 +130,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#68f190898c17d104f6c9a6212cdc6737c97635a0",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#4.2.1-rc1",
     "backoff": "^2.5.0",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
