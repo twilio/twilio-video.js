@@ -624,6 +624,45 @@ async function getRegionalizedIceServers(token, region) {
   return iceServers;
 }
 
+function getTotalBytesReceived(statReports) {
+  let totalBytesReceived = 0;
+  statReports.forEach(statReport => {
+    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
+      statReport[trackType].forEach(trackStats => {
+        totalBytesReceived += trackStats.bytesReceived;
+      });
+    });
+  });
+  return totalBytesReceived;
+}
+
+/**
+ * validates that media was flowing in given rooms.
+ * @param {Room} room
+ * @param {number} testTimeMS
+ * @returns {Promise<>}
+ */
+async function validateMediaFlow(room, testTimeMS = 6000) {
+  // wait for some time.
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
+
+  // get StatsReports.
+  const statsBefore = await room.getStats();
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore);
+
+  // wait for some more time.
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
+
+  // get StatsReports again.
+  const statsAfter = await room.getStats();
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
+
+  console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
+  if (bytesReceivedAfter <= bytesReceivedBefore) {
+    throw new Error('no media flow detected');
+  }
+}
+
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -656,3 +695,4 @@ exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
 exports.setupAliceAndBob = setupAliceAndBob;
+exports.validateMediaFlow = validateMediaFlow;

@@ -1,8 +1,33 @@
+/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
 
 const createLocalTracks = require('../../../lib/createlocaltrack');
+const {
+  setupAliceAndBob,
+  smallVideoConstraints,
+  validateMediaFlow,
+  waitFor,
+  waitForSometime
+} = require('../../lib/util');
+
+const {
+  createLocalVideoTrack,
+} = require('../../../lib');
+
+
+async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
+  let mediaFlowDetected = false;
+  try {
+    await validateMediaFlow(room, 2000);
+    mediaFlowDetected = true;
+  } catch (err) {
+    mediaFlowDetected = false;
+  }
+  errorMessage = errorMessage || `Unexpected mediaFlow ${mediaFlowDetected} in ${room.sid}`;
+  assert.equal(mediaFlowDetected, mediaFlowExpected, errorMessage);
+}
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];
@@ -72,6 +97,51 @@ const createLocalTracks = require('../../../lib/createlocaltrack');
           return stoppedEvent;
         });
       });
+    });
+  });
+
+  describe('replaceTrack behavior', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.timeout(120000); // this may take long.
+
+    let roomSid;
+    let aliceRoom;
+    let bobRoom;
+    let bobLocal;
+    beforeEach(async () => {
+      ({ roomSid, aliceRoom, bobLocal, bobRoom } = await setupAliceAndBob({
+        aliceOptions: { tracks: [] },
+        bobOptions: { tracks: [] },
+      }));
+    });
+    afterEach(() => {
+      [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+    });
+
+    it('media flow restarts when track is replaced', async () => {
+      console.log('Checking media flow before publish');
+      await assertMediaFlow(aliceRoom, false, `Unexpected media flow before publishing track: ${aliceRoom.sid}`);
+      const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+
+      // Bob publishes video track
+      await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
+      await waitForSometime(5000);
+
+      console.log('Checking media flow after publish');
+      await assertMediaFlow(aliceRoom, true, `Unexpected media flow after publishing track: ${aliceRoom.sid}`);
+
+      bobVideoTrackA._trackSender._clones.forEach(clone => clone.track.stop());
+
+      await waitForSometime(1000);
+      console.log('Checking media flow after stop');
+      await assertMediaFlow(aliceRoom, false, `Unexpected media flow after stopping track: ${aliceRoom.sid}`);
+
+      const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
+      bobVideoTrackA._setMediaStreamTrack(bobVideoTrackB.mediaStreamTrack);
+      await waitForSometime(1000);
+
+      console.log('Checking media flow after track replace');
+      await assertMediaFlow(aliceRoom, true, `Unexpected media flow after replacing track: ${aliceRoom.sid}`);
     });
   });
 });
