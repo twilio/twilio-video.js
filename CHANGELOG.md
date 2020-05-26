@@ -6,9 +6,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 New Features
 ------------
 
-- twilio-video.js now retries connection attempts when the signaling server is busy. The client can attempt
-  one or more connection attempts wirh a server specified backoff period. If the client exceeds all attempts
-  the the CancelablePromise is rejected with a [SignalingServerBusyError](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/SignalingServerBusyError.html).
+- twilio-video.js now retries connection attempts when the signaling server is busy. The client may attempt
+  one or more connection attempts with a server specified backoff period. If the client exceeds all attempts
+  the CancelablePromise is rejected with a [SignalingServerBusyError](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/SignalingServerBusyError.html).
 - The status of the signaling connection can now be monitored by passing an [EventListener](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListener__anchor)
   in ConnectOptions as shown in the code snippet below. Each event is documented [here](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListenerEvent). (JSDK-2777)
   ```js
