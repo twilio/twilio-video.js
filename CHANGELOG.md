@@ -21,7 +21,7 @@ New Features
    // of the connection to Twilio's signaling server.
   sdkEvents.on('event', event => {
     const { level, name } = event;
-    if (name === 'wait') {
+    if (name === 'waiting') {
       assert.equal(level, 'warning');
       console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
     } else if (name === 'connecting') {
