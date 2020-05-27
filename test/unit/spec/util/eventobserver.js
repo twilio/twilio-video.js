@@ -19,7 +19,7 @@ describe('EventObserver', () => {
       ['connecting', 'info'],
       ['early', 'info'],
       ['open', 'info'],
-      ['wait', 'warning']
+      ['waiting', 'warning']
     ].forEach(([name, level, payload]) => {
       context(`with .name "${name}"${payload
         ? ` and .payload ${JSON.stringify(payload)}`

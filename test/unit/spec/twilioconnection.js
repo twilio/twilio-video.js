@@ -100,7 +100,7 @@ describe('TwilioConnection', function() {
   });
 
   describe('#close', () => {
-    ['closed', 'connecting', 'early', 'open', ['wait', true], ['wait', false]].forEach(args => {
+    ['closed', 'connecting', 'early', 'open', ['waiting', true], ['waiting', false]].forEach(args => {
       const [state, keepAlive] = Array.isArray(args) ? args : [args];
 
       const expectedEvents = {
@@ -124,15 +124,15 @@ describe('TwilioConnection', function() {
           { name: 'open' },
           { name: 'closed', payload: { reason: 'local' } }
         ],
-        wait: [
+        waiting: [
           { name: 'early' },
           { name: 'connecting' },
-          { name: 'wait' },
+          { name: 'waiting' },
           { name: 'closed', payload: { reason: 'local' } }
         ]
       }[state];
 
-      context(`when the TwilioConnection's .state is "${state}"${state === 'wait' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
+      context(`when the TwilioConnection's .state is "${state}"${state === 'waiting' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
         let closeEventReason;
         let eventObserver;
         let twilioConnection;
@@ -153,7 +153,7 @@ describe('TwilioConnection', function() {
               negotiatedTimeout: 100,
               type: 'welcome'
             });
-          } else if (state === 'wait') {
+          } else if (state === 'waiting') {
             twilioConnection._ws.receiveMessage({
               keepAlive,
               retryAfter: 100,
@@ -188,7 +188,7 @@ describe('TwilioConnection', function() {
           });
         }
 
-        if (state === 'closed' || (state === 'wait' && !keepAlive)) {
+        if (state === 'closed' || (state === 'waiting' && !keepAlive)) {
           it('should not call .close on the underlying WebSocket', () => {
             sinon.assert.callCount(twilioConnection._ws.close, 0);
           });
@@ -214,9 +214,9 @@ describe('TwilioConnection', function() {
   });
 
   describe('#sendMessage', () => {
-    ['closed', 'connecting', 'early', 'open', ['wait', true], ['wait', false]].forEach(args => {
+    ['closed', 'connecting', 'early', 'open', ['waiting', true], ['waiting', false]].forEach(args => {
       const [state, keepAlive] = Array.isArray(args) ? args : [args];
-      context(`when the TwilioConnection's .state is "${state}"${state === 'wait' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
+      context(`when the TwilioConnection's .state is "${state}"${state === 'waiting' ? ` with keepAlive = ${keepAlive}` : ''}`, () => {
         const body = { foo: 'bar' };
         let twilioConnection;
 
@@ -237,7 +237,7 @@ describe('TwilioConnection', function() {
               negotiatedTimeout: 100,
               type: 'welcome'
             });
-          } else if (state === 'wait') {
+          } else if (state === 'waiting') {
             twilioConnection._ws.receiveMessage({
               keepAlive,
               retryAfter: 100,
@@ -257,7 +257,7 @@ describe('TwilioConnection', function() {
           connecting: 'should enqueue the given "msg" body',
           early: 'should enqueue the given "msg" body',
           open: 'should send a "msg" with the given body',
-          wait: 'should enqueue the given "msg" body'
+          waiting: 'should enqueue the given "msg" body'
         }[state], {
           closed: () => {
             assert.equal(twilioConnection._messageQueue.length, 0);
@@ -275,7 +275,7 @@ describe('TwilioConnection', function() {
             assert.equal(twilioConnection._messageQueue.length, 0);
             sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify({ body, type: 'msg' }));
           },
-          wait: () => {
+          waiting: () => {
             assert.deepEqual(twilioConnection._messageQueue[0], { body, type: 'msg' });
             sinon.assert.callCount(twilioConnection._ws.send, 0);
           }
@@ -545,13 +545,13 @@ describe('TwilioConnection', function() {
             ], ([keepAlive, retryAfter, cookie]) => {
               let changedState;
               let closeReason;
-              let waitArgs;
+              let waitingArgs;
               let wsCloseCallCount;
               let setTimeoutSpy;
 
               beforeEach(async () => {
-                twilioConnection.once('wait', (...args) => {
-                  waitArgs = args;
+                twilioConnection.once('waiting', (...args) => {
+                  waitingArgs = args;
                   wsCloseCallCount = twilioConnection._ws.close.callCount;
                 });
                 const stateChanged = new Promise(resolve => {
@@ -594,8 +594,8 @@ describe('TwilioConnection', function() {
                   { name: 'closed', payload: { reason: 'busy' } }
                 ]);
               } else {
-                it('should set the TwilioConnection\'s .state to "wait"', () => {
-                  assert.deepEqual(waitArgs, [keepAlive, retryAfter]);
+                it('should set the TwilioConnection\'s .state to "waiting"', () => {
+                  assert.deepEqual(waitingArgs, [keepAlive, retryAfter]);
                 });
 
                 it('should call setTimeout with the retryAfter value', () => {
@@ -609,7 +609,7 @@ describe('TwilioConnection', function() {
                 testEventObserverEvents(() => eventObserver, [
                   { name: 'early' },
                   { name: 'connecting' },
-                  { name: 'wait' }
+                  { name: 'waiting' }
                 ]);
 
                 if (keepAlive) {
@@ -643,7 +643,7 @@ describe('TwilioConnection', function() {
                     testEventObserverEvents(() => eventObserver, [
                       { name: 'early' },
                       { name: 'connecting' },
-                      { name: 'wait' },
+                      { name: 'waiting' },
                       { name: 'connecting' }
                     ]);
                   });
@@ -684,7 +684,7 @@ describe('TwilioConnection', function() {
                     testEventObserverEvents(() => eventObserver, [
                       { name: 'early' },
                       { name: 'connecting' },
-                      { name: 'wait' },
+                      { name: 'waiting' },
                       { name: 'early' },
                       { name: 'connecting' }
                     ]);
