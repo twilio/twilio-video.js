@@ -2,17 +2,22 @@
 'use strict';
 
 const assert = require('assert');
+const defaults = require('../../lib/defaults');
+const getToken = require('../../lib/token');
 
 const createLocalTracks = require('../../../lib/createlocaltrack');
 const {
+  participantsConnected,
   setupAliceAndBob,
   smallVideoConstraints,
+  tracksSubscribed,
   validateMediaFlow,
   waitFor,
   waitForSometime
 } = require('../../lib/util');
 
 const {
+  connect,
   createLocalVideoTrack,
 } = require('../../../lib');
 
@@ -29,7 +34,7 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
   assert.equal(mediaFlowDetected, mediaFlowExpected, errorMessage);
 }
 
-['audio', 'video'].forEach(kind => {
+['audio'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
 
@@ -100,7 +105,7 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
     });
   });
 
-  describe('replaceTrack behavior', function() {
+  describe('replaceTrack', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000); // this may take long.
 
@@ -108,18 +113,22 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
     let aliceRoom;
     let bobRoom;
     let bobLocal;
+    let roomName;
+    let charlieRoom;
     beforeEach(async () => {
-      ({ roomSid, aliceRoom, bobLocal, bobRoom } = await setupAliceAndBob({
+      aliceRoom = null;
+      bobRoom = null;
+      charlieRoom = null;
+      ({ roomName, roomSid, aliceRoom, bobLocal, bobRoom } = await setupAliceAndBob({
         aliceOptions: { tracks: [] },
         bobOptions: { tracks: [] },
       }));
     });
     afterEach(() => {
-      [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+      [aliceRoom, bobRoom, charlieRoom].forEach(room => room && room.disconnect());
     });
 
-    it('media flow restarts when track is replaced', async () => {
-      console.log('Checking media flow before publish');
+    it('media flows after track is replaced', async () => {
       await assertMediaFlow(aliceRoom, false, `Unexpected media flow before publishing track: ${aliceRoom.sid}`);
       const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
 
@@ -127,21 +136,54 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
       await waitForSometime(5000);
 
-      console.log('Checking media flow after publish');
       await assertMediaFlow(aliceRoom, true, `Unexpected media flow after publishing track: ${aliceRoom.sid}`);
 
+      // stop track and its clones.
+      bobVideoTrackA._trackSender.track.stop();
       bobVideoTrackA._trackSender._clones.forEach(clone => clone.track.stop());
 
       await waitForSometime(1000);
-      console.log('Checking media flow after stop');
       await assertMediaFlow(aliceRoom, false, `Unexpected media flow after stopping track: ${aliceRoom.sid}`);
 
       const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
       bobVideoTrackA._setMediaStreamTrack(bobVideoTrackB.mediaStreamTrack);
       await waitForSometime(1000);
 
-      console.log('Checking media flow after track replace');
       await assertMediaFlow(aliceRoom, true, `Unexpected media flow after replacing track: ${aliceRoom.sid}`);
+    });
+
+    // NOTE: replaceTrack causes the mediaStream track to get replaced. it does not require re-negotiation for existing PeerConnections.
+    //  but for new PCs (applicable to new participants on P2P) is the offer/answer would have id for new mediaStream which does not
+    //  match the id sent in signaling messages. This test ensures that we take care of this case.
+    it('new participant can subscribe to track after have been replaced', async () => {
+      const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+
+      // Bob publishes video track
+      await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
+
+      // wait for alice to see bobs track
+      const bobRemoteInAliceRoom = aliceRoom.participants.get(bobRoom.localParticipant.sid);
+      await waitFor(tracksSubscribed(bobRemoteInAliceRoom, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
+
+      // bobs track gets ended.
+      // bobVideoTrackA._trackSender._clones.forEach(clone => clone.track.stop());
+
+      // // bob replaces track
+      const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
+      console.log(`bob replaces the track: mediaStreamTrack track old: ${bobVideoTrackA.mediaStreamTrack.id}, new: ${bobVideoTrackB.mediaStreamTrack.id}`);
+      bobVideoTrackA._setMediaStreamTrack(bobVideoTrackB.mediaStreamTrack);
+
+      // Charlie joins a room after sometime.
+      await waitForSometime(5000);
+      const charlieRoom = await connect(getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
+
+      // wait for Charlie to see Bob an Alice
+      await waitFor(participantsConnected(charlieRoom, 2), `Charlie to see Alice and Bob connected: ${roomSid}`);
+
+      const bobRemoteInCharlieRoom = charlieRoom.participants.get(bobRoom.localParticipant.sid);
+      await waitFor(tracksSubscribed(bobRemoteInCharlieRoom, 1), `wait for charlie to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
+
+      await assertMediaFlow(charlieRoom, true, `Unexpected media flow after replacing track: ${charlieRoom.sid}`);
     });
   });
 });

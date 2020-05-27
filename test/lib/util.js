@@ -432,7 +432,7 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
 
-  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid };
+  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
 }
 
 async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions, participantNames }) {

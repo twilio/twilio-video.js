@@ -33,7 +33,7 @@ describe('MediaTrackSender', () => {
 
   describe('constructor', () => {
     before(() => {
-      sender = new MediaTrackSender('bar', mediaStreamTrack);
+      sender = new MediaTrackSender(mediaStreamTrack);
     });
 
     it('should return a MediaTrackSender', () => {
@@ -65,7 +65,7 @@ describe('MediaTrackSender', () => {
 
   describe('clone', () => {
     it('returns a new MediaTrackSender containing a clone of the underlying MediaStreamTrack', () => {
-      sender = new MediaTrackSender('bar', mediaStreamTrack);
+      sender = new MediaTrackSender(mediaStreamTrack);
       const clonedSender = sender.clone();
       assert.notEqual(clonedSender, sender);
       assert.notEqual(clonedSender.track, sender.track);
@@ -76,7 +76,7 @@ describe('MediaTrackSender', () => {
   ['addSender', 'removeSender'].forEach(method => {
     describe(`#${method}`, () => {
       before(() => {
-        sender = new MediaTrackSender('bar', mediaStreamTrack);
+        sender = new MediaTrackSender(mediaStreamTrack);
       });
 
       describe('called with an RTCRtpSender that has', () => {
