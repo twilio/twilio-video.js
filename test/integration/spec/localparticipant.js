@@ -9,8 +9,7 @@ const {
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
-  LocalDataTrack,
-  LocalVideoTrack
+  LocalDataTrack
 } = require('../../../lib');
 
 const LocalTrackPublication = require('../../../lib/media/track/localtrackpublication');
@@ -42,6 +41,7 @@ const {
   tracksUnpublished,
   trackStarted,
   waitFor,
+  waitForNot,
   waitForSometime,
   waitForTracks
 } = require('../../lib/util');
@@ -51,6 +51,44 @@ describe('LocalParticipant', function() {
   this.timeout(60000);
 
   (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"networkQualityLevelChanged" event', () => {
+
+    function inRange(num, low, high) {
+      return typeof num === 'number' && low <= num && num <= high;
+    }
+
+    function verifyNetworkQualityStats(stats, nqLevel, configLevel) {
+      switch (configLevel) {
+        case 1:
+          assert.equal(stats, null);
+          break;
+        case 2:
+          if (nqLevel === 0) {
+            assert.equal(stats, null);
+            assert.equal(stats, null);
+          } else {
+            assert.notEqual(stats.audio, null);
+            assert.notEqual(stats.video, null);
+            assert.equal(stats.audio.sendStats, null);
+            assert.equal(stats.video.sendStats, null);
+            assert.equal(stats.audio.recvStats, null);
+            assert.equal(stats.video.recvStats, null);
+          }
+          break;
+        case 3:
+          if (nqLevel === 0) {
+            assert.equal(stats, null);
+            assert.equal(stats, null);
+          } else {
+            assert.notEqual(stats.audio, null);
+            assert.notEqual(stats.video, null);
+            assert.notEqual(stats.audio.sendStats, null);
+            assert.notEqual(stats.video.sendStats, null);
+            assert.notEqual(stats.audio.recvStats, null);
+            assert.notEqual(stats.video.recvStats, null);
+          }
+      }
+    }
+
     combinationContext([
       [
         [null, 1, 2, 3],
@@ -71,19 +109,21 @@ describe('LocalParticipant', function() {
 
       const nqConfig = (local || remote) ? { local, remote } : true;
 
-      function inRange(num, low, high) {
-        return typeof num === 'number' && low <= num && num <= high;
-      }
-
       async function setup() {
         const thisTracks = await createLocalTracks({ audio: true, fake: true });
         thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
-        const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged',
-          (level, stats) => resolve([level, stats])));
+        const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
+          assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
+          assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
+          resolve([level, stats]);
+        }));
         const remoteNqLevelPromise = inRange(nqConfig.remote, 1, 3)
           ? new Promise(resolve => thisRoom.on('participantConnected',
-            participant => participant.once('networkQualityLevelChanged', (level, stats) => resolve([level, stats]))))
-          : Promise.resolve([]);
+            participant => participant.once('networkQualityLevelChanged', (level, stats) => {
+              assert.equal(level, participant.networkQualityLevel);
+              assert.deepStrictEqual(stats, participant.networkQualityStats);
+              resolve([level, stats]);
+            }))) : Promise.resolve([]);
         const thatTracks = await createLocalTracks({ audio: true, fake: true });
         thatRoom = await connect(getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
         [localNqLevel, localNqStats] = await localNqLevelPromise;
@@ -95,54 +135,13 @@ describe('LocalParticipant', function() {
       });
 
       it('is raised whenever network quality level for the LocalParticipant changes', () => {
-        assert.equal(localNqLevel, thisRoom.localParticipant.networkQualityLevel);
-        switch (nqConfig.local) {
-          case 1:
-            assert.equal(localNqStats, null);
-            break;
-          case 2:
-            assert.notEqual(localNqStats.audio, null);
-            assert.notEqual(localNqStats.video, null);
-            assert.equal(localNqStats.audio.sendStats, null);
-            assert.equal(localNqStats.video.sendStats, null);
-            assert.equal(localNqStats.audio.recvStats, null);
-            assert.equal(localNqStats.video.recvStats, null);
-            break;
-          case 3:
-            assert.notEqual(localNqStats.audio, null);
-            assert.notEqual(localNqStats.video, null);
-            assert.notEqual(localNqStats.audio.sendStats, null);
-            assert.notEqual(localNqStats.video.sendStats, null);
-            assert.notEqual(localNqStats.audio.recvStats, null);
-            assert.notEqual(localNqStats.video.recvStats, null);
-        }
-        assert.deepStrictEqual(localNqStats, thisRoom.localParticipant.networkQualityStats);
+        assert.notEqual(localNqLevel, 0);
+        verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local);
       });
 
       if (inRange(nqConfig.remote, 1, 3)) {
         it('is raised whenever network quality level for the RemoteParticipant changes', () => {
-          assert.equal(remoteNqLevel, Array.from(thisRoom.participants.values())[0].networkQualityLevel);
-          switch (nqConfig.remote) {
-            case 1:
-              assert.equal(remoteNqStats, null);
-              break;
-            case 2:
-              assert.notEqual(remoteNqStats.audio, null);
-              assert.notEqual(remoteNqStats.video, null);
-              assert.equal(remoteNqStats.audio.sendStats, null);
-              assert.equal(remoteNqStats.video.sendStats, null);
-              assert.equal(remoteNqStats.audio.recvStats, null);
-              assert.equal(remoteNqStats.video.recvStats, null);
-              break;
-            case 3:
-              assert.notEqual(remoteNqStats.audio, null);
-              assert.notEqual(remoteNqStats.video, null);
-              assert.notEqual(remoteNqStats.audio.sendStats, null);
-              assert.notEqual(remoteNqStats.video.sendStats, null);
-              assert.notEqual(remoteNqStats.audio.recvStats, null);
-              assert.notEqual(remoteNqStats.video.recvStats, null);
-          }
-          assert.deepStrictEqual(remoteNqStats, Array.from(thisRoom.participants.values())[0].networkQualityStats);
+          verifyNetworkQualityStats(remoteNqStats, remoteNqLevel, nqConfig.remote);
         });
       }
 
@@ -154,7 +153,83 @@ describe('LocalParticipant', function() {
           thatRoom.disconnect();
         }
       });
+    });
 
+    describe('setNetworkQualityConfiguration', () => {
+      let thisRoom;
+      let thatRoom;
+
+      beforeEach(() => {
+        thisRoom = null;
+        thatRoom = null;
+      });
+
+      afterEach(() => {
+        [thisRoom, thatRoom].forEach(room => room && room.disconnect());
+      });
+
+      it('when networkConfiguration is false does not fire networkQualityLevelChanged', async () => {
+        const nqConfig = false;
+        const options = Object.assign({ name: randomName() }, defaults);
+        const thisTracks = await createLocalTracks({ audio: true, fake: true });
+        thisRoom = await connect(getToken('Alice_Old'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
+        const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
+          assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
+          assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
+          resolve([level, stats]);
+        }));
+
+        const thatTracks = await createLocalTracks({ audio: true, fake: true });
+        thatRoom = await connect(getToken('Bob_Old'), Object.assign({ tracks: thatTracks }, options));
+        await waitForNot(localNqLevelPromise, 'networkQualityLevelChanged was not expected');
+      });
+
+      [
+        {
+          name: 'case 1',
+          initialConfig: { local: 1, remote: 0 },
+          updatedConfig: { local: 3, remote: 3 }
+        },
+        {
+          name: 'case 2',
+          initialConfig: { local: 3, remote: 3 },
+          updatedConfig: { local: 1, remote: 0 }
+        }
+      ].forEach(testCase => {
+        it('setNetworkQualityConfiguration can update the configuration after connect: (@unstable: JSDK-2827)' + testCase.name, async () => {
+          let nqConfig = testCase.initialConfig;
+          const options = Object.assign({ name: randomName() }, defaults);
+          const thisTracks = await createLocalTracks({ audio: true, fake: true });
+          thisRoom = await connect(getToken('Alice'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
+
+          const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
+            assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
+            assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
+            resolve([level, stats]);
+          }));
+
+          const thatTracks = await createLocalTracks({ audio: true, fake: true });
+          thatRoom = await connect(getToken('Bob'), Object.assign({ tracks: thatTracks }, options));
+
+          let [localNqLevel, localNqStats] = await waitFor(localNqLevelPromise, 'networkQualityLevelChanged is now expected');
+          verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local);
+
+          nqConfig = testCase.updatedConfig;
+          thisRoom.localParticipant.setNetworkQualityConfiguration(nqConfig);
+
+          const updatedNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
+            assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
+            assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
+            resolve([level, stats]);
+          }));
+
+          // we expect that when next networkQualityLevelChanged fires, it will have new stats.
+          // but the problem is we get networkQualityLevelChanged only if networkLevel change. And we have no way
+          // to force networkQualityLevelChanged. (JSDK-2827)
+          [localNqLevel, localNqStats] = await waitFor(updatedNqLevelPromise, 'updated networkQualityLevelChanged is now expected');
+          verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local);
+        });
+      });
     });
   });
 
@@ -347,7 +422,7 @@ describe('LocalParticipant', function() {
       [
         [true],
         // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2802)' : ''
       ]
     ], ([isEnabled, kind, withName, priority, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -643,7 +718,7 @@ describe('LocalParticipant', function() {
       [
         [true],
         // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable)' : ''
+        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2803)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments
@@ -1288,18 +1363,19 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#publishTrack and #unpublishTrack, when called in rapid succession', () => {
+  describe('JSDK-2769 - #publishTrack and #unpublishTrack, when called in rapid succession', () => {
     let error;
     let publication;
 
     before(async () => {
       const audioTrack = await createLocalAudioTrack();
       const name = randomName();
+      const tracks = [audioTrack, await createLocalVideoTrack()];
       let videoTrack;
 
-      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map(token => connect(token, Object.assign({
+      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map((token, i) => connect(token, Object.assign({
         name,
-        tracks: [audioTrack]
+        tracks: i === 0 ? [audioTrack] : tracks
       }, defaults))));
 
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
@@ -1307,9 +1383,10 @@ describe('LocalParticipant', function() {
       try {
         for (let i = 0; i < 10; i++) {
           // eslint-disable-next-line no-await-in-loop
-          videoTrack = videoTrack ? new LocalVideoTrack(videoTrack.mediaStreamTrack.clone()) : await createLocalVideoTrack();
+          videoTrack = await createLocalVideoTrack();
           // eslint-disable-next-line no-await-in-loop
           publication = await rooms[0].localParticipant.publishTrack(videoTrack);
+          videoTrack.stop();
           rooms[0].localParticipant.unpublishTrack(videoTrack);
         }
       } catch (e) {

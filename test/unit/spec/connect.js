@@ -22,7 +22,6 @@ const Signaling = require('../../../lib/signaling');
 const RoomSignaling = require('../../../lib/signaling/room');
 
 const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemediastream');
-const MockIceServerSource = require('../../lib/mockiceserversource');
 
 const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmLTE0NzUxOTAzNDgiLCJncmFudHMiOnsiaWRlbnRpdHkiOiJhc2QiLCJydGMiOnsiY29uZmlndXJhdGlvbl9wcm9maWxlX3NpZCI6IlZTM2Y3NWUwZjE0ZTdjOGIyMDkzOGZjNTA5MmU4MmYyM2EifX0sImlhdCI6MTQ3NTE5MDM0OCwiZXhwIjoxNDc1MTkzOTQ4LCJpc3MiOiJTSzY3NGIxODg2OWYxMWZhY2M2NjVhNjVmZDRkZGYyZjRmIiwic3ViIjoiQUM5NmNjYzkwNDc1M2IzMzY0ZjI0MjExZThkOTc0NmE5MyJ9.N0UuZSblqb7MknNuiRkiEVVEdmztm5AdYIhQp7zU2PI';
 
@@ -63,59 +62,70 @@ describe('connect', () => {
     });
   });
 
-  describe('called with ConnectOptions#dscpTagging', () => {
-    let signaling;
+  [
+    {
+      name: 'abortOnIceServersTimeout',
+      value: true
+    },
+    {
+      name: 'dscpTagging',
+      newName: 'enableDscp',
+      value: true
+    },
+    {
+      name: 'iceServersTimeout',
+      value: 2000
+    }
+  ].forEach(({ name, newName, value }) => {
+    describe(`called with the deprecated ConnectOptions flag "${name}"`, () => {
+      let signaling;
 
-    before(() => {
-      const mockSignaling = new Signaling();
-      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
-      signaling = sinon.spy(() => mockSignaling);
-    });
-
-    context('for the first time', () => {
       before(() => {
-        connect(token, {
-          dscpTagging: true,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
+        const mockSignaling = new Signaling();
+        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+        signaling = sinon.spy(() => mockSignaling);
+      });
+
+      ['first', 'second'].forEach(callCount => {
+        context(`for the ${callCount} time`, () => {
+          before(() => {
+            connect(token, {
+              [name]: value,
+              iceServers: [],
+              signaling,
+              Log: function() {
+                return sinon.createStubInstance(Log);
+              }
+            });
+          });
+
+          it(`should remove "${name}" from ConnectOptions`, () => {
+            const options = signaling.args[0][1];
+            assert(!(name in options));
+          });
+
+          if (newName) {
+            it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
+              const options = signaling.args[0][1];
+              assert.equal(options[newName], value);
+            });
+          }
+
+          if (callCount === 'first') {
+            it('should call .warn on the underlying Log with the deprecation warning message', () => {
+              const options = signaling.args[0][1];
+              const warning = newName
+                ? `The ConnectOptions flag "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
+                : `The ConnectOptions flag "${name}" is no longer applicable and will be ignored.`;
+              sinon.assert.calledWith(options.log.warn, warning);
+            });
+          } else {
+            it('should not call .warn on the underlying Log', () => {
+              const options = signaling.args[1][1];
+              sinon.assert.notCalled(options.log.warn);
+            });
           }
         });
-      });
-
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[0][1];
-        assert.equal(options.enableDscp, true);
-      });
-
-      it('should call .warn on the underlying Log with the deprecation warning message', () => {
-        const options = signaling.args[0][1];
-        sinon.assert.calledWith(options.log.warn, 'The ConnectOptions flag "dscpTagging" is '
-          + 'deprecated and scheduled for removal. Please use "enableDscp" instead.');
-      });
-    });
-
-    context('for the second time', () => {
-      before(() => {
-        connect(token, {
-          dscpTagging: false,
-          iceServers: [],
-          signaling,
-          Log: function() {
-            return sinon.createStubInstance(Log);
-          }
-        });
-      });
-
-      it('should set ConnectOptions#enableDscp', () => {
-        const options = signaling.args[1][1];
-        assert.equal(options.enableDscp, false);
-      });
-
-      it('should not call .warn on the underlying Log', () => {
-        const options = signaling.args[1][1];
-        sinon.assert.callCount(options.log.warn, 0);
       });
     });
   });
@@ -303,23 +313,6 @@ describe('connect', () => {
           localTracks.forEach(track => assert(track.stop.calledOnce));
         }
       });
-
-      it('never calls .start() on the IceServerSource', async () => {
-        // eslint-disable-next-line require-await
-        async function createLocalTracks() {
-          return [];
-        }
-        const iceServerSource = new MockIceServerSource();
-        const promise = connect(token, { createLocalTracks, iceServers: iceServerSource });
-        promise.cancel();
-        try {
-          await promise;
-          throw new Error('Unexpected resolution');
-        } catch (error) {
-          // Do nothing.
-        }
-        assert(!iceServerSource.start.calledOnce);
-      });
     });
 
     describe('when it succeeds', () => {
@@ -350,31 +343,6 @@ describe('connect', () => {
         });
 
         assert.equal(shouldStopLocalTracks, true);
-      });
-    });
-
-    describe('when it fails', () => {
-      it('calls .stop() on the IceServerSource', async () => {
-        const mockSignaling = new Signaling();
-        mockSignaling.connect = () => Promise.resolve(() => { throw new Error(); });
-        function signaling() {
-          return mockSignaling;
-        }
-
-        const iceServerSource = new MockIceServerSource();
-
-        try {
-          await connect(token, {
-            iceServers: iceServerSource,
-            signaling,
-            tracks: []
-          });
-          throw new Error('Unexpected resolution');
-        } catch (error) {
-          // Do nothing.
-        }
-
-        assert(iceServerSource.stop.calledOnce);
       });
     });
   });

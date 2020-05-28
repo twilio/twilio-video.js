@@ -7,7 +7,6 @@ if (typeof window === 'undefined') {
 require('./spec/connect');
 require('./spec/createlocaltrack');
 require('./spec/createlocaltracks');
-require('./spec/ecs');
 require('./spec/encodingparameters');
 require('./spec/localparticipant');
 require('./spec/networkqualityconfiguration');
@@ -22,9 +21,6 @@ require('./spec/data/transceiver');
 require('./spec/data/sender');
 require('./spec/data/receiver');
 require('./spec/data/transport');
-
-require('./spec/iceserversource/constant');
-require('./spec/iceserversource/nts');
 
 require('./spec/media/track/es5/localdatatrack');
 require('./spec/media/track/mediatrack');
@@ -61,6 +57,7 @@ require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');
+require('./spec/util/eventobserver');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/sdp');

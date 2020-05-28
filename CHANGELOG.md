@@ -1,5 +1,75 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.5.0 (May 27, 2020)
+====================
+
+New Features
+------------
+
+- The client now retries connection attempts when `connect()` is called and the signaling server is busy. The client may attempt
+  one or more connection attempts with a server specified backoff period. If the client exceeds all attempts
+  the CancelablePromise is rejected with a [SignalingServerBusyError](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/SignalingServerBusyError.html).
+  The status of the signaling connection can now be monitored by passing an [EventListener](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListener__anchor)
+  in ConnectOptions as shown in the code snippet below. Each event is documented [here](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListenerEvent). (JSDK-2777)
+
+  ```js
+  const { EventEmitter } = require('events');
+  const { connect } = require('twilio-video');
+
+  const sdkEvents = new EventEmitter();
+
+  // Listen to events on the EventListener in order to monitor the status
+   // of the connection to Twilio's signaling server.
+  sdkEvents.on('event', event => {
+    const { level, name } = event;
+    if (name === 'waiting') {
+      assert.equal(level, 'warning');
+      console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
+    } else if (name === 'connecting') {
+      assert.equal(level, 'info');
+      console.log('Connecting to Twilio\'s signaling server.');
+    } else if (name === 'open') {
+      assert.equal(level, 'info');
+      console.log('Connected to Twilio\'s signaling server, joining the Room now.');
+    } else if (name === 'closed') {
+      if (level === 'error') {
+        const { payload: { reason } } = event;
+        console.error('Connection to Twilio\'s signaling server abruptly closed:', reason);
+      } else {
+        console.log('Connection to Twilio\'s signaling server closed.');
+      }
+    }
+  });
+
+  connect('token', { eventListener: sdkEvents }).then(room => {
+    console.log('Joined the Room:', room.name);
+  }, error => {
+    if (error.code === 53006) {
+      console.error('Twilio\'s signaling server cannot accept connection requests at this time.');
+    }
+  });
+  ```
+
+- Reduced connection times by acquiring RTCIceServers during the initial handshake with Twilio's
+  signaling server rather than sending a HTTP POST request to a different endpoint. Because of this,
+  the ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` are no longer
+  applicable, and they will be ignored. (JSDK-2676)
+
+- Reduced connection times by removing a round trip during the initial handshake with Twilio's
+  signaling server. (JSDK-2777)
+
+- The CancelablePromise returned by `connect()` will now be rejected with a [SignalingConnectionError](https://www.twilio.com/docs/api/errors/53000)
+  if the underlying WebSocket connection to Twilio's signaling server is not open in 15 seconds. (JSDK-2684)
+
+Bug Fixes
+---------
+
+- Fixed a bug where `isSupported` was throwing an exception in a server-side rendering application. (JSDK-2818)
+- Fixed a bug where sometimes the publishing of a LocalTrack very quickly after another LocalTrack was unpublished
+  never completed. (JSDK-2769)
+- Fixed a bug in `Room.getStats()` where it did not return correct values for `packetsLost`, `roundTripTime` for
+  LocalTracks. (JSDK-2755, JSDK-2780, JSDK-2787)
+
 2.4.0 (May 4, 2020)
 ===================
 

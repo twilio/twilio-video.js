@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 'use strict';
 
@@ -11,7 +12,6 @@ const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
 const second = 1000;
-const minute = 60 * second;
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -466,16 +466,24 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
   return [options.name, thisRoom, thoseRooms, peerConnections];
 }
 
+let random = 1;
+async function verifyOnline() {
+  const result = await fetch('http://www.google.com?' + random, { mode: 'no-cors', cache: 'no-store' });
+  if (!result) {
+    throw new Error('fetch returned undefined');
+  }
+}
+
 /**
  * Returns a promise that resolves after being connected/disconnected from network.
  * @param {('online'|'offline')} onlineOrOffline - if online waits for connected state
  * @returns {Promise<void>}
  */
 function waitToGo(onlineOrOffline) {
-  const wantonline = onlineOrOffline === 'online';
+  const wantOnline = onlineOrOffline === 'online';
   // eslint-disable-next-line no-console
   return new Promise(resolve => {
-    if (window.navigator.onLine !== wantonline) {
+    if (window.navigator.onLine !== wantOnline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
     } else {
       resolve();
@@ -489,7 +497,8 @@ function waitToGo(onlineOrOffline) {
  */
 async function waitToGoOnline() {
   try {
-    await waitFor(waitToGo('online'), 'wait to go online', 1 * minute);
+    await waitFor(waitToGo('online'), 'wait to go online', 10 * second);
+    await waitFor(verifyOnline(), 'verified online');
   } catch (err) {
     // eslint-disable-next-line no-console
     console.log('waitToGoOnline failed. but since its known to be unstable on ' +
@@ -503,6 +512,7 @@ async function waitToGoOnline() {
  */
 async function waitToGoOffline() {
   await waitFor(waitToGo('offline'), 'wait to go offline');
+  await waitForNot(verifyOnline(), 'verifyOffline', 2 * second);
 }
 
 /**

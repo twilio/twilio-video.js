@@ -10,10 +10,11 @@ const { RoomCompletedError, SignalingConnectionError } = require('../../../../..
 const TwilioError = require('../../../../../lib/util/twilioerror');
 const { defer } = require('../../../../../lib/util');
 
-const { combinations } = require('../../../../lib/util');
+const { combinations, waitForSometime } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
   combinations([
+    [true, false], // iceServers
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
     [true, false], // automaticSubscription
@@ -77,8 +78,9 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+  ]).forEach(([iceServers, networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
     describe(`constructor, called with
+      .iceServers ${iceServers ? '' : 'not '}provided
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
       .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
@@ -87,18 +89,21 @@ describe('TwilioConnectionTransport', () => {
       .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
-      beforeEach(() => {
-        test = makeTest(Object.assign(bandwidthProfile ? { bandwidthProfile } : {}, {
-          iceServerSourceStatus: [
-            { foo: 'bar' }
-          ],
+      beforeEach(async () => {
+        test = makeTest(Object.assign(iceServers ? {
+          iceServers: [{ urls: 'foo' }]
+        } : {}, bandwidthProfile ? {
+          bandwidthProfile
+        } : {}, {
           automaticSubscription,
           networkQuality,
           dominantSpeaker,
           trackPriority,
           trackSwitchOff
         }));
-        test.open();
+        if (iceServers) {
+          await waitForSometime(1);
+        }
       });
 
       it('should set the .state to "connecting"', () => {
@@ -109,67 +114,102 @@ describe('TwilioConnectionTransport', () => {
         assert.equal(0, test.transport._sessionTimeoutMS);
       });
 
-      it(`should call .sendMessage on the underlying TwilioConnection with a Connect RSP message that
-        ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
-        ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
-        the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
-        ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
-        ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
-        ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
-        const message = test.twilioConnection.sendMessage.args[0][0];
-        assert.equal(typeof message.format, 'string');
-        assert.deepEqual(message.ice_servers, test.iceServerSourceStatus);
-        assert.equal(message.name, test.name);
-
-        if (networkQuality) {
-          assert.deepEqual(message.media_signaling.network_quality.transports, [{ type: 'data-channel' }]);
-        } else {
-          assert(!('network_quality' in message.media_signaling));
-        }
-
-        if (dominantSpeaker) {
-          assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
-        } else {
-          assert(!('active_speaker' in message.media_signaling));
-        }
-
-        if (trackPriority) {
-          assert.deepEqual(message.media_signaling.track_priority.transports, [{ type: 'data-channel' }]);
-        } else {
-          assert(!('track_priority' in message.media_signaling));
-        }
-
-        if (trackSwitchOff) {
-          assert.deepEqual(message.media_signaling.track_switch_off.transports, [{ type: 'data-channel' }]);
-        } else {
-          assert(!('track_switch_off' in message.media_signaling));
-        }
-
-        assert.deepEqual(message.subscribe, {
-          rules: [{
-            type: automaticSubscription ? 'include' : 'exclude',
-            all: true
-          }],
-          revision: 1
+      const testConnect = (isFirstRSPMessage, iceServersStatus) => {
+        it('should call onIced with the given RTCIceServers', () => {
+          sinon.assert.calledWith(test.onIced, [{ urls: 'foo' }]);
         });
 
-        if (bandwidthProfile) {
-          assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
-        } else {
-          assert(!('bandwidth_profile' in message));
-        }
+        const action = isFirstRSPMessage
+          ? 'set TwilioConnectionOptions.helloBody to'
+          : 'call .sendMessage on the underlying TwilioConnection with';
 
-        assert.equal(message.participant, test.localParticipantState);
-        assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
-        assert.equal(message.token, test.accessToken);
-        assert.equal(message.type, 'connect');
-        assert.equal(message.version, 2);
-        assert.equal(message.publisher.name, `${name}.js`);
-        assert.equal(message.publisher.sdk_version, version);
-        assert.equal(typeof message.publisher.user_agent, 'string');
-      });
+        it(`should ${action} a Connect RSP message that
+          ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
+          ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
+          the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
+          ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
+          ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
+          ${bandwidthProfile ? 'contains' : 'does not contain'} the "bandwidth_profile" payload`, () => {
+          const message = isFirstRSPMessage
+            ? test.twilioConnection.helloBody
+            : test.twilioConnection.sendMessage.args[0][0];
+
+          assert.equal(typeof message.format, 'string');
+          assert.equal(message.ice_servers, iceServersStatus);
+          assert.equal(message.name, test.name);
+
+          if (networkQuality) {
+            assert.deepEqual(message.media_signaling.network_quality.transports, [{ type: 'data-channel' }]);
+          } else {
+            assert(!('network_quality' in message.media_signaling));
+          }
+
+          if (dominantSpeaker) {
+            assert.deepEqual(message.media_signaling.active_speaker.transports, [{ type: 'data-channel' }]);
+          } else {
+            assert(!('active_speaker' in message.media_signaling));
+          }
+
+          if (trackPriority) {
+            assert.deepEqual(message.media_signaling.track_priority.transports, [{ type: 'data-channel' }]);
+          } else {
+            assert(!('track_priority' in message.media_signaling));
+          }
+
+          if (trackSwitchOff) {
+            assert.deepEqual(message.media_signaling.track_switch_off.transports, [{ type: 'data-channel' }]);
+          } else {
+            assert(!('track_switch_off' in message.media_signaling));
+          }
+
+          assert.deepEqual(message.subscribe, {
+            rules: [{
+              type: automaticSubscription ? 'include' : 'exclude',
+              all: true
+            }],
+            revision: 1
+          });
+
+          if (bandwidthProfile) {
+            assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
+          } else {
+            assert(!('bandwidth_profile' in message));
+          }
+
+          assert.equal(message.participant, test.localParticipantState);
+          assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
+          assert.equal(message.token, test.accessToken);
+          assert.equal(message.type, 'connect');
+          assert.equal(message.version, 2);
+          assert.equal(message.publisher.name, `${name}.js`);
+          assert.equal(message.publisher.sdk_version, version);
+          assert.equal(typeof message.publisher.user_agent, 'string');
+        });
+      };
+      if (iceServers) {
+        testConnect(true, 'overrode');
+      } else {
+        it('should set TwilioConnectionOptions.helloBody to an Ice RSP message', () => {
+          const message = test.twilioConnection.helloBody;
+          assert.deepEqual(message, {
+            edge: 'roaming',
+            token: test.accessToken,
+            type: 'ice',
+            version: 1
+          });
+        });
+
+        context('and after an Iced RSP message is received', () => {
+          beforeEach(() => {
+            test.open();
+            test.ice();
+            return waitForSometime(1);
+          });
+
+          testConnect(false, 'acquire');
+        });
+      }
     });
-
   });
 
   describe('#disconnect, called when the Transport\'s .state is', () => {
@@ -516,7 +556,7 @@ describe('TwilioConnectionTransport', () => {
       });
 
       it('should not call .sendMessage on the underlying TwilioConnection', () => {
-        sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
+        sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
       });
 
       context('when the .state transitions to', () => {
@@ -542,7 +582,7 @@ describe('TwilioConnectionTransport', () => {
           });
 
           it('should not call .sendMessage on the TwilioConnection with the reduced Update RSP message', () => {
-            sinon.assert.callCount(test.twilioConnection.sendMessage, 3);
+            sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
           });
         });
       });
@@ -668,7 +708,7 @@ describe('TwilioConnectionTransport', () => {
       });
 
       it('should not call .sendMessage on the underlying TwilioConnection', () => {
-        sinon.assert.callCount(test.twilioConnection.sendMessage, 2);
+        sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
       });
     });
   });
@@ -699,11 +739,11 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 1000;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('timeout');
             });
 
             it('should transition .state to "syncing"', () => {
@@ -718,9 +758,9 @@ describe('TwilioConnectionTransport', () => {
               // set reasonable timeout so that,
               // it ends up in multiple attempts.
               test.autoOpen = true;
-              test.sendMessageSpy = () => {
+              test.onTwilioConnectionCreated = twilioConnection => {
                 connectRequests++;
-                setTimeout(() => test.twilioConnection.close(new Error('foo')));
+                twilioConnection.once('open', () => twilioConnection.close('failed'));
               };
               return new Promise(resolve => {
                 test.transport.on('stateChanged', state => {
@@ -737,7 +777,7 @@ describe('TwilioConnectionTransport', () => {
           context('when the re-connect attempts have been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 0;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('failed');
             });
 
             it('should transition .state to "disconnected"', () => {
@@ -754,9 +794,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -790,9 +830,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           beforeEach(() => {
-            test.twilioConnection.close(new Error('foo'));
+            test.twilioConnection.close('timeout');
           });
           it('should transition .state to "disconnected"', () => {
             assert.deepEqual([
@@ -806,9 +846,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -842,7 +882,7 @@ describe('TwilioConnectionTransport', () => {
           test.transport.once('stateChanged', (state, error) => {
             disconnectedError = error;
           });
-          test.twilioConnection.close(new Error('foo'));
+          test.twilioConnection.close('failed');
         });
 
         it('should do nothing"', () => {
@@ -877,10 +917,10 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed with an Error', () => {
+        context('when closed with a CloseReason not equal to "local"', () => {
           context('when the re-connect attempts haven\'t been exhausted', () => {
             beforeEach(() => {
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('failed');
             });
 
             it('should not transition states', () => {
@@ -894,7 +934,7 @@ describe('TwilioConnectionTransport', () => {
           context('when the re-connect attempts have been exhausted', () => {
             beforeEach(() => {
               test.transport._sessionTimeoutMS = 0;
-              test.twilioConnection.close(new Error('foo'));
+              test.twilioConnection.close('timeout');
             });
 
             it('should transition .state to "disconnected"', () => {
@@ -912,9 +952,9 @@ describe('TwilioConnectionTransport', () => {
           });
         });
 
-        context('when closed without an Error', () => {
+        context('when closed with a "local" CloseReason', () => {
           beforeEach(() => {
-            test.twilioConnection.close();
+            test.twilioConnection.close('local');
           });
 
           it('should transition .state to "disconnected"', () => {
@@ -952,11 +992,11 @@ describe('TwilioConnectionTransport', () => {
               const deferred = defer();
               if (isReconnecting) {
                 test.autoOpen = true;
-                test.sendMessageSpy = message => {
-                  deferred.resolve(message);
+                test.onTwilioConnectionCreated = twilioConnection => {
+                  twilioConnection.once('open', () => deferred.resolve());
                 };
                 // this should kick off reconnect attempt async
-                test.close(new Error('foo'));
+                test.close('timeout');
               } else {
                 deferred.resolve();
               }
@@ -975,9 +1015,8 @@ describe('TwilioConnectionTransport', () => {
                 ], test.transitions);
               });
 
-              it('should call .sendMessage on the underlying TwilioConnection with a Sync RSP message', () => {
-                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
-                sinon.assert.calledWith(test.twilioConnection.sendMessage, {
+              it('should set TwilioConnectionOptions.helloBody to a Sync RSP message', () => {
+                assert.deepEqual(test.twilioConnection.helloBody, {
                   name: test.name,
                   participant: test.localParticipantState,
                   // eslint-disable-next-line
@@ -993,10 +1032,6 @@ describe('TwilioConnectionTransport', () => {
                 assert.deepEqual([
                   'connected'
                 ], test.transitions);
-              });
-
-              it('should not call .sendMessage on the underlying TwilioConnection', () => {
-                sinon.assert.callCount(test.twilioConnection.sendMessage, 1);
               });
             }
           });
@@ -1022,19 +1057,6 @@ describe('TwilioConnectionTransport', () => {
 
         it('should not emit either "connected" or "message" events', () => {
           assert(!connectedOrMessageEventEmitted);
-        });
-
-        it('should call .sendMessage on the underlying TwilioConnection with a Connect RSP message', () => {
-          const message = test.twilioConnection.sendMessage.args[0][0];
-          assert.equal(message.name, test.name);
-          assert.equal(message.participant, test.localParticipantState);
-          assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
-          assert.equal(message.token, test.accessToken);
-          assert.equal(message.type, 'connect');
-          assert.equal(message.version, 2);
-          assert.equal(message.publisher.name, `${name}.js`);
-          assert.equal(message.publisher.sdk_version, version);
-          assert.equal(typeof message.publisher.user_agent, 'string');
         });
       });
 
@@ -1648,9 +1670,10 @@ describe('TwilioConnectionTransport', () => {
 
 function createTwilioConnection(options) {
   class FakeTwilioConnection extends EventEmitter {
-    constructor() {
+    constructor(url, twilioConnectionOptions) {
       super();
-      this.close = sinon.spy(error => this.emit('close', error));
+      this.close = sinon.spy(reason => this.emit('close', reason));
+      this.helloBody = twilioConnectionOptions.helloBody;
       this.open = () => this.emit('open');
       this.receiveMessage = message => this.emit('message', message);
       this.sendMessage =  sinon.spy(message => {
@@ -1660,11 +1683,20 @@ function createTwilioConnection(options) {
       });
       options.twilioConnection = this;
 
+      if (options.onTwilioConnectionCreated) {
+        options.onTwilioConnectionCreated(this);
+      }
       if (options.autoOpen) {
         setTimeout(() => this.open(), 0);
       }
     }
   }
+
+  FakeTwilioConnection.CloseReason = {
+    BUSY: 'busy',
+    LOCAL: 'local'
+  };
+
   return FakeTwilioConnection;
 }
 
@@ -1683,6 +1715,7 @@ function makeTest(options) {
     ]
   };
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
+  options.onIced = options.onIced || sinon.spy(() => Promise.resolve());
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
   options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
@@ -1701,13 +1734,15 @@ function makeTest(options) {
   });
   options.receiveMessage = message => options.twilioConnection.receiveMessage(message);
 
-  options.close = error => {
-    options.twilioConnection.close(error);
+  options.close = reason => {
+    options.twilioConnection.close(reason);
   };
 
   options.open = () => options.twilioConnection.open();
   // eslint-disable-next-line camelcase
   options.connect = () => options.receiveMessage({ session: makeName(), type: 'connected', sid: 'roomSid', participant: { sid: 'mySid' }, options: { session_timeout: 10 } });
+  // eslint-disable-next-line camelcase
+  options.ice = () => options.receiveMessage({ ice_servers: [{ urls: 'foo' }], type: 'iced' });
   options.sync = () => options.receiveMessage({ type: 'synced' });
   return options;
 }
