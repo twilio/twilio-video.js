@@ -2,22 +2,23 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 
 2.6.0 (in progress)
 ===================
+
 - twilio-video now has a workaround for [webkit bug 208516](https://bugs.webkit.org/show_bug.cgi?id=208516).
   With this workaround, the sdk will re-check the status of audio track when Safari gains foreground, and re-acquire
   the track if its in `ended` or `muted` state. (JSDK-2828)
 
-2.5.0 (in progress)
-===================
+2.5.0 (May 27, 2020)
+====================
 
 New Features
 ------------
 
-- Previously, twilio-video.js would reject the CancelablePromise returned by `connect` if the
-  signaling server was busy with too many connection requests. Now, it will try again after a
-  server specified backoff period either until it is successfully connected or the server
-  asks it to stop trying. In this case, the CancelablePromise is rejected with a [SignalingServerBusyError](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/SignalingServerBusyError.html).
-  You can monitor the status of the signaling connection by passing an [EventListener](https://stage.twiliocdn.com/sdk/js/video/releases/2.5.0-rc1/docs/global.html#EventListener__anchor)
-  in ConnectOptions as shown below. (JSDK-2777)
+- The client now retries connection attempts when `connect()` is called and the signaling server is busy. The client may attempt
+  one or more connection attempts with a server specified backoff period. If the client exceeds all attempts
+  the CancelablePromise is rejected with a [SignalingServerBusyError](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/SignalingServerBusyError.html).
+  The status of the signaling connection can now be monitored by passing an [EventListener](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListener__anchor)
+  in ConnectOptions as shown in the code snippet below. Each event is documented [here](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListenerEvent). (JSDK-2777)
+
   ```js
   const { EventEmitter } = require('events');
   const { connect } = require('twilio-video');
@@ -28,7 +29,7 @@ New Features
    // of the connection to Twilio's signaling server.
   sdkEvents.on('event', event => {
     const { level, name } = event;
-    if (name === 'wait') {
+    if (name === 'waiting') {
       assert.equal(level, 'warning');
       console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
     } else if (name === 'connecting') {

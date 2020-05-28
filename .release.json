@@ -1,6 +1,6 @@
 {
   "type": "JavaScript",
-  "travis": true,
+  "ci": "circleci",
   "slug": "twilio/twilio-video.js",
   "env": {
     "GH_REF": "github.com/twilio/twilio-video.js.git"
