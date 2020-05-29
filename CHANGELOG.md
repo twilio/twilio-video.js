@@ -3,9 +3,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
-- twilio-video now has a workaround for [webkit bug 208516](https://bugs.webkit.org/show_bug.cgi?id=208516).
-  With this workaround, the sdk will re-check the status of audio track when Safari gains foreground, and re-acquire
-  the track if its in `ended` or `muted` state. (JSDK-2828)
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone. Now, your application will regain the microphone after foregrounding. (JSDK-2828)
 
 2.5.0 (May 27, 2020)
 ====================
