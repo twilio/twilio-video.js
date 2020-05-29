@@ -190,7 +190,7 @@ describe('replaceTrack', function() {
     });
   });
 
-  it.only('track can be replaced again and agin', async () => {
+  it('track can be replaced again and agin', async () => {
     // Bob publishes video track
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
     await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
