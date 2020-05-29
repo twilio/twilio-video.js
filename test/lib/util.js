@@ -607,6 +607,10 @@ async function waitForSometime(timeoutMS = 10 * second) {
   await new Promise(resolve => setTimeout(resolve, timeoutMS));
 }
 
+async function waitForEvent(eventTarget, event) {
+  await new Promise(resolve => eventTarget.once(event, resolve));
+}
+
 /**
  * Get the regionalized RTCIceServers[].
  * @param {string} token
@@ -688,6 +692,7 @@ exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitForEvent = waitForEvent;
 exports.waitForSometime = waitForSometime;
 exports.waitForNot = waitForNot;
 exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
