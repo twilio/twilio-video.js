@@ -165,12 +165,13 @@ describe('replaceTrack', function() {
   });
 
   [true, false].forEach(trackEnabled => {
-    it('media track replacement preserves isEnabled state: ', async () => {
+    it(`media track replacement preserves isEnabled state: ${trackEnabled}`, async () => {
       // Bob publishes video track
       const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
       await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
 
       bobVideoTrackA.enable(trackEnabled);
+      assert.equal(bobVideoTrackA.isEnabled, trackEnabled);
 
       // bob replaces the track.
       const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
@@ -186,11 +187,11 @@ describe('replaceTrack', function() {
       await waitFor(tracksSubscribed(bobRemote, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
 
       const bobRemoteTrack = [...bobRemote.videoTracks.values()][0];
-      assert.equal(bobRemoteTrack.track.isEnabled, trackEnabled);
+      assert.equal(bobRemoteTrack.track.isEnabled, trackEnabled, `was expecting remoteTrack to be ${trackEnabled ? 'enabled' : 'disabled'}`);
     });
   });
 
-  it('track can be replaced again and agin', async () => {
+  it('track can be replaced again and again', async () => {
     // Bob publishes video track
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
     await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
