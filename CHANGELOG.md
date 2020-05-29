@@ -10,6 +10,41 @@ Changes
   versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
   for these browser versions. (JSDK-2832)
 
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
+  application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
+  microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
+  LocalAudioTrack's `mediaStreamTrack` property will now point to the newly acquired MediaStreamTrack, and
+  the `started` event is fired again on the LocalAudioTrack. The `id` of the LocalAudioTrack is now no longer
+  guaranteed to be equal to the `id` of the MediaStreamTrack. Also, if you want to listen to events on the
+  MediaStreamTrack, we recommend that you do so in the `started` event handler, since it guarantees that you
+  are always listening to events on the most recently acquired MediaStreamTrack. (JSDK-2828)
+
+```js
+const { createLocalAudioTrack } = require('twilio-video');
+
+const localAudioTrack = await createLocalAudioTrack();
+
+function onMute() {
+  console.log('MediaStreamTrack muted!');
+}
+
+function onUnmute() {
+  console.log('MediaStreamTrack unmuted!');
+}
+
+localAudioTrack.on('started', () => {
+  const { mediaStreamTrack } = localAudioTrack;
+  mediaStreamTrack.addEventListener('mute', onMute);
+  mediaStreamTrack.addEventListener('unmute', onUnmute);
+});
+
+localAudioTrack.on('stopped', () => {
+  const { mediaStreamTrack } = localAudioTrack;
+  mediaStreamTrack.removeEventListener('mute', onMute);
+  mediaStreamTrack.removeEventListener('unmute', onUnmute);
+});
+```
+
 2.5.0 (May 27, 2020)
 ====================
 
