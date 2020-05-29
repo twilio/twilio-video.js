@@ -432,7 +432,7 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
 
-  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid };
+  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
 }
 
 async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions, participantNames }) {
@@ -607,6 +607,10 @@ async function waitForSometime(timeoutMS = 10 * second) {
   await new Promise(resolve => setTimeout(resolve, timeoutMS));
 }
 
+async function waitForEvent(eventTarget, event) {
+  await new Promise(resolve => eventTarget.once(event, resolve));
+}
+
 /**
  * Get the regionalized RTCIceServers[].
  * @param {string} token
@@ -622,6 +626,45 @@ async function getRegionalizedIceServers(token, region) {
     iceServer.urls = iceServer.urls.replace(/global/, region);
   });
   return iceServers;
+}
+
+function getTotalBytesReceived(statReports) {
+  let totalBytesReceived = 0;
+  statReports.forEach(statReport => {
+    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
+      statReport[trackType].forEach(trackStats => {
+        totalBytesReceived += trackStats.bytesReceived;
+      });
+    });
+  });
+  return totalBytesReceived;
+}
+
+/**
+ * validates that media was flowing in given rooms.
+ * @param {Room} room
+ * @param {number} testTimeMS
+ * @returns {Promise<>}
+ */
+async function validateMediaFlow(room, testTimeMS = 6000) {
+  // wait for some time.
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
+
+  // get StatsReports.
+  const statsBefore = await room.getStats();
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore);
+
+  // wait for some more time.
+  await new Promise(resolve => setTimeout(resolve, testTimeMS));
+
+  // get StatsReports again.
+  const statsAfter = await room.getStats();
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
+
+  console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
+  if (bytesReceivedAfter <= bytesReceivedBefore) {
+    throw new Error('no media flow detected');
+  }
 }
 
 
@@ -649,6 +692,7 @@ exports.waitForTracks = waitForTracks;
 exports.smallVideoConstraints = smallVideoConstraints;
 exports.setup = setup;
 exports.waitFor = waitFor;
+exports.waitForEvent = waitForEvent;
 exports.waitForSometime = waitForSometime;
 exports.waitForNot = waitForNot;
 exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
@@ -656,3 +700,4 @@ exports.waitToGoOnline = waitToGoOnline;
 exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
 exports.setupAliceAndBob = setupAliceAndBob;
+exports.validateMediaFlow = validateMediaFlow;

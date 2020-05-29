@@ -3,8 +3,19 @@
 
 const assert = require('assert');
 const MediaTrackSender = require('../../../../../lib/media/track/sender');
+const Document = require('../../../../lib/document');
 
 describe('MediaTrackSender', () => {
+  before(() => {
+    global.document = global.document || new Document();
+  });
+
+  after(() => {
+    if (global.document instanceof Document) {
+      delete global.document;
+    }
+  });
+
   const mediaStreamTrack = {
     id: 'bar',
     kind: 'baz',

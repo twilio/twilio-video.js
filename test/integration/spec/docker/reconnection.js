@@ -12,6 +12,7 @@ const getToken = require('../../../lib/token');
 const {
   getRegionalizedIceServers,
   randomName,
+  validateMediaFlow,
   waitToGoOffline,
   waitToGoOnline,
   smallVideoConstraints,
@@ -116,39 +117,6 @@ async function setup(setupOptions) {
   }), `Rooms to get connected, and Tracks to be started: ${sid}`, 3 * ONE_MINUTE);
 }
 
-function getTotalBytesReceived(statReports) {
-  let totalBytesReceived = 0;
-  statReports.forEach(statReport => {
-    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
-      statReport[trackType].forEach(trackStats => {
-        totalBytesReceived += trackStats.bytesReceived;
-      });
-    });
-  });
-  return totalBytesReceived;
-}
-
-// validates that media was flowing in given rooms.
-async function validateMediaFlow(room) {
-  const testTimeMS = 6000;
-  // wait for some time.
-  await new Promise(resolve => setTimeout(resolve, testTimeMS));
-
-  // get StatsReports.
-  const statsBefore = await room.getStats();
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore);
-
-  // wait for some more time.
-  await new Promise(resolve => setTimeout(resolve, testTimeMS));
-
-  // get StatsReports again.
-  const statsAfter = await room.getStats();
-  const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
-
-  if (bytesReceivedAfter <= bytesReceivedBefore) {
-    throw new Error('no media flow detected');
-  }
-}
 
 // reads and prints list of current networks.
 // returns currentNetworks array.

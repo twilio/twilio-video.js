@@ -84,6 +84,19 @@ describe('createLocalTracks', () => {
       assert.deepEqual(localTracks.map(track => track.name), ['foo', 'bar']);
     });
   });
+
+  context('when called with workaroundWebKitBug1208516', () => {
+    it('should pass the option for LocalAudioTrack', async () => {
+      const options = Object.assign({
+        audio: { name: 'audio', workaroundWebKitBug1208516: true },
+        video: { name: 'video', workaroundWebKitBug1208516: true }
+      }, makeOptions());
+
+      const localTracks = await createLocalTracks(options);
+      const audioTrack = localTracks.find(track => track.name === 'audio');
+      assert.equal(audioTrack.workaroundWebKitBug1208516, true);
+    });
+  });
 });
 
 function makeOptions() {
@@ -95,6 +108,7 @@ function makeOptions() {
       this.kind = mediaStreamTrack.kind;
       this.mediaStreamTrack = mediaStreamTrack;
       this.name = options.name || mediaStreamTrack.id;
+      this.workaroundWebKitBug1208516 = options.workaroundWebKitBug1208516;
     }),
     LocalVideoTrack: sinon.spy(function LocalVideoTrack(mediaStreamTrack, options) {
       options = options || {};

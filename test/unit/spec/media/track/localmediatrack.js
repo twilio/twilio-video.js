@@ -7,6 +7,7 @@ const { inherits } = require('util');
 
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
+const Document = require('../../../../lib/document');
 
 const log = require('../../../../lib/fakelog');
 
@@ -20,6 +21,16 @@ const log = require('../../../../lib/fakelog');
   };
 
   describe(description, () => {
+    before(() => {
+      global.document = global.document || new Document();
+    });
+
+    after(() => {
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
     let track;
 
     describe('constructor', () => {
@@ -103,6 +114,68 @@ const log = require('../../../../lib/fakelog');
       it('should call .enable with false', () => {
         sinon.assert.calledWith(track.enable, false);
       });
+    });
+
+    describe('#_setMediaStreamTrack', () => {
+      let dummyElement;
+      beforeEach(() => {
+        dummyElement = { oncanplay: 'bar' };
+        document.createElement = sinon.spy(() => {
+          return dummyElement;
+        });
+        track = createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+        track._attach = sinon.spy(el => el);
+        track._detachElement = sinon.spy();
+        track._attachments.delete = sinon.spy();
+      });
+
+      it('should not replace track id or name', async () => {
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        assert.equal(track.id, 'foo');
+        assert.equal(track.name, 'foo');
+
+        await track._setMediaStreamTrack(newTrack);
+        assert.equal(track.id, 'foo');
+        assert.equal(track.name, 'foo');
+      });
+
+      it('should update underlying mediaStreamTrack', async () => {
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        assert.equal(track.mediaStreamTrack.id, 'foo');
+
+        await track._setMediaStreamTrack(newTrack);
+        assert.equal(track.mediaStreamTrack.id, 'bar');
+      });
+
+      it('should fire started event after replacing track', async () => {
+        const started1Promise = new Promise(resolve => track.on('started', resolve));
+        dummyElement.oncanplay();
+        await started1Promise;
+
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        const started2Promise = new Promise(resolve => track.on('started', resolve));
+
+        await track._setMediaStreamTrack(newTrack);
+
+        dummyElement.oncanplay();
+        await started2Promise;
+      });
+
+      it('should maintain enabled/disabled state of the track', async () => {
+        const newTrack = new MediaStreamTrack('bar', kind[description]);
+        assert.equal(track.id, 'foo');
+        assert.equal(track.name, 'foo');
+        assert.equal(track.isEnabled, true);
+        track.disable();
+        assert.equal(track.isEnabled, false);
+
+
+        await track._setMediaStreamTrack(newTrack);
+        assert.equal(track.id, 'foo');
+        assert.equal(track.name, 'foo');
+        assert.equal(track.isEnabled, false);
+      });
+
     });
 
     describe('#enable', () => {
