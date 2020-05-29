@@ -28,7 +28,7 @@ localAudioTrack.on('stopped', () => {
   mediaStreamTrack.removeEventListener('mute', onMute);
   mediaStreamTrack.removeEventListener('unmute', onUnmute);
 });
-\`\`\`
+```
 
 2.5.0 (May 27, 2020)
 ====================
