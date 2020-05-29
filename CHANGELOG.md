@@ -3,7 +3,7 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
-- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone. Now, your application will regain the microphone after foregrounding. (JSDK-2828)
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone. Now your application will regain the microphone after foregrounding. For this SDK reacquires mediaStream track on gaining foreground, causing `LocalAudioTrack.mediaStreamTrack` to change. SDK will emits 'started' event on LocalAudioTrack - you can use this event to setup listeners on new mediaStreamTrack. (JSDK-2828)
 
 2.5.0 (May 27, 2020)
 ====================
