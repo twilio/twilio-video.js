@@ -613,7 +613,58 @@ describe('TwilioConnection', function() {
                 ]);
 
                 if (keepAlive) {
-                  context('should eventually transition to "connecting" state and', () => {
+                  context('when a "welcome" message is received within the retryAfter period', () => {
+                    const messagesToEnqueue = [{
+                      body: JSON.stringify({ foo: 'bar' }),
+                      type: 'msg'
+                    }, {
+                      body: JSON.stringify({ baz: 'zee' }),
+                      type: 'msg'
+                    }];
+
+                    const negotiatedTimeout = 100;
+                    let openEmitted;
+
+                    beforeEach(() => {
+                      messagesToEnqueue.forEach(message => {
+                        twilioConnection._messageQueue.push(message);
+                      });
+
+                      twilioConnection.once('open', () => {
+                        openEmitted = true;
+                      });
+
+                      twilioConnection._ws.receiveMessage({
+                        negotiatedTimeout,
+                        type: 'welcome'
+                      });
+                      assert.equal(twilioConnection._messageQueue.length, 0);
+                    });
+
+                    it('should send any enqueued messages using the underlying WebSocket', () => {
+                      messagesToEnqueue.forEach(message => {
+                        sinon.assert.calledWith(twilioConnection._ws.send, JSON.stringify(message));
+                      });
+                      assert.equal(twilioConnection._messageQueue.length, 0);
+                    });
+
+                    it('should set the TwilioConnection\'s .state to "open"', () => {
+                      assert.equal(twilioConnection.state, 'open');
+                    });
+
+                    it('should emit "open" on the TwilioConnection', () => {
+                      assert(openEmitted);
+                    });
+
+                    testEventObserverEvents(() => eventObserver, [
+                      { name: 'early' },
+                      { name: 'connecting' },
+                      { name: 'waiting' },
+                      { name: 'open' }
+                    ]);
+                  });
+
+                  context('when a "welcome" message is not received within the retryAfter period, should transition to "connecting" state and', () => {
                     beforeEach(async () => {
                       const changedStatePromise = new Promise(resolve => twilioConnection.once('stateChanged', resolve));
                       test.clock.tick(retryAfter + 1);
