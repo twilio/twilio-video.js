@@ -1,5 +1,15 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.5.1 (in progress)
+===================
+
+Changes
+-------
+
+- Removed support for versions of Chrome (23 - 55) and Firefox (22 - 43) that support prefixed
+  versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
+  for these browser versions. (JSDK-2832)
+
 2.5.0 (May 27, 2020)
 ====================
 
