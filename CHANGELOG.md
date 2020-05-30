@@ -3,7 +3,22 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
-- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone. Now your application will regain the microphone after foregrounding. As a result of this, the LocalAudioTrack's `mediaStreamTrack` property will now point to the newly acquired MediaStreamTrack, and the `started` event is fired again on the LocalAudioTrack. The `id` of the LocalAudioTrack is now no longer guaranteed to be equal to the `id` of the MediaStreamTrack. Also, if you want to listen to events on the MediaStreamTrack, we recommend that you do so in the `started` event handler, since it guarantees that you are always listening to events on the most recently acquired MediaStreamTrack. (JSDK-2828)
+Changes
+-------
+
+- Removed support for versions of Chrome (23 - 55) and Firefox (22 - 43) that support prefixed
+  versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
+  for these browser versions. (JSDK-2832)
+
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
+  application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
+  microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
+  LocalAudioTrack's `mediaStreamTrack` property will now point to the newly acquired MediaStreamTrack, and
+  the `started` event is fired again on the LocalAudioTrack. The `id` of the LocalAudioTrack is now no longer
+  guaranteed to be equal to the `id` of the MediaStreamTrack. Also, if you want to listen to events on the
+  MediaStreamTrack, we recommend that you do so in the `started` event handler, since it guarantees that you
+  are always listening to events on the most recently acquired MediaStreamTrack. (JSDK-2828)
+
 ```js
 const { createLocalAudioTrack } = require('twilio-video');
 
