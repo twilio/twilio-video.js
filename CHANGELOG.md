@@ -45,6 +45,12 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
+Bug Fixes
+---------
+
+- Updated npm module dependency on `puppeteer` and `chromedriver` to be `devDependencies` instead of `optionalDependencies`. (JSDK-2848)
+
+
 2.5.0 (May 27, 2020)
 ====================
 
