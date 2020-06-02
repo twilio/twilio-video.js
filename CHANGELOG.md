@@ -10,6 +10,11 @@ Changes
   versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
   for these browser versions. (JSDK-2832)
 
+Bug Fixes
+---------
+
+- Moved npm dependencies `chromedriver` and `puppeteer` to `devDependencies` from `optionalDependencies`. (JSDK-2848)
+
 2.5.0 (May 27, 2020)
 ====================
 
