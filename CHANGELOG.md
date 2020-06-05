@@ -1,7 +1,7 @@
 For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.5.1 (in progress)
-===================
+2.5.1 (June 5, 2020)
+====================
 
 Changes
 -------
