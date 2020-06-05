@@ -84,6 +84,15 @@ describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
         document.emit('visibilitychange', document.visibilityState);
         await Promise.all(replaceTrackPromises);
       });
+
+      it('un-registers for document visibility change when track is stopped', () => {
+        sinon.assert.callCount(document.addEventListener, 1);
+        sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
+        sinon.assert.callCount(document.removeEventListener, 0);
+
+        localAudioTrack.stop();
+        sinon.assert.callCount(document.removeEventListener, 1);
+      });
     });
   });
 });
