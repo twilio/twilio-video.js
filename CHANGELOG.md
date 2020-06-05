@@ -3,13 +3,6 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
-Changes
--------
-
-- Removed support for versions of Chrome (23 - 55) and Firefox (22 - 43) that support prefixed
-  versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
-  for these browser versions. (JSDK-2832)
-
 - Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
   application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
   microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
@@ -45,11 +38,24 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
+- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) which caused remote tracks to stay in paused
+  state, even after safari gains foreground. To workaround this twilio-video will now play the remote tracks that were paused
+  when safari gains foreground.
+
+2.5.1 (in progress)
+===================
+
+Changes
+-------
+
+- Removed support for versions of Chrome (23 - 55) and Firefox (22 - 43) that support prefixed
+  versions of the WebRTC APIs that have been deprecated. `isSupported` will now return `false`
+  for these browser versions. (JSDK-2832)
+
 Bug Fixes
 ---------
 
-- Updated npm module dependency on `puppeteer` and `chromedriver` to be `devDependencies` instead of `optionalDependencies`. (JSDK-2848)
-
+- Moved npm dependencies `chromedriver` and `puppeteer` to `devDependencies` from `optionalDependencies`. (JSDK-2848)
 
 2.5.0 (May 27, 2020)
 ====================
