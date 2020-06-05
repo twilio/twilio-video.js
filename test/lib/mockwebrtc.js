@@ -52,12 +52,11 @@ const navigator = {
   userAgent: 'Node'
 };
 
-function getUserMedia(constraints, successCallback) {
-  const mediaStream = new MediaStream();
-  setTimeout(() => successCallback(mediaStream));
+function getUserMedia() {
+  return Promise.resolve(new MediaStream());
 }
 
-navigator.webkitGetUserMedia = getUserMedia;
+navigator.mediaDevices = { getUserMedia };
 
 class RTCDataChannel {
   constructor(label) {
