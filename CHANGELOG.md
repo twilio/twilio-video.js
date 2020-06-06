@@ -38,12 +38,12 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
-- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) which caused remote tracks to stay in paused
-  state, even after safari gains foreground. To workaround this twilio-video will now play the remote tracks that were paused
-  when safari gains foreground.
+- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) which caused remote
+  tracks to stay in paused state, even after safari gains foreground. To workaround this twilio-video
+  will now play the remote tracks that were paused when safari gains foreground.
 
-2.5.1 (in progress)
-===================
+2.5.1 (June 5, 2020)
+====================
 
 Changes
 -------
