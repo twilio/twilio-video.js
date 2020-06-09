@@ -3,6 +3,9 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
+Changes
+-------
+
 - Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
   application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
   microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
@@ -38,9 +41,7 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
-- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) which caused remote
-  tracks to stay in paused state, even after safari gains foreground. To workaround this twilio-video
-  will now play the remote tracks that were paused when safari gains foreground.
+- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded, it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application is backgrounded.
 
 2.5.1 (June 5, 2020)
 ====================
