@@ -41,7 +41,9 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
-- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded, it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application is backgrounded.
+- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded,
+  it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application
+  is backgrounded.
 
 2.5.1 (June 5, 2020)
 ====================
