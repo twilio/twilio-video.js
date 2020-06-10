@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Important: Note that circleci logs are publicly availbe.
-# Do not echo or printenv or in any other way let the sensitive
-# environment variables get printed or saved.
+# NOTE(mpatwardhan): IMPORTANT - Since CircleCi logs are publicly available,
+# DO NOT echo or printenv or in any other way let the sensitive environment variables
+# get printed or saved.
 
 set -ev
 
@@ -60,5 +60,4 @@ else
 fi
 
 echo "Done with Tests!"
-
 
