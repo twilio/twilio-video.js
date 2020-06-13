@@ -577,7 +577,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
  * @param {number} timeoutMS - time to wait in milliseconds.
  * @returns {Promise<void>}
  */
-async function waitForNot(promise, message, timeoutMS = 5 * second) {
+function waitForNot(promise, message, timeoutMS = 5 * second) {
   let timer = null;
   const timeoutPromise = new Promise(resolve => {
     timer = setTimeout(() => {
@@ -594,8 +594,7 @@ async function waitForNot(promise, message, timeoutMS = 5 * second) {
     }
   });
 
-  const result = await Promise.race([notPromise, timeoutPromise]);
-  return result;
+  return Promise.race([notPromise, timeoutPromise]);
 }
 
 /**
@@ -607,8 +606,14 @@ async function waitForSometime(timeoutMS = 10 * second) {
   await new Promise(resolve => setTimeout(resolve, timeoutMS));
 }
 
-async function waitForEvent(eventTarget, event) {
-  await new Promise(resolve => eventTarget.once(event, resolve));
+/**
+ * Returns a Promise that is resolved after the given event is fired once.
+ * @param {EventEmitter} emitter
+ * @param {string} event
+ * @returns {Promise<any>}
+ */
+function waitForEvent(emitter, event) {
+  return new Promise(resolve => emitter.once(event, resolve));
 }
 
 /**
