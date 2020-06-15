@@ -3,7 +3,6 @@
 
 const assert = require('assert');
 const defaults = require('../../lib/defaults');
-const { isFirefox } = require('../../lib/guessbrowser');
 const { completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 
@@ -109,7 +108,7 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
     });
   });
 
-  describe(`${description}._setMediaStreamTrack`, function() {
+  describe(`${description}#restart`, function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
@@ -135,42 +134,33 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       return completeRoom(roomSid);
     });
 
-    it('media flows after track is replaced, ', async () => {
+    it('should continue media flow', async () => {
       await assertMediaFlow(aliceRoom, false, `Unexpected media flow before publishing track: ${aliceRoom.sid}`);
       const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
 
       // Bob publishes track
       await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);
       await waitForSometime(5000);
-
-      await assertMediaFlow(aliceRoom, true, `Unexpected media flow after publishing track: ${aliceRoom.sid}`);
-
-      // stop track and its clones.
-      bobLocalTrackA._trackSender.track.stop();
-      bobLocalTrackA._trackSender._clones.forEach(clone => clone.track.stop());
-
-      // on firefox, media stats show few bytes even after track is stopped.
-      if (!isFirefox) {
-        await waitForSometime(1000);
-        await assertMediaFlow(aliceRoom, false, `Unexpected media flow after stopping track: ${aliceRoom.sid}`);
-      }
+      await assertMediaFlow(aliceRoom, true, `Unexpected lack of media flow after publishing track: ${aliceRoom.sid}`);
 
       const startedPromise = waitForEvent(bobLocalTrackA, 'started');
+      const stoppedPromise = waitForEvent(bobLocalTrackA, 'stopped');
 
-      const bobLocalTrackB = await createLocalTrack(Object.assign({ name: 'trackB' }, options));
-      bobLocalTrackA._setMediaStreamTrack(bobLocalTrackB.mediaStreamTrack);
+      // Bob restarts track.
+      await bobLocalTrackA.restart();
 
-      // started event should fire on the track.
+      // "stopped" and "started" events should fire in order.
+      await stoppedPromise;
       await startedPromise;
 
       await waitForSometime(1000);
-      await assertMediaFlow(aliceRoom, true, `Unexpected media flow after replacing track: ${aliceRoom.sid}`);
+      await assertMediaFlow(aliceRoom, true, `Unexpected lack of media flow after replacing track: ${aliceRoom.sid}`);
 
       // Stop Bob's LocalTracks.
-      [bobLocalTrackA, bobLocalTrackB].forEach(track => track.stop());
+      bobLocalTrackA.stop();
     });
 
-    it('track can be disabled after publishing (@unstable: JSDK-2852)', async () => {
+    it(`${description} can be disabled after publishing (@unstable: JSDK-2852)`, async () => {
       const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
       await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);
       bobLocalTrackA.enable(false);
@@ -184,8 +174,9 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
 
       // NOTE(mmalavalli): We have to wait for the "disabled" event to fire on Alice's
       // RemoteTrack for Bob before verifying that it was disabled.
-      await waitForEvent(bobRemoteTrack.track, 'disabled');
-
+      if (bobRemoteTrack.track.isEnabled) {
+        await waitForEvent(bobRemoteTrack.track, 'disabled');
+      }
       assert.equal(bobRemoteTrack.track.isEnabled, false, `alice was expecting remoteTrack to be 'disabled' in ${roomSid}`);
 
       // Stop Bob's LocalTrack.
@@ -193,7 +184,7 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
     });
 
     [true, false].forEach(trackEnabled => {
-      it(`media track replacement preserves isEnabled state: ${trackEnabled} (@unstable: JSDK-2852)`, async () => {
+      it(`should preserve isEnabled state: ${trackEnabled} (@unstable: JSDK-2852)`, async () => {
         // Bob publishes track
         const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
         await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);
@@ -213,12 +204,10 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
           const trackEventPromise = waitForEvent(bobRemoteTrack.track, expectEvent);
           await waitFor(trackEventPromise, `waiting for alice to see track ${expectEvent} on Bob's track: ${roomSid}`);
         }
-
         assert.equal(bobRemoteTrack.track.isEnabled, trackEnabled, `alice was expecting remoteTrack to be ${trackEnabled ? 'enabled' : 'disabled'} in ${roomSid}`);
 
-        // bob replaces the track.
-        const bobLocalTrackB = await createLocalTrack(Object.assign({ name: 'trackB' }, options));
-        bobLocalTrackA._setMediaStreamTrack(bobLocalTrackB.mediaStreamTrack);
+        // Bob restarts the track.
+        await bobLocalTrackA.restart();
 
         // Charlie joins a room after sometime.
         const charlieRoom = await connect(getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
@@ -233,38 +222,46 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
         assert.equal(bobRemoteTrackForCharlie.track.isEnabled, trackEnabled, `Charlie was expecting remoteTrack to be ${trackEnabled ? 'enabled' : 'disabled'} in ${roomSid}`);
 
         // Stop Bob's LocalTracks.
-        [bobLocalTrackA, bobLocalTrackB].forEach(track => track.stop());
+        bobLocalTrackA.stop();
       });
     });
 
-    it('track can be replaced again and again', async () => {
+    it('should be able to restart more than once', async () => {
       // Bob publishes track
       const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
       await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);
 
-      // bob replaces the track.
-      const bobLocalTrackB = await createLocalTrack(Object.assign({ name: 'trackB' }, options));
-      bobLocalTrackA._setMediaStreamTrack(bobLocalTrackB.mediaStreamTrack);
+      const startedPromise1 = waitForEvent(bobLocalTrackA, 'started');
+      const stoppedPromise1 = waitForEvent(bobLocalTrackA, 'stopped');
 
-      await waitForEvent(bobLocalTrackA, 'started');
+      // Bob restarts the track.
+      await bobLocalTrackA.restart();
 
-      // bob replaces the track again.
-      const bobLocalTrackC = await createLocalTrack(Object.assign({ name: 'trackC' }, options));
-      bobLocalTrackA._setMediaStreamTrack(bobLocalTrackC.mediaStreamTrack);
+      // "stopped" and "started" events should fire in order.
+      await stoppedPromise1;
+      await startedPromise1;
 
-      // started event should fire on the track.
-      await waitForEvent(bobLocalTrackA, 'started');
+      const startedPromise2 = waitForEvent(bobLocalTrackA, 'started');
+      const stoppedPromise2 = waitForEvent(bobLocalTrackA, 'stopped');
+
+      // Bob restarts the track again.
+      await bobLocalTrackA.restart();
+
+      // "stopped" and "started" events should fire in order.
+      await stoppedPromise2;
+      await startedPromise2;
+
       await waitForSometime(1000);
-      await assertMediaFlow(aliceRoom, true, `Unexpected media flow after replacing track: ${aliceRoom.sid}`);
+      await assertMediaFlow(aliceRoom, true, `Unexpected lack of media flow after replacing track: ${aliceRoom.sid}`);
 
-      // Stop Bob's LocalTracks.
-      [bobLocalTrackA, bobLocalTrackB, bobLocalTrackC].forEach(track => track.stop());
+      // Stop Bob's LocalTrack.
+      bobLocalTrackA.stop();
     });
 
-    // NOTE: replaceTrack causes the mediaStream track to get replaced. it does not require re-negotiation for existing PeerConnections.
-    //  but for new PCs (applicable to new participants on P2P) is the offer/answer would have id for new mediaStream which does not
-    //  match the id sent in signaling messages. This test ensures that we take care of this case.
-    it('new participant can subscribe to track after it has been replaced', async () => {
+    // NOTE(mpatwardhan): restart() causes the MediaStreamTrack to get replaced. it does not require re-negotiation for existing PeerConnections.
+    //  but for new PCs (applicable to new participants on P2P) is the offer/answer would have new MSIDs which do not
+    //  match the those sent in signaling messages. This test ensures that we take care of this case.
+    it('should be able to be subscribed to by RemoteParticipants that join the Room after restart', async () => {
       const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
 
       // Bob publishes track
@@ -274,14 +271,9 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       const bobRemoteInAliceRoom = aliceRoom.participants.get(bobRoom.localParticipant.sid);
       await waitFor(tracksSubscribed(bobRemoteInAliceRoom, 1), `wait for alice to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
 
-      // stop track and its clones.
-      bobLocalTrackA._trackSender.track.stop();
-      bobLocalTrackA._trackSender._clones.forEach(clone => clone.track.stop());
-
-      // bob replaces track
-      const bobLocalTrackB = await createLocalTrack(Object.assign({ name: 'trackB' }, options));
-      console.log(`bob replaces the track: mediaStreamTrack track old: ${bobLocalTrackA.mediaStreamTrack.id}, new: ${bobLocalTrackB.mediaStreamTrack.id}`);
-      bobLocalTrackA._setMediaStreamTrack(bobLocalTrackB.mediaStreamTrack);
+      // Bob restarts the track.
+      await bobLocalTrackA.restart();
+      console.log(`bob replaces the track: mediaStreamTrack track old: ${bobLocalTrackA.id}, new: ${bobLocalTrackA.mediaStreamTrack.id}`);
 
       // Charlie joins a room after sometime.
       await waitForSometime(5000);
@@ -294,10 +286,10 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       await waitFor(tracksSubscribed(bobRemoteInCharlieRoom, 1), `wait for charlie to subscribe to Bob's tracks: ${roomSid}`, 20000, true);
 
       await waitForSometime(5000);
-      await assertMediaFlow(charlieRoom, true, `Unexpected media flow after replacing track: ${charlieRoom.sid}`);
+      await assertMediaFlow(charlieRoom, true, `Unexpected lack of media flow after replacing track: ${charlieRoom.sid}`);
 
-      // Stop Bob's LocalTracks.
-      [bobLocalTrackA, bobLocalTrackB].forEach(track => track.stop());
+      // Stop Bob's LocalTrack.
+      bobLocalTrackA.stop();
     });
   });
 });
