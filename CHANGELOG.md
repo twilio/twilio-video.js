@@ -3,47 +3,16 @@ For 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/suppor
 2.6.0 (in progress)
 ===================
 
-Changes
--------
+New Features
+------------
 
-- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
-  application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
-  microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
-  LocalAudioTrack's `mediaStreamTrack` property will now point to the newly acquired MediaStreamTrack, and
-  the `started` event is fired again on the LocalAudioTrack. The `id` of the LocalAudioTrack is now no longer
-  guaranteed to be equal to the `id` of the MediaStreamTrack. Also, if you want to listen to events on the
-  MediaStreamTrack, we recommend that you do so in the `started` event handler, since it guarantees that you
-  are always listening to events on the most recently acquired MediaStreamTrack. (JSDK-2828)
-
-```js
-const { createLocalAudioTrack } = require('twilio-video');
-
-const localAudioTrack = await createLocalAudioTrack();
-
-function onMute() {
-  console.log('MediaStreamTrack muted!');
-}
-
-function onUnmute() {
-  console.log('MediaStreamTrack unmuted!');
-}
-
-localAudioTrack.on('started', () => {
-  const { mediaStreamTrack } = localAudioTrack;
-  mediaStreamTrack.addEventListener('mute', onMute);
-  mediaStreamTrack.addEventListener('unmute', onUnmute);
-});
-
-localAudioTrack.on('stopped', () => {
-  const { mediaStreamTrack } = localAudioTrack;
-  mediaStreamTrack.removeEventListener('mute', onMute);
-  mediaStreamTrack.removeEventListener('unmute', onUnmute);
-});
-```
-
-- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded,
-  it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application
-  was backgrounded (JSDK-2879).
+- Previously, if you wanted to change the MediaTrackConstraints of an audio or video
+  LocalTrack that is published to a Room, you would have to unpublish it, create a new
+  LocalTrack with the desired MediaTrackConstraints and publish it to the Room. Now,
+  you can just `restart` the LocalTrack with the desired MediaTrackConstraints. For details,
+  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.6.0/docs/dist/docs/LocalAudioTrack.html#restart__anchor)
+  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.6.0/docs/dist/docs/LocalVideoTrack.html#restart__anchor)
+  documentation. (JSDK-2870)
 
 2.5.1 (June 5, 2020)
 ====================
