@@ -220,10 +220,10 @@ const { defer } = require('../../../../../lib/util');
           x => `when called with${x ? '' : 'out'} constraints`
         ],
         [
-          ['rejects with an Error', 'resolves with a MediaStream'],
-          x => `when getUserMedia ${x}`
+          [true, false],
+          x => `when getUserMedia ${x ? 'resolves with a MediaStream' : 'rejects with an Error'}`
         ]
-      ], ([isCreatedByCreateLocalTracks, constraints, gUMBehavior]) => {
+      ], ([isCreatedByCreateLocalTracks, constraints, gUMSucceeds]) => {
         const restartArgs = constraints ? [constraints] : [];
         let error;
         let getUserMedia;
@@ -231,12 +231,10 @@ const { defer } = require('../../../../../lib/util');
         let track;
 
         before(async () => {
-          getUserMedia = /rejects/.test(gUMBehavior) ? sinon.spy(() => {
-            return Promise.reject(new Error('foo'));
-          }) : sinon.spy((...args) => fakeGetUserMedia(...args).then(stream => {
+          getUserMedia = sinon.spy(gUMSucceeds ? (...args) => fakeGetUserMedia(...args).then(stream => {
             mediaStream = stream;
             return stream;
-          }));
+          }) : () => Promise.reject(new Error('foo')));
 
           track = createLocalMediaTrack(LocalMediaTrack, kind[description], {
             getUserMedia,
@@ -254,7 +252,7 @@ const { defer } = require('../../../../../lib/util');
           }
         });
 
-        if (!isCreatedByCreateLocalTracks || /rejects/.test(gUMBehavior)) {
+        if (!(isCreatedByCreateLocalTracks && gUMSucceeds)) {
           if (!isCreatedByCreateLocalTracks) {
             it('should not call getUserMedia', () => {
               sinon.assert.notCalled(getUserMedia);
