@@ -150,8 +150,8 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       await bobLocalTrackA.restart();
 
       // "stopped" and "started" events should fire in order.
-      await stoppedPromise;
-      await startedPromise;
+      await waitFor(stoppedPromise, `Bob's LocalTrack to stop: ${aliceRoom.sid}`);
+      await waitFor(startedPromise, `Bob's LocalTrack to start: ${aliceRoom.sid}`);
 
       await waitForSometime(1000);
       await assertMediaFlow(aliceRoom, true, `Unexpected lack of media flow after replacing track: ${aliceRoom.sid}`);
@@ -238,8 +238,8 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       await bobLocalTrackA.restart();
 
       // "stopped" and "started" events should fire in order.
-      await stoppedPromise1;
-      await startedPromise1;
+      await waitFor(stoppedPromise1, `Bob's LocalTrack to stop (1): ${aliceRoom.sid}`);
+      await waitFor(startedPromise1, `Bob's LocalTrack to start (1): ${aliceRoom.sid}`);
 
       const startedPromise2 = waitForEvent(bobLocalTrackA, 'started');
       const stoppedPromise2 = waitForEvent(bobLocalTrackA, 'stopped');
@@ -248,8 +248,8 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
       await bobLocalTrackA.restart();
 
       // "stopped" and "started" events should fire in order.
-      await stoppedPromise2;
-      await startedPromise2;
+      await waitFor(stoppedPromise2, `Bob's LocalTrack to stop (2): ${aliceRoom.sid}`);
+      await waitFor(startedPromise2, `Bob's LocalTrack to start (2): ${aliceRoom.sid}`);
 
       await waitForSometime(1000);
       await assertMediaFlow(aliceRoom, true, `Unexpected lack of media flow after replacing track: ${aliceRoom.sid}`);
