@@ -726,6 +726,9 @@ describe('LocalParticipant', () => {
               clone() {
                 return track._trackSender;
               },
+              removeClone() {
+                // No-op.
+              },
               track: {
                 enabled: true
               }
@@ -756,6 +759,9 @@ describe('LocalParticipant', () => {
             track._trackSender = {
               clone() {
                 return track._trackSender;
+              },
+              removeClone() {
+                // No-op.
               },
               stop() {
                 return true;
