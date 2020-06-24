@@ -24,8 +24,8 @@ describe('GlobalEvents', () => {
   });
 
   it('is a singleton', () => {
-    const globalEvents1 = require('../../../../lib/util/GlobalEvents');
-    const globalEvents2 = require('../../../../lib/util/GlobalEvents');
+    const globalEvents1 = require('../../../../lib/util/globalevents');
+    const globalEvents2 = require('../../../../lib/util/globalevents');
     assert.equal(globalEvents1, globalEvents2);
   });
 
