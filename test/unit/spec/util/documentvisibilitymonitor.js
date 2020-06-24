@@ -4,7 +4,7 @@ const Document = require('../../../lib/document');
 const documentVisibilityMonitor = require('../../../../lib/util/documentvisibilitymonitor');
 const { defer, waitForSometime } = require('../../../../lib/util');
 
-describe('DocumentVisibilityMonitor', () => {
+describe.only('DocumentVisibilityMonitor', () => {
   let addEventListenerStub;
   let removeEventListenerStub;
 
@@ -35,12 +35,14 @@ describe('DocumentVisibilityMonitor', () => {
   });
 
   describe('document visibility events: ', () => {
-    it('onVisible throws for invalid phase', () => {
-      assert.throws(() => documentVisibilityMonitor.onVisible(4, () => {}));
-    });
+    [-1, 0, 3, 'some string', undefined, null].forEach(phase => {
+      it(`onVisible throws for invalid phase value: ${phase}`, () => {
+        assert.throws(() => documentVisibilityMonitor.onVisible(phase, () => {}));
+      });
 
-    it('offVisible throws for invalid phase', () => {
-      assert.throws(() => documentVisibilityMonitor.offVisible('not_a_phase', () => {}, 'unsupportedPhase'));
+      it(`offVisible throws for invalid phase value: ${phase}`, () => {
+        assert.throws(() => documentVisibilityMonitor.offVisible(phase, () => {}));
+      });
     });
 
     [1, 2].forEach(phase => {
