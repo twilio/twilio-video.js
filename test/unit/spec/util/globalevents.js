@@ -1,11 +1,10 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const Document = require('../../../lib/document');
-const globalEvents = require('../../../../lib/util/globalevents');
+const documentVisibilityMonitor = require('../../../../lib/util/documentvisibilitymonitor');
 const { defer, waitForSometime } = require('../../../../lib/util');
-// const { waitForSometime } = require('../../../lib/util');
 
-describe('GlobalEvents', () => {
+describe('DocumentVisibilityMonitor', () => {
   let addEventListenerStub;
   let removeEventListenerStub;
 
@@ -24,9 +23,9 @@ describe('GlobalEvents', () => {
   });
 
   it('is a singleton', () => {
-    const globalEvents1 = require('../../../../lib/util/globalevents');
-    const globalEvents2 = require('../../../../lib/util/globalevents');
-    assert.equal(globalEvents1, globalEvents2);
+    const documentVisibilityMonitor1 = require('../../../../lib/util/documentvisibilitymonitor');
+    const documentVisibilityMonitor2 = require('../../../../lib/util/documentvisibilitymonitor');
+    assert.equal(documentVisibilityMonitor1, documentVisibilityMonitor2);
   });
 
   describe('constructor', () => {
@@ -36,18 +35,15 @@ describe('GlobalEvents', () => {
   });
 
   describe('document visibility events: ', () => {
-    ['phase1', 'phase2'].forEach(phase => {
-      const phases = {
-        'phase1': {
-          registerFunction: 'onVisiblePhase1',
-          unRegisterFunction: 'offVisiblePhase1'
-        },
-        'phase2': {
-          registerFunction: 'onVisiblePhase1',
-          unRegisterFunction: 'offVisiblePhase1'
-        }
-      };
+    it('onVisible throws for unsupported phase', () => {
+      assert.throws(() => documentVisibilityMonitor.onVisible(() => {}, 'unsupportedPhase'));
+    });
 
+    it('offVisible throws for unsupported phase', () => {
+      assert.throws(() => documentVisibilityMonitor.offVisible(() => {}, 'unsupportedPhase'));
+    });
+
+    ['phase1', 'phase2'].forEach(phase => {
       describe(`phase: ${phase}`, () => {
         beforeEach(() => {
           addEventListenerStub.resetHistory();
@@ -59,10 +55,10 @@ describe('GlobalEvents', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
 
           const callback = () => {};
-          globalEvents[phases[phase].registerFunction](callback);
+          documentVisibilityMonitor.onVisible(callback, phase);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          globalEvents[phases[phase].unRegisterFunction](callback);
+          documentVisibilityMonitor.offVisible(callback, phase);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -71,16 +67,16 @@ describe('GlobalEvents', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
 
           const callback = () => {};
-          globalEvents[phases[phase].registerFunction](callback);
+          documentVisibilityMonitor.onVisible(callback, phase);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          globalEvents[phases[phase].registerFunction](callback);
+          documentVisibilityMonitor.onVisible(callback, phase);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          globalEvents[phases[phase].unRegisterFunction](callback);
+          documentVisibilityMonitor.offVisible(callback, phase);
           sinon.assert.callCount(document.removeEventListener, 0);
 
-          globalEvents[phases[phase].unRegisterFunction](callback);
+          documentVisibilityMonitor.offVisible(callback, phase);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -93,7 +89,7 @@ describe('GlobalEvents', () => {
             deferred.resolve();
           };
 
-          globalEvents[phases[phase].registerFunction](callback);
+          documentVisibilityMonitor.onVisible(callback, phase);
           sinon.assert.callCount(document.addEventListener, 1);
 
           global.document.visibilityState = 'visible';
@@ -101,7 +97,7 @@ describe('GlobalEvents', () => {
 
           await deferred.promise;
 
-          globalEvents[phases[phase].unRegisterFunction](callback);
+          documentVisibilityMonitor.offVisible(callback, phase);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -115,7 +111,7 @@ describe('GlobalEvents', () => {
             deferred.resolve();
           };
 
-          globalEvents[phases[phase].registerFunction](callback);
+          documentVisibilityMonitor.onVisible(callback, phase);
           sinon.assert.callCount(document.addEventListener, 1);
 
           global.document.visibilityState = 'visible';
@@ -123,18 +119,19 @@ describe('GlobalEvents', () => {
 
           await deferred.promise;
 
-          globalEvents[phases[phase].unRegisterFunction](callback);
+          documentVisibilityMonitor.offVisible(callback, phase);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
       });
     });
 
     describe('event sequencing', () => {
-      it('for visibility phase1 gets called before phase 2', done => {
+      it('for visibility phase1 gets called before phase 2', async () => {
+        const deferred = defer();
         let phase1Called = 0;
         let phase2Called = 0;
 
-        const phase1CallBack = async () => {
+        const phase1Callback = async () => {
           assert.equal(phase2Called, 0);
           phase1Called++;
           await waitForSometime(500);
@@ -144,16 +141,19 @@ describe('GlobalEvents', () => {
         const phase2Callback = () => {
           assert.equal(phase1Called, 2);
           phase2Called++;
-          done();
+          deferred.resolve();
         };
 
-        globalEvents.onVisiblePhase2(phase2Callback);
-
-        globalEvents.onVisiblePhase1(phase1CallBack);
-        globalEvents.onVisiblePhase1(phase1CallBack);
+        documentVisibilityMonitor.onVisible(phase2Callback, 'phase2');
+        documentVisibilityMonitor.onVisible(phase1Callback, 'phase1');
+        documentVisibilityMonitor.onVisible(phase1Callback, 'phase1');
 
         global.document.visibilityState = 'visible';
         global.document.dispatchEvent('visibilitychange');
+
+        await deferred.promise;
+        assert.equal(phase1Called, 2);
+        assert.equal(phase2Called, 1);
       });
     });
   });

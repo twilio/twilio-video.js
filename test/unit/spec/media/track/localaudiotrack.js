@@ -104,7 +104,7 @@ function createLocalAudioTrack(options) {
   options = Object.assign({
     log,
     getUserMedia: fakeGetUserMedia,
-    silentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
+    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
   }, options);
 
   return new LocalAudioTrack(mediaStreamTrack, options);
