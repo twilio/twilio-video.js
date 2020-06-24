@@ -1,7 +1,7 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const Document = require('../../../lib/document');
-const globalEvents = require('../../../../lib/util/GlobalEvents');
+const globalEvents = require('../../../../lib/util/globalevents');
 const { defer, waitForSometime } = require('../../../../lib/util');
 // const { waitForSometime } = require('../../../lib/util');
 
@@ -66,6 +66,24 @@ describe('GlobalEvents', () => {
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
+        it('registers for visibility change just once', () => {
+          sinon.assert.callCount(document.addEventListener, 0);
+          sinon.assert.callCount(document.removeEventListener, 0);
+
+          const callback = () => {};
+          globalEvents[phases[phase].registerFunction](callback);
+          sinon.assert.callCount(document.addEventListener, 1);
+
+          globalEvents[phases[phase].registerFunction](callback);
+          sinon.assert.callCount(document.addEventListener, 1);
+
+          globalEvents[phases[phase].unRegisterFunction](callback);
+          sinon.assert.callCount(document.removeEventListener, 0);
+
+          globalEvents[phases[phase].unRegisterFunction](callback);
+          sinon.assert.callCount(document.removeEventListener, 1);
+        });
+
         it('callback function can return sync', async () => {
           sinon.assert.callCount(document.addEventListener, 0);
           sinon.assert.callCount(document.removeEventListener, 0);
@@ -113,20 +131,26 @@ describe('GlobalEvents', () => {
 
     describe('event sequencing', () => {
       it('for visibility phase1 gets called before phase 2', done => {
-        let phase1Called = false;
-        let phase2Called = false;
-        globalEvents.onVisiblePhase2(() => {
-          assert.equal(phase1Called, true);
-          phase2Called = true;
-          done();
-        });
+        let phase1Called = 0;
+        let phase2Called = 0;
 
-        globalEvents.onVisiblePhase1(async () => {
-          assert.equal(phase2Called, false);
-          phase1Called = true;
-          await waitForSometime(2000);
-          assert.equal(phase2Called, false);
-        });
+        const phase1CallBack = async () => {
+          assert.equal(phase2Called, 0);
+          phase1Called++;
+          await waitForSometime(500);
+          assert.equal(phase2Called, 0);
+        };
+
+        const phase2Callback = () => {
+          assert.equal(phase1Called, 2);
+          phase2Called++;
+          done();
+        };
+
+        globalEvents.onVisiblePhase2(phase2Callback);
+
+        globalEvents.onVisiblePhase1(phase1CallBack);
+        globalEvents.onVisiblePhase1(phase1CallBack);
 
         global.document.visibilityState = 'visible';
         global.document.dispatchEvent('visibilitychange');
