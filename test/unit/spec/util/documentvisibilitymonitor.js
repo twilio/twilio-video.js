@@ -4,7 +4,7 @@ const Document = require('../../../lib/document');
 const documentVisibilityMonitor = require('../../../../lib/util/documentvisibilitymonitor');
 const { defer, waitForSometime } = require('../../../../lib/util');
 
-describe.only('DocumentVisibilityMonitor', () => {
+describe('DocumentVisibilityMonitor', () => {
   let addEventListenerStub;
   let removeEventListenerStub;
 
