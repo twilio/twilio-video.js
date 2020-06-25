@@ -52,6 +52,10 @@ echo "Validating current branch..."
 validate_branch
 
 echo "Checking for .only..."
-check_diffs 'test/unit/spec/' '\.js$' '\.only' '.only'
+check_diffs 'test/' '\.js$' '\.only' '.only'
 
-exit 0 # commit will  execute
+echo "Checking for main export from package.json..."
+check_diffs '.' 'package.json' 'main.*\/lib\/index.js' 'exporting es6'
+
+# all is well
+exit 0
