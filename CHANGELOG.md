@@ -1,4 +1,8 @@
-For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
+The Twilio Programmable Video SDKs use Semantic Versioning. Twilio supports version N-1 for 12 months after the first GA release of version N. Version 2.x is the latest Video JavaScript SDK. For 2.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
+
+**Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. 
+
+
 
 1.20.1 (February 6, 2020)
 =========================
