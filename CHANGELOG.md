@@ -3,6 +3,51 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
 
+2.6.0 (June 26, 2020)
+=====================
+
+Changes
+-------
+
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your
+  application to lose the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the
+  microphone. Now your application will regain the microphone after foregrounding. As a result of this, the
+  LocalAudioTrack's `mediaStreamTrack` property will now point to the newly acquired MediaStreamTrack, and
+  the `started` event is fired again on the LocalAudioTrack. The `id` of the LocalAudioTrack is now no longer
+  guaranteed to be equal to the `id` of the MediaStreamTrack. Also, if you want to listen to events on the
+  MediaStreamTrack, we recommend that you do so in the `started` event handler, since it guarantees that you
+  are always listening to events on the most recently acquired MediaStreamTrack. (JSDK-2828)
+
+```js
+const { createLocalAudioTrack } = require('twilio-video');
+
+const localAudioTrack = await createLocalAudioTrack();
+
+function onMute() {
+  console.log('MediaStreamTrack muted!');
+}
+
+function onUnmute() {
+  console.log('MediaStreamTrack unmuted!');
+}
+
+localAudioTrack.on('started', () => {
+  const { mediaStreamTrack } = localAudioTrack;
+  mediaStreamTrack.addEventListener('mute', onMute);
+  mediaStreamTrack.addEventListener('unmute', onUnmute);
+});
+
+localAudioTrack.on('stopped', () => {
+  const { mediaStreamTrack } = localAudioTrack;
+  mediaStreamTrack.removeEventListener('mute', onMute);
+  mediaStreamTrack.removeEventListener('unmute', onUnmute);
+});
+```
+
+- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded,
+  it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application
+  was backgrounded (JSDK-2879).
+
 2.5.1 (June 5, 2020)
 ====================
 

@@ -1,4 +1,5 @@
 'use strict';
+const { EventEmitter } = require('events');
 
 class HTMLElement {
   constructor(tagName) {
@@ -28,8 +29,10 @@ class HTMLBodyElement extends HTMLElement {
   }
 }
 
-class Document {
+class Document extends EventEmitter {
   constructor() {
+    super();
+    this.visibilityState = 'visible';
     this.body = new HTMLBodyElement();
   }
 
@@ -39,6 +42,18 @@ class Document {
 
   querySelector() {
     return null;
+  }
+
+  dispatchEvent(event, ...args) {
+    this.emit(event, ...args);
+  }
+
+  addEventListener(...args) {
+    this.addListener(...args);
+  }
+
+  removeEventListener(...args) {
+    this.removeListener(...args);
   }
 }
 

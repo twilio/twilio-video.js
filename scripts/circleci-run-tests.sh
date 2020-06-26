@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# NOTE(mpatwardhan): IMPORTANT - Since CircleCi logs are publicly available,
+# DO NOT echo or printenv or in any other way let the sensitive environment variables
+# get printed or saved.
+
 set -ev
 
 echo "current directory:"
@@ -55,5 +60,4 @@ else
 fi
 
 echo "Done with Tests!"
-
 

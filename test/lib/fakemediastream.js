@@ -86,6 +86,10 @@ class FakeMediaStreamTrack extends EventTarget {
     return clone;
   }
 
+  getConstraints() {
+    return {};
+  }
+
   stop() {
     this.dispatchEvent({
       type: 'ended',
