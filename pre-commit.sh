@@ -8,7 +8,7 @@
 
 # Check 1: check for direct commit against protected branches.
 # ------------------------------------------------------------
-function validate_branch () {
+function block_protected_branch_commits () {
     # notice current_branch evaluation only looks at part at the end of
     # so if you want to exclude feature/foo, list foo in the protected_branches
 
@@ -25,9 +25,9 @@ function validate_branch () {
     done
 }
 
-# Check 2: Ensure that you are not commiting any tests with marked .only
+# Check 2: checks against blocked pattern specified by the parameter.
 # ----------------------------------------------------------------------
-function check_diffs () {
+function block_commit_for_diff_patterns () {
   FOLDER_PATTERN="$1"
   FILES_PATTERN="$2"
   FORBIDDEN="$3"
@@ -48,14 +48,14 @@ function check_diffs () {
   fi
 }
 
-echo "Validating current branch..."
-validate_branch
+echo "Checking current branch..."
+block_protected_branch_commits
 
 echo "Checking for .only..."
-check_diffs 'test/' '\.js$' '\.only' '.only'
+block_commit_for_diff_patterns 'test/' '\.js$' '\.only\(' '.only'
 
 echo "Checking for main export from package.json..."
-check_diffs '.' 'package.json' 'main.*\/lib\/index.js' 'exporting es6'
+block_commit_for_diff_patterns '.' 'package.json' 'main.*\/lib\/index.js' 'exporting es6'
 
 # all is well
 exit 0
