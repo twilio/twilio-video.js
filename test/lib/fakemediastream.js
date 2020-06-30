@@ -57,7 +57,7 @@ class FakeMediaStream extends EventTarget {
 }
 
 class FakeMediaStreamTrack extends EventTarget {
-  constructor(kind, constraints) {
+  constructor(kind, constraints = {}) {
     super();
     Object.defineProperties(this, {
       _constraints: {
@@ -109,7 +109,6 @@ class FakeMediaStreamTrack extends EventTarget {
 
 function fakeGetUserMedia(constraints) {
   const fakeMediaStream = new FakeMediaStream();
-
   if (constraints.audio) {
     fakeMediaStream.addTrack(new FakeMediaStreamTrack('audio'), constraints.audio);
   }

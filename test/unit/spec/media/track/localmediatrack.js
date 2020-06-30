@@ -5,11 +5,12 @@ const sinon = require('sinon');
 
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
-const Document = require('../../../../lib/document');
+const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
 
+const Document = require('../../../../lib/document');
 const log = require('../../../../lib/fakelog');
 const { fakeGetUserMedia, FakeMediaStreamTrack: MediaStreamTrack } = require('../../../../lib/fakemediastream');
-const { combinationContext,  waitForEvent } = require('../../../../lib/util');
+const { combinationContext, waitForEvent, waitForSometime } = require('../../../../lib/util');
 const { defer } = require('../../../../../lib/util');
 
 [
@@ -412,7 +413,7 @@ const { defer } = require('../../../../../lib/util');
     after(() => {
       addEventListenerStub.restore();
       removeEventListenerStub.restore();
-      if (global.document instanceof Document) {
+      if (global.document instanceof Document && description === 'LocalVideoTrack') {
         delete global.document;
       }
     });
@@ -429,6 +430,7 @@ const { defer } = require('../../../../../lib/util');
 
       context('when called with workaroundWebKitBug1208516', () => {
         let localMediaTrack = null;
+
         before(() => {
           document.visibilityState = 'visible';
           localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], { workaroundWebKitBug1208516: true });
@@ -446,7 +448,7 @@ const { defer } = require('../../../../../lib/util');
           sinon.assert.callCount(document.removeEventListener, 0);
         });
 
-        it('when document becomes visible and track is ended, calls setMediaStreamTrack on all senders', async () => {
+        it('should call setMediaStreamTrack on all senders when document is visible and MediaStreamTrack has ended', async () => {
           document.visibilityState = 'visible';
           localMediaTrack.mediaStreamTrack.readyState = 'ended';
 
@@ -467,10 +469,78 @@ const { defer } = require('../../../../../lib/util');
 
           // setup senders
           senders.forEach(sender => localMediaTrack._trackSender.addSender(sender));
-          assert(replaceTrackPromises.length === senders.length);
+          assert.equal(replaceTrackPromises.length, senders.length);
 
           document.emit('visibilitychange', document.visibilityState);
           await Promise.all(replaceTrackPromises);
+        });
+
+        it('should call setMediaStreamTrack on all senders when MediaStreamTrack has ended', () => {
+          document.visibilityState = 'visible';
+          localMediaTrack.mediaStreamTrack.readyState = 'ended';
+
+          const replaceTrackPromises = [];
+
+          // create two fake RTCRtpSender
+          const senders = [1, 2].map(() => {
+            const deferred = defer();
+            replaceTrackPromises.push(deferred.promise);
+            return {
+              track: 'foo', // track is replaced only when sender.track is not falsy.
+              replaceTrack: sinon.spy(() => {
+                deferred.resolve();
+                return Promise.resolve();
+              })
+            };
+          });
+
+          // setup senders
+          senders.forEach(sender => localMediaTrack._trackSender.addSender(sender));
+          assert.equal(replaceTrackPromises.length, senders.length);
+
+          // Emit "ended" event on the MediaStreamTrack
+          localMediaTrack.mediaStreamTrack.stop();
+
+          return Promise.all(replaceTrackPromises);
+        });
+
+        it('should wait until MediaStreamTrack is re-acquired before calling the visible phase 2 callback even if MediaStreamTrack ends first', async () => {
+          const mediaStreamTrack = localMediaTrack.mediaStreamTrack;
+          document.visibilityState = 'visible';
+          mediaStreamTrack.readyState = 'ended';
+
+          // create two fake RTCRtpSender
+          const senders = [1, 2].map(() => {
+            const deferred = defer();
+            return {
+              track: 'foo', // track is replaced only when sender.track is not falsy.
+              resolveReplaceTrack: () => deferred.resolve(),
+              replaceTrack: () => deferred.promise
+            };
+          });
+
+          // setup senders
+          senders.forEach(sender => localMediaTrack._trackSender.addSender(sender));
+
+          // Emit "ended" event on the MediaStreamTrack
+          localMediaTrack.mediaStreamTrack.stop();
+
+          // When document visible phase 2 callback is called, test whether MediaStreamTrack is re-acquired
+          const phase2Promise = new Promise(resolve => documentVisibilityMonitor.onVisible(2, function onVisible() {
+            documentVisibilityMonitor.offVisible(2, onVisible);
+            assert.notEqual(mediaStreamTrack, localMediaTrack.mediaStreamTrack);
+            resolve();
+          }));
+
+          // Wait for some time and then emit document visibility
+          await waitForSometime(50);
+          document.emit('visibilitychange', document.visibilityState);
+
+          // Wait for some time and resolve the Promise returned by each RTCRtpSender.replaceTrack
+          await waitForSometime(100);
+          senders.forEach(sender => sender.resolveReplaceTrack());
+
+          return phase2Promise;
         });
 
         it('un-registers for document visibility change when track is stopped', () => {
@@ -492,7 +562,8 @@ function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints 
   const mediaStreamTrack = new MediaStreamTrack(kind, constraints);
   options = Object.assign({
     log,
-    getUserMedia: fakeGetUserMedia
+    getUserMedia: fakeGetUserMedia,
+    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
   }, options);
 
   return new LocalMediaTrack(mediaStreamTrack, options);

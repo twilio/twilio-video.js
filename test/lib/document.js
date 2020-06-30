@@ -32,6 +32,7 @@ class HTMLBodyElement extends HTMLElement {
 class Document extends EventEmitter {
   constructor() {
     super();
+    this.visibilityState = 'visible';
     this.body = new HTMLBodyElement();
   }
 
@@ -41,6 +42,10 @@ class Document extends EventEmitter {
 
   querySelector() {
     return null;
+  }
+
+  dispatchEvent(event, ...args) {
+    this.emit(event, ...args);
   }
 
   addEventListener(...args) {
