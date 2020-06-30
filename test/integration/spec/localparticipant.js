@@ -196,7 +196,8 @@ describe('LocalParticipant', function() {
           updatedConfig: { local: 1, remote: 0 }
         }
       ].forEach(testCase => {
-        it('setNetworkQualityConfiguration can update the configuration after connect: (@unstable: JSDK-2827)' + testCase.name, async () => {
+        // TODO(mmalavalli): Re-enable once JSDK-2827 is implemented.
+        it.skip('setNetworkQualityConfiguration can update the configuration after connect: (@unstable: JSDK-2827)' + testCase.name, async () => {
           let nqConfig = testCase.initialConfig;
           const options = Object.assign({ name: randomName() }, defaults);
           const thisTracks = await createLocalTracks({ audio: true, fake: true });
