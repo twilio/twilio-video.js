@@ -21,7 +21,7 @@ function generateReportName(files) {
 
   // generate reportname like: DOCKER-true-BROWSER-chrome-BVER-beta-TOPOLOGY-group-2
   let strReportName = `DO-${isDocker}-`;
-  ['BROWSER', 'BVER', 'TOPOLOGY', 'TRAVIS_JOB_NUMBER'].forEach(dim => {
+  ['BROWSER', 'BVER', 'TOPOLOGY'].forEach(dim => {
     if (process.env[dim]) {
       const dimAbrr = dim.substr(0, 2);
       strReportName += `-${dimAbrr}-${process.env[dim]}`;
@@ -40,6 +40,7 @@ function generateReportName(files) {
 }
 
 function makeConf(defaultFile, browserNoActivityTimeout, requires) {
+  const browserDisconnectTimeout = 10000;
   browserNoActivityTimeout = browserNoActivityTimeout || 30000;
   if (isDocker) {
     // things go slow in docker for network tests
@@ -136,6 +137,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       singleRun: !process.env.DEBUG,
       concurrency: 1,
       browserNoActivityTimeout,
+      browserDisconnectTimeout,
       customLaunchers: {
         ChromeInDocker: {
           base: 'ChromeHeadless',
@@ -175,6 +177,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
+            'media.autoplay.block-webaudio': false,
             'media.autoplay.enabled.user-gestures-needed': false,
             'media.block-autoplay-until-in-foreground': false,
             'media.getusermedia.insecure.enabled': true,
@@ -187,6 +190,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
+            'media.autoplay.block-webaudio': false,
             'media.autoplay.enabled.user-gestures-needed': false,
             'media.block-autoplay-until-in-foreground': false,
             'media.getusermedia.insecure.enabled': true,
