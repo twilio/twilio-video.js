@@ -57,9 +57,12 @@ class FakeMediaStream extends EventTarget {
 }
 
 class FakeMediaStreamTrack extends EventTarget {
-  constructor(kind) {
+  constructor(kind, constraints = {}) {
     super();
     Object.defineProperties(this, {
+      _constraints: {
+        value: typeof constraints === 'boolean' ? {} : constraints
+      },
       id: {
         value: randomName(),
         enumerable: true
@@ -76,6 +79,11 @@ class FakeMediaStreamTrack extends EventTarget {
         value: true,
         writable: true,
         enumerable: true
+      },
+      readyState: {
+        value: 'live',
+        writable: true,
+        enumerable: true
       }
     });
   }
@@ -87,10 +95,11 @@ class FakeMediaStreamTrack extends EventTarget {
   }
 
   getConstraints() {
-    return {};
+    return this._constraints;
   }
 
   stop() {
+    this.readyState = 'ended';
     this.dispatchEvent({
       type: 'ended',
       target: this
@@ -100,12 +109,11 @@ class FakeMediaStreamTrack extends EventTarget {
 
 function fakeGetUserMedia(constraints) {
   const fakeMediaStream = new FakeMediaStream();
-
   if (constraints.audio) {
-    fakeMediaStream.addTrack(new FakeMediaStreamTrack('audio'));
+    fakeMediaStream.addTrack(new FakeMediaStreamTrack('audio'), constraints.audio);
   }
   if (constraints.video) {
-    fakeMediaStream.addTrack(new FakeMediaStreamTrack('video'));
+    fakeMediaStream.addTrack(new FakeMediaStreamTrack('video'), constraints.video);
   }
 
   return Promise.resolve(fakeMediaStream);

@@ -1,9 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { EventEmitter } = require('events');
 const sinon = require('sinon');
-const { inherits } = require('util');
 
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
@@ -11,8 +9,9 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
 
 const Document = require('../../../../lib/document');
 const log = require('../../../../lib/fakelog');
-const { fakeGetUserMedia } = require('../../../../lib/fakemediastream');
-const { defer, waitForSometime } = require('../../../../../lib/util');
+const { fakeGetUserMedia, FakeMediaStreamTrack: MediaStreamTrack } = require('../../../../lib/fakemediastream');
+const { combinationContext, waitForEvent, waitForSometime } = require('../../../../lib/util');
+const { defer } = require('../../../../../lib/util');
 
 [
   ['LocalAudioTrack', LocalAudioTrack],
@@ -40,7 +39,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       let mediaStreamTrack;
 
       before(() => {
-        mediaStreamTrack = new MediaStreamTrack('foo', kind[description]);
+        mediaStreamTrack = new MediaStreamTrack(kind[description]);
       });
 
       context('when called without the "options" argument', () => {
@@ -52,7 +51,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
     describe('.isEnabled', () => {
       it('should set the .isEnabled to the MediaStreamTrack\'s .enabled property', () => {
-        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
         assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
         track.mediaStreamTrack.enabled = !track.mediaStreamTrack.enabled;
         assert.equal(track.isEnabled, track.mediaStreamTrack.enabled);
@@ -61,7 +60,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
     describe('.isStopped', () => {
       it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
-        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
         track.mediaStreamTrack.readyState = 'ended';
         assert(track.isStopped);
         track.mediaStreamTrack.readyState = 'live';
@@ -73,7 +72,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       context('when .name is not a string', () => {
         it('should set .name to the stringified version of the property', () => {
           const notAString = { foo: 'bar' };
-          track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description], { name: notAString });
+          track = createLocalMediaTrack(LocalMediaTrack, kind[description], { name: notAString });
           assert.equal(track.name, String(notAString));
         });
       });
@@ -82,9 +81,9 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
         context(`when .name is ${isNamePresentInOptions ? '' : 'not '}present in LocalTrackOptions`, () => {
           it(`should set .name to ${isNamePresentInOptions ? 'LocalTrackOptions\' .name' : 'MediaStreamTrack\'s ID'}`, () => {
             track = isNamePresentInOptions
-              ? createLocalMediaTrack(LocalMediaTrack, '1', kind[description], { name: 'foo' })
-              : createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
-            assert.equal(track.name, isNamePresentInOptions ? 'foo' : '1');
+              ? createLocalMediaTrack(LocalMediaTrack, kind[description], { name: 'foo' })
+              : createLocalMediaTrack(LocalMediaTrack, kind[description]);
+            assert.equal(track.name, isNamePresentInOptions ? 'foo' : track.id);
           });
         });
       });
@@ -92,15 +91,11 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
     describe('"trackStopped" event', () => {
       context('when the MediaStreamTrack emits onended event', () => {
-        it('should emit LocalMediaTrack#stopped, passing the instance of LocalMediaTrack', async () => {
-          track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
-
-          const stoppedEvent = new Promise(resolve => track.once('stopped', resolve));
-
+        it(`should emit ${description}#stopped, passing the instance of ${description}`, async () => {
+          track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
+          const stoppedEvent = waitForEvent(track, 'stopped');
           assert(track.mediaStreamTrack.readyState !== 'ended');
-
-          track.mediaStreamTrack.emit('ended');
-
+          track.mediaStreamTrack.stop();
           const _track = await stoppedEvent;
           assert.equal(track, _track);
         });
@@ -109,7 +104,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
     describe('#disable', () => {
       before(() => {
-        track = createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
         track.enable = sinon.spy();
         track.disable();
       });
@@ -126,56 +121,48 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
         document.createElement = sinon.spy(() => {
           return dummyElement;
         });
-        track = createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
         track._attach = sinon.spy(el => el);
         track._detachElement = sinon.spy();
         track._attachments.delete = sinon.spy();
       });
 
       it('should not replace track id or name', async () => {
-        const newTrack = new MediaStreamTrack('bar', kind[description]);
-        assert.equal(track.id, 'foo');
-        assert.equal(track.name, 'foo');
-
+        const newTrack = new MediaStreamTrack(kind[description]);
+        const trackId = track.id;
+        const trackName = track.name;
         await track._setMediaStreamTrack(newTrack);
-        assert.equal(track.id, 'foo');
-        assert.equal(track.name, 'foo');
+        assert.equal(track.id, trackId);
+        assert.equal(track.name, trackName);
       });
 
       it('should update underlying mediaStreamTrack', async () => {
-        const newTrack = new MediaStreamTrack('bar', kind[description]);
-        assert.equal(track.mediaStreamTrack.id, 'foo');
-
+        const newTrack = new MediaStreamTrack(kind[description]);
         await track._setMediaStreamTrack(newTrack);
-        assert.equal(track.mediaStreamTrack.id, 'bar');
+        assert.equal(track.mediaStreamTrack, newTrack);
       });
 
-      it('should fire started event after replacing track', async () => {
-        const started1Promise = new Promise(resolve => track.on('started', resolve));
+      it('should fire stopped and started events before and after replacing track respectively', async () => {
+        const started1Promise = waitForEvent(track, 'started');
         dummyElement.oncanplay();
         await started1Promise;
 
-        const newTrack = new MediaStreamTrack('bar', kind[description]);
-        const started2Promise = new Promise(resolve => track.on('started', resolve));
+        const newTrack = new MediaStreamTrack(kind[description]);
+        const stopped1Promise = waitForEvent(track, 'stopped');
+        const started2Promise = waitForEvent(track, 'started');
 
         await track._setMediaStreamTrack(newTrack);
-
+        await stopped1Promise;
         dummyElement.oncanplay();
         await started2Promise;
       });
 
       it('should maintain enabled/disabled state of the track', async () => {
-        const newTrack = new MediaStreamTrack('bar', kind[description]);
-        assert.equal(track.id, 'foo');
-        assert.equal(track.name, 'foo');
+        const newTrack = new MediaStreamTrack(kind[description]);
         assert.equal(track.isEnabled, true);
         track.disable();
         assert.equal(track.isEnabled, false);
-
-
         await track._setMediaStreamTrack(newTrack);
-        assert.equal(track.id, 'foo');
-        assert.equal(track.name, 'foo');
         assert.equal(track.isEnabled, false);
       });
 
@@ -187,7 +174,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
         let trackEnabledEmitted;
 
         before(() => {
-          track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+          track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
           track.mediaStreamTrack.enabled = Math.random() > 0.5;
           track.on('disabled', () => { trackDisabledEmitted = true; });
           track.on('enabled', () => { trackEnabledEmitted = true; });
@@ -205,7 +192,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
             let eventEmitted;
 
             before(() => {
-              track =  createLocalMediaTrack(LocalMediaTrack, 'foo', kind[description]);
+              track =  createLocalMediaTrack(LocalMediaTrack, kind[description]);
               track.mediaStreamTrack.enabled = !enabled;
               track.on(enabled ? 'enabled' : 'disabled', () => { eventEmitted = true; });
               track.enable(enabled);
@@ -223,6 +210,101 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       });
     });
 
+    describe('#restart', () => {
+      combinationContext([
+        [
+          [true, false],
+          x => `when called on a ${description} that was ${x ? '' : 'not '}created using either createLocalTracks or create${description}`
+        ],
+        [
+          [undefined, { foo: 'bar' }],
+          x => `when called with${x ? '' : 'out'} constraints`
+        ],
+        [
+          [true, false],
+          x => `when getUserMedia ${x ? 'resolves with a MediaStream' : 'rejects with an Error'}`
+        ]
+      ], ([isCreatedByCreateLocalTracks, constraints, gUMSucceeds]) => {
+        const restartArgs = constraints ? [constraints] : [];
+        let error;
+        let getUserMedia;
+        let mediaStream;
+        let track;
+
+        before(async () => {
+          getUserMedia = sinon.spy(gUMSucceeds ? (...args) => fakeGetUserMedia(...args).then(stream => {
+            mediaStream = stream;
+            return stream;
+          }) : () => Promise.reject(new Error('foo')));
+
+          track = createLocalMediaTrack(LocalMediaTrack, kind[description], {
+            getUserMedia,
+            isCreatedByCreateLocalTracks
+          }, {
+            baz: 'zee'
+          });
+
+          track._setMediaStreamTrack = sinon.spy();
+
+          try {
+            await track.restart(...restartArgs);
+          } catch (err) {
+            error = err;
+          }
+        });
+
+        if (!(isCreatedByCreateLocalTracks && gUMSucceeds)) {
+          if (!isCreatedByCreateLocalTracks) {
+            it('should not call getUserMedia', () => {
+              sinon.assert.notCalled(getUserMedia);
+            });
+          } else {
+            it(`should call getUserMedia with the ${restartArgs.length > 0 ? 'new' : 'existing'} constraints`, () => {
+              sinon.assert.calledWith(getUserMedia, Object.assign({
+                audio: false,
+                video: false
+              }, {
+                [kind[description]]: restartArgs.length > 0
+                  ? { foo: 'bar' }
+                  : { baz: 'zee' }
+              }));
+            });
+          }
+
+          it(`should reject with ${!isCreatedByCreateLocalTracks ? 'a TypeError' : 'the Error raised by getUserMedia'}`, () => {
+            if (!isCreatedByCreateLocalTracks) {
+              assert(error instanceof TypeError);
+            } else {
+              assert(error.message, 'foo');
+            }
+          });
+
+          it('should not call _setMediaStreamTrack', () => {
+            sinon.assert.notCalled(track._setMediaStreamTrack);
+          });
+        } else {
+          it('should not reject', () => {
+            assert.equal(typeof error, 'undefined');
+          });
+
+          it(`should call getUserMedia with the ${restartArgs.length > 0 ? 'new' : 'existing'} constraints`, () => {
+            sinon.assert.calledWith(getUserMedia, Object.assign({
+              audio: false,
+              video: false
+            }, {
+              [kind[description]]: restartArgs.length > 0
+                ? { foo: 'bar' }
+                : { baz: 'zee' }
+            }));
+          });
+
+          it('should call _setMediaStreamTrack with the MediaStreamTrack returned by getUserMedia', () => {
+            sinon.assert.calledWith(track._setMediaStreamTrack, mediaStream.getTracks()[0]);
+          });
+        }
+      });
+    });
+
     describe('#stop', () => {
       const dummyElement = {
         oncanplay: null,
@@ -231,7 +313,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       };
 
       before(() => {
-        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
         track._createElement = sinon.spy(() => dummyElement);
       });
 
@@ -255,7 +337,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       let track;
 
       before(() => {
-        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
       });
 
       it('only returns public properties', () => {
@@ -288,7 +370,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       let track;
 
       before(() => {
-        track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
       });
 
       it('only returns public properties', () => {
@@ -340,7 +422,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
       context('when called without workaroundWebKitBug1208516', () => {
         it('does not register for document visibility change', () => {
           document.visibilityState = 'visible';
-          const track = createLocalMediaTrack(LocalMediaTrack, '1', kind[description]);
+          const track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
           assert(track instanceof LocalMediaTrack);
           sinon.assert.callCount(document.addEventListener, 0);
         });
@@ -351,7 +433,7 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
         before(() => {
           document.visibilityState = 'visible';
-          localMediaTrack = createLocalMediaTrack(LocalMediaTrack, '1', kind[description], { workaroundWebKitBug1208516: true });
+          localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], { workaroundWebKitBug1208516: true });
           assert(localMediaTrack instanceof LocalMediaTrack);
         });
 
@@ -476,8 +558,8 @@ const { defer, waitForSometime } = require('../../../../../lib/util');
 
 });
 
-function createLocalMediaTrack(LocalMediaTrack, id, kind, options = {}) {
-  const mediaStreamTrack = new MediaStreamTrack(id, kind);
+function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}) {
+  const mediaStreamTrack = new MediaStreamTrack(kind, constraints);
   options = Object.assign({
     log,
     getUserMedia: fakeGetUserMedia,
@@ -486,28 +568,3 @@ function createLocalMediaTrack(LocalMediaTrack, id, kind, options = {}) {
 
   return new LocalMediaTrack(mediaStreamTrack, options);
 }
-
-function MediaStreamTrack(id, kind) {
-  EventEmitter.call(this);
-
-  Object.defineProperties(this, {
-    id: { value: id },
-    kind: { value: kind },
-    enabled: { value: true, writable: true }
-  });
-}
-
-inherits(MediaStreamTrack, EventEmitter);
-
-MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
-
-MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
-
-MediaStreamTrack.prototype.stop = function stop() {
-  // Simulating the browser-native MediaStreamTrack's 'ended' event
-  this.emit('ended', { type: 'ended' });
-};
-
-MediaStreamTrack.prototype.getConstraints = function getConstraints() {
-  return {};
-};

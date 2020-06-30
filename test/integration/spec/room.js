@@ -563,7 +563,7 @@ describe('Room', function() {
       await waitFor([p1, p2, p3, p4], `trackSwitchedOff to get fired on RemoteTrack, RemoteTrackPublication, participant and room: ${aliceRoom.sid}`);
     });
 
-    it('"trackSwitchedOn" fires on RemoteTrack ("switchedOn"), RemoteTrackPublication, RemoteParticipant and Room (@unstable: JSDK-2809)', async () => {
+    it('"trackSwitchedOn" fires on RemoteTrack ("switchedOn"), RemoteTrackPublication, RemoteParticipant and Room', async () => {
       // 1) RemoteTrack
       const p1 = new Promise(resolve => loPriTrackPub.track.once('switchedOn', resolve));
 

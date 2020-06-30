@@ -1,7 +1,7 @@
 {
   "name": "twilio-video",
   "title": "Twilio Video",
-  "description": "Twilio Video JavaScript library",
+  "description": "Twilio Video JavaScript Library",
   "version": "2.6.1-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
