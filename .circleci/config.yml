@@ -22,6 +22,9 @@ parameters:
   backend_workflow: # runs JS integration.
     type: boolean
     default: false
+  backend_group_workflow: # runs Group only JS integration.
+    type: boolean
+    default: false
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -308,6 +311,25 @@ workflows:
             parameters:
               browser: ["chrome", "firefox"]
               topology: ["group", "peer-to-peer"]
+              test_stability: ["stable"]
+
+  Backend_Group_Workflow:
+    when: << pipeline.parameters.backend_group_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable"]
+              topology: ["group"]
+              test_stability: ["stable"]
+      - run-network-tests:
+          name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              topology: ["group"]
               test_stability: ["stable"]
 
   Pull_Request_Workflow:
