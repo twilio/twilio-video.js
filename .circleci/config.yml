@@ -19,6 +19,9 @@ parameters:
   backend_workflow: # runs JS integration.
     type: boolean
     default: false
+  backend_group_workflow: # runs Group only JS integration.
+    type: boolean
+    default: false
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -294,6 +297,19 @@ workflows:
           <<: *browser_firefox
           <<: *bver_stable
           <<: *topology_p2p
+  Backend_Group_Workflow:
+    when: << pipeline.parameters.backend_group_workflow >>
+    jobs:
+      - run-integration-tests:
+          name: "chrome stable group"
+          <<: *browser_chrome
+          <<: *bver_stable
+          <<: *topology_group
+      - run-integration-tests:
+          name: "firefox stable group"
+          <<: *browser_firefox
+          <<: *bver_stable
+          <<: *topology_group
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
