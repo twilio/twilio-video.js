@@ -19,7 +19,7 @@ New Features
 Bug Fixes
 ---------
 
-- Restored es5 support which was broken in 2.6.0. (JSDK-2913)
+- Restored es5 support which was broken in 2.5.0. (JSDK-2913)
 
 2.6.0 (June 26, 2020)
 =====================
