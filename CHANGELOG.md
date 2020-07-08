@@ -2,8 +2,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.7.0 (in progress)
-===================
+2.7.0 (July 8, 2020)
+====================
 
 New Features
 ------------
@@ -15,6 +15,11 @@ New Features
   please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalAudioTrack.html#restart__anchor)
   and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalVideoTrack.html#restart__anchor)
   documentation. (JSDK-2870)
+
+Bug Fixes
+---------
+
+- Restored es5 support which was broken in 2.5.0. (JSDK-2913)
 
 2.6.0 (June 26, 2020)
 =====================
