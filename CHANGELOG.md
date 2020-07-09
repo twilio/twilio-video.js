@@ -12,8 +12,8 @@ New Features
   LocalTrack that is published to a Room, you would have to unpublish it, create a new
   LocalTrack with the desired MediaTrackConstraints and publish it to the Room. Now,
   you can just `restart` the LocalTrack with the desired MediaTrackConstraints. For details,
-  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalAudioTrack.html#restart__anchor)
-  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalVideoTrack.html#restart__anchor)
+  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalAudioTrack.html#restart__anchor)
+  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalVideoTrack.html#restart__anchor)
   documentation. (JSDK-2870)
 
 Bug Fixes
