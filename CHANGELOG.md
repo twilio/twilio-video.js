@@ -2,6 +2,24 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.7.0 (July 8, 2020)
+====================
+
+New Features
+------------
+
+- Previously, if you wanted to change the MediaTrackConstraints of an audio or video
+  LocalTrack that is published to a Room, you would have to unpublish it, create a new
+  LocalTrack with the desired MediaTrackConstraints and publish it to the Room. Now,
+  you can just `restart` the LocalTrack with the desired MediaTrackConstraints. For details,
+  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalAudioTrack.html#restart__anchor)
+  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalVideoTrack.html#restart__anchor)
+  documentation. (JSDK-2870)
+
+Bug Fixes
+---------
+
+- Restored es5 support which was broken in 2.5.0. (JSDK-2913)
 
 2.6.0 (June 26, 2020)
 =====================
@@ -44,9 +62,9 @@ localAudioTrack.on('stopped', () => {
 });
 ```
 
-- Worked around iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded,
+- Worked around this iOS Safari [bug](https://bugs.webkit.org/show_bug.cgi?id=212780) where, when the application is foregrounded,
   it sometimes does not resume playback of the HTMLMediaElements attached to RemoteTracks that are paused when the application
-  was backgrounded (JSDK-2879).
+  is backgrounded. (JSDK-2879)
 
 2.5.1 (June 5, 2020)
 ====================
