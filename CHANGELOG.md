@@ -8,8 +8,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug where audio only Firefox 79+ and Chrome Participants could not hear each
-  other in a Peer to Peer Room due to this [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1106157). (JSDK-2914)
+- Fixed a bug where audio only Firefox 79+ and Chrome Participants could not hear
+  each other in a Peer to Peer Room due to this [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1106157). (JSDK-2914)
+- Fixed a bug where `isSupported` returned `false` for Android Chrome browser on
+  Motorola phones. (JSDK-2878)
 
 2.7.0 (July 8, 2020)
 ====================
