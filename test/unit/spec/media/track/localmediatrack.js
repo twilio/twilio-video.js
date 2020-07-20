@@ -559,8 +559,9 @@ const { defer } = require('../../../../../lib/util');
 });
 
 function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}) {
-  const mediaStreamTrack = new MediaStreamTrack(kind, constraints);
+  const mediaStreamTrack = new MediaStreamTrack(kind);
   options = Object.assign({
+    [kind]: constraints,
     log,
     getUserMedia: fakeGetUserMedia,
     gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
