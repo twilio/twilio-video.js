@@ -556,16 +556,108 @@ const { defer } = require('../../../../../lib/util');
     });
   });
 
+  if (description === 'LocalVideoTrack') {
+    [
+      { workaroundSilentLocalVideo: true },
+      { workaroundSilentLocalVideo: false },
+      {}
+    ].forEach(options => {
+      describe(`when created with${'workaroundSilentLocalVideo' in options
+        ? ` workaroundSilentLocalVideo = ${options.workaroundSilentLocalVideo}`
+        : 'out workaroundSilentLocalVideo'}`, () => {
+        const shouldApplyWorkaround = !!options.workaroundSilentLocalVideo;
+        let localVideoTrack;
+
+        beforeEach(() => {
+          global.document = global.document || new Document();
+          localVideoTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], {
+            ...options,
+            isCreatedByCreateLocalTracks: true
+          }, {}, [
+            'addEventListener',
+            'removeEventListener'
+          ]);
+        });
+
+        afterEach(() => {
+          if (global.document instanceof Document) {
+            delete global.document;
+          }
+        });
+
+        it(`should${shouldApplyWorkaround ? '' : ' not'} call addEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
+          if (shouldApplyWorkaround) {
+            sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+          } else {
+            sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+          }
+        });
+
+        context('when #stop is called', () => {
+          beforeEach(() => {
+            localVideoTrack.stop();
+          });
+
+          it(`should${shouldApplyWorkaround ? '' : ' not'} call removeEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
+            if (shouldApplyWorkaround) {
+              sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.removeEventListener, 'unmute');
+            } else {
+              sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.removeEventListener, 'unmute');
+            }
+          });
+        });
+
+        context('when #restart is called', () => {
+          let mediaStreamTrack;
+
+          beforeEach(() => {
+            mediaStreamTrack = localVideoTrack.mediaStreamTrack;
+            return localVideoTrack.restart();
+          });
+
+          it(`should${shouldApplyWorkaround ? '' : ' not'} call removeEventListener on the old MediaStreamTrack for the "unmute" event`, () => {
+            if (shouldApplyWorkaround) {
+              sinon.assert.calledWith(mediaStreamTrack.removeEventListener, 'unmute');
+            } else {
+              sinon.assert.neverCalledWith(mediaStreamTrack.removeEventListener, 'unmute');
+            }
+          });
+
+          it(`should${shouldApplyWorkaround ? '' : ' not'} call addEventListener on the new MediaStreamTrack for the "unmute" event`, () => {
+            if (shouldApplyWorkaround) {
+              sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+            } else {
+              sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+            }
+          });
+        });
+      });
+    });
+  }
 });
 
-function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}) {
+function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}, stubMediaStreamTrackMethods = []) {
   const mediaStreamTrack = new MediaStreamTrack(kind);
+  stubMethods(mediaStreamTrack, stubMediaStreamTrackMethods);
+
   options = Object.assign({
     [kind]: constraints,
     log,
-    getUserMedia: fakeGetUserMedia,
-    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
+    getUserMedia: constraints => fakeGetUserMedia(constraints).then(stream => {
+      stream.getTracks().forEach(track => stubMethods(track, stubMediaStreamTrackMethods));
+      return stream;
+    }),
+    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints).then(stream => {
+      stream.getTracks().forEach(track => stubMethods(track, stubMediaStreamTrackMethods));
+      return stream;
+    })
   }, options);
 
   return new LocalMediaTrack(mediaStreamTrack, options);
+}
+
+function stubMethods(instance, methods) {
+  methods.forEach(method => {
+    instance[method] = sinon.spy();
+  });
 }
