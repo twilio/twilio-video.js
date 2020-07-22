@@ -8,6 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- Fixed a bug where, sometimes an iOS Safari Participant's `<audio>` and `<video>`
+  elements were paused after handling an incoming phone call. Because of this,
+  RemoteParticipants could not be seen and/or heard. (JSDK-2899)
 - Fixed a bug where iOS Safari Participants stopped sending video frames after an
   incoming phone call. (JSDK-2915)
 - Fixed a bug where audio only Firefox 79+ and Chrome Participants could not hear
