@@ -556,84 +556,81 @@ const { defer } = require('../../../../../lib/util');
     });
   });
 
-  if (description === 'LocalVideoTrack') {
-    [
-      { workaroundSilentLocalVideo: true },
-      { workaroundSilentLocalVideo: false },
-      {}
-    ].forEach(options => {
-      describe(`when created with${'workaroundSilentLocalVideo' in options
-        ? ` workaroundSilentLocalVideo = ${options.workaroundSilentLocalVideo}`
-        : 'out workaroundSilentLocalVideo'}`, () => {
-        const shouldApplyWorkaround = !!options.workaroundSilentLocalVideo;
-        let localVideoTrack;
+  [
+    { workaroundSilenceOnUnmute: true },
+    { workaroundSilenceOnUnmute: false },
+    {}
+  ].forEach(options => {
+    describe(`when created with${'workaroundSilenceOnUnmute' in options
+      ? ` workaroundSilenceOnUnmute = ${options.workaroundSilenceOnUnmute}`
+      : 'out workaroundSilenceOnUnmute'}`, () => {
+      const { workaroundSilenceOnUnmute } = options;
+      let localMediaTrack;
+
+      beforeEach(() => {
+        global.document = global.document || new Document();
+        localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], Object.assign({
+          isCreatedByCreateLocalTracks: true
+        }, options), {}, [
+          'addEventListener',
+          'removeEventListener'
+        ]);
+      });
+
+      afterEach(() => {
+        if (global.document instanceof Document) {
+          delete global.document;
+        }
+      });
+
+      it(`should${workaroundSilenceOnUnmute ? '' : ' not'} call addEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
+        if (workaroundSilenceOnUnmute) {
+          sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.addEventListener, 'unmute');
+        } else {
+          sinon.assert.neverCalledWith(localMediaTrack.mediaStreamTrack.addEventListener, 'unmute');
+        }
+      });
+
+      context('when #stop is called', () => {
+        beforeEach(() => {
+          localMediaTrack.stop();
+        });
+
+        it(`should${workaroundSilenceOnUnmute ? '' : ' not'} call removeEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
+          if (workaroundSilenceOnUnmute) {
+            sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.removeEventListener, 'unmute');
+          } else {
+            sinon.assert.neverCalledWith(localMediaTrack.mediaStreamTrack.removeEventListener, 'unmute');
+          }
+        });
+      });
+
+      context('when #restart is called', () => {
+        let mediaStreamTrack;
 
         beforeEach(() => {
-          global.document = global.document || new Document();
-          localVideoTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], {
-            ...options,
-            isCreatedByCreateLocalTracks: true
-          }, {}, [
-            'addEventListener',
-            'removeEventListener'
-          ]);
+          mediaStreamTrack = localMediaTrack.mediaStreamTrack;
+          return localMediaTrack.restart();
         });
 
-        afterEach(() => {
-          if (global.document instanceof Document) {
-            delete global.document;
-          }
-        });
-
-        it(`should${shouldApplyWorkaround ? '' : ' not'} call addEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
-          if (shouldApplyWorkaround) {
-            sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+        it(`should${workaroundSilenceOnUnmute ? '' : ' not'} call removeEventListener on the old MediaStreamTrack for the "unmute" event`, () => {
+          if (workaroundSilenceOnUnmute) {
+            sinon.assert.calledWith(mediaStreamTrack.removeEventListener, 'unmute');
           } else {
-            sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
+            sinon.assert.neverCalledWith(mediaStreamTrack.removeEventListener, 'unmute');
           }
         });
 
-        context('when #stop is called', () => {
-          beforeEach(() => {
-            localVideoTrack.stop();
-          });
-
-          it(`should${shouldApplyWorkaround ? '' : ' not'} call removeEventListener on the underlying MediaStreamTrack for the "unmute" event`, () => {
-            if (shouldApplyWorkaround) {
-              sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.removeEventListener, 'unmute');
-            } else {
-              sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.removeEventListener, 'unmute');
-            }
-          });
-        });
-
-        context('when #restart is called', () => {
-          let mediaStreamTrack;
-
-          beforeEach(() => {
-            mediaStreamTrack = localVideoTrack.mediaStreamTrack;
-            return localVideoTrack.restart();
-          });
-
-          it(`should${shouldApplyWorkaround ? '' : ' not'} call removeEventListener on the old MediaStreamTrack for the "unmute" event`, () => {
-            if (shouldApplyWorkaround) {
-              sinon.assert.calledWith(mediaStreamTrack.removeEventListener, 'unmute');
-            } else {
-              sinon.assert.neverCalledWith(mediaStreamTrack.removeEventListener, 'unmute');
-            }
-          });
-
-          it(`should${shouldApplyWorkaround ? '' : ' not'} call addEventListener on the new MediaStreamTrack for the "unmute" event`, () => {
-            if (shouldApplyWorkaround) {
-              sinon.assert.calledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
-            } else {
-              sinon.assert.neverCalledWith(localVideoTrack.mediaStreamTrack.addEventListener, 'unmute');
-            }
-          });
+        it(`should${workaroundSilenceOnUnmute ? '' : ' not'} call addEventListener on the new MediaStreamTrack for the "unmute" event`, () => {
+          if (workaroundSilenceOnUnmute) {
+            sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.addEventListener, 'unmute');
+          } else {
+            sinon.assert.neverCalledWith(localMediaTrack.mediaStreamTrack.addEventListener, 'unmute');
+          }
         });
       });
     });
-  }
+  });
 });
 
 function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}, stubMediaStreamTrackMethods = []) {
