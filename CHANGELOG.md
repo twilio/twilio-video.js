@@ -8,6 +8,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- In version [2.6.0](#260-june-26-2020), we had introduced a workaround for this iOS Safari
+  [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose
+  the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone.
+  This release refactors the workaround to work for **iOS versions 13.6 and above**. (JSDK-2928) 
 - Fixed a bug where, sometimes an iOS Safari Participant's `<audio>` and `<video>`
   elements were paused after handling an incoming phone call. Because of this,
   RemoteParticipants could not be seen and/or heard. (JSDK-2899)
