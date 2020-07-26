@@ -8,6 +8,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- Fixed a bug where, sometimes an iOS Safari Participant is not heard by others in
+  a Room after handling an incoming phone call. (JSDK-2932)
 - In version [2.6.0](#260-june-26-2020), we had introduced a workaround for this iOS Safari
   [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose
   the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone.
