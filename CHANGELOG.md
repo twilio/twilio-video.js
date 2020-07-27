@@ -2,6 +2,28 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.7.1 (in progress)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where, sometimes an iOS Safari Participant is not heard by others in
+  a Room after handling an incoming phone call. (JSDK-2932)
+- In version [2.6.0](#260-june-26-2020), we had introduced a workaround for this iOS Safari
+  [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose
+  the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone.
+  This release refactors the workaround to work for **iOS versions 13.6 and above**. (JSDK-2928) 
+- Fixed a bug where, sometimes an iOS Safari Participant's `<audio>` and `<video>`
+  elements were paused after handling an incoming phone call. Because of this,
+  RemoteParticipants could not be seen and/or heard. (JSDK-2899)
+- Fixed a bug where iOS Safari Participants stopped sending video frames after an
+  incoming phone call. (JSDK-2915)
+- Fixed a bug where audio only Firefox 79+ and Chrome Participants could not hear
+  each other in a Peer to Peer Room due to this [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1106157). (JSDK-2914)
+- Fixed a bug where `isSupported` returned `false` for Android Chrome browser on
+  Motorola phones. (JSDK-2878)
+
 2.7.0 (July 8, 2020)
 ====================
 
@@ -12,8 +34,8 @@ New Features
   LocalTrack that is published to a Room, you would have to unpublish it, create a new
   LocalTrack with the desired MediaTrackConstraints and publish it to the Room. Now,
   you can just `restart` the LocalTrack with the desired MediaTrackConstraints. For details,
-  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalAudioTrack.html#restart__anchor)
-  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/dist/docs/LocalVideoTrack.html#restart__anchor)
+  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalAudioTrack.html#restart__anchor)
+  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalVideoTrack.html#restart__anchor)
   documentation. (JSDK-2870)
 
 Bug Fixes

@@ -61,6 +61,14 @@ describe('isSupported', () => {
     [
       'Electron',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Electron/3.1.12 Safari/537.36'
+    ],
+    [
+      'Moto G4 Android Chrome',
+      'Mozilla/5.0 (Linux; Android 6.0.1; Moto G (4)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Mobile Safari/537.36'
+    ],
+    [
+      'Moto G7 Android Chrome',
+      'Mozilla/5.0 (Linux; Android 9; moto g(7) power) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.96 Mobile Safari/537.36'
     ]
   ].forEach(([browser, useragent, chrome]) => {
     it('returns true for supported browser: ' + browser, () => {

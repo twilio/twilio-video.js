@@ -5,6 +5,7 @@ const assert = require('assert');
 const { flatMap } = require('../../../../../lib/util');
 
 const {
+  disableRtx,
   getMediaSections,
   setBitrateParameters,
   setCodecPreferences,
@@ -979,6 +980,189 @@ describe('removeSSRCAttributes', () => {
   tests.forEach(test => {
     it(test.name, () => {
       assert.equal(removeSSRCAttributes(test.before, test.remove), test.after);
+    });
+  });
+});
+
+describe('disableRtx', () => {
+  const sdpWithoutRtx = `v=0\r
+o=mozilla...THIS_IS_SDPARTA-78.0.1 914717455470386583 0 IN IP4 0.0.0.0\r
+s=-\r
+t=0 0\r
+a=fingerprint:sha-256 64:C5:43:F0:DE:63:49:1C:80:85:98:98:48:EA:50:38:DF:1E:95:28:5A:F2:5B:22:A3:9D:6E:C7:F5:66:A4:73\r
+a=group:BUNDLE 0 1\r
+a=ice-options:trickle\r
+a=msid-semantic:WMS *\r
+m=audio 9 UDP/TLS/RTP/SAVPF 111 9 0 8 126\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:111 maxplaybackrate=48000;stereo=1;useinbandfec=1\r
+a=fmtp:126 0-15\r
+a=ice-pwd:87bc3b58d14e6e747ec7607495db1e36\r
+a=ice-ufrag:73f379bf\r
+a=mid:0\r
+a=msid:{7c81c628-2293-d24f-b6a6-612725ade021} {c04b41b9-0284-c549-bb2b-ba0d430f18d2}\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtpmap:9 G722/8000/1\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:126 telephone-event/8000/1\r
+a=setup:active\r
+a=ssrc:599948313 cname:{69b8d6b0-3ec4-004c-98e0-543de2b8e22f}\r
+m=video 9 UDP/TLS/RTP/SAVPF 96 98 125 108\r
+c=IN IP4 0.0.0.0\r
+a=inactive\r
+a=extmap:14 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:125 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:108 profile-level-id=42e01f;level-asymmetry-allowed=1\r
+a=fmtp:96 max-fs=12288;max-fr=60\r
+a=fmtp:98 max-fs=12288;max-fr=60\r
+a=ice-pwd:87bc3b58d14e6e747ec7607495db1e36\r
+a=ice-ufrag:73f379bf\r
+a=mid:1\r
+a=rtcp-fb:96 nack\r
+a=rtcp-fb:96 nack pli\r
+a=rtcp-fb:96 ccm fir\r
+a=rtcp-fb:96 goog-remb\r
+a=rtcp-fb:98 nack\r
+a=rtcp-fb:98 nack pli\r
+a=rtcp-fb:98 ccm fir\r
+a=rtcp-fb:98 goog-remb\r
+a=rtcp-fb:125 nack\r
+a=rtcp-fb:125 nack pli\r
+a=rtcp-fb:125 ccm fir\r
+a=rtcp-fb:125 goog-remb\r
+a=rtcp-fb:108 nack\r
+a=rtcp-fb:108 nack pli\r
+a=rtcp-fb:108 ccm fir\r
+a=rtcp-fb:108 goog-remb\r
+a=rtcp-mux\r
+a=rtpmap:96 VP8/90000\r
+a=rtpmap:98 VP9/90000\r
+a=rtpmap:125 H264/90000\r
+a=rtpmap:108 H264/90000\r
+a=setup:active\r
+a=ssrc:123182331 cname:{69b8d6b0-3ec4-004c-98e0-543de2b8e22f}`;
+
+  const sdpWithRtx = `v=0\r
+o=mozilla...THIS_IS_SDPARTA-79.0 182335824049326962 0 IN IP4 0.0.0.0\r
+s=-\r
+t=0 0\r
+a=fingerprint:sha-256 24:B0:F9:5C:CD:C4:88:C2:9B:DE:CC:B1:D7:9C:41:7B:1D:94:C8:2A:87:8C:A3:F6:94:83:AC:30:64:00:4C:E5\r
+a=group:BUNDLE 0 1\r
+a=ice-options:trickle\r
+a=msid-semantic:WMS *\r
+m=audio 9 UDP/TLS/RTP/SAVPF 111 9 0 8 126\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:111 maxplaybackrate=48000;stereo=1;useinbandfec=1\r
+a=fmtp:126 0-15\r
+a=ice-pwd:00887f6cd54bbbdde038834c933f944e\r
+a=ice-ufrag:3914f648\r
+a=mid:0\r
+a=msid:{ecaa60a2-3118-3d43-a5c8-0793a8a5b0cc} {dae6631b-a5f7-c047-a11f-22b467ccb280}\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtpmap:9 G722/8000/1\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:126 telephone-event/8000/1\r
+a=setup:active\r
+a=ssrc:3010114044 cname:{fd6b9593-e05a-f34f-b91a-389a1874c13c}\r
+m=video 9 UDP/TLS/RTP/SAVPF 96 97 99 107 109 98 125 108\r
+c=IN IP4 0.0.0.0\r
+a=inactive\r
+a=extmap:14 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=extmap:12 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r
+a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:125 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:108 profile-level-id=42e01f;level-asymmetry-allowed=1\r
+a=fmtp:96 max-fs=12288;max-fr=60\r
+a=fmtp:97 apt=96\r
+a=fmtp:98 max-fs=12288;max-fr=60\r
+a=fmtp:99 apt=98\r
+a=fmtp:107 apt=125\r
+a=fmtp:109 apt=108\r
+a=ice-pwd:00887f6cd54bbbdde038834c933f944e\r
+a=ice-ufrag:3914f648\r
+a=mid:1\r
+a=rtcp-fb:96 nack\r
+a=rtcp-fb:96 nack pli\r
+a=rtcp-fb:96 ccm fir\r
+a=rtcp-fb:96 goog-remb\r
+a=rtcp-fb:96 transport-cc\r
+a=rtcp-fb:98 nack\r
+a=rtcp-fb:98 nack pli\r
+a=rtcp-fb:98 ccm fir\r
+a=rtcp-fb:98 goog-remb\r
+a=rtcp-fb:98 transport-cc\r
+a=rtcp-fb:125 nack\r
+a=rtcp-fb:125 nack pli\r
+a=rtcp-fb:125 ccm fir\r
+a=rtcp-fb:125 goog-remb\r
+a=rtcp-fb:125 transport-cc\r
+a=rtcp-fb:108 nack\r
+a=rtcp-fb:108 nack pli\r
+a=rtcp-fb:108 ccm fir\r
+a=rtcp-fb:108 goog-remb\r
+a=rtcp-fb:108 transport-cc\r
+a=rtcp-mux\r
+a=rtpmap:96 VP8/90000\r
+a=rtpmap:97 rtx/90000\r
+a=rtpmap:98 VP9/90000\r
+a=rtpmap:99 rtx/90000\r
+a=rtpmap:125 H264/90000\r
+a=rtpmap:107 rtx/90000\r
+a=rtpmap:108 H264/90000\r
+a=rtpmap:109 rtx/90000\r
+a=setup:active\r
+a=ssrc:2476366320 cname:{fd6b9593-e05a-f34f-b91a-389a1874c13c}\r
+a=ssrc:3143435575 cname:{fd6b9593-e05a-f34f-b91a-389a1874c13c}\r
+a=ssrc-group:FID 2476366320 3143435575`;
+
+  [sdpWithoutRtx, sdpWithRtx].forEach(sdp => {
+    const rtxFmtpRegex = /^a=fmtp:.+ apt=.+$/gm;
+    const rtxPts = [97, 99, 107, 109];
+    const rtxRtpmapRegex = /^a=rtpmap:.+ rtx\/.+$/gm;
+    const rtxSSRCAttrRegex = /^a=ssrc:3143435575 .+$/gm;
+    const shouldRemoveRtx = sdp === sdpWithRtx;
+    const ssrcGroupRegex = /^a=ssrc-group:FID .+ .+$/gm;
+
+    it(`should ${shouldRemoveRtx ? 'disable RTX' : 'do nothing'}`, () => {
+      const sdp1 = disableRtx(sdp);
+      if (shouldRemoveRtx) {
+        const mediaSections = getMediaSections(sdp);
+        const mediaSections1 = getMediaSections(sdp1);
+        mediaSections.forEach((mediaSection, i) => {
+          if (!/^m=video/.test(mediaSections1[i])) {
+            assert.equal(mediaSections1[i], mediaSection);
+          } else {
+            // The RTX payload types should not be present.
+            const lines = mediaSections1[i].split('\r\n');
+            const pts = lines[0].match(/(\d+)/g).slice(1);
+            rtxPts.forEach(rtxPt => assert(!pts.includes(rtxPt)));
+
+            // SDP lines related to RTX should not be present.
+            const rtxLines = lines.filter(line => rtxFmtpRegex.test(line)
+             || rtxRtpmapRegex.test(line)
+             || rtxSSRCAttrRegex.test(line)
+             || ssrcGroupRegex.test(line));
+            assert.equal(rtxLines.length, 0);
+          }
+        });
+      } else {
+        assert.equal(sdp1, sdp);
+      }
     });
   });
 });
