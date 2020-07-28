@@ -420,11 +420,25 @@ const { defer } = require('../../../../../lib/util');
 
     describe('constructor', () => {
       context('when called without workaroundWebKitBug1208516', () => {
-        it('does not register for document visibility change', () => {
+        let track;
+
+        before(() => {
           document.visibilityState = 'visible';
-          const track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
-          assert(track instanceof LocalMediaTrack);
-          sinon.assert.callCount(document.addEventListener, 0);
+          track = createLocalMediaTrack(LocalMediaTrack, kind[description], {}, {}, [
+            'addEventListener',
+            'removeEventListener'
+          ]);
+        });
+
+        it('does not register for document visibility change', () => {
+          sinon.assert.notCalled(document.addEventListener);
+        });
+
+        it('should not listen to "ended" and "unmute" events on the underlying MediaStreamTrack', () => {
+          sinon.assert.callCount(track.mediaStreamTrack.addEventListener, 1);
+          sinon.assert.neverCalledWith(track.mediaStreamTrack.addEventListener, 'unmute');
+          assert.equal(track.mediaStreamTrack.addEventListener.args[0][0], 'ended');
+          assert.equal(track.mediaStreamTrack.addEventListener.args[0][1].name, 'onended');
         });
       });
 
@@ -433,8 +447,12 @@ const { defer } = require('../../../../../lib/util');
 
         before(() => {
           document.visibilityState = 'visible';
-          localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], { workaroundWebKitBug1208516: true });
-          assert(localMediaTrack instanceof LocalMediaTrack);
+          localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], {
+            workaroundWebKitBug1208516: true
+          }, {}, [
+            'addEventListener',
+            'removeEventListener'
+          ]);
         });
 
         after(() => {
@@ -446,6 +464,12 @@ const { defer } = require('../../../../../lib/util');
           sinon.assert.callCount(document.addEventListener, 1);
           sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
           sinon.assert.callCount(document.removeEventListener, 0);
+        });
+
+        it('should listen to "ended" and "unmute" events on the underlying MediaStreamTrack', () => {
+          ['ended', 'unmute'].forEach(event => {
+            sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.addEventListener, event);
+          });
         });
 
         it('should call setMediaStreamTrack on all senders when document is visible and MediaStreamTrack has ended', async () => {
@@ -543,7 +567,7 @@ const { defer } = require('../../../../../lib/util');
           return phase2Promise;
         });
 
-        it('un-registers for document visibility change when track is stopped', () => {
+        it('un-registers for document visibility change and "ended" and "unmute" events when track is stopped', () => {
           sinon.assert.callCount(document.addEventListener, 1);
           sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
           sinon.assert.callCount(document.removeEventListener, 0);
@@ -551,20 +575,39 @@ const { defer } = require('../../../../../lib/util');
           localMediaTrack.stop();
           sinon.assert.callCount(document.removeEventListener, 1);
           sinon.assert.calledWith(document.removeEventListener, 'visibilitychange');
+
+          ['ended', 'unmute'].forEach(event => {
+            sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.removeEventListener, event);
+          });
         });
       });
     });
   });
-
 });
 
-function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}) {
-  const mediaStreamTrack = new MediaStreamTrack(kind, constraints);
+function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}, stubMediaStreamTrackMethods = []) {
+  const mediaStreamTrack = new MediaStreamTrack(kind);
+  stubMethods(mediaStreamTrack, stubMediaStreamTrackMethods);
+
   options = Object.assign({
+    [kind]: constraints,
     log,
-    getUserMedia: fakeGetUserMedia,
-    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints)
+    getUserMedia: constraints => fakeGetUserMedia(constraints).then(stream => {
+      stream.getTracks().forEach(track => stubMethods(track, stubMediaStreamTrackMethods));
+      return stream;
+    }),
+    gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints).then(stream => {
+      stream.getTracks().forEach(track => stubMethods(track, stubMediaStreamTrackMethods));
+      return stream;
+    })
   }, options);
 
   return new LocalMediaTrack(mediaStreamTrack, options);
+}
+
+function stubMethods(instance, methods) {
+  methods.forEach(method => {
+    const fn = instance[method];
+    instance[method] = sinon.spy((...args) => fn.apply(instance, args));
+  });
 }
