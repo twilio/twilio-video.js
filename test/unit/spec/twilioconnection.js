@@ -95,7 +95,7 @@ describe('TwilioConnection', function() {
     });
 
     it('should emit "event" on the EventObserver', () => {
-      sinon.assert.calledWith(eventObserver.emit, 'event', { name: 'early' });
+      sinon.assert.calledWith(eventObserver.emit, 'event', { name: 'early', group: 'signaling', level: 'info' });
     });
   });
 
@@ -105,30 +105,30 @@ describe('TwilioConnection', function() {
 
       const expectedEvents = {
         closed: [
-          { name: 'early' },
-          { name: 'connecting' },
-          { name: 'closed', payload: { reason: 'local' } }
+          { name: 'early', group: 'signaling', level: 'info' },
+          { name: 'connecting', group: 'signaling', level: 'info' },
+          { name: 'closed', group: 'signaling', level: 'info', payload: { reason: 'local' } }
         ],
         connecting: [
-          { name: 'early' },
-          { name: 'connecting' },
-          { name: 'closed', payload: { reason: 'local' } }
+          { name: 'early', group: 'signaling', level: 'info' },
+          { name: 'connecting', group: 'signaling', level: 'info' },
+          { name: 'closed', group: 'signaling', level: 'info', payload: { reason: 'local' } }
         ],
         early: [
-          { name: 'early' },
-          { name: 'closed', payload: { reason: 'local' } }
+          { name: 'early', group: 'signaling', level: 'info' },
+          { name: 'closed', group: 'signaling', level: 'info', payload: { reason: 'local' } }
         ],
         open: [
-          { name: 'early' },
-          { name: 'connecting' },
-          { name: 'open' },
-          { name: 'closed', payload: { reason: 'local' } }
+          { name: 'early', group: 'signaling', level: 'info' },
+          { name: 'connecting', group: 'signaling', level: 'info' },
+          { name: 'open', group: 'signaling', level: 'info' },
+          { name: 'closed', group: 'signaling', level: 'info', payload: { reason: 'local' } }
         ],
         waiting: [
-          { name: 'early' },
-          { name: 'connecting' },
-          { name: 'waiting' },
-          { name: 'closed', payload: { reason: 'local' } }
+          { name: 'early', group: 'signaling', level: 'info' },
+          { name: 'connecting', group: 'signaling', level: 'info' },
+          { name: 'waiting', group: 'signaling', level: 'warning' },
+          { name: 'closed', group: 'signaling', level: 'info', payload: { reason: 'local' } }
         ]
       }[state];
 
@@ -327,8 +327,8 @@ describe('TwilioConnection', function() {
           });
 
           testEventObserverEvents(() => eventObserver, [
-            { name: 'early' },
-            { name: 'closed', payload: { reason: 'timeout' } }
+            { name: 'early', group: 'signaling', level: 'info' },
+            { name: 'closed', group: 'signaling', level: 'error', payload: { reason: 'timeout' } }
           ]);
         });
 
@@ -353,8 +353,8 @@ describe('TwilioConnection', function() {
           });
 
           testEventObserverEvents(() => eventObserver, [
-            { name: 'early' },
-            { name: 'connecting' }
+            { name: 'early', group: 'signaling', level: 'info' },
+            { name: 'connecting', group: 'signaling', level: 'info' }
           ]);
 
           context('when a "welcome" message is received within the "welcome" timeout', () => {
@@ -401,9 +401,9 @@ describe('TwilioConnection', function() {
             });
 
             testEventObserverEvents(() => eventObserver, [
-              { name: 'early' },
-              { name: 'connecting' },
-              { name: 'open' }
+              { name: 'early', group: 'signaling', level: 'info' },
+              { name: 'connecting', group: 'signaling', level: 'info' },
+              { name: 'open', group: 'signaling', level: 'info' }
             ]);
 
             context('when the TwilioConnection fails to receive any "heartbeat" messages', () => {
@@ -430,10 +430,10 @@ describe('TwilioConnection', function() {
               });
 
               testEventObserverEvents(() => eventObserver, [
-                { name: 'early' },
-                { name: 'connecting' },
-                { name: 'open' },
-                { name: 'closed', payload: { reason: 'timeout' } }
+                { name: 'early', group: 'signaling', level: 'info' },
+                { name: 'connecting', group: 'signaling', level: 'info' },
+                { name: 'open', group: 'signaling', level: 'info' },
+                { name: 'closed', group: 'signaling', level: 'error', payload: { reason: 'timeout' } }
               ]);
             });
 
@@ -522,9 +522,9 @@ describe('TwilioConnection', function() {
             });
 
             testEventObserverEvents(() => eventObserver, [
-              { name: 'early' },
-              { name: 'connecting' },
-              { name: 'closed', payload: { reason: 'failed' } }
+              { name: 'early', group: 'signaling', level: 'info' },
+              { name: 'connecting', group: 'signaling', level: 'info' },
+              { name: 'closed', group: 'signaling', level: 'error', payload: { reason: 'failed' } }
             ]);
           });
 
@@ -589,9 +589,9 @@ describe('TwilioConnection', function() {
                 });
 
                 testEventObserverEvents(() => eventObserver, [
-                  { name: 'early' },
-                  { name: 'connecting' },
-                  { name: 'closed', payload: { reason: 'busy' } }
+                  { name: 'early', group: 'signaling', level: 'info' },
+                  { name: 'connecting', group: 'signaling', level: 'info' },
+                  { name: 'closed', group: 'signaling', level: 'error', payload: { reason: 'busy' } }
                 ]);
               } else {
                 it('should set the TwilioConnection\'s .state to "waiting"', () => {
@@ -607,9 +607,9 @@ describe('TwilioConnection', function() {
                 });
 
                 testEventObserverEvents(() => eventObserver, [
-                  { name: 'early' },
-                  { name: 'connecting' },
-                  { name: 'waiting' }
+                  { name: 'early', group: 'signaling', level: 'info' },
+                  { name: 'connecting', group: 'signaling', level: 'info' },
+                  { name: 'waiting', group: 'signaling', level: 'warning' }
                 ]);
 
                 if (keepAlive) {
@@ -657,10 +657,10 @@ describe('TwilioConnection', function() {
                     });
 
                     testEventObserverEvents(() => eventObserver, [
-                      { name: 'early' },
-                      { name: 'connecting' },
-                      { name: 'waiting' },
-                      { name: 'open' }
+                      { name: 'early', group: 'signaling', level: 'info' },
+                      { name: 'connecting', group: 'signaling', level: 'info' },
+                      { name: 'waiting', group: 'signaling', level: 'warning' },
+                      { name: 'open', group: 'signaling', level: 'info' }
                     ]);
                   });
 
@@ -692,10 +692,10 @@ describe('TwilioConnection', function() {
                     });
 
                     testEventObserverEvents(() => eventObserver, [
-                      { name: 'early' },
-                      { name: 'connecting' },
-                      { name: 'waiting' },
-                      { name: 'connecting' }
+                      { name: 'early', group: 'signaling', level: 'info' },
+                      { name: 'connecting', group: 'signaling', level: 'info' },
+                      { name: 'waiting', group: 'signaling', level: 'warning' },
+                      { name: 'connecting', group: 'signaling', level: 'info' }
                     ]);
                   });
                 } else {
@@ -733,11 +733,11 @@ describe('TwilioConnection', function() {
                     });
 
                     testEventObserverEvents(() => eventObserver, [
-                      { name: 'early' },
-                      { name: 'connecting' },
-                      { name: 'waiting' },
-                      { name: 'early' },
-                      { name: 'connecting' }
+                      { name: 'early', group: 'signaling', level: 'info' },
+                      { name: 'connecting', group: 'signaling', level: 'info' },
+                      { name: 'waiting', group: 'signaling', level: 'warning' },
+                      { name: 'early', group: 'signaling', level: 'info' },
+                      { name: 'connecting', group: 'signaling', level: 'info' }
                     ]);
                   });
                 }
@@ -770,9 +770,9 @@ describe('TwilioConnection', function() {
               });
 
               testEventObserverEvents(() => eventObserver, [
-                { name: 'early' },
-                { name: 'connecting' },
-                { name: 'closed', payload: { reason: 'timeout' } }
+                { name: 'early', group: 'signaling', level: 'info' },
+                { name: 'connecting', group: 'signaling', level: 'info' },
+                { name: 'closed', group: 'signaling', level: 'error', payload: { reason: 'timeout' } }
               ]);
             });
 
@@ -816,9 +816,9 @@ describe('TwilioConnection', function() {
               });
 
               testEventObserverEvents(() => eventObserver, [
-                { name: 'early' },
-                { name: 'connecting' },
-                { name: 'open' }
+                { name: 'early', group: 'signaling', level: 'info' },
+                { name: 'connecting', group: 'signaling', level: 'info' },
+                { name: 'open', group: 'signaling', level: 'info' }
               ]);
             });
           });
