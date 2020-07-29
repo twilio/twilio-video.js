@@ -11,28 +11,40 @@ describe('EventObserver', () => {
 
   describe('"event", when emitted', () => {
     [
-      ['closed', 'error', { reason: 'busy' }],
-      ['closed', 'error', { reason: 'failed' }],
-      ['closed', 'info', { reason: 'local' }],
-      ['closed', 'error', { reason: 'remote' }],
-      ['closed', 'error', { reason: 'timeout' }],
-      ['connecting', 'info'],
-      ['early', 'info'],
-      ['open', 'info'],
-      ['waiting', 'warning']
-    ].forEach(([name, level, payload]) => {
-      context(`with .name "${name}"${payload
-        ? ` and .payload ${JSON.stringify(payload)}`
-        : ''}, should emit an "event" on the EventListener with`, () => {
-        let connectTimestamp;
-        let eventParams;
+      { reason: 'bad_group', group: 'bad_group', level: 'info' },
+      { reason: 'bad_level', name: 'foo', group: 'signaling', level: 'bad_level' },
+      { reason: 'missing_level', name: 'foo', group: 'signaling' },
+      { reason: 'missing_group', name: 'foo', level: 'info' },
+      { reason: 'missing_name', level: 'info', group: 'signaling' },
+      { name: 'level_info', level: 'info', group: 'signaling' },
+      { name: 'level_warning', level: 'warning', group: 'signaling' },
+      { name: 'level_error', level: 'error', group: 'signaling' },
+      { name: 'level_debug', level: 'debug', group: 'signaling' }
+    ].forEach(params => {
+      let reason = params.reason;
+      let connectTimestamp;
+      let eventParams;
+      let eventObserver;
 
-        before(() => {
-          connectTimestamp = Date.now();
-          const eventListener = new EventEmitter();
-          const eventObserver = new EventObserver(connectTimestamp, eventListener);
-          eventListener.once('event', event => { eventParams = event; });
-          eventObserver.emit('event', payload ? { name, payload } : { name });
+      before(() => {
+        delete params.reason;
+        connectTimestamp = Date.now();
+        const eventListener = new EventEmitter();
+        eventObserver = new EventObserver(connectTimestamp, eventListener);
+        eventListener.once('event', event => { eventParams = event; });
+      });
+
+      if (params.reason) {
+        it('throws for bad event params : ' + reason, () => {
+          assert.throws(() => {
+            eventObserver.emit('event', params);
+          });
+        });
+      } else {
+        it(' does not throw for: ' + params.name, () => {
+          assert.doesNotThrow(() => {
+            eventObserver.emit('event', params);
+          });
         });
 
         it('.timestamp', () => {
@@ -47,18 +59,18 @@ describe('EventObserver', () => {
           assert.equal(eventParams.group, 'signaling');
         });
 
-        it(`.level set to "${level}"`, () => {
-          assert.equal(eventParams.level, level);
+        it(`.level set to "${params.level}"`, () => {
+          assert.equal(eventParams.level, params.level);
         });
 
-        it(`.name set to "${name}"`, () => {
-          assert.equal(eventParams.name, name);
+        it(`.name set to "${params.name}"`, () => {
+          assert.equal(eventParams.name, params.name);
         });
 
         it('.payload set to the given payload', () => {
-          assert.deepEqual(eventParams.payload, payload);
+          assert.deepEqual(eventParams.payload, params.payload);
         });
-      });
+      }
     });
   });
 });

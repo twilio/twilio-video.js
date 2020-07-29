@@ -1,6 +1,15 @@
-The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK. 
+The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
+
+2.7.2 (In Progress)
+===================
+
+Changes
+-------
+
+- Added metrics about signaling server connections. This is internal change, and has no effect on the SDK API.
+
 
 2.7.1 (July 28, 2020)
 =====================
@@ -13,7 +22,7 @@ Bug Fixes
 - In version [2.6.0](#260-june-26-2020), we had introduced a workaround for this iOS Safari
   [bug](https://bugs.webkit.org/show_bug.cgi?id=208516) which causes your application to lose
   the microphone when another application (Siri, YouTube, FaceTime, etc.) reserves the microphone.
-  This release refactors the workaround to work for **iOS versions 13.6 and above**. (JSDK-2928) 
+  This release refactors the workaround to work for **iOS versions 13.6 and above**. (JSDK-2928)
 - Fixed a bug where, sometimes an iOS Safari Participant's `<audio>` and `<video>`
   elements were paused after handling an incoming phone call. Because of this,
   RemoteParticipants could not be seen and/or heard. (JSDK-2899)
