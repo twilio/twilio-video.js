@@ -43,7 +43,7 @@ const {
   waitOnceForRoomEvent
 } = require('../../lib/util');
 
-describe(`LocalTrackPublication ${isFirefox ? '(@unstable: JSDK-2804)' : ''}`, function() {
+describe('LocalTrackPublication', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -108,7 +108,6 @@ describe(`LocalTrackPublication ${isFirefox ? '(@unstable: JSDK-2804)' : ''}`, f
 
     aliceLocalAudioTrack.disable();
     await waitOnceForRoomEvent(thisRoom, 'trackDisabled');
-
     [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
   });
 
