@@ -35,6 +35,7 @@ const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
 const RECONNECTING_TIMEOUT = 5 * ONE_MINUTE;
 const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
 const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
+const RESET_NETWORK_TIMEOUT = 4 * ONE_MINUTE;
 
 const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'us2'];
 const DOCKER_PROXY_TURN_IP_RANGES = {
@@ -140,7 +141,7 @@ describe('network:', function() {
   });
 
   it('connect rejects when network is down', async () => {
-    await waitFor(dockerAPI.resetNetwork(), 'reset network');
+    await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
     await waitToGoOnline();
     let currentNetworks = await readCurrentNetworks(dockerAPI);
     const sid = await createRoom(name, defaults.topology);
@@ -168,7 +169,7 @@ describe('network:', function() {
       return;
     } finally {
       console.log('resetting network');
-      await waitFor(dockerAPI.resetNetwork(), 'resetting network');
+      await waitFor(dockerAPI.resetNetwork(), 'resetting network', RESET_NETWORK_TIMEOUT);
     }
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
@@ -239,7 +240,7 @@ describe('network:', function() {
           this.skip();
         }
 
-        await waitFor(dockerAPI.resetNetwork(), 'reset network');
+        await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
         await waitToGoOnline();
         currentNetworks = await readCurrentNetworks(dockerAPI);
         const setupOptions = identities.map(identity => ({ identity }));
@@ -256,7 +257,7 @@ describe('network:', function() {
           }
         });
         rooms = [];
-        await waitFor(dockerAPI.resetNetwork(), 'reset network after each');
+        await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
         if (sid) {
           await completeRoom(sid);
         }

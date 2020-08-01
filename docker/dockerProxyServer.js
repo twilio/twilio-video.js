@@ -32,6 +32,7 @@ class DockerProxyServer {
     }
   }
 
+
   /**
    * starts the webserver server, and starts listening for incoming requests.
    */
@@ -40,7 +41,7 @@ class DockerProxyServer {
     const express = require('express');
     const app = express();
     app.use(cors());
-
+    let requestNumber = 0;
     [
       { endpoint: '/version', handleRequest: '_version' },
       { endpoint: '/isDocker', handleRequest: '_isDocker' },
@@ -60,10 +61,15 @@ class DockerProxyServer {
       { endpoint: '/getCurrentNetworks', handleRequest: '_getCurrentNetworks' },
     ].forEach(({ endpoint, handleRequest }) => {
       app.get(endpoint, async ({ params }, res, next) => {
+        const thisRequestNumber = requestNumber++;
+        const logPrefix = `DockerProxyServer [${thisRequestNumber}]: `;
+        console.log(logPrefix + 'Executing: ', endpoint, params);
         try {
           const data = await this[handleRequest](params);
+          console.log(logPrefix + 'Done executing: ', endpoint, params);
           return res.send(data);
         } catch (err) {
+          console.error(logPrefix + 'Error executing: ', endpoint, params);
           return next(err);
         }
       });
@@ -117,9 +123,13 @@ class DockerProxyServer {
 
   // resets network to default state
   async _resetNetwork() {
-    await this._disconnectFromAllNetworks();
-    await this._connectToDefaultNetwork();
-    await this._pruneNetworks();
+    try {
+      await this._disconnectFromAllNetworks();
+      await this._connectToDefaultNetwork();
+      await this._pruneNetworks();
+    } catch (err) {
+      console.error('Error in _resetNetwork:', err);
+    }
   }
 
   // removes all unused networks (created by this instance)
