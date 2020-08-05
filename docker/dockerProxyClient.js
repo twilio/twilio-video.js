@@ -2,7 +2,7 @@
 'use strict';
 
 const DOCKER_PROXY_SERVER_URL = 'http://localhost:3032/';
-
+let requestNumber = 0;
 /**
  * Provides interface to communicate with docker via DockerProxyServer
  * via {@link DockerProxyServer}
@@ -152,13 +152,17 @@ class DockerProxyClient {
   }
 
   async _makeRequest(api) {
+    const thisRequestNumber = requestNumber++;
+    const logPrefix = `DockerProxyClient [${thisRequestNumber}]: `;
     try {
+      console.log(logPrefix + 'Requesting: ', api);
       const res = await fetch(this._serverUrl + api);
       const text = await res.text();
       const json = text ? JSON.parse(text) : {};
+      console.log(logPrefix + 'Done: ', api, json);
       return json;
     } catch (err) {
-      console.error(`"fetch ${api} threw  : `, err);
+      console.error(logPrefix + 'Threw  : ', err);
       throw err;
     }
   }

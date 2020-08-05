@@ -3,13 +3,15 @@
 const http = require('http');
 
 let requestId = 200;
-function fetchRequest(options, postdata) {
+function fetchRequest(options, postData) {
   const thisRequest = requestId++;
+  const logPrefix = `fetchRequest[${thisRequest}]: `;
+  console.log(logPrefix + 'Processing ', postData);
   return new Promise((resolve, reject) => {
     let clientRequest = http.request(options, res => {
       const requestFailed = res.statusCode !== 200 && res.statusCode !== 201;
       if (requestFailed) {
-        console.warn(`${thisRequest}: request returned:`, res.statusCode, options, postdata);
+        console.warn(logPrefix + 'requestFailed returned:', res.statusCode, options, postData);
       }
       res.setEncoding('utf8');
       let rawData = '';
@@ -23,22 +25,23 @@ function fetchRequest(options, postdata) {
             parsedData = JSON.parse(rawData);
           }
           if (requestFailed) {
-            console.warn(`${thisRequest}: request failed with:`, res.statusCode, parsedData);
+            console.warn(logPrefix + 'requestFailed2 returned:', res.statusCode, postData);
           }
+          console.log(logPrefix + 'resolving');
           resolve(parsedData);
         } catch (e) {
-          console.warn(`${thisRequest}: error parsing data:`, rawData);
+          console.error(logPrefix + 'rejecting:', e);
           reject(e);
         }
       });
     });
     clientRequest.on('error', e => {
-      console.warn(`${thisRequest}: request failed`, e);
+      console.error(logPrefix + 'rejecting:', e);
       reject(e);
     });
 
-    if (postdata) {
-      clientRequest.write(postdata);
+    if (postData) {
+      clientRequest.write(postData);
     }
     clientRequest.end();
   });
