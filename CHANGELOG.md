@@ -5,6 +5,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.7.2 (In Progress)
 ===================
 
+Bug Fixes
+---------
+- Fixed a race condition that causes the sdk to return stale answer SDP when it loses connection momentarily, which leads to an error: 'Error setting remote description` (JSDK-2893)
+
 Changes
 -------
 
