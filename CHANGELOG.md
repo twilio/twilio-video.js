@@ -5,6 +5,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.7.2 (In Progress)
 ===================
 
+Bug Fixes
+---------
+- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
+
 Changes
 -------
 
