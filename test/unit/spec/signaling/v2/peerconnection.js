@@ -12,6 +12,7 @@ const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { a, combinationContext, makeEncodingParameters, waitForSometime } = require('../../../../lib/util');
+const { defer } = require('../../../../../lib/util');
 
 describe('PeerConnectionV2', () => {
   let didStartMonitor;
@@ -504,6 +505,46 @@ describe('PeerConnectionV2', () => {
           assert.deepEqual(test.pcv2.getState(), expectedState(test));
         });
       });
+    });
+
+    it('returns last stable answer version when while new offer is being processed', async () => {
+      // Apply remote offer for revision 1
+      const test = makeTest({ offers: 3, answers: 3 });
+
+      // Apply remote offer for revision 1
+      await test.pcv2.update(test.state().setDescription(makeOffer(), 1));
+
+      // getState should return the answer sdp with revision 1.
+      assert.equal(test.pcv2._lastStableDescriptionRevision, 1);
+      assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.answers[0], 1));
+
+      // resolve deferred promise when setRemoteDescription is called.
+      const setRemoteDescriptionCalled = defer();
+      const setRemoteDescriptionStub = sinon.stub(test.pc, 'setRemoteDescription');
+      setRemoteDescriptionStub.callsFake(() => {
+        setRemoteDescriptionCalled.resolve();
+        // eslint-disable-next-line no-undef
+        return setRemoteDescriptionStub.wrappedMethod.apply(test.pc, arguments);
+      });
+
+      // Apply remote offer for revision 2
+      const updatePromise = test.pcv2.update(test.state().setDescription(makeOffer(), 2));
+
+      // getState when called before the update is finished.
+      // should return the last answer with last stable revision.
+      assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.answers[0], 1));
+
+      // even after setRemoteDescriptionCalled getState should returned revision 1 answer.
+      await setRemoteDescriptionCalled.promise;
+      assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.answers[0], 1));
+
+      // and once the update is finished.
+      await updatePromise;
+
+      // should return new answer with new revision.
+      assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.answers[1], 2));
+
+      setRemoteDescriptionStub.restore();
     });
   });
 

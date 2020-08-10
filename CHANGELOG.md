@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 Bug Fixes
 ---------
-- Fixed a race condition that causes the sdk to return stale answer SDP when it loses connection momentarily, which leads to an error: 'Error setting remote description` (JSDK-2893)
+- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
 
 Changes
 -------
