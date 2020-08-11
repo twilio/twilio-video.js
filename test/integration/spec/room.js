@@ -12,7 +12,7 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
-const { isFirefox } = require('../../lib/guessbrowser');
+const { isFirefox, isChrome } = require('../../lib/guessbrowser');
 const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
@@ -28,9 +28,11 @@ const {
   participantsConnected,
   randomName,
   setup,
+  setupAliceAndBob,
   trackStarted,
   tracksSubscribed,
   tracksPublished,
+  validateMediaFlow,
   waitFor,
   waitForSometime,
   waitForTracks
@@ -153,6 +155,50 @@ describe('Room', function() {
 
     it('should raise a "trackUnsubscribed" event for each RemoteParticipant\'s RemoteTracks', async () => {
       await tracksUnsubscribed;
+    });
+  });
+
+  [true, false].forEach(simulcastEnabled => {
+    (isChrome ? describe.only : describe.skip)(`getStats with VP8 Simulcast ${simulcastEnabled ? 'enabled' : 'not enabled'}`, function() {
+      it(`returns ${simulcastEnabled ? 'multiple' : 'single'} LocalVideoTrackStats corresponding to the LocalVideoTrack`, async () => {
+        const vp8SimulcastOptions = { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] };
+        const aliceLocalTracks = await createLocalTracks();
+        const bobLocalTracks = await createLocalTracks();
+        const aliceOptions = Object.assign({ tracks: aliceLocalTracks }, simulcastEnabled ? vp8SimulcastOptions : {});
+        const bobOptions = { tracks: bobLocalTracks };
+        const { roomSid, aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+
+        // wait for alice and bob to subscribe to tracks.
+        await waitFor(tracksSubscribed(bobRemote, 2), `${aliceLocal.sid} to subscribe to Bob's RemoteTracks: ${roomSid}`);
+        await waitFor(tracksSubscribed(aliceRemote, 2), `${bobLocal.sid} to subscribe to Alice's RemoteTracks: ${roomSid}`);
+
+        await validateMediaFlow(aliceRoom);
+
+        const aliceRoomStats = await aliceRoom.getStats();
+        const bobRoomStats = await bobRoom.getStats();
+
+        assert.equal(bobRoomStats.length, 1);
+        assert.equal(bobRoomStats[0].remoteAudioTrackStats.length, 1);
+        assert.equal(bobRoomStats[0].remoteVideoTrackStats.length, 1);
+        assert.equal(bobRoomStats[0].localAudioTrackStats.length, 1);
+        assert.equal(bobRoomStats[0].localVideoTrackStats.length, 1);
+
+        assert.equal(aliceRoomStats.length, 1);
+        assert.equal(aliceRoomStats[0].remoteAudioTrackStats.length, 1);
+        assert.equal(aliceRoomStats[0].remoteVideoTrackStats.length, 1);
+        assert.equal(aliceRoomStats[0].localAudioTrackStats.length, 1);
+
+        if (simulcastEnabled) {
+          assert(aliceRoomStats[0].localVideoTrackStats.length > 1);
+          const aliceLocalTrack = aliceLocal.videoTracks.values().next().value;
+          aliceRoomStats[0].localVideoTrackStats.forEach(localVideoTrackStats => {
+            assert.equal(aliceLocalTrack.trackSid, localVideoTrackStats.trackSid);
+            assert.equal(aliceLocalTrack.track.id, localVideoTrackStats.trackId);
+          });
+        } else {
+          assert.equal(aliceRoomStats[0].localVideoTrackStats.length, 1);
+        }
+      });
     });
   });
 
