@@ -159,7 +159,7 @@ describe('Room', function() {
   });
 
   [true, false].forEach(simulcastEnabled => {
-    (isChrome ? describe.only : describe.skip)(`getStats with VP8 Simulcast ${simulcastEnabled ? 'enabled' : 'not enabled'}`, function() {
+    (isChrome ? describe : describe.skip)(`getStats with VP8 Simulcast ${simulcastEnabled ? 'enabled' : 'not enabled'}`, function() {
       it(`returns ${simulcastEnabled ? 'multiple' : 'single'} LocalVideoTrackStats corresponding to the LocalVideoTrack`, async () => {
         const vp8SimulcastOptions = { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] };
         const aliceLocalTracks = await createLocalTracks();
