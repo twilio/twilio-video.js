@@ -864,11 +864,6 @@ describe('connect', function() {
             }
           ],
           ({ source }) => `when Tracks are pre-created using ${source}`
-        ],
-        [
-          [true],
-          // eslint-disable-next-line no-unused-vars
-          _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2801)' : ''
         ]
       ], ([names, { source, getTracks }]) => {
         if (source === 'MediaStreamTracks from getUserMedia()' && !!names) {
