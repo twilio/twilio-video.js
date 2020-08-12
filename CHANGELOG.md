@@ -23,10 +23,6 @@ Bug Fixes
   }
 ```
 
-Changes
--------
-
-- Added metrics about signaling server connections. This is internal change, and has no effect on the SDK API.
 
 
 2.7.1 (July 28, 2020)
