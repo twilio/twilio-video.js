@@ -12,7 +12,7 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
-const { isFirefox, isChrome } = require('../../lib/guessbrowser');
+const { isFirefox, isChrome, isSafari } = require('../../lib/guessbrowser');
 const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
@@ -159,7 +159,7 @@ describe('Room', function() {
   });
 
   [true, false].forEach(simulcastEnabled => {
-    (isChrome ? describe : describe.skip)(`getStats with VP8 Simulcast ${simulcastEnabled ? 'enabled' : 'not enabled'}`, function() {
+    ((isChrome || isSafari) ? describe : describe.skip)(`getStats with VP8 Simulcast ${simulcastEnabled ? 'enabled' : 'not enabled'}`, function() {
       it(`returns ${simulcastEnabled ? 'multiple' : 'single'} LocalVideoTrackStats corresponding to the LocalVideoTrack`, async () => {
         const vp8SimulcastOptions = { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] };
         const aliceLocalTracks = await createLocalTracks();
