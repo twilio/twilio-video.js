@@ -9,6 +9,20 @@ Bug Fixes
 ---------
 - Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
 
+- Fixed a bug where `Room.getStats()` returned stats for only one of the temporal layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats` object for each temporal layer, which you can recognize by the `trackId` and `trackSid` properties. (JSDK-2920)
+```js
+  async function getBytesSentOnLocalVideoTrack(room, trackSid) {
+    const stats = await room.getStats();
+    let totalBytesSent = 0;
+    stats.forEach(stat => {
+      totalBytesSent += stat.localVideoTrackStats
+        .filter(localVideoTrackStats => trackSid === localVideoTrackStats.trackSid)
+        .reduce((bytesSent, localVideoTrackStats) => bytesSent + localVideoTrackStats.bytesSent, 0);
+    });
+    return totalBytesSent;
+  }
+```
+
 Changes
 -------
 
