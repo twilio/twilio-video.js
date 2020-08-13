@@ -59,8 +59,5 @@ else
     npm run test:integration
 fi
 
-SLACK_MESSAGE_TEXT="done with ${BROWSER}-${BVER} in ${ENVIRONMENT}"
-curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
-
 echo "Done with Tests!"
 
