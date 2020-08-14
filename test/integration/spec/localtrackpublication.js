@@ -161,7 +161,7 @@ describe('LocalTrackPublication', function() {
     combinationContext([
       [
         [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled (@unstable: JSDK-2805)'}`
+        x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
         ['audio', 'video', 'data'],
