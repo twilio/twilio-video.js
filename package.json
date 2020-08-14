@@ -128,8 +128,6 @@
   "dependencies": {
     "@twilio/webrtc": "4.3.2",
     "backoff": "^2.5.0",
-    "puppeteer": "^5.2.1",
-    "puppeteer-core": "^5.2.1",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },
