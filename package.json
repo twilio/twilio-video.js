@@ -113,7 +113,7 @@
     "test:framework:react:build": "cd ./test/framework/twilio-video-react && npm run build",
     "test:framework:react:run": "mocha ./test/framework/twilio-video-react.js",
     "test:framework:react": "npm-run-all test:framework:react:*",
-    "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver",
+    "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver && npm install puppeteer",
     "test:framework": "npm-run-all test:framework:install test:framework:angular test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "build:es5": "rimraf ./es5 && babel lib -d es5",
@@ -128,6 +128,8 @@
   "dependencies": {
     "@twilio/webrtc": "4.3.2",
     "backoff": "^2.5.0",
+    "puppeteer": "^5.2.1",
+    "puppeteer-core": "^5.2.1",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },

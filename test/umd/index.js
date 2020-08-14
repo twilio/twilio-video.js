@@ -39,7 +39,7 @@ describe('UMD', function() {
             if (res.version === version) {
               return done();
             }
-            return done(new Error('Version mismatch'));
+            return done(new Error(`Version mismatch. res.version=${res.version}, package version=${version}`));
           }
           return done(new Error(res.reason));
         });

@@ -141,11 +141,11 @@ commands:
           name: Installing dependencies
           command: npm install
       - run:
-          name: Running UMD Tests
-          command: npm run test:umd
-      - run:
           name: Running Framework Tests
           command: npm run test:framework
+      - run:
+          name: Running UMD Tests
+          command: npm run test:umd
       - save-test-results
   echo-command:
     description: "marker command"
