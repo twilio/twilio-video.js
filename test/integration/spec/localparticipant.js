@@ -441,7 +441,6 @@ describe('LocalParticipant', function() {
       let thisLocalTrackPublication;
       let thisTrack;
       let thoseRooms;
-      let thoseParticipants;
       let thoseTracksBefore;
       let thoseTracksPublished;
       let thoseTracksSubscribed;
@@ -500,22 +499,22 @@ describe('LocalParticipant', function() {
           return participantsConnected(room, identities.length - 1);
         }), `all Participants to connect: ${sid}`);
 
-        thoseParticipants = thoseRooms.map(thatRoom => {
+        const [aliceInBobRoom, aliceInCharlieRoom] = thoseRooms.map(thatRoom => {
           return thatRoom.participants.get(thisParticipant.sid);
         });
 
-        await waitFor(thoseParticipants.map(thatParticipant => {
+        await waitFor([aliceInBobRoom, aliceInCharlieRoom].map(thatParticipant => {
           return tracksSubscribed(thatParticipant, tracks.length);
         }), `tracksSubscribed: ${sid}`);
 
-        thoseTracksBefore = flatMap(thoseParticipants, thatParticipant => {
+        thoseTracksBefore = flatMap([aliceInBobRoom, aliceInCharlieRoom], thatParticipant => {
           return [...thatParticipant._tracks.values()];
         });
 
         if (when === 'previously') {
           thisParticipant.unpublishTrack(thisTrack);
 
-          await waitFor(thoseParticipants.map(thatParticipant => {
+          await waitFor([aliceInBobRoom, aliceInCharlieRoom].map(thatParticipant => {
             return tracksUnpublished(thatParticipant, tracks.length);
           }), `tracksUnpublished: ${sid}`);
 
@@ -527,8 +526,8 @@ describe('LocalParticipant', function() {
         }
 
         const thisLocalTrackPublicationPromise = priority ? thisParticipant.publishTrack(thisTrack, { priority }) : thisParticipant.publishTrack(thisTrack);
-        const thoseTracksPublishedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackPublished', thatParticipant, 1));
-        const thoseTracksSubscribedPromise = thoseParticipants.map(thatParticipant => waitForTracks('trackSubscribed', thatParticipant, 1));
+        const thoseTracksPublishedPromise = [aliceInBobRoom, aliceInCharlieRoom].map(thatParticipant => waitForTracks('trackPublished', thatParticipant, 1));
+        const thoseTracksSubscribedPromise = [aliceInBobRoom, aliceInCharlieRoom].map(thatParticipant => waitForTracks('trackSubscribed', thatParticipant, 1));
 
         thisLocalTrackPublication = await waitFor(thisLocalTrackPublicationPromise, `Track to publish: ${sid}`);
         thoseTracksPublished = await waitFor(thoseTracksPublishedPromise, `Participants to receive trackPublished: ${sid}`);
@@ -694,7 +693,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe('#unpublishTrack', function() {
+  describe.only('#unpublishTrack', function() {
     // eslint-disable-next-line no-invalid-this
     this.retries(2);
 
@@ -724,11 +723,9 @@ describe('LocalParticipant', function() {
 
       let sid;
       let thisRoom;
-      // let alice;
       let thisLocalTrackPublication;
       let thisTrack;
       let thoseRooms;
-      let thoseParticipants;
       let thosePublicationsUnsubscribed;
       let thoseTracksUnpublished;
       let thoseTracksUnsubscribed;
@@ -768,6 +765,7 @@ describe('LocalParticipant', function() {
         const [bobRoom, charlieRoom] = await waitFor(thoseTokens.map(thatToken => {
           return connect(thatToken, thoseOptions);
         }), `Rooms to get connected: ${sid}`);
+        thoseRooms = [bobRoom, charlieRoom];
 
         await waitFor([thisRoom, bobRoom, charlieRoom].map(room => {
           return participantsConnected(room, identities.length - 1);
@@ -809,7 +807,7 @@ describe('LocalParticipant', function() {
 
         thisLocalTrackPublication = alice.unpublishTrack(thisTrack);
 
-        thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
+        thosePublicationsUnsubscribed = flatMap([aliceInBobRoom, aliceInCharlieRoom], participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
         });
 
@@ -817,7 +815,7 @@ describe('LocalParticipant', function() {
           'trackUnsubscribed',
           'trackUnpublished'
         ].map(event => {
-          return Promise.all(thoseParticipants.map(async thatParticipant => {
+          return Promise.all([aliceInBobRoom, aliceInCharlieRoom].map(async thatParticipant => {
             const [trackOrPublication] = await waitForTracks(event, thatParticipant, 1);
             return trackOrPublication;
           }));
