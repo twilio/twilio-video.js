@@ -455,7 +455,7 @@ describe('LocalParticipant', function() {
 
       before(async () => {
         sid = await createRoom(randomName(), defaults.topology);
-        const identities = [randomName(), randomName(), randomName()];
+        const identities = ['Alice', 'Bob', 'Charlie'];
         const options = Object.assign({ name: sid }, defaults);
         const localTrackOptions = Object.assign(
           withName
@@ -724,7 +724,7 @@ describe('LocalParticipant', function() {
 
       let sid;
       let thisRoom;
-      let thisParticipant;
+      // let alice;
       let thisLocalTrackPublication;
       let thisTrack;
       let thoseRooms;
@@ -736,7 +736,7 @@ describe('LocalParticipant', function() {
 
       before(async () => {
         sid = await createRoom(randomName(), defaults.topology);
-        const identities = [randomName(), randomName(), randomName()];
+        const identities = ['Alice', 'Bob', 'Charlie'];
         const options = Object.assign({ name: sid }, defaults);
 
         thisTrack = await {
@@ -758,50 +758,56 @@ describe('LocalParticipant', function() {
         const thisToken = getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
-        thisParticipant = thisRoom.localParticipant;
-        await tracksPublished(thisParticipant, tracks.length);
+        const alice  = thisRoom.localParticipant;
+        await tracksPublished(alice, tracks.length);
 
         const thoseIdentities = identities.slice(1);
         const thoseTokens = thoseIdentities.map(getToken);
         const thoseOptions = Object.assign({ tracks: [] }, options);
 
-        thoseRooms = await waitFor(thoseTokens.map(thatToken => {
+        const [bobRoom, charlieRoom] = await waitFor(thoseTokens.map(thatToken => {
           return connect(thatToken, thoseOptions);
         }), `Rooms to get connected: ${sid}`);
 
-        await waitFor([thisRoom].concat(thoseRooms).map(room => {
+        await waitFor([thisRoom, bobRoom, charlieRoom].map(room => {
           return participantsConnected(room, identities.length - 1);
         }), `all Participants to get connected: ${sid}`);
 
-        thoseParticipants = thoseRooms.map(thatRoom => {
-          return thatRoom.participants.get(thisParticipant.sid);
+        const [aliceInBobRoom, aliceInCharlieRoom] = [bobRoom, charlieRoom].map(thatRoom => {
+          return thatRoom.participants.get(alice.sid);
         });
 
-        await waitFor(thoseParticipants.map(thatParticipant => {
-          return tracksSubscribed(thatParticipant, tracks.length);
-        }), `Track to get subscribed: ${sid}`);
+        const bobSubscribes =  tracksSubscribed(aliceInBobRoom, tracks.length);
+        const charlieSubscribes =  tracksSubscribed(aliceInCharlieRoom, tracks.length);
+
+        await waitFor(bobSubscribes, `Bob to subscribe Alice's track: ${sid}`);
+        await waitFor(charlieSubscribes, `Charlie to subscribe Alice's track: ${sid}`);
 
         if (when !== 'published') {
-          thisParticipant.unpublishTrack(thisTrack);
+          alice.unpublishTrack(thisTrack);
 
-          await waitFor(thoseParticipants.map(thatParticipant => {
-            return tracksUnpublished(thatParticipant, tracks.length - 1);
-          }), `Track to get unpublished: ${sid}`);
+          const bobSeesUnpublished =  tracksUnpublished(aliceInBobRoom, tracks.length - 1);
+          const charlieSeesUnpublished =  tracksUnpublished(aliceInCharlieRoom, tracks.length - 1);
+
+          await waitFor(bobSeesUnpublished, `Bob to see track getting Unpublished: ${sid}`);
+          await waitFor(charlieSeesUnpublished, `Charlie to see track getting Unpublished: ${sid}`);
 
           // NOTE(mmalavalli): Even though the "trackUnpublished" events are
           // fired on the RemoteParticipants, we need to make sure that the
           // SDP negotiation is complete before we re-publish the LocalTrack.
           // Therefore we wait for 2 seconds.
-          await waitForSometime(2000);
+          await waitForSometime(4000);
 
-          await waitFor(thisParticipant.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
+          await waitFor(alice.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
 
-          await waitFor(thoseParticipants.map(thatParticipant => {
-            return tracksSubscribed(thatParticipant, tracks.length);
-          }), `Tracks to get re-subscribed: ${sid}`);
+          const bobSubscribesAgain =  tracksSubscribed(aliceInBobRoom, tracks.length);
+          const charlieSubscribesAgain =  tracksSubscribed(aliceInCharlieRoom, tracks.length);
+
+          await waitFor(bobSubscribesAgain, `Bob to subscribe Alice's track again: ${sid}`);
+          await waitFor(charlieSubscribesAgain, `Charlie to subscribe Alice's track again: ${sid}`);
         }
 
-        thisLocalTrackPublication = thisParticipant.unpublishTrack(thisTrack);
+        thisLocalTrackPublication = alice.unpublishTrack(thisTrack);
 
         thosePublicationsUnsubscribed = flatMap(thoseParticipants, participant => [...participant.tracks.values()]).map(publication => {
           return new Promise(resolve => publication.once('unsubscribed', resolve));
