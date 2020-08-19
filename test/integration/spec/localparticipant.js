@@ -693,7 +693,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe.only('#unpublishTrack', function() {
+  describe('#unpublishTrack', function() {
     // eslint-disable-next-line no-invalid-this
     this.retries(2);
 
