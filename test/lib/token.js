@@ -16,6 +16,7 @@ const defaults = Object.assign({
  * @property {string} configurationProfileSid
  * @property {?string} [grant="video"] - one of "video", "conversations", or null
  * @property {number} [ttl=60000]
+ * @property {?string} room
  */
 
 /**
@@ -47,6 +48,7 @@ function createToken(identity, options) {
   accessToken.identity = identity;
 
   let grant = options.grant;
+  const room = options.room;
   switch (grant) {
     case 'conversations':
       grant = new AccessToken.ConversationsGrant({
@@ -56,7 +58,7 @@ function createToken(identity, options) {
       break;
     case 'video':
       grant = new AccessToken.VideoGrant({
-        identity
+        identity, room
       });
       break;
     default:

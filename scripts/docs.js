@@ -14,6 +14,7 @@ const publicClasses = [
   'lib/createlocaltrack.js',
   'lib/createlocaltracks.js',
   'lib/index.js',
+  'lib/preflight.js',
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',

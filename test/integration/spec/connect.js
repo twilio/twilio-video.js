@@ -5,6 +5,8 @@ const assert = require('assert');
 const { getUserMedia } = require('@twilio/webrtc');
 
 const connect = require('../../../lib/connect');
+const testPreflight = require('../../../lib/preflight');
+
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
 const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
@@ -44,6 +46,28 @@ const {
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
+
+describe('preflight', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+  it('works', async () => {
+    const [aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { grant: 'video' }));
+    const preflight = testPreflight(aliceToken, bobToken);
+    const deferred = {};
+    deferred.promise = new Promise((resolve, reject) => {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
+
+    preflight.on('completed', report => {
+      // eslint-disable-next-line no-console
+      console.log(report);
+      deferred.resolve();
+    });
+
+    await deferred.promise;
+  });
+});
 
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
