@@ -16,8 +16,5 @@
   },
   "include": [
     "tsdef/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }
