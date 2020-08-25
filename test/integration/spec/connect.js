@@ -61,8 +61,18 @@ describe('preflight', function() {
 
     preflight.on('completed', report => {
       // eslint-disable-next-line no-console
-      console.log(report);
+      console.log('completed:', report);
       deferred.resolve();
+    });
+
+    preflight.on('progress', process => {
+      // eslint-disable-next-line no-console
+      console.log('progress:', process);
+    });
+
+    preflight.on('failed', error => {
+      // eslint-disable-next-line no-console
+      console.log('failed:', error);
     });
 
     await deferred.promise;
