@@ -47,6 +47,9 @@ const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/cons
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
+function assertTimeMeasurement(measurement) {
+  assert.equal(typeof measurement.duration, 'number');
+}
 describe('preflight', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
@@ -61,7 +64,8 @@ describe('preflight', function() {
 
     preflight.on('completed', report => {
       // eslint-disable-next-line no-console
-      console.log('completed:', report);
+      console.log('completed:', JSON.stringify(report, null, 4));
+      assertTimeMeasurement(report.testTiming);
       deferred.resolve();
     });
 
