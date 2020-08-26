@@ -88,8 +88,9 @@
   "main": "./es5/index.js",
   "types": "./tsdef/index.d.ts",
   "scripts": {
-    "lint": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
+    "lint:js": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
     "lint:ts": "eslint ./tsdef/*.ts",
+    "lint": "npm-run-all lint:js lint:ts",
     "test:unit": "mocha ./test/unit/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration": "node ./scripts/karma.js karma/integration.conf.js",

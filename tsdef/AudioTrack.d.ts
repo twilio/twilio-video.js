@@ -6,8 +6,6 @@ export class AudioTrack extends Track {
   kind: 'audio';
   mediaStreamTrack: MediaStreamTrack;
 
-  _attachments?: HTMLMediaElement[];
-
   attach(element?: HTMLMediaElement | string): HTMLMediaElement;
   detach(element?: HTMLMediaElement | string): HTMLMediaElement[];
 }
