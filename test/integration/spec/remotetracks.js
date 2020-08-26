@@ -54,7 +54,7 @@ describe('RemoteVideoTrack', function() {
 
     beforeEach(async () => {
       const dataTrack = new LocalDataTrack();
-      [, thisRoom, thoseRooms] = await setup({
+      [, thisRoom, thoseRooms] = await waitFor(setup({
         testOptions: {
           bandwidthProfile: {
             video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
@@ -63,24 +63,24 @@ describe('RemoteVideoTrack', function() {
         },
         otherOptions: { tracks: [dataTrack] },
         nTracks: 0
-      });
+      }), 'creating room');
 
-      [aliceTracks, bobTracks] = await Promise.all(['alice', 'bob'].map(async () => [
+      [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(async () => [
         createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
         await createLocalVideoTrack(smallVideoConstraints),
-      ]));
+      ]), 'create local tracks');
 
       [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
       [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
       // Alice publishes her tracks at low priority
       // Bob publishes his tracks at standard priority
-      await Promise.all([
+      await waitFor([
         ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_LOW })),
         ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
         tracksSubscribed(aliceRemote, 3),
         tracksSubscribed(bobRemote, 3)
-      ]);
+      ], `alice and bob to subscribe each others tracks: ${thisRoom.sid} `);
 
       [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
         return [...videoTracks.values()][0].track;
