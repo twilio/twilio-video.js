@@ -5,8 +5,6 @@ const assert = require('assert');
 const { getUserMedia } = require('@twilio/webrtc');
 
 const connect = require('../../../lib/connect');
-const testPreflight = require('../../../lib/preflight');
-
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
 const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
@@ -44,99 +42,7 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-const { topology } = require('../../lib/defaults');
-
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
-
-function assertTimeMeasurement(measurement) {
-  assert.equal(typeof measurement.duration, 'number');
-}
-
-function assertStat(stat) {
-  assert.equal(typeof stat.min, 'number');
-  assert.equal(typeof stat.max, 'number');
-  assert.equal(typeof stat.average, 'number');
-}
-
-function assertIceCandidate(candidate) {
-  assert.equal(typeof candidate.ip, 'string');
-  assert.equal(typeof candidate.port, 'number');
-  assert.equal(typeof candidate.candidateType, 'string');
-}
-
-describe('preflight', function() {
-  // eslint-disable-next-line no-invalid-this
-  this.timeout(60000);
-  let aliceToken;
-  let bobToken;
-  let roomSid;
-  beforeEach(async () => {
-    const roomName = 'preflight_' + randomName();
-    roomSid = await createRoom(roomName, defaults.topology);
-    ([aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { room: roomSid })));
-  });
-  afterEach(async () => {
-    await completeRoom(roomSid);
-  });
-
-  it('generates test report', async () => {
-    const preflight = testPreflight(aliceToken, bobToken);
-    const deferred = {};
-    const progressReceived = [];
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
-
-    preflight.on('completed', report => {
-      // console.log('report:', JSON.stringify(report, null, 4));
-      assert.equal(report.roomSid, roomSid);
-      assert.equal(typeof report.signalingRegion, 'string');
-      assertTimeMeasurement(report.testTiming);
-      assertTimeMeasurement(report.networkTiming.connect);
-      assertTimeMeasurement(report.networkTiming.media);
-      assertStat(report.stats.jitter);
-      assertStat(report.stats.rtt);
-      assertStat(report.stats.outgoingBitrate);
-      assertStat(report.stats.incomingBitrate);
-      assertStat(report.stats.packetLoss);
-      assertIceCandidate(report.selectedLocalIceCandidate);
-      assertIceCandidate(report.selectedRemoteIceCandidate);
-      if (topology === 'peer-to-peer') {
-        assert.equal(report.stats.networkQuality, null);
-        assert.equal(report.mediaRegion, null);
-
-      } else {
-        assert.equal(typeof report.mediaRegion, 'string');
-        assertStat(report.stats.networkQuality);
-      }
-
-      assert.deepEqual(progressReceived, [
-        'mediaAcquired',
-        'connected',
-        'remoteConnected',
-        'mediaPublished',
-        'mediaSubscribed',
-        'mediaStarted'
-      ]);
-      deferred.resolve();
-    });
-
-    preflight.on('progress', progress => {
-      // eslint-disable-next-line no-console
-      console.log('progress:', progress);
-      progressReceived.push(progress);
-    });
-
-    preflight.on('failed', error => {
-      // eslint-disable-next-line no-console
-      console.log('failed:', error);
-      deferred.reject(error);
-    });
-
-    await deferred.promise;
-  });
-});
 
 describe('connect', function() {
   // eslint-disable-next-line no-invalid-this
