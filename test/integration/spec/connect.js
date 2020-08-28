@@ -44,12 +44,20 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
+const { topology } = require('../../lib/defaults');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 function assertTimeMeasurement(measurement) {
   assert.equal(typeof measurement.duration, 'number');
 }
+
+function assertStat(stat) {
+  assert.equal(typeof stat.min, 'number');
+  assert.equal(typeof stat.max, 'number');
+  assert.equal(typeof stat.average, 'number');
+}
+
 describe('preflight', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
@@ -57,6 +65,7 @@ describe('preflight', function() {
     const [aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { grant: 'video' }));
     const preflight = testPreflight(aliceToken, bobToken);
     const deferred = {};
+    const progressReceived = [];
     deferred.promise = new Promise((resolve, reject) => {
       deferred.resolve = resolve;
       deferred.reject = reject;
@@ -66,17 +75,41 @@ describe('preflight', function() {
       // eslint-disable-next-line no-console
       console.log('completed:', JSON.stringify(report, null, 4));
       assertTimeMeasurement(report.testTiming);
+      assertTimeMeasurement(report.networkTiming.connect);
+      assertTimeMeasurement(report.networkTiming.media);
+      assertStat(report.stats.jitter);
+      assertStat(report.stats.rtt);
+      assertStat(report.stats.outgoingBitrate);
+      assertStat(report.stats.incomingBitrate);
+      assertStat(report.stats.packetLoss);
+      if (defaults.topology === 'peer-to-peer') {
+        assert.equal(report.stats.networkQuality, null);
+      } else {
+        assertStat(report.stats.networkQuality);
+      }
+
+
+      assert.deepEqual(progressReceived, [
+        'mediaAcquired',
+        'connected',
+        'remoteConnected',
+        'mediaPublished',
+        'mediaSubscribed',
+        'mediaStarted'
+      ]);
       deferred.resolve();
     });
 
-    preflight.on('progress', process => {
+    preflight.on('progress', progress => {
       // eslint-disable-next-line no-console
-      console.log('progress:', process);
+      console.log('progress:', progress);
+      progressReceived.push(progress);
     });
 
     preflight.on('failed', error => {
       // eslint-disable-next-line no-console
       console.log('failed:', error);
+      deferred.reject(error);
     });
 
     await deferred.promise;
