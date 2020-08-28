@@ -58,11 +58,28 @@ function assertStat(stat) {
   assert.equal(typeof stat.average, 'number');
 }
 
+function assertIceCandidate(candidate) {
+  assert.equal(typeof candidate.ip, 'string');
+  assert.equal(typeof candidate.port, 'number');
+  assert.equal(typeof candidate.candidateType, 'string');
+}
+
 describe('preflight', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  it('works', async () => {
-    const [aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { grant: 'video' }));
+  let aliceToken;
+  let bobToken;
+  let roomSid;
+  beforeEach(async () => {
+    const roomName = 'preflight_' + randomName();
+    roomSid = await createRoom(roomName, defaults.topology);
+    ([aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { room: roomSid })));
+  });
+  afterEach(async () => {
+    await completeRoom(roomSid);
+  });
+
+  it('generates test report', async () => {
     const preflight = testPreflight(aliceToken, bobToken);
     const deferred = {};
     const progressReceived = [];
@@ -72,8 +89,9 @@ describe('preflight', function() {
     });
 
     preflight.on('completed', report => {
-      // eslint-disable-next-line no-console
-      console.log('completed:', JSON.stringify(report, null, 4));
+      // console.log('report:', JSON.stringify(report, null, 4));
+      assert.equal(report.roomSid, roomSid);
+      assert.equal(typeof report.signalingRegion, 'string');
       assertTimeMeasurement(report.testTiming);
       assertTimeMeasurement(report.networkTiming.connect);
       assertTimeMeasurement(report.networkTiming.media);
@@ -82,12 +100,16 @@ describe('preflight', function() {
       assertStat(report.stats.outgoingBitrate);
       assertStat(report.stats.incomingBitrate);
       assertStat(report.stats.packetLoss);
-      if (defaults.topology === 'peer-to-peer') {
+      assertIceCandidate(report.selectedLocalIceCandidate);
+      assertIceCandidate(report.selectedRemoteIceCandidate);
+      if (topology === 'peer-to-peer') {
         assert.equal(report.stats.networkQuality, null);
+        assert.equal(report.mediaRegion, null);
+
       } else {
+        assert.equal(typeof report.mediaRegion, 'string');
         assertStat(report.stats.networkQuality);
       }
-
 
       assert.deepEqual(progressReceived, [
         'mediaAcquired',

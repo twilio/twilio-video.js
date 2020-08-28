@@ -1,6 +1,6 @@
 'use strict';
 
-const { AccessToken } = require('twilio');
+const AccessToken = require('twilio').jwt.AccessToken;
 const credentials = require('../env');
 
 const defaults = Object.assign({
