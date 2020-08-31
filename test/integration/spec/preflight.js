@@ -4,10 +4,10 @@
 const assert = require('assert');
 const testPreflight = require('../../../lib/preflight');
 const getToken = require('../../lib/token');
-
+const defaults = require('../../lib/defaults');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const { randomName } = require('../../lib/util');
-const { topology } = require('../../lib/defaults');
+
 
 function assertTimeMeasurement(measurement) {
   assert.equal(typeof measurement.duration, 'number');
@@ -38,7 +38,7 @@ describe('preflight', function() {
   let roomSid;
   beforeEach(async () => {
     const roomName = 'preflight_' + randomName();
-    roomSid = await createRoom(roomName, topology);
+    roomSid = await createRoom(roomName, defaults.topology);
     ([aliceToken, bobToken] = ['alice', 'bob'].map(identity => getToken(identity, { room: roomSid })));
   });
   afterEach(async () => {
@@ -46,7 +46,9 @@ describe('preflight', function() {
   });
 
   it('completes and generates test report', async () => {
-    const preflight = testPreflight(aliceToken, bobToken);
+    const environment = defaults.environment;
+    const options = { environment };
+    const preflight = testPreflight(aliceToken, bobToken, options);
     const deferred = {};
     const progressReceived = [];
     deferred.promise = new Promise((resolve, reject) => {
@@ -68,7 +70,7 @@ describe('preflight', function() {
       assertStat(report.stats.packetLoss);
       assertIceCandidate(report.selectedLocalIceCandidate);
       assertIceCandidate(report.selectedRemoteIceCandidate);
-      if (topology === 'peer-to-peer') {
+      if (defaults.topology === 'peer-to-peer') {
         assert.equal(report.stats.networkQuality, null);
         assert.equal(report.mediaRegion, null);
 
