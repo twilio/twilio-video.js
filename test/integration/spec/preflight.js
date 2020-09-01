@@ -57,7 +57,6 @@ describe('preflight', function() {
     });
 
     preflight.on('completed', report => {
-      // console.log('report:', JSON.stringify(report, null, 4));
       assert.equal(report.roomSid, roomSid);
       assert.equal(typeof report.signalingRegion, 'string');
       assertTimeMeasurement(report.testTiming);
@@ -68,8 +67,8 @@ describe('preflight', function() {
       assertStat(report.stats.outgoingBitrate, 'outgoingBitrate');
       assertStat(report.stats.incomingBitrate, 'incomingBitrate');
       assertStat(report.stats.packetLoss);
-      assertIceCandidate(report.selectedLocalIceCandidate);
-      assertIceCandidate(report.selectedRemoteIceCandidate);
+      assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
+      assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
       if (defaults.topology === 'peer-to-peer') {
         assert.equal(report.stats.networkQuality, null);
         assert.equal(report.mediaRegion, null);
