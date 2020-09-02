@@ -1,10 +1,12 @@
 import * as Video from './index';
 
-const localAudioTrack: Video.LocalAudioTrack | null = null;
-const Track: Video.Track | null = null;
+function getAudioTrack(track: Video.LocalAudioTrack) {
+  const localAudioTrack = track;
+  localAudioTrack.attach();
+  localAudioTrack.detach();
+}
 
-localAudioTrack.enable(true);
-localAudioTrack.stop();
-
-const trackKind = Track.kind;
-const trackName = Track.name;
+function getDataTrack(track: Video.LocalDataTrack) {
+  const localDataTrack = track;
+  localDataTrack.send('hello world');
+}
