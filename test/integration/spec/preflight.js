@@ -30,6 +30,30 @@ function assertIceCandidate(candidate) {
   assert.equal(typeof candidate.candidateType, 'string');
 }
 
+function validateReport(report)  {
+  // console.log('report: ', JSON.stringify(report, null, 4));
+  assert.equal(typeof report.signalingRegion, 'string');
+  assertTimeMeasurement(report.testTiming);
+  assertTimeMeasurement(report.networkTiming.connect);
+  assertTimeMeasurement(report.networkTiming.media);
+  assertStat(report.stats.jitter, 'jitter');
+  assertStat(report.stats.rtt, 'rtt');
+  assertStat(report.stats.outgoingBitrate, 'outgoingBitrate');
+  assertStat(report.stats.incomingBitrate, 'incomingBitrate');
+  assertStat(report.stats.packetLoss);
+  assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
+  assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
+  assert.equal(typeof report.isTurnRequired, 'boolean');
+  if (defaults.topology === 'peer-to-peer') {
+    assert.equal(report.stats.networkQuality, null);
+    assert.equal(report.mediaRegion, null);
+
+  } else {
+    assert.equal(typeof report.mediaRegion, 'string');
+    assertStat(report.stats.networkQuality);
+  }
+}
+
 describe('preflight', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
@@ -58,26 +82,7 @@ describe('preflight', function() {
 
     preflight.on('completed', report => {
       assert.equal(report.roomSid, roomSid);
-      assert.equal(typeof report.signalingRegion, 'string');
-      assertTimeMeasurement(report.testTiming);
-      assertTimeMeasurement(report.networkTiming.connect);
-      assertTimeMeasurement(report.networkTiming.media);
-      assertStat(report.stats.jitter, 'jitter');
-      assertStat(report.stats.rtt, 'rtt');
-      assertStat(report.stats.outgoingBitrate, 'outgoingBitrate');
-      assertStat(report.stats.incomingBitrate, 'incomingBitrate');
-      assertStat(report.stats.packetLoss);
-      assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
-      assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
-      if (defaults.topology === 'peer-to-peer') {
-        assert.equal(report.stats.networkQuality, null);
-        assert.equal(report.mediaRegion, null);
-
-      } else {
-        assert.equal(typeof report.mediaRegion, 'string');
-        assertStat(report.stats.networkQuality);
-      }
-
+      validateReport(report);
       assert.deepEqual(progressReceived, [
         'mediaAcquired',
         'connected',
