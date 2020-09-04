@@ -2,7 +2,7 @@
 'use strict';
 
 const assert = require('assert');
-const testPreflight = require('../../../lib/preflight');
+const testPreflight = require('../../../lib/preflight/preflight');
 const getToken = require('../../lib/token');
 const defaults = require('../../lib/defaults');
 const { createRoom, completeRoom } = require('../../lib/rest');
@@ -105,6 +105,11 @@ describe('preflight', function() {
       // eslint-disable-next-line no-console
       console.log('failed:', error);
       deferred.reject(error);
+    });
+
+    preflight.on('warning', (name, text) => {
+      // eslint-disable-next-line no-console
+      console.log('warning:', name, text);
     });
 
     await deferred.promise;

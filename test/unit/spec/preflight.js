@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const preflight = require('../../../lib/preflight');
+const preflight = require('../../../lib/preflight/preflight');
 describe('preflight', () => {
   describe('throws when called with invalid parameters', () => {
     [
