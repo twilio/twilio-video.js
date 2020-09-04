@@ -39,5 +39,6 @@ describe('preflight', () => {
   it('returns test object', () => {
     const testObj = preflight('foo', 'bar', {});
     assert(testObj);
+    testObj.stop();
   });
 });
