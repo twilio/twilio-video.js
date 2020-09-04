@@ -31,7 +31,8 @@ function assertIceCandidate(candidate) {
 }
 
 function validateReport(report)  {
-  // console.log('report: ', JSON.stringify(report, null, 4));
+  // eslint-disable-next-line no-console
+  console.log('report: ', JSON.stringify(report, null, 4));
   assert.equal(typeof report.signalingRegion, 'string');
   assertTimeMeasurement(report.testTiming);
   assertTimeMeasurement(report.networkTiming.connect);
