@@ -10,7 +10,7 @@ New Features
 
 - Added a new api `testPreflight`. This api helps test the connectivity with twilio-servers for the video rooms. It connects two participants to the video room using supplied tokens. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying the room operations, it generates a report containing statistics about the connection.
 
-Note: the tokens used for the connection must specify the room to be used for test. This must be a test room and must not to be used fo regular operations.
+Note: the tokens used for the connection must specify the room to be used for test. This must be a unique test room and must not to be used for regular operations.
 
 ```js
 const Video = require('twilio-video');
