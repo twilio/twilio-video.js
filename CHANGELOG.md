@@ -2,6 +2,43 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.8.0 (In Progress)
+===================
+
+New Features
+------------
+
+- Added a new api `testPreflight`. This api helps test the connectivity with twilio-servers for the video rooms. It connects two participants to the video room using supplied tokens. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying the room operations, it generates a report containing statistics about the connection.
+
+Note: the tokens used for the connection must specify the room to be used for test. This must be a unique test room and must not to be used for regular operations.
+
+```js
+const Video = require('twilio-video');
+const tempRoomName = 'test-room-' + Date.now();
+const publisherToken = getAccessToken('alice', tempRoomName);
+const subscriberToken = getAccessToken('bob', tempRoomName);
+
+const preflightTest = Video.testPreflight(publisherToken, subscriberToken);
+
+preflightTest.on('completed', function(report) {
+  console.log("Test completed in " + report.testTiming.duration + " milliseconds.");
+  console.log(" It took " + report.networkTiming.connect.duration + " milliseconds to connect");
+  console.log(" It took " + report.networkTiming.media.duration + " milliseconds to receive media");
+
+  // network score is available only for group rooms.
+  console.log(" Your network score was: " + report.stats.networkQuality);
+});
+
+preflightTest.on('failed', function(error) {
+  console.log("Test failed:" + error);
+});
+
+preflightTest.on('progress', function(progressState) {
+  console.log(progressState);
+});
+```
+
+
 2.7.2 (August 12, 2020)
 =======================
 
