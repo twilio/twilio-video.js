@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Video from './index';
 
 function getAudioTrack(track: Video.LocalAudioTrack) {
