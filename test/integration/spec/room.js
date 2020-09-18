@@ -13,7 +13,7 @@ const {
 } = require('../../../lib/util/twilio-video-errors');
 
 const { isFirefox, isChrome, isSafari } = require('../../lib/guessbrowser');
-const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
 
@@ -644,6 +644,40 @@ describe('Room', function() {
       await waitFor(p2, `Alice to receive "trackSwitchedOn" on Bob's RemoteTrackPublication: ${aliceRoom.sid}`);
       await waitFor(p3, `Alice to receive "trackSwitchedOn" on Bob's RemoteParticipant: ${aliceRoom.sid}`);
       await waitFor(p4, `Alice to receive "trackSwitchedOn" on the Room: ${aliceRoom.sid}`);
+    });
+  });
+
+  describe('VMS-2812: when local and remote sdp use different m-line order', () => {
+    // these tests force the audio and video m-line order mismatch.
+    // this would help catch issues like VMS-2812 in future.
+    it('case 1: connected with different track order', async () => {
+      const aliceTracks = await waitFor([createLocalAudioTrack(), createLocalVideoTrack()], 'alice local tracks');
+      const bobTracks = await waitFor([createLocalVideoTrack(), createLocalAudioTrack()], 'bob local tracks');
+      const aliceOptions = { tracks: aliceTracks };
+      const bobOptions = { tracks: bobTracks };
+      const { roomSid, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+
+      const aliceAudio = validateMediaFlow(aliceRoom, 10000, ['remoteAudioTrackStats']);
+      const aliceVideo = validateMediaFlow(aliceRoom, 10000, ['remoteVideoTrackStats']);
+
+      const bobAudio = validateMediaFlow(bobRoom, 10000, ['remoteAudioTrackStats']);
+      const bobVideo = validateMediaFlow(bobRoom, 10000, ['remoteVideoTrackStats']);
+
+      await waitFor([aliceAudio, aliceVideo, bobAudio, bobVideo], `waiting to verify media in ${roomSid}`);
+    });
+
+    it('case 2: connected with video only and audio added later', async () => {
+      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+      const aliceLocalAudio = await waitFor(createLocalAudioTrack(), 'alice local audio track');
+      const aliceOptions = { tracks: [aliceLocalVideo] };
+      const bobOptions = { tracks: [] };
+      const { roomSid, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+      await waitFor(aliceRoom.localParticipant.publishTrack(aliceLocalAudio), `alice to publish audio ${roomSid}`);
+
+      const bobAudio = validateMediaFlow(bobRoom, 10000, ['remoteAudioTrackStats']);
+      const bobVideo = validateMediaFlow(bobRoom, 10000, ['remoteVideoTrackStats']);
+
+      await waitFor([bobAudio, bobVideo], `waiting to verify media in ${roomSid}`);
     });
   });
 });
