@@ -2,6 +2,28 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.7.3 (in progress)
+===================
+
+Changes
+-------
+
+- This release introduces a new ConnectOptions boolean `enableDtxForOpus`, which can be used
+  to turn on DTX for the opus codec, which drastically reduces the bitrate of silent AudioTracks,
+  thereby potentially saving CPU cycles due to the opus decoder having to decode a lot fewer audio
+  packets. (VIDEO-3077 / JSDK-3001)
+
+  ```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect('token', {
+    enableDtxForOpus: true
+  });
+  ```
+
+  You can verify that DTX is turned on by going to `chrome://webrtc-internals` and checking out
+  the bitrate graph for you encoded local audio, where it should go to almost zero during silence.
+
 2.7.2 (August 12, 2020)
 =======================
 
