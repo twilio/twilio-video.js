@@ -161,7 +161,7 @@ describe('LocalTrackPublication', function() {
     combinationContext([
       [
         [true, false],
-        x => `called with ${x ? 'an enabled' : 'a disabled (@unstable: JSDK-2805)'}`
+        x => `called with ${x ? 'an enabled' : 'a disabled'}`
       ],
       [
         ['audio', 'video', 'data'],
@@ -170,11 +170,6 @@ describe('LocalTrackPublication', function() {
       [
         ['published', 'published, unpublished, and then published again'],
         x => 'that was ' + x
-      ],
-      [
-        [true],
-        // eslint-disable-next-line no-unused-vars
-        _x => defaults.topology === 'peer-to-peer' ? '(@unstable: JSDK-2806)' : ''
       ]
     ], ([isEnabled, kind, when]) => {
       // eslint-disable-next-line no-warning-comments

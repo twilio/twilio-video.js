@@ -95,7 +95,7 @@ function waitUntilError(driver) {
 function waitUntilDisconnectedOrError(driver) {
   return Promise.race([
     waitUntilDisconnected(driver),
-    waitUntilError(driver).then(() => { throw new Error('Test Application errored'); })
+    waitUntilError(driver).then(ex => { throw new Error('Test Application errored: ' + ex); })
   ]);
 }
 
