@@ -5,8 +5,8 @@
     "react-scripts": "^1.1.4"
   },
   "dependencies": {
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1",
+    "react": "^16.5.0",
+    "react-dom": "^16.5.0",
     "twilio-video": "file:../../../"
   },
   "scripts": {
