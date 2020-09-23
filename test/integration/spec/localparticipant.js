@@ -1394,4 +1394,48 @@ describe('LocalParticipant', function() {
       assert(!error);
     });
   });
+
+  describe.only('JSDK-2985 - Event Listeners cleaned up after leaving room', () => {
+    let room;
+    let error;
+    let listenerCount = 0;
+    const events = ['enabled', 'disabled', 'started', 'stopped', 'message'];
+    async function setupRoom(token, options) {
+      let room = await connect(token, options);
+      return room;
+    }
+
+    before(async () => {
+      try {
+        const token = getToken(randomName());
+        const options = Object.assign({ audio: true, fake: true }, defaults);
+        // eslint-disable-next-line no-await-in-loop
+        room = await setupRoom(token, options);
+        if (room) {
+          room.disconnect();
+        }
+        events.forEach(event => {
+          room.localParticipant.tracks.forEach(publication => {
+            listenerCount += publication.track.listenerCount(event);
+          });
+        });
+      } catch (e) {
+        error = e;
+      }
+    });
+
+    it('should have 0 event listeners after disconnecting from multiple rooms', () => {
+      assert.equal(listenerCount, 0);
+    });
+
+    it('should not throw any errors', () => {
+      assert(!error);
+    });
+
+    after(() => {
+      if (room) {
+        room.disconnect();
+      }
+    });
+  });
 });
