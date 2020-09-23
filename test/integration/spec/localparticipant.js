@@ -1395,7 +1395,7 @@ describe('LocalParticipant', function() {
     });
   });
 
-  describe.only('JSDK-2985 - Event Listeners cleaned up after leaving room', () => {
+  describe('JSDK-2985 - Clean up LocalTrack event listeners added by the LocalTrackPublication after leaving room', () => {
     let room;
     let error;
     let listenerCount = 0;
