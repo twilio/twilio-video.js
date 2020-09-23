@@ -14,6 +14,8 @@ const publicClasses = [
   'lib/createlocaltrack.js',
   'lib/createlocaltracks.js',
   'lib/index.js',
+  'lib/preflight/preflight.js',
+  'lib/preflight/preflighttest.js',
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
@@ -55,6 +57,7 @@ const publicClasses = [
   'lib/stats/remoteaudiotrackstats.js',
   'lib/stats/remotevideotrackstats.js',
   'lib/util/twilio-video-errors.js',
+  'lib/util/timemeasurement.js',
   'lib/util/twilioerror.js'
 ];
 
