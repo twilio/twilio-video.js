@@ -7,9 +7,9 @@ export class RemoteAudioTrack extends AudioTrack {
   isSwitchedOff: boolean;
   isEnabled: boolean;
 
-  on(event: "disabled", listener: () => void): void;
-  on(event: "enabled", listener: () => void): void;
-  on(event: "started", listener: () => void): void;
-  on(event: "switchedOff", listener: () => void): void;
-  on(event: "switchedOn", listener: () => void): void;
+  on(event: "disabled", listener: (track: this) => void): this;
+  on(event: "enabled", listener: (track: this) => void): this;
+  on(event: "started", listener: (track: this) => void): this;
+  on(event: "switchedOff", listener: (track: this) => void): this;
+  on(event: "switchedOn", listener: (track: this) => void): this;
 }

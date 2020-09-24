@@ -13,8 +13,8 @@ export class LocalAudioTrack extends AudioTrack {
   restart(constraints?: MediaTrackConstraints): Promise<void>;
   stop(): LocalAudioTrack;
 
-  on(event: "disabled", listener: () => void): void;
-  on(event: "enabled", listener: () => void): void;
-  on(event: "started", listener: () => void): void;
-  on(event: "stopped", listener: () => void): void;
+  on(event: "disabled", listener: (track: this) => void): this;
+  on(event: "enabled", listener: (track: this) => void): this;
+  on(event: "started", listener: (track: this) => void): this;
+  on(event: "stopped", listener: (track: this) => void): this;
 }
