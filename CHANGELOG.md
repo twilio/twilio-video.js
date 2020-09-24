@@ -38,6 +38,10 @@ preflightTest.on('progress', function(progressState) {
 });
 ```
 
+Bug Fixes
+---------
+- Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting from a room. (JSDK-2985)
+
 
 2.7.2 (August 12, 2020)
 =======================
