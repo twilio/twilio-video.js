@@ -5,7 +5,6 @@ if (typeof window === 'undefined') {
 }
 
 require('./spec/connect');
-require('./spec/preflight');
 require('./spec/createlocaltrack');
 require('./spec/createlocaltracks');
 require('./spec/encodingparameters');
