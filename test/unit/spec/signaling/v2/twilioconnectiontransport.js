@@ -14,6 +14,7 @@ const { combinations, waitForSometime } = require('../../../../lib/util');
 
 describe('TwilioConnectionTransport', () => {
   combinations([
+    [true, false], // preflight
     [true, false], // iceServers
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
@@ -78,8 +79,9 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([iceServers, networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+  ]).forEach(([preflight, iceServers, networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
     describe(`constructor, called with
+      .preflight ${preflight ? '' : 'not '}set
       .iceServers ${iceServers ? '' : 'not '}provided
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
@@ -97,6 +99,7 @@ describe('TwilioConnectionTransport', () => {
         } : {}, {
           automaticSubscription,
           networkQuality,
+          preflight,
           dominantSpeaker,
           trackPriority,
           trackSwitchOff
@@ -180,6 +183,7 @@ describe('TwilioConnectionTransport', () => {
           assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
           assert.equal(message.token, test.accessToken);
           assert.equal(message.type, 'connect');
+          assert.equal(message.preflight, preflight);
           assert.equal(message.version, 2);
           assert.equal(message.publisher.name, `${name}.js`);
           assert.equal(message.publisher.sdk_version, version);
@@ -193,6 +197,7 @@ describe('TwilioConnectionTransport', () => {
           const message = test.twilioConnection.helloBody;
           assert.deepEqual(message, {
             edge: 'roaming',
+            preflight,
             token: test.accessToken,
             type: 'ice',
             version: 1
