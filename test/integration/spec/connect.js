@@ -42,7 +42,6 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 describe('connect', function() {

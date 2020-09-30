@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.7.3-dev",
+  "version": "2.8.0-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -68,7 +68,7 @@
     "sinon": "^4.0.1",
     "ts-node": "4.0.1",
     "tslint": "5.8.0",
-    "twilio": "^2.11.1",
+    "twilio": "^3.49.0",
     "twilio-release-tool": "^1.0.0",
     "typescript": "3.3.1",
     "uglify-js": "^2.8.22",
