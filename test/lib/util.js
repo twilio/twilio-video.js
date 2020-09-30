@@ -633,10 +633,10 @@ async function getRegionalizedIceServers(token, region) {
   return iceServers;
 }
 
-function getTotalBytesReceived(statReports) {
+function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
-    ['remoteVideoTrackStats', 'remoteAudioTrackStats'].forEach(trackType => {
+    trackTypes.forEach(trackType => {
       statReport[trackType].forEach(trackStats => {
         totalBytesReceived += trackStats.bytesReceived;
       });
@@ -651,20 +651,20 @@ function getTotalBytesReceived(statReports) {
  * @param {number} testTimeMS
  * @returns {Promise<>}
  */
-async function validateMediaFlow(room, testTimeMS = 6000) {
+async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
   const statsBefore = await room.getStats();
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore);
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
 
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports again.
   const statsAfter = await room.getStats();
-  const bytesReceivedAfter = getTotalBytesReceived(statsAfter);
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypes);
 
   console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
