@@ -201,6 +201,13 @@ DEBUG=1
 TEST_FILES=<path_ to_the_file>
 ```
 
+Tips
+----
+- Use Pre-commit hook: We have some useful pre-commit hook that would help identify common mistakes before commit. Use them by executing
+```
+ln -s ../../pre-commit.sh .git/hooks/pre-commit
+```
+
 Contributing
 ------------
 
