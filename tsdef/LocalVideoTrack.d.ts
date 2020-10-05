@@ -8,10 +8,10 @@ export class LocalVideoTrack extends VideoTrack {
   id: Track.ID;
   isStopped: boolean;
 
-  disable(): LocalVideoTrack;
-  enable(enabled?: boolean): LocalVideoTrack;
+  disable(): this;
+  enable(enabled?: boolean): this;
   restart(constraints?: MediaTrackConstraints): Promise<void>;
-  stop(): LocalVideoTrack;
+  stop(): this;
 
   on(event: 'dimensionsChanged', listener: (track: VideoTrack) => any): this;
   on(event: 'disabled', listener: (track: this) => any): this;

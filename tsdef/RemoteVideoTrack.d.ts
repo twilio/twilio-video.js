@@ -3,11 +3,11 @@ import { VideoTrack } from './VideoTrack';
 
 export class RemoteVideoTrack extends VideoTrack {
   sid: Track.SID;
-  priority: Track.Priority;
+  priority: Track.Priority | null;
   isSwitchedOff: boolean;
   isEnabled: boolean;
 
-  setPriority(priority: Track.Priority): RemoteVideoTrack;
+  setPriority(priority: Track.Priority): this;
 
   on(event: 'dimensionsChanged', listener: (track: this) => any): this;
   on(event: 'disabled', listener: (track: this) => any): this;
