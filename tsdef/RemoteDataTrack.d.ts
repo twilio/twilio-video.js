@@ -9,4 +9,10 @@ export class RemoteDataTrack extends Track {
   ordered: boolean;
   reliable: boolean;
   sid: Track.SID;
+
+  setPriority(priority: Track.Priority): RemoteDataTrack;
+
+  on(event: 'message', listener: (data: string | ArrayBuffer, track: RemoteDataTrack) => any): this;
+  on(event: 'switchedOff', listener: (track: this) => any): this;
+  on(event: 'switchedOn', listener: (track: this) => any): this;
 }
