@@ -8,12 +8,12 @@ export class RemoteTrackPublication extends TrackPublication {
   publishPriority: Track.Priority;
   track: RemoteTrack | null;
 
-  on(event: 'publishPriorityChanged', listener: (priority: Track.Priority) => void): this;
-  on(event: 'subscribed', listener: (track: RemoteTrack) => void): this;
-  on(event: 'subscriptionFailed', listener: (error: TwilioError) => void): this;
-  on(event: 'trackDisabled', listener: () => void): this;
-  on(event: 'trackEnabled', listener: () => void): this;
-  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack) => void): this;
-  on(event: 'trackSwitchedOn', listener: (track: RemoteTrack) => void): this;
-  on(event: 'unsubscribed', listener: (track: RemoteTrack) => void): this;
+  on(event: 'publishPriorityChanged', listener: (priority: Track.Priority) => any): this;
+  on(event: 'subscribed', listener: (track: RemoteTrack) => any): this;
+  on(event: 'subscriptionFailed', listener: (error: TwilioError) => any): this;
+  on(event: 'trackDisabled', listener: () => any): this;
+  on(event: 'trackEnabled', listener: () => any): this;
+  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack) => any): this;
+  on(event: 'trackSwitchedOn', listener: (track: RemoteTrack) => any): this;
+  on(event: 'unsubscribed', listener: (track: RemoteTrack) => any): this;
 }

@@ -8,6 +8,6 @@ export class TrackPublication extends EventEmitter {
   toJSON(): string;
   toString(): string;
 
-  on(event: 'trackDisabled', listener: (publication: this) => void): this;
-  on(event: 'trackEnabled', listener: (publication: this) => void): this;
+  on(event: 'trackDisabled', listener: (publication: this) => any): this;
+  on(event: 'trackEnabled', listener: (publication: this) => any): this;
 }
