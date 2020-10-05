@@ -18,4 +18,3 @@ yarn.lock
 .idea
 .vscode
 pre-commit.sh
-tsdef/twilio-video-tests.js

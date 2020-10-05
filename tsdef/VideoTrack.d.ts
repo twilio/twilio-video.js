@@ -19,7 +19,7 @@ export class VideoTrack extends Track {
   attach(element?: HTMLMediaElement | string): HTMLVideoElement;
   detach(element?: HTMLMediaElement | string): HTMLMediaElement[];
 
-  on(event: 'disabled', listener: (track: this) => void): this;
-  on(event: 'enabled', listener: (track: this) => void): this;
-  on(event: 'started', listener: (track: this) => void): this;
+  on(event: 'disabled', listener: (track: this) => any): this;
+  on(event: 'enabled', listener: (track: this) => any): this;
+  on(event: 'started', listener: (track: this) => any): this;
 }

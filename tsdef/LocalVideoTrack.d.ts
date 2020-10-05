@@ -13,9 +13,9 @@ export class LocalVideoTrack extends VideoTrack {
   restart(constraints?: MediaTrackConstraints): Promise<void>;
   stop(): LocalVideoTrack;
 
-  on(event: 'dimensionsChanged', listener: (track: VideoTrack) => void): this;
-  on(event: 'disabled', listener: (track: this) => void): this;
-  on(event: 'enabled', listener: (track: this) => void): this;
-  on(event: 'started', listener: (track: this) => void): this;
-  on(event: 'stopped', listener: (track: this) => void): this;
+  on(event: 'dimensionsChanged', listener: (track: VideoTrack) => any): this;
+  on(event: 'disabled', listener: (track: this) => any): this;
+  on(event: 'enabled', listener: (track: this) => any): this;
+  on(event: 'started', listener: (track: this) => any): this;
+  on(event: 'stopped', listener: (track: this) => any): this;
 }
