@@ -2,8 +2,8 @@ import { Track } from './Track';
 
 export namespace VideoTrack {
   interface Dimensions {
-      width: number | null;
-      height: number | null;
+    width: number | null;
+    height: number | null;
   }
 }
 

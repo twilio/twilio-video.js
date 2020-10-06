@@ -7,7 +7,7 @@ export class RemoteVideoTrack extends VideoTrack {
   isSwitchedOff: boolean;
   isEnabled: boolean;
 
-  setPriority(priority: Track.Priority): this;
+  setPriority(priority: Track.Priority | null): this;
 
   on(event: 'dimensionsChanged', listener: (track: this) => any): this;
   on(event: 'disabled', listener: (track: this) => any): this;
