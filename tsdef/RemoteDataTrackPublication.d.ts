@@ -1,8 +1,7 @@
 import { RemoteTrackPublication } from './RemoteTrackPublication';
-import { Track } from './Track';
 
 export class RemoteDataTrackPublication extends RemoteTrackPublication {
-  kind: Track.Kind | 'data';
+  kind: 'data';
   track: RemoteDataTrack | null;
 
   on(event: 'subscribed', listener: (track: RemoteDataTrack) => any): this;

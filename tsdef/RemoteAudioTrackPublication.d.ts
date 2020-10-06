@@ -1,8 +1,7 @@
 import { RemoteTrackPublication } from './RemoteTrackPublication';
-import { Track } from './Track';
 
 export class RemoteAudioTrackPublication extends RemoteTrackPublication {
-  kind: Track.Kind | 'audio';
+  kind: 'audio';
   track: RemoteAudioTrack | null;
 
   on(event: 'subscribed', listener: (track: RemoteAudioTrack) => any): this;
