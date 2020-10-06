@@ -8,6 +8,7 @@ export namespace Track {
 }
 
 export class Track extends EventEmitter {
-    kind: Track.Kind;
-    name: string;
+  kind: Track.Kind;
+  name: string;
+  isEnabled: boolean;
 }
