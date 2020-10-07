@@ -1,4 +1,6 @@
+import { RemoteAudioTrack } from './RemoteAudioTrack';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
+import { TwilioError } from './TwilioError';
 
 export class RemoteAudioTrackPublication extends RemoteTrackPublication {
   kind: 'audio';

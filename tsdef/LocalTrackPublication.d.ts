@@ -1,9 +1,8 @@
+import { LocalTrack } from './types';
 import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
 
 export class LocalTrackPublication extends TrackPublication {
-  isTrackEnabled: boolean;
-  kind: Track.Kind;
   priority: Track.Priority;
   track: LocalTrack;
 

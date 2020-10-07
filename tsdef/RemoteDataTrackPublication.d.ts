@@ -1,4 +1,6 @@
+import { RemoteDataTrack } from './RemoteDataTrack';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
+import { TwilioError } from './TwilioError';
 
 export class RemoteDataTrackPublication extends RemoteTrackPublication {
   kind: 'data';
