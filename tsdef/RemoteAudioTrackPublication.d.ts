@@ -11,4 +11,5 @@ export class RemoteAudioTrackPublication extends RemoteTrackPublication {
   on(event: 'trackDisabled', listener: () => any): this;
   on(event: 'trackEnabled', listener: () => any): this;
   on(event: 'unsubscribed', listener: (track: RemoteAudioTrack) => any): this;
+  on(event: string, listener: (...args: any[]) => any): this;
 }

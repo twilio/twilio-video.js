@@ -11,4 +11,5 @@ export class RemoteVideoTrackPublication extends RemoteTrackPublication {
   on(event: 'trackSwitchedOff', listener: (track: RemoteVideoTrack) => any): this;
   on(event: 'trackSwitchedOn', listener: (track: RemoteVideoTrack) => any): this;
   on(event: 'unsubscribed', listener: (track: RemoteVideoTrack) => any): this;
+  on(event: string, listener: (...args: any[]) => any): this;
 }

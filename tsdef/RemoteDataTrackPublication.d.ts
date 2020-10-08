@@ -9,4 +9,5 @@ export class RemoteDataTrackPublication extends RemoteTrackPublication {
   on(event: 'subscribed', listener: (track: RemoteDataTrack) => any): this;
   on(event: 'subscriptionFailed', listener: (error: TwilioError) => any): this;
   on(event: 'unsubscribed', listener: (track: RemoteDataTrack) => any): this;
+  on(event: string, listener: (...args: any[]) => any): this;
 }
