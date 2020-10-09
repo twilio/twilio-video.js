@@ -9,6 +9,6 @@ export class LocalTrackPublication extends TrackPublication {
   setPriority(priority: Track.Priority): this;
   unpublish(): this;
 
-  on(event: 'trackDisabled', listener: () => any): this;
-  on(event: 'trackEnabled', listener: () => any): this;
+  on(event: 'trackDisabled', listener: () => void): this;
+  on(event: 'trackEnabled', listener: () => void): this;
 }

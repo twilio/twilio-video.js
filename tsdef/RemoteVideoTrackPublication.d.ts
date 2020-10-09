@@ -6,10 +6,10 @@ export class RemoteVideoTrackPublication extends RemoteTrackPublication {
   kind: 'video';
   track: RemoteVideoTrack | null;
 
-  on(event: 'subscribed', listener: (track: RemoteVideoTrack) => any): this;
-  on(event: 'subscriptionFailed', listener: (error: TwilioError) => any): this;
-  on(event: 'trackSwitchedOff', listener: (track: RemoteVideoTrack) => any): this;
-  on(event: 'trackSwitchedOn', listener: (track: RemoteVideoTrack) => any): this;
-  on(event: 'unsubscribed', listener: (track: RemoteVideoTrack) => any): this;
-  on(event: string, listener: (...args: any[]) => any): this;
+  on(event: 'subscribed', listener: (track: RemoteVideoTrack) => void): this;
+  on(event: 'subscriptionFailed', listener: (error: TwilioError) => void): this;
+  on(event: 'trackSwitchedOff', listener: (track: RemoteVideoTrack) => void): this;
+  on(event: 'trackSwitchedOn', listener: (track: RemoteVideoTrack) => void): this;
+  on(event: 'unsubscribed', listener: (track: RemoteVideoTrack) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }
