@@ -1,9 +1,9 @@
 'use strict';
 
+require('./spec/browserbugs/chromium');
 require('./spec/docker/reconnection');
 require('./spec/docker/docker');
 require('./spec/connect');
-require('./spec/external');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');

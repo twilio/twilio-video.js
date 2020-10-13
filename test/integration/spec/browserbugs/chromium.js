@@ -1,8 +1,10 @@
-/* eslint-disable no-undefined */
 'use strict';
 
-describe('external issues', () => {
-  it('https://bugs.chromium.org/p/chromium/issues/detail?id=1127625', async () => {
+const { isChrome } = require('../../../lib/guessbrowser');
+
+(isChrome ? describe : describe.skip)('Chromium bugs', () => {
+  it('Bug 1127625', async () => {
+    // Link: https://bugs.chromium.org/p/chromium/issues/detail?id=1127625
     const alice = new RTCPeerConnection();
     const bob = new RTCPeerConnection();
     alice.onicecandidate = e => e.candidate && bob.addIceCandidate(e.candidate);
@@ -22,7 +24,8 @@ describe('external issues', () => {
     await bob.setLocalDescription(nextOffer);
   });
 
-  it('https://bugs.chromium.org/p/chromium/issues/detail?id=1134686', async () => {
+  it('Bug 1134686', async () => {
+    // Link: https://bugs.chromium.org/p/chromium/issues/detail?id=1134686
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
     const pc = new RTCPeerConnection();
     // addTransceiver videotrack?
