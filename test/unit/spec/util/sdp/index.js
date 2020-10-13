@@ -135,7 +135,7 @@ describe('setCodecPreferences', () => {
       x => `when preferredVideoCodecs is ${x ? 'not ' : ''}empty`
     ]
   ], ([sdpType, preferredAudioCodecs, preferredVideoCodecs]) => {
-    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',') : [];
+    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',').map(codec => ({ codec })) : [];
     preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',').map(codec => ({ codec })) : [];
     context(`should ${preferredAudioCodecs.length ? 'update the' : 'preserve the existing'} audio codec order`, () => {
       it(`and ${preferredVideoCodecs.length ? 'update the' : 'preserve the existing'} video codec order`, () => {
@@ -830,9 +830,9 @@ describe('revertSimulcastForNonVP8MediaSections', () => {
         video: [{ id: 'video-1', ssrc: ssrcs[0] }]
       });
       if (isVP8PreferredPayloadType) {
-        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'VP8' }]);
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'VP8' }]);
       } else {
-        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'H264' }]);
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'H264' }]);
       }
       revertedSdp = revertSimulcastForNonVP8MediaSections(simSdp, sdp, remoteSdp);
     });
