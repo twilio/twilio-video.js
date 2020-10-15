@@ -700,31 +700,24 @@ describe('LocalTrackPublication', function() {
     });
   });
 
-  // note: I have seen firefox getting disconnected after this test.
-  // note: also seen and this test fail (Bob only sends TrackA in SDP) on p2p.
-  const arrayOfNumbers = Array(5).fill(0).map(Number.call, Number);
-  arrayOfNumbers.forEach(i => {
-    it(`${i}] JSDK-2573 - race condition when recycling transceiver`, async () => {
-      // Alice and Bob join without tracks
-      const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
-        aliceOptions: { tracks: [] },
-        bobOptions: { tracks: [] },
-      });
-
-      console.log('Room: ', roomSid);
-
-      const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
-      const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
-
-      // Bob publishes video trackA and trackB in quick succession
-      await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
-      await waitFor(bobLocal.publishTrack(bobVideoTrackB), `Bob to publish video trackB: ${roomSid}`);
-
-      // wait for alice to subscribe two tracks
-      await waitFor(tracksSubscribed(bobRemote, 2), `wait for alice to subscribe to Bobs tracks: ${roomSid}`);
-
-      aliceRoom.disconnect();
-      bobRoom.disconnect();
+  it('JSDK-2573 - race condition when recycling transceiver', async () => {
+    // Alice and Bob join without tracks
+    const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
+      aliceOptions: { tracks: [] },
+      bobOptions: { tracks: [] },
     });
+
+    const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
+    const bobVideoTrackB = await createLocalVideoTrack(Object.assign({ name: 'trackB' }, smallVideoConstraints));
+
+    // Bob publishes video trackA and trackB in quick succession
+    await waitFor(bobLocal.publishTrack(bobVideoTrackA), `Bob to publish video trackA: ${roomSid}`);
+    await waitFor(bobLocal.publishTrack(bobVideoTrackB), `Bob to publish video trackB: ${roomSid}`);
+
+    // wait for alice to subscribe two tracks
+    await waitFor(tracksSubscribed(bobRemote, 2), `wait for alice to subscribe to Bobs tracks: ${roomSid}`);
+
+    aliceRoom.disconnect();
+    bobRoom.disconnect();
   });
 });
