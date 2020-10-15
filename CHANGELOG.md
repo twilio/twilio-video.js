@@ -2,6 +2,23 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.9.0 (in progress)
+===================
+
+New Features
+------------
+
+- You can now connect to a Group Room with Maximum Participants between 50 and 100 (Large Group Rooms).
+  Large Group Rooms are different from the other types of Rooms in the following ways:
+  - "participantConnected" event is raised on the Room when a RemoteParticipant
+    publishes the first LocalTrack.
+  - "participantDisconnected" event is raised on the Room when a RemoteParticipant
+    stops publishing all of its LocalTracks.
+  - The total number of published Tracks in the Room cannot exceed 16. Any attempt
+    to publish more Tracks will be rejected with a `ParticipantMaxTracksExceededError`. (JSDK-3021)
+  
+  NOTE: Large Group Rooms is currently in **beta**.
+    
 2.8.0 (November 20, 2020)
 =========================
 
