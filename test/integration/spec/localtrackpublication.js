@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -700,7 +699,7 @@ describe('LocalTrackPublication', function() {
     });
   });
 
-  it('JSDK-2573 - race condition when recycling transceiver', async () => {
+  it('JSDK-2573/JSDK-2807 - race condition when recycling transceiver', async () => {
     // Alice and Bob join without tracks
     const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
       aliceOptions: { tracks: [] },
