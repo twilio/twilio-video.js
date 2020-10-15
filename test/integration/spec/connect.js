@@ -1233,6 +1233,61 @@ describe('connect', function() {
       }
     });
   });
+
+  describe('opus dtx', () => {
+    [
+      [{}, 'when preferredAudioCodecs is not specified'],
+      [{ preferredAudioCodecs: ['isac', { codec: 'PCMU' }] }, 'when opus is not specified in preferredAudioCodecs'],
+      [{ preferredAudioCodecs: ['opus'] }, 'when opus is specified as a string'],
+      [{ preferredAudioCodecs: [{ codec: 'opus' }, 'isac'] }, 'when opus is specified as a setting and dtx is not specified'],
+      [{ preferredAudioCodecs: [{ codec: 'isac' }, { codec: 'opus', dtx: true }] }, 'when opus is specified as a setting and dtx is true'],
+      [{ preferredAudioCodecs: [{ codec: 'opus', dtx: false }, 'isac'] }, 'when opus is specified as a setting and dtx is false']
+    ].forEach(([preferredAudioCodecOptions, description]) => {
+      context(description, () => {
+        let peerConnections;
+        let sid;
+        let thisRoom;
+        let thoseRooms;
+
+        before(async () => {
+          [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+            testOptions: preferredAudioCodecOptions
+          });
+
+          // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
+          // before verifying that simulcast has been enabled. This was added to remove
+          // flakiness of this test in Travis.
+          await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+            pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+          })));
+        });
+
+        const shouldApplyDtx = !(preferredAudioCodecOptions.preferredAudioCodecs
+          && preferredAudioCodecOptions.preferredAudioCodecs.some(codecOrSetting =>
+            codecOrSetting.codec === 'opus' && codecOrSetting.dtx === false));
+
+        it(`should ${shouldApplyDtx ? '' : 'not '}add "usedtx=1" to opus's fmtp line`, () => {
+          flatMap(peerConnections, pc => getMediaSections(pc.localDescription.sdp, 'audio')).forEach(section => {
+            const codecMap = createCodecMapForMediaSection(section);
+            const opusPts = codecMap.get('opus');
+            if (!opusPts) {
+              assert(!/usedtx=1/.test(section));
+            } else {
+              const fmtpAttributes = section.match(new RegExp(`^a=fmtp:${opusPts[0]} (.+)$`, 'm'))[1].split(';');
+              assert(shouldApplyDtx
+                ? fmtpAttributes.includes('usedtx=1')
+                : !fmtpAttributes.includes('usedtx=1'));
+            }
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
+      });
+    });
+  });
 });
 
 function getPayloadTypes(mediaSection) {
