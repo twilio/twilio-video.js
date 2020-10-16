@@ -1,6 +1,8 @@
 
 export type NetworkQualityLevel = number;
 
+export type NetworkQualityVerbosity = 0 | 1 | 2 | 3;
+
 export class NetworkQualityStats {
   level: NetworkQualityLevel;
   audio: NetworkQualityAudioStats | null;
@@ -37,4 +39,9 @@ export class NetworkQualityLatencyStats {
   jitter: number | null;
   rtt: number | null;
   level: NetworkQualityLevel | null;
+}
+
+export interface NetworkQualityConfiguration {
+  local?: NetworkQualityVerbosity;
+  remote?: NetworkQualityVerbosity;
 }

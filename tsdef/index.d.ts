@@ -3,6 +3,7 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
+import { LocalParticipant } from './LocalParticipant';
 import { LocalTrackPublication } from './LocalTrackPublication';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
@@ -16,4 +17,4 @@ import { RemoteVideoTrackPublication  } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
 
-export { Track, LocalAudioTrack, RemoteAudioTrack, LocalDataTrack, RemoteDataTrack, LocalVideoTrack, RemoteVideoTrack, TrackPublication, LocalTrackPublication, RemoteTrackPublication, RemoteVideoTrackPublication, RemoteDataTrackPublication, RemoteAudioTrackPublication, LocalAudioTrackPublication, LocalVideoTrackPublication, LocalDataTrackPublication, LocalTrack, RemoteTrack };
+export { Track, LocalAudioTrack, RemoteAudioTrack, LocalDataTrack, RemoteDataTrack, LocalVideoTrack, RemoteVideoTrack, TrackPublication, LocalTrackPublication, RemoteTrackPublication, RemoteVideoTrackPublication, RemoteDataTrackPublication, RemoteAudioTrackPublication, LocalAudioTrackPublication, LocalVideoTrackPublication, LocalDataTrackPublication, LocalTrack, RemoteTrack, LocalParticipant };
