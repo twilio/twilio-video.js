@@ -8,9 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- Enabled discontinuous transmission (DTX) in the Opus audio codec, which will result in
-  bandwidth and CPU savings during silence and background noise. You can control this
-  feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
+- Enabled discontinuous transmission (DTX) in the Opus audio codec by default, which
+  will result in bandwidth and CPU savings during silence and background noise. You
+  can control this feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
   
   ```js
   const { connect } = require('twilio-video');
