@@ -103,3 +103,35 @@ function localDataTrackPublication(publication: Video.LocalDataTrackPublication)
   const publicationInfo = { kind, track };
   return publicationInfo;
 }
+
+function RemoteParticipant(RemoteParticipant: Video.RemoteParticipant) {
+  const chatLog = document.getElementById('someElementChat');
+  const RemoteData = RemoteParticipant.dataTracks;
+  const RemoteAudio = RemoteParticipant.audioTracks;
+  const sid = RemoteParticipant.sid;
+
+  RemoteParticipant.on('disconnected', remoteParticipant => {
+    return `${remoteParticipant} Has Disconnected`;
+  });
+  RemoteParticipant.on('trackMessage', msg => {
+    const textElement = document.createElement('p');
+    if (chatLog) {
+      textElement.innerText = `${msg}`;
+      chatLog.appendChild(textElement);
+    }
+  });
+}
+
+function LocalParticipant(LocalParticipant: Video.LocalParticipant) {
+  const LocalAudioTrack = LocalParticipant.audioTracks;
+  const LocalVideoTrack = LocalParticipant.videoTracks;
+  const LocalTracks = LocalParticipant.tracks;
+  const signalingRegion = LocalParticipant.signalingRegion;
+
+  LocalParticipant.on('networkQualityLevelChanged', (networkQualityLevel, networkQualityStats) => {
+    return `Your network quality level has changed to : ${networkQualityLevel}`;
+  });
+  LocalParticipant.on('trackPublicationFailed', (error, track) => {
+    return `There was a problem publishing track ${track} with error ${error}`;
+  });
+}
