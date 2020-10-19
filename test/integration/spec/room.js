@@ -18,7 +18,7 @@ const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
-const { completeRoom, createRoom } = require('../../lib/rest');
+const { completeRoom, createRoom, startRecording, stopRecording } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
 
@@ -517,19 +517,43 @@ describe('Room', function() {
     });
   });
 
-  describe('"recordingStarted" event', () => {
-    it.skip('is raised whenever recording is started on the Room via the REST API', () => {
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mroberts): POST to the REST API to start recording on the Room.
-    });
-  });
+  if (defaults.topology !== 'peer-to-peer') {
+    ['recordingStarted', 'recordingStopped'].forEach(recordingEvent => {
+      describe.only(`${recordingEvent} event`, () => {
+        let sid;
+        let room;
+        let enableRecording = recordingEvent !== 'recordingStarted';
+        before(async () => {
+          sid = await createRoom(randomName(), defaults.topology, { RecordParticipantsOnConnect: enableRecording });
+          const options = Object.assign({ name: sid, tracks: [] }, defaults);
+          room = await connect(getToken(randomName()), options);
+        });
 
-  describe('"recordingStopped" event', () => {
-    it.skip('is raised whenever recording is stopped on the Room via the REST API', () => {
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mroberts): POST to the REST API to stop recording on the Room.
+        after(() => {
+          if (room) {
+            room.disconnect();
+          }
+          return completeRoom(sid);
+        });
+
+        it(`should be set to ${enableRecording}`, () => {
+          assert.equal(room.isRecording, enableRecording);
+        });
+
+        it('is raised whenever recording is started on the Room via the REST API', async () => {
+          const recordingEventPromise = new Promise(resolve => room.once(recordingEvent, resolve));
+
+          if (enableRecording) {
+            await stopRecording(room);
+          } else {
+            await startRecording(room);
+          }
+
+          await waitFor(recordingEventPromise, `failed to receive ${recordingEvent} on ${room.sid}`);
+        });
+      });
     });
-  });
+  }
 
   (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"trackSwitched" events', () => {
     let alice;
