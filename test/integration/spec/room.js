@@ -12,8 +12,8 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
-const { isFirefox, isChrome, isSafari } = require('../../lib/guessbrowser');
-const { video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
+const { isChrome, isSafari } = require('../../lib/guessbrowser');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
 
@@ -202,7 +202,7 @@ describe('Room', function() {
     });
   });
 
-  describe(`getStats ${isFirefox ? '(@unstable: JSDK-2808)' : ''}`, function() {
+  describe('getStats', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
@@ -225,7 +225,7 @@ describe('Room', function() {
       // 2. Create Room.
       sid = await createRoom(randomName(), defaults.topology);
 
-      rooms = await Promise.all(localTracks.map(async (localTrack, i) => {
+      rooms = await waitFor(localTracks.map(async (localTrack, i) => {
         // 3. Connect to Room with specified LocalTrack.
         const identity = randomName();
         const token = getToken(identity);
@@ -243,9 +243,9 @@ describe('Room', function() {
         assert(localTrackPublication);
         localTrackPublications[i] = localTrackPublication;
         return room;
-      }));
+      }), `rooms to get connected and track published: ${sid}`);
 
-      await Promise.all(rooms.map(async room => {
+      await waitFor(rooms.map(async room => {
         // 5. Wait for RemoteParticipants to connect.
         await participantsConnected(room, 2);
         const remoteParticipants = [...room.participants.values()];
@@ -268,13 +268,13 @@ describe('Room', function() {
         await Promise.all(remoteMediaTracks.map(remoteMediaTrack => trackStarted(remoteMediaTrack)));
 
         return room;
-      }));
+      }), `remote tracks to start: ${sid}`);
 
       // wait for sometime before retrieving stats
       await waitForSometime(2000);
 
       // 8. Get StatsReports.
-      reports = await Promise.all(rooms.map(room => room.getStats()));
+      reports = await waitFor(rooms.map(room => room.getStats()), `stats reports ${sid}`);
     });
 
     it('includes the expected LocalAudioTrackStats and LocalVideoTrackStats', () => {
@@ -644,6 +644,40 @@ describe('Room', function() {
       await waitFor(p2, `Alice to receive "trackSwitchedOn" on Bob's RemoteTrackPublication: ${aliceRoom.sid}`);
       await waitFor(p3, `Alice to receive "trackSwitchedOn" on Bob's RemoteParticipant: ${aliceRoom.sid}`);
       await waitFor(p4, `Alice to receive "trackSwitchedOn" on the Room: ${aliceRoom.sid}`);
+    });
+  });
+
+  describe('VMS-2812: when local and remote sdp use different m-line order', () => {
+    // these tests force the audio and video m-line order mismatch.
+    // this would help catch issues like VMS-2812 in future.
+    it('case 1: connected with different track order', async () => {
+      const aliceTracks = await waitFor([createLocalAudioTrack(), createLocalVideoTrack()], 'alice local tracks');
+      const bobTracks = await waitFor([createLocalVideoTrack(), createLocalAudioTrack()], 'bob local tracks');
+      const aliceOptions = { tracks: aliceTracks };
+      const bobOptions = { tracks: bobTracks };
+      const { roomSid, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+
+      const aliceAudio = validateMediaFlow(aliceRoom, 10000, ['remoteAudioTrackStats']);
+      const aliceVideo = validateMediaFlow(aliceRoom, 10000, ['remoteVideoTrackStats']);
+
+      const bobAudio = validateMediaFlow(bobRoom, 10000, ['remoteAudioTrackStats']);
+      const bobVideo = validateMediaFlow(bobRoom, 10000, ['remoteVideoTrackStats']);
+
+      await waitFor([aliceAudio, aliceVideo, bobAudio, bobVideo], `waiting to verify media in ${roomSid}`);
+    });
+
+    it('case 2: connected with video only and audio added later', async () => {
+      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+      const aliceLocalAudio = await waitFor(createLocalAudioTrack(), 'alice local audio track');
+      const aliceOptions = { tracks: [aliceLocalVideo] };
+      const bobOptions = { tracks: [] };
+      const { roomSid, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+      await waitFor(aliceRoom.localParticipant.publishTrack(aliceLocalAudio), `alice to publish audio ${roomSid}`);
+
+      const bobAudio = validateMediaFlow(bobRoom, 10000, ['remoteAudioTrackStats']);
+      const bobVideo = validateMediaFlow(bobRoom, 10000, ['remoteVideoTrackStats']);
+
+      await waitFor([bobAudio, bobVideo], `waiting to verify media in ${roomSid}`);
     });
   });
 });
