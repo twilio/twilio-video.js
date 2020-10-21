@@ -1254,11 +1254,11 @@ describe('connect', function() {
             testOptions: preferredAudioCodecOptions
           });
 
-          // NOTE(mmalavalli): Ensuring that the local RTCSessionDescription is set
-          // before verifying that simulcast has been enabled. This was added to remove
-          // flakiness of this test in Travis.
-          await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
-            pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+          // NOTE(mmalavalli): Ensuring that the RTCPeerConnections are stable before
+          // verifying that opus DTX has been enabled/disabled. This was added to remove
+          // flakiness of this test in Circle.
+          await Promise.all(peerConnections.map(pc => pc.signalingState === 'stable' ? Promise.resolve() : new Promise(resolve => {
+            pc.addEventListener('signalingstatechange', () => pc.signalingState === 'stable' && resolve());
           })));
         });
 
@@ -1267,17 +1267,9 @@ describe('connect', function() {
             codecOrSetting.codec === 'opus' && codecOrSetting.dtx === false));
 
         it(`should ${shouldApplyDtx ? '' : 'not '}add "usedtx=1" to opus's fmtp line`, () => {
-          flatMap(peerConnections, pc => getMediaSections(pc.localDescription.sdp, 'audio')).forEach(section => {
-            const codecMap = createCodecMapForMediaSection(section);
-            const opusPts = codecMap.get('opus');
-            if (!opusPts) {
-              assert(!/usedtx=1/.test(section));
-            } else {
-              const fmtpAttributes = section.match(new RegExp(`^a=fmtp:${opusPts[0]} (.+)$`, 'm'))[1].split(';');
-              assert(shouldApplyDtx
-                ? fmtpAttributes.includes('usedtx=1')
-                : !fmtpAttributes.includes('usedtx=1'));
-            }
+          ['local', 'remote'].forEach(localOrRemote => {
+            flatMap(peerConnections, pc => getMediaSections(pc[`${localOrRemote}Description`].sdp, 'audio'))
+              .forEach(section => checkOpusDtxInMediaSection(section, shouldApplyDtx));
           });
         });
 
@@ -1289,6 +1281,17 @@ describe('connect', function() {
     });
   });
 });
+
+function checkOpusDtxInMediaSection(section, shouldApplyDtx) {
+  const codecMap = createCodecMapForMediaSection(section);
+  const opusPts = codecMap.get('opus');
+  if (!opusPts) {
+    assert(!/usedtx=1/.test(section));
+    return;
+  }
+  const fmtpAttributes = section.match(new RegExp(`^a=fmtp:${opusPts[0]} (.+)$`, 'm'))[1].split(';');
+  assert(shouldApplyDtx ? fmtpAttributes.includes('usedtx=1') : !fmtpAttributes.includes('usedtx=1'));
+}
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
