@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.8.0-beta.2 (in progress)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where an iOS 14 Safari Participant is not heard by others in a Room after
+  handling an incoming phone call. (JSDK-3031)
+
 2.8.0-beta.1 (September 28, 2020)
 =================================
 
@@ -64,20 +73,21 @@ preflightTest.on('progress', function(progressState) {
 });
 ```
 
-Bug Fixes
----------
-- Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting from a room. (JSDK-2985)
-
-
 2.7.2 (August 12, 2020)
 =======================
 
 Bug Fixes
 ---------
-- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
 
-- Fixed a bug where `Room.getStats()` returned stats for only one of the temporal layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats` object for each temporal layer, which you can recognize by the `trackId` and `trackSid` properties. (JSDK-2920)
-```js
+- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently
+  disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
+
+- Fixed a bug where `Room.getStats()` returned stats for only one of the temporal
+  layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats`
+  object for each temporal layer, which you can recognize by the `trackId` and
+  `trackSid` properties. (JSDK-2920)
+
+  ```js
   async function getBytesSentOnLocalVideoTrack(room, trackSid) {
     const stats = await room.getStats();
     let totalBytesSent = 0;
@@ -88,7 +98,7 @@ Bug Fixes
     });
     return totalBytesSent;
   }
-```
+  ```
 
 2.7.1 (July 28, 2020)
 =====================
@@ -440,7 +450,7 @@ New Features
       video: {
         dominantSpeakerPriority: 'high',
         maxTracks: 2,
-        mode: 'collaboration'
+        mode: 'collaboration',
         trackSwitchOffMode: 'detected' // possible values: "predicted", "detected" or "disabled".
       }
     }
