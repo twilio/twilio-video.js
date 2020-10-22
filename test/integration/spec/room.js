@@ -12,7 +12,7 @@ const {
   RoomCompletedError
 } = require('../../../lib/util/twilio-video-errors');
 
-const { isFirefox, isChrome, isSafari } = require('../../lib/guessbrowser');
+const { isChrome, isSafari } = require('../../lib/guessbrowser');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
@@ -202,7 +202,7 @@ describe('Room', function() {
     });
   });
 
-  describe(`getStats ${isFirefox ? '(@unstable: JSDK-2808)' : ''}`, function() {
+  describe('getStats', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120000);
 
@@ -225,7 +225,7 @@ describe('Room', function() {
       // 2. Create Room.
       sid = await createRoom(randomName(), defaults.topology);
 
-      rooms = await Promise.all(localTracks.map(async (localTrack, i) => {
+      rooms = await waitFor(localTracks.map(async (localTrack, i) => {
         // 3. Connect to Room with specified LocalTrack.
         const identity = randomName();
         const token = getToken(identity);
@@ -243,9 +243,9 @@ describe('Room', function() {
         assert(localTrackPublication);
         localTrackPublications[i] = localTrackPublication;
         return room;
-      }));
+      }), `rooms to get connected and track published: ${sid}`);
 
-      await Promise.all(rooms.map(async room => {
+      await waitFor(rooms.map(async room => {
         // 5. Wait for RemoteParticipants to connect.
         await participantsConnected(room, 2);
         const remoteParticipants = [...room.participants.values()];
@@ -268,13 +268,13 @@ describe('Room', function() {
         await Promise.all(remoteMediaTracks.map(remoteMediaTrack => trackStarted(remoteMediaTrack)));
 
         return room;
-      }));
+      }), `remote tracks to start: ${sid}`);
 
       // wait for sometime before retrieving stats
       await waitForSometime(2000);
 
       // 8. Get StatsReports.
-      reports = await Promise.all(rooms.map(room => room.getStats()));
+      reports = await waitFor(rooms.map(room => room.getStats()), `stats reports ${sid}`);
     });
 
     it('includes the expected LocalAudioTrackStats and LocalVideoTrackStats', () => {
