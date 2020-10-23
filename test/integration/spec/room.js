@@ -42,8 +42,8 @@ describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('.isRecording', () => {
-    [true, false].forEach(enableRecording => {
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('.isRecording', () => {
+    [true].forEach(enableRecording => {
       context(`when recording is ${enableRecording ? 'enabled' : 'disabled'}`, () => {
         let room;
         let sid;
