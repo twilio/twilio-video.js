@@ -51,7 +51,11 @@ describe('InsightsPublisher (@unstable: JSDK-2761)', function() {
             publisher.once('connected', () => reject(new Error('Unexpected connect')));
             publisher.once('disconnected', resolve);
           });
-          assert(error instanceof Error);
+          assert(error instanceof Error, `unexpected error ${error}`);
+          if (!(error instanceof Error)) {
+            // eslint-disable-next-line no-console
+            console.log('Unexpected error:', error);
+          }
         } : () => new Promise((resolve, reject) => {
           publisher.once('connected', resolve);
           publisher.once('disconnected', error => reject(error || new Error('Unexpected disconnect')));
