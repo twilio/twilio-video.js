@@ -110,6 +110,8 @@ function RemoteParticipant(RemoteParticipant: Video.RemoteParticipant) {
   const RemoteAudio = RemoteParticipant.audioTracks;
   const sid = RemoteParticipant.sid;
 
+  const testDataTracks = RemoteParticipant.dataTracks;
+
   RemoteParticipant.on('disconnected', remoteParticipant => {
     return `${remoteParticipant} Has Disconnected`;
   });
@@ -124,6 +126,7 @@ function RemoteParticipant(RemoteParticipant: Video.RemoteParticipant) {
 
 function LocalParticipant(LocalParticipant: Video.LocalParticipant) {
   const LocalAudioTrack = LocalParticipant.audioTracks;
+  const LocalDataTracks = LocalParticipant.dataTracks;
   const LocalVideoTrack = LocalParticipant.videoTracks;
   const LocalTracks = LocalParticipant.tracks;
   const signalingRegion = LocalParticipant.signalingRegion;
