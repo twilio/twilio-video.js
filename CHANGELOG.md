@@ -8,6 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- Fixed a bug which caused `restart` method on LocalTrack to fail on some android devices
+  with `Failed to re-acquire MediaStreamTrack`. (JSDK-3003)
+
 - Fixed a bug where an iOS 14 Safari Participant is not heard by others in a Room after
   handling an incoming phone call. (JSDK-3031)
 
