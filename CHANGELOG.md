@@ -2,16 +2,33 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.7.3 (in progress)
+2.8.0 (in progress)
 ===================
+
+New Features
+------------
+
+- Enabled discontinuous transmission (DTX) in the Opus audio codec by default, which
+  will result in bandwidth and CPU savings during silence and background noise. You
+  can control this feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
+  
+  ```js
+  const { connect } = require('twilio-video');
+  
+  // Disable DTX for Opus.
+  connect('token', {
+    preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
+  });
+  ```
+
+2.7.3 (October 21, 2020)
+========================
 
 Bug Fixes
 ---------
 
 - Fixed a bug where an iOS 14 Safari Participant is not heard by others in a Room after
   handling an incoming phone call. (JSDK-3031)
-- Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting
-  from a Room. (JSDK-2985)
 
 2.7.2 (August 12, 2020)
 =======================

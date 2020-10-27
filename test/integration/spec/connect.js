@@ -42,6 +42,7 @@ const {
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
+
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 
 describe('connect', function() {
@@ -1233,7 +1234,65 @@ describe('connect', function() {
       }
     });
   });
+
+  describe('opus dtx', () => {
+    [
+      [{}, 'when preferredAudioCodecs is not specified'],
+      [{ preferredAudioCodecs: ['isac', { codec: 'PCMU' }] }, 'when opus is not specified in preferredAudioCodecs'],
+      [{ preferredAudioCodecs: ['opus'] }, 'when opus is specified as a string'],
+      [{ preferredAudioCodecs: [{ codec: 'opus' }, 'isac'] }, 'when opus is specified as a setting and dtx is not specified'],
+      [{ preferredAudioCodecs: [{ codec: 'isac' }, { codec: 'opus', dtx: true }] }, 'when opus is specified as a setting and dtx is true'],
+      [{ preferredAudioCodecs: [{ codec: 'opus', dtx: false }, 'isac'] }, 'when opus is specified as a setting and dtx is false']
+    ].forEach(([preferredAudioCodecOptions, description]) => {
+      context(description, () => {
+        let peerConnections;
+        let sid;
+        let thisRoom;
+        let thoseRooms;
+
+        before(async () => {
+          [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+            testOptions: preferredAudioCodecOptions
+          });
+
+          // NOTE(mmalavalli): Ensuring that the RTCPeerConnections are stable before
+          // verifying that opus DTX has been enabled/disabled. This was added to remove
+          // flakiness of this test in Circle.
+          await Promise.all(peerConnections.map(pc => pc.signalingState === 'stable' ? Promise.resolve() : new Promise(resolve => {
+            pc.addEventListener('signalingstatechange', () => pc.signalingState === 'stable' && resolve());
+          })));
+        });
+
+        const shouldApplyDtx = !(preferredAudioCodecOptions.preferredAudioCodecs
+          && preferredAudioCodecOptions.preferredAudioCodecs.some(codecOrSetting =>
+            codecOrSetting.codec === 'opus' && codecOrSetting.dtx === false));
+
+        it(`should ${shouldApplyDtx ? '' : 'not '}add "usedtx=1" to opus's fmtp line`, () => {
+          ['local', 'remote'].forEach(localOrRemote => {
+            flatMap(peerConnections, pc => getMediaSections(pc[`${localOrRemote}Description`].sdp, 'audio'))
+              .forEach(section => checkOpusDtxInMediaSection(section, shouldApplyDtx));
+          });
+        });
+
+        after(() => {
+          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+          return completeRoom(sid);
+        });
+      });
+    });
+  });
 });
+
+function checkOpusDtxInMediaSection(section, shouldApplyDtx) {
+  const codecMap = createCodecMapForMediaSection(section);
+  const opusPts = codecMap.get('opus');
+  if (!opusPts) {
+    assert(!/usedtx=1/.test(section));
+    return;
+  }
+  const fmtpAttributes = section.match(new RegExp(`^a=fmtp:${opusPts[0]} (.+)$`, 'm'))[1].split(';');
+  assert(shouldApplyDtx ? fmtpAttributes.includes('usedtx=1') : !fmtpAttributes.includes('usedtx=1'));
+}
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];

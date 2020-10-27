@@ -50,6 +50,7 @@ esac
 if [ "${NETWORK_TESTS}" = "true" ];
 then
     # network tets run inside a container with docker socket mapped in the container.
+    echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
     docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
 else
     # ask circleci to split tests by timing.
