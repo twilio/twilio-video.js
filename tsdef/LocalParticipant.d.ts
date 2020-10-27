@@ -25,8 +25,8 @@ export class LocalParticipant extends Participant<LocalAudioTrackPublication, Lo
 
   on(event: 'disconnected', listener: (participant: this) => void): this;
   on(event: 'trackDimensionsChanged', listener: (track: LocalVideoTrack) => void): this;
-  on(event: 'trackEnabled', listener: (track: LocalTrack) => void): this;
   on(event: 'trackDisabled', listener: (track: LocalTrack) => void): this;
+  on(event: 'trackEnabled', listener: (track: LocalTrack) => void): this;
   on(event: 'trackPublicationFailed', listener: (error: TwilioError, track: LocalTrack) => void): this;
   on(event: 'trackPublished', listener: (publication: LocalTrackPublication) => void): this;
   on(event: 'trackStarted', listener: (track: LocalTrack) => void): this;

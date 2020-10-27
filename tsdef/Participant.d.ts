@@ -1,7 +1,6 @@
-import { AudioTrackPublication, DataTrackPublication, NetworkQualityLevel, NetworkQualityStats, VideoTrackPublication } from './types';
+import { NetworkQualityLevel, NetworkQualityStats } from './types';
 import { EventEmitter } from 'events';
 import { Track } from './Track';
-import { TrackPublication } from './TrackPublication';
 import { VideoTrack } from './VideoTrack';
 
 export namespace Participant {
@@ -24,7 +23,7 @@ export class Participant<AudioTrackPublication, DataTrackPublication, VideoTrack
   on(event: 'networkQualityLevelChanged', listener: (networkQualityLevel: NetworkQualityLevel, networkQualityStats: NetworkQualityStats) => void): this;
   on(event: 'reconnected', listener: (participant: this) => void): this;
   on(event: 'reconnecting', listener: (participant: this) => void): this;
-  on(event: 'trackStarted', listener: (track: Track) => void): this;
   on(event: 'trackDimensionsChanged', listener: (track: VideoTrack) => void): this;
+  on(event: 'trackStarted', listener: (track: Track) => void): this;
   on(event: string, listener: (...args: any[]) => void): this;
 }
