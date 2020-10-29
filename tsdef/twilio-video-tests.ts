@@ -122,6 +122,52 @@ function RemoteParticipant(RemoteParticipant: Video.RemoteParticipant) {
       chatLog.appendChild(textElement);
     }
   });
+  RemoteParticipant.on('trackDimensionsChanged', videoTrack => {
+    return `${videoTrack} has new track dimensions`;
+  });
+  RemoteParticipant.on('trackDisabled', someTrack => {
+    return `${someTrack} is now disabled`;
+  });
+  RemoteParticipant.on('trackEnabled', someOtherTrack => {
+    return `${someOtherTrack} is now disabled`;
+  });
+  RemoteParticipant.on('trackPublished', publication => {
+    const track = publication.track;
+    return `${track} is now published`;
+  });
+  RemoteParticipant.on('trackPublishPriorityChanged', (trackPriority, remotePublication) => {
+    const remotePublicationPriority = remotePublication.publishPriority;
+    return `${remotePublicationPriority} priorty is now ${trackPriority}`;
+  });
+  RemoteParticipant.on('trackStarted', aTrack => {
+    return `${aTrack} has started`;
+  });
+  RemoteParticipant.on('trackSubscribed', (anotherTrack, anotherPublication) => {
+    const track = anotherTrack.kind;
+    const publicationSid = anotherPublication.trackSid;
+    return `${track} track with ${publicationSid} is subscribed`;
+  });
+  RemoteParticipant.on('trackSubscriptionFailed', (err, publication) => {
+    throw err;
+  });
+  RemoteParticipant.on('trackSwitchedOff', (yetAnotherTrack, yetAnotherPublication) => {
+    const trackName = yetAnotherTrack.name;
+    const publication = yetAnotherPublication.trackName;
+    return `${trackName} is now switched off`;
+  });
+  RemoteParticipant.on('trackSwitchedOn', (yetAnotherTrack, yetAnotherPublication) => {
+    const trackName = yetAnotherTrack.name;
+    const publication = yetAnotherPublication.trackName;
+    return `${trackName} is now switched on`;
+  });
+  RemoteParticipant.on('trackUnpublished', somePublication => {
+    const publicationTrackName = somePublication.trackName;
+    return `${publicationTrackName} is unpublished`;
+  });
+  RemoteParticipant.on('trackUnsubscribed', (anotherTrack, anotherPublication) => {
+    const publicationName = anotherPublication.trackName;
+    return `${anotherTrack.name}, ${publicationName} has been unsubscribed`;
+  });
 }
 
 function LocalParticipant(LocalParticipant: Video.LocalParticipant) {
@@ -131,10 +177,28 @@ function LocalParticipant(LocalParticipant: Video.LocalParticipant) {
   const LocalTracks = LocalParticipant.tracks;
   const signalingRegion = LocalParticipant.signalingRegion;
 
-  LocalParticipant.on('networkQualityLevelChanged', (networkQualityLevel, networkQualityStats) => {
-    return `Your network quality level has changed to : ${networkQualityLevel}`;
+  LocalParticipant.on('disconnected', participant => {
+    return `${participant.sid} has disconnected from the room`;
+  });
+  LocalParticipant.on('trackDimensionsChanged', videoTrack => {
+    return `${videoTrack.name} dimensions have changed`;
+  });
+  LocalParticipant.on('trackDisabled', localTrack => {
+    return `Muting ${localTrack.name}`;
+  });
+  LocalParticipant.on('trackEnabled', localTrack => {
+    return `Unmute ${localTrack.name}`;
   });
   LocalParticipant.on('trackPublicationFailed', (error, track) => {
     return `There was a problem publishing track ${track} with error ${error}`;
+  });
+  LocalParticipant.on('trackPublished', publication => {
+    return `Failed to publish ${publication.trackName}`;
+  });
+  LocalParticipant.on('trackStarted', track => {
+    return `${track.name} has started`;
+  });
+  LocalParticipant.on('trackStopped', track => {
+    return `${track.name} has stopped`;
   });
 }
