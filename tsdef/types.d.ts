@@ -16,6 +16,7 @@ export type RemoteTrack = RemoteAudioTrack | RemoteVideoTrack | RemoteDataTrack;
 export type AudioTrackPublication = LocalAudioTrackPublication | RemoteAudioTrackPublication;
 export type DataTrackPublication = LocalDataTrackPublication | RemoteAudioTrackPublication;
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
+
 export interface EncodingParameters {
   maxAudioBitrate?: number | null;
   maxVideoBitrate?: number | null;

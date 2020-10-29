@@ -104,101 +104,101 @@ function localDataTrackPublication(publication: Video.LocalDataTrackPublication)
   return publicationInfo;
 }
 
-function RemoteParticipant(RemoteParticipant: Video.RemoteParticipant) {
+function RemoteParticipant(remoteParticipant: Video.RemoteParticipant) {
   const chatLog = document.getElementById('someElementChat');
-  const RemoteData = RemoteParticipant.dataTracks;
-  const RemoteAudio = RemoteParticipant.audioTracks;
-  const sid = RemoteParticipant.sid;
+  const RemoteData = remoteParticipant.dataTracks;
+  const RemoteAudio = remoteParticipant.audioTracks;
+  const sid = remoteParticipant.sid;
 
-  const testDataTracks = RemoteParticipant.dataTracks;
+  const testDataTracks = remoteParticipant.dataTracks;
 
-  RemoteParticipant.on('disconnected', remoteParticipant => {
+  remoteParticipant.on('disconnected', remoteParticipant => {
     return `${remoteParticipant} Has Disconnected`;
   });
-  RemoteParticipant.on('trackMessage', msg => {
+  remoteParticipant.on('trackMessage', msg => {
     const textElement = document.createElement('p');
     if (chatLog) {
       textElement.innerText = `${msg}`;
       chatLog.appendChild(textElement);
     }
   });
-  RemoteParticipant.on('trackDimensionsChanged', videoTrack => {
+  remoteParticipant.on('trackDimensionsChanged', videoTrack => {
     return `${videoTrack} has new track dimensions`;
   });
-  RemoteParticipant.on('trackDisabled', someTrack => {
+  remoteParticipant.on('trackDisabled', someTrack => {
     return `${someTrack} is now disabled`;
   });
-  RemoteParticipant.on('trackEnabled', someOtherTrack => {
+  remoteParticipant.on('trackEnabled', someOtherTrack => {
     return `${someOtherTrack} is now disabled`;
   });
-  RemoteParticipant.on('trackPublished', publication => {
+  remoteParticipant.on('trackPublished', publication => {
     const track = publication.track;
     return `${track} is now published`;
   });
-  RemoteParticipant.on('trackPublishPriorityChanged', (trackPriority, remotePublication) => {
+  remoteParticipant.on('trackPublishPriorityChanged', (trackPriority, remotePublication) => {
     const remotePublicationPriority = remotePublication.publishPriority;
     return `${remotePublicationPriority} priorty is now ${trackPriority}`;
   });
-  RemoteParticipant.on('trackStarted', aTrack => {
+  remoteParticipant.on('trackStarted', aTrack => {
     return `${aTrack} has started`;
   });
-  RemoteParticipant.on('trackSubscribed', (anotherTrack, anotherPublication) => {
+  remoteParticipant.on('trackSubscribed', (anotherTrack, anotherPublication) => {
     const track = anotherTrack.kind;
     const publicationSid = anotherPublication.trackSid;
     return `${track} track with ${publicationSid} is subscribed`;
   });
-  RemoteParticipant.on('trackSubscriptionFailed', (err, publication) => {
+  remoteParticipant.on('trackSubscriptionFailed', (err, publication) => {
     throw err;
   });
-  RemoteParticipant.on('trackSwitchedOff', (yetAnotherTrack, yetAnotherPublication) => {
+  remoteParticipant.on('trackSwitchedOff', (yetAnotherTrack, yetAnotherPublication) => {
     const trackName = yetAnotherTrack.name;
     const publication = yetAnotherPublication.trackName;
     return `${trackName} is now switched off`;
   });
-  RemoteParticipant.on('trackSwitchedOn', (yetAnotherTrack, yetAnotherPublication) => {
+  remoteParticipant.on('trackSwitchedOn', (yetAnotherTrack, yetAnotherPublication) => {
     const trackName = yetAnotherTrack.name;
     const publication = yetAnotherPublication.trackName;
     return `${trackName} is now switched on`;
   });
-  RemoteParticipant.on('trackUnpublished', somePublication => {
+  remoteParticipant.on('trackUnpublished', somePublication => {
     const publicationTrackName = somePublication.trackName;
     return `${publicationTrackName} is unpublished`;
   });
-  RemoteParticipant.on('trackUnsubscribed', (anotherTrack, anotherPublication) => {
+  remoteParticipant.on('trackUnsubscribed', (anotherTrack, anotherPublication) => {
     const publicationName = anotherPublication.trackName;
     return `${anotherTrack.name}, ${publicationName} has been unsubscribed`;
   });
 }
 
-function LocalParticipant(LocalParticipant: Video.LocalParticipant) {
-  const LocalAudioTrack = LocalParticipant.audioTracks;
-  const LocalDataTracks = LocalParticipant.dataTracks;
-  const LocalVideoTrack = LocalParticipant.videoTracks;
-  const LocalTracks = LocalParticipant.tracks;
-  const signalingRegion = LocalParticipant.signalingRegion;
+function LocalParticipant(localParticipant: Video.LocalParticipant) {
+  const LocalAudioTrack = localParticipant.audioTracks;
+  const LocalDataTracks = localParticipant.dataTracks;
+  const LocalVideoTrack = localParticipant.videoTracks;
+  const LocalTracks = localParticipant.tracks;
+  const signalingRegion = localParticipant.signalingRegion;
 
-  LocalParticipant.on('disconnected', participant => {
+  localParticipant.on('disconnected', participant => {
     return `${participant.sid} has disconnected from the room`;
   });
-  LocalParticipant.on('trackDimensionsChanged', videoTrack => {
+  localParticipant.on('trackDimensionsChanged', videoTrack => {
     return `${videoTrack.name} dimensions have changed`;
   });
-  LocalParticipant.on('trackDisabled', localTrack => {
+  localParticipant.on('trackDisabled', localTrack => {
     return `Muting ${localTrack.name}`;
   });
-  LocalParticipant.on('trackEnabled', localTrack => {
+  localParticipant.on('trackEnabled', localTrack => {
     return `Unmute ${localTrack.name}`;
   });
-  LocalParticipant.on('trackPublicationFailed', (error, track) => {
+  localParticipant.on('trackPublicationFailed', (error, track) => {
     return `There was a problem publishing track ${track} with error ${error}`;
   });
-  LocalParticipant.on('trackPublished', publication => {
+  localParticipant.on('trackPublished', publication => {
     return `Failed to publish ${publication.trackName}`;
   });
-  LocalParticipant.on('trackStarted', track => {
+  localParticipant.on('trackStarted', track => {
     return `${track.name} has started`;
   });
-  LocalParticipant.on('trackStopped', track => {
+  localParticipant.on('trackStopped', track => {
     return `${track.name} has stopped`;
   });
 }
