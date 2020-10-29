@@ -1,7 +1,6 @@
-import { EncodingParameters, LocalTrack, NetworkQualityConfiguration } from './types';
+import { EncodingParameters, LocalTrack, LocalTrackOptions, NetworkQualityConfiguration } from './types';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
-import { LocalTrackOptions } from './LocalTrackOptions';
 import { LocalTrackPublication } from './LocalTrackPublication';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
