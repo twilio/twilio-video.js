@@ -17,3 +17,6 @@ export { RemoteVideoTrack } from './RemoteVideoTrack';
 export { RemoteVideoTrackPublication  } from './RemoteVideoTrackPublication';
 export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
+
+export { Room } from './Room';
+export { connect, createLocalAudioTrack, createLocalTracks, createLocalVideoTrack, rewriteLocalTrackIds } from './twilio-video';
