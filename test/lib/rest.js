@@ -70,16 +70,14 @@ function subscribeTrack(publication, room) {
 
 
 function startRecording(room) {
-  // 'Rules=[{"type": "include", "all": "true"}]'
   return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
-    Rules: [{ type: 'include', all: true }]
+    Rules: '[{ "type": "include", "all": "true" }]'
   });
 }
 
 function stopRecording(room) {
-  // 'Rules=[{"type": "exclude", "all": "true"}]'
   return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
-    Rules: [{ type: 'exclude', all: true }]
+    Rules: '[{ "type": "exclude", "all": "true" }]'
   });
 }
 
