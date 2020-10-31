@@ -53,7 +53,7 @@ async function main() {
     }
   }
 
-  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests)).filter(path => /connect/.test(path));
+  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests));
 
   // NOTE(mmalavalli): Deploy the file server. This is used to serve static assets
   // like images, music files, etc. which are used by some integration tests.
