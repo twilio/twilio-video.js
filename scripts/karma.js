@@ -2,24 +2,25 @@
 'use strict';
 
 const { readdirSync, statSync } = require('fs');
-const { Server, stopper } = require('karma');
-const { parseConfig } = require('karma').config;
+const { Server, config: { parseConfig }, stopper } = require('karma');
 const { resolve: resolvePath } = require('path');
 const { join } = require('path');
+
+const staticServer = require('node-http-server');
 
 const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 const dockerIntegrationTests = join(__dirname, '..', 'test', 'integration', 'spec', 'docker');
 const isDocker = require('is-docker')();
 const DockerProxyServer = require('../docker/dockerProxyServer');
+
 function getTestPaths(path) {
-  var stat = statSync(path);
+  const stat = statSync(path);
   if (stat && stat.isDirectory()) {
     return readdirSync(path).reduce((files, file) => {
       return files.concat(getTestPaths(`${path}/${file}`));
     }, []);
   }
-
   return [path];
 }
 
@@ -52,7 +53,15 @@ async function main() {
     }
   }
 
-  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests));
+  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests)).filter(path => /connect/.test(path));
+
+  // NOTE(mmalavalli): Deploy the file server. This is used to serve static assets
+  // like images, music files, etc. which are used by some integration tests.
+  await new Promise(resolve => staticServer.deploy({
+    contentType: { m4a: 'audio/mp4' },
+    port: 9877,
+    root: `${process.cwd()}/test/`
+  }, resolve));
 
   let processExitCode = 0;
   for (const file of files) {

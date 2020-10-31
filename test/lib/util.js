@@ -1,3 +1,5 @@
+/* globals webkitAudioContext */
+/* eslint-disable new-cap */
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 'use strict';
@@ -19,7 +21,50 @@ function a(word) {
 
 const audioContext = typeof AudioContext !== 'undefined' && 'createMediaStreamDestination' in AudioContext.prototype
   ? new AudioContext()
-  : null;
+  : typeof webkitAudioContext !== 'undefined' && 'createMediaStreamDestination' in webkitAudioContext.prototype
+    ? new webkitAudioContext()
+    : null;
+
+function createAudioMediaFromAudioData(audioData) {
+  const mediaSource = audioContext.createBufferSource();
+  mediaSource.buffer = audioData;
+  const destination = audioContext.createMediaStreamDestination();
+  mediaSource.connect(destination);
+  return {
+    source: mediaSource,
+    track: destination.stream.getTracks()[0]
+  };
+}
+
+function decodeAudioFromArrayBuffer(arrayBuffer) {
+  return new Promise(resolve =>
+    audioContext.decodeAudioData(arrayBuffer, resolve));
+}
+
+function getArrayBufferForFile(url) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'arraybuffer';
+    xhr.onreadystatechange = () =>
+      xhr.readyState === 4 && resolve(xhr.response);
+    xhr.send();
+  });
+}
+
+/**
+ * Create a media source and track for a file at the given URL.
+ * @param {string} url
+ * @returns {Promise<{source: AudioBufferSourceNode, track: MediaStreamTrack} | null>}
+ */
+async function createFileAudioMedia(url) {
+  if (!audioContext) {
+    return null;
+  }
+  const arrayBuffer = await getArrayBufferForFile(url);
+  const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
+  return createAudioMediaFromAudioData(audioData);
+}
 
 /**
  * Create a synthetic audio MediaStreamTrack, if possible.
@@ -432,7 +477,25 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
 
-  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
+  const nTracks = Math.min(...[aliceLocal, bobLocal].map(participant => participant.tracks.size));
+  await waitFor([aliceRemote, bobRemote].map(participant => tracksSubscribed(participant, nTracks)), 'tracks to be subscribed');
+
+  const [alicePeerConnection, bobPeerConnection] = [aliceRoom, bobRoom].map(room => {
+    return [...room._signaling._peerConnectionManager._peerConnections.values()][0]._peerConnection;
+  });
+
+  return {
+    aliceRoom,
+    bobRoom,
+    aliceLocal,
+    bobLocal,
+    aliceRemote,
+    bobRemote,
+    roomSid,
+    roomName,
+    alicePeerConnection,
+    bobPeerConnection
+  };
 }
 
 async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions, participantNames }) {
@@ -675,6 +738,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
 
 exports.a = a;
 exports.capitalize = capitalize;
+exports.createFileAudioMedia = createFileAudioMedia;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;

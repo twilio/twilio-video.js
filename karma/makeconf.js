@@ -103,6 +103,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       failOnEmptyTestSuite: false,
       files,
       preprocessors,
+      proxies: {
+        '/static/': 'http://localhost:9877/static/'
+      },
       browserify: {
         debug: !!process.env.DEBUG,
         transform: [

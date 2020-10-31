@@ -30,11 +30,13 @@ const getToken = require('../../lib/token');
 const {
   capitalize,
   combinationContext,
+  createFileAudioMedia,
   isRTCRtpSenderParamsSupported,
   participantsConnected,
   pairs,
   randomName,
   setup,
+  setupAliceAndBob,
   smallVideoConstraints,
   tracksSubscribed,
   tracksPublished,
@@ -1280,6 +1282,102 @@ describe('connect', function() {
         });
       });
     });
+
+    combinationContext([
+      [
+        [true, false],
+        x => `When Alice ${x ? 'enables' : 'disables'} DTX`
+      ],
+      [
+        [true, false],
+        x => `When Bob ${x ? 'enables' : 'disables'} DTX`
+      ],
+    ], ([aliceDtx, bobDtx]) => {
+      let aliceBitratesSilence;
+      let aliceBitratesSpeech;
+      let aliceRoom;
+      let bobBitratesSilence;
+      let bobBitratesSpeech;
+      let bobRoom;
+      let roomSid;
+      let tracks;
+
+      before(async () => {
+        const { source, track } = await  createFileAudioMedia('/static/speech.m4a');
+        let alicePeerConnection;
+        let bobPeerConnection;
+
+        tracks = [
+          track,
+          await createLocalVideoTrack(smallVideoConstraints)
+        ];
+
+        ({
+          aliceRoom,
+          bobRoom,
+          roomSid,
+          alicePeerConnection,
+          bobPeerConnection
+        } = await setupAliceAndBob({
+          aliceOptions: {
+            preferredAudioCodecs: [{ codec: 'opus', dtx: aliceDtx }],
+            tracks
+          },
+          bobOptions: {
+            preferredAudioCodecs: [{ codec: 'opus', dtx: bobDtx }],
+            tracks
+          }
+        }));
+
+        // NOTE(mmalavalli): Ensure that ICE reaches connected state before verifying bitrates.
+        await Promise.all([alicePeerConnection, bobPeerConnection].map(pc =>
+          pc.iceConnectionState === 'connected'
+            ? Promise.resolve()
+            : new Promise(resolve => pc.addEventListener('iceconnectionstatechange', () => pc.iceConnectionState === 'connected' && resolve()))
+        ));
+
+        source.start();
+
+        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
+        // so the below bitrate samples represent speech.
+        [aliceBitratesSpeech, bobBitratesSpeech] = await Promise.all([
+          aliceRoom,
+          bobRoom
+        ].map(room => pollOutgoingAudioBitrate(room, 5)));
+
+        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
+        // so the below bitrate samples represent silence.
+        [aliceBitratesSilence, bobBitratesSilence] = await Promise.all([
+          aliceRoom,
+          bobRoom
+        ].map(room => pollOutgoingAudioBitrate(room, 5)));
+      });
+
+      it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
+        const bitrateTests = {
+          true: (bitrateSpeech, bitrateSilence) => {
+            return Math.round(100 * bitrateSilence / bitrateSpeech) <= 20;
+          },
+          false: (bitrateSpeech, bitrateSilence) => {
+            return Math.round(100 * bitrateSilence / bitrateSpeech) >= 80;
+          }
+        };
+
+        const aliceBitrateSilenceAvg = Math.round(aliceBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
+        const aliceBitrateSpeechAvg = Math.round(aliceBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
+        assert(bitrateTests[aliceDtx](aliceBitrateSpeechAvg, aliceBitrateSilenceAvg));
+
+        const bobBitrateSilenceAvg = Math.round(bobBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
+        const bobBitrateSpeechAvg = Math.round(bobBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
+        assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
+      });
+
+      after(() => {
+        [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+        tracks.forEach(track => track.stop());
+        return completeRoom(roomSid);
+      });
+    });
   });
 });
 
@@ -1296,4 +1394,26 @@ function checkOpusDtxInMediaSection(section, shouldApplyDtx) {
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
+}
+
+async function pollOutgoingAudioBitrate(room, nSamples) {
+  const samples = [];
+  if (nSamples <= 0) {
+    return samples;
+  }
+  let [{ localAudioTrackStats: [stats] }] = await room.getStats();
+  let { bytesSent: curBytesSent } = stats || { bytesSent: 0 };
+
+  return new Promise(resolve => {
+    const pollInterval = setInterval(async () => {
+      const [{ localAudioTrackStats: [{ bytesSent }] }] = await room.getStats();
+      samples.push((bytesSent - curBytesSent) * 8);
+      curBytesSent = bytesSent;
+      nSamples--;
+      if (nSamples <= 0) {
+        clearInterval(pollInterval);
+        resolve(samples);
+      }
+    }, 1000);
+  });
 }
