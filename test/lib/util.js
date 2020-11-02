@@ -37,8 +37,10 @@ function createAudioMediaFromAudioData(audioData) {
 }
 
 function decodeAudioFromArrayBuffer(arrayBuffer) {
-  return new Promise(resolve =>
-    audioContext.decodeAudioData(arrayBuffer, resolve));
+  return audioContext.resume().then(() => {
+    return new Promise(resolve =>
+      audioContext.decodeAudioData(arrayBuffer, resolve));
+  });
 }
 
 function getArrayBufferForFile(url) {
