@@ -24,6 +24,7 @@ const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib
 
 const {
   createSyntheticAudioStreamTrack,
+  combinationContext,
   dominantSpeakerChanged,
   participantsConnected,
   randomName,
@@ -43,72 +44,103 @@ describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('recording', () => {
-    [true, false].forEach(trackSharedAtConnect => {
-      [true, false].forEach(recordingEnabledAtCreate => {
-        context(`when recording is ${recordingEnabledAtCreate ? 'enabled' : 'disabled'} and tracks ${trackSharedAtConnect ? 'published' : 'not published'} at connect `, () => {
-          let room;
-          let sid;
-          let localTrack;
-          const initialRecording = trackSharedAtConnect ? recordingEnabledAtCreate : false;
-          before(async () => {
-            sid = await createRoom(randomName(), defaults.topology, { RecordParticipantsOnConnect: recordingEnabledAtCreate });
-            localTrack = await waitFor(createLocalVideoTrack(), 'alice local video track');
-            const options = Object.assign({ name: sid, tracks: trackSharedAtConnect ? [localTrack] : [] }, defaults);
-            room = await connect(getToken(randomName()), options);
-          });
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('recording', () => {
+    combinationContext([
+      [
+        [true, false],
+        x => `when tracks are ${x ? 'published' : 'not published'} at connect time`
+      ],
+      [
+        [true, false],
+        x => `when recording is ${x ? 'enabled' : 'not enabled'} at connect time`
+      ]
+    ], ([trackSharedAtConnect, recordingEnabledAtCreate]) => {
+      let room;
+      let sid;
+      let localTracks;
+      const initialRecording = trackSharedAtConnect ? recordingEnabledAtCreate : false;
+      before(async () => {
+        sid = await createRoom(randomName(), defaults.topology, { RecordParticipantsOnConnect: recordingEnabledAtCreate });
+        localTracks = await createLocalTracks();
+        const options = Object.assign({ name: sid, tracks: trackSharedAtConnect ? localTracks : [] }, defaults);
+        room = await connect(getToken(randomName()), options);
+      });
 
-          it(`.isRecording should initially be set to ${initialRecording}`, () => {
-            assert.strictEqual(room.isRecording, initialRecording);
-          });
+      it(`.isRecording should initially be set to ${initialRecording}`, () => {
+        assert.strictEqual(room.isRecording, initialRecording);
+      });
 
-          if (!trackSharedAtConnect) {
-            // publish track.
-            it(`after track is published ${recordingEnabledAtCreate ? 'fires' : 'does not fire'} recordingStarted`, async () => {
-              const recordingStartedPromise = new Promise(resolve => room.once('recordingStarted', resolve));
-              await room.localParticipant.publishTrack(localTrack);
-
-              if (recordingEnabledAtCreate) {
-                await waitFor(recordingStartedPromise, `recording started: ${room.sid}`);
-                assert.strictEqual(room.isRecording, true);
-              } else {
-                await waitForNot(recordingStartedPromise, `recording started: ${room.sid}`);
-                assert.strictEqual(room.isRecording, false);
-              }
-            });
-          }
+      if (!trackSharedAtConnect) {
+        // publish track.
+        it(`after 1st track is published ${recordingEnabledAtCreate ? 'fires' : 'does not fire'} recordingStarted`, async () => {
+          const recordingStartedPromise = new Promise(resolve => room.once('recordingStarted', resolve));
+          await room.localParticipant.publishTrack(localTracks[0]);
 
           if (recordingEnabledAtCreate) {
-            it('recordingStopped is raised whenever recording is stopped on the Room via the REST API', async () => {
-              const recordingEventPromise = new Promise(resolve => room.once('recordingStopped', resolve));
-              await stopRecording(room);
-              await waitFor(recordingEventPromise, `failed to receive recordingStopped on ${room.sid}`);
-              assert.strictEqual(room.isRecording, false);
-            });
+            await waitFor(recordingStartedPromise, `recording started: ${room.sid}`);
+            assert.strictEqual(room.isRecording, true);
           } else {
-            it('recordingStarted is raised whenever recording is started on the Room via the REST API', async () => {
-              const recordingEventPromise = new Promise(resolve => room.once('recordingStarted', resolve));
-              await startRecording(room);
-              await waitFor(recordingEventPromise, `failed to receive recordingStarted on ${room.sid}`);
-              assert.strictEqual(room.isRecording, true);
-            });
-
-            it('recordingStopped fires when track is unpublished', async () => {
-              const recordingEventPromise = new Promise(resolve => room.once('recordingStopped', resolve));
-              room.localParticipant.unpublishTrack(localTrack);
-
-              await waitFor(recordingEventPromise, `failed to receive recordingStopped on ${room.sid}`);
-              assert.strictEqual(room.isRecording, false);
-            });
+            await waitForNot(recordingStartedPromise, `recording started: ${room.sid}`);
+            assert.strictEqual(room.isRecording, false);
           }
-
-          after(() => {
-            if (room) {
-              room.disconnect();
-            }
-            return completeRoom(sid);
-          });
         });
+
+        it(`.isRecording should be set to ${recordingEnabledAtCreate}`, () => {
+          assert.strictEqual(room.isRecording, recordingEnabledAtCreate);
+        });
+
+        it('publishing 2nd track does not fire recordingStarted', async () => {
+          const recordingStartedPromise = new Promise(resolve => room.once('recordingStarted', resolve));
+          await room.localParticipant.publishTrack(localTracks[1]);
+
+          await waitForNot(recordingStartedPromise, `recording started: ${room.sid}`);
+        });
+      }
+
+      if (recordingEnabledAtCreate) {
+        it('recordingStopped is raised whenever recording is stopped on the Room via the REST API', async () => {
+          const recordingEventPromise = new Promise(resolve => room.once('recordingStopped', resolve));
+          await stopRecording(room);
+          await waitFor(recordingEventPromise, `failed to receive recordingStopped on ${room.sid}`);
+
+        });
+
+        it('.isRecording is set to false', () => {
+          assert.strictEqual(room.isRecording, false);
+        });
+      } else {
+        it('recordingStarted is raised whenever recording is started on the Room via the REST API', async () => {
+          const recordingEventPromise = new Promise(resolve => room.once('recordingStarted', resolve));
+          await startRecording(room);
+          await waitFor(recordingEventPromise, `failed to receive recordingStarted on ${room.sid}`);
+        });
+
+        it('.isRecording is set to true', () => {
+          assert.strictEqual(room.isRecording, true);
+        });
+
+        it('recordingStopped does not fire when one of the track is unpublished', async () => {
+          const recordingEventPromise = new Promise(resolve => room.once('recordingStopped', resolve));
+          room.localParticipant.unpublishTrack(localTracks[0]);
+
+          await waitForNot(recordingEventPromise, `unexpected recording stopped: ${room.sid}`);
+          assert.strictEqual(room.isRecording, false);
+        });
+
+        it('recordingStopped fires when last track is unpublished', async () => {
+          const recordingEventPromise = new Promise(resolve => room.once('recordingStopped', resolve));
+          room.localParticipant.unpublishTrack(localTracks[1]);
+
+          await waitFor(recordingEventPromise, `failed to receive recordingStopped on ${room.sid}`);
+          assert.strictEqual(room.isRecording, false);
+        });
+      }
+
+      after(() => {
+        if (room) {
+          room.disconnect();
+        }
+        return completeRoom(sid);
       });
     });
   });
