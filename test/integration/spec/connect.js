@@ -1283,6 +1283,13 @@ describe('connect', function() {
       });
     });
 
+    // NOTE(mmalavalli): Skipping this test on Firefox because AudioContext.decodeAudioData()
+    // does not complete resulting in the test timing out.
+    // TODO(mmalavalli): Enable on Firefox after figuring out and fixing the cause.
+    if (isFirefox) {
+      return;
+    }
+
     combinationContext([
       [
         [true, false],
@@ -1340,10 +1347,7 @@ describe('connect', function() {
           'Alice and Bob to collect outgoing silence bitrate samples');
       });
 
-      // NOTE(mmalavalli): Skipping this test on Firefox because AudioContext.decodeAudioData()
-      // does not complete resulting in the test timing out.
-      // TODO(mmalavalli): Enable on Firefox after figuring out and fixing the cause.
-      (isFirefox ? it.skip : it)(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
+      it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
         const bitrateTests = {
           true: (bitrateSpeech, bitrateSilence) => {
             return Math.round(100 * bitrateSilence / bitrateSpeech) <= 20;
