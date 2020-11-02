@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as Video from './index';
 
 function getAudioTrack(track: Video.LocalAudioTrack) {
@@ -202,3 +201,101 @@ function LocalParticipant(localParticipant: Video.LocalParticipant) {
     return `${track.name} has stopped`;
   });
 }
+
+let room: Video.Room | null = null;
+let localVideoTrack: Video.LocalVideoTrack | null = null;
+let localAudioTrack: Video.LocalAudioTrack | null = null;
+
+async function initRoom() {
+  room = await Video.connect('$TOKEN', {
+    name: 'room-name',
+    video: false,
+    audio: false,
+    dominantSpeaker: true,
+    networkQuality: true,
+    region: 'au1',
+    maxAudioBitrate: 500,
+    maxVideoBitrate: 200,
+    bandwidthProfile: {
+      video: {
+        dominantSpeakerPriority: 'high',
+        renderDimensions: {
+          low: {
+            height: 500,
+            width: null,
+          },
+        },
+        trackSwitchOffMode: 'detected',
+      },
+    },
+    preferredVideoCodecs: ['VP9', { codec: 'H264' }, { codec: 'VP8', simulcast: true }],
+  });
+  await Video.connect('$TOKEN', {
+    networkQuality: {
+      local: 3,
+      remote: 1,
+    },
+  });
+
+  localVideoTrack = await Video.createLocalVideoTrack({ name: 'camera' });
+  await localVideoTrack.restart({ facingMode: 'environment' });
+  localAudioTrack = await Video.createLocalAudioTrack({ name: 'microphone' });
+  await localAudioTrack.restart({ channelCount: 3 });
+  room.localParticipant.publishTrack(localAudioTrack);
+  room.participants.forEach(participantConnected);
+
+  room.on('participantConnected', participantConnected);
+  room.on('participantDisconnected', participantDisconnected);
+  room.once('disconnected', (room: Video.Room, error: Video.TwilioError) => {
+    room.participants.forEach(participantDisconnected);
+    room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {
+      publication.unpublish();
+      if (publication.track.kind !== 'data') { trackUnsubscribed(publication.track); }
+    });
+  });
+}
+
+function unpublishTracks() {
+  if (room && localVideoTrack) { room.localParticipant.unpublishTrack(localVideoTrack); }
+  if (room && localAudioTrack) { room.localParticipant.unpublishTrack(localAudioTrack); }
+  if (room && localVideoTrack && localAudioTrack) { room.localParticipant.unpublishTracks([localVideoTrack, localAudioTrack]); }
+}
+
+function participantConnected(participant: Video.Participant<Video.RemoteAudioTrackPublication, Video.RemoteDataTrackPublication, Video.RemoteVideoTrackPublication, Video.RemoteTrackPublication>) {
+  participant.on('trackSubscribed', trackSubscribed);
+  participant.on('trackUnsubscribed', trackUnsubscribed);
+
+  participant.tracks.forEach(publication => {
+    const remotePublication = publication as Video.RemoteTrackPublication;
+    if (remotePublication.isSubscribed) {
+      trackSubscribed(remotePublication.track as Video.VideoTrack | Video.AudioTrack);
+    }
+  });
+}
+
+function participantDisconnected(participant: Video.Participant<Video.RemoteAudioTrackPublication, Video.RemoteDataTrackPublication, Video.RemoteVideoTrackPublication, Video.RemoteTrackPublication>) {
+  participant.tracks.forEach(publication => {
+    const remotePublication = publication as Video.RemoteTrackPublication;
+    if (remotePublication.isSubscribed) {
+      const { track } = remotePublication;
+      if (track) { trackUnsubscribed(track as Video.AudioTrack | Video.VideoTrack); }
+    }
+  });
+}
+
+function trackSubscribed(track: Video.VideoTrack | Video.AudioTrack) {
+  const media = track.attach();
+  insertDomElement(media);
+}
+
+function trackUnsubscribed(track: Video.VideoTrack | Video.AudioTrack) {
+  track.detach().forEach(element => element.remove());
+}
+
+function insertDomElement(element: HTMLMediaElement) {
+  document.createElement('div');
+  element.appendChild(element);
+}
+
+initRoom();
+unpublishTracks();
