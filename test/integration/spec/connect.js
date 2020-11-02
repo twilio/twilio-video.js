@@ -1,4 +1,4 @@
-/* eslint-disable no-undefined */
+/* eslint-disable no-console, no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -1318,7 +1318,7 @@ describe('connect', function() {
           roomSid,
           alicePeerConnection,
           bobPeerConnection
-        } = await setupAliceAndBob({
+        } = await waitFor(setupAliceAndBob({
           aliceOptions: {
             preferredAudioCodecs: [{ codec: 'opus', dtx: aliceDtx }],
             tracks
@@ -1327,30 +1327,28 @@ describe('connect', function() {
             preferredAudioCodecs: [{ codec: 'opus', dtx: bobDtx }],
             tracks
           }
-        }));
+        }), 'Alice and Bob to join the Room'));
 
         // NOTE(mmalavalli): Ensure that ICE reaches connected state before verifying bitrates.
-        await Promise.all([alicePeerConnection, bobPeerConnection].map(pc =>
+        await waitFor([alicePeerConnection, bobPeerConnection].map(pc =>
           pc.iceConnectionState === 'connected'
             ? Promise.resolve()
             : new Promise(resolve => pc.addEventListener('iceconnectionstatechange', () => pc.iceConnectionState === 'connected' && resolve()))
-        ));
+        ), 'Alice and Bob to establish a media connection');
 
         source.start();
 
         // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
         // so the below bitrate samples represent speech.
-        [aliceBitratesSpeech, bobBitratesSpeech] = await Promise.all([
-          aliceRoom,
-          bobRoom
-        ].map(room => pollOutgoingAudioBitrate(room, 5)));
+        [aliceBitratesSpeech, bobBitratesSpeech] = await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          'Alice and Bob to collect outgoing speech bitrate samples');
 
         // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
         // so the below bitrate samples represent silence.
-        [aliceBitratesSilence, bobBitratesSilence] = await Promise.all([
-          aliceRoom,
-          bobRoom
-        ].map(room => pollOutgoingAudioBitrate(room, 5)));
+        [aliceBitratesSilence, bobBitratesSilence] = await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          'Alice and Bob to collect outgoing silence bitrate samples');
       });
 
       it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
@@ -1365,16 +1363,20 @@ describe('connect', function() {
 
         const aliceBitrateSilenceAvg = Math.round(aliceBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
         const aliceBitrateSpeechAvg = Math.round(aliceBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
+        console.log(`Avg. bitrate reduction during silence (Alice): ${Math.round(100 * aliceBitrateSilenceAvg / aliceBitrateSpeechAvg)}`);
         assert(bitrateTests[aliceDtx](aliceBitrateSpeechAvg, aliceBitrateSilenceAvg));
 
         const bobBitrateSilenceAvg = Math.round(bobBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
         const bobBitrateSpeechAvg = Math.round(bobBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
+        console.log(`Avg. bitrate reduction during silence (Bob): ${Math.round(100 * bobBitrateSilenceAvg / bobBitrateSpeechAvg)}`);
         assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
       });
 
       after(() => {
         [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
-        tracks.forEach(track => track.stop());
+        if (tracks) {
+          tracks.forEach(track => track.stop());
+        }
         return completeRoom(roomSid);
       });
     });
