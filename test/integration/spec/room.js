@@ -43,7 +43,7 @@ describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('recording', () => {
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('recording', () => {
     [true, false].forEach(trackSharedAtConnect => {
       [true, false].forEach(recordingEnabledAtCreate => {
         context(`when recording is ${recordingEnabledAtCreate ? 'enabled' : 'disabled'} and tracks ${trackSharedAtConnect ? 'published' : 'not published'} at connect `, () => {
