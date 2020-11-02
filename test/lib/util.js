@@ -37,10 +37,8 @@ function createAudioMediaFromAudioData(audioData) {
 }
 
 function decodeAudioFromArrayBuffer(arrayBuffer) {
-  return audioContext.resume().then(() => {
-    return new Promise(resolve =>
-      audioContext.decodeAudioData(arrayBuffer, resolve));
-  });
+  return new Promise(resolve =>
+    audioContext.decodeAudioData(arrayBuffer, resolve));
 }
 
 function getArrayBufferForFile(url) {
@@ -48,12 +46,8 @@ function getArrayBufferForFile(url) {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
     xhr.responseType = 'arraybuffer';
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        console.log(xhr.response);
-        resolve(xhr.response);
-      }
-    };
+    xhr.onreadystatechange = () =>
+      xhr.readyState === 4 && resolve(xhr.response);
     xhr.send();
   });
 }
@@ -67,9 +61,9 @@ async function createFileAudioMedia(url) {
   if (!audioContext) {
     return null;
   }
-  const arrayBuffer = await waitFor(getArrayBufferForFile(url), 'Getting audio file');
-  const audioData = await waitFor(decodeAudioFromArrayBuffer(arrayBuffer), 'Decoding audio from array buffer');
-  return waitFor(createAudioMediaFromAudioData(audioData), 'Creating audio track from audio data');
+  const arrayBuffer = await getArrayBufferForFile(url);
+  const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
+  return createAudioMediaFromAudioData(audioData);
 }
 
 /**
@@ -475,7 +469,7 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
 
   const bobRoom = await connect(getToken('Bob'), bobOptions);
 
-  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'participants to connect');
+  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'Alice and Bob to connect');
 
   const roomSid = aliceRoom.sid;
   const aliceLocal = aliceRoom.localParticipant;
@@ -483,25 +477,19 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
 
-  const nTracks = Math.min(...[aliceLocal, bobLocal].map(participant => participant.tracks.size));
-  await waitFor([aliceRemote, bobRemote].map(participant => tracksSubscribed(participant, nTracks)), 'tracks to be subscribed');
+  const peerConnectionManagers = [aliceRoom, bobRoom]
+    .map(({ _signaling: { _peerConnectionManager } }) => _peerConnectionManager);
 
-  const [alicePeerConnection, bobPeerConnection] = [aliceRoom, bobRoom].map(room => {
-    return [...room._signaling._peerConnectionManager._peerConnections.values()][0]._peerConnection;
-  });
+  await waitFor(peerConnectionManagers.map(pcm => new Promise(resolve => {
+    pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
+      if (pcm.iceConnectionState === 'connected') {
+        pcm.removeListener('iceConnectionStateChanged', onIceConnectionStateChanged);
+        resolve();
+      }
+    });
+  })), 'Alice and Bob to establish a media connection');
 
-  return {
-    aliceRoom,
-    bobRoom,
-    aliceLocal,
-    bobLocal,
-    aliceRemote,
-    bobRemote,
-    roomSid,
-    roomName,
-    alicePeerConnection,
-    bobPeerConnection
-  };
+  return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
 }
 
 async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOptions, participantNames }) {

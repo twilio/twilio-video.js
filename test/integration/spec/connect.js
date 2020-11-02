@@ -1307,9 +1307,6 @@ describe('connect', function() {
           createFileAudioMedia('/static/speech.m4a'),
           'Creating speech recording track');
 
-        let alicePeerConnection;
-        let bobPeerConnection;
-
         tracks = [
           track,
           await waitFor(
@@ -1317,13 +1314,7 @@ describe('connect', function() {
             'Creating video track')
         ];
 
-        ({
-          aliceRoom,
-          bobRoom,
-          roomSid,
-          alicePeerConnection,
-          bobPeerConnection
-        } = await waitFor(setupAliceAndBob({
+        ({ aliceRoom, bobRoom, roomSid } = await waitFor(setupAliceAndBob({
           aliceOptions: {
             preferredAudioCodecs: [{ codec: 'opus', dtx: aliceDtx }],
             tracks
@@ -1333,13 +1324,6 @@ describe('connect', function() {
             tracks
           }
         }), 'Alice and Bob to join the Room'));
-
-        // NOTE(mmalavalli): Ensure that ICE reaches connected state before verifying bitrates.
-        await waitFor([alicePeerConnection, bobPeerConnection].map(pc =>
-          pc.iceConnectionState === 'connected'
-            ? Promise.resolve()
-            : new Promise(resolve => pc.addEventListener('iceconnectionstatechange', () => pc.iceConnectionState === 'connected' && resolve()))
-        ), 'Alice and Bob to establish a media connection');
 
         source.start();
 
@@ -1356,7 +1340,10 @@ describe('connect', function() {
           'Alice and Bob to collect outgoing silence bitrate samples');
       });
 
-      it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
+      // NOTE(mmalavalli): Skipping this test on Firefox because AudioContext.decodeAudioData()
+      // does not complete resulting in the test timing out.
+      // TODO(mmalavalli): Enable on Firefox after figuring out and fixing the cause.
+      (isFirefox ? it.skip : it)(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
         const bitrateTests = {
           true: (bitrateSpeech, bitrateSilence) => {
             return Math.round(100 * bitrateSilence / bitrateSpeech) <= 20;
