@@ -206,8 +206,15 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
         }
         assert.equal(bobRemoteTrack.track.isEnabled, trackEnabled, `alice was expecting remoteTrack to be ${trackEnabled ? 'enabled' : 'disabled'} in ${roomSid}`);
 
-        // Bob restarts the track.
+        const startedPromise = waitForEvent(bobLocalTrackA, 'started');
+        const stoppedPromise = waitForEvent(bobLocalTrackA, 'stopped');
+
+        // Bob restarts track.
         await bobLocalTrackA.restart();
+
+        // "stopped" and "started" events should fire in order.
+        await waitFor(stoppedPromise, `Bob's LocalTrack to stop: ${roomSid}`);
+        await waitFor(startedPromise, `Bob's LocalTrack to start: ${roomSid}`);
 
         // Charlie joins a room after sometime.
         const charlieRoom = await connect(getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
