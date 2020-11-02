@@ -65,9 +65,9 @@ async function createFileAudioMedia(url) {
   if (!audioContext) {
     return null;
   }
-  const arrayBuffer = await getArrayBufferForFile(url);
-  const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
-  return createAudioMediaFromAudioData(audioData);
+  const arrayBuffer = await waitFor(getArrayBufferForFile(url), 'Getting audio file');
+  const audioData = await waitFor(decodeAudioFromArrayBuffer(arrayBuffer), 'Decoding audio from array buffer');
+  return waitFor(createAudioMediaFromAudioData(audioData), 'Creating audio track from audio data');
 }
 
 /**
