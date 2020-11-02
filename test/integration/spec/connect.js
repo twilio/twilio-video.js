@@ -1303,13 +1303,18 @@ describe('connect', function() {
       let tracks;
 
       before(async () => {
-        const { source, track } = await  createFileAudioMedia('/static/speech.m4a');
+        const { source, track } = await waitFor(
+          createFileAudioMedia('/static/speech.m4a'),
+          'Creating speech recording track');
+
         let alicePeerConnection;
         let bobPeerConnection;
 
         tracks = [
           track,
-          await createLocalVideoTrack(smallVideoConstraints)
+          await waitFor(
+            createLocalVideoTrack(smallVideoConstraints),
+            'Creating video track')
         ];
 
         ({
