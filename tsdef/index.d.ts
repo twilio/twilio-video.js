@@ -1,3 +1,4 @@
+export { AudioTrack } from './AudioTrack';
 export { LocalTrack, RemoteTrack } from './types';
 export { LocalAudioTrack } from './LocalAudioTrack';
 export { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
@@ -7,6 +8,7 @@ export { LocalParticipant } from './LocalParticipant';
 export { LocalTrackPublication } from './LocalTrackPublication';
 export { LocalVideoTrack } from './LocalVideoTrack';
 export { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
+export { Participant } from './Participant';
 export { RemoteAudioTrack } from './RemoteAudioTrack';
 export { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
 export { RemoteDataTrack } from './RemoteDataTrack';
@@ -15,8 +17,9 @@ export { RemoteParticipant } from './RemoteParticipant';
 export { RemoteTrackPublication } from './RemoteTrackPublication';
 export { RemoteVideoTrack } from './RemoteVideoTrack';
 export { RemoteVideoTrackPublication  } from './RemoteVideoTrackPublication';
+export { Room } from './Room';
 export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
-
-export { Room } from './Room';
-export { connect, createLocalAudioTrack, createLocalTracks, createLocalVideoTrack, rewriteLocalTrackIds } from './twilio-video';
+export { TwilioError } from './TwilioError';
+export { VideoTrack } from './VideoTrack';
+export * from './twilio-video';
