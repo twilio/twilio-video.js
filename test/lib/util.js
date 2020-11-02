@@ -48,7 +48,7 @@ function getArrayBufferForFile(url) {
     xhr.responseType = 'arraybuffer';
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
-        console.log(xhr.responseText);
+        console.log(xhr.response);
         resolve(xhr.response);
       }
     };
