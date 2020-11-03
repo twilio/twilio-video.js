@@ -1,4 +1,4 @@
-/* eslint-disable no-undefined */
+/* eslint-disable no-console, no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -30,11 +30,13 @@ const getToken = require('../../lib/token');
 const {
   capitalize,
   combinationContext,
+  createFileAudioMedia,
   isRTCRtpSenderParamsSupported,
   participantsConnected,
   pairs,
   randomName,
   setup,
+  setupAliceAndBob,
   smallVideoConstraints,
   tracksSubscribed,
   tracksPublished,
@@ -1280,6 +1282,100 @@ describe('connect', function() {
         });
       });
     });
+
+    // NOTE(mmalavalli): Skipping this test on Firefox because AudioContext.decodeAudioData()
+    // does not complete resulting in the test timing out.
+    // TODO(mmalavalli): Enable on Firefox after figuring out and fixing the cause.
+    if (isFirefox) {
+      return;
+    }
+
+    combinationContext([
+      [
+        [true, false],
+        x => `When Alice ${x ? 'enables' : 'disables'} DTX`
+      ],
+      [
+        [true, false],
+        x => `When Bob ${x ? 'enables' : 'disables'} DTX`
+      ],
+    ], ([aliceDtx, bobDtx]) => {
+      let aliceBitratesSilence;
+      let aliceBitratesSpeech;
+      let aliceRoom;
+      let bobBitratesSilence;
+      let bobBitratesSpeech;
+      let bobRoom;
+      let roomSid;
+      let tracks;
+
+      before(async () => {
+        const { source, track } = await waitFor(
+          createFileAudioMedia('/static/speech.m4a'),
+          'Creating speech recording track');
+
+        tracks = [
+          track,
+          await waitFor(
+            createLocalVideoTrack(smallVideoConstraints),
+            'Creating video track')
+        ];
+
+        ({ aliceRoom, bobRoom, roomSid } = await waitFor(setupAliceAndBob({
+          aliceOptions: {
+            preferredAudioCodecs: [{ codec: 'opus', dtx: aliceDtx }],
+            tracks
+          },
+          bobOptions: {
+            preferredAudioCodecs: [{ codec: 'opus', dtx: bobDtx }],
+            tracks
+          }
+        }), 'Alice and Bob to join the Room'));
+
+        source.start();
+
+        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
+        // so the below bitrate samples represent speech.
+        [aliceBitratesSpeech, bobBitratesSpeech] = await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          'Alice and Bob to collect outgoing speech bitrate samples');
+
+        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
+        // so the below bitrate samples represent silence.
+        [aliceBitratesSilence, bobBitratesSilence] = await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          'Alice and Bob to collect outgoing silence bitrate samples');
+      });
+
+      it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
+        const bitrateTests = {
+          true: (bitrateSpeech, bitrateSilence) => {
+            return Math.round(100 * bitrateSilence / bitrateSpeech) <= 20;
+          },
+          false: (bitrateSpeech, bitrateSilence) => {
+            return Math.round(100 * bitrateSilence / bitrateSpeech) >= 80;
+          }
+        };
+
+        const aliceBitrateSilenceAvg = Math.round(aliceBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
+        const aliceBitrateSpeechAvg = Math.round(aliceBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
+        console.log(`Avg. bitrate reduction during silence (Alice): ${Math.round(100 * aliceBitrateSilenceAvg / aliceBitrateSpeechAvg)}`);
+        assert(bitrateTests[aliceDtx](aliceBitrateSpeechAvg, aliceBitrateSilenceAvg));
+
+        const bobBitrateSilenceAvg = Math.round(bobBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
+        const bobBitrateSpeechAvg = Math.round(bobBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
+        console.log(`Avg. bitrate reduction during silence (Bob): ${Math.round(100 * bobBitrateSilenceAvg / bobBitrateSpeechAvg)}`);
+        assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
+      });
+
+      after(() => {
+        [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+        if (tracks) {
+          tracks.forEach(track => track.stop());
+        }
+        return completeRoom(roomSid);
+      });
+    });
   });
 });
 
@@ -1296,4 +1392,26 @@ function checkOpusDtxInMediaSection(section, shouldApplyDtx) {
 
 function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
+}
+
+async function pollOutgoingAudioBitrate(room, nSamples) {
+  const samples = [];
+  if (nSamples <= 0) {
+    return samples;
+  }
+  let [{ localAudioTrackStats: [stats] }] = await room.getStats();
+  let { bytesSent: curBytesSent } = stats || { bytesSent: 0 };
+
+  return new Promise(resolve => {
+    const pollInterval = setInterval(async () => {
+      const [{ localAudioTrackStats: [{ bytesSent }] }] = await room.getStats();
+      samples.push((bytesSent - curBytesSent) * 8);
+      curBytesSent = bytesSent;
+      nSamples--;
+      if (nSamples <= 0) {
+        clearInterval(pollInterval);
+        resolve(samples);
+      }
+    }, 1000);
+  });
 }
