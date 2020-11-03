@@ -480,10 +480,11 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const peerConnectionManagers = [aliceRoom, bobRoom]
     .map(({ _signaling: { _peerConnectionManager } }) => _peerConnectionManager);
 
-  peerConnectionManagers.forEach(pcm => console.log(pcm.iceConnectionState));
+  peerConnectionManagers.forEach((pcm, i) => console.log(`${i ? 'Bob' : 'Alice'}: ${pcm.iceConnectionState}`));
 
-  await waitFor(peerConnectionManagers.map(pcm => pcm.iceConnectionState === 'connected' ? Promise.resolve() : new Promise(resolve => {
+  await waitFor(peerConnectionManagers.map((pcm, i) => pcm.iceConnectionState === 'connected' ? Promise.resolve() : new Promise(resolve => {
     pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
+      console.log(`${i ? 'Bob' : 'Alice'}: ${pcm.iceConnectionState}`);
       if (pcm.iceConnectionState === 'connected') {
         pcm.removeListener('iceConnectionStateChanged', onIceConnectionStateChanged);
         resolve();
