@@ -177,7 +177,7 @@ const tagPrompt = {
   type: 'input',
   name: 'tag',
   message: 'Tag to use (type branch name if you do not want to use tag):',
-  default: '2.0.0-beta15',
+  default: () => getBranches().then(branches => branches.current),
   validate: (val) => { return typeof val === 'string' && val.length > 5; }
 };
 
