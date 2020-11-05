@@ -1,4 +1,4 @@
-import { MediaConnectionError, SignalingConnectionDisconnectedError } from './error';
+import { MediaConnectionError, SignalingConnectionDisconnectedError, TwilioError } from './TwilioError';
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
 import { Participant } from './Participant';
@@ -8,7 +8,6 @@ import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { StatsReport } from './stats';
 import { Track } from './Track';
-import { TwilioError } from './TwilioError';
 
 export namespace Room {
   type SID = string;
