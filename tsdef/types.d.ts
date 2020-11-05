@@ -136,7 +136,7 @@ export interface ConnectOptions {
   maxVideoBitrate?: number | null;
   name?: string | null;
   networkQuality?: boolean | NetworkQualityConfiguration;
-  region?: 'au1' | 'br1' | 'ie1' | 'de1' | 'jp1' | 'sg1' | 'us1' | 'us2' | 'gll';
+  region?: string;
   preferredAudioCodecs?: AudioCodec[];
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
   logLevel?: LogLevel | LogLevels;
