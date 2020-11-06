@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.7.4-dev",
+  "version": "2.8.0-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -59,6 +59,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "0.0.32",
     "mocha": "^3.2.0",
+    "node-http-server": "^8.1.2",
     "npm-run-all": "^4.0.2",
     "requirejs": "^2.3.3",
     "rimraf": "^2.6.1",

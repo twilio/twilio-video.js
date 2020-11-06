@@ -1,3 +1,5 @@
+/* globals webkitAudioContext */
+/* eslint-disable new-cap */
 /* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 'use strict';
@@ -19,7 +21,50 @@ function a(word) {
 
 const audioContext = typeof AudioContext !== 'undefined' && 'createMediaStreamDestination' in AudioContext.prototype
   ? new AudioContext()
-  : null;
+  : typeof webkitAudioContext !== 'undefined' && 'createMediaStreamDestination' in webkitAudioContext.prototype
+    ? new webkitAudioContext()
+    : null;
+
+function createAudioMediaFromAudioData(audioData) {
+  const mediaSource = audioContext.createBufferSource();
+  mediaSource.buffer = audioData;
+  const destination = audioContext.createMediaStreamDestination();
+  mediaSource.connect(destination);
+  return {
+    source: mediaSource,
+    track: destination.stream.getTracks()[0]
+  };
+}
+
+function decodeAudioFromArrayBuffer(arrayBuffer) {
+  return new Promise(resolve =>
+    audioContext.decodeAudioData(arrayBuffer, resolve));
+}
+
+function getArrayBufferForFile(url) {
+  return new Promise(resolve => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'arraybuffer';
+    xhr.onreadystatechange = () =>
+      xhr.readyState === 4 && resolve(xhr.response);
+    xhr.send();
+  });
+}
+
+/**
+ * Create a media source and track for a file at the given URL.
+ * @param {string} url
+ * @returns {Promise<{source: AudioBufferSourceNode, track: MediaStreamTrack} | null>}
+ */
+async function createFileAudioMedia(url) {
+  if (!audioContext) {
+    return null;
+  }
+  const arrayBuffer = await getArrayBufferForFile(url);
+  const audioData = await decodeAudioFromArrayBuffer(arrayBuffer);
+  return createAudioMediaFromAudioData(audioData);
+}
 
 /**
  * Create a synthetic audio MediaStreamTrack, if possible.
@@ -424,13 +469,30 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
 
   const bobRoom = await connect(getToken('Bob'), bobOptions);
 
-  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'participants to connect');
+  await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'Alice and Bob to connect');
 
   const roomSid = aliceRoom.sid;
   const aliceLocal = aliceRoom.localParticipant;
   const bobLocal = bobRoom.localParticipant;
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
+
+  const peerConnectionManagers = [aliceRoom, bobRoom]
+    .map(({ _signaling: { _peerConnectionManager } }) => _peerConnectionManager);
+
+  // NOTE(mmalavalli): In Circle CI Firefox, for some reason, only one of the Participants
+  // ICE goes to connected state instead of the expected behavior (both Participants' ICE should go
+  // to connected state). So, until we know more, we wait for only one Participant to reach
+  // ICE connected state.
+  // TODO(mmalavalli): Wait for both Participants to reach ICE connected state.
+  await waitFor(Promise.race(peerConnectionManagers.map(pcm => new Promise(resolve => {
+    pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
+      if (pcm.iceConnectionState === 'connected') {
+        pcm.removeListener('iceConnectionStateChanged', onIceConnectionStateChanged);
+        resolve();
+      }
+    });
+  }))), 'Alice or Bob to establish a media connection');
 
   return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
 }
@@ -675,6 +737,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
 
 exports.a = a;
 exports.capitalize = capitalize;
+exports.createFileAudioMedia = createFileAudioMedia;
 exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
