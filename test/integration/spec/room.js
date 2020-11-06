@@ -44,7 +44,8 @@ describe('Room', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
-  (defaults.topology === 'peer-to-peer' ? describe.skip : describe.only)('recording', () => {
+
+  (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('recording', () => {
     combinationContext([
       [
         [true, false],
