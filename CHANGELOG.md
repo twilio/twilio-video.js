@@ -20,18 +20,18 @@ New Features
     preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
   });
   ```
-
 Bug Fixes
 ---------
+
 - Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting from a room. (JSDK-2985)
 
-2.7.3 (October 21, 2020)
-========================
 
 Bug Fixes
 ---------
 
 - Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
+- Fixed a bug where an iOS 14 Safari Participant is not heard by others in a Room after
+  handling an incoming phone call. (JSDK-3031)
 
 2.7.2 (August 12, 2020)
 =======================
