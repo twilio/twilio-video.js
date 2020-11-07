@@ -699,9 +699,7 @@ describe('LocalTrackPublication', function() {
     });
   });
 
-  // note: I have seen firefox getting disconnected after this test.
-  // note: also seen and this test fail (Bob only sends TrackA in SDP) on p2p.
-  it(`JSDK-2573 - race condition when recycling transceiver: ${isFirefox || defaults.topology === 'peer-to-peer' ? '@unstable: JSDK-2807' : ''}`, async () => {
+  it('JSDK-2573/JSDK-2807 - race condition when recycling transceiver', async () => {
     // Alice and Bob join without tracks
     const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
       aliceOptions: { tracks: [] },

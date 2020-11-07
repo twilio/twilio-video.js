@@ -1411,6 +1411,8 @@ describe('LocalParticipant', function() {
         localAudioTrack = await createLocalAudioTrack({ fake: true });
         const token = getToken(randomName());
         const options = Object.assign({ tracks: [localAudioTrack] }, defaults);
+        const token = getToken(randomName());
+        const options = Object.assign({ audio: true, fake: true }, defaults);
         // eslint-disable-next-line no-await-in-loop
         room = await setupRoom(token, options);
         if (room) {

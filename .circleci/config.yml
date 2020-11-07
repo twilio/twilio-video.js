@@ -64,11 +64,17 @@ executors:
         default: "stable"
     docker:
       - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
     environment:
       <<: *defaultEnv
   generic-executor:
     docker:
       - image: alpine:3.7
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
     environment:
       <<: *defaultEnv
   machine-executor:
@@ -254,6 +260,10 @@ jobs:
   trigger-qe-tests:
     docker:
       - image: circleci/node:latest
+        auth:
+          username: $DOCKER_USERNAME
+          password: $DOCKER_PASSWORD
+
     steps:
       - run:
           name: Trigger QE tests

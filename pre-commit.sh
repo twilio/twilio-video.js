@@ -52,7 +52,7 @@ echo "Checking current branch..."
 block_protected_branch_commits
 
 echo "Checking for .only..."
-block_commit_for_diff_patterns 'test/' '\.js$' '\.only\(' '.only'
+block_commit_for_diff_patterns 'test/' '\.js$' '\.only' '.only'
 
 echo "Checking for main export from package.json..."
 block_commit_for_diff_patterns '.' 'package.json' 'main.*\/lib\/index.js' 'exporting es6'

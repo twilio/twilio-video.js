@@ -21,13 +21,18 @@ function completeRoom(nameOrSid) {
  * @returns {Promise<Room.SID>}
  */
 async function createRoom(name, type, roomOptions) {
-  const { sid, status } = await rest('/v1/Rooms', Object.assign({
+  const roomsResults =  await rest('/v1/Rooms', Object.assign({
     Type: type,
     UniqueName: name
   }, roomOptions));
+
+  const { sid, status } = roomsResults;
   if (status === 'in-progress') {
     return sid;
   }
+
+  // eslint-disable-next-line no-console
+  console.warn(`Could not create ${type} Room: ${name}: `, roomsResults);
   throw new Error(`Could not create ${type} Room: ${name}`);
 }
 
@@ -63,6 +68,21 @@ function subscribeTrack(publication, room) {
   return subscribedTracks(publication, room, 'subscribe');
 }
 
+
+function startRecording(room) {
+  return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
+    Rules: '[{ "type": "include", "all": "true" }]'
+  });
+}
+
+function stopRecording(room) {
+  return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
+    Rules: '[{ "type": "exclude", "all": "true" }]'
+  });
+}
+
+exports.startRecording = startRecording;
+exports.stopRecording = stopRecording;
 exports.completeRoom = completeRoom;
 exports.createRoom = createRoom;
 exports.unsubscribeTrack = unsubscribeTrack;

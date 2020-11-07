@@ -8,6 +8,14 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
+Android Firefox Participants sometimes fail to publish VP8 VideoTracks in Group Rooms
+-------------------------------------------------------------------------------------
+
+If an Android Participant connects to a Group Room without video, and soon after tries
+to publish a VP8 VideoTrack, the publication fails due to this [bug](https://github.com/mozilla-mobile/fenix/issues/15179).
+You can work around this issue by publishing the VP8 VideoTrack while connecting to the
+Room by passing it to the SDK in the `ConnectOptions.tracks` array.
+
 Android Chrome 81+ Participants fail to subscribe to H264 VideoTracks in Group Rooms
 ------------------------------------------------------------------------------------
 
@@ -40,9 +48,42 @@ policies here:
 - [Firefox Autoplay Policy](https://hacks.mozilla.org/2019/02/firefox-66-to-block-automatically-playing-audible-video-and-audio/)
 - [Safari Autoplay Policy](https://webkit.org/blog/7734/auto-play-policy-changes-for-macos/)
 
-Playback of RemoteAudioTracks should not be affected since its playback does not
-depend on the \<audio\> element. However, for RemoteVideoTracks, there are two ways
-to ensure playback:
+Playback of RemoteAudioTracks should not be affected in Chrome and Firefox. Safari will
+pause \<audio\> elements that play back RemoteAudioTracks if no local media is being captured.
+They can be played by the application after a user interaction.
+
+```js
+remoteParticipant.on('trackSubscribed', track => {
+  if (track.kind === 'audio') {
+    const audioEl = track.attach();
+    isUserInteractionRequired(audioEl).then(isRequired => {
+      if (isRequired) {
+        const playbackButton = /* Get the playback button */;
+        playBackButton.onclick = () => audioEl.play();
+      }
+    });
+  }
+});
+
+function isUserInteractionRequired(audioEl) {
+  if (!audioEl.paused) {
+    return Promise.resolve(false);
+  }  
+  if (audioEl.hasAttribute('autoplay')) {
+    return Promise.race([
+      new Promise(resolve => audioEl.onplay = resolve),
+      new Promise(resolve => setTimeout(resolve, 500))
+    ]).then(() => {
+      return audioEl.paused;
+    });
+  }
+  return audioEl.play().catch(error => {
+    return error.name === 'NotAllowedError';
+  });
+}
+```
+ 
+For RemoteVideoTracks, there are two ways to ensure playback:
 
 - Make sure that the user interacts with your application before joining a Room.
   Here is an example:
