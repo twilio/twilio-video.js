@@ -1,5 +1,6 @@
 'use strict';
 
+require('./spec/browserbugs/chromium');
 require('./spec/docker/reconnection');
 require('./spec/docker/docker');
 require('./spec/connect');

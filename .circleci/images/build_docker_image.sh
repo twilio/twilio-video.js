@@ -35,7 +35,7 @@ if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
     echo "No version change detected. Exiting"
     echo "========================================================="
     echo notpushed > ./logs/notpushed.txt
-    SLACK_MESSAGE_TEXT="Docker Image for ${BROWSER}-${BVER} is still ${NEW_VERSION}"
+    SLACK_MESSAGE_TEXT="${BROWSER}-${BVER} is ${NEW_VERSION}"
     curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
     exit 0
 fi
@@ -49,7 +49,7 @@ fi
 echo "Pushing browserContainer image for ${BROWSER}-${BVER}"
 docker push twilio/twilio-video-browsers:${BROWSER}-${BVER}
 echo pushed > ./logs/pushed.txt
-SLACK_MESSAGE_TEXT="Docker Image for ${BROWSER}-${BVER} updated to ${NEW_VERSION}"
+SLACK_MESSAGE_TEXT="Updated: ${BROWSER}-${BVER} => ${NEW_VERSION}"
 curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
 
 echo "========================================================="

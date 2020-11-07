@@ -2,56 +2,52 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.8.0 (In Progress)
+2.8.0 (in progress)
 ===================
 
 New Features
 ------------
 
-- Added a new api `testPreflight`. This api helps test the connectivity with twilio-servers for the video rooms. It connects two participants to the video room using supplied tokens. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying the room operations, it generates a report containing statistics about the connection.
+- Enabled discontinuous transmission (DTX) in the Opus audio codec by default, which
+  will result in bandwidth and CPU savings during silence and background noise. You
+  can control this feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
 
-Note: the tokens used for the connection must specify the room to be used for test. This must be a unique test room and must not to be used for regular operations.
+  ```js
+  const { connect } = require('twilio-video');
 
-```js
-const Video = require('twilio-video');
-const tempRoomName = 'test-room-' + Date.now();
-const publisherToken = getAccessToken('alice', tempRoomName);
-const subscriberToken = getAccessToken('bob', tempRoomName);
-
-const preflightTest = Video.testPreflight(publisherToken, subscriberToken);
-
-preflightTest.on('completed', function(report) {
-  console.log("Test completed in " + report.testTiming.duration + " milliseconds.");
-  console.log(" It took " + report.networkTiming.connect.duration + " milliseconds to connect");
-  console.log(" It took " + report.networkTiming.media.duration + " milliseconds to receive media");
-
-  // network score is available only for group rooms.
-  console.log(" Your network score was: " + report.stats.networkQuality);
-});
-
-preflightTest.on('failed', function(error) {
-  console.log("Test failed:" + error);
-});
-
-preflightTest.on('progress', function(progressState) {
-  console.log(progressState);
-});
-```
+  // Disable DTX for Opus.
+  connect('token', {
+    preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
+  });
+  ```
 
 Bug Fixes
 ---------
 - Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting from a room. (JSDK-2985)
 
+2.7.3 (October 21, 2020)
+========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
 
 2.7.2 (August 12, 2020)
 =======================
 
 Bug Fixes
 ---------
-- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
 
-- Fixed a bug where `Room.getStats()` returned stats for only one of the temporal layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats` object for each temporal layer, which you can recognize by the `trackId` and `trackSid` properties. (JSDK-2920)
-```js
+- Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently
+  disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
+
+- Fixed a bug where `Room.getStats()` returned stats for only one of the temporal
+  layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats`
+  object for each temporal layer, which you can recognize by the `trackId` and
+  `trackSid` properties. (JSDK-2920)
+
+  ```js
   async function getBytesSentOnLocalVideoTrack(room, trackSid) {
     const stats = await room.getStats();
     let totalBytesSent = 0;
@@ -62,7 +58,7 @@ Bug Fixes
     });
     return totalBytesSent;
   }
-```
+  ```
 
 2.7.1 (July 28, 2020)
 =====================

@@ -230,7 +230,7 @@ const { defer } = require('../../../../../lib/util');
         let getUserMedia;
         let mediaStream;
         let track;
-
+        let stoppedEmitted = false;
         before(async () => {
           getUserMedia = sinon.spy(gUMSucceeds ? (...args) => fakeGetUserMedia(...args).then(stream => {
             mediaStream = stream;
@@ -246,11 +246,17 @@ const { defer } = require('../../../../../lib/util');
 
           track._setMediaStreamTrack = sinon.spy();
 
+          track.once('stopped', () => {
+            stoppedEmitted = true;
+          });
+
           try {
             await track.restart(...restartArgs);
           } catch (err) {
             error = err;
           }
+
+
         });
 
         if (!(isCreatedByCreateLocalTracks && gUMSucceeds)) {
@@ -259,6 +265,10 @@ const { defer } = require('../../../../../lib/util');
               sinon.assert.notCalled(getUserMedia);
             });
           } else {
+            it('should stop the track', () => {
+              assert(stoppedEmitted, 'stop was emitted');
+            });
+
             it(`should call getUserMedia with the ${restartArgs.length > 0 ? 'new' : 'existing'} constraints`, () => {
               sinon.assert.calledWith(getUserMedia, Object.assign({
                 audio: false,
