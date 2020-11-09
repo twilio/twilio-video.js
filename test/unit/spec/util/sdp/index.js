@@ -6,6 +6,7 @@ const { flatMap } = require('../../../../../lib/util');
 
 const {
   disableRtx,
+  enableDtxForOpus,
   getMediaSections,
   setBitrateParameters,
   setCodecPreferences,
@@ -135,7 +136,7 @@ describe('setCodecPreferences', () => {
       x => `when preferredVideoCodecs is ${x ? 'not ' : ''}empty`
     ]
   ], ([sdpType, preferredAudioCodecs, preferredVideoCodecs]) => {
-    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',') : [];
+    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',').map(codec => ({ codec })) : [];
     preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',').map(codec => ({ codec })) : [];
     context(`should ${preferredAudioCodecs.length ? 'update the' : 'preserve the existing'} audio codec order`, () => {
       it(`and ${preferredVideoCodecs.length ? 'update the' : 'preserve the existing'} video codec order`, () => {
@@ -830,9 +831,9 @@ describe('revertSimulcastForNonVP8MediaSections', () => {
         video: [{ id: 'video-1', ssrc: ssrcs[0] }]
       });
       if (isVP8PreferredPayloadType) {
-        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'VP8' }]);
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'VP8' }]);
       } else {
-        remoteSdp = setCodecPreferences(sdp, ['PCMU'], [{ codec: 'H264' }]);
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'H264' }]);
       }
       revertedSdp = revertSimulcastForNonVP8MediaSections(simSdp, sdp, remoteSdp);
     });
@@ -1163,6 +1164,222 @@ a=ssrc-group:FID 2476366320 3143435575`;
       } else {
         assert.equal(sdp1, sdp);
       }
+    });
+  });
+});
+
+describe('enableDtxForOpus', () => {
+  const sdps = {
+    planb: `\
+v=0\r
+o=- 6385359508499371184 3 IN IP4 127.0.0.1\r
+s=-\r
+t=0 0\r
+a=group:BUNDLE audio video\r
+a=msid-semantic: WMS 7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+m=audio 22602 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
+c=IN IP4 34.203.250.135\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=candidate:2235265311 1 udp 7935 34.203.250.135 22602 typ relay raddr 107.20.226.156 rport 51463 generation 0 network-cost 50\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:audio\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtcp-fb:111 transport-cc\r
+a=fmtp:111 minptime=10;useinbandfec=1\r
+a=rtpmap:103 ISAC/16000\r
+a=rtpmap:104 ISAC/32000\r
+a=rtpmap:9 G722/8000\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:106 CN/32000\r
+a=rtpmap:105 CN/16000\r
+a=rtpmap:13 CN/8000\r
+a=rtpmap:110 telephone-event/48000\r
+a=rtpmap:112 telephone-event/32000\r
+a=rtpmap:113 telephone-event/16000\r
+a=rtpmap:126 telephone-event/8000\r
+m=video 9 UDP/TLS/RTP/SAVPF 96 97\r
+c=IN IP4 0.0.0.0\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:video\r
+a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:4 urn:3gpp:video-orientation\r
+a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type\r
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtcp-rsize\r
+a=rtpmap:96 VP8/90000\r
+a=rtcp-fb:96 goog-remb\r
+a=rtcp-fb:96 transport-cc\r
+a=rtcp-fb:96 ccm fir\r
+a=rtcp-fb:96 nack\r
+a=rtcp-fb:96 nack pli\r
+a=rtpmap:97 rtx/90000\r
+a=fmtp:97 apt=96\r
+a=ssrc-group:FID 0000000000 1111111111\r
+a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+`,
+    unified: `\
+v=0\r
+o=- 6385359508499371184 3 IN IP4 127.0.0.1\r
+s=-\r
+t=0 0\r
+a=group:BUNDLE 0 1 2\r
+a=msid-semantic: WMS 7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+m=audio 22602 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
+c=IN IP4 34.203.250.135\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=candidate:2235265311 1 udp 7935 34.203.250.135 22602 typ relay raddr 107.20.226.156 rport 51463 generation 0 network-cost 50\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:0\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtcp-fb:111 transport-cc\r
+a=fmtp:111 minptime=10;useinbandfec=1\r
+a=rtpmap:103 ISAC/16000\r
+a=rtpmap:104 ISAC/32000\r
+a=rtpmap:9 G722/8000\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:106 CN/32000\r
+a=rtpmap:105 CN/16000\r
+a=rtpmap:13 CN/8000\r
+a=rtpmap:110 telephone-event/48000\r
+a=rtpmap:112 telephone-event/32000\r
+a=rtpmap:113 telephone-event/16000\r
+a=rtpmap:126 telephone-event/8000\r
+m=video 9 UDP/TLS/RTP/SAVPF 96 97\r
+c=IN IP4 0.0.0.0\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:1\r
+a=extmap:2 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:4 urn:3gpp:video-orientation\r
+a=extmap:5 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=extmap:6 http://www.webrtc.org/experiments/rtp-hdrext/playout-delay\r
+a=extmap:7 http://www.webrtc.org/experiments/rtp-hdrext/video-content-type\r
+a=extmap:8 http://www.webrtc.org/experiments/rtp-hdrext/video-timing\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtcp-rsize\r
+a=rtpmap:96 VP8/90000\r
+a=rtcp-fb:96 goog-remb\r
+a=rtcp-fb:96 transport-cc\r
+a=rtcp-fb:96 ccm fir\r
+a=rtcp-fb:96 nack\r
+a=rtcp-fb:96 nack pli\r
+a=rtpmap:97 rtx/90000\r
+a=fmtp:97 apt=96\r
+a=ssrc-group:FID 0000000000 1111111111\r
+a=ssrc:0000000000 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:0000000000 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:0000000000 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:0000000000 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 cname:s9hDwDQNjISOxWtK\r
+a=ssrc:1111111111 msid:7a9d401b-3cf6-4216-b260-78f93ba4c32e d8b9a935-da54-4d21-a8de-522c87258244\r
+a=ssrc:1111111111 mslabel:7a9d401b-3cf6-4216-b260-78f93ba4c32e\r
+a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
+m=audio 22602 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
+c=IN IP4 34.203.250.135\r
+a=rtcp:9 IN IP4 0.0.0.0\r
+a=candidate:2235265311 1 udp 7935 34.203.250.135 22602 typ relay raddr 107.20.226.156 rport 51463 generation 0 network-cost 50\r
+a=ice-ufrag:Cmuk\r
+a=ice-pwd:qjHlb5sxe0bozbwpRSYqil3v\r
+a=ice-options:trickle\r
+a=fingerprint:sha-256 BE:29:0C:60:05:B6:6E:E6:EA:A8:28:D5:89:41:F9:5B:22:11:CD:26:01:98:E0:55:9D:FE:C2:F8:EA:4C:17:91\r
+a=setup:actpass\r
+a=mid:2\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=sendrecv\r
+a=rtcp-mux\r
+a=rtpmap:111 opus/48000/2\r
+a=rtcp-fb:111 transport-cc\r
+a=fmtp:111 minptime=10;useinbandfec=1\r
+a=rtpmap:103 ISAC/16000\r
+a=rtpmap:104 ISAC/32000\r
+a=rtpmap:9 G722/8000\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:106 CN/32000\r
+a=rtpmap:105 CN/16000\r
+a=rtpmap:13 CN/8000\r
+a=rtpmap:110 telephone-event/48000\r
+a=rtpmap:112 telephone-event/32000\r
+a=rtpmap:113 telephone-event/16000\r
+a=rtpmap:126 telephone-event/8000\r
+`
+  };
+
+  combinationContext([
+    [
+      ['planb', 'unified'],
+      x => `when the SDP is of the format "${x}"`
+    ],
+    [
+      ['', '0'],
+      x => `when audio mids are ${x ? '' : 'not '}specified`
+    ]
+  ], ([sdpFormat, midsCsv]) => {
+    const mids = midsCsv ? midsCsv.split(',') : [];
+
+    if (mids.length > 0 && sdpFormat === 'planb') {
+      return;
+    }
+    const dtxMids = mids.length > 0 ? mids : sdpFormat === 'planb' ? ['audio'] : ['0', '2'];
+
+    it(`should enable opus DTX for ${mids.length > 0 ? 'the specified audio mids' : 'all the audio mids'}`, () => {
+      const sdp = sdps[sdpFormat];
+      const sdp1 = mids.length > 0 ? enableDtxForOpus(sdp, mids) : enableDtxForOpus(sdp);
+      const mediaSections = getMediaSections(sdp);
+      const mediaSections1 = getMediaSections(sdp1);
+      mediaSections1.forEach((section, i) => {
+        if (!/^m=audio/.test(section)) {
+          assert.equal(section, mediaSections[i]);
+        } else {
+          const mid = section.match(/^a=mid:(.+)$/m)[1];
+          if (dtxMids.includes(mid)) {
+            assert.notEqual(section, mediaSections[i]);
+            assert(/a=fmtp:111 minptime=10;useinbandfec=1;usedtx=1/.test(section));
+            assert(!/a=fmtp:111 minptime=10;useinbandfec=1;usedtx=1/.test(mediaSections[i]));
+          } else {
+            assert.equal(section, mediaSections[i]);
+          }
+        }
+      });
     });
   });
 });
