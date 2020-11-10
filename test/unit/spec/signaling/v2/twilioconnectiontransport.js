@@ -1769,6 +1769,6 @@ function makeInsightsPublisher() {
     this.disconnect = sinon.spy(() => {});
     this.connect = sinon.spy(() => {});
     this.publish = sinon.spy(() => 'baz');
-  };
+  }
   return new InsightsPublisher();
 }
