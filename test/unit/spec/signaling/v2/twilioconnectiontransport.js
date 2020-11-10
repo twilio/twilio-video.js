@@ -1717,8 +1717,7 @@ function makeTest(options) {
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
   options.onIced = options.onIced || sinon.spy(() => Promise.resolve());
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
-  options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
-  options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
+  options.eventPublisher = options.eventPublisher || makeInsightsPublisher();
   options.TwilioConnection = options.TwilioConnection || createTwilioConnection(options);
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
@@ -1765,11 +1764,11 @@ function makePeerConnectionManager() {
   return { getStates: () => [] };
 }
 
-function makeInsightsPublisherConstructor(testOptions) {
-  return function InsightsPublisher() {
+function makeInsightsPublisher() {
+  function InsightsPublisher() {
     this.disconnect = sinon.spy(() => {});
     this.connect = sinon.spy(() => {});
     this.publish = sinon.spy(() => 'baz');
-    testOptions.eventPublisher = this;
   };
+  return new InsightsPublisher();
 }
