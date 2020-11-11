@@ -1438,4 +1438,62 @@ describe('LocalParticipant', function() {
       }
     });
   });
+
+  describe.only('JSDK-2985 - Clean up RemoteTrack event listeners added by the RemoteTrackPublication after leaving room', () => {
+    let bobRoom;
+    let aliceRoom;
+    let error;
+    let listenerCount = 0;
+    let bobAudioTrack;
+    let aliceAudioTrack;
+    const roomName = 'randomRoom';
+    const events = ['enabled', 'disabled', 'started', 'stopped', 'message'];
+
+    async function setupRoom(token, options) {
+      let room = await connect(token, options);
+      return room;
+    }
+
+    before(async () => {
+      try {
+        bobAudioTrack = await createLocalAudioTrack({ fake: true });
+        const bobToken = getToken(randomName());
+        const bobOptions = Object.assign({ name: roomName, tracks: [bobAudioTrack] }, defaults);
+
+        aliceAudioTrack = await createLocalAudioTrack({ fake: true });
+        const aliceToken = getToken(randomName());
+        const aliceOptions = Object.assign({ name: roomName, tracks: [aliceAudioTrack] }, defaults);
+
+        // eslint-disable-next-line no-await-in-loop
+        bobRoom = await setupRoom(bobToken, bobOptions);
+        aliceRoom = await setupRoom(aliceToken, aliceOptions);
+
+        if (aliceRoom) {
+          aliceRoom.disconnect();
+        }
+
+        events.forEach(event => {
+          listenerCount += aliceAudioTrack.listenerCount(event);
+        });
+      } catch (e) {
+        error = e;
+      }
+    });
+
+    it('should have 0 event listeners after disconnecting from multiple rooms', () => {
+      console.log('remote Alice audio Track', listenerCount);
+      assert.strictEqual(listenerCount, 0);
+    });
+
+    it('should not throw any errors', () => {
+      assert(!error);
+    });
+
+    after(() => {
+      if (bobRoom && aliceRoom) {
+        bobRoom.disconnect();
+        aliceRoom.disconnect();
+      }
+    });
+  });
 });
