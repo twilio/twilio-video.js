@@ -21,6 +21,47 @@ New Features
   });
   ```
 
+- Exposed SDK logger using [loglevel](https://www.npmjs.com/package/loglevel) module to allow for updating logging configuration after calling `Video.connect`, `Video.createLocalAudioTrack`, `Video.createLocalTracks` and `Video.createLocalVideoTrack`. With this feature, logs can now be intercepted at runtime to allow realtime processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
+
+  ```js
+  var { Logger, connect } = require('twilio-video');
+  var token = getAccessToken();
+
+  // Connect using a custom logger name
+  connect(token, {
+    loggerName: 'logger-alice',
+    logLevel: 'debug',
+    name: 'my-cool-room'
+  }).then(function(room) {
+    room.on('participantConnected', function(participant) {
+      console.log(participant.identity + ' has connected');
+    });
+  }).catch(error => {
+    console.log('Could not connect to the Room:', error.message);
+  });
+
+  // Set log level
+  var logger = Logger.getLogger('logger-alice');
+  logger.setLevel('debug');
+
+  // Get logs
+  var originalFactory = logger.methodFactory;
+  logger.methodFactory = function (methodName, logLevel, loggerName) {
+    var method = originalFactory(methodName, logLevel, loggerName);
+
+    return function (datetime, logLevel, component, message, data) {
+      method(datetime, logLevel, component, message, data);
+      // Send to your own server
+      postDataToServer(arguments);
+
+      //Check for specific logs
+      if (data && data.event) {
+        // Found an event!
+      }
+    };
+  };
+  ```
+
 2.7.3 (October 21, 2020)
 ========================
 

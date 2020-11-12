@@ -9,6 +9,7 @@ const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
 
 const {
+  DEFAULT_LOGGER_NAME,
   DEFAULT_LOG_LEVEL,
   WS_SERVER,
   DEFAULT_REGION,
@@ -45,16 +46,17 @@ describe('connect', () => {
       mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
       const signaling = sinon.spy(() => mockSignaling);
 
+      // eslint-disable-next-line no-undefined
       connect(token, {
         iceServers: [],
-        // eslint-disable-next-line no-undefined
+        loggerName: undefined,
         logLevel: undefined,
         signaling,
-        // eslint-disable-next-line no-undefined
         wsServer: undefined
       });
 
       const options = signaling.args[0][1];
+      assert.equal(options.loggerName, DEFAULT_LOGGER_NAME);
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
