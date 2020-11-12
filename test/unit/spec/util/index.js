@@ -78,6 +78,21 @@ describe('util', () => {
         expectedPayload: { roomName: 'room name goes here' },
       },
       {
+        testCase: 'region specified',
+        connectOptions: { region: 'in1' },
+        expectedPayload: { region: 'in1' },
+      },
+      {
+        testCase: 'maxVideoBitrate specified',
+        connectOptions: { maxVideoBitrate: 100 },
+        expectedPayload: { maxVideoBitrate: 100 },
+      },
+      {
+        testCase: 'maxAudioBitrate specified',
+        connectOptions: { maxAudioBitrate: 100 },
+        expectedPayload: { maxAudioBitrate: 100 },
+      },
+      {
         testCase: 'bandwidthProfile specified',
         connectOptions: {
           bandwidthProfile: {
