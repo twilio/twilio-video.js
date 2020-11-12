@@ -73,6 +73,11 @@ describe('util', () => {
         expectedPayload: { preferredAudioCodecs: JSON.stringify([{ codec: 'VP8', simulcast: true }]) },
       },
       {
+        testCase: 'name specified',
+        connectOptions: { name: 'room name goes here' },
+        expectedPayload: { roomName: 'room name goes here' },
+      },
+      {
         testCase: 'bandwidthProfile specified',
         connectOptions: {
           bandwidthProfile: {
