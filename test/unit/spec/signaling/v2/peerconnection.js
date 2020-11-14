@@ -396,6 +396,10 @@ describe('PeerConnectionV2', () => {
           it('does not update the state', () => {
             assert.deepEqual(test.pcv2.getState(), before);
           });
+          it.only('removes event listeners on the encoding parameter', () => {
+            const listenerCount = test.pcv2._encodingParameters.listenerCount('changed');
+            assert.strictEqual(listenerCount, 0);
+          });
         } else {
           it('calls close on the underlying RTCPeerConnection', () => {
             sinon.assert.calledOnce(test.pc.close);
