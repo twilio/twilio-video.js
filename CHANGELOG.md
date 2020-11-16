@@ -11,15 +11,17 @@ New Features
 - Enabled discontinuous transmission (DTX) in the Opus audio codec by default, which
   will result in bandwidth and CPU savings during silence and background noise. You
   can control this feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
-  
+
   ```js
   const { connect } = require('twilio-video');
-  
+
   // Disable DTX for Opus.
   connect('token', {
     preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
   });
   ```
+
+- Added support for TypeScript definitions for the public classes. TypeScript developers can now use these definitions in their TypeScript projects shown below. (JSDK-3007)
 
 Bug Fixes
 ---------

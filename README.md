@@ -56,6 +56,12 @@ Using this method, you can `require` twilio-video.js like so:
 const Video = require('twilio-video');
 ```
 
+TypeScript definitions can now be imported using this method.
+
+```ts
+import * as Video from 'twilio-video';
+```
+
 ### CDN
 
 Releases of twilio-video.js are hosted on a CDN, and you can include these
