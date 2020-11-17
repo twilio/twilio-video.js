@@ -2,6 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.9.0 (in progress)
+===================
+
+New Features
+------------
+
+- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+
+  ```ts
+    import * as Video from 'twilio-video';
+  ```
+
 2.8.0 (in progress)
 ===================
 
@@ -20,8 +32,6 @@ New Features
     preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
   });
   ```
-
-- Added support for TypeScript definitions for the public classes. TypeScript developers can now use these definitions in their TypeScript projects shown below. (JSDK-3007)
 
 Bug Fixes
 ---------
