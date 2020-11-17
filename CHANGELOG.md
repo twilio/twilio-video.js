@@ -27,24 +27,9 @@ New Features
   var { Logger, connect } = require('twilio-video');
   var token = getAccessToken();
 
-  // Connect using a custom logger name
-  connect(token, {
-    loggerName: 'logger-alice',
-    logLevel: 'debug',
-    name: 'my-cool-room'
-  }).then(function(room) {
-    room.on('participantConnected', function(participant) {
-      console.log(participant.identity + ' has connected');
-    });
-  }).catch(error => {
-    console.log('Could not connect to the Room:', error.message);
-  });
+  var logger = Logger.getLogger('twilio-video');
 
-  // Set log level
-  var logger = Logger.getLogger('logger-alice');
-  logger.setLevel('debug');
-
-  // Get logs
+  // Listen for logs
   var originalFactory = logger.methodFactory;
   logger.methodFactory = function (methodName, logLevel, loggerName) {
     var method = originalFactory(methodName, logLevel, loggerName);
@@ -60,6 +45,18 @@ New Features
       }
     };
   };
+  logger.setLevel('debug');
+
+  connect(token, {
+    logLevel: 'debug',
+    name: 'my-cool-room'
+  }).then(function(room) {
+    room.on('participantConnected', function(participant) {
+      console.log(participant.identity + ' has connected');
+    });
+  }).catch(error => {
+    console.log('Could not connect to the Room:', error.message);
+  });
   ```
 
 2.7.3 (October 21, 2020)
