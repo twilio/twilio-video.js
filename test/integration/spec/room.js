@@ -67,14 +67,10 @@ describe('Room', function() {
       });
 
       it(`.isRecording should initially be set to ${recordingEnabledAtCreate}`, () => {
-        // eslint-disable-next-line no-warning-comments
-        // TODO(mpatwardhan): once JSDK-3064 is implemented, isRecording will be recordingEnabledAtCreate && trackSharedAtConnect
-        assert.strictEqual(room.isRecording, recordingEnabledAtCreate);
+        assert.strictEqual(room.isRecording, recordingEnabledAtCreate && trackSharedAtConnect);
       });
 
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mpatwardhan): enable these tests after JSDK-3064 is implemented
-      describe.skip('recording events', () => {
+      describe('recording events', () => {
         if (!trackSharedAtConnect) {
           // publish track.
           it(`after 1st track is published ${recordingEnabledAtCreate ? 'fires' : 'does not fire'} recordingStarted`, async () => {
@@ -129,7 +125,7 @@ describe('Room', function() {
             room.localParticipant.unpublishTrack(localTracks[0]);
 
             await waitForNot(recordingEventPromise, `unexpected recording stopped: ${room.sid}`);
-            assert.strictEqual(room.isRecording, false);
+            assert.strictEqual(room.isRecording, true);
           });
 
           it('recordingStopped fires when last track is unpublished', async () => {
@@ -140,7 +136,6 @@ describe('Room', function() {
             assert.strictEqual(room.isRecording, false);
           });
         }
-
       });
 
       after(() => {
