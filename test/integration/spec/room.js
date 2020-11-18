@@ -66,7 +66,7 @@ describe('Room', function() {
         room = await connect(getToken(randomName()), options);
       });
 
-      it(`.isRecording should initially be set to ${recordingEnabledAtCreate}`, () => {
+      it(`.isRecording should initially be set to ${recordingEnabledAtCreate && trackSharedAtConnect}`, () => {
         assert.strictEqual(room.isRecording, recordingEnabledAtCreate && trackSharedAtConnect);
       });
 

@@ -5,10 +5,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.9.0 (in progress)
 ===================
 
-Update
-------
-- `Room.isRecording` previously indicated if recording is enabled for the room. Now it indicates if any track in the room is being recorded.
-Corresponding events `recordingStarted` and `recordingStopped` will be emitted when status of `isRecording` changes. (JSDK-3064)
+Changes
+-------
+- Previously, `Room.isRecording` indicated whether recording is enabled for the Room.
+Now it indicates if the Track published to the Room are being recorded. If recording is
+enabled for the Room, then `Room.isRecording` is set to `true` when the first Track is published
+to the Room. It is set to `false` when the last Track is unpublished from the Room.
+The `recordingStarted` and `recordingStopped` events will be emitted on the Room
+when `Room.isRecording` toggles. (JSDK-3064)
 
 2.8.0 (in progress)
 ===================
