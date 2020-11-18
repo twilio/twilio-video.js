@@ -38,17 +38,11 @@ New Features
       method(datetime, logLevel, component, message, data);
       // Send to your own server
       postDataToServer(arguments);
-
-      //Check for specific logs
-      if (data && data.event) {
-        // Found an event!
-      }
     };
   };
   logger.setLevel('debug');
 
   connect(token, {
-    logLevel: 'debug',
     name: 'my-cool-room'
   }).then(function(room) {
     room.on('participantConnected', function(participant) {

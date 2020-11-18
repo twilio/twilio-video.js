@@ -66,20 +66,29 @@ describe('connect', () => {
 
   [
     {
+      name: 'logLevel',
+      newName: 'Video.Logger',
+      value: 'debug',
+      shouldDelete: false,
+    },
+    {
       name: 'abortOnIceServersTimeout',
-      value: true
+      value: true,
+      shouldDelete: true,
     },
     {
       name: 'dscpTagging',
       newName: 'enableDscp',
-      value: true
+      value: true,
+      shouldDelete: true
     },
     {
       name: 'iceServersTimeout',
-      value: 2000
-    }
-  ].forEach(({ name, newName, value }) => {
-    describe(`called with the deprecated ConnectOptions flag "${name}"`, () => {
+      value: 2000,
+      shouldDelete: true
+    },
+  ].forEach(({ name, newName, value, shouldDelete }) => {
+    describe(`called with the deprecated ConnectOptions "${name}"`, () => {
       let signaling;
 
       before(() => {
@@ -101,10 +110,17 @@ describe('connect', () => {
             });
           });
 
-          it(`should remove "${name}" from ConnectOptions`, () => {
-            const options = signaling.args[0][1];
-            assert(!(name in options));
-          });
+          if (shouldDelete) {
+            it(`should remove "${name}" from ConnectOptions`, () => {
+              const options = signaling.args[0][1];
+              assert(!(name in options));
+            });
+          } else {
+            it(`should not remove "${name}" from ConnectOptions`, () => {
+              const options = signaling.args[0][1];
+              assert(name in options);
+            });
+          }
 
           if (newName) {
             it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
@@ -117,8 +133,8 @@ describe('connect', () => {
             it('should call .warn on the underlying Log with the deprecation warning message', () => {
               const options = signaling.args[0][1];
               const warning = newName
-                ? `The ConnectOptions flag "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
-                : `The ConnectOptions flag "${name}" is no longer applicable and will be ignored.`;
+                ? `The ConnectOptions "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
+                : `The ConnectOptions "${name}" is no longer applicable and will be ignored.`;
               sinon.assert.calledWith(options.log.warn, warning);
             });
           } else {
