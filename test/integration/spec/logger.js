@@ -9,7 +9,7 @@ const defaults = require('../../lib/defaults');
 const connect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
 const { createRoom } = require('../../lib/rest');
-const { randomName, waitForSometime } = require('../../lib/util');
+const { randomName } = require('../../lib/util');
 
 describe('logger', function() {
   // eslint-disable-next-line no-invalid-this
@@ -31,11 +31,13 @@ describe('logger', function() {
 
     logger = Logger.getLogger(loggerName);
     const originalFactory = logger.methodFactory;
-    logger.methodFactory = function (methodName, level, loggerName) {
+    logger.methodFactory = function(methodName, level, loggerName) {
       const method = originalFactory(methodName, level, loggerName);
-      return function (datetime, logLevel, component, message, data) {
+      return function(datetime, logLevel, component, message, data) {
         loggerCb({ datetime, logLevel, component, message, data });
-        showLogs && method(...arguments);
+        if (showLogs) {
+          method(...arguments);
+        }
       };
     };
     logger.setLevel('info');
@@ -63,8 +65,8 @@ describe('logger', function() {
     await connect(token, Object.assign({ name: sid, logLevel: {
       default: 'error',
       media: 'warn',
-    }}, defaults));
-    
+    } }, defaults));
+
     assert(!!Logger.getLogger(DEFAULT_LOGGER_NAME + '-default'));
     assert(!!Logger.getLogger(DEFAULT_LOGGER_NAME + '-media'));
   });
