@@ -122,10 +122,17 @@ describe('connect', () => {
             });
           }
 
-          if (newName) {
+          if (newName && shouldDelete) {
             it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
               const options = signaling.args[0][1];
               assert.equal(options[newName], value);
+            });
+          }
+
+          if (newName && !shouldDelete) {
+            it(`should not set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
+              const options = signaling.args[0][1];
+              assert(!options[newName]);
             });
           }
 
