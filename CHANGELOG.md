@@ -25,7 +25,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
-- Fixed a bug where LocalTrack event listeners were not being cleaned up after disconnecting from a room,. (JSDK-2985)
+- Fixed a bug where LocalTrack event listeners attached by the SDK were not being cleaned up after disconnecting from a Room. (JSDK-2985)
 
 2.7.3 (October 21, 2020)
 ========================
