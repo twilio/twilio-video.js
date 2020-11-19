@@ -35,6 +35,10 @@ New Features
 
 - Exposed SDK logger using [loglevel](https://www.npmjs.com/package/loglevel) module to allow for updating logging configuration after calling `Video.connect`, `Video.createLocalAudioTrack`, `Video.createLocalTracks` and `Video.createLocalVideoTrack`. With this feature, logs can now be intercepted at runtime to allow realtime processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
 
+  In addition, the `ConnectOptions`'s `logLevel` property is now deprecated and you should start using this new SDK logger instead.
+
+  Example:
+
   ```js
   var { Logger, connect } = require('twilio-video');
   var token = getAccessToken();
