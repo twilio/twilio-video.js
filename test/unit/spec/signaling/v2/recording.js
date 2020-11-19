@@ -24,11 +24,11 @@ describe('RecordingV2', () => {
           2: 'a newer revision',
           1: 'the current revision',
           0: 'an older revision'
-        })[x] + ' and .enabled set to'
+        })[x] + ' and .is_recording set to'
       ],
       [
         [false, true],
-        x => x + ', when .isEnabled is'
+        x => x + ', when .is_recording is'
       ],
       [
         [null, false, true],
@@ -131,7 +131,8 @@ function testEnableOrDisable(method, argument, isEnabled) {
 
 function testUpdate(revision, enabled, isEnabled) {
   const recordingState = {
-    enabled: enabled,
+    // eslint-disable-next-line camelcase
+    is_recording: enabled,
     revision: revision
   };
 
