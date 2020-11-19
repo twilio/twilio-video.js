@@ -4,6 +4,7 @@ require('./spec/browserbugs/chromium');
 require('./spec/docker/reconnection');
 require('./spec/docker/docker');
 require('./spec/connect');
+require('./spec/logger');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');

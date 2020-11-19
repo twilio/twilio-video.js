@@ -9,6 +9,7 @@ const { a } = require('../../lib/util');
 const connect = require('../../../lib/connect');
 
 const {
+  DEFAULT_LOGGER_NAME,
   DEFAULT_LOG_LEVEL,
   WS_SERVER,
   DEFAULT_REGION,
@@ -45,16 +46,17 @@ describe('connect', () => {
       mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
       const signaling = sinon.spy(() => mockSignaling);
 
+      // eslint-disable-next-line no-undefined
       connect(token, {
         iceServers: [],
-        // eslint-disable-next-line no-undefined
+        loggerName: undefined,
         logLevel: undefined,
         signaling,
-        // eslint-disable-next-line no-undefined
         wsServer: undefined
       });
 
       const options = signaling.args[0][1];
+      assert.equal(options.loggerName, DEFAULT_LOGGER_NAME);
       assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
@@ -64,20 +66,29 @@ describe('connect', () => {
 
   [
     {
+      name: 'logLevel',
+      newName: 'Video.Logger',
+      value: 'debug',
+      shouldDelete: false,
+    },
+    {
       name: 'abortOnIceServersTimeout',
-      value: true
+      value: true,
+      shouldDelete: true,
     },
     {
       name: 'dscpTagging',
       newName: 'enableDscp',
-      value: true
+      value: true,
+      shouldDelete: true
     },
     {
       name: 'iceServersTimeout',
-      value: 2000
-    }
-  ].forEach(({ name, newName, value }) => {
-    describe(`called with the deprecated ConnectOptions flag "${name}"`, () => {
+      value: 2000,
+      shouldDelete: true
+    },
+  ].forEach(({ name, newName, value, shouldDelete }) => {
+    describe(`called with the deprecated ConnectOptions "${name}"`, () => {
       let signaling;
 
       before(() => {
@@ -99,15 +110,29 @@ describe('connect', () => {
             });
           });
 
-          it(`should remove "${name}" from ConnectOptions`, () => {
-            const options = signaling.args[0][1];
-            assert(!(name in options));
-          });
+          if (shouldDelete) {
+            it(`should remove "${name}" from ConnectOptions`, () => {
+              const options = signaling.args[0][1];
+              assert(!(name in options));
+            });
+          } else {
+            it(`should not remove "${name}" from ConnectOptions`, () => {
+              const options = signaling.args[0][1];
+              assert(name in options);
+            });
+          }
 
-          if (newName) {
+          if (newName && shouldDelete) {
             it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
               const options = signaling.args[0][1];
               assert.equal(options[newName], value);
+            });
+          }
+
+          if (newName && !shouldDelete) {
+            it(`should not set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
+              const options = signaling.args[0][1];
+              assert(!options[newName]);
             });
           }
 
@@ -115,8 +140,8 @@ describe('connect', () => {
             it('should call .warn on the underlying Log with the deprecation warning message', () => {
               const options = signaling.args[0][1];
               const warning = newName
-                ? `The ConnectOptions flag "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
-                : `The ConnectOptions flag "${name}" is no longer applicable and will be ignored.`;
+                ? `The ConnectOptions "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
+                : `The ConnectOptions "${name}" is no longer applicable and will be ignored.`;
               sinon.assert.calledWith(options.log.warn, warning);
             });
           } else {

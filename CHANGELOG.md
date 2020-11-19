@@ -33,6 +33,42 @@ New Features
   });
   ```
 
+- twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
+
+  With this `ConnectOptions`'s `logLevel` property is now deprecated and you should start using this new SDK logger instead.
+
+  Example:
+
+  ```js
+  var { Logger, connect } = require('twilio-video');
+  var token = getAccessToken();
+
+  var logger = Logger.getLogger('twilio-video');
+
+  // Listen for logs
+  var originalFactory = logger.methodFactory;
+  logger.methodFactory = function (methodName, logLevel, loggerName) {
+    var method = originalFactory(methodName, logLevel, loggerName);
+
+    return function (datetime, logLevel, component, message, data) {
+      method(datetime, logLevel, component, message, data);
+      // Send to your own server
+      postDataToServer(arguments);
+    };
+  };
+  logger.setLevel('debug');
+
+  connect(token, {
+    name: 'my-cool-room'
+  }).then(function(room) {
+    room.on('participantConnected', function(participant) {
+      console.log(participant.identity + ' has connected');
+    });
+  }).catch(error => {
+    console.log('Could not connect to the Room:', error.message);
+  });
+  ```
+
 Bug Fixes
 ---------
 
