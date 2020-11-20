@@ -26,6 +26,8 @@ Bug Fixes
 
 - Fixed a bug where Chrome Participants failed to restart a LocalAudioTrack or LocalVideoTrack
   on some android devices. (JSDK-3003)
+- Fixed a bug where sometimes Tracks that were added in quick succession were not published due
+  to a race condition. (JSDK-2807)
 
 2.7.3 (October 21, 2020)
 ========================
