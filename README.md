@@ -60,6 +60,20 @@ TypeScript definitions can now be imported using this method.
 
 ```ts
 import * as Video from 'twilio-video';
+
+function getRemoteParticipantIdentity(remoteParticipant: Video.RemoteParticipant) {
+  return remoteParticipant.identity;
+}
+```
+
+Alternatively, you can import just the definitions you need like so:
+
+```ts
+import { RemoteParticipant } from 'twilio-video';
+
+function getRemoteParticipantIdentity(remoteParticipant: RemoteParticipant) {
+  return remoteParticipant.identity;
+}
 ```
 
 ### CDN
