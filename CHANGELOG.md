@@ -2,6 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.9.0 (in progress)
+===================
+
+Changes
+-------
+- Previously, `Room.isRecording` indicated whether recording is enabled for the Room.
+Now it indicates if the Track published to the Room are being recorded. If recording is
+enabled for the Room, then `Room.isRecording` is set to `true` when the first Track is published
+to the Room. It is set to `false` when the last Track is unpublished from the Room.
+The `recordingStarted` and `recordingStopped` events will be emitted on the Room
+when `Room.isRecording` toggles. (JSDK-3064)
+
 2.8.0 (in progress)
 ===================
 
@@ -11,23 +23,62 @@ New Features
 - Enabled discontinuous transmission (DTX) in the Opus audio codec by default, which
   will result in bandwidth and CPU savings during silence and background noise. You
   can control this feature using the ConnectOptions property `preferredAudioCodecs`. (JSDK-3022)
-  
+
   ```js
   const { connect } = require('twilio-video');
-  
+
   // Disable DTX for Opus.
   connect('token', {
     preferredAudioCodecs: [{ codec: 'opus', dtx: false }]
   });
   ```
 
-2.7.3 (October 21, 2020)
-========================
+- twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
+
+  With this `ConnectOptions`'s `logLevel` property is now deprecated and you should start using this new SDK logger instead.
+
+  Example:
+
+  ```js
+  var { Logger, connect } = require('twilio-video');
+  var token = getAccessToken();
+
+  var logger = Logger.getLogger('twilio-video');
+
+  // Listen for logs
+  var originalFactory = logger.methodFactory;
+  logger.methodFactory = function (methodName, logLevel, loggerName) {
+    var method = originalFactory(methodName, logLevel, loggerName);
+
+    return function (datetime, logLevel, component, message, data) {
+      method(datetime, logLevel, component, message, data);
+      // Send to your own server
+      postDataToServer(arguments);
+    };
+  };
+  logger.setLevel('debug');
+
+  connect(token, {
+    name: 'my-cool-room'
+  }).then(function(room) {
+    room.on('participantConnected', function(participant) {
+      console.log(participant.identity + ' has connected');
+    });
+  }).catch(error => {
+    console.log('Could not connect to the Room:', error.message);
+  });
+  ```
 
 Bug Fixes
 ---------
 
 - Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
+
+2.7.3 (October 21, 2020)
+========================
+
+Bug Fixes
+---------
 
 - Fixed a bug where an iOS 14 Safari Participant is not heard by others in a Room after
   handling an incoming phone call. (JSDK-3031)
