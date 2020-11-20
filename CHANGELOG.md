@@ -2,8 +2,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
-2.8.0 (in progress)
-===================
+2.8.0 (November 20, 2020)
+=========================
 
 New Features
 ------------
@@ -24,7 +24,8 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
+- Fixed a bug where Chrome Participants failed to restart a LocalAudioTrack or LocalVideoTrack
+  on some android devices. (JSDK-3003)
 
 2.7.3 (October 21, 2020)
 ========================
