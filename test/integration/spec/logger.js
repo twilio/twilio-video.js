@@ -130,13 +130,12 @@ describe('logger', function() {
     assert(!!callSpies.length);
 
     // ensure that signaling events were fired for early/connecting/open events.
-    // callSpies.map(callSpy => callSpy.args[0]).filter(arg => arg.message === 'event')
     let early = false;
     let connecting = false;
     let open = false;
     callSpies.forEach(callSpy => {
       const { message, data } = callSpy.args[0];
-      if (message === 'event') {
+      if (message === 'event' && data.group === 'signaling') {
         assert(typeof data.elapsedTime === 'number');
         assert(typeof data.timestamp === 'number');
         assert(typeof data.level === 'string');

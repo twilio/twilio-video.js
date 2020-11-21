@@ -31,7 +31,7 @@ Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You
 
       // check for signaling events that previously were
       // emitted on (now deprecated) eventListener
-      if (message === 'event') {
+      if (message === 'event' && data.group === 'signaling') {
         if (data.name === 'waiting') {
           assert.equal(data.level, 'warning');
           console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
@@ -50,7 +50,7 @@ Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You
           }
         }
       }
-      // You can send to your own server
+      // You may also send the logs to your own server
       postDataToServer(arguments);
 
     };
