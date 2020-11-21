@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
 
+2.9.0 (In progress)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalTrack event listeners attached by the SDK were not being cleaned up after disconnecting from a Room. (JSDK-2985)
+
 2.8.0 (November 20, 2020)
 =========================
 
