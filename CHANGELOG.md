@@ -9,7 +9,9 @@ New Features
 
 - twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
 
-  With this `ConnectOptions`'s `logLevel` property is now deprecated and you should start using this new SDK logger instead.
+With this change `ConnectOptions`'s `logLevel` property is now deprecated. You can instead use `logger.setLevel` to set the desired log level.
+
+Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting logger as shown in example below.
 
   Example:
 
@@ -26,10 +28,35 @@ New Features
 
     return function (datetime, logLevel, component, message, data) {
       method(datetime, logLevel, component, message, data);
-      // Send to your own server
+
+      // check for signaling events that previously were
+      // emitted on (now deprecated) eventListener
+      if (message === 'event') {
+        if (data.name === 'waiting') {
+          assert.equal(data.level, 'warning');
+          console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
+        } else if (data.name === 'connecting') {
+          assert.equal(data.level, 'info');
+          console.log('Connecting to Twilio\'s signaling server.');
+        } else if (data.name === 'open') {
+          assert.equal(data.level, 'info');
+          console.log('Connected to Twilio\'s signaling server, joining the Room now.');
+        } else if (data.name === 'closed') {
+          if (data.level === 'error') {
+            const { payload: { reason } } = data;
+            console.error('Connection to Twilio\'s signaling server abruptly closed:', data.reason);
+          } else {
+            console.log('Connection to Twilio\'s signaling server closed.');
+          }
+        }
+      }
+      // You can send to your own server
       postDataToServer(arguments);
+
     };
   };
+
+  // setLevel lets you to control what gets printed on console logs.
   logger.setLevel('debug');
 
   connect(token, {

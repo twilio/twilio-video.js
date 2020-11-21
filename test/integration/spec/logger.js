@@ -124,6 +124,33 @@ describe('logger', function() {
     assert.equal(room.name, loggedRoomName);
   });
 
+  it('should log signaling events', async () => {
+    room = await connect(token, Object.assign({ name: sid }, defaults));
+    const callSpies = loggerCb.getCalls();
+    assert(!!callSpies.length);
+
+    // ensure that signaling events were fired for early/connecting/open events.
+    // callSpies.map(callSpy => callSpy.args[0]).filter(arg => arg.message === 'event')
+    let early = false;
+    let connecting = false;
+    let open = false;
+    callSpies.forEach(callSpy => {
+      const { message, data } = callSpy.args[0];
+      if (message === 'event') {
+        assert(typeof data.elapsedTime === 'number');
+        assert(typeof data.timestamp === 'number');
+        assert(typeof data.level === 'string');
+        assert(typeof data.name === 'string');
+        early = early || data.name === 'early';
+        connecting = connecting || data.name === 'connecting';
+        open = open || data.name === 'open';
+      }
+    });
+    assert(early);
+    assert(connecting);
+    assert(open);
+  });
+
   describe('connectOptions.logLevel', () => {
     beforeEach(() => {
       loadPlugin('my-logger', true);

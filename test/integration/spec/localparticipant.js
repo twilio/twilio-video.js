@@ -196,6 +196,7 @@ describe('LocalParticipant', function() {
           updatedConfig: { local: 1, remote: 0 }
         }
       ].forEach(testCase => {
+        // eslint-disable-next-line no-warning-comments
         // TODO(mmalavalli): Re-enable once JSDK-2827 is implemented.
         it.skip('setNetworkQualityConfiguration can update the configuration after connect: (@unstable: JSDK-2827)' + testCase.name, async () => {
           let nqConfig = testCase.initialConfig;

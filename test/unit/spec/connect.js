@@ -83,6 +83,12 @@ describe('connect', () => {
       shouldDelete: true
     },
     {
+      name: 'eventListener',
+      newName: 'Video.Logger',
+      value: sinon.spy(),
+      shouldDelete: false
+    },
+    {
       name: 'iceServersTimeout',
       value: 2000,
       shouldDelete: true
