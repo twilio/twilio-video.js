@@ -7,6 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 Changes
 -------
+
 - Previously, `Room.isRecording` indicated whether recording is enabled for the Room.
 Now it indicates if the Track published to the Room are being recorded. If recording is
 enabled for the Room, then `Room.isRecording` is set to `true` when the first Track is published
