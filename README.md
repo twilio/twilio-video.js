@@ -67,7 +67,7 @@ Video.createLocalTracks().then((localTracks: Array<Video.LocalAudioTrack|Video.L
     tracks: localTracks
   });
 }).then((room: Video.Room) => {
-  console.log('Successfully connect to Room:', room.name);
+  console.log('Successfully connected to Room:', room.name);
 });
 ```
 
@@ -82,7 +82,7 @@ createLocalTracks().then((localTracks: Array<LocalAudioTrack|LocalVideoTrack>) =
     tracks: localTracks
   });
 }).then((room: Room) => {
-  console.log('Successfully connect to Room:', room.name);
+  console.log('Successfully connected to Room:', room.name);
 });
 ```
 
