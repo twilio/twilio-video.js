@@ -313,6 +313,7 @@ function makeWsServer() {
 function makeTest(options) {
   options = options || {};
   options.log = fakeLog;
+  options.eventObserver = options.eventObserver || { emit: sinon.spy() };
   options.token = options.token || makeToken(options);
   options.wsServer = options.wsServer || makeWsServer(options);
   options.tracks = options.tracks || [];
@@ -332,6 +333,7 @@ function makeTest(options) {
     makeEncodingParameters(options),
     { audio: [], video: [] },
     options);
+
   return options;
 }
 
