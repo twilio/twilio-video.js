@@ -96,12 +96,14 @@ describe('util', () => {
         testCase: 'bandwidthProfile specified',
         connectOptions: {
           bandwidthProfile: {
-            mode: 'grid',
-            maxTracks: 1,
-            trackSwitchOffMode: 'detected',
-            dominantSpeakerPriority: 'high',
-            renderDimensions: {
-              high: { width: 100, height: 200 }
+            video: {
+              mode: 'grid',
+              maxTracks: 1,
+              trackSwitchOffMode: 'detected',
+              dominantSpeakerPriority: 'high',
+              renderDimensions: {
+                high: { width: 100, height: 200 }
+              }
             }
           }
         },
