@@ -1143,24 +1143,37 @@ describe('RoomV2', () => {
       });
 
       context('when .participants includes a Participant state for a disconnected ParticipantV2', () => {
-        it('does not construct a new ParticipantV2 with the Participant state', () => {
-          const sid = makeParticipantSid();
-          const test = makeTest({
-            participants: [
-              { sid: sid, tracks: [] }
-            ]
+        [
+          [2, 1],
+          [2, 2],
+          [2, 3]
+        ].forEach(([revision, nextRevision]) => {
+          context(`with ${nextRevision < revision
+            ? 'an older revision'
+            : nextRevision === revision
+              ? 'the same revision'
+              : 'with a newer revision'}`, () => {
+            const shouldCreate = nextRevision > revision;
+            it(`${shouldCreate ? 'constructs' : 'does not construct'} a new ParticipantV2 with the Participant state`, () => {
+              const sid = makeParticipantSid();
+              const test = makeTest({
+                participants: [
+                  { sid: sid, revision, tracks: [] }
+                ]
+              });
+              test.participantV2s[0].emit('stateChanged', 'disconnected');
+              test.transport.emit('message', {
+                participants: [
+                  { sid: sid, fizz: 'buzz', revision: nextRevision, tracks: [] }
+                ],
+                // eslint-disable-next-line camelcase
+                peer_connections: []
+              });
+              assert.equal(
+                shouldCreate ? 2 : 1,
+                test.participantV2s.length);
+            });
           });
-          test.participantV2s[0].emit('stateChanged', 'disconnected');
-          test.transport.emit('message', {
-            participants: [
-              { sid: sid, fizz: 'buzz', tracks: [] }
-            ],
-            // eslint-disable-next-line camelcase
-            peer_connections: []
-          });
-          assert.equal(
-            1,
-            test.participantV2s.length);
         });
 
         it('does not call .update with the Participant state on the disconnected ParticipantV2', () => {
@@ -1966,6 +1979,7 @@ function makeRemoteParticipantV2Constructor(testOptions) {
 
   function RemoteParticipantV2(initialState, getTrackTransceiver) {
     EventEmitter.call(this);
+    this.revision = initialState.revision || 0;
     this.tracks = (initialState.tracks || []).reduce((tracks, track) => tracks.set(track.sid, track), new Map());
     this.state = initialState.state || 'connected';
     this.sid = initialState.sid;
