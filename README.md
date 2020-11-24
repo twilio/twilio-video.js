@@ -61,29 +61,21 @@ TypeScript definitions can now be imported using this method.
 ```ts
 import * as Video from 'twilio-video';
 
-Video.createLocalTracks().then((localTracks: Array<Video.LocalAudioTrack|Video.LocalVideoTrack>) => {
-  return Video.connect('token', {
-    name: 'my-cool-room',
-    tracks: localTracks
-  });
-}).then((room: Video.Room) => {
-  console.log('Successfully connected to Room:', room.name);
-});
+function participantDisconnected(participant: Video.RemoteParticipant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+  document.getElementById(participant.sid).remove();
+}
 ```
 
 Alternatively, you can import just the definitions you need like so:
 
 ```ts
-import { connect, createLocalTracks, LocalAudioTrack, LocalVideoTrack, Room } from 'twilio-video';
+import { RemoteParticiant } from 'twilio-video';
 
-createLocalTracks().then((localTracks: Array<LocalAudioTrack|LocalVideoTrack>) => {
-  return connect('token', {
-    name: 'my-cool-room',
-    tracks: localTracks
-  });
-}).then((room: Room) => {
-  console.log('Successfully connected to Room:', room.name);
-});
+function participantDisconnected(participant: RemoteParticipant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+  document.getElementById(participant.sid).remove();
+}
 ```
 
 ### CDN
