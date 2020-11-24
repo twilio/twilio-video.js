@@ -15,6 +15,11 @@ to the Room. It is set to `false` when the last Track is unpublished from the Ro
 The `recordingStarted` and `recordingStopped` events will be emitted on the Room
 when `Room.isRecording` toggles. (JSDK-3064)
 
+Bug Fixes
+---------
+
+- Fixed a bug where LocalTrack event listeners attached by the SDK were not being cleaned up after disconnecting from a Room. (JSDK-2985)
+
 2.8.0 (November 20, 2020)
 =========================
 
