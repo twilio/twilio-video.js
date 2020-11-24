@@ -11,7 +11,7 @@ export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<L
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
 
 export { AudioTrack } from './AudioTrack';
-export { LocalTrack, RemoteTrack } from './types';
+export { LocalTrack, RemoteTrack, LogLevel, LogLevels } from './types';
 export { LocalAudioTrack } from './LocalAudioTrack';
 export { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 export { LocalDataTrack } from './LocalDataTrack';

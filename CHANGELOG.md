@@ -17,6 +17,23 @@ New Features
 2.8.0 (in progress)
 ===================
 
+Changes
+-------
+
+- Previously, `Room.isRecording` indicated whether recording is enabled for the Room.
+Now it indicates if the Track published to the Room are being recorded. If recording is
+to the Room. It is set to `false` when the last Track is unpublished from the Room.
+The `recordingStarted` and `recordingStopped` events will be emitted on the Room
+when `Room.isRecording` toggles. (JSDK-3064)
+
+Bug Fixes
+---------
+
+- Fixed a bug where LocalTrack event listeners attached by the SDK were not being cleaned up after disconnecting from a Room. (JSDK-2985)
+
+2.8.0 (November 20, 2020)
+=========================
+
 New Features
 ------------
 
@@ -36,7 +53,10 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where restarting a LocalAudioTrack or LocalVideoTrack failed on some android devices. (JSDK-3003)
+- Fixed a bug where Chrome Participants failed to restart a LocalAudioTrack or LocalVideoTrack
+  on some android devices. (JSDK-3003)
+- Fixed a bug where sometimes Tracks that were added in quick succession were not published due
+  to a race condition. (JSDK-2807)
 
 2.7.3 (October 21, 2020)
 ========================

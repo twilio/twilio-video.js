@@ -111,7 +111,7 @@ export interface VideoCodecSettings {
 }
 
 export interface VP8CodecSettings extends VideoCodecSettings {
-  codec: 'VP8';
+  codec: VideoCodec.VP8;
   simulcast?: boolean;
 }
 

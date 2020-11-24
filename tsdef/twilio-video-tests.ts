@@ -1,5 +1,12 @@
 import * as Video from './index';
 
+enum LogLevel {
+  Debug = 'debug',
+  Info = 'info'
+}
+
+const level: LogLevel = LogLevel.Debug
+
 function getAudioTrack(track: Video.LocalAudioTrack) {
   const localAudioTrack = track;
   localAudioTrack.attach();
