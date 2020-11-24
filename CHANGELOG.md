@@ -11,7 +11,7 @@ New Features
 
 With this change `ConnectOptions`'s `logLevel` property is now deprecated. You can instead use `logger.setLevel` to set the desired log level.
 
-Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting logger as shown in example below.
+Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting the logger's messages as shown in the example below.
 
   Example:
 
