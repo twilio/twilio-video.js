@@ -11,6 +11,22 @@ New Features
 - twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
 
 With this change `ConnectOptions`'s `logLevel` property is now deprecated. You can instead use `logger.setLevel` to set the desired log level.
+  ```js
+  var { Logger, connect } = require('twilio-video');
+  var logger = Logger.getLogger('twilio-video');
+
+  // setLevel lets you to control what gets printed on console logs by twilio-video.
+  logger.setLevel('debug');
+  connect(token, {
+    name: 'my-cool-room'
+  }).then(function(room) {
+    room.on('participantConnected', function(participant) {
+      console.log(participant.identity + ' has connected');
+    });
+  }).catch(error => {
+    console.log('Could not connect to the Room:', error.message);
+  });
+  ```
 
 Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting the logger's messages as shown in the example below.
 
@@ -24,23 +40,20 @@ Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You
 
   // Listen for logs
   var originalFactory = logger.methodFactory;
-  logger.methodFactory = function (methodName, logLevel, loggerName) {
-    var method = originalFactory(methodName, logLevel, loggerName);
+  logger.methodFactory = function (methodName, level, loggerName) {
+    var method = originalFactory(methodName, level, loggerName);
 
     return function (datetime, logLevel, component, message, data) {
       method(datetime, logLevel, component, message, data);
-
-      // check for signaling events that previously were
+      // check for signaling events that previously used to be
       // emitted on (now deprecated) eventListener
+      // they are fired with message = `event`, and group == `signaling`
       if (message === 'event' && data.group === 'signaling') {
         if (data.name === 'waiting') {
-          assert.equal(data.level, 'warning');
           console.warn('Twilio\'s signaling server is busy, so we wait a little while before trying again.');
         } else if (data.name === 'connecting') {
-          assert.equal(data.level, 'info');
           console.log('Connecting to Twilio\'s signaling server.');
         } else if (data.name === 'open') {
-          assert.equal(data.level, 'info');
           console.log('Connected to Twilio\'s signaling server, joining the Room now.');
         } else if (data.name === 'closed') {
           if (data.level === 'error') {
@@ -51,14 +64,11 @@ Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You
           }
         }
       }
-      // You may also send the logs to your own server
-      postDataToServer(arguments);
-
     };
   };
 
-  // setLevel lets you to control what gets printed on console logs.
-  logger.setLevel('debug');
+  // you need to setLevel to info (or debug) in order to intercept signaling events.
+  logger.setLevel('info');
   connect(token, {
     name: 'my-cool-room'
   }).then(function(room) {
