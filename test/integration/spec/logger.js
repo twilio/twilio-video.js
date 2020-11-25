@@ -59,9 +59,9 @@ describe('logger', function() {
   afterEach(async () => {
     if (room) {
       room.disconnect();
-      await completeRoom(sid);
     }
     room = null;
+    await completeRoom(sid);
 
     // Reset logger module cache
     const loggers = Logger.getLoggers();
@@ -128,6 +128,7 @@ describe('logger', function() {
     room = await connect(token, Object.assign({ name: sid }, defaults));
     const callSpies = loggerCb.getCalls();
     assert(!!callSpies.length);
+    room.disconnect();
 
     // ensure that signaling events were fired for early/connecting/open events.
     let early = false;
