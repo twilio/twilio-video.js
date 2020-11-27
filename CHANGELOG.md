@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server.
+- twilio-video now allows customizing logger using [loglevel](https://www.npmjs.com/package/loglevel) module. With this feature, logs can now be intercepted at runtime to allow real-time processing of the logs which include but not limited to inspecting the log data and sending it to your own server. (JSDK-2373)
 
 With this change `ConnectOptions`'s `logLevel` property is now deprecated. You can instead use `logger.setLevel` to set the desired log level.
   ```js
@@ -28,7 +28,7 @@ With this change `ConnectOptions`'s `logLevel` property is now deprecated. You c
   });
   ```
 
-Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting the logger's messages as shown in the example below.
+Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You can listen for the signaling events by intercepting the logger's messages as shown in the example below. (JSDK-2977)
 
   Example:
 
@@ -79,8 +79,6 @@ Additionally  `ConnectOptions`'s `eventListener` property is now deprecated. You
     console.log('Could not connect to the Room:', error.message);
   });
   ```
-
-
 
 2.9.0 (in progress)
 ===================
