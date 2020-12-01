@@ -7,9 +7,6 @@ export class TrackPublication extends EventEmitter {
   trackName: string;
   trackSid: Track.SID;
 
-  toJSON(): string;
-  toString(): string;
-
   on(event: 'trackDisabled', listener: () => void): this;
   on(event: 'trackEnabled', listener: () => void): this;
 }

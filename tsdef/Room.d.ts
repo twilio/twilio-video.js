@@ -1,13 +1,12 @@
-import { MediaConnectionError, SignalingConnectionDisconnectedError, TwilioError } from './TwilioError';
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
-import { Participant } from './Participant';
+import { ParticipantImpl } from './Participant';
 import { RemoteParticipant } from './RemoteParticipant';
-import { RemoteTrack } from './types';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
-import { StatsReport } from './stats';
 import { Track } from './Track';
+import { TwilioError } from './TwilioError';
+import { RemoteTrack, StatsReport } from './types';
 
 export namespace Room {
   type SID = string;
@@ -19,7 +18,7 @@ export class Room extends EventEmitter {
   localParticipant: LocalParticipant;
   mediaRegion: string;
   name: string;
-  participants: Map<Participant.SID, RemoteParticipant>;
+  participants: Map<ParticipantImpl.SID, RemoteParticipant>;
   sid: Room.SID;
   state: string;
 
@@ -33,7 +32,7 @@ export class Room extends EventEmitter {
   on(event: 'participantReconnected', listener: (participant: RemoteParticipant) => void): this;
   on(event: 'participantReconnecting', listener: (participant: RemoteParticipant) => void): this;
   on(event: 'reconnected', listener: () => void): this;
-  on(event: 'reconnecting', listener: (error: MediaConnectionError | SignalingConnectionDisconnectedError) => void): this;
+  on(event: 'reconnecting', listener: (error: TwilioError) => void): this;
   on(event: 'recordingStarted', listener: () => void): this;
   on(event: 'recordingStopped', listener: () => void): this;
   on(event: 'trackDimensionsChanged', listener: (track: RemoteVideoTrack, participant: RemoteParticipant) => void): this;

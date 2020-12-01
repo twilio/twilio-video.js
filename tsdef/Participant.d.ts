@@ -3,18 +3,18 @@ import { EventEmitter } from 'events';
 import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
-export namespace Participant {
+export namespace ParticipantImpl {
   type Identity = string;
   type SID = string;
 }
 
-export class Participant<AudioTrackPublication, DataTrackPublication, VideoTrackPublication, TrackPublication> extends EventEmitter {
+export class ParticipantImpl<AudioTrackPublication, DataTrackPublication, VideoTrackPublication, TrackPublication> extends EventEmitter {
   audioTracks: Map<Track.SID, AudioTrackPublication>;
   dataTracks: Map<Track.SID, DataTrackPublication>;
-  identity: Participant.Identity;
+  identity: ParticipantImpl.Identity;
   networkQualityLevel: NetworkQualityLevel | null;
   networkQualityStats: NetworkQualityStats | null;
-  sid: Participant.SID;
+  sid: ParticipantImpl.SID;
   state: string;
   tracks: Map<Track.SID, TrackPublication>;
   videoTracks: Map<Track.SID, VideoTrackPublication>;

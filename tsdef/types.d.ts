@@ -3,11 +3,13 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
+import { LocalParticipant } from './LocalParticipant';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { RemoteAudioTrack } from './RemoteAudioTrack';
 import { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
 import { RemoteDataTrack } from './RemoteDataTrack';
+import { RemoteParticipant } from './RemoteParticipant';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
@@ -15,9 +17,11 @@ import { VideoTrack } from './VideoTrack';
 
 export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
 export type RemoteTrack = RemoteAudioTrack | RemoteVideoTrack | RemoteDataTrack;
+export type DataTrack = LocalDataTrack | RemoteDataTrack;
 export type AudioTrackPublication = LocalAudioTrackPublication | RemoteAudioTrackPublication;
 export type DataTrackPublication = LocalDataTrackPublication | RemoteAudioTrackPublication;
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
+export type Participant = LocalParticipant | RemoteParticipant;
 
 export interface EncodingParameters {
   maxAudioBitrate?: number | null;
@@ -30,8 +34,8 @@ export type NetworkQualityVerbosity = 0 | 1 | 2 | 3;
 
 export class NetworkQualityStats {
   level: NetworkQualityLevel;
-  audio: NetworkQualityAudioStats | null;
-  video: NetworkQualityVideoStats | null;
+  audio: NetworkQualityMediaStats | null;
+  video: NetworkQualityMediaStats | null;
 }
 
 export class NetworkQualityMediaStats {
@@ -40,10 +44,6 @@ export class NetworkQualityMediaStats {
   sendStats: NetworkQualitySendOrRecvStats | null;
   recvStats: NetworkQualitySendOrRecvStats | null;
 }
-
-export class NetworkQualityAudioStats extends NetworkQualityMediaStats {}
-
-export class NetworkQualityVideoStats extends NetworkQualityMediaStats {}
 
 export class NetworkQualitySendOrRecvStats {
   bandwidth: NetworkQualityBandwidthStats | null;
@@ -106,13 +106,28 @@ export interface BandwidthProfileOptions {
   video?: VideoBandwidthProfileOptions;
 }
 
+export interface AudioCodecSettings {
+  codec: AudioCodec;
+}
+
+export interface OpusCodecSettings {
+  name: 'opus';
+  dtx?: boolean;
+}
+
 export interface VideoCodecSettings {
   codec: VideoCodec;
 }
 
 export interface VP8CodecSettings extends VideoCodecSettings {
-  codec: VideoCodec.VP8;
+  codec: 'VP8';
   simulcast?: boolean;
+}
+
+export interface LocalDataTrackOptions {
+  maxPacketLifeTime?: number;
+  maxRetransmits?: number;
+  ordered?: boolean;
 }
 
 export interface LocalTrackOptions {
@@ -120,16 +135,27 @@ export interface LocalTrackOptions {
   name?: string;
 }
 
+export interface LocalTrackPublishOptions {
+  priority?: Track.Priority;
+}
+
+export interface MediaStreamTrackPublishOptions {
+  priority?: Track.Priority;
+}
+
+/**
+ * @param {dscpTagging}: Deprecated
+ * @param {eventListener}: Soon to be deprecated
+ */
 export interface ConnectOptions {
-  abortOnIceServersTimeout?: boolean;
   audio?: boolean | CreateLocalTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
   dscpTagging?: boolean;
   enableDscp?: boolean;
-  iceServers?: RTCIceServer[];
-  iceServersTimeout?: number;
+  eventListener?: EventListener;
+  iceServers?: Array<RTCIceServer>
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;
   maxAudioBitrate?: number | null;
@@ -137,10 +163,10 @@ export interface ConnectOptions {
   name?: string | null;
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
-  preferredAudioCodecs?: AudioCodec[];
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
+  preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings>
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings>;
   logLevel?: LogLevel | LogLevels;
-  tracks?: LocalTrack[] | MediaStreamTrack[];
+  tracks?: Array<LocalTrack | MediaStreamTrack>
   video?: boolean | CreateLocalTrackOptions;
 }
 
@@ -153,4 +179,54 @@ export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
   logLevel?: LogLevel | LogLevels;
   video?: boolean | CreateLocalTrackOptions;
+}
+
+export class TrackStats {
+  trackId: Track.ID;
+  trackSid: Track.SID;
+  timestamp: number;
+  ssrc: string;
+  packetsLost: number | null;
+  codec: string | null;
+}
+
+export class LocalTrackStats extends TrackStats {
+  bytesSent: number | null;
+  packetsSent: number | null;
+  roundTripTime: number | null;
+}
+
+export class LocalVideoTrackStats extends LocalTrackStats {
+  captureDimensions: VideoTrack.Dimensions | null;
+  dimensions: VideoTrack.Dimensions | null;
+  captureFrameRate: number | null;
+  frameRate: number | null;
+}
+
+export class LocalAudioTrackStats extends LocalTrackStats {
+  audioLevel: AudioLevel | null;
+  jitter: number | null;
+}
+
+export class RemoteTrackStats extends TrackStats {
+  bytesReceived: number | null;
+  packetsReceived: number | null;
+}
+
+export class RemoteAudioTrackStats extends RemoteTrackStats {
+  audioLevel: AudioLevel | null;
+  jitter: number | null;
+}
+
+export class RemoteVideoTrackStats extends RemoteTrackStats {
+  dimensions: VideoTrack.Dimensions | null;
+  frameRate: number | null;
+}
+
+export class StatsReport {
+  peerConnectionId: string;
+  localAudioTrackStats: LocalAudioTrackStats[];
+  localVideoTrackStats: LocalVideoTrackStats[];
+  remoteAudioTrackStats: RemoteAudioTrackStats[];
+  remoteVideoTrackStats: RemoteVideoTrackStats[];
 }

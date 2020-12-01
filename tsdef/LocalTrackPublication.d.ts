@@ -11,4 +11,5 @@ export class LocalTrackPublication extends TrackPublication {
 
   on(event: 'trackDisabled', listener: () => void): this;
   on(event: 'trackEnabled', listener: () => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }

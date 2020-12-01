@@ -15,4 +15,5 @@ export class RemoteDataTrack extends Track {
   on(event: 'message', listener: (data: string | ArrayBuffer, track: RemoteDataTrack) => void): this;
   on(event: 'switchedOff', listener: (track: this) => void): this;
   on(event: 'switchedOn', listener: (track: this) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }
