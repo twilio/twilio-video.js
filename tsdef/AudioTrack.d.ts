@@ -12,4 +12,5 @@ export class AudioTrack extends Track {
   on(event: 'disabled', listener: (track: this) => void): this;
   on(event: 'enabled', listener: (track: this) => void): this;
   on(event: 'started', listener: (track: this) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }

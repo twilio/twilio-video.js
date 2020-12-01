@@ -262,10 +262,12 @@ function unpublishTracks() {
 }
 
 function participantConnected(participant: Video.Participant) {
+  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
+
   participant.on('trackSubscribed', trackSubscribed);
   participant.on('trackUnsubscribed', trackUnsubscribed);
 
-  participant.tracks.forEach((publication: any) => {
+  participant.tracks.forEach((publication: TrackPublications) => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       trackSubscribed(remotePublication.track as Video.VideoTrack | Video.AudioTrack);
@@ -274,7 +276,9 @@ function participantConnected(participant: Video.Participant) {
 }
 
 function participantDisconnected(participant: Video.Participant) {
-  participant.tracks.forEach((publication: any)=> {
+  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
+
+  participant.tracks.forEach((publication: TrackPublications) => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       const { track } = remotePublication;
