@@ -39,6 +39,7 @@ describe('logger', function() {
       const method = originalFactory(methodName, level, loggerName);
       return function(datetime, logLevel, component, message, data) {
         loggerCb({ datetime, logLevel, component, message, data });
+
         // Decorate the logs by prefixing with the loggerName
         method(loggerName, datetime, logLevel, component, message, data);
       };
@@ -59,9 +60,9 @@ describe('logger', function() {
   afterEach(async () => {
     if (room) {
       room.disconnect();
-      await completeRoom(sid);
     }
     room = null;
+    await completeRoom(sid);
 
     // Reset logger module cache
     const loggers = Logger.getLoggers();
@@ -122,6 +123,37 @@ describe('logger', function() {
     });
 
     assert.equal(room.name, loggedRoomName);
+  });
+
+  it('should log signaling events', async () => {
+    room = await connect(token, Object.assign({ name: sid }, defaults));
+    room.disconnect();
+
+    const callSpies = loggerCb.getCalls();
+    assert(!!callSpies.length);
+
+    // ensure that signaling events were fired for early/connecting/open events.
+    let early = false;
+    let connecting = false;
+    let open = false;
+    let closed = false;
+    callSpies.forEach(callSpy => {
+      const { message, data } = callSpy.args[0];
+      if (message === 'event' && data.group === 'signaling') {
+        assert(typeof data.elapsedTime === 'number');
+        assert(typeof data.timestamp === 'number');
+        assert(typeof data.level === 'string');
+        assert(typeof data.name === 'string');
+        early = early || data.name === 'early';
+        connecting = connecting || data.name === 'connecting';
+        open = open || data.name === 'open';
+        closed = closed || data.name === 'closed';
+      }
+    });
+    assert(early);
+    assert(connecting);
+    assert(open);
+    assert(closed);
   });
 
   describe('connectOptions.logLevel', () => {
