@@ -1,7 +1,7 @@
+import { RemoteTrack } from './types';
 import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
 import { TwilioError } from './TwilioError';
-import { RemoteTrack } from './types';
 
 export class RemoteTrackPublication extends TrackPublication {
   isSubscribed: boolean;

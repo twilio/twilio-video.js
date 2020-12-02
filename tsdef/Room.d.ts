@@ -1,3 +1,4 @@
+import { RemoteTrack, StatsReport } from './types';
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
 import { Participant } from './Participant';
@@ -6,7 +7,6 @@ import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
-import { RemoteTrack, StatsReport } from './types';
 
 export namespace Room {
   type SID = string;

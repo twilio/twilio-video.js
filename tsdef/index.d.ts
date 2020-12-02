@@ -1,7 +1,7 @@
+import { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { Room } from './Room';
-import { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
 
 export const isSupported: boolean;
 export const version:string;

@@ -1,3 +1,4 @@
+import { EncodingParameters, LocalTrack, LocalTrackPublishOptions, NetworkQualityConfiguration } from './types';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
 import { LocalTrackPublication } from './LocalTrackPublication';
@@ -6,7 +7,6 @@ import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { Participant } from './Participant';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
-import { EncodingParameters, LocalTrack, LocalTrackPublishOptions, NetworkQualityConfiguration } from './types';
 
 export class LocalParticipant extends Participant {
   audioTracks: Map<Track.SID, LocalAudioTrackPublication>;

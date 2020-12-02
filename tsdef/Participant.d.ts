@@ -1,7 +1,7 @@
+import { AudioTrackPublication, DataTrackPublication, NetworkQualityLevel, NetworkQualityStats, VideoTrackPublication } from './types';
 import { EventEmitter } from 'events';
 import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
-import { AudioTrackPublication, DataTrackPublication, NetworkQualityLevel, NetworkQualityStats, VideoTrackPublication } from './types';
 import { VideoTrack } from './VideoTrack';
 
 export namespace Participant {

@@ -1,5 +1,5 @@
-import { Track } from './Track';
 import { LocalTrackOptions } from './types';
+import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
 export class LocalVideoTrack extends VideoTrack {
