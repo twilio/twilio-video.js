@@ -20,7 +20,6 @@ export type DataTrack = LocalDataTrack | RemoteDataTrack;
 export type AudioTrackPublication = LocalAudioTrackPublication | RemoteAudioTrackPublication;
 export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPublication;
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
-// export type Participant = LocalParticipant | RemoteParticipant;
 
 export interface EncodingParameters {
   maxAudioBitrate?: number | null;
@@ -163,7 +162,7 @@ export interface ConnectOptions {
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings>
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings>;
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
   logLevel?: LogLevel | LogLevels;
   tracks?: Array<LocalTrack | MediaStreamTrack>
   video?: boolean | CreateLocalTrackOptions;
