@@ -1399,6 +1399,7 @@ describe('LocalParticipant', function() {
     let room;
     let error;
     let listenerCount = 0;
+    let localAudioTrack;
     const events = ['enabled', 'disabled', 'started', 'stopped', 'message'];
     async function setupRoom(token, options) {
       let room = await connect(token, options);
@@ -1407,17 +1408,16 @@ describe('LocalParticipant', function() {
 
     before(async () => {
       try {
+        localAudioTrack = await createLocalAudioTrack({ fake: true });
         const token = getToken(randomName());
-        const options = Object.assign({ audio: true, fake: true }, defaults);
+        const options = Object.assign({ tracks: [localAudioTrack] }, defaults);
         // eslint-disable-next-line no-await-in-loop
         room = await setupRoom(token, options);
         if (room) {
           room.disconnect();
         }
         events.forEach(event => {
-          room.localParticipant.tracks.forEach(publication => {
-            listenerCount += publication.track.listenerCount(event);
-          });
+          listenerCount += localAudioTrack.listenerCount(event);
         });
       } catch (e) {
         error = e;
@@ -1425,7 +1425,7 @@ describe('LocalParticipant', function() {
     });
 
     it('should have 0 event listeners after disconnecting from multiple rooms', () => {
-      assert.equal(listenerCount, 0);
+      assert.strictEqual(listenerCount, 0);
     });
 
     it('should not throw any errors', () => {

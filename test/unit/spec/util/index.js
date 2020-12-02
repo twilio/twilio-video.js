@@ -10,10 +10,140 @@ const {
   hidePrivateAndCertainPublicPropertiesInClass,
   makeUUID,
   promiseFromEvents,
-  isChromeScreenShareTrack
+  isChromeScreenShareTrack,
+  createRoomConnectEventPayload
 } = require('../../../../lib/util');
 
 describe('util', () => {
+  describe('createRoomConnectEventPayload', () => {
+    [
+      {
+        testCase: 'empty options',
+        connectOptions: {},
+        expectedPayload: {},
+      },
+      {
+        testCase: 'audio true',
+        connectOptions: { audio: true },
+        expectedPayload: { audio: 'true' },
+      },
+      {
+        testCase: 'video true',
+        connectOptions: { video: true },
+        expectedPayload: { video: 'true' },
+      },
+      {
+        testCase: 'automaticSubscription true',
+        connectOptions: { automaticSubscription: true },
+        expectedPayload: { automaticSubscription: 'true' },
+      },
+      {
+        testCase: 'tracks specified',
+        connectOptions: { tracks: [{ kind: 'audio' }, { kind: 'data' }, { kind: 'video' }] },
+        expectedPayload: { audioTracks: 1, dataTracks: 1, videoTracks: 1 },
+      },
+      {
+        testCase: 'enableDominantSpeaker true',
+        connectOptions: { dominantSpeaker: true },
+        expectedPayload: { enableDominantSpeaker: 'true' },
+      },
+      {
+        testCase: 'enableDominantSpeaker false',
+        connectOptions: { dominantSpeaker: false },
+        expectedPayload: { enableDominantSpeaker: 'false' },
+      },
+      {
+        testCase: 'eventListener provided',
+        connectOptions: { eventListener: {} },
+        expectedPayload: { eventListener: 'true' },
+      },
+      {
+        testCase: 'iceTransportPolicy specified',
+        connectOptions: { iceTransportPolicy: 'relay' },
+        expectedPayload: { iceTransportPolicy: 'relay' },
+      },
+      {
+        testCase: 'preferredAudioCodecs specified',
+        connectOptions: { preferredAudioCodecs: ['one', 'two'] },
+        expectedPayload: { preferredAudioCodecs: JSON.stringify(['one', 'two']) },
+      },
+      {
+        testCase: 'preferredVideoCodecs specified',
+        connectOptions: { preferredAudioCodecs: [{ codec: 'VP8', simulcast: true }] },
+        expectedPayload: { preferredAudioCodecs: JSON.stringify([{ codec: 'VP8', simulcast: true }]) },
+      },
+      {
+        testCase: 'name specified',
+        connectOptions: { name: 'room name goes here' },
+        expectedPayload: { roomName: 'room name goes here' },
+      },
+      {
+        testCase: 'region specified',
+        connectOptions: { region: 'in1' },
+        expectedPayload: { region: 'in1' },
+      },
+      {
+        testCase: 'maxVideoBitrate specified',
+        connectOptions: { maxVideoBitrate: 100 },
+        expectedPayload: { maxVideoBitrate: 100 },
+      },
+      {
+        testCase: 'maxAudioBitrate specified',
+        connectOptions: { maxAudioBitrate: 100 },
+        expectedPayload: { maxAudioBitrate: 100 },
+      },
+      {
+        testCase: 'bandwidthProfile specified',
+        connectOptions: {
+          bandwidthProfile: {
+            video: {
+              mode: 'grid',
+              maxTracks: 1,
+              trackSwitchOffMode: 'detected',
+              dominantSpeakerPriority: 'high',
+              renderDimensions: {
+                high: { width: 100, height: 200 }
+              }
+            }
+          }
+        },
+        expectedPayload: {
+          bandwidthProfileOptions: {
+            mode: 'grid',
+            maxTracks: 1,
+            trackSwitchOffMode: 'detected',
+            dominantSpeakerPriority: 'high',
+            renderDimensions: JSON.stringify({
+              high: { width: 100, height: 200 }
+            })
+          }
+        },
+      },
+    ].forEach(({ testCase, connectOptions, expectedPayload }) => {
+      it(testCase, () => {
+        const event = createRoomConnectEventPayload(connectOptions);
+        const defaultOptions = {
+          'audio': 'false',
+          'audioTracks': 0,
+          'automaticSubscription': 'false',
+          'dataTracks': 0,
+          'enableDominantSpeaker': 'false',
+          'enableDscp': 'false',
+          'eventListener': 'false',
+          'iceServers': 0,
+          'preflight': 'false',
+          'video': 'false',
+          'videoTracks': 0
+        };
+        const expectedOutput = Object.assign(defaultOptions, expectedPayload);
+        assert.strictEqual(event.name, 'connect');
+        assert.strictEqual(event.level, 'info');
+        assert.strictEqual(event.group, 'room');
+        assert.deepStrictEqual(event.payload, expectedOutput);
+      });
+    });
+  });
+
   describe('hidePrivateProperties', () => {
     it('should do what it says', () => {
       const object = { foo: 'bar', _baz: 'qux' };
