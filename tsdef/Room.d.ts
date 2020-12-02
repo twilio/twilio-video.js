@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
-import { ParticipantImpl } from './Participant';
+import { Participant } from './Participant';
 import { RemoteParticipant } from './RemoteParticipant';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
@@ -18,7 +18,7 @@ export class Room extends EventEmitter {
   localParticipant: LocalParticipant;
   mediaRegion: string;
   name: string;
-  participants: Map<ParticipantImpl.SID, RemoteParticipant>;
+  participants: Map<Participant.SID, RemoteParticipant>;
   sid: Room.SID;
   state: string;
 

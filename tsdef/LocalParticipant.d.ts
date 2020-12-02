@@ -3,19 +3,19 @@ import { LocalDataTrackPublication } from './LocalDataTrackPublication';
 import { LocalTrackPublication } from './LocalTrackPublication';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
-import { ParticipantImpl } from './Participant';
+import { Participant } from './Participant';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
 import { EncodingParameters, LocalTrack, LocalTrackPublishOptions, NetworkQualityConfiguration } from './types';
 
-export class LocalParticipant extends ParticipantImpl<LocalAudioTrackPublication, LocalDataTrackPublication, LocalVideoTrackPublication, LocalTrackPublication> {
+export class LocalParticipant extends Participant {
   audioTracks: Map<Track.SID, LocalAudioTrackPublication>;
   dataTracks: Map<Track.SID, LocalDataTrackPublication>;
   tracks: Map<Track.SID, LocalTrackPublication>;
   videoTracks: Map<Track.SID, LocalVideoTrackPublication>;
   signalingRegion: string;
 
-  publishTrack(track: LocalTrack, options?: LocalTrackPublishOptions): Promise<LocalTrackPublication>;
+  publishTrack(track: LocalTrack | MediaStreamTrack, options?: LocalTrackPublishOptions): Promise<LocalTrackPublication>;
   publishTracks(tracks: Array<LocalTrack | MediaStreamTrack>): Promise<LocalTrackPublication[]>;
   setNetworkQualityConfiguration(networkQualityConfiguration: NetworkQualityConfiguration): this;
   setParameters(encodingParameters?: EncodingParameters | null): this;

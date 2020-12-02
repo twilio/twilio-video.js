@@ -4,7 +4,7 @@ import { TwilioError } from './TwilioError';
 
 export class RemoteDataTrackPublication extends RemoteTrackPublication {
   kind: 'data';
-  track: RemoteDataTrack | null;
+  track: RemoteDataTrack;
 
   on(event: 'subscribed', listener: (track: RemoteDataTrack) => void): this;
   on(event: 'subscriptionFailed', listener: (error: TwilioError) => void): this;

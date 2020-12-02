@@ -1,15 +1,16 @@
-import { ParticipantImpl } from './Participant';
+// import { RemoteDataTrackPublication } from './RemoteDataTrackPublication';
+import { Participant } from './Participant';
 import { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
 import { RemoteDataTrack } from './RemoteDataTrack';
 import { RemoteDataTrackPublication } from './RemoteDataTrackPublication';
-import { RemoteTrack } from './types';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
+import { RemoteTrack } from './types';
 
-export class RemoteParticipant extends ParticipantImpl<RemoteAudioTrackPublication, RemoteDataTrackPublication, RemoteVideoTrackPublication, RemoteTrackPublication> {
+export class RemoteParticipant extends Participant {
   audioTracks: Map<Track.SID, RemoteAudioTrackPublication>;
   dataTracks: Map<Track.SID, RemoteDataTrackPublication>;
   tracks: Map<Track.SID, RemoteTrackPublication>;

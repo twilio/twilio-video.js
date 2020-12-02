@@ -3,13 +3,12 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
-import { LocalParticipant } from './LocalParticipant';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { RemoteAudioTrack } from './RemoteAudioTrack';
 import { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
 import { RemoteDataTrack } from './RemoteDataTrack';
-import { RemoteParticipant } from './RemoteParticipant';
+import { RemoteDataTrackPublication } from './RemoteDataTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
@@ -19,9 +18,9 @@ export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
 export type RemoteTrack = RemoteAudioTrack | RemoteVideoTrack | RemoteDataTrack;
 export type DataTrack = LocalDataTrack | RemoteDataTrack;
 export type AudioTrackPublication = LocalAudioTrackPublication | RemoteAudioTrackPublication;
-export type DataTrackPublication = LocalDataTrackPublication | RemoteAudioTrackPublication;
+export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPublication;
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
-export type Participant = LocalParticipant | RemoteParticipant;
+// export type Participant = LocalParticipant | RemoteParticipant;
 
 export interface EncodingParameters {
   maxAudioBitrate?: number | null;
