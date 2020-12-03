@@ -30,7 +30,12 @@ function request(config, data) {
         try {
           resolve(JSON.parse(data.join('')));
         } catch (e) {
-          resolve({ status: 'ok' });
+          resolve({
+            e,
+            errorMessage: e.message,
+            data: data.join(''),
+            status: 'not_ok'
+          });
         }
       });
     });
