@@ -108,8 +108,8 @@ export interface AudioCodecSettings {
   codec: AudioCodec;
 }
 
-export interface OpusCodecSettings {
-  name: 'opus';
+export interface OpusCodecSettings extends AudioCodecSettings {
+  codec: 'opus';
   dtx?: boolean;
 }
 
@@ -138,12 +138,13 @@ export interface LocalTrackPublishOptions {
 }
 
 export interface MediaStreamTrackPublishOptions {
+  name?: string;
   priority?: Track.Priority;
 }
 
 /**
  * @param {dscpTagging}: Deprecated
- * @param {eventListener}: Soon to be deprecated
+ * @param {eventListener}: Deprecated
  */
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
@@ -153,7 +154,7 @@ export interface ConnectOptions {
   dscpTagging?: boolean;
   enableDscp?: boolean;
   eventListener?: EventListener;
-  iceServers?: Array<RTCIceServer>
+  iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;
   maxAudioBitrate?: number | null;
@@ -162,9 +163,9 @@ export interface ConnectOptions {
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings>
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings>;
   logLevel?: LogLevel | LogLevels;
-  tracks?: Array<LocalTrack | MediaStreamTrack>
+  tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
 }
 
