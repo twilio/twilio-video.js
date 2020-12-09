@@ -4,7 +4,7 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const { getUserMedia } = require('@twilio/webrtc');
-
+const { Logger } = require('../../../lib');
 const connect = require('../../../lib/connect');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
 const createLocalTracks = require('../../../lib/createlocaltracks');
@@ -1273,6 +1273,33 @@ describe('connect', function() {
         });
       }
     });
+  });
+
+  it('keeps track of rooms in global variable, and logs a debug message on room creation', async () => {
+    const identity = randomName();
+    const loggerName = 'logger-' + identity;
+    const options = Object.assign({ loggerName }, defaults);
+    const logger = Logger.getLogger(loggerName);
+    let roomLogged = null;
+    logger.methodFactory = () => {
+      return (dateTime, logLevel, component, message, data) => {
+        if (component.includes('connect') && message === 'Room:') {
+          // connect component emits a message with room as parameter.
+          console.log('Received room log message :', dateTime, logLevel, component, message, data);
+          roomLogged = data;
+          assert(window._TwilioVideo.rooms.indexOf(roomLogged) >= 0);
+        }
+      };
+    };
+    logger.setLevel('debug');
+
+    const token = getToken(identity);
+    const room = await connect(token, options);
+    assert(roomLogged.sid === room.sid);
+    assert(window._TwilioVideo.rooms.indexOf(room) >= 0);
+
+    room.disconnect();
+    assert(window._TwilioVideo.rooms.indexOf(room) === -1);
   });
 
   describe('opus dtx', () => {
