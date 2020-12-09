@@ -484,6 +484,7 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   // ICE goes to connected state instead of the expected behavior (both Participants' ICE should go
   // to connected state). So, until we know more, we wait for only one Participant to reach
   // ICE connected state.
+  // eslint-disable-next-line no-warning-comments
   // TODO(mmalavalli): Wait for both Participants to reach ICE connected state.
   await waitFor(Promise.race(peerConnectionManagers.map(pcm => new Promise(resolve => {
     pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
