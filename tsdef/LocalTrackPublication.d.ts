@@ -3,6 +3,8 @@ import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
 
 export class LocalTrackPublication extends TrackPublication {
+  isTrackEnabled: boolean;
+  kind: Track.Kind;
   priority: Track.Priority;
   track: LocalTrack;
 
@@ -11,4 +13,5 @@ export class LocalTrackPublication extends TrackPublication {
 
   on(event: 'trackDisabled', listener: () => void): this;
   on(event: 'trackEnabled', listener: () => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }

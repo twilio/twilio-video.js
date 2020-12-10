@@ -1,12 +1,5 @@
 import * as Video from './index';
 
-enum LogLevel {
-  Debug = 'debug',
-  Info = 'info'
-}
-
-const level: LogLevel = LogLevel.Debug
-
 function getAudioTrack(track: Video.LocalAudioTrack) {
   const localAudioTrack = track;
   localAudioTrack.attach();
@@ -235,7 +228,7 @@ async function initRoom() {
         trackSwitchOffMode: 'detected',
       },
     },
-    preferredVideoCodecs: ['VP9', { codec: 'H264' }, { codec: 'VP8', simulcast: true }],
+    preferredVideoCodecs: ['VP9', { codec: 'H264' }, { codec: 'VP8' }],
   });
   await Video.connect('$TOKEN', {
     networkQuality: {
@@ -268,11 +261,13 @@ function unpublishTracks() {
   if (room && localVideoTrack && localAudioTrack) { room.localParticipant.unpublishTracks([localVideoTrack, localAudioTrack]); }
 }
 
-function participantConnected(participant: Video.Participant<Video.RemoteAudioTrackPublication, Video.RemoteDataTrackPublication, Video.RemoteVideoTrackPublication, Video.RemoteTrackPublication>) {
+function participantConnected(participant: Video.Participant) {
+  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
+
   participant.on('trackSubscribed', trackSubscribed);
   participant.on('trackUnsubscribed', trackUnsubscribed);
 
-  participant.tracks.forEach(publication => {
+  participant.tracks.forEach((publication: TrackPublications) => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       trackSubscribed(remotePublication.track as Video.VideoTrack | Video.AudioTrack);
@@ -280,8 +275,10 @@ function participantConnected(participant: Video.Participant<Video.RemoteAudioTr
   });
 }
 
-function participantDisconnected(participant: Video.Participant<Video.RemoteAudioTrackPublication, Video.RemoteDataTrackPublication, Video.RemoteVideoTrackPublication, Video.RemoteTrackPublication>) {
-  participant.tracks.forEach(publication => {
+function participantDisconnected(participant: Video.Participant) {
+  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
+
+  participant.tracks.forEach((publication: TrackPublications) => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       const { track } = remotePublication;

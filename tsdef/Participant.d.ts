@@ -1,6 +1,7 @@
-import { NetworkQualityLevel, NetworkQualityStats } from './types';
+import { AudioTrackPublication, DataTrackPublication, NetworkQualityLevel, NetworkQualityStats, VideoTrackPublication } from './types';
 import { EventEmitter } from 'events';
 import { Track } from './Track';
+import { TrackPublication } from './TrackPublication';
 import { VideoTrack } from './VideoTrack';
 
 export namespace Participant {
@@ -8,7 +9,7 @@ export namespace Participant {
   type SID = string;
 }
 
-export class Participant<AudioTrackPublication, DataTrackPublication, VideoTrackPublication, TrackPublication> extends EventEmitter {
+export class Participant extends EventEmitter {
   audioTracks: Map<Track.SID, AudioTrackPublication>;
   dataTracks: Map<Track.SID, DataTrackPublication>;
   identity: Participant.Identity;

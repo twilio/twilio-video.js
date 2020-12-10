@@ -16,4 +16,5 @@ export class RemoteVideoTrack extends VideoTrack {
   on(event: 'stopped', listener: (track: this) => void): this;
   on(event: 'switchedOff', listener: (track: this) => void): this;
   on(event: 'switchedOn', listener: (track: this) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }

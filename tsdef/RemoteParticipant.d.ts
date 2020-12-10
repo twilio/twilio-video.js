@@ -9,7 +9,7 @@ import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
 
-export class RemoteParticipant extends Participant<RemoteAudioTrackPublication, RemoteDataTrackPublication, RemoteVideoTrackPublication, RemoteTrackPublication> {
+export class RemoteParticipant extends Participant {
   audioTracks: Map<Track.SID, RemoteAudioTrackPublication>;
   dataTracks: Map<Track.SID, RemoteDataTrackPublication>;
   tracks: Map<Track.SID, RemoteTrackPublication>;

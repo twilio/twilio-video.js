@@ -4,9 +4,7 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "extends": [
-    "plugin:@typescript-eslint/recommended"
-  ],
+  "extends": ["plugin:@typescript-eslint/recommended"],
   "env": {
     "es6": true,
     "node": true

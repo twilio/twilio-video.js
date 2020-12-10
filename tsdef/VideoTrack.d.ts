@@ -9,6 +9,7 @@ export namespace VideoTrack {
 
 export class VideoTrack extends Track {
   isStarted: boolean;
+  isEnabled: boolean;
   dimensions: VideoTrack.Dimensions;
   kind: 'video';
   mediaStreamTrack: MediaStreamTrack;
@@ -19,4 +20,5 @@ export class VideoTrack extends Track {
   on(event: 'disabled', listener: (track: this) => void): this;
   on(event: 'enabled', listener: (track: this) => void): this;
   on(event: 'started', listener: (track: this) => void): this;
+  on(event: string, listener: (...args: any[]) => void): this;
 }
