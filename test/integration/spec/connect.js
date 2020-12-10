@@ -2,6 +2,7 @@
 'use strict';
 
 const assert = require('assert');
+const { EventEmitter } = require('events');
 const { getUserMedia } = require('@twilio/webrtc');
 
 const connect = require('../../../lib/connect');
@@ -203,6 +204,43 @@ describe('connect', function() {
         }
         assert.equal(error, null);
       });
+    });
+  });
+
+  describe('signaling events', () => {
+    let sid;
+    let room = null;
+    beforeEach(async () => {
+      sid = await createRoom(randomName(), defaults.topology);
+    });
+
+    afterEach(async () => {
+      if (room) {
+        room.disconnect();
+        room = null;
+      }
+      await  completeRoom(sid);
+    });
+
+    it('are emitted on eventListener specified', async () => {
+      const eventListener = new EventEmitter();
+      const signalingEventsFired = [];
+      eventListener.on('event', event => {
+        if (event.group === 'signaling') {
+          assert(typeof event.elapsedTime === 'number');
+          assert(typeof event.timestamp === 'number');
+          assert(typeof event.level === 'string');
+          assert(typeof event.name === 'string');
+          signalingEventsFired.push(event);
+        }
+      });
+      const token = getToken(randomName());
+      room = await connect(token, Object.assign({ name: sid, eventListener, tracks: [] }, defaults));
+
+      // verify that we received early/connecting/open events.
+      assert(signalingEventsFired.find(event => event.name === 'early'));
+      assert(signalingEventsFired.find(event => event.name === 'connecting'));
+      assert(signalingEventsFired.find(event => event.name === 'open'));
     });
   });
 
@@ -1285,6 +1323,7 @@ describe('connect', function() {
 
     // NOTE(mmalavalli): Skipping this test on Firefox because AudioContext.decodeAudioData()
     // does not complete resulting in the test timing out.
+    // eslint-disable-next-line no-warning-comments
     // TODO(mmalavalli): Enable on Firefox after figuring out and fixing the cause.
     if (isFirefox) {
       return;
