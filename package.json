@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.9.0-dev",
+  "version": "2.10.1-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -129,6 +129,7 @@
   "dependencies": {
     "@twilio/webrtc": "4.3.2",
     "backoff": "^2.5.0",
+    "loglevel": "^1.7.0",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },

@@ -1,11 +1,12 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const EventObserver = require('../../../../lib/util/eventobserver');
+const log = require('../../../lib/fakelog');
 
 describe('EventObserver', () => {
   describe('constructor', () => {
     it('should return an EventObserver', () => {
-      assert(new EventObserver(0, new EventEmitter()) instanceof EventObserver);
+      assert(new EventObserver(0, log, new EventEmitter()) instanceof EventObserver);
     });
   });
 
@@ -30,7 +31,7 @@ describe('EventObserver', () => {
         delete params.reason;
         connectTimestamp = Date.now();
         const eventListener = new EventEmitter();
-        eventObserver = new EventObserver(connectTimestamp, eventListener);
+        eventObserver = new EventObserver(connectTimestamp, log, eventListener);
         eventListener.once('event', event => { eventParams = event; });
       });
 
