@@ -1,5 +1,21 @@
 import * as Video from './index';
 
+function customLogging() {
+  const logger = Video.Logger.getLogger('twilio-video');
+
+  const originalFactory = logger.methodFactory;
+  logger.methodFactory = function(methodName, logLevel, loggerName) {
+    const method = originalFactory(methodName, logLevel, loggerName);
+
+    return function(datetime, logLevel, component, message, data) {
+      method(datetime, logLevel, component, message, data);
+      // Send to your own server
+    };
+  };
+
+  logger.setLevel('debug');
+}
+
 function getAudioTrack(track: Video.LocalAudioTrack) {
   const localAudioTrack = track;
   localAudioTrack.attach();

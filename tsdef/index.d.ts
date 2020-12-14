@@ -1,12 +1,12 @@
 import { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';
-import { Logger } from 'loglevel';
 import { Room } from './Room';
+import log from 'loglevel';
 
 export const isSupported: boolean;
 export const version:string;
-export const Logger: Logger;
+export const Logger: typeof log;
 export function connect(token: string, options?: ConnectOptions): Promise<Room>;
 export function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrack>;
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
