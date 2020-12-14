@@ -1,4 +1,3 @@
-
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
@@ -74,7 +73,14 @@ export type AudioLevel = number;
 export type AudioCodec = 'isac' | 'opus' | 'PCMA' | 'PCMU';
 export type VideoCodec = 'H264' | 'VP8' | 'VP9';
 
+/**
+ * @deprecated
+ */
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'off';
+
+/**
+ * @deprecated
+ */
 export interface LogLevels {
   default: LogLevel;
   media: LogLevel;
@@ -129,6 +135,9 @@ export interface LocalDataTrackOptions {
 }
 
 export interface LocalTrackOptions {
+/**
+ * @deprecated
+ */
   logLevel: LogLevel | LogLevels;
   name?: string;
 }
@@ -142,17 +151,21 @@ export interface MediaStreamTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-/**
- * @param {dscpTagging}: Deprecated
- * @param {eventListener}: Deprecated
- */
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
+
+  /**
+   * @deprecated use enableDscp
+   */
   dscpTagging?: boolean;
   enableDscp?: boolean;
+
+  /**
+   * @deprecated use Video.Logger
+   */
   eventListener?: EventListener;
   iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
@@ -164,18 +177,29 @@ export interface ConnectOptions {
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings>
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings>;
+
+  /**
+   * @deprecated use Video.Logger.
+   */
   logLevel?: LogLevel | LogLevels;
+
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
 }
 
 export interface CreateLocalTrackOptions extends MediaTrackConstraints {
+  /**
+   * @deprecated
+   */
   logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
 }
 export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
+  /**
+   * @deprecated
+   */
   logLevel?: LogLevel | LogLevels;
   video?: boolean | CreateLocalTrackOptions;
 }
