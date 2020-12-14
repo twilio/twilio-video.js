@@ -145,7 +145,7 @@ export interface MediaStreamTrackPublishOptions {
 /**
  * @param {dscpTagging}: Deprecated
  * @param {eventListener}: Deprecated
- * @param {logLevels}: Deprecated
+ * @param {logLevel}: Deprecated
  */
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
