@@ -7,8 +7,8 @@ function customLogging() {
   logger.methodFactory = function(methodName, logLevel, loggerName) {
     const method = originalFactory(methodName, logLevel, loggerName);
 
-    return function(datetime, logLevel, component, message, data) {
-      method(datetime, logLevel, component, message, data);
+    return function(dateTime, logLevel, component, message, data) {
+      methods(dateTime, logLevel, component, message, data);
       // Send to your own server
     };
   };
