@@ -1,4 +1,3 @@
-
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
@@ -136,6 +135,9 @@ export interface LocalDataTrackOptions {
 }
 
 export interface LocalTrackOptions {
+/**
+ * @deprecated
+ */
   logLevel: LogLevel | LogLevels;
   name?: string;
 }
@@ -186,12 +188,18 @@ export interface ConnectOptions {
 }
 
 export interface CreateLocalTrackOptions extends MediaTrackConstraints {
+  /**
+   * @deprecated
+   */
   logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
 }
 export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
+  /**
+   * @deprecated
+   */
   logLevel?: LogLevel | LogLevels;
   video?: boolean | CreateLocalTrackOptions;
 }
