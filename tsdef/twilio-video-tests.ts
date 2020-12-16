@@ -9,7 +9,6 @@ function customLogging() {
 
     return function(dateTime, logLevel, component, message, data) {
       method(dateTime, logLevel, component, message, data);
-      // Send to your own server
     };
   };
 
@@ -315,6 +314,17 @@ function trackUnsubscribed(track: Video.VideoTrack | Video.AudioTrack) {
 function insertDomElement(element: HTMLMediaElement) {
   document.createElement('div');
   element.appendChild(element);
+}
+
+function useConnectionOptions() {
+  const connectionOptions: Video.ConnectOptions = {
+    dominantSpeaker: true,
+    networkQuality: { local: 1, remote: 1 },
+    maxAudioBitrate: Number('13000'),
+    preferredAudioCodecs: [{  codec: 'opus', dtx: false }],
+    preferredVideoCodecs: [{ codec: 'VP8', simulcast: false }],
+  };
+  return connectionOptions;
 }
 
 initRoom();
