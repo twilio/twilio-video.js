@@ -2289,6 +2289,7 @@ function makePeerConnectionV2(options) {
     RTCPeerConnection: options.RTCPeerConnection,
     RTCSessionDescription: identity,
     isChromeScreenShareTrack: options.isChromeScreenShareTrack,
+    eventObserver: options.eventObserver || { emit: sinon.spy() },
     isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
     sessionTimeout: options.sessionTimeout,
     setBitrateParameters: options.setBitrateParameters,
