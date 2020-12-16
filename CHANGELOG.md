@@ -8,7 +8,11 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- twilio-video now includes TypeScript definitions
+- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+
+  ```ts
+    import * as Video from 'twilio-video';
+  ```
 
 2.10.0 (December 10, 2020)
 ==========================
@@ -86,18 +90,6 @@ New Features
   }).catch(error => {
     console.log('Could not connect to the Room:', error.message);
   });
-  ```
-
-2.9.0 (December 2, 2020)
-========================
-
-New Features
-------------
-
-- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
-
-  ```ts
-    import * as Video from 'twilio-video';
   ```
 
 2.8.0 (in progress)
