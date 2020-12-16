@@ -166,6 +166,7 @@ export interface ConnectOptions {
   /**
    * @deprecated use Video.Logger
    */
+  loggerName?: string;
   eventListener?: EventListener;
   iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
@@ -175,8 +176,8 @@ export interface ConnectOptions {
   name?: string | null;
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
-  preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings>
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings>;
+  preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
 
   /**
    * @deprecated use Video.Logger.
