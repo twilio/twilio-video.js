@@ -2,6 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
+2.11.0 (In Progress)
+====================
+
+New Features
+------------
+
+- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+
+  ```ts
+    import * as Video from 'twilio-video';
+  ```
+
 2.10.0 (December 10, 2020)
 ==========================
 
