@@ -20,9 +20,9 @@ function getQueryParameters(location) {
 // eslint-disable-next-line
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
 // eslint-disable-next-line
-const environment = (getQueryParameters(location).get('environment') || [])[0] || '';
+const environment = (getQueryParameters(location).get('environment') || [])[0];
 
-if (environment.length !== 0 && environment !== 'prod') {
+if (environment !== 'prod') {
   ReactDOM.render(
     <App token={token} environment={environment}/>,
     document.getElementById('root')

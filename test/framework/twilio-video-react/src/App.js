@@ -7,23 +7,16 @@ export default class App extends Component {
 
     this.state = {};
 
-    if (this.props.environment) {
-      connect(this.props.token, Object.assign({ environment: this.props.environment })).then(room => {
-        this.setState({ room });
-        room.once('disconnected', () => this.forceUpdate());
-        room.disconnect();
-      }, error => {
-        this.setState({ error });
-      });
-    } else {
-      connect(this.props.token).then(room => {
-        this.setState({ room });
-        room.once('disconnected', () => this.forceUpdate());
-        room.disconnect();
-      }, error => {
-        this.setState({ error });
-      });
-    }
+    const connectOptions = this.props.environment ? { environment: this.props.environment } : {};
+
+    connect(this.props.token, connectOptions).then(room => {
+      this.setState({ room });
+      room.once('disconnected', () => this.forceUpdate());
+      room.disconnect();
+    }, error => {
+      this.setState({ error });
+    });
+
   }
 
   componentWillUnmount() {

@@ -18,9 +18,9 @@ function getQueryParameters(location) {
 }
 
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
-const environment = (getQueryParameters(location).get('environment') || [])[0] || '';
+const environment = (getQueryParameters(location).get('environment') || [])[0];
 
-Twilio.Video.connect(token, Object.assign({ environment })).then(room => {
+Twilio.Video.connect(token, environment ? { environment } : {}).then(room => {
   root.innerHTML = `<p>Connected to Room ${room.sid}.</p>`;
   room.disconnect();
   root.innerHTML = `<p>Disconnected from Room ${room.sid}.</p>`;
