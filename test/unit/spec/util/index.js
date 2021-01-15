@@ -93,6 +93,26 @@ describe('util', () => {
         expectedPayload: { maxAudioBitrate: 100 },
       },
       {
+        testCase: 'networkQuality true',
+        connectOptions: { networkQuality: true },
+        expectedPayload: { networkQualityConfiguration: { local: 1, remote: 0 } },
+      },
+      {
+        testCase: 'networkQuality false',
+        connectOptions: { networkQuality: false },
+        expectedPayload: { networkQualityConfiguration: { local: 0, remote: 0 } },
+      },
+      {
+        testCase: 'networkQuality custom',
+        connectOptions: { networkQuality: { local: 2, remote: 2 } },
+        expectedPayload: { networkQualityConfiguration: { local: 2, remote: 2 } },
+      },
+      {
+        testCase: 'networkQuality invalid local',
+        connectOptions: { networkQuality: { local: 'foo', remote: 2 } },
+        expectedPayload: { networkQualityConfiguration: { remote: 2 } },
+      },
+      {
         testCase: 'bandwidthProfile specified',
         connectOptions: {
           bandwidthProfile: {
@@ -101,6 +121,7 @@ describe('util', () => {
               maxTracks: 1,
               trackSwitchOffMode: 'detected',
               dominantSpeakerPriority: 'high',
+              maxSubscriptionBitrate: 500,
               renderDimensions: {
                 high: { width: 100, height: 200 }
               }
@@ -113,6 +134,7 @@ describe('util', () => {
             maxTracks: 1,
             trackSwitchOffMode: 'detected',
             dominantSpeakerPriority: 'high',
+            maxSubscriptionBitrate: 500,
             renderDimensions: JSON.stringify({
               high: { width: 100, height: 200 }
             })

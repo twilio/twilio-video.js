@@ -56,13 +56,36 @@ Using this method, you can `require` twilio-video.js like so:
 const Video = require('twilio-video');
 ```
 
+TypeScript definitions can now be imported using this method.
+
+```ts
+import * as Video from 'twilio-video';
+
+function participantDisconnected(participant: Video.RemoteParticipant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+  document.getElementById(participant.sid).remove();
+}
+```
+
+Alternatively, you can import just the definitions you need like so:
+
+```ts
+import { RemoteParticiant } from 'twilio-video';
+
+function participantDisconnected(participant: RemoteParticipant) {
+  console.log('Participant "%s" disconnected', participant.identity);
+  document.getElementById(participant.sid).remove();
+}
+```
+
 ### CDN
 
 Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/latest/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/2.10.0/twilio-video.min.js"></script>
+
 ```
 
 Using this method, twilio-video.js will set a browser global:

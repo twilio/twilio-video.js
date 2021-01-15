@@ -4,7 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 
 const { makeUUID } = require('../../../../lib/util');
-const { DEFAULT_LOG_LEVEL } = require('../../../../lib/util/constants');
+const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('../../../../lib/util/constants');
 const Log = require('../../../../lib/util/log');
 
 function component(name) {
@@ -17,21 +17,23 @@ function component(name) {
 
 describe('Log', () => {
   const log = Log.prototype.log;
+  let getLogger;
+  let logger;
+
   beforeEach(() => {
     Log.prototype.log = sinon.spy(log);
+
+    logger = {
+      setDefaultLevel: sinon.spy(),
+      debug: sinon.spy(),
+      info: sinon.spy(),
+      warn: sinon.spy(),
+      error: sinon.spy(),
+    };
+    getLogger = sinon.stub().returns(logger);
   });
 
-  before(() => {
-    Log._levels.splice(0, Log._levels.length,
-      { name: 'DEBUG', logFn: sinon.spy() },
-      { name: 'INFO',  logFn: sinon.spy() },
-      { name: 'WARN',  logFn: sinon.spy() },
-      { name: 'ERROR', logFn: sinon.spy() },
-      { name: 'OFF' }
-    );
-  });
-
-  describe('new Log(component, logLevels)', () => {
+  describe('constructor', () => {
     let getLevelByName;
 
     before(() => {
@@ -78,13 +80,47 @@ describe('Log', () => {
     });
 
     it('should set the default Log level if module specific level is not specified', () => {
-      const log = new Log('foo', component('bar'), { baz: 'error' });
+      const log = new Log('foo', component('bar'), { baz: 'error' }, undefined, getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(logger.setDefaultLevel, DEFAULT_LOG_LEVEL);
       assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
     });
 
     it('should set the default Log level if logLevels object is not specified', () => {
-      const log = new Log('foo', component('bar'));
+      const log = new Log('foo', component('bar'), undefined, undefined, getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(logger.setDefaultLevel, DEFAULT_LOG_LEVEL);
       assert.equal(log.logLevel, Log.getLevelByName(DEFAULT_LOG_LEVEL));
+    });
+
+    it('should use "silent" if level is "off" when calling loglevel.setDefaultLevel', () => {
+      const log = new Log('foo', component('bar'), { foo: 'off' }, undefined, getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(logger.setDefaultLevel, 'silent');
+    });
+
+    it('should use the specified loggerName', () => {
+      const log = new Log('foo', component('bar'), { baz: 'error' }, 'qux', getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(getLogger, 'qux');
+    });
+
+    it('should append moduleName if logLevels have different levels', () => {
+      const log = new Log('foo', component('bar'), { foo: 'info', baz: 'error' }, 'qux', getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(getLogger, 'qux-foo');
+    });
+
+    it('should not append moduleName if logLevels have the same levels', () => {
+      const log = new Log('foo', component('bar'), { foo: 'info', baz: 'info' }, 'qux', getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(getLogger, 'qux');
+    });
+
+    it('should use default loggerName if loggerName is not specified', () => {
+      const log = new Log('foo', component('bar'), { baz: 'error' }, undefined, getLogger);
+      log.log(Log.DEBUG, []);
+      sinon.assert.calledWith(getLogger, DEFAULT_LOGGER_NAME);
     });
   });
 
@@ -112,6 +148,19 @@ describe('Log', () => {
       const parent = new Log('foo', component('parent'), logLevels);
       const child = parent.createLog('bar', component('child'));
       assert.equal(child._logLevels, parent._logLevels);
+    });
+
+    it('should create a Log whose loggerName is the same as that of its parent', () => {
+      const parent = new Log('foo', component('parent'), { foo: 'debug' }, 'bar');
+      const child = parent.createLog('baz', component('child'));
+      assert.equal(child._loggerName, parent._loggerName);
+    });
+
+    it('should not append moduleName twice if it was already appended from the parent', () => {
+      const logLevels = { foo: 'debug', bar: 'error' };
+      const parent = new Log('foo', component('parent'), logLevels, 'baz');
+      const child = parent.createLog('bar', component('child'));
+      assert.equal(child._loggerName, 'baz-bar');
     });
   });
 
@@ -143,6 +192,7 @@ describe('Log', () => {
   });
 
   describe('#log(logLevel, message)', () => {
+    const loggerMethods = ['debug', 'info', 'warn', 'error'];
     it('should throw an error if the logLevel passed is invalid', () => {
       // eslint-disable-next-line new-cap
       const log = new Log('foo', component('bar'));
@@ -151,18 +201,20 @@ describe('Log', () => {
       });
     });
 
-    it('should call the log function if the logLevel is within the Logs verbosity', () => {
-      // eslint-disable-next-line new-cap
-      const log = new Log('foo', component('bar'), { foo: 'warn' });
-      log.log(Log.ERROR, 'foo');
-      assert(Log._levels[Log.ERROR].logFn.called);
+    it('should not call any logger method if logLevel is "off"', () => {
+      const log = new Log('foo', component('bar'));
+      log.log(Log.OFF, []);
+      loggerMethods.forEach(method => {
+        sinon.assert.notCalled(logger[method]);
+      });
     });
 
-    it('should not call the log function if the logLevel is outside of the Logs verbosity', () => {
-      // eslint-disable-next-line new-cap
-      const log = new Log('foo', component('bar'), { foo: 'off' });
-      log.log(Log.WARN, 'foo');
-      assert(!Log._levels[Log.WARN].logFn.called);
+    loggerMethods.forEach((method, i) => {
+      it(`should call logger.${method} if logLevel is Log.${method.toUpperCase()}`, () => {
+        const log = new Log('foo', component('bar'), undefined, 'baz', getLogger);
+        log.log(i, []);
+        sinon.assert.called(logger[method]);
+      });
     });
   });
 
