@@ -69,6 +69,7 @@ function remoteAudioTrackPublication(publication: Video.RemoteAudioTrackPublicat
   });
   publication.on('subscribed', track => {
     track.attach('someOtherEl');
+    track.setPriority('high');
   });
   publication.on('trackDisabled', () => {
     if (track) {
@@ -86,6 +87,7 @@ function remoteAudioTrackPublication(publication: Video.RemoteAudioTrackPublicat
 function remoteDataTrackPublication(publication: Video.RemoteDataTrackPublication) {
   const chatLog = document.getElementById('someElementChat');
   publication.on('subscribed', track => {
+    track.setPriority('high');
     track.on('message', msg => {
       const textElement = document.createElement('p');
       if (chatLog) {
@@ -277,12 +279,10 @@ function unpublishTracks() {
 }
 
 function participantConnected(participant: Video.Participant) {
-  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
-
   participant.on('trackSubscribed', trackSubscribed);
   participant.on('trackUnsubscribed', trackUnsubscribed);
 
-  participant.tracks.forEach((publication: TrackPublications) => {
+  participant.tracks.forEach(publication => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       trackSubscribed(remotePublication.track as Video.VideoTrack | Video.AudioTrack);
@@ -291,9 +291,7 @@ function participantConnected(participant: Video.Participant) {
 }
 
 function participantDisconnected(participant: Video.Participant) {
-  type TrackPublications = Video.LocalTrackPublication | Video.RemoteTrackPublication;
-
-  participant.tracks.forEach((publication: TrackPublications) => {
+  participant.tracks.forEach(publication => {
     const remotePublication = publication as Video.RemoteTrackPublication;
     if (remotePublication.isSubscribed) {
       const { track } = remotePublication;

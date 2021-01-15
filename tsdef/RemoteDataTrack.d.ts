@@ -7,6 +7,7 @@ export class RemoteDataTrack extends Track {
   maxPacketLifeTime: number | null;
   maxRetransmits: number | null;
   ordered: boolean;
+  priority: Track.Priority | null;
   reliable: boolean;
   sid: Track.SID;
 
