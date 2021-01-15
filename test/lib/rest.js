@@ -1,6 +1,6 @@
 'use strict';
 
-const { rest } = require('./post');
+const { rest, getREST } = require('./post');
 
 /**
  * Complete a Room using the REST API.
@@ -11,6 +11,10 @@ function completeRoom(nameOrSid) {
   return rest(`/v1/Rooms/${nameOrSid}`, {
     Status: 'completed'
   });
+}
+
+function getRoom(roomSid) {
+  return getREST(`/v1/Rooms/${roomSid}`);
 }
 
 /**
@@ -85,5 +89,6 @@ exports.startRecording = startRecording;
 exports.stopRecording = stopRecording;
 exports.completeRoom = completeRoom;
 exports.createRoom = createRoom;
+exports.getRoom = getRoom;
 exports.unsubscribeTrack = unsubscribeTrack;
 exports.subscribeTrack = subscribeTrack;

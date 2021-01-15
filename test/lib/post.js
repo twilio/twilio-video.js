@@ -35,10 +35,24 @@ function request(config, data) {
       });
     });
     request.once('error', reject);
-    request.write(Object.keys(data).map(key => `${key}=${data[key]}`).join('&'));
+    if (data) {
+      request.write(Object.keys(data).map(key => `${key}=${data[key]}`).join('&'));
+    }
     request.end();
   });
 }
+
+/**
+ * Make an HTTP(S) get request.
+ * @param {*} config
+ * @returns {Promise<*>}
+ */
+function get(config) {
+  return request(Object.assign({
+    method: 'GET'
+  }, config));
+}
+
 
 /**
  * Make an HTTP(S) post request.
@@ -89,5 +103,23 @@ function postREST(path, data) {
   }, data);
 }
 
+/**
+ * Make an REST request.
+ * @param {string} path
+ * @returns {Promise<*>}
+ */
+function getREST(path) {
+  return get({
+    auth: `${apiKeySid}:${apiKeySecret}`,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    hostname: HOST_NAME_REST,
+    path
+  });
+}
+
 exports.ecs = postECS;
 exports.rest = postREST;
+exports.getREST = getREST;
+
