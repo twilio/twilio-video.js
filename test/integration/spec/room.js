@@ -151,6 +151,7 @@ describe('Room', function() {
     let roomSid = null;
     let aliceRoom = null;
     let bobRoom = null;
+    let charlieRoom = null;
     let track = null;
     let roomDetails = null;
 
@@ -173,26 +174,39 @@ describe('Room', function() {
       track.stop();
     });
 
+    it('emits participantConnected when a participant joins with a track', async () => {
+      const charlieConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
+      const charlieTrack = await createLocalAudioTrack({ fake: true });
+      charlieRoom = await connect(getToken('Charlie'), Object.assign({ name: roomSid }, defaults, { tracks: [charlieTrack] }));
+
+      await waitFor(charlieConnectedPromise, `waiting for participantConnected for Charlie: ${roomSid}`);
+
+      const charlieDiscConnectedPromise = new Promise(resolve => aliceRoom.once('participantDisconnected', resolve));
+      charlieRoom.disconnect();
+      await waitFor(charlieDiscConnectedPromise, `waiting for Charlie disconnected: ${roomSid}`);
+    });
+
     it('does not send participantConnected when a participant joins with no tracks', async () => {
-      const bobConnectedPromise = new Promise(resolve => aliceRoom.on('participantConnected', resolve));
+      const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
       bobRoom = await connect(getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
 
       await waitForNot(bobConnectedPromise, `received unexpected participantConnected: ${roomSid}`);
     });
 
     it('emits participantConnected when a participant publishes track', async () => {
-      const bobConnectedPromise = new Promise(resolve => aliceRoom.on('participantConnected', resolve));
+      const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
 
       await bobRoom.localParticipant.publishTrack(track);
       await waitFor(bobConnectedPromise, `waiting for participantConnected: ${roomSid}`);
     });
 
     it('returns error when published tracks increase the limit', async () => {
-      const tracksToPublish = Array(roomDetails.max_concurrent_published_tracks - 1).fill(0);
-      await waitFor(tracksToPublish.map(async () => {
-        const anotherTrack = await createLocalAudioTrack({ fake: true });
-        return bobRoom.localParticipant.publishTrack(anotherTrack);
-      }), 'max track to get published');
+      let tracksPublishedAlready = 0;
+      aliceRoom.participants.forEach(p => { tracksPublishedAlready += p.tracks.size; });
+      const tracksToPublish = Array(roomDetails.max_concurrent_published_tracks - tracksPublishedAlready).fill(0);
+
+      const tracks = await waitFor(tracksToPublish.map(() => createLocalAudioTrack({ fake: true })));
+      await waitFor(bobRoom.localParticipant.publishTracks(tracks), `max Tracks to get published: ${roomSid}`);
 
       const oneMoreTrack = await createLocalAudioTrack({ fake: true });
       let publishError = null;
@@ -209,10 +223,8 @@ describe('Room', function() {
       const bobDisConnectedPromise = new Promise(resolve => aliceRoom.once('participantDisconnected', resolve));
 
       [...bobRoom.localParticipant.tracks.values()].forEach(trackPub => trackPub.unpublish());
-      // bobRoom.localParticipant.unpublishTrack(track);
       await waitFor(bobDisConnectedPromise, `waiting for synthetic participantDisConnected: ${roomSid}`);
     });
-
   });
 
   describe('disconnect', () => {
