@@ -102,7 +102,14 @@ function waitUntilError(driver) {
 function waitUntilDisconnectedOrError(driver) {
   return Promise.race([
     waitUntilDisconnected(driver),
-    waitUntilError(driver).then(ex => { throw new Error('Test Application errored: ' + ex); })
+    waitUntilError(driver).then(ex => {
+      ex.getText().then(text => {
+        // eslint-disable-next-line no-console
+        console.log('Selenium Object', text);
+      });
+      throw new Error('Test Application errored: ' + ex);
+    })
+    // waitUntilError(driver).then(ex => { throw new Error('Test Application errored: ' + ex); })
   ]);
 }
 

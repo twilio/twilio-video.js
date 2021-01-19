@@ -147,8 +147,14 @@ commands:
           name: Installing dependencies
           command: npm install
       - run:
-          name: Running Framework Tests
-          command: npm run test:framework
+          name: Installing dependencies
+          command: npm run test:framework:install
+      - run:
+          name: Running No Framework Tests
+          command: npm run test:framework:no-framework
+      - run:
+          name: Running React Framework Tests
+          command: npm run test:framework:react
       - run:
           name: Running UMD Tests
           command: npm run test:umd
@@ -347,32 +353,6 @@ workflows:
     jobs:
       - Build
       - UnitTests
-      - run-integration-tests:
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
-          matrix:
-            parameters:
-              browser: ["chrome", "firefox"]
-              bver: ["stable", "unstable", "beta"]
-              topology: ["group", "peer-to-peer"]
-              test_stability: ["stable"]
-          requires: [Build, UnitTests]
-      - run-integration-tests:
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
-          matrix:
-            parameters:
-              browser: ["chrome", "firefox"]
-              bver: ["stable"]
-              topology: ["group", "peer-to-peer"]
-              test_stability: ["unstable"]
-          requires: [Build, UnitTests]
-      - run-network-tests:
-          name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
-          matrix:
-            parameters:
-              browser: ["chrome", "firefox"]
-              topology: ["group", "peer-to-peer"]
-              test_stability: ["stable", "unstable"]
-          requires: [Build, UnitTests]
       - Framework-tests:
           name: "framework tests"
           requires: [Build, UnitTests]
