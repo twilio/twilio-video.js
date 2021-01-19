@@ -7,6 +7,8 @@ export class RemoteAudioTrack extends AudioTrack {
   isSwitchedOff: boolean;
   isEnabled: boolean;
 
+  setPriority(priority: Track.Priority | null): this;
+
   on(event: 'disabled', listener: (track: this) => void): this;
   on(event: 'enabled', listener: (track: this) => void): this;
   on(event: 'started', listener: (track: this) => void): this;
