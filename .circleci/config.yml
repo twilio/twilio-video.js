@@ -9,7 +9,7 @@ parameters:
   environment:
     type: enum
     enum: ["prod", "stage", "dev"]
-    default: "stage"
+    default: "prod"
   pr_workflow:    # runs for every pull request.
     type: boolean
     default: true # by default pr workflow will get executed.
@@ -142,6 +142,7 @@ commands:
       - save-test-results
   framework-tests:
     steps:
+      - build
       - run:
           name: Installing dependencies
           command: npm install
