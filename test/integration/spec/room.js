@@ -564,37 +564,25 @@ describe('Room', function() {
     });
   });
 
-  // eslint-disable-next-line
-  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', async () => {
-    let options;
-    let sid;
-    let thatParticipant;
-    let thisRoom;
-    let thatRoom;
-
-    before(async () => {
-      sid = await createRoom(randomName(), defaults.topology);
-      options = Object.assign({ name: sid }, defaults);
-      thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
+    it('is raised whenever the dominant speaker in the Room changes', async () => {
+      const sid = await waitFor(createRoom(randomName(), defaults.topology), 'creating room');
+      const options = Object.assign({ name: sid }, defaults);
+      const thisRoom = await waitFor(connect(getToken('Alice'), Object.assign({ tracks: [] }, options)), `Alice connecting to the room: ${sid}`);
 
       const tracks = [createSyntheticAudioStreamTrack() || (await createLocalTracks({
         audio: true,
         fake: true
       }))[0]];
 
-      thatRoom = await connect(getToken(randomName()), Object.assign({ tracks }, options));
-      await participantsConnected(thisRoom, 1);
-      thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
-    });
+      const thatRoom = await waitFor(connect(getToken('Bob'), Object.assign({ tracks }, options), `Bob connecting to the room: ${sid}`));
+      await waitFor(participantsConnected(thisRoom, 1), `Alice receives participantsConnected: ${sid}`);
+      const thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
 
-    it('is raised whenever the dominant speaker in the Room changes', async () => {
-      await dominantSpeakerChanged(thisRoom, thatParticipant);
+      await waitFor(dominantSpeakerChanged(thisRoom, thatParticipant), `Alice receives dominantSpeakerChanged: ${sid}`);
       assert.equal(thisRoom.dominantSpeaker, thatParticipant);
-    });
-
-    after(() => {
       [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      await completeRoom(sid);
     });
   });
 
