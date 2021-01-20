@@ -142,7 +142,6 @@ commands:
       - save-test-results
   framework-tests:
     steps:
-      - build
       - run:
           name: Installing dependencies
           command: npm install
@@ -151,10 +150,10 @@ commands:
           command: npm run test:framework:install
       - run:
           name: Running No Framework Tests
-          command: npm run test:framework:no-framework
+          command: npm run test:framework:react
       - run:
           name: Running React Framework Tests
-          command: npm run test:framework:react
+          command: npm run test:framework:no-framework
       - run:
           name: Running UMD Tests
           command: npm run test:umd
