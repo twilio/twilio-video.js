@@ -258,7 +258,7 @@ describe('Room', function() {
         const tracksToPublishLater = await waitFor(Array(nTracksToPublishLater).fill(0).map(() => createLocalAudioTrack({ fake: true })), `creating ${nTracksToPublishLater} tracks`);
         let publishError = null;
         try {
-          await waitFor(bobRoom.localParticipant.publishTracks(tracksToPublishLater), `subsequent ${nTracksToPublishLater} Tracks to get published: ${roomSid}`);
+          await bobRoom.localParticipant.publishTracks(tracksToPublishLater);
         } catch (error) {
           publishError = error;
           assert(publishError instanceof ParticipantMaxTracksExceededError);
