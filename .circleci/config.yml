@@ -191,6 +191,7 @@ jobs:
       test_stability:
         type: string
     environment:
+      TEST_TYPE: "integration"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
     executor:
