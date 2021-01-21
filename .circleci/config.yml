@@ -144,17 +144,8 @@ commands:
     steps:
       - build
       - run:
-          name: Installing dependencies
-          command: npm install
-      - run:
-          name: Installing dependencies
-          command: npm run test:framework:install
-      - run:
-          name: Running No Framework Tests
-          command: ENVIRONMENT=<< pipeline.parameters.environment >> npm run test:framework:no-framework
-      - run:
-          name: Running React Framework Tests
-          command: ENVIRONMENT=<< pipeline.parameters.environment >> npm run test:framework:react
+          name: Running Framework Tests
+          command: scripts/circleci-run-tests.sh
       - run:
           name: Running UMD Tests
           command: npm run test:umd
@@ -200,6 +191,7 @@ jobs:
       test_stability:
         type: string
     environment:
+      TEST_TYPE: "integration"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
     executor:
@@ -216,7 +208,7 @@ jobs:
       test_stability:
         type: string
     environment:
-      NETWORK_TESTS: "true"
+      TEST_TYPE: "network"
       BVER: "stable"
       BROWSER: << parameters.browser >>
       TOPOLOGY: << parameters.topology >>
@@ -225,6 +217,7 @@ jobs:
     steps: [network-tests]
   Framework-tests:
     environment:
+      TEST_TYPE: "framework"
       BROWSER: "chrome"
     executor: docker-with-browser
     steps: [framework-tests]
