@@ -28,5 +28,5 @@ Twilio.Video.connect(token, environment ? { environment } : {}).then(room => {
   room.disconnect();
   root.innerHTML = `<p>Disconnected from Room ${room.sid}.</p>`;
 }, error => {
-  root.innerHTML = `<pre><code>${error.stack} <br> ENVIRONMENT: ${environment}</code></pre>`;
+  root.innerHTML = `<pre><code>${error.stack} <br> ENVIRONMENT: ${environment} <br> TOKEN: ${token}</code></pre>`;
 });
