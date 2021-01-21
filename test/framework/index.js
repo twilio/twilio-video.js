@@ -58,6 +58,8 @@ function runFrameworkTest(options) {
       token = getToken('twilio-video.js-framework-test');
       // eslint-disable-next-line no-process-env
       environment = process.env.ENVIRONMENT;
+      // eslint-disable-next-line no-console
+      console.log('Environmentin node: ', environment);
 
       if (environment && environment !== 'prod') {
         return driver.get(`http://${host}:${port}?token=${token}&environment=${environment}`);
