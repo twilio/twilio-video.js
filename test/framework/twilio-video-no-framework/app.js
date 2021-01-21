@@ -20,6 +20,9 @@ function getQueryParameters(location) {
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
 const environment = (getQueryParameters(location).get('environment') || [])[0];
 
+// eslint-disable-next-line
+console.log('No Framework Environment ', environment, location.search);
+
 Twilio.Video.connect(token, environment ? { environment } : {}).then(room => {
   root.innerHTML = `<p>Connected to Room ${room.sid}.</p>`;
   room.disconnect();

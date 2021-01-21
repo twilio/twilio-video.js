@@ -150,11 +150,11 @@ commands:
           name: Installing dependencies
           command: npm run test:framework:install
       - run:
+          name: Running No Framework Tests
+          command: ENVIRONMENT=<< pipeline.parameters.environment >> npm run test:framework:no-framework
+      - run:
           name: Running React Framework Tests
           command: ENVIRONMENT=<< pipeline.parameters.environment >> npm run test:framework:react
-      - run:
-          name: Running No Framework Tests
-          command: npm run test:framework:no-framework
       - run:
           name: Running UMD Tests
           command: npm run test:umd
