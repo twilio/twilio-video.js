@@ -7,10 +7,11 @@ export class RemoteDataTrack extends Track {
   maxPacketLifeTime: number | null;
   maxRetransmits: number | null;
   ordered: boolean;
+  priority: Track.Priority | null;
   reliable: boolean;
   sid: Track.SID;
 
-  setPriority(priority: Track.Priority | null): RemoteDataTrack;
+  setPriority(priority: Track.Priority | null): this;
 
   on(event: 'message', listener: (data: string | ArrayBuffer, track: RemoteDataTrack) => void): this;
   on(event: 'switchedOff', listener: (track: this) => void): this;
