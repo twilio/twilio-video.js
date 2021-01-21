@@ -8,10 +8,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+- You can now import type definitions for the SDK APIs to your project as shown below. Twilio-Video types will take priority when installed at the same time as the Definitely Typed type definitions. (JSDK-3007)
 
   ```ts
-    import * as Video from 'twilio-video';
+  import * as Video from 'twilio-video';
+
+  let room: Video.Room | null = null;
+
+  async function connectToRoom() {
+    room = await Video.connect('$TOKEN', { name: 'room-name' });
+    console.log('Connected to Room "%s"', room.name);
+    return room;
+  }
   ```
 
 2.10.0 (December 10, 2020)
