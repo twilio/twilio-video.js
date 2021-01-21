@@ -21,6 +21,7 @@ function getQueryParameters(location) {
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
 // eslint-disable-next-line
 const environment = (getQueryParameters(location).get('environment') || [])[0];
+console.log('React App Environment ', environment, location.search);
 
 if (environment !== 'prod') {
   ReactDOM.render(
