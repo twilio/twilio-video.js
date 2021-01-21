@@ -19,6 +19,9 @@ function getAudioTrack(track: Video.LocalAudioTrack) {
   const localAudioTrack = track;
   localAudioTrack.attach();
   localAudioTrack.detach();
+  localAudioTrack.disable();
+  localAudioTrack.enable();
+  localAudioTrack.stop();
 
   localAudioTrack.attach('someEl');
   localAudioTrack.detach('someEl');
