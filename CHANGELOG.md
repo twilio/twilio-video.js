@@ -14,6 +14,11 @@ New Features
     import * as Video from 'twilio-video';
   ```
 
+Bug Fixes
+---------
+
+- Fixed a bug where the `Video` namespace is not exported properly when using RequireJS. (JSDK-3129)
+
 2.10.0 (December 10, 2020)
 ==========================
 

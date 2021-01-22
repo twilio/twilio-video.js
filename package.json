@@ -91,6 +91,7 @@
     "test:unit": "mocha ./test/unit/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration": "node ./scripts/karma.js karma/integration.conf.js",
+    "test:umd:install": "npm install puppeteer",
     "test:umd": "mocha ./test/umd/index.js",
     "test:crossbrowser:build:clean": "rimraf ./test/crossbrowser/lib ./test/crossbrowser/src/browser/index.js",
     "test:crossbrowser:build:lint": "cd ./test/crossbrowser && tslint --project tsconfig.json",
@@ -135,7 +136,6 @@
   "dependencies": {
     "@twilio/webrtc": "4.3.2",
     "backoff": "^2.5.0",
-    "loglevel": "^1.7.0",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
   },
