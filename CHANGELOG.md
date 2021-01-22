@@ -17,7 +17,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed an issue where `Video` object is not exported properly when using RequireJS. (JSDK-3129)
+- Fixed a bug where the `Video` namespace is not exported properly when using RequireJS. (JSDK-3129)
 
 2.10.0 (December 10, 2020)
 ==========================
