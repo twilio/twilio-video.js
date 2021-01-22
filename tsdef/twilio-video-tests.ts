@@ -16,15 +16,13 @@ function customLogging() {
 }
 
 function getAudioTrack(track: Video.LocalAudioTrack) {
-  const localAudioTrack = track;
-  localAudioTrack.attach();
-  localAudioTrack.detach();
-  localAudioTrack.disable();
-  localAudioTrack.enable();
-  localAudioTrack.stop();
+  let localAudioTrack: Video.LocalAudioTrack = track;
 
   localAudioTrack.attach('someEl');
   localAudioTrack.detach('someEl');
+
+  localAudioTrack = localAudioTrack.disable().enable().stop();
+  return localAudioTrack;
 }
 
 function getDataTrack(track: Video.LocalDataTrack) {
