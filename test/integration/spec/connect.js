@@ -704,15 +704,17 @@ describe('connect', function() {
   });
 
   describe('called with EncodingParameters', () => {
+    const minAudioBitrate = 6000;
+    const minVideoBitrate = 20000;
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 20000, 0],
+        [undefined, null, minAudioBitrate, 0],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 40000, 0],
+        [undefined, null, minVideoBitrate, 0],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
     ], ([maxAudioBitrate, maxVideoBitrate]) => {
@@ -734,6 +736,8 @@ describe('connect', function() {
         video: encodingParameters.maxVideoBitrate
       };
 
+      let averageAudioBitrate;
+      let averageVideoBitrate;
       let peerConnections;
       let sid;
       let thisRoom;
@@ -746,11 +750,19 @@ describe('connect', function() {
           nTracks: 0
         });
 
-        // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
-        // which is an asynchronous operation, wait for a little while until the changes are applied.
-        if (isRTCRtpSenderParamsSupported) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
-        }
+        // Grab 5 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
+        // if applying bandwidth constraints, which is an asynchronous operation
+        const bitrates = await pollOutgoingBitrate(thisRoom, 5);
+
+        const average = items => {
+          let avg = items.reduce((x, y) => x + y) / items.length;
+          // Round down to the nearest thousand. This is to help test flakiness because browsers'
+          // actual bitrates exceeds a little over (by a few hundreds) the maxBitrate that was set
+          return Math.floor(avg / 1000) * 1000;
+        };
+        // Ignore the first sample. Max average bitrate usually normalizes after 1 sec
+        averageAudioBitrate = average(bitrates.audio.slice(1));
+        averageVideoBitrate = average(bitrates.video.slice(1));
       });
 
       ['audio', 'video'].forEach(kind => {
@@ -787,6 +799,30 @@ describe('connect', function() {
             assert(maxBitrate ? bLinePattern.test(section) : !bLinePattern.test(section));
           });
         });
+
+        // TODO: Remove firefox check once this firefox bug is fixed
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
+        if (!isFirefox) {
+          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+            const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
+            const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
+            if (maxBitrates[kind]) {
+              const hasLessBitrate = averageBitrate <= maxBitrates[kind];
+              if (!hasLessBitrate) {
+                // Log values if failed
+                console.log(`maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+              }
+              assert(hasLessBitrate);
+            } else {
+              const hasUnlimitedBitrate = averageBitrate > minBitrate;
+              if (!hasUnlimitedBitrate) {
+                // Log values if failed
+                console.log(`Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+              }
+              assert(hasUnlimitedBitrate);
+            }
+          });
+        }
       });
 
       after(() => {
@@ -1376,13 +1412,13 @@ describe('connect', function() {
         // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
         // so the below bitrate samples represent speech.
         [aliceBitratesSpeech, bobBitratesSpeech] = await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5).audio),
           'Alice and Bob to collect outgoing speech bitrate samples');
 
         // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
         // so the below bitrate samples represent silence.
         [aliceBitratesSilence, bobBitratesSilence] = await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingAudioBitrate(room, 5)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5).audio),
           'Alice and Bob to collect outgoing silence bitrate samples');
       });
 
@@ -1433,23 +1469,36 @@ function getPayloadTypes(mediaSection) {
   return [...createPtToCodecName(mediaSection).keys()];
 }
 
-async function pollOutgoingAudioBitrate(room, nSamples) {
-  const samples = [];
-  if (nSamples <= 0) {
-    return samples;
-  }
-  let [{ localAudioTrackStats: [stats] }] = await room.getStats();
-  let { bytesSent: curBytesSent } = stats || { bytesSent: 0 };
+async function pollOutgoingBitrate(room, nSamples) {
+  if (nSamples <= 0) { return { audio: [], video: [] }; }
 
+  const getBytesSent = async () => {
+    const roomStats = await room.getStats();
+    return ['audio', 'video'].reduce((returnedStats, kind) => {
+      const [{ [`local${capitalize(kind)}TrackStats`]: [stats] }] = roomStats;
+      const bytesSent = stats ? stats.bytesSent : 0;
+      return { [kind]: bytesSent, ...returnedStats };
+    }, {});
+  };
+
+  const samples = [];
+  let curBytesSent = await getBytesSent();
   return new Promise(resolve => {
     const pollInterval = setInterval(async () => {
-      const [{ localAudioTrackStats: [{ bytesSent }] }] = await room.getStats();
-      samples.push((bytesSent - curBytesSent) * 8);
+      const bytesSent = await getBytesSent();
+      samples.push({
+        audio: (bytesSent.audio - curBytesSent.audio) * 8,
+        video: (bytesSent.video - curBytesSent.video) * 8,
+      });
       curBytesSent = bytesSent;
       nSamples--;
       if (nSamples <= 0) {
         clearInterval(pollInterval);
-        resolve(samples);
+        // Flatten out
+        resolve({
+          audio: samples.map(b => b.audio),
+          video: samples.map(b => b.video),
+        });
       }
     }, 1000);
   });
