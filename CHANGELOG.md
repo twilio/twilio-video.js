@@ -8,10 +8,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+- You can now import type definitions for the SDK APIs to your project. Previously, typescript developers relied on [definitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1a7a99db8ec25d48f3dfec146af742e5bc40a5f7/types/twilio-video/index.d.ts) for these definitions. We would like to thank the folks at DefinitelyTyped for maintaining these definitions. Going forward, the definitions will be included in the library and will take precedence over any other type definitions that you may be using. (JSDK-3007)
 
+  You can access the types of the public API classes from the `Video` namespace as shown below:
   ```ts
-    import * as Video from 'twilio-video';
+  import * as Video from 'twilio-video';
+
+  Video.connect('token', { name: 'my-cool-room' }).then((room: Video.Room) => {
+    console.log('Connected to Room:', room.name);
+    room.on('participantConnected', (participant: Video.RemoteParticipant) => {
+      console.log('RemoteParticipant joined:', participant.identity);
+    });
+  });
   ```
 
 Bug Fixes

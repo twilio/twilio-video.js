@@ -2,6 +2,7 @@ import { RemoteTrack, StatsReport } from './types';
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
 import { Participant } from './Participant';
+import { RemoteDataTrack } from './RemoteDataTrack';
 import { RemoteParticipant } from './RemoteParticipant';
 import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
@@ -38,7 +39,7 @@ export class Room extends EventEmitter {
   on(event: 'trackDimensionsChanged', listener: (track: RemoteVideoTrack, participant: RemoteParticipant) => void): this;
   on(event: 'trackDisabled', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackEnabled', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
-  on(event: 'trackMessage', listener: (data: string | ArrayBuffer, track: RemoteVideoTrack, participant: RemoteParticipant) => void): this;
+  on(event: 'trackMessage', listener: (data: string | ArrayBuffer, track: RemoteDataTrack, participant: RemoteParticipant) => void): this;
   on(event: 'trackPublished', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackPublishPriorityChanged', listener: (priority: Track.Priority, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackStarted', listener: (track: RemoteTrack, participant: RemoteParticipant) => void): this;
