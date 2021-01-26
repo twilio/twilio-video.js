@@ -1411,15 +1411,15 @@ describe('connect', function() {
 
         // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
         // so the below bitrate samples represent speech.
-        [aliceBitratesSpeech, bobBitratesSpeech] = await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5).audio),
-          'Alice and Bob to collect outgoing speech bitrate samples');
+        [aliceBitratesSpeech, bobBitratesSpeech] = (await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
+          'Alice and Bob to collect outgoing speech bitrate samples')).map(samples => samples.audio);
 
         // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
         // so the below bitrate samples represent silence.
-        [aliceBitratesSilence, bobBitratesSilence] = await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5).audio),
-          'Alice and Bob to collect outgoing silence bitrate samples');
+        [aliceBitratesSilence, bobBitratesSilence] = (await waitFor(
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
+          'Alice and Bob to collect outgoing silence bitrate samples')).map(samples => samples.audio);
       });
 
       it(`Alice should ${aliceDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence and Bob should ${bobDtx ? '' : 'not '}drastically reduce outgoing audio bitrate during silence`, () => {
