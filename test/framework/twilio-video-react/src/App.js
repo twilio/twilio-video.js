@@ -7,13 +7,16 @@ export default class App extends Component {
 
     this.state = {};
 
-    connect(this.props.token).then(room => {
+    const connectOptions = this.props.environment ? { environment: this.props.environment } : {};
+
+    connect(this.props.token, connectOptions).then(room => {
       this.setState({ room });
       room.once('disconnected', () => this.forceUpdate());
       room.disconnect();
     }, error => {
       this.setState({ error });
     });
+
   }
 
   componentWillUnmount() {

@@ -121,7 +121,7 @@
     "test:framework:react:run": "mocha ./test/framework/twilio-video-react.js",
     "test:framework:react": "npm-run-all test:framework:react:*",
     "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver && npm install puppeteer",
-    "test:framework": "npm-run-all test:framework:install test:framework:angular test:framework:no-framework test:framework:react",
+    "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "build:ts": "tsc -p tsconfig.json --noEmit",
     "build:es5": "rimraf ./es5 && babel lib -d es5",

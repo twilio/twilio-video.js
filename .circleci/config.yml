@@ -144,11 +144,8 @@ commands:
     steps:
       - build
       - run:
-          name: Installing dependencies
-          command: npm install
-      - run:
           name: Running Framework Tests
-          command: npm run test:framework
+          command: scripts/circleci-run-tests.sh
       - save-test-results
   umd-tests:
     steps:
@@ -204,6 +201,7 @@ jobs:
       test_stability:
         type: string
     environment:
+      TEST_TYPE: "integration"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
     executor:
@@ -220,7 +218,7 @@ jobs:
       test_stability:
         type: string
     environment:
-      NETWORK_TESTS: "true"
+      TEST_TYPE: "network"
       BVER: "stable"
       BROWSER: << parameters.browser >>
       TOPOLOGY: << parameters.topology >>
@@ -229,6 +227,7 @@ jobs:
     steps: [network-tests]
   Framework-tests:
     environment:
+      TEST_TYPE: "framework"
       BROWSER: "chrome"
     executor: docker-with-browser
     steps: [framework-tests]
