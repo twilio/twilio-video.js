@@ -2,17 +2,44 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-2.11.0 (In Progress)
+2.12.0 (In Progress)
 ====================
 
 New Features
 ------------
 
-- You can now import type definitions for the SDK APIs to your project as shown below. (JSDK-3007)
+- You can now connect to a Group Room with Maximum Participants between 50 and 100 (Large Group Rooms).
+  Large Group Rooms are different from the other types of Rooms in the following ways:
+  - "participantConnected" event is raised on the Room when a RemoteParticipant
+    publishes the first LocalTrack.
+  - "participantDisconnected" event is raised on the Room when a RemoteParticipant
+    stops publishing all of its LocalTracks.
+  - The total number of published Tracks in the Room cannot exceed 16. Any attempt
+    to publish more Tracks will be rejected with a `ParticipantMaxTracksExceededError`. (JSDK-3021)
 
-  ```ts
-    import * as Video from 'twilio-video';
-  ```
+  NOTE: Large Group Rooms is currently in **beta**.
+
+2.11.0 (January 26, 2021)
+=========================
+
+- You can now import type definitions for the SDK APIs to your project. Previously, typescript developers relied on [definitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1a7a99db8ec25d48f3dfec146af742e5bc40a5f7/types/twilio-video/index.d.ts) for these definitions. We would like to thank the folks at DefinitelyTyped for maintaining these definitions. Going forward, the definitions will be included in the library and will take precedence over any other type definitions that you may be using. (JSDK-3007)
+
+You can access the types of the public API classes from the `Video` namespace as shown below:
+```ts
+import * as Video from 'twilio-video';
+
+Video.connect('token', { name: 'my-cool-room' }).then((room: Video.Room) => {
+  console.log('Connected to Room:', room.name);
+  room.on('participantConnected', (participant: Video.RemoteParticipant) => {
+    console.log('RemoteParticipant joined:', participant.identity);
+  });
+});
+```
+
+Bug Fixes
+---------
+
+- Fixed a bug where the `Video` namespace is not exported properly when using RequireJS. (JSDK-3129)
 
 2.10.0 (December 10, 2020)
 ==========================
