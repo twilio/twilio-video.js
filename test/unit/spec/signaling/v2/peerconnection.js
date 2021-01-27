@@ -773,41 +773,59 @@ describe('PeerConnectionV2', () => {
     let test;
     let stream;
     let result;
+    let trackSender;
 
-    [
-      ['never been added', () => {}],
-      ['been added', (test, trackSender) => {
-        test.pcv2.addMediaTrackSender(trackSender);
-      }],
-      ['been removed', (test, trackSender) => {
-        test.pcv2.addMediaTrackSender(trackSender);
-        test.pcv2.removeMediaTrackSender(trackSender);
-      }]
-    ].forEach(([scenario, setup]) => {
-      context(scenario, () => {
-        beforeEach(() => {
-          test = makeTest();
-          const tracks = [{ id: 1 }];
-          stream = { getTracks() { return tracks; } };
-          const trackSender = makeMediaTrackSender(tracks[0]);
-          setup(test, trackSender, stream);
-          test.pc.removeTrack = sinon.spy(() => {});
-          result = test.pcv2.removeMediaTrackSender(trackSender);
-        });
+    [true, false].forEach(shouldClosePeerConnection => {
+      context(`peerConnection is ${shouldClosePeerConnection ? '' : 'not '}closed`, () => {
+        [
+          ['never been added', () => {}],
+          ['been added', (test, trackSender) => {
+            test.pcv2.addMediaTrackSender(trackSender);
+          }],
+          ['been removed', (test, trackSender) => {
+            test.pcv2.addMediaTrackSender(trackSender);
+            test.pcv2.removeMediaTrackSender(trackSender);
+          }]
+        ].forEach(([scenario, setup]) => {
+          context(scenario, () => {
+            beforeEach(() => {
+              test = makeTest();
+              const tracks = [{ id: 1 }];
+              stream = { getTracks() { return tracks; } };
+              trackSender = makeMediaTrackSender(tracks[0]);
+              setup(test, trackSender, stream);
+              test.pc.removeTrack = sinon.spy(() => {});
 
-        it('returns undefined', () => {
-          assert(!result);
-        });
+              if (shouldClosePeerConnection) {
+                test.pcv2.close();
+              }
 
-        if (scenario === 'been added') {
-          it('calls removeTrack on the underlying RTCPeerConnection', () => {
-            assert.equal(test.pc.removeTrack.args[0][0].track, stream.getTracks()[0]);
+              result = test.pcv2.removeMediaTrackSender(trackSender);
+            });
+
+            it('returns undefined', () => {
+              assert(!result);
+            });
+
+            if (scenario === 'been added') {
+              it(`${shouldClosePeerConnection ? 'does not call' : 'calls'} removeTrack on the underlying RTCPeerConnection`, () => {
+                if (shouldClosePeerConnection) {
+                  sinon.assert.notCalled(test.pc.removeTrack);
+                } else {
+                  assert.equal(test.pc.removeTrack.args[0][0].track, stream.getTracks()[0]);
+                }
+              });
+
+              it('should remove the RTCRtpSender from the MediaTrackSender', () => {
+                sinon.assert.called(trackSender.removeSender);
+              });
+              return;
+            }
+
+            it('does not call removeTrack on the underlying RTCPeerConnection', () => {
+              sinon.assert.notCalled(test.pc.removeTrack);
+            });
           });
-          return;
-        }
-
-        it('does not call removeTrack on the underlying RTCPeerConnection', () => {
-          sinon.assert.notCalled(test.pc.removeTrack);
         });
       });
     });
