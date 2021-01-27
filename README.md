@@ -1,9 +1,6 @@
 **NEW:** Please check out our [Best Practices Guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices)
 for building video applications with twilio-video.js.
 
-**IMPORTANT:** Please upgrade to the latest version of twilio-video.js to avoid breaking changes in Chrome in early 2020 (removal of Plan B).
-See [this advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for details.
-
 twilio-video.js
 ===============
 
@@ -19,11 +16,7 @@ twilio-video.js allows you to add real-time voice and video to your web apps.
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
 * [React-based Multi-party Video App](https://github.com/twilio/twilio-video-app-react)
 
-**We want your feedback!** Email
-[video-product@twilio.com](mailto:video-product@twilio.com) with suggested
-improvements, feature requests and general feedback, or feel free to open a
-GitHub issue. If you need technical support, contact
-[help@twilio.com](mailto:help@twilio.com).
+**We want your feedback!** Please feel free to open a [GitHub issue](https://github.com/twilio/twilio-video.js/issues) for suggested improvements or feature requests. If you need technical support, contact [help@twilio.com](mailto:help@twilio.com).
 
 Browser Support
 ---------------
@@ -84,7 +77,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/2.10.0/twilio-video.min.js"></script>
+<script src="//media.twiliocdn.com/sdk/js/video/releases/2.11.0/twilio-video.min.js"></script>
 
 ```
 
