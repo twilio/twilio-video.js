@@ -703,6 +703,8 @@ describe('connect', function() {
     });
   });
 
+  // TODO: The following tests verifies bitrates using default codec, OPUS.
+  // We should also verify other codecs like ISAC, PCMU and PCMA.
   describe('called with EncodingParameters', () => {
     const minAudioBitrate = 6000;
     const minVideoBitrate = 20000;
@@ -808,18 +810,10 @@ describe('connect', function() {
             const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
             if (maxBitrates[kind]) {
               const hasLessBitrate = averageBitrate <= maxBitrates[kind];
-              if (!hasLessBitrate) {
-                // Log values if failed
-                console.log(`maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-              }
-              assert(hasLessBitrate);
+              assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
             } else {
               const hasUnlimitedBitrate = averageBitrate > minBitrate;
-              if (!hasUnlimitedBitrate) {
-                // Log values if failed
-                console.log(`Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-              }
-              assert(hasUnlimitedBitrate);
+              assert(hasUnlimitedBitrate, `Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
             }
           });
         }
