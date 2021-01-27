@@ -12,7 +12,8 @@ const publicVars = [
   'isSupported',
   'LocalAudioTrack',
   'LocalDataTrack',
-  'LocalVideoTrack'
+  'LocalVideoTrack',
+  'Logger'
 ];
 
 describe('UMD', function() {
