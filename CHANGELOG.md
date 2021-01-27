@@ -1,7 +1,6 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
-=======
 
 2.12.0 (In Progress)
 ====================
@@ -21,7 +20,7 @@ New Features
   NOTE: Large Group Rooms is currently in **beta**.
 
 2.11.0 (January 26, 2021)
-====================
+=========================
 
 - You can now import type definitions for the SDK APIs to your project. Previously, typescript developers relied on [definitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1a7a99db8ec25d48f3dfec146af742e5bc40a5f7/types/twilio-video/index.d.ts) for these definitions. We would like to thank the folks at DefinitelyTyped for maintaining these definitions. Going forward, the definitions will be included in the library and will take precedence over any other type definitions that you may be using. (JSDK-3007)
 
