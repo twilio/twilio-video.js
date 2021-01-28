@@ -19,6 +19,11 @@ New Features
 
   NOTE: Large Group Rooms is currently in **beta**.
 
+Bug Fixes
+---------
+
+- Fixed a bug where calling `LocalMediaTrack.restart()` logged a warning about PeerConnection being closed in Peer to Peer Rooms. (JSDK-2912)
+
 2.11.0 (January 26, 2021)
 =========================
 
