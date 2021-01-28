@@ -29,6 +29,7 @@ function runFrameworkTest(options) {
     let server;
     let driver;
     let token;
+    let environment;
 
     before(() => {
       server = spawn(start.command, start.args, {
@@ -55,6 +56,12 @@ function runFrameworkTest(options) {
 
     beforeEach(() => {
       token = getToken('twilio-video.js-framework-test');
+      // eslint-disable-next-line no-process-env
+      environment = process.env.ENVIRONMENT;
+
+      if (environment && environment !== 'prod') {
+        return driver.get(`http://${host}:${port}?token=${token}&environment=${environment}`);
+      }
       return driver.get(`http://${host}:${port}?token=${token}`);
     });
 

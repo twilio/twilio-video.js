@@ -9,7 +9,8 @@ const {
 } = require('../../../lib');
 
 const {
-  RoomCompletedError
+  RoomCompletedError,
+  ParticipantMaxTracksExceededError
 } = require('../../../lib/util/twilio-video-errors');
 
 const { isChrome, isSafari } = require('../../lib/guessbrowser');
@@ -18,7 +19,7 @@ const RemoteParticipant = require('../../../lib/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../lib/util');
 
 const defaults = require('../../lib/defaults');
-const { completeRoom, createRoom, startRecording, stopRecording } = require('../../lib/rest');
+const { completeRoom, createRoom, startRecording, stopRecording, getRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
 
@@ -439,37 +440,25 @@ describe('Room', function() {
     });
   });
 
-  // eslint-disable-next-line
-  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', async () => {
-    let options;
-    let sid;
-    let thatParticipant;
-    let thisRoom;
-    let thatRoom;
-
-    before(async () => {
-      sid = await createRoom(randomName(), defaults.topology);
-      options = Object.assign({ name: sid }, defaults);
-      thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: [] }, options));
+  (defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('"dominantSpeakerChanged" event', () => {
+    it('is raised whenever the dominant speaker in the Room changes', async () => {
+      const sid = await waitFor(createRoom(randomName(), defaults.topology), 'creating room');
+      const options = Object.assign({ name: sid }, defaults);
+      const thisRoom = await waitFor(connect(getToken('Alice'), Object.assign({ tracks: [] }, options)), `Alice connecting to the room: ${sid}`);
 
       const tracks = [createSyntheticAudioStreamTrack() || (await createLocalTracks({
         audio: true,
         fake: true
       }))[0]];
 
-      thatRoom = await connect(getToken(randomName()), Object.assign({ tracks }, options));
-      await participantsConnected(thisRoom, 1);
-      thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
-    });
+      const thatRoom = await waitFor(connect(getToken('Bob'), Object.assign({ tracks }, options), `Bob connecting to the room: ${sid}`));
+      await waitFor(participantsConnected(thisRoom, 1), `Alice receives participantsConnected: ${sid}`);
+      const thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
 
-    it('is raised whenever the dominant speaker in the Room changes', async () => {
-      await dominantSpeakerChanged(thisRoom, thatParticipant);
+      await waitFor(dominantSpeakerChanged(thisRoom, thatParticipant), `Alice receives dominantSpeakerChanged: ${sid}`);
       assert.equal(thisRoom.dominantSpeaker, thatParticipant);
-    });
-
-    after(() => {
       [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      await completeRoom(sid);
     });
   });
 
@@ -710,6 +699,130 @@ describe('Room', function() {
       await waitFor(p2, `Alice to receive "trackSwitchedOn" on Bob's RemoteTrackPublication: ${aliceRoom.sid}`);
       await waitFor(p3, `Alice to receive "trackSwitchedOn" on Bob's RemoteParticipant: ${aliceRoom.sid}`);
       await waitFor(p4, `Alice to receive "trackSwitchedOn" on the Room: ${aliceRoom.sid}`);
+    });
+  });
+
+  (defaults.topology === 'group' ? describe : describe.skip)('large rooms', () => {
+    let roomSid = null;
+    let aliceRoom = null;
+    let bobRoom = null;
+    let charlieRoom = null;
+    let track = null;
+    let roomDetails = null;
+
+    before(async () => {
+      // create a large group room
+      roomSid = await createRoom(randomName(), defaults.topology, { MaxParticipants: 51 });
+      roomDetails = await getRoom(roomSid);
+
+      assert(roomDetails.max_concurrent_published_tracks === 16);
+      assert(roomDetails.max_participants === 51);
+      track = await createLocalAudioTrack({ fake: true });
+
+      // alice join the room
+      aliceRoom = await connect(getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+    });
+
+    after(async () => {
+      [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+      await completeRoom(roomSid);
+      track.stop();
+    });
+
+    it('emits participantConnected when a participant joins with a track', async () => {
+      const charlieConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
+      const charlieTrack = await createLocalAudioTrack({ fake: true });
+      charlieRoom = await connect(getToken('Charlie'), Object.assign({ name: roomSid }, defaults, { tracks: [charlieTrack] }));
+
+      await waitFor(charlieConnectedPromise, `waiting for participantConnected for Charlie: ${roomSid}`);
+
+      const charlieDiscConnectedPromise = new Promise(resolve => aliceRoom.once('participantDisconnected', resolve));
+      charlieRoom.disconnect();
+      await waitFor(charlieDiscConnectedPromise, `waiting for Charlie disconnected: ${roomSid}`);
+    });
+
+    it('does not emit participantConnected when a participant joins with no tracks', async () => {
+      const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
+      bobRoom = await connect(getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+
+      await waitForNot(bobConnectedPromise, `received unexpected participantConnected: ${roomSid}`);
+    });
+
+    it('emits participantConnected when a participant publishes track', async () => {
+      const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
+
+      await bobRoom.localParticipant.publishTrack(track);
+      await waitFor(bobConnectedPromise, `waiting for participantConnected: ${roomSid}`);
+    });
+
+    it('returns error when published tracks increase the limit', async () => {
+      let tracksPublishedAlready = 0;
+      aliceRoom.participants.forEach(p => { tracksPublishedAlready += p.tracks.size; });
+      const tracksToPublish = Array(roomDetails.max_concurrent_published_tracks - tracksPublishedAlready).fill(0);
+
+      const tracks = await waitFor(tracksToPublish.map(() => createLocalAudioTrack({ fake: true })));
+      await waitFor(bobRoom.localParticipant.publishTracks(tracks), `max Tracks to get published: ${roomSid}`);
+
+      const oneMoreTrack = await createLocalAudioTrack({ fake: true });
+      let publishError = null;
+      try {
+        await bobRoom.localParticipant.publishTrack(oneMoreTrack);
+      } catch (error) {
+        publishError = error;
+        assert(publishError.code === 53203, `Unexpected ErrorCode: ${publishError.code}`);
+      }
+      assert(publishError !== null, 'was expecting an error publishing track');
+    });
+
+    it('emits synthetic participantDisconnected when participant unpublish last track', async () => {
+      const bobDisConnectedPromise = new Promise(resolve => aliceRoom.once('participantDisconnected', resolve));
+
+      [...bobRoom.localParticipant.tracks.values()].forEach(trackPub => trackPub.unpublish());
+      await waitFor(bobDisConnectedPromise, `waiting for synthetic participantDisConnected: ${roomSid}`);
+    });
+  });
+
+  (defaults.topology === 'group' ? describe : describe.skip)('large rooms ParticipantMaxTracksExceededError', () => {
+    [1, 2, 5].forEach(nTracksToPublishLater => {
+      it(`throws ParticipantMaxTracksExceededError when publishing ${nTracksToPublishLater} tracks when they exceed the limit:`, async () => {
+
+        // create a large group room
+        const roomSid = await createRoom(randomName(), defaults.topology, { MaxParticipants: 51 });
+        const roomDetails = await getRoom(roomSid);
+
+        assert(roomDetails.max_concurrent_published_tracks === 16);
+        assert(roomDetails.max_participants === 51);
+
+        // alice join the room
+        const aliceRoom = await connect(getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+
+        // bob joins room with 0 tracks
+        const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
+        const bobRoom = await connect(getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+
+        // it does not invoke participantConnected.
+        await waitForNot(bobConnectedPromise, `received unexpected participantConnected: ${roomSid}`);
+
+        // bob publishes max_concurrent_published_tracks - nTracksToPublishLater + 1
+        const nTracksToPublishInitially = roomDetails.max_concurrent_published_tracks - nTracksToPublishLater + 1;
+        const tracksToPublishInitially = await waitFor(Array(nTracksToPublishInitially).fill(0).map(() => createLocalAudioTrack({ fake: true })), `creating ${nTracksToPublishInitially} tracks`);
+        await waitFor(bobRoom.localParticipant.publishTracks(tracksToPublishInitially), `initial ${nTracksToPublishInitially} tracks to get published: ${roomSid}`);
+
+        // creating  nTracksToPublishLater more tracks would exceed max limit.
+        const tracksToPublishLater = await waitFor(Array(nTracksToPublishLater).fill(0).map(() => createLocalAudioTrack({ fake: true })), `creating ${nTracksToPublishLater} tracks`);
+        let publishError = null;
+        try {
+          await bobRoom.localParticipant.publishTracks(tracksToPublishLater);
+        } catch (error) {
+          publishError = error;
+          assert(publishError instanceof ParticipantMaxTracksExceededError);
+          assert(publishError.code === 53203, `Unexpected ErrorCode: ${publishError.code}`);
+        }
+        assert(publishError !== null, 'was expecting an error publishing track');
+
+        [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+        await completeRoom(roomSid);
+      });
     });
   });
 

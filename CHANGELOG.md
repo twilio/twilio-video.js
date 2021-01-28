@@ -1,26 +1,40 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
-**Support for 1.x will cease on December 4th, 2020**. This branch will only receive fixes for critical issues until that date. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) when planning your migration to 2.x. For details on the 1.x changes, go [here](https://github.com/twilio/twilio-video.js/blob/support-1.x/CHANGELOG.md).
+**Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-2.11.0 (In Progress)
+2.12.0 (In Progress)
 ====================
 
 New Features
 ------------
 
+- You can now connect to a Group Room with Maximum Participants between 50 and 100 (Large Group Rooms).
+  Large Group Rooms are different from the other types of Rooms in the following ways:
+  - "participantConnected" event is raised on the Room when a RemoteParticipant
+    publishes the first LocalTrack.
+  - "participantDisconnected" event is raised on the Room when a RemoteParticipant
+    stops publishing all of its LocalTracks.
+  - The total number of published Tracks in the Room cannot exceed 16. Any attempt
+    to publish more Tracks will be rejected with a `ParticipantMaxTracksExceededError`. (JSDK-3021)
+
+  NOTE: Large Group Rooms is currently in **beta**.
+
+2.11.0 (January 26, 2021)
+=========================
+
 - You can now import type definitions for the SDK APIs to your project. Previously, typescript developers relied on [definitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1a7a99db8ec25d48f3dfec146af742e5bc40a5f7/types/twilio-video/index.d.ts) for these definitions. We would like to thank the folks at DefinitelyTyped for maintaining these definitions. Going forward, the definitions will be included in the library and will take precedence over any other type definitions that you may be using. (JSDK-3007)
 
-  You can access the types of the public API classes from the `Video` namespace as shown below:
-  ```ts
-  import * as Video from 'twilio-video';
+You can access the types of the public API classes from the `Video` namespace as shown below:
+```ts
+import * as Video from 'twilio-video';
 
-  Video.connect('token', { name: 'my-cool-room' }).then((room: Video.Room) => {
-    console.log('Connected to Room:', room.name);
-    room.on('participantConnected', (participant: Video.RemoteParticipant) => {
-      console.log('RemoteParticipant joined:', participant.identity);
-    });
+Video.connect('token', { name: 'my-cool-room' }).then((room: Video.Room) => {
+  console.log('Connected to Room:', room.name);
+  room.on('participantConnected', (participant: Video.RemoteParticipant) => {
+    console.log('RemoteParticipant joined:', participant.identity);
   });
-  ```
+});
+```
 
 Bug Fixes
 ---------
