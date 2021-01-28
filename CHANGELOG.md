@@ -22,7 +22,7 @@ New Features
 Bug Fixes
 ---------
 
-- Fixed a bug where calling `LocalMediaTrack.restart()` logs a warning about PeerConnection being closed in Peer to Peer Rooms. (JSDK-2912)
+- Fixed a bug where calling `LocalMediaTrack.restart()` logged a warning about PeerConnection being closed in Peer to Peer Rooms. (JSDK-2912)
 
 2.11.0 (January 26, 2021)
 =========================
