@@ -1,5 +1,5 @@
 export class VideoProcessor {
-  processFrame(inputFrame: HTMLCanvasElement | OffscreenCanvas)
-    : Promise<HTMLCanvasElement | OffscreenCanvas | null>
-    | HTMLCanvasElement | OffscreenCanvas | null;
+  processFrame(inputFrame: OffscreenCanvas)
+    : Promise<OffscreenCanvas | null>
+    | OffscreenCanvas | null;
 }
