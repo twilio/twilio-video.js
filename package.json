@@ -61,6 +61,7 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "0.0.32",
     "mocha": "^3.2.0",
+    "mock-require": "^3.0.3",
     "node-http-server": "^8.1.2",
     "npm-run-all": "^4.0.2",
     "requirejs": "^2.3.3",

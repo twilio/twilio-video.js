@@ -27,6 +27,7 @@ require('./spec/media/track/mediatrack');
 require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localaudiotrack');
+require('./spec/media/track/localvideotrack');
 require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/receiver');
 require('./spec/media/track/remotedatatrack');
