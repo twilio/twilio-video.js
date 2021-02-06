@@ -18,11 +18,13 @@ const mediaStreamTrackSettings = {
 
 describe('VideoTrack', () => {
   let captureStream;
+  let clock;
   let videoTrack;
   let mediaStreamTrack;
   let processedTrack;
 
   beforeEach(() => {
+    clock = sinon.useFakeTimers();
     processedTrack = {};
     captureStream = sinon.stub().returns({getTracks: () => [processedTrack]});
     const document = new Document();
@@ -32,17 +34,22 @@ describe('VideoTrack', () => {
     mediaStreamTrack = new MediaStreamTrack('1', 'video');
     const mediaTrackTransceiver = new MediaTrackTransceiver('1', mediaStreamTrack);
     videoTrack = new VideoTrack(mediaTrackTransceiver, { log: log });
-    videoTrack._selectElement = sinon.stub();
+
     videoTrack._attach = sinon.stub();
-    videoTrack._captureFrames = sinon.stub();
+    videoTrack._selectElement = sinon.stub();
     videoTrack._updateElementsMediaStreamTrack = sinon.stub();
   });
 
   afterEach(() => {
     delete global.document;
+    clock.restore();
   });
 
   describe('#attach', () => {
+    beforeEach(() => {
+      videoTrack._captureFrames = sinon.stub();
+    });
+
     it('should start capturing frames if a VideoProcessor is attached', () => {
       videoTrack.processor = 'foo';
       videoTrack.attach('foo');
@@ -87,6 +94,7 @@ describe('VideoTrack', () => {
 
       describe('when a valid VideoProcessor is provided', () => {
         beforeEach(() => {
+          videoTrack._captureFrames = sinon.stub();
           videoTrack.addProcessor(processor);
         });
 
@@ -157,6 +165,39 @@ describe('VideoTrack', () => {
             assert.throws(() => {videoTrack.addProcessor(param)}, regex);
           });
         });
+      });
+    });
+  });
+
+  describe('#_captureFrames', () => {
+    beforeEach(() => {
+      videoTrack._attachments.add('foo');
+      videoTrack.processor = 'foo';
+    });
+
+    describe('no operation', () => {
+      beforeEach(() => {
+        videoTrack._dummyEl.play = sinon.stub().returns(Promise.resolve());
+      });
+
+      it('when called more than once', () => {
+        videoTrack._captureFrames();
+        videoTrack._captureFrames();
+        videoTrack._captureFrames();
+        videoTrack._captureFrames();
+        sinon.assert.calledOnce(videoTrack._dummyEl.play);
+      });
+
+      it('when a VideoProcessor is not added', () => {
+        videoTrack.processor = null;
+        videoTrack._captureFrames();
+        sinon.assert.notCalled(videoTrack._dummyEl.play);
+      });
+
+      it('when no video elements are attached', () => {
+        videoTrack._attachments.clear();
+        videoTrack._captureFrames();
+        sinon.assert.notCalled(videoTrack._dummyEl.play);
       });
     });
   });
