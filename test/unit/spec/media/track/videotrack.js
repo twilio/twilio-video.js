@@ -170,9 +170,116 @@ describe('VideoTrack', () => {
   });
 
   describe('#_captureFrames', () => {
+    const internalPromise = () => Promise.resolve();
+    const timeoutMs = 1000 / mediaStreamTrackSettings.frameRate;
+    let processFrame;
+
     beforeEach(() => {
+      processFrame = sinon.spy();
       videoTrack._attachments.add('foo');
-      videoTrack.processor = 'foo';
+      videoTrack.processor = { processFrame };
+
+      videoTrack._dummyEl.play = () => ({ then: (cb) => {
+        cb();
+        return { catch: sinon.stub() };
+      }});
+
+      videoTrack._inputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
+      videoTrack._outputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
+    });
+
+    describe('processFrame', () => {
+      it('should pass the inputFrames to the processFrame method', () => {
+        videoTrack._captureFrames();
+        clock.tick(timeoutMs);
+        sinon.assert.calledWith(processFrame, videoTrack._inputFrame);
+      });
+
+      [{
+        name: 'should draw the processed frame to the outputFrame if the return value is valid and not a promise',
+        getReturnValue: () => 'myframe',
+        expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
+      },{
+        name: 'should draw the processed frame to the outputFrame if the return value is valid in a promise',
+        getReturnValue: () =>  Promise.resolve('myframe'),
+        expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
+      },{
+        name: 'should drop the frame if processFrame throws an exception',
+        getReturnValue:  () => { throw new Error('foo'); },
+        expectedDrawing: {}
+      },{
+        name: 'should drop the frame if processFrame returns null',
+        getReturnValue:  () => null,
+        expectedDrawing: {}
+      },{
+        name: 'should drop the frame if processFrame returns a promise which resolves to null',
+        getReturnValue:  () => Promise.resolve(null),
+        expectedDrawing: {}
+      }].forEach(({name, getReturnValue, expectedDrawing}) => {
+        it(name, async () => {
+          videoTrack.processor.processFrame = (inputFrame) => getReturnValue();
+          videoTrack._captureFrames();
+          clock.tick(timeoutMs);
+          await internalPromise();
+          assert.deepEqual(videoTrack._outputFrame.drawing, expectedDrawing);
+        });
+      });
+    });
+
+    describe('requestVideoFrameCallback', () => {
+      let onVideoFrame;
+
+      beforeEach(() => {
+        onVideoFrame = sinon.stub();
+      });
+
+      it('should use requestVideoFrameCallback when available', async () => {
+        videoTrack._dummyEl.requestVideoFrameCallback = (cb) => {
+          setTimeout(() => {
+            cb();
+            onVideoFrame();
+          }, timeoutMs);
+        };
+        videoTrack._captureFrames();
+
+        clock.tick(timeoutMs - 1);
+        sinon.assert.notCalled(processFrame);
+        sinon.assert.notCalled(onVideoFrame);
+        clock.tick(1);
+        sinon.assert.calledOnce(processFrame);
+        sinon.assert.calledOnce(onVideoFrame);
+
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledTwice(processFrame);
+        sinon.assert.calledTwice(onVideoFrame);
+
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledThrice(processFrame);
+        sinon.assert.calledThrice(onVideoFrame);
+      });
+
+      it('should use setTimeout if requestVideoFrameCallback is not available', async () => {
+        videoTrack._captureFrames();
+
+        clock.tick(timeoutMs - 1);
+        sinon.assert.notCalled(processFrame);
+        sinon.assert.notCalled(onVideoFrame);
+        clock.tick(1);
+        sinon.assert.calledOnce(processFrame);
+        sinon.assert.notCalled(onVideoFrame);
+
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledTwice(processFrame);
+        sinon.assert.notCalled(onVideoFrame);
+
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledThrice(processFrame);
+        sinon.assert.notCalled(onVideoFrame);
+      });
     });
 
     describe('no operation', () => {
@@ -206,6 +313,12 @@ describe('VideoTrack', () => {
 function OffscreenCanvas(width, height){
   this.width = width;
   this.height = height;
+  this.drawing = {};
+  this.getContext = () => ({
+    drawImage: (image, x, y, width, height) => {
+      this.drawing = { image, x, y, width, height };
+    }
+  });
 }
 
 function MediaStreamTrack(id, kind) {
