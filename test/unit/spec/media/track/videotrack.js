@@ -26,9 +26,9 @@ describe('VideoTrack', () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers();
     processedTrack = {};
-    captureStream = sinon.stub().returns({getTracks: () => [processedTrack]});
+    captureStream = sinon.stub().returns({ getTracks: () => [processedTrack] });
     const document = new Document();
-    document.createElement = () => ({captureStream});
+    document.createElement = () => ({ captureStream });
     global.document = document;
 
     mediaStreamTrack = new MediaStreamTrack('1', 'video');
@@ -101,7 +101,7 @@ describe('VideoTrack', () => {
         it('should add a VideoProcessor', () => {
           assert.equal(videoTrack.processor, processor);
         });
-  
+
         it('should not log a warning', () => {
           sinon.assert.notCalled(log.warn);
         });
@@ -134,35 +134,35 @@ describe('VideoTrack', () => {
           name: 'processor is null',
           errorMsg: 'Received an invalid VideoProcessor.',
           param: null,
-        },{
+        }, {
           name: 'processor is undefined',
           errorMsg: 'Received an invalid VideoProcessor.',
           param: undefined,
-        },{
+        }, {
           name: 'processFrame is null',
           errorMsg: 'Received an invalid VideoProcessor.',
           param: { processFrame: null },
-        },{
+        }, {
           name: 'processFrame is undefined',
           errorMsg: 'Received an invalid VideoProcessor.',
           param: { processFrame: undefined },
-        },{
+        }, {
           name: 'processor is already set',
           errorMsg: 'A VideoProcessor has already been added.',
           param: { processFrame: sinon.spy() },
-          setup: () => videoTrack.processor = { processFrame: sinon.spy() }
-        },{
+          setup: () => { videoTrack.processor = { processFrame: sinon.spy() }; }
+        }, {
           name: 'dummyEl is not set',
           errorMsg: 'VideoTrack has not been initialized.',
           param: { processFrame: sinon.spy() },
-          setup: () => videoTrack._dummyEl = null
-        }].forEach(({name, errorMsg, param, setup}) => {
+          setup: () => { videoTrack._dummyEl = null; }
+        }].forEach(({ name, errorMsg, param, setup }) => {
           it(`when ${name}`, () => {
             if (setup) {
               setup();
             }
             const regex = new RegExp(errorMsg);
-            assert.throws(() => {videoTrack.addProcessor(param)}, regex);
+            assert.throws(() => { videoTrack.addProcessor(param); }, regex);
           });
         });
       });
@@ -179,10 +179,10 @@ describe('VideoTrack', () => {
       videoTrack._attachments.add('foo');
       videoTrack.processor = { processFrame };
 
-      videoTrack._dummyEl.play = () => ({ then: (cb) => {
+      videoTrack._dummyEl.play = () => ({ then: cb => {
         cb();
         return { catch: sinon.stub() };
-      }});
+      } });
 
       videoTrack._inputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
       videoTrack._outputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
@@ -199,25 +199,25 @@ describe('VideoTrack', () => {
         name: 'should draw the processed frame to the outputFrame if the return value is valid and not a promise',
         getReturnValue: () => 'myframe',
         expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
-      },{
+      }, {
         name: 'should draw the processed frame to the outputFrame if the return value is valid in a promise',
         getReturnValue: () =>  Promise.resolve('myframe'),
         expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
-      },{
+      }, {
         name: 'should drop the frame if processFrame throws an exception',
-        getReturnValue:  () => { throw new Error('foo'); },
+        getReturnValue: () => { throw new Error('foo'); },
         expectedDrawing: {}
-      },{
+      }, {
         name: 'should drop the frame if processFrame returns null',
-        getReturnValue:  () => null,
+        getReturnValue: () => null,
         expectedDrawing: {}
-      },{
+      }, {
         name: 'should drop the frame if processFrame returns a promise which resolves to null',
-        getReturnValue:  () => Promise.resolve(null),
+        getReturnValue: () => Promise.resolve(null),
         expectedDrawing: {}
-      }].forEach(({name, getReturnValue, expectedDrawing}) => {
+      }].forEach(({ name, getReturnValue, expectedDrawing }) => {
         it(name, async () => {
-          videoTrack.processor.processFrame = (inputFrame) => getReturnValue();
+          videoTrack.processor.processFrame = () => getReturnValue();
           videoTrack._captureFrames();
           clock.tick(timeoutMs);
           await internalPromise();
@@ -234,10 +234,10 @@ describe('VideoTrack', () => {
       });
 
       it('should use requestVideoFrameCallback when available', async () => {
-        videoTrack._dummyEl.requestVideoFrameCallback = (cb) => {
+        videoTrack._dummyEl.requestVideoFrameCallback = cb => {
           setTimeout(() => {
-            cb();
             onVideoFrame();
+            cb();
           }, timeoutMs);
         };
         videoTrack._captureFrames();
@@ -310,7 +310,7 @@ describe('VideoTrack', () => {
   });
 });
 
-function OffscreenCanvas(width, height){
+function OffscreenCanvas(width, height) {
   this.width = width;
   this.height = height;
   this.drawing = {};

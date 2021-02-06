@@ -22,7 +22,7 @@ mock('../../../../../lib/media/track/localmediatrack', function() {
     enable() {
       parentClassContext.enable(...arguments);
     }
-  }
+  };
 });
 
 const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
