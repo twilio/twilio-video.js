@@ -3,9 +3,8 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const mock = require('mock-require');
-const { EventEmitter } = require('events');
-const { inherits } = require('util');
 const log = require('../../../../lib/fakelog');
+const { FakeMediaStreamTrack: MediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 describe('LocalVideoTrack', () => {
   const parentClassContext = {};
@@ -95,16 +94,3 @@ describe('LocalVideoTrack', () => {
     });
   });
 });
-
-function MediaStreamTrack(id, kind) {
-  EventEmitter.call(this);
-  Object.defineProperties(this, {
-    id: { value: id },
-    kind: { value: kind },
-    enabled: { value: true, writable: true },
-    readyState: { value: 'live', writable: true }
-  });
-}
-inherits(MediaStreamTrack, EventEmitter);
-MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
-MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
