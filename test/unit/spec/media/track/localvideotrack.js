@@ -7,29 +7,37 @@ const { EventEmitter } = require('events');
 const { inherits } = require('util');
 const log = require('../../../../lib/fakelog');
 
-const parentClassContext = {};
-mock('../../../../../lib/media/track/localmediatrack', function() {
-  return class LocalMediaTrack {
-    constructor() {
-      this._log = log;
-    }
-    addProcessor() {
-      parentClassContext.addProcessor(...arguments);
-    }
-    disable() {
-      parentClassContext.disable(...arguments);
-    }
-    enable() {
-      parentClassContext.enable(...arguments);
-    }
-  };
-});
-
-const LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
-
 describe('LocalVideoTrack', () => {
+  const parentClassContext = {};
   let localVideoTrack;
   let mediaStreamTrack;
+  let LocalVideoTrack;
+
+  before(() => {
+    delete require.cache[require.resolve('../../../../../lib/media/track/localmediatrack')];
+    delete require.cache[require.resolve('../../../../../lib/media/track/localvideotrack')];
+    mock('../../../../../lib/media/track/localmediatrack', function() {
+      return class LocalMediaTrack {
+        constructor() {
+          this._log = log;
+        }
+        addProcessor() {
+          parentClassContext.addProcessor(...arguments);
+        }
+        disable() {
+          parentClassContext.disable(...arguments);
+        }
+        enable() {
+          parentClassContext.enable(...arguments);
+        }
+      };
+    });
+    LocalVideoTrack = require('../../../../../lib/media/track/localvideotrack');
+  });
+
+  after(() => {
+    mock.stopAll();
+  });
 
   beforeEach(() => {
     parentClassContext.addProcessor = sinon.spy();
@@ -41,10 +49,6 @@ describe('LocalVideoTrack', () => {
     localVideoTrack._trackSender = {
       setMediaStreamTrack: sinon.stub().resolves({})
     };
-  });
-
-  after(() => {
-    mock.stopAll();
   });
 
   describe('#addProcessor', () => {
