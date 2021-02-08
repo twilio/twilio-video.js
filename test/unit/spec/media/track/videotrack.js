@@ -170,7 +170,9 @@ describe('VideoTrack', () => {
   });
 
   describe('#_captureFrames', () => {
-    const internalPromise = () => Promise.resolve();
+    // As of node12, the Promise.then and Promise.finally requires separate
+    // promises to resolve internally.
+    const internalPromise = () => Promise.resolve().then(Promise.resolve());
     const timeoutMs = 1000 / mediaStreamTrackSettings.frameRate;
     let processFrame;
 
