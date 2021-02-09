@@ -16,7 +16,8 @@ describe('RemoteTrackPublicationV2', () => {
           priority: makeUUID(),
           sid: makeSid()
         };
-        assert.equal((new RemoteTrackPublicationV2(trackState))[prop], trackState[prop]);
+        const isSwitchedOff = makeSwitchedOff();
+        assert.equal((new RemoteTrackPublicationV2(trackState, isSwitchedOff))[prop], trackState[prop]);
       });
     });
 
@@ -30,6 +31,20 @@ describe('RemoteTrackPublicationV2', () => {
             priority: makeUUID(),
             sid: makeSid()
           })).isEnabled, enabled);
+        });
+      });
+    });
+
+    [true, false].forEach(isSwitchedOff => {
+      context(`when isSwitchedOff is ${isSwitchedOff}`, () => {
+        it(`sets .isSwitchedOff to ${isSwitchedOff}`, () => {
+          assert.equal((new RemoteTrackPublicationV2({
+            enabled: makeEnabled(),
+            kind: makeKind(),
+            name: makeUUID(),
+            priority: makeUUID(),
+            sid: makeSid()
+          }, isSwitchedOff)).isSwitchedOff, isSwitchedOff);
         });
       });
     });
@@ -648,6 +663,10 @@ describe('RemoteTrackPublicationV2', () => {
 });
 
 function makeEnabled() {
+  return (Math.random() < 0.5);
+}
+
+function makeSwitchedOff() {
   return (Math.random() < 0.5);
 }
 

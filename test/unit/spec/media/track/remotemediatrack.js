@@ -23,7 +23,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             try {
-              track = makeTrack('foo', 'bar', kind, true, getOptions(), RemoteTrack);
+              track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: getOptions(), RemoteTrack });
             } catch (e) {
               error = e;
             }
@@ -68,7 +68,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let onPriorityChange;
       beforeEach(() => {
         onPriorityChange = sinon.spy();
-        track = makeTrack('foo', 'bar', kind, true, options, RemoteTrack, onPriorityChange);
+        track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled: true, options, RemoteTrack, setPriority: onPriorityChange });
       });
 
       [null, ...Object.values(trackPriority)].forEach(priorityValue => {
@@ -111,7 +111,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             arg = null;
-            track = makeTrack('foo', 'bar', kind, isEnabled, null, RemoteTrack);
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled, options: null, RemoteTrack });
             track.once('disabled', _arg => {
               trackDisabled = true;
               arg = _arg;
@@ -164,10 +164,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
           before(() => {
             arg = null;
-            track = makeTrack('foo', 'bar', kind, true, null, RemoteTrack);
-            if (isSwitchedOff) {
-              track._setSwitchedOff(isSwitchedOff);
-            }
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff, isEnabled: true, options: null, RemoteTrack });
             track.once('switchedOff', _arg => {
               trackSwitchedOff = true;
               arg = _arg;
@@ -209,7 +206,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let track;
 
       before(() => {
-        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -242,7 +239,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
     describe('#attach', () => {
       it('enables the track if disabled', () => {
-        let track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        let track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
@@ -262,7 +259,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let el2;
       let track;
       beforeEach(() => {
-        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
@@ -302,7 +299,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
       let track;
 
       before(() => {
-        track = makeTrack('foo', 'MT1', kind, true, null, RemoteTrack);
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -335,10 +332,11 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   });
 });
 
-function makeTrack(id, sid, kind, isEnabled, options, RemoteTrack, setPriority) {
+function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
+  isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, setPriority, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, options);
 }
