@@ -47,18 +47,29 @@ prod)
   ;;
 esac
 
-if [ "${NETWORK_TESTS}" = "true" ];
-then
-    # network tets run inside a container with docker socket mapped in the container.
-    echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
-    docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
-else
-    # ask circleci to split tests by timing.
-    echo "Asking circleci to pick tests based on timings..."
-    export TEST_FILES=$(circleci tests glob "$PWD/test/integration/spec/**/*.js" | circleci tests split --split-by=timings)
-    echo $TEST_FILES
-    npm run test:integration
-fi
+case ${TEST_TYPE} in
+network)
+  echo "Running network tests"
+  # network tets run inside a container with docker socket mapped in the container.
+  echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
+  docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
+  ;;
+integration)
+  echo "Testing integration tests"
+  # ask circleci to split tests by timing.
+  echo "Asking circleci to pick tests based on timings..."
+  export TEST_FILES=$(circleci tests glob "$PWD/test/integration/spec/**/*.js" | circleci tests split --split-by=timings)
+  echo $TEST_FILES
+  npm run test:integration
+  ;;
+framework)
+  echo "Testing framework"
+  npm run test:framework
+  ;;
+*)
+  echo 'Please specify TEST_TYPE ("network", "integration", or "framework")'
+  exit 1
+  ;;
+esac
 
 echo "Done with Tests!"
-

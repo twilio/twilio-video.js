@@ -464,6 +464,42 @@ describe('PeerConnectionManager', () => {
             test.peerConnectionManager.setTrackSenders([...trackSenders2, ...trackSenders3]));
         });
 
+        context('when the PeerConnection has transitioned to "closed"', () => {
+          it('should remove mediaTrackSenders from the PeerConnection', async () => {
+            const test = makeTest({ isAudioContextSupported });
+            const mediaStream1 = makeMediaStream({ audio: 1 });
+            const mediaStream2 = makeMediaStream({ video: 1 });
+            const trackSenders1 = mediaStream1.getTracks().map(makeTrackSender);
+            const trackSenders2 = mediaStream2.getTracks().map(makeTrackSender);
+
+            test.peerConnectionManager.setTrackSenders([...trackSenders1, ...trackSenders2]);
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([{ id: '123' }]);
+            test.peerConnectionV2s[0].state = 'closed';
+            test.peerConnectionV2s[0].emit('stateChanged', 'closed');
+
+            const args = test.peerConnectionV2s[0].removeMediaTrackSender.args;
+            assert.equal(trackSenders1[0].id, args[0][0].id);
+            assert.equal(trackSenders2[0].id, args[1][0].id);
+          });
+
+          it('should remove dataTrackSenders from the PeerConnection', async () => {
+            const test = makeTest({ isAudioContextSupported });
+            const dataTrackSender1 = new DataTrackSender(null, null, true);
+            const dataTrackSender2 = new DataTrackSender(null, null, true);
+
+            test.peerConnectionManager.setTrackSenders([dataTrackSender1, dataTrackSender2]);
+            await test.peerConnectionManager.createAndOffer();
+            await test.peerConnectionManager.update([{ id: '123' }]);
+            test.peerConnectionV2s[0].state = 'closed';
+            test.peerConnectionV2s[0].emit('stateChanged', 'closed');
+
+            const args = test.peerConnectionV2s[0].removeDataTrackSender.args;
+            assert.equal(dataTrackSender1.id, args[0][0].id);
+            assert.equal(dataTrackSender2.id, args[1][0].id);
+          });
+        });
+
         context('when called with the same MediaTrackSenders as the last time', () => {
           it('should not call addMediaTrackSender on the underlying PeerConnectionV2s', async () => {
             const test = makeTest({ isAudioContextSupported });

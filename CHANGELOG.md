@@ -2,11 +2,31 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-2.11.0 (January 26, 2021)
-====================
+2.12.0 (Feb 10, 2020)
+=====================
 
 New Features
 ------------
+
+**100 Participant Rooms Pilot**
+- In this pilot program developers can connect to a Group Room with Maximum Participants set between 50 and 100.
+  A Room created with Max Participants greater than 50 is structured to support a small number of presenters and a large number of viewers. It has the following behavioral differences compared to regular Group Rooms:
+  - "participantConnected" event is raised on the Room when a RemoteParticipant
+    publishes the first LocalTrack.
+  - "participantDisconnected" event is raised on the Room when a RemoteParticipant
+    stops publishing all of its LocalTracks.
+  - The total number of published Tracks in the Room cannot exceed 16 at any one time. Any attempt
+    to publish more Tracks will be rejected with a `ParticipantMaxTracksExceededError`. (JSDK-3021)
+
+
+Bug Fixes
+---------
+
+- Fixed a bug where calling `LocalMediaTrack.restart()` logged a warning about PeerConnection being closed in Peer to Peer Rooms. (JSDK-2912)
+- Fixed a race condition that sometimes caused `switchedOff` event for `RemoteVideoTrack` to not get emitted, which also resulted in wrong value for `RemoteVideoTrack.isSwitchedOff` property. (VIDEO-3695)
+
+2.11.0 (January 26, 2021)
+=========================
 
 - You can now import type definitions for the SDK APIs to your project. Previously, typescript developers relied on [definitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/1a7a99db8ec25d48f3dfec146af742e5bc40a5f7/types/twilio-video/index.d.ts) for these definitions. We would like to thank the folks at DefinitelyTyped for maintaining these definitions. Going forward, the definitions will be included in the library and will take precedence over any other type definitions that you may be using. (JSDK-3007)
 

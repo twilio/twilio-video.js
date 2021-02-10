@@ -19,8 +19,17 @@ function getQueryParameters(location) {
 
 // eslint-disable-next-line
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
+// eslint-disable-next-line
+const environment = (getQueryParameters(location).get('environment') || [])[0];
 
-ReactDOM.render(
-  <App token={token} />,
-  document.getElementById('root')
-);
+if (environment !== 'prod') {
+  ReactDOM.render(
+    <App token={token} environment={environment}/>,
+    document.getElementById('root')
+  );
+} else {
+  ReactDOM.render(
+    <App token={token} />,
+    document.getElementById('root')
+  );
+}
