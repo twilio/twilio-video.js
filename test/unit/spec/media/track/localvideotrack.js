@@ -8,6 +8,7 @@ const { FakeMediaStreamTrack: MediaStreamTrack } = require('../../../../lib/fake
 
 describe('LocalVideoTrack', () => {
   const parentClassContext = {};
+  const internalPromise = () => Promise.resolve().then(Promise.resolve());
   let localVideoTrack;
   let mediaStreamTrack;
   let LocalVideoTrack;
@@ -24,13 +25,19 @@ describe('LocalVideoTrack', () => {
           parentClassContext._captureFrames(...arguments);
         }
         addProcessor() {
-          parentClassContext.addProcessor(...arguments);
+          return parentClassContext.addProcessor(...arguments);
+        }
+        removeProcessor() {
+          return parentClassContext.removeProcessor(...arguments);
         }
         disable() {
-          parentClassContext.disable(...arguments);
+          return parentClassContext.disable(...arguments);
         }
         enable() {
-          parentClassContext.enable(...arguments);
+          return parentClassContext.enable(...arguments);
+        }
+        restart() {
+          return parentClassContext.restart(...arguments);
         }
       };
     });
@@ -44,14 +51,17 @@ describe('LocalVideoTrack', () => {
   beforeEach(() => {
     parentClassContext._captureFrames = sinon.spy();
     parentClassContext.addProcessor = sinon.spy();
+    parentClassContext.removeProcessor = sinon.spy();
     parentClassContext.disable = sinon.spy();
     parentClassContext.enable = sinon.spy();
+    parentClassContext.restart = sinon.stub().resolves({});
 
     mediaStreamTrack = new MediaStreamTrack('foo', 'video');
     localVideoTrack = new LocalVideoTrack(mediaStreamTrack, {});
     localVideoTrack._trackSender = {
       setMediaStreamTrack: sinon.stub().resolves({})
     };
+    localVideoTrack._updateElementsMediaStreamTrack = sinon.stub();
   });
 
   describe('#addProcessor', () => {
@@ -72,27 +82,67 @@ describe('LocalVideoTrack', () => {
     });
   });
 
+  describe('#removeProcessor', () => {
+    beforeEach(() => {
+      localVideoTrack.removeProcessor('foo');
+    });
+
+    it('should call parent class method', () => {
+      sinon.assert.calledWith(parentClassContext.removeProcessor, 'foo');
+    });
+
+    it('should set RTCRtpSender with the original mediaStreamTrack', () => {
+      sinon.assert.calledWith(localVideoTrack._trackSender.setMediaStreamTrack, mediaStreamTrack);
+    });
+
+    it('should set attached elements srcObject with the original mediaStreamTrack', async () => {
+      await internalPromise();
+      sinon.assert.called(localVideoTrack._updateElementsMediaStreamTrack);
+    });
+  });
+
   describe('#enable', () => {
     it('should call parent class method', () => {
       localVideoTrack.enable();
       sinon.assert.calledOnce(parentClassContext.enable);
     });
 
-    it('should enable processedTrack', () => {
-      localVideoTrack.processedTrack = {};
-      localVideoTrack.enable();
-      assert(localVideoTrack.processedTrack.enabled);
+    [true, undefined].forEach(param => {
+      context(`when enabled parameter is ${param}`, () => {
+        it('should enable processedTrack', () => {
+          localVideoTrack.processedTrack = {};
+          localVideoTrack.enable(param);
+          assert(localVideoTrack.processedTrack.enabled);
+        });
+
+        it('should start capturing frames if processedTrack is available', () => {
+          localVideoTrack.processedTrack = { foo: 'foo' };
+          localVideoTrack.enable(param);
+          sinon.assert.calledOnce(parentClassContext._captureFrames);
+          sinon.assert.calledWith(localVideoTrack._trackSender.setMediaStreamTrack, { enabled: true, foo: 'foo' });
+        });
+
+        it('should not start capturing frames if processedTrack is not available', () => {
+          localVideoTrack.enable(param);
+          sinon.assert.notCalled(parentClassContext._captureFrames);
+          sinon.assert.notCalled(localVideoTrack._trackSender.setMediaStreamTrack);
+        });
+      });
     });
 
-    it('should start capturing frames if processedTrack is available', () => {
-      localVideoTrack.processedTrack = {};
-      localVideoTrack.enable();
-      sinon.assert.calledOnce(parentClassContext._captureFrames);
-    });
+    context('when enabled parameter is false', () => {
+      it('should disable processedTrack', () => {
+        localVideoTrack.processedTrack = {};
+        localVideoTrack.enable(false);
+        assert(!localVideoTrack.processedTrack.enabled);
+      });
 
-    it('should not start capturing frames if processedTrack is not available', () => {
-      localVideoTrack.enable();
-      sinon.assert.notCalled(parentClassContext._captureFrames);
+      it('should not start capturing frames if processedTrack is available', () => {
+        localVideoTrack.processedTrack = {};
+        localVideoTrack.enable(false);
+        sinon.assert.notCalled(parentClassContext._captureFrames);
+        sinon.assert.notCalled(localVideoTrack._trackSender.setMediaStreamTrack);
+      });
     });
   });
 
@@ -106,6 +156,39 @@ describe('LocalVideoTrack', () => {
       localVideoTrack.processedTrack = {};
       localVideoTrack.disable();
       assert(localVideoTrack.processedTrack.enabled === false);
+    });
+  });
+
+  describe('#restart', () => {
+    beforeEach(() => {
+      localVideoTrack.addProcessor = sinon.stub();
+      localVideoTrack.removeProcessor = sinon.stub();
+    });
+
+    it('should call parent class method', () => {
+      localVideoTrack.restart();
+      sinon.assert.calledOnce(parentClassContext.restart);
+    });
+
+    it('should not call addProcessor and removeProcessor if no VideoProcessor is added', () => {
+      localVideoTrack.restart();
+      sinon.assert.notCalled(localVideoTrack.addProcessor);
+      sinon.assert.notCalled(localVideoTrack.removeProcessor);
+    });
+
+    it('should call addProcessor, restart and removeProcessor in the correct order', async () => {
+      localVideoTrack.processor = 'foo';
+      localVideoTrack.restart();
+      await internalPromise();
+      sinon.assert.calledOnce(localVideoTrack.addProcessor);
+      sinon.assert.calledOnce(parentClassContext.restart);
+      sinon.assert.calledOnce(localVideoTrack.removeProcessor);
+
+      sinon.assert.calledWith(localVideoTrack.addProcessor, 'foo');
+      sinon.assert.calledWith(localVideoTrack.removeProcessor, 'foo');
+
+      sinon.assert.callOrder(
+        localVideoTrack.removeProcessor, parentClassContext.restart, localVideoTrack.addProcessor);
     });
   });
 });
