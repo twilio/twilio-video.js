@@ -23,6 +23,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where calling `LocalMediaTrack.restart()` logged a warning about PeerConnection being closed in Peer to Peer Rooms. (JSDK-2912)
+- Fixed a race condition that sometimes caused `switchedOff` event for `RemoteVideoTrack` to not get emitted, which also resulted in wrong value for `RemoteVideoTrack.isSwitchedOff` property. (VIDEO-3695)
 
 2.11.0 (January 26, 2021)
 =========================

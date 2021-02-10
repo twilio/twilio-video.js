@@ -902,6 +902,7 @@ function makeTest(options) {
     || sinon.spy(() => options.getTrackTransceiverDeferred.promise);
   options.RemoteTrackPublicationV2 = options.RemoteTrackPublicationV2 || makeRemoteTrackPublicationV2Constructor(options);
 
+  options.getInitialTrackSwitchOffState = options.getInitialTrackSwitchOffState || sinon.spy(() => { return false; });
   options.participant = options.participant || makeRemoteParticipantV2(options);
 
   options.state = revision => {
@@ -945,16 +946,17 @@ RemoteParticipantStateBuilder.prototype.setTracks = function setTracks(tracks) {
 };
 
 function makeRemoteParticipantV2(options) {
-  return new RemoteParticipantV2(options, options.getTrackTransceiver, options);
+  return new RemoteParticipantV2(options, options.getTrackTransceiver, options.getInitialTrackSwitchOffState, options);
 }
 
 function makeRemoteTrackPublicationV2Constructor(testOptions) {
   testOptions = testOptions || {};
   testOptions.remoteTrackPublicationV2s = testOptions.remoteTrackPublicationV2s || [];
-  return function RemoteTrackPublicationV2(trackState) {
+  return function RemoteTrackPublicationV2(trackState, isSwitchedOff) {
     this.sid = trackState.sid;
     this.setTrackTransceiver = sinon.spy(() => {});
     this.update = sinon.spy(() => this);
+    this.isSwitchedOff = isSwitchedOff;
     testOptions.remoteTrackPublicationV2s.push(this);
   };
 }
