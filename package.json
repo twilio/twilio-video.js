@@ -121,7 +121,7 @@
     "test:framework:react:build": "cd ./test/framework/twilio-video-react && npm run build",
     "test:framework:react:run": "mocha ./test/framework/twilio-video-react.js",
     "test:framework:react": "npm-run-all test:framework:react:*",
-    "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver && npm install puppeteer@5.5.0",
+    "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver && npm install puppeteer",
     "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "build:ts": "tsc -p tsconfig.json --noEmit",
