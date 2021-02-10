@@ -509,7 +509,6 @@ describe('LocalTrackPublication', function() {
       });
     });
 
-
     [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(beforePriority => {
       [PRIORITY_LOW, PRIORITY_STANDARD, PRIORITY_HIGH].forEach(afterPriority => {
         const expectNotification = beforePriority !== afterPriority;
@@ -641,6 +640,7 @@ describe('LocalTrackPublication', function() {
       assert.equal(trackAPubLocal.priority, PRIORITY_STANDARD);
       assert.equal(trackBPubLocal.priority, PRIORITY_LOW);
 
+
       // wait for alice to subscribe two tracks
       await waitFor(tracksSubscribed(bobRemote, 2), `wait for alice to subscribe to Bobs tracks: ${roomSid}`);
 
@@ -649,10 +649,11 @@ describe('LocalTrackPublication', function() {
       const trackBPubRemote = bobRemote.videoTracks.get(trackBPubLocal.trackSid);
       assert(trackBPubRemote);
 
+
       await waitFor([
         trackSwitchedOn(trackAPubRemote.track),
         trackSwitchedOff(trackBPubRemote.track)
-      ], `Step 1] trackA=On, trackB=Off: ${roomSid}`);
+      ], `Step 1] trackA[${trackAPubRemote.track.sid}]=On, trackB[${trackBPubRemote.track.sid}]=Off: ${roomSid}`);
       assert.equal(trackAPubRemote.publishPriority, PRIORITY_STANDARD);
       assert.equal(trackBPubRemote.publishPriority, PRIORITY_LOW);
 
@@ -668,7 +669,7 @@ describe('LocalTrackPublication', function() {
       await waitFor([
         trackSwitchedOn(trackBPubRemote.track),
         trackSwitchedOff(trackAPubRemote.track)
-      ], `Step 2] trackA=Off, trackB=On: ${roomSid}`);
+      ], `Step 2] trackA[${trackAPubRemote.track.sid}]=Off, trackB[${trackBPubRemote.track.sid}]=On: ${roomSid}`);
 
       // wait for trackBPriorityChangedToHigh before checking publishPriority.
       await waitFor(trackBPriorityChangedToHigh, `trackB priority changed to High: ${roomSid}`);
@@ -687,7 +688,7 @@ describe('LocalTrackPublication', function() {
       await waitFor([
         trackSwitchedOn(trackAPubRemote.track),
         trackSwitchedOff(trackBPubRemote.track)
-      ], `Step 3] trackA=On, trackB=Off: ${roomSid}`);
+      ], `Step 3] trackA[${trackAPubRemote.track.sid}]=On, trackB[${trackBPubRemote.track.sid}]=Off: ${roomSid}`);
 
       // wait for trackBPriorityChangedToLow before checking publishPriority.
       await waitFor(trackBPriorityChangedToLow, `trackB priority changed to Low: ${roomSid}`);

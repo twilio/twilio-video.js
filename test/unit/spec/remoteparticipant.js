@@ -1513,7 +1513,7 @@ function makeTest(options) {
   }
   options.trackSignalings = options.trackSignalings || [];
 
-  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, setPriorityCallback, opts) {
+  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1522,11 +1522,12 @@ function makeTest(options) {
     this.sid = sid;
     this.setPriority = setPriorityCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
+    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
 
-  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, setPriorityCallback, opts) {
+  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1535,6 +1536,7 @@ function makeTest(options) {
     this.sid = sid;
     this.setPriority = setPriorityCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
+    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
   });
   inherits(options.RemoteVideoTrack, EventEmitter);
@@ -1548,6 +1550,7 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : dataTrackReceiver.id;
     this.sid = sid;
     this._setEnabled = enabled => { this.enabled = enabled; };
+    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
   });
   inherits(options.RemoteDataTrack, EventEmitter);
@@ -1620,6 +1623,8 @@ function makeTrackSignaling(options) {
   track.subscribeFailed = error => {
     track.error = error;
     track.emit('updated');
+  };
+  track._setSwitchedOff = () => {
   };
   track.trackTransceiver = null;
   if (!options.shouldSubscriptionFail && !options.testTrackSubscriptionRestApi) {
