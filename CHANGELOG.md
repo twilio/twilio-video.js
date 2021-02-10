@@ -8,16 +8,16 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- You can now connect to a Group Room with Maximum Participants between 50 and 100 (Large Group Rooms).
-  Large Group Rooms are different from the other types of Rooms in the following ways:
+**100 Participant Rooms Pilot**
+- In this pilot program developers can connect to a Group Room with Maximum Participants set between 50 and 100.
+  A Room created with Max Participants greater than 50 is structured to support a small number of presenters and a large number of viewers. It has the following behavioral differences compared to regular Group Rooms:
   - "participantConnected" event is raised on the Room when a RemoteParticipant
     publishes the first LocalTrack.
   - "participantDisconnected" event is raised on the Room when a RemoteParticipant
     stops publishing all of its LocalTracks.
-  - The total number of published Tracks in the Room cannot exceed 16. Any attempt
+  - The total number of published Tracks in the Room cannot exceed 16 at any one time. Any attempt
     to publish more Tracks will be rejected with a `ParticipantMaxTracksExceededError`. (JSDK-3021)
 
-  NOTE: Large Group Rooms is currently in **beta**.
 
 Bug Fixes
 ---------
