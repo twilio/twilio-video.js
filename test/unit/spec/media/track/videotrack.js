@@ -124,8 +124,16 @@ describe('VideoTrack', () => {
           sinon.assert.calledOnce(videoTrack._updateElementsMediaStreamTrack);
         });
 
-        it('should start capturing frames', () => {
+        it('should start capturing frames after setting the processor', () => {
           sinon.assert.calledOnce(videoTrack._captureFrames);
+        });
+
+        it('should start capturing frames whenever mediaStreamTrack unmutes', () => {
+          sinon.assert.calledOnce(videoTrack._captureFrames);
+          mediaStreamTrack.emit('unmute');
+          sinon.assert.calledTwice(videoTrack._captureFrames);
+          mediaStreamTrack.emit('unmute');
+          sinon.assert.calledThrice(videoTrack._captureFrames);
         });
       });
 
@@ -282,6 +290,42 @@ describe('VideoTrack', () => {
         sinon.assert.calledThrice(processFrame);
         sinon.assert.notCalled(onVideoFrame);
       });
+
+      it('should stop capturing frames if mediaStreamTrack is disabled', async () => {
+        videoTrack._captureFrames();
+
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+
+        mediaStreamTrack.enabled = false;
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+      });
+
+      it('should stop capturing frames if mediaStreamTrack is muted', async () => {
+        videoTrack._captureFrames();
+
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+
+        mediaStreamTrack.muted = true;
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+      });
+
+      it('should stop capturing frames if mediaStreamTrack has ended', async () => {
+        videoTrack._captureFrames();
+
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+
+        mediaStreamTrack.readyState = 'ended';
+        await internalPromise();
+        clock.tick(timeoutMs);
+        sinon.assert.calledOnce(processFrame);
+      });
     });
 
     describe('no operation', () => {
@@ -328,7 +372,9 @@ function MediaStreamTrack(id, kind) {
   Object.defineProperties(this, {
     id: { value: id },
     kind: { value: kind },
-    enabled: { value: mediaStreamTrackSettings.enabled },
+    enabled: { value: mediaStreamTrackSettings.enabled, writable: true },
+    readyState: { value: 'live', writable: true },
+    muted: { value: false, writable: true },
     getSettings: { value: () => mediaStreamTrackSettings }
   });
 }

@@ -20,6 +20,9 @@ describe('LocalVideoTrack', () => {
         constructor() {
           this._log = log;
         }
+        _captureFrames() {
+          parentClassContext._captureFrames(...arguments);
+        }
         addProcessor() {
           parentClassContext.addProcessor(...arguments);
         }
@@ -39,6 +42,7 @@ describe('LocalVideoTrack', () => {
   });
 
   beforeEach(() => {
+    parentClassContext._captureFrames = sinon.spy();
     parentClassContext.addProcessor = sinon.spy();
     parentClassContext.disable = sinon.spy();
     parentClassContext.enable = sinon.spy();
@@ -78,6 +82,17 @@ describe('LocalVideoTrack', () => {
       localVideoTrack.processedTrack = {};
       localVideoTrack.enable();
       assert(localVideoTrack.processedTrack.enabled);
+    });
+
+    it('should start capturing frames if processedTrack is available', () => {
+      localVideoTrack.processedTrack = {};
+      localVideoTrack.enable();
+      sinon.assert.calledOnce(parentClassContext._captureFrames);
+    });
+
+    it('should not start capturing frames if processedTrack is not available', () => {
+      localVideoTrack.enable();
+      sinon.assert.notCalled(parentClassContext._captureFrames);
     });
   });
 
