@@ -291,40 +291,44 @@ describe('VideoTrack', () => {
         sinon.assert.notCalled(onVideoFrame);
       });
 
-      it('should stop capturing frames if mediaStreamTrack is disabled', async () => {
-        videoTrack._captureFrames();
+      [{
+        state: 'disabled',
+        setState: () => {
+          mediaStreamTrack.enabled = false;
+        }
+      }, {
+        state: 'muted',
+        setState: () => {
+          mediaStreamTrack.muted = true;
+        }
+      }, {
+        state: 'ended',
+        setState: () => {
+          mediaStreamTrack.readyState = 'ended';
+        }
+      }].forEach(({ state, setState }) => {
+        it(`should stop capturing frames if mediaStreamTrack is ${state}`, async () => {
+          videoTrack._captureFrames();
 
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
+          clock.tick(timeoutMs);
+          sinon.assert.calledOnce(processFrame);
 
-        mediaStreamTrack.enabled = false;
-        await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
-      });
+          setState();
+          await internalPromise();
+          clock.tick(timeoutMs);
+          sinon.assert.calledOnce(processFrame);
+        });
 
-      it('should stop capturing frames if mediaStreamTrack is muted', async () => {
-        videoTrack._captureFrames();
+        it(`should not start capturing frames if mediaStreamTrack is ${state}`, async () => {
+          setState();
+          videoTrack._captureFrames();
+          clock.tick(timeoutMs);
+          sinon.assert.notCalled(processFrame);
 
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
-
-        mediaStreamTrack.muted = true;
-        await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
-      });
-
-      it('should stop capturing frames if mediaStreamTrack has ended', async () => {
-        videoTrack._captureFrames();
-
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
-
-        mediaStreamTrack.readyState = 'ended';
-        await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledOnce(processFrame);
+          await internalPromise();
+          clock.tick(timeoutMs);
+          sinon.assert.notCalled(processFrame);
+        });
       });
     });
 
