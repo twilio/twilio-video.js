@@ -219,6 +219,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'isEnabled',
             'isSwitchedOff',
             'priority',
@@ -230,7 +231,9 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'dimensions',
+            'processor',
             'isEnabled',
             'isSwitchedOff',
             'priority',
@@ -315,6 +318,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
             priority: null,
+            processedTrack: null,
             sid: track.sid
           });
         } else {
@@ -327,6 +331,8 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
             priority: null,
+            processedTrack: null,
+            processor: null,
             sid: track.sid
           });
         }
