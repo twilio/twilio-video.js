@@ -15,7 +15,7 @@ export class VideoTrack extends Track {
   kind: 'video';
   processor: VideoProcessor | null;
   mediaStreamTrack: MediaStreamTrack;
-  processedTrack: MediaStreamTrack;
+  processedTrack: MediaStreamTrack | null;
 
   addProcessor(processor: VideoProcessor): this;
   removeProcessor(processor: VideoProcessor): this;
