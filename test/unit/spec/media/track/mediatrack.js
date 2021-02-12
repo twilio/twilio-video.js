@@ -29,12 +29,21 @@ describe('MediaTrack', () => {
   });
 
   describe('constructor', () => {
-    before(() => {
+    beforeEach(() => {
       track = createMediaTrack('1', 'audio');
     });
 
     it('should call ._initialize', () => {
       assert.equal(track._initialize.callCount, 1);
+    });
+
+    it('should return unprocessedTrack as the mediaStreamTrack if it exists', () => {
+      track._unprocessedTrack = 'foo';
+      assert.equal(track.mediaStreamTrack, 'foo');
+    });
+
+    it('should return the mediaTrackTransceiver.track as the mediaStreamTrack if unprocessedTrack does not exists', () => {
+      assert.equal(track.mediaStreamTrack, track.tranceiver.track);
     });
   });
 
@@ -383,6 +392,20 @@ describe('MediaTrack', () => {
     });
   });
 
+  describe('_updateElementsMediaStreamTrack', () => {
+    it('should reattach each existing elements', () => {
+      track = createMediaTrack('1', 'video');
+      track._attach = sinon.spy();
+      track._attachments.add('foo');
+      track._attachments.add('bar');
+      track._updateElementsMediaStreamTrack();
+
+      sinon.assert.calledTwice(track._attach);
+      assert.equal(track._attach.firstCall.args[0], 'foo');
+      assert.equal(track._attach.secondCall.args[0], 'bar');
+    });
+  });
+
   describe('_getAllAttachedElements', () => {
     it('should return an array with all elements in ._attachments', () => {
       track = createMediaTrack('1', 'audio');
@@ -449,8 +472,14 @@ describe('MediaTrack', () => {
     let track;
     let mediaStream;
     let MediaStream;
+    let processedTrack;
 
     beforeEach(() => {
+      processedTrack = {
+        getAudioTracks: sinon.stub(),
+        getVideoTracks: sinon.stub(),
+        kind: 'audio'
+      };
       MediaStream = sinon.spy(function MediaStream() {
         // eslint-disable-next-line consistent-this
         mediaStream = this;
@@ -460,6 +489,7 @@ describe('MediaTrack', () => {
       MediaStream.prototype.removeTrack = sinon.spy();
       el = document.createElement('audio');
       track = createMediaTrack(1, 'audio', { MediaStream: MediaStream });
+      track.processedTrack = null;
     });
 
     context('when the .srcObject of the HTMLMediaElement is not a MediaStream', () => {
@@ -478,6 +508,14 @@ describe('MediaTrack', () => {
 
       it('should call .addTrack() with the MediaTrack\'s MediaStreamTrack on the MediaStream', () => {
         assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
+      });
+
+      context('when processedTrack is not null', () => {
+        it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
+          track.processedTrack = processedTrack;
+          track._attach(el);
+          assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
+        });
       });
 
       it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
@@ -523,6 +561,14 @@ describe('MediaTrack', () => {
         assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
       });
 
+      context('when processedTrack is not null', () => {
+        it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
+          track.processedTrack = processedTrack;
+          track._attach(el);
+          assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
+        });
+      });
+
       it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
         assert.equal(el.srcObject, mediaStream);
       });
@@ -549,7 +595,9 @@ describe('MediaTrack', () => {
 function createMediaTrack(id, kind, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);
   const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
-  return new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+  const mediaTrack = new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+  mediaTrack.tranceiver = mediaTrackTransceiver;
+  return mediaTrack;
 }
 
 function MediaStreamTrack(id, kind) {

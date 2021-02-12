@@ -357,6 +357,7 @@ const { defer } = require('../../../../../lib/util');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'id',
             'isEnabled',
             'isStopped'
@@ -367,7 +368,9 @@ const { defer } = require('../../../../../lib/util');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'dimensions',
+            'processor',
             'id',
             'isEnabled',
             'isStopped'
@@ -392,7 +395,8 @@ const { defer } = require('../../../../../lib/util');
             isStopped: track.isStopped,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
-            name: track.name
+            name: track.name,
+            processedTrack: null
           });
         } else {
           assert.deepEqual(track.toJSON(), {
@@ -403,7 +407,9 @@ const { defer } = require('../../../../../lib/util');
             dimensions: track.dimensions,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
-            name: track.name
+            name: track.name,
+            processor: null,
+            processedTrack: null
           });
         }
       });
