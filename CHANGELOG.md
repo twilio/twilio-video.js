@@ -19,7 +19,7 @@ New Features
   }
   ```
 
-  A VideoTrack provides new methods `addProcessor` and `removeProcessor` which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below:
+  A VideoTrack provides new methods `addProcessor` and `removeProcessor` which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
 
   ```ts
   import { createLocalVideoTrack } from 'twilio-video';
