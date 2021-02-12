@@ -276,7 +276,7 @@ describe('VideoTrack', () => {
     // As of node12, the Promise.then and Promise.finally requires separate
     // promises to resolve internally.
     const internalPromise = () => Promise.resolve().then(Promise.resolve());
-    const timeoutMs = 1000 / mediaStreamTrackSettings.frameRate;
+    const timeoutMs = Math.floor(1000 / mediaStreamTrackSettings.frameRate);
     let processFrame;
 
     beforeEach(() => {
@@ -333,20 +333,35 @@ describe('VideoTrack', () => {
 
     describe('capture frame loop', () => {
       it('should call processFrame with the correct frame rate', async () => {
+        const cb = sinon.stub();
+        const artificialDelay = 12;
+        videoTrack.processor.processFrame = () => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              cb();
+              return resolve();
+            }, artificialDelay);
+          });
+        };
+
         videoTrack._captureFrames();
+        await internalPromise();
 
-        clock.tick(timeoutMs - 1);
-        sinon.assert.notCalled(processFrame);
+        clock.tick(artificialDelay - 1);
+        await internalPromise();
+        sinon.assert.notCalled(cb);
+
         clock.tick(1);
-        sinon.assert.calledOnce(processFrame);
-
         await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledTwice(processFrame);
+        sinon.assert.calledOnce(cb);
 
+        clock.tick(timeoutMs - artificialDelay);
         await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledThrice(processFrame);
+        sinon.assert.calledOnce(cb);
+
+        clock.tick(timeoutMs - artificialDelay);
+        await internalPromise();
+        sinon.assert.calledTwice(cb);
       });
 
       [{

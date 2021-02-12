@@ -62,6 +62,7 @@ describe('LocalVideoTrack', () => {
       setMediaStreamTrack: sinon.stub().resolves({})
     };
     localVideoTrack._updateElementsMediaStreamTrack = sinon.stub();
+    localVideoTrack.mediaStreamTrack = mediaStreamTrack;
   });
 
   describe('#addProcessor', () => {
