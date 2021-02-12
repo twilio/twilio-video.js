@@ -278,6 +278,7 @@ describe('VideoTrack', () => {
     const internalPromise = () => Promise.resolve().then(Promise.resolve());
     const timeoutMs = Math.floor(1000 / mediaStreamTrackSettings.frameRate);
     let processFrame;
+    let internalOutputFrame;
 
     beforeEach(() => {
       processFrame = sinon.spy();
@@ -291,6 +292,7 @@ describe('VideoTrack', () => {
 
       videoTrack._inputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
       videoTrack._outputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
+      internalOutputFrame = videoTrack._outputFrame;
     });
 
     describe('processFrame', () => {
@@ -313,6 +315,13 @@ describe('VideoTrack', () => {
         getReturnValue: () => { throw new Error('foo'); },
         expectedDrawing: {}
       }, {
+        name: 'should drop the frame if the internal output frame is null',
+        getReturnValue: () =>  Promise.resolve('myframe'),
+        expectedDrawing: {},
+        setup: () => {
+          videoTrack._outputFrame = null;
+        }
+      }, {
         name: 'should drop the frame if processFrame returns null',
         getReturnValue: () => null,
         expectedDrawing: {}
@@ -320,13 +329,16 @@ describe('VideoTrack', () => {
         name: 'should drop the frame if processFrame returns a promise which resolves to null',
         getReturnValue: () => Promise.resolve(null),
         expectedDrawing: {}
-      }].forEach(({ name, getReturnValue, expectedDrawing }) => {
+      }].forEach(({ name, getReturnValue, expectedDrawing, setup }) => {
         it(name, async () => {
+          if (setup) {
+            setup();
+          }
           videoTrack.processor.processFrame = () => getReturnValue();
           videoTrack._captureFrames();
           clock.tick(timeoutMs);
           await internalPromise();
-          assert.deepEqual(videoTrack._outputFrame.drawing, expectedDrawing);
+          assert.deepEqual(internalOutputFrame.drawing, expectedDrawing);
         });
       });
     });
