@@ -9,7 +9,7 @@ New Features
 ------------
 
 **Video Processor API Pilot**
-- You can now register a `VideoProcessor` with a VideoTrack in order to process its video frames. In a LocalVideoTrack, video frames are processed before being sent to the encoder. In a RemoteVideoTrack, video frames are processed before being sent to the attached `<video>` element(s). The `VideoProcessor` should implement the following interface:
+- You can now register a `VideoProcessor` with a VideoTrack in order to process its video frames. In a LocalVideoTrack, video frames are processed before being sent to the encoder. In a RemoteVideoTrack, video frames are processed before being sent to the attached `<video>` element(s). The `VideoProcessor` should implement the interface shown below. (VIDEO-3560, VIDEO-3561)
 
   ```ts
   abstract class VideoProcessor {
