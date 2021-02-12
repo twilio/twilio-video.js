@@ -13,7 +13,9 @@ export class VideoTrack extends Track {
   isEnabled: boolean;
   dimensions: VideoTrack.Dimensions;
   kind: 'video';
+  processor: VideoProcessor;
   mediaStreamTrack: MediaStreamTrack;
+  processedTrack: MediaStreamTrack;
 
   addProcessor(processor: VideoProcessor): this;
   removeProcessor(processor: VideoProcessor): this;
