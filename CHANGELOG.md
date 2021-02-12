@@ -51,6 +51,7 @@ New Features
       : track.addProcessor(processor);
   });
   ```
+  (VIDEO-3560, VIDEO-3561)
 
 2.12.0 (Feb 10, 2020)
 =====================
