@@ -29,12 +29,21 @@ describe('MediaTrack', () => {
   });
 
   describe('constructor', () => {
-    before(() => {
+    beforeEach(() => {
       track = createMediaTrack('1', 'audio');
     });
 
     it('should call ._initialize', () => {
       assert.equal(track._initialize.callCount, 1);
+    });
+
+    it('should return unprocessedTrack as the mediaStreamTrack if it exists', () => {
+      track._unprocessedTrack = 'foo';
+      assert.equal(track.mediaStreamTrack, 'foo');
+    });
+
+    it('should return the mediaTrackTransceiver.track as the mediaStreamTrack if unprocessedTrack does not exists', () => {
+      assert.equal(track.mediaStreamTrack, track.tranceiver.track);
     });
   });
 
@@ -586,7 +595,9 @@ describe('MediaTrack', () => {
 function createMediaTrack(id, kind, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);
   const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
-  return new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+  const mediaTrack = new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+  mediaTrack.tranceiver = mediaTrackTransceiver;
+  return mediaTrack;
 }
 
 function MediaStreamTrack(id, kind) {

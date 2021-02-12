@@ -127,32 +127,24 @@ describe('VideoTrack', () => {
         it('should start capturing frames after setting the processor', () => {
           sinon.assert.calledOnce(videoTrack._captureFrames);
         });
-
-        it('should start capturing frames whenever mediaStreamTrack unmutes', () => {
-          sinon.assert.calledOnce(videoTrack._captureFrames);
-          mediaStreamTrack.emit('unmute');
-          sinon.assert.calledTwice(videoTrack._captureFrames);
-          mediaStreamTrack.emit('unmute');
-          sinon.assert.calledThrice(videoTrack._captureFrames);
-        });
       });
 
       context('raise an error', () => {
         [{
           name: 'processor is null',
-          errorMsg: 'Received an invalid VideoProcessor.',
+          errorMsg: 'Received an invalid VideoProcessor from addProcessor.',
           param: null,
         }, {
           name: 'processor is undefined',
-          errorMsg: 'Received an invalid VideoProcessor.',
+          errorMsg: 'Received an invalid VideoProcessor from addProcessor.',
           param: undefined,
         }, {
           name: 'processFrame is null',
-          errorMsg: 'Received an invalid VideoProcessor.',
+          errorMsg: 'Received an invalid VideoProcessor from addProcessor.',
           param: { processFrame: null },
         }, {
           name: 'processFrame is undefined',
-          errorMsg: 'Received an invalid VideoProcessor.',
+          errorMsg: 'Received an invalid VideoProcessor from addProcessor.',
           param: { processFrame: undefined },
         }, {
           name: 'processor is already set',
@@ -177,11 +169,114 @@ describe('VideoTrack', () => {
     });
   });
 
+  describe('#removeProcessor', () => {
+    let processor;
+
+    beforeEach(() => {
+      processor = { foo: 'foo' };
+      videoTrack.processor = processor;
+      videoTrack.processedTrack = 'foo';
+      videoTrack._isCapturing = true;
+      videoTrack._inputFrame = new OffscreenCanvas(1, 2);
+      videoTrack._outputFrame = new OffscreenCanvas(3, 4);
+      videoTrack._updateElementsMediaStreamTrack = sinon.stub();
+    });
+
+    it('should clear existing timeout callback', () => {
+      let cb = sinon.stub();
+      videoTrack._captureTimeoutId = setTimeout(cb, 50);
+      clock.tick(50);
+      sinon.assert.calledOnce(cb);
+
+      cb = sinon.stub();
+      videoTrack._captureTimeoutId = setTimeout(cb, 50);
+      videoTrack.removeProcessor(processor);
+      clock.tick(50);
+      sinon.assert.notCalled(cb);
+    });
+
+    it('should update attached video elements mediaStreamTrack', () => {
+      videoTrack.removeProcessor(processor);
+      sinon.assert.calledOnce(videoTrack._updateElementsMediaStreamTrack);
+    });
+
+    it('should clear inputFrame canvas', () => {
+      const inputFrame = videoTrack._inputFrame;
+      assert(inputFrame.drawing);
+      videoTrack.removeProcessor(processor);
+      assert(!inputFrame.drawing);
+    });
+
+    it('should clear outputFrame canvas', () => {
+      const outputFrame = videoTrack._outputFrame;
+      assert(outputFrame.drawing);
+      videoTrack.removeProcessor(processor);
+      assert(!outputFrame.drawing);
+    });
+
+    describe('should reset field', () => {
+      beforeEach(() => {
+        videoTrack.removeProcessor(processor);
+      });
+
+      it('isCapturing flag', () => {
+        assert(!videoTrack._isCapturing);
+      });
+
+      it('existing VideoProcessor', () => {
+        assert(!videoTrack.processor);
+      });
+
+      it('processedTrack', () => {
+        assert(!videoTrack.processedTrack);
+      });
+
+      it('_inputFrame', () => {
+        assert(!videoTrack._inputFrame);
+      });
+
+      it('_outputFrame', () => {
+        assert(!videoTrack._outputFrame);
+      });
+    });
+
+    context('raise an error', () => {
+      [{
+        name: 'processor param is null',
+        errorMsg: 'Received an invalid VideoProcessor from removeProcessor.',
+        getParam: () => null
+      }, {
+        name: 'processor param is undefined',
+        errorMsg: 'Received an invalid VideoProcessor from removeProcessor.',
+        getParam: () => undefined
+      }, {
+        name: 'there is no existing processor',
+        errorMsg: 'No existing VideoProcessor detected.',
+        getParam: () => processor,
+        setup: () => {
+          videoTrack.processor = null;
+        }
+      }, {
+        name: 'processor param is not the same as the existing one',
+        errorMsg: 'The provided VideoProcessor is different than the existing one.',
+        getParam: () => ({ bar: 'bar' })
+      }].forEach(({ name, errorMsg, getParam, setup }) => {
+        it(`when ${name}`, () => {
+          if (setup) {
+            setup();
+          }
+          const regex = new RegExp(errorMsg);
+          assert.throws(() => { videoTrack.removeProcessor(getParam()); }, regex);
+        });
+      });
+    });
+  });
+
   describe('#_captureFrames', () => {
     // As of node12, the Promise.then and Promise.finally requires separate
     // promises to resolve internally.
     const internalPromise = () => Promise.resolve().then(Promise.resolve());
-    const timeoutMs = 1000 / mediaStreamTrackSettings.frameRate;
+    const timeoutMs = Math.floor(1000 / mediaStreamTrackSettings.frameRate);
     let processFrame;
 
     beforeEach(() => {
@@ -236,78 +331,61 @@ describe('VideoTrack', () => {
       });
     });
 
-    describe('requestVideoFrameCallback', () => {
-      let onVideoFrame;
-
-      beforeEach(() => {
-        onVideoFrame = sinon.stub();
-      });
-
-      it('should use requestVideoFrameCallback when available', async () => {
-        videoTrack._dummyEl.requestVideoFrameCallback = cb => {
-          setTimeout(() => {
-            onVideoFrame();
-            cb();
-          }, timeoutMs);
+    describe('capture frame loop', () => {
+      it('should call processFrame with the correct frame rate', async () => {
+        const cb = sinon.stub();
+        const artificialDelay = 12;
+        videoTrack.processor.processFrame = () => {
+          return new Promise(resolve => {
+            setTimeout(() => {
+              cb();
+              return resolve();
+            }, artificialDelay);
+          });
         };
+
         videoTrack._captureFrames();
+        await internalPromise();
 
-        clock.tick(timeoutMs - 1);
-        sinon.assert.notCalled(processFrame);
-        sinon.assert.notCalled(onVideoFrame);
+        clock.tick(artificialDelay - 1);
+        await internalPromise();
+        sinon.assert.notCalled(cb);
+
         clock.tick(1);
-        sinon.assert.calledOnce(processFrame);
-        sinon.assert.calledOnce(onVideoFrame);
-
         await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledTwice(processFrame);
-        sinon.assert.calledTwice(onVideoFrame);
+        sinon.assert.calledOnce(cb);
 
+        clock.tick(timeoutMs - artificialDelay);
         await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledThrice(processFrame);
-        sinon.assert.calledThrice(onVideoFrame);
-      });
+        sinon.assert.calledOnce(cb);
 
-      it('should use setTimeout if requestVideoFrameCallback is not available', async () => {
-        videoTrack._captureFrames();
-
-        clock.tick(timeoutMs - 1);
-        sinon.assert.notCalled(processFrame);
-        sinon.assert.notCalled(onVideoFrame);
-        clock.tick(1);
-        sinon.assert.calledOnce(processFrame);
-        sinon.assert.notCalled(onVideoFrame);
-
+        clock.tick(timeoutMs - artificialDelay);
         await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledTwice(processFrame);
-        sinon.assert.notCalled(onVideoFrame);
-
-        await internalPromise();
-        clock.tick(timeoutMs);
-        sinon.assert.calledThrice(processFrame);
-        sinon.assert.notCalled(onVideoFrame);
+        sinon.assert.calledTwice(cb);
       });
 
       [{
-        state: 'disabled',
+        state: 'mediaStreamTrack is disabled',
         setState: () => {
           mediaStreamTrack.enabled = false;
         }
       }, {
-        state: 'muted',
-        setState: () => {
-          mediaStreamTrack.muted = true;
-        }
-      }, {
-        state: 'ended',
+        state: 'mediaStreamTrack is ended',
         setState: () => {
           mediaStreamTrack.readyState = 'ended';
         }
+      }, {
+        state: 'there is no VideoProcessor added',
+        setState: () => {
+          videoTrack.processor = null;
+        }
+      }, {
+        state: 'there are no video elements attached',
+        setState: () => {
+          videoTrack._attachments.clear();
+        }
       }].forEach(({ state, setState }) => {
-        it(`should stop capturing frames if mediaStreamTrack is ${state}`, async () => {
+        it(`should stop capturing frames if ${state}`, async () => {
           videoTrack._captureFrames();
 
           clock.tick(timeoutMs);
@@ -319,7 +397,7 @@ describe('VideoTrack', () => {
           sinon.assert.calledOnce(processFrame);
         });
 
-        it(`should not start capturing frames if mediaStreamTrack is ${state}`, async () => {
+        it(`should not start capturing frames if ${state}`, async () => {
           setState();
           videoTrack._captureFrames();
           clock.tick(timeoutMs);
@@ -356,6 +434,18 @@ describe('VideoTrack', () => {
         videoTrack._captureFrames();
         sinon.assert.notCalled(videoTrack._dummyEl.play);
       });
+
+      it('when mediaStreamTrack is disabled', () => {
+        mediaStreamTrack.enabled = false;
+        videoTrack._captureFrames();
+        sinon.assert.notCalled(videoTrack._dummyEl.play);
+      });
+
+      it('when mediaStreamTrack is ended', () => {
+        mediaStreamTrack.readyState = 'ended';
+        videoTrack._captureFrames();
+        sinon.assert.notCalled(videoTrack._dummyEl.play);
+      });
     });
   });
 });
@@ -367,7 +457,8 @@ function OffscreenCanvas(width, height) {
   this.getContext = () => ({
     drawImage: (image, x, y, width, height) => {
       this.drawing = { image, x, y, width, height };
-    }
+    },
+    clearRect: () => { this.drawing = null; }
   });
 }
 

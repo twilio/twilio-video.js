@@ -16,6 +16,7 @@ export class VideoTrack extends Track {
   mediaStreamTrack: MediaStreamTrack;
 
   addProcessor(processor: VideoProcessor): this;
+  removeProcessor(processor: VideoProcessor): this;
   attach(element?: HTMLMediaElement | string): HTMLVideoElement;
   detach(element?: HTMLMediaElement | string): HTMLVideoElement[];
 
