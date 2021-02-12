@@ -2,8 +2,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-2.12.0 (In Progress)
-====================
+2.12.0 (Feb 10, 2020)
+=====================
 
 New Features
 ------------
