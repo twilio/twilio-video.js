@@ -85,6 +85,7 @@ describe('LocalVideoTrack', () => {
 
   describe('#removeProcessor', () => {
     beforeEach(() => {
+      localVideoTrack._unprocessedTrack = 'bar';
       localVideoTrack.removeProcessor('foo');
     });
 
@@ -97,8 +98,20 @@ describe('LocalVideoTrack', () => {
     });
 
     it('should set attached elements srcObject with the original mediaStreamTrack', async () => {
+      // Resolves _trackSender.setMediaStreamTrack
+      await internalPromise();
+      // Trigger the 'then' callback
       await internalPromise();
       sinon.assert.called(localVideoTrack._updateElementsMediaStreamTrack);
+    });
+
+    it('should set unprocessedTrack to null after trackSender.setMediaStreamTrack resolves', async () => {
+      assert.equal(localVideoTrack._unprocessedTrack, 'bar');
+      // Resolves _trackSender.setMediaStreamTrack
+      await internalPromise();
+      // Trigger the 'then' callback
+      await internalPromise();
+      assert.equal(localVideoTrack._unprocessedTrack, null);
     });
   });
 
