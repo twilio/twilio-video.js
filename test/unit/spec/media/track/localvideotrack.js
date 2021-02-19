@@ -175,8 +175,7 @@ describe('LocalVideoTrack', () => {
 
   describe('#restart', () => {
     beforeEach(() => {
-      localVideoTrack.addProcessor = sinon.stub();
-      localVideoTrack.removeProcessor = sinon.stub();
+      localVideoTrack._restartProcessor = sinon.stub();
     });
 
     it('should call parent class method', () => {
@@ -184,25 +183,19 @@ describe('LocalVideoTrack', () => {
       sinon.assert.calledOnce(parentClassContext.restart);
     });
 
-    it('should not call addProcessor and removeProcessor if no VideoProcessor is added', () => {
+    it('should not call _restartProcessor if no VideoProcessor is added', () => {
       localVideoTrack.restart();
-      sinon.assert.notCalled(localVideoTrack.addProcessor);
-      sinon.assert.notCalled(localVideoTrack.removeProcessor);
+      sinon.assert.notCalled(localVideoTrack._restartProcessor);
     });
 
-    it('should call addProcessor, restart and removeProcessor in the correct order', async () => {
+    it('should call restart and _restartProcessor in the correct order', async () => {
       localVideoTrack.processor = 'foo';
       localVideoTrack.restart();
       await internalPromise();
-      sinon.assert.calledOnce(localVideoTrack.addProcessor);
       sinon.assert.calledOnce(parentClassContext.restart);
-      sinon.assert.calledOnce(localVideoTrack.removeProcessor);
+      sinon.assert.calledOnce(localVideoTrack._restartProcessor);
 
-      sinon.assert.calledWith(localVideoTrack.addProcessor, 'foo');
-      sinon.assert.calledWith(localVideoTrack.removeProcessor, 'foo');
-
-      sinon.assert.callOrder(
-        localVideoTrack.removeProcessor, parentClassContext.restart, localVideoTrack.addProcessor);
+      sinon.assert.callOrder(parentClassContext.restart, localVideoTrack._restartProcessor);
     });
   });
 });
