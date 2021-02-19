@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const MediaSignalingTransport = require('../../../../../lib/data/transport');
 const RenderHintsController = require('../../../../../lib/signaling/v2/renderhintscontroller.js');
 const fakeLog = require('../../../../lib/fakelog');
+const { defer } = require('../../../../../lib/util');
 
 describe('RenderHintsController', () => {
   describe('constructor', () => {
@@ -23,26 +24,31 @@ describe('RenderHintsController', () => {
       assert(subject._dirtyTracks.has('foo'));
     });
 
-    it('if transport is set sends out the updated track state', () => {
+    it('if transport is set sends out the updated track state ', () => {
       let subject = makeTest();
       let mspTransport = sinon.createStubInstance(MediaSignalingTransport);
       subject.setTransport(mspTransport);
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-
-      sinon.assert.calledWith(mspTransport.publish, {
-        type: 'render_hints',
-        subscriber: {
-          id: sinon.match.number,
-          hints: [{
-            'track_sid': 'foo',
-            'enabled': true,
-            'render_dimension': { height: 100, width: 100 },
-          }]
-        }
+      const deferred = defer();
+      mspTransport.publish.callsFake(() => {
+        deferred.resolve();
       });
 
-      assert(subject._trackHints.has('foo'));
-      assert(!subject._dirtyTracks.has('foo'));
+      return deferred.promise.then(() => {
+        sinon.assert.calledWith(mspTransport.publish, {
+          type: 'render_hints',
+          subscriber: {
+            id: sinon.match.number,
+            hints: [{
+              'track_sid': 'foo',
+              'enabled': true,
+              'render_dimension': { height: 100, width: 100 },
+            }]
+          }
+        });
+        assert(subject._trackHints.has('foo'));
+        assert(!subject._dirtyTracks.has('foo'));
+      });
     });
   });
 
@@ -168,8 +174,6 @@ describe('RenderHintsController', () => {
 });
 
 function makeTest(log) {
-  // mspTransport = mspTransport || sinon.createStubInstance(MediaSignalingTransport);
-  //
   log = log || fakeLog;
   return new RenderHintsController({ log });
 }
