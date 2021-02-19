@@ -24,11 +24,19 @@ describe('RenderHintsController', () => {
       assert(subject._dirtyTracks.has('foo'));
     });
 
-    it('if transport is set sends out the updated track state ', () => {
+    it('flattens and sends updated track states ', () => {
       let subject = makeTest();
       let mspTransport = sinon.createStubInstance(MediaSignalingTransport);
       subject.setTransport(mspTransport);
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.sendTrackHint('bar', { enabled: false, renderDimension: { width: 100, height: 100 } });
+      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 101 } });
+
+      assert(subject._trackHints.has('foo'));
+      assert(subject._trackHints.has('bar'));
+      assert(subject._dirtyTracks.has('foo'));
+      assert(subject._dirtyTracks.has('bar'));
+
       const deferred = defer();
       mspTransport.publish.callsFake(() => {
         deferred.resolve();
@@ -42,12 +50,21 @@ describe('RenderHintsController', () => {
             hints: [{
               'track_sid': 'foo',
               'enabled': true,
+              'render_dimension': { height: 101, width: 101 },
+            }, {
+              'track_sid': 'bar',
+              'enabled': false,
               'render_dimension': { height: 100, width: 100 },
             }]
           }
         });
+
+        // once published tracks shouldn't be dirty anymore.
+        //  but state must be preserved.
         assert(subject._trackHints.has('foo'));
+        assert(subject._trackHints.has('bar'));
         assert(!subject._dirtyTracks.has('foo'));
+        assert(!subject._dirtyTracks.has('bar'));
       });
     });
   });
