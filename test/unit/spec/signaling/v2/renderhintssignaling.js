@@ -4,11 +4,11 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
-const RenderHintsController = require('../../../../../lib/signaling/v2/renderhintscontroller.js');
+const RenderHintsSignaling = require('../../../../../lib/signaling/v2/renderhintssignaling.js');
 const log = require('../../../../lib/fakelog');
 const { defer } = require('../../../../../lib/util');
 
-describe('RenderHintsController', () => {
+describe('RenderHintsSignaling', () => {
   describe('constructor', () => {
     it('sets ._transport to null', () => {
       const mst = makeTransport();
@@ -110,7 +110,7 @@ function makeTest(mst) {
     });
   };
 
-  const subject = new RenderHintsController(getReceiver, { log });
+  const subject = new RenderHintsSignaling(getReceiver, { log });
   subject.setup('foo');
   return subject;
 }
