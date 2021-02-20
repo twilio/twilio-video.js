@@ -3,6 +3,7 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const sinon = require('sinon');
+const log = require('../../../../lib/fakelog');
 
 const NetworkQualitySignaling = require('../../../../../lib/signaling/v2/networkqualitysignaling');
 const NetworkQualityConfiguration = require('../../../../../lib/networkqualityconfiguration');
@@ -26,7 +27,15 @@ describe('NetworkQualitySignaling', () => {
   beforeEach(() => {
     clock = sinon.useFakeTimers();
     mst = new MockMediaSignalingTransport();
-    nqs = new NetworkQualitySignaling(mst, new NetworkQualityConfiguration());
+    const getReceiver = () => {
+      return Promise.resolve({
+        kind: 'data',
+        toDataTransport: () => mst,
+        once: () => {}
+      });
+    };
+    nqs = new NetworkQualitySignaling(getReceiver, new NetworkQualityConfiguration(), { log });
+    nqs.setup('foo');
   });
 
   afterEach(() => {
@@ -179,7 +188,15 @@ describe('NetworkQualitySignaling', () => {
 
     beforeEach(() => {
       mst = new MockMediaSignalingTransport();
-      nqs = new NetworkQualitySignaling(mst);
+      const getReceiver = () => {
+        return Promise.resolve({
+          kind: 'data',
+          toDataTransport: () => mst,
+          once: () => {}
+        });
+      };
+      nqs = new NetworkQualitySignaling(getReceiver, new NetworkQualityConfiguration(), { log });
+      nqs.setup('foo');
     });
 
     describe('a "network_quality" message with', () => {

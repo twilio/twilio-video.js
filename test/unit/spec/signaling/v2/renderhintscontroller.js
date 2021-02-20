@@ -1,33 +1,44 @@
 'use strict';
 
 const assert = require('assert');
+const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
-const MediaSignalingTransport = require('../../../../../lib/data/transport');
 const RenderHintsController = require('../../../../../lib/signaling/v2/renderhintscontroller.js');
-const fakeLog = require('../../../../lib/fakelog');
+const log = require('../../../../lib/fakelog');
 const { defer } = require('../../../../../lib/util');
 
 describe('RenderHintsController', () => {
   describe('constructor', () => {
-    it('sets ._mspTransport to null', () => {
-      const subject = makeTest();
-      assert.strictEqual(subject._mspTransport, null);
+    it('sets ._transport to null', () => {
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      assert.strictEqual(subject._transport, null);
+    });
+
+    it('but gets assigned after ready', () => {
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      return new Promise(resolve => {
+        subject.on('ready', () => {
+          assert(subject._transport !== null);
+          resolve();
+        });
+      });
     });
   });
 
   describe('sendTrackHint', () => {
     it('updates track state', () => {
-      let subject = makeTest();
+      const subject = makeTest(makeTransport());
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
       assert(subject._trackHints.has('foo'));
       assert(subject._dirtyTracks.has('foo'));
     });
 
     it('flattens and sends updated track states ', () => {
-      let subject = makeTest();
-      let mspTransport = sinon.createStubInstance(MediaSignalingTransport);
-      subject.setTransport(mspTransport);
+      const mst = makeTransport();
+      const subject = makeTest(mst);
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
       subject.sendTrackHint('bar', { enabled: false, renderDimension: { width: 100, height: 100 } });
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 101 } });
@@ -38,12 +49,12 @@ describe('RenderHintsController', () => {
       assert(subject._dirtyTracks.has('bar'));
 
       const deferred = defer();
-      mspTransport.publish.callsFake(() => {
+      mst.publish.callsFake(() => {
         deferred.resolve();
       });
 
       return deferred.promise.then(() => {
-        sinon.assert.calledWith(mspTransport.publish, {
+        sinon.assert.calledWith(mst.publish, {
           type: 'render_hints',
           subscriber: {
             id: sinon.match.number,
@@ -71,7 +82,7 @@ describe('RenderHintsController', () => {
 
   describe('deleteTrackState', () => {
     it('deletes stored track state.', () => {
-      let subject = makeTest();
+      let subject = makeTest(makeTransport());
       subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
       assert(subject._trackHints.has('foo'));
       assert(subject._dirtyTracks.has('foo'));
@@ -81,116 +92,26 @@ describe('RenderHintsController', () => {
       assert(!subject._dirtyTracks.has('foo'));
     });
   });
-
-  describe('setTransport', () => {
-    let mspTransport = sinon.createStubInstance(MediaSignalingTransport);
-    let subject = makeTest();
-    let messageCallback = null;
-
-    it('hooks up for message callback', () => {
-      subject.setTransport(mspTransport);
-      assert(mspTransport.addListener.callCount === 1);
-      sinon.assert.calledWith(mspTransport.addListener, 'message');
-      subject.setTransport(null);
-      mspTransport.addListener.resetHistory();
-    });
-
-    it('sends latest state of the tracks', () => {
-      // queue some hints.
-      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-      subject.sendTrackHint('bar', { enabled: true, renderDimension: { width: 200, height: 200 } });
-      subject.sendTrackHint('baz', { enabled: false, renderDimension: { width: 0, height: 0 } });
-
-      mspTransport.addListener.callsFake((event, callback) => { messageCallback = callback; });
-
-      // and then set transport.
-      subject.setTransport(mspTransport);
-      sinon.assert.callCount(mspTransport.addListener, 1);
-      sinon.assert.calledWith(mspTransport.addListener, 'message');
-
-      sinon.assert.callCount(mspTransport.publish, 1);
-      sinon.assert.calledWith(mspTransport.publish, {
-        type: 'render_hints',
-        subscriber: {
-          id: sinon.match.number,
-          hints: [{
-            'track_sid': 'foo',
-            'enabled': true,
-            'render_dimension': { height: 100, width: 100 },
-          }, {
-            'track_sid': 'bar',
-            'enabled': true,
-            'render_dimension': { height: 200, width: 200 },
-          }, {
-            'track_sid': 'baz',
-            'enabled': false,
-            'render_dimension': { height: 0, width: 0 },
-          }],
-        }
-      });
-    });
-
-    it('waits for answer from server and then sends next update', () => {
-      // update some tracks
-      subject.sendTrackHint('baz', { enabled: true, renderDimension: { width: 20, height: 20 } });
-      subject.sendTrackHint('foo', { enabled: false, renderDimension: { width: 0, height: 0 } });
-
-      // this wont be sent yet, since last message is outstanding.
-      sinon.assert.callCount(mspTransport.publish, 1);
-
-      mspTransport.publish.resetHistory();
-      sinon.assert.callCount(mspTransport.publish, 0);
-
-      messageCallback({ type: 'render_hints', foo: 1 });
-
-      sinon.assert.callCount(mspTransport.publish, 1);
-      sinon.assert.calledWith(mspTransport.publish, {
-        type: 'render_hints',
-        subscriber: {
-          id: sinon.match.number,
-          hints: [{
-            'track_sid': 'baz',
-            'enabled': true,
-            'render_dimension': { height: 20, width: 20 },
-          }, {
-            'track_sid': 'foo',
-            'enabled': false,
-            'render_dimension': { height: 0, width: 0 },
-          }]
-        }
-      });
-    });
-
-    it('sends complete state when transport is set again', () => {
-      subject.setTransport(null);
-      mspTransport.publish.resetHistory();
-
-      subject.setTransport(mspTransport);
-      sinon.assert.callCount(mspTransport.publish, 1);
-      sinon.assert.calledWith(mspTransport.publish, {
-        type: 'render_hints',
-        subscriber: {
-          id: sinon.match.number,
-          hints: [{
-            'track_sid': 'foo',
-            'enabled': false,
-            'render_dimension': { height: 0, width: 0 },
-          }, {
-            'track_sid': 'bar',
-            'enabled': true,
-            'render_dimension': { height: 200, width: 200 },
-          }, {
-            'track_sid': 'baz',
-            'enabled': true,
-            'render_dimension': { height: 20, width: 20 },
-          }]
-        }
-      });
-    });
-  });
 });
 
-function makeTest(log) {
-  log = log || fakeLog;
-  return new RenderHintsController({ log });
+function makeTransport(onPublish) {
+  const transport = new EventEmitter();
+  transport.publish = onPublish || sinon.stub();
+  transport.mak = 1;
+  return transport;
 }
+
+function makeTest(mst) {
+  const getReceiver = () => {
+    return Promise.resolve({
+      kind: 'data',
+      toDataTransport: () => mst,
+      once: () => {}
+    });
+  };
+
+  const subject = new RenderHintsController(getReceiver, { log });
+  subject.setup('foo');
+  return subject;
+}
+

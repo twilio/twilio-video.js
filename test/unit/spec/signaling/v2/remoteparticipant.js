@@ -904,6 +904,7 @@ function makeTest(options) {
 
   options.getInitialTrackSwitchOffState = options.getInitialTrackSwitchOffState || sinon.spy(() => { return false; });
   options.setRenderHints = options.setRenderHints || sinon.spy(() => { return false; });
+  options.setPriority = options.setPriority || sinon.spy(() => { return false; });
   options.participant = options.participant || makeRemoteParticipantV2(options);
 
   options.state = revision => {
@@ -947,7 +948,7 @@ RemoteParticipantStateBuilder.prototype.setTracks = function setTracks(tracks) {
 };
 
 function makeRemoteParticipantV2(options) {
-  return new RemoteParticipantV2(options, options.getTrackTransceiver, options.getInitialTrackSwitchOffState, options.setRenderHints, options);
+  return new RemoteParticipantV2(options, options.getInitialTrackSwitchOffState, options.setPriority, options.setRenderHints, options);
 }
 
 function makeRemoteTrackPublicationV2Constructor(testOptions) {

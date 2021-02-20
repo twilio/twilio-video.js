@@ -4,6 +4,8 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 
 const DominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
+const { waitForSometime } = require('../../../../../lib/util');
+const log = require('../../../../lib/fakelog');
 
 function makeTransport() {
   const transport = new EventEmitter();
@@ -11,10 +13,26 @@ function makeTransport() {
   return transport;
 }
 
+function makeTest(mst) {
+  const getReceiver = () => {
+    return Promise.resolve({
+      kind: 'data',
+      toDataTransport: () => mst,
+      once: () => {}
+    });
+  };
+
+  const subject = new DominantSpeakerSignaling(getReceiver, { log });
+  subject.setup('foo');
+  return subject;
+}
+
 describe('DominantSpeakerSignaling', () => {
   describe('constructor(mediaSignalingTransport)', () => {
     it('initializes .loudestParticipantSid to null', () => {
-      assert.strictEqual(new DominantSpeakerSignaling(makeTransport()).loudestParticipantSid, null);
+      const subject = makeTest(makeTransport());
+      subject.setup('foo');
+      assert.strictEqual(subject.loudestParticipantSid, null);
     });
 
     describe('when mediaSignalingTransport emits a "message" event containing an Dominant Speaker message', () => {
@@ -24,9 +42,10 @@ describe('DominantSpeakerSignaling', () => {
         let mediaSignalingTransport;
         let dominantSpeakerSignaling;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           mediaSignalingTransport = makeTransport();
-          dominantSpeakerSignaling = new DominantSpeakerSignaling(mediaSignalingTransport);
+          dominantSpeakerSignaling = makeTest(mediaSignalingTransport);
+          await waitForSometime(10);
         });
 
         it('updates .loudestParticipantSid', () => {
@@ -48,9 +67,10 @@ describe('DominantSpeakerSignaling', () => {
         let mediaSignalingTransport;
         let dominantSpeakerSignaling;
 
-        beforeEach(() => {
+        beforeEach(async () => {
           mediaSignalingTransport = makeTransport();
-          dominantSpeakerSignaling = new DominantSpeakerSignaling(mediaSignalingTransport);
+          dominantSpeakerSignaling = makeTest(mediaSignalingTransport);
+          await waitForSometime(10);
           mediaSignalingTransport.emit('message', { type: 'active_speaker', participant });
         });
 

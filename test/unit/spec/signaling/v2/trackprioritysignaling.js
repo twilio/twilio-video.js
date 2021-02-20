@@ -2,31 +2,51 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
+const { EventEmitter } = require('events');
+const log = require('../../../../lib/fakelog');
+const { waitForSometime } = require('../../../../../lib/util');
 
-const MediaSignalingTransport = require('../../../../../lib/data/transport');
 const TrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
+
+function makeTransport() {
+  const transport = new EventEmitter();
+  transport.publish = sinon.spy();
+  return transport;
+}
+
+function makeTest(mst) {
+  const getReceiver = () => {
+    return Promise.resolve({
+      kind: 'data',
+      toDataTransport: () => mst,
+      once: () => {}
+    });
+  };
+
+  const subject = new TrackPrioritySignaling(getReceiver, { log });
+  subject.setup('foo');
+  return subject;
+}
 
 describe('TrackPrioritySignaling', () => {
   describe('constructor', () => {
     it('should return a TrackPrioritySignaling', () => {
-      const mediaSignalingTransport = sinon.createStubInstance(MediaSignalingTransport);
-      const trackPrioritySignaling = new TrackPrioritySignaling(mediaSignalingTransport);
+      const trackPrioritySignaling = makeTest(makeTransport());
       assert(trackPrioritySignaling instanceof TrackPrioritySignaling);
     });
   });
 
   describe('#sendTrackPriorityUpdates', () => {
-    ['publish', 'subscribe'].forEach(action => {
-      context(`when the ${action} priority of a ${{ publish: 'Local', subscribe: 'Remote' }[action]}Track is changed`, () => {
-        it(`should call the underlying MediaSignalingTransport's .publish with the MSP payload's .${action} property set to the new priority`, () => {
-          const mediaSignalingTransport = sinon.createStubInstance(MediaSignalingTransport);
-          const trackPrioritySignaling = new TrackPrioritySignaling(mediaSignalingTransport);
-          trackPrioritySignaling.sendTrackPriorityUpdate('MT123', action, 'bar');
-          sinon.assert.calledWith(mediaSignalingTransport.publish, {
-            type: 'track_priority',
-            track: 'MT123',
-            [action]: 'bar'
-          });
+    context('when the subscribe priority of a RemoteTrack is changed', () => {
+      it('should call the underlying MediaSignalingTransport\'s .publish with the MSP payload\'s subscribe property set to the new priority', async () => {
+        const mst = makeTransport();
+        const trackPrioritySignaling = makeTest(mst);
+        await waitForSometime(10);
+        trackPrioritySignaling.sendTrackPriorityUpdate('MT123', 'subscribe', 'bar');
+        sinon.assert.calledWith(mst.publish, {
+          type: 'track_priority',
+          track: 'MT123',
+          subscribe: 'bar'
         });
       });
     });
