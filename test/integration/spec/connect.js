@@ -805,7 +805,7 @@ describe('connect', function() {
         // TODO: Remove firefox check once this firefox bug is fixed
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
         if (!isFirefox) {
-          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate (@unstable: VIDEO-4205)`, () => {
             const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
             const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
             if (maxBitrates[kind]) {
