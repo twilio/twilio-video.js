@@ -1281,9 +1281,6 @@ describe('RoomV2', () => {
               sinon.assert.callCount(dataTrackReceiver2.toDataTransport, 1);
             });
 
-            // it('should construct a TrackPrioritySignaling with the new DataTrackTransport,', () => {
-            //   sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
-            // });
           });
         });
       });
@@ -1439,9 +1436,6 @@ describe('RoomV2', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
         });
 
-        // it('constructs a DominantSpeakerSignaling with the DataTrackTransport,', () => {
-        //   assert(DominantSpeakerSignaling.calledWith(dataTrackTransport));
-        // });
 
         it('starts updating when the track emits "message"', () => {
           dataTrackTransport.emit('message', { type: 'active_speaker', participant: 'bob' });
@@ -1482,9 +1476,6 @@ describe('RoomV2', () => {
             assert(dataTrackReceiver2.toDataTransport.calledOnce);
           });
 
-          // it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
-          //   assert(DominantSpeakerSignaling.calledWith(dataTrackReceiver2));
-          // });
 
           it('starts updating when new track emits "message"', () => {
             dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'Charlie' });
