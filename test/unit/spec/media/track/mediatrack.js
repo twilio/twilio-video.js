@@ -518,6 +518,23 @@ describe('MediaTrack', () => {
         });
       });
 
+      context('when mediaStreamTrack parameter is provided', () => {
+        const newMediaStreamTrack = {
+          getAudioTracks: sinon.stub(),
+          getVideoTracks: sinon.stub(),
+          kind: 'audio'
+        };
+        it('should use the provided mediaStreamTrack if processedTrack is null', () => {
+          track._attach(el, newMediaStreamTrack);
+          assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+        });
+        it('should use the provided mediaStreamTrack if processedTrack is not null', () => {
+          track.processedTrack = processedTrack;
+          track._attach(el, newMediaStreamTrack);
+          assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+        });
+      });
+
       it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
         assert.equal(el.srcObject, mediaStream);
       });
