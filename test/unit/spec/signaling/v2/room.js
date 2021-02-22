@@ -1824,7 +1824,6 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
-    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 
@@ -1969,7 +1968,6 @@ function makeLocalParticipant(options) {
 
   localParticipant.connect = sinon.spy(() => localParticipant.emit('stateChanged', 'connected'));
   localParticipant.reconnecting = sinon.spy(() => localParticipant.emit('stateChanged', 'reconnecting'));
-  localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);
