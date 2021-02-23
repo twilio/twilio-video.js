@@ -14,7 +14,7 @@ function makeTransport() {
   return transport;
 }
 
-function makeTest(mst) {
+function makeTest(mst, setupTransport = true) {
   const getReceiver = () => {
     return Promise.resolve({
       kind: 'data',
@@ -24,7 +24,9 @@ function makeTest(mst) {
   };
 
   const subject = new TrackPrioritySignaling(getReceiver, { log });
-  subject.setup('foo');
+  if (setupTransport) {
+    subject.setup('foo');
+  }
   return subject;
 }
 
@@ -37,12 +39,32 @@ describe('TrackPrioritySignaling', () => {
   });
 
   describe('#sendTrackPriorityUpdates', () => {
+    it('throws if updates are not for "subscribe" priority', () => {
+      const mst = makeTransport();
+      const trackPrioritySignaling = makeTest(mst);
+      let error = null;
+      try {
+        trackPrioritySignaling.sendTrackPriorityUpdate('MT123', 'publish', 'bar');
+      } catch (ex) {
+        error = ex;
+      }
+      assert(error);
+      assert(error.message === 'only subscribe priorities are supported, found: publish');
+    });
+
     context('when the subscribe priority of a RemoteTrack is changed', () => {
-      it('should call the underlying MediaSignalingTransport\'s .publish with the MSP payload\'s subscribe property set to the new priority', async () => {
+      it('queues updates and publishes MSP payload when transport is ready ', async () => {
         const mst = makeTransport();
-        const trackPrioritySignaling = makeTest(mst);
-        await waitForSometime(10);
+        const trackPrioritySignaling = makeTest(mst, false);
         trackPrioritySignaling.sendTrackPriorityUpdate('MT123', 'subscribe', 'bar');
+
+        await waitForSometime(10);
+        sinon.assert.callCount(mst.publish, 0);
+
+        trackPrioritySignaling.setup('foo');
+        await waitForSometime(10);
+
+        sinon.assert.callCount(mst.publish, 1);
         sinon.assert.calledWith(mst.publish, {
           type: 'track_priority',
           track: 'MT123',
@@ -52,3 +74,4 @@ describe('TrackPrioritySignaling', () => {
     });
   });
 });
+

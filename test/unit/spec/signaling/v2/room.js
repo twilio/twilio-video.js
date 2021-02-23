@@ -1281,9 +1281,6 @@ describe('RoomV2', () => {
               sinon.assert.callCount(dataTrackReceiver2.toDataTransport, 1);
             });
 
-            // it('should construct a TrackPrioritySignaling with the new DataTrackTransport,', () => {
-            //   sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
-            // });
           });
         });
       });
@@ -1439,9 +1436,6 @@ describe('RoomV2', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
         });
 
-        // it('constructs a DominantSpeakerSignaling with the DataTrackTransport,', () => {
-        //   assert(DominantSpeakerSignaling.calledWith(dataTrackTransport));
-        // });
 
         it('starts updating when the track emits "message"', () => {
           dataTrackTransport.emit('message', { type: 'active_speaker', participant: 'bob' });
@@ -1482,9 +1476,6 @@ describe('RoomV2', () => {
             assert(dataTrackReceiver2.toDataTransport.calledOnce);
           });
 
-          // it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
-          //   assert(DominantSpeakerSignaling.calledWith(dataTrackReceiver2));
-          // });
 
           it('starts updating when new track emits "message"', () => {
             dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'Charlie' });
@@ -1833,7 +1824,6 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
-    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 
@@ -1978,7 +1968,6 @@ function makeLocalParticipant(options) {
 
   localParticipant.connect = sinon.spy(() => localParticipant.emit('stateChanged', 'connected'));
   localParticipant.reconnecting = sinon.spy(() => localParticipant.emit('stateChanged', 'reconnecting'));
-  localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);
