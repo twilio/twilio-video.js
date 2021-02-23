@@ -28,7 +28,7 @@ function makeTest(mst) {
 }
 
 describe('DominantSpeakerSignaling', () => {
-  describe('constructor(mediaSignalingTransport)', () => {
+  describe('constructor', () => {
     it('initializes .loudestParticipantSid to null', () => {
       const subject = makeTest(makeTransport());
       subject.setup('foo');
