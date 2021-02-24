@@ -89,6 +89,7 @@ function generateBuildRequest(program) {
 
 // sends a request using given options/body
 function triggerBuild({options, body}) {
+  console.log('Triggering:', options, body);
   return new Promise((resolve, reject) => {
     const request = http.request(options, function(res) {
       const chunks = [];

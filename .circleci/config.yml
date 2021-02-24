@@ -190,32 +190,12 @@ jobs:
     steps:
       - echo-command:
           to: "Build Passed!"
-  run-integration-tests-custom:
-    parallelism: 1
-    parameters:
-      browser:
-        type: string
-      bver:
-        type: string
-      topology:
-        type: enum
-        enum: ["group", "peer-to-peer"]
-        default: "group"
-      test_stability:
-        type: string
-    environment:
-      TEST_TYPE: "integration"
-      TOPOLOGY: << parameters.topology >>
-      TEST_STABILITY: << parameters.test_stability >>
-      TEST_FILES: << pipeline.parameters.test_files >>
-    executor:
-      name: docker-with-browser
-      browser: << parameters.browser >>
-      bver: << parameters.bver >>
-    steps: [integration-tests]
   run-integration-tests:
-    parallelism: 6
+    parallelism: << parameters.parallelism >>
     parameters:
+      parallelism:
+        type: integer
+        default: 6
       browser:
         type: string
       bver:
@@ -339,6 +319,7 @@ workflows:
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
+          parallelism: 1
       - run-network-tests:
           name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
@@ -348,7 +329,7 @@ workflows:
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
-      - run-integration-tests-custom:
+      - run-integration-tests:
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
