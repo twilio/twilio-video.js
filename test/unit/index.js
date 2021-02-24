@@ -27,6 +27,7 @@ require('./spec/media/track/mediatrack');
 require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localaudiotrack');
+require('./spec/media/track/localvideotrack');
 require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/receiver');
 require('./spec/media/track/remotedatatrack');
@@ -34,6 +35,7 @@ require('./spec/media/track/remotemediatrack');
 require('./spec/media/track/remotetrackpublication');
 require('./spec/media/track/sender');
 require('./spec/media/track/transceiver');
+require('./spec/media/track/videotrack');
 
 require('./spec/signaling/participant');
 require('./spec/signaling/room');

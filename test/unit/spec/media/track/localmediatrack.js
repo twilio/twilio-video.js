@@ -136,10 +136,31 @@ const { defer } = require('../../../../../lib/util');
         assert.equal(track.name, trackName);
       });
 
-      it('should update underlying mediaStreamTrack', async () => {
+      it('should update underlying mediaStreamTrack if unprocessedTrack does not exists', async () => {
+        const stub = sinon.stub();
+        const originalFn = track._trackSender.setMediaStreamTrack;
+        track._trackSender.setMediaStreamTrack = mediaStreamTrack => {
+          stub(mediaStreamTrack);
+          return originalFn.call(track._trackSender, mediaStreamTrack);
+        };
         const newTrack = new MediaStreamTrack(kind[description]);
         await track._setMediaStreamTrack(newTrack);
         assert.equal(track.mediaStreamTrack, newTrack);
+        sinon.assert.calledWith(stub, newTrack);
+      });
+
+      it('should not update underlying mediaStreamTrack if unprocessedTrack exists', async () => {
+        const stub = sinon.stub();
+        const originalFn = track._trackSender.setMediaStreamTrack;
+        track._trackSender.setMediaStreamTrack = mediaStreamTrack => {
+          stub(mediaStreamTrack);
+          return originalFn.call(track._trackSender, mediaStreamTrack);
+        };
+        const newTrack = new MediaStreamTrack(kind[description]);
+        track._unprocessedTrack = new MediaStreamTrack(kind[description]);
+        await track._setMediaStreamTrack(newTrack);
+        assert.equal(newTrack, track._unprocessedTrack);
+        sinon.assert.notCalled(stub);
       });
 
       it('should fire stopped and started events before and after replacing track respectively', async () => {
@@ -357,6 +378,7 @@ const { defer } = require('../../../../../lib/util');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'id',
             'isEnabled',
             'isStopped'
@@ -367,7 +389,9 @@ const { defer } = require('../../../../../lib/util');
             'name',
             'isStarted',
             'mediaStreamTrack',
+            'processedTrack',
             'dimensions',
+            'processor',
             'id',
             'isEnabled',
             'isStopped'
@@ -392,7 +416,8 @@ const { defer } = require('../../../../../lib/util');
             isStopped: track.isStopped,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
-            name: track.name
+            name: track.name,
+            processedTrack: null
           });
         } else {
           assert.deepEqual(track.toJSON(), {
@@ -403,7 +428,9 @@ const { defer } = require('../../../../../lib/util');
             dimensions: track.dimensions,
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
-            name: track.name
+            name: track.name,
+            processor: null,
+            processedTrack: null
           });
         }
       });

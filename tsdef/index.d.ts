@@ -22,6 +22,7 @@ export { LocalTrackPublication } from './LocalTrackPublication';
 export { LocalVideoTrack } from './LocalVideoTrack';
 export { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 export { Log } from './loglevel';
+export { VideoProcessor } from './VideoProcessor';
 export { Participant } from './Participant';
 export { RemoteAudioTrack } from './RemoteAudioTrack';
 export { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
