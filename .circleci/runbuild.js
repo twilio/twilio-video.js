@@ -67,7 +67,8 @@ function generateBuildRequest(program) {
       custom_workflow: program.workflow === 'custom',
       backend_workflow: program.workflow === 'backend',
       environment: program.environment,
-      test_stability: program.test_stability
+      test_stability: program.test_stability,
+      test_files: program.test_files
     }
   };
 
@@ -186,8 +187,17 @@ const topologyPrompt = {
   choices: ['group', 'peer-to-peer'],
   validate: answer => answer.length > 0,
   default: 'group',
-
 };
+
+const testFilesPrompt = {
+  when: (answers) => answers.workflow === 'custom',
+  type: 'input',
+  name: 'test_files',
+  message: 'Files to test against:',
+  default: 'auto',
+  validate: (val) => { return typeof val === 'string' && val.length > 3; }
+};
+
 
 // tag can be chosen only for backend workflow
 const tagPrompt = {
@@ -198,6 +208,7 @@ const tagPrompt = {
   default: '2.0.0-beta15',
   validate: (val) => { return typeof val === 'string' && val.length > 5; }
 };
+
 
 const confirmPrompt = {
   type: 'confirm',
@@ -221,11 +232,12 @@ inquirer.prompt([
   bverPrompt,
   topologyPrompt,
   stableTestsPrompt,
+  testFilesPrompt
 ]).then(answers => {
   console.log('Will make a CI request with:', answers);
 
   // get basic values from answers.
-  const { branch, token, workflow, tag } = answers;
+  const { branch, token, workflow, tag, test_files } = answers;
 
   // make combo of possible multi-select (checkbox) values.
   var combo = ['browser', 'bver', 'environment', 'topology', 'test_stability'].reduce( (acc, dim) => {
@@ -233,7 +245,7 @@ inquirer.prompt([
     const result = [];
     acc.forEach(accElement => dimValues.forEach(dimValue => result.push({ ...accElement, [dim]: dimValue})));
     return result;
-  }, [{ branch, token, workflow, tag }]);
+  }, [{ branch, token, workflow, tag, test_files }]);
 
   inquirer.prompt([confirmPrompt]).then(({ confirm }) => {
     if (confirm) {

@@ -47,6 +47,9 @@ parameters:
   release_command:
     type: string
     default: "echo no release command was specified" # release-tool specifies the real command.
+  test_files: # specifies test files to execute.
+    type: string
+    default: "auto"
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
@@ -187,6 +190,29 @@ jobs:
     steps:
       - echo-command:
           to: "Build Passed!"
+  run-integration-tests-custom:
+    parallelism: 1
+    parameters:
+      browser:
+        type: string
+      bver:
+        type: string
+      topology:
+        type: enum
+        enum: ["group", "peer-to-peer"]
+        default: "group"
+      test_stability:
+        type: string
+    environment:
+      TEST_TYPE: "integration"
+      TOPOLOGY: << parameters.topology >>
+      TEST_STABILITY: << parameters.test_stability >>
+      TEST_FILES: << pipeline.parameters.test_files >>
+    executor:
+      name: docker-with-browser
+      browser: << parameters.browser >>
+      bver: << parameters.bver >>
+    steps: [integration-tests]
   run-integration-tests:
     parallelism: 6
     parameters:
@@ -204,6 +230,7 @@ jobs:
       TEST_TYPE: "integration"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
+      TEST_FILES: << pipeline.parameters.test_files >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -321,7 +348,7 @@ workflows:
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
-      - run-integration-tests:
+      - run-integration-tests-custom:
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
