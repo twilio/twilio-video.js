@@ -1,4 +1,5 @@
 import { Track } from './Track';
+import { VideoProcessor } from './VideoProcessor';
 
 export namespace VideoTrack {
   interface Dimensions {
@@ -12,8 +13,12 @@ export class VideoTrack extends Track {
   isEnabled: boolean;
   dimensions: VideoTrack.Dimensions;
   kind: 'video';
+  processor: VideoProcessor | null;
   mediaStreamTrack: MediaStreamTrack;
+  processedTrack: MediaStreamTrack | null;
 
+  addProcessor(processor: VideoProcessor): this;
+  removeProcessor(processor: VideoProcessor): this;
   attach(element?: HTMLMediaElement | string): HTMLVideoElement;
   detach(element?: HTMLMediaElement | string): HTMLVideoElement[];
 

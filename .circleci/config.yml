@@ -47,6 +47,9 @@ parameters:
   release_command:
     type: string
     default: "echo no release command was specified" # release-tool specifies the real command.
+  test_files: # specifies test files to execute.
+    type: string
+    default: "auto"
 
 defaultEnv: &defaultEnv
   ENVIRONMENT: << pipeline.parameters.environment >>
@@ -188,8 +191,11 @@ jobs:
       - echo-command:
           to: "Build Passed!"
   run-integration-tests:
-    parallelism: 6
+    parallelism: << parameters.parallelism >>
     parameters:
+      parallelism:
+        type: integer
+        default: 6
       browser:
         type: string
       bver:
@@ -204,6 +210,7 @@ jobs:
       TEST_TYPE: "integration"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
+      TEST_FILES: << pipeline.parameters.test_files >>
     executor:
       name: docker-with-browser
       browser: << parameters.browser >>
@@ -312,6 +319,7 @@ workflows:
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
+          parallelism: 1
       - run-network-tests:
           name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>

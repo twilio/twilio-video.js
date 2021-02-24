@@ -27,6 +27,7 @@ dev)
   export API_KEY_SECRET=${API_KEY_SECRET_DEV}
   export API_KEY_SID=${API_KEY_SID_DEV}
   export REGIONS='us1'
+  export WS_SERVER=wss://us2.vss.dev.twilio.com/signaling
   ;;
 stage)
   echo "Testing against stage"
@@ -57,8 +58,10 @@ network)
 integration)
   echo "Testing integration tests"
   # ask circleci to split tests by timing.
-  echo "Asking circleci to pick tests based on timings..."
-  export TEST_FILES=$(circleci tests glob "$PWD/test/integration/spec/**/*.js" | circleci tests split --split-by=timings)
+  if [ "${TEST_FILES}" == "auto" ]; then
+    echo "Asking circleci to pick tests based on timings..."
+    export TEST_FILES=$(circleci tests glob "$PWD/test/integration/spec/**/*.js" | circleci tests split --split-by=timings)
+  fi
   echo $TEST_FILES
   npm run test:integration
   ;;

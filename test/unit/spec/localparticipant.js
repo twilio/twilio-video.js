@@ -449,6 +449,33 @@ describe('LocalParticipant', () => {
                   it('should raise a "trackPublished" event with the LocalTrackPublication after the Promise resolves', () => {
                     assert.equal(trackPublishedEvent, localTrackPublication);
                   });
+
+                  if (hasLocalTrack && kind === 'video' && trackType === 'LocalTrack') {
+                    describe('when handling processed tracks', () => {
+                      let localTrack;
+
+                      beforeEach(() => {
+                        test.signaling.state = 'connected';
+                        localTrack = createTrack();
+                        localTrack._setSenderMediaStreamTrack = sinon.stub();
+                      });
+
+                      it('should update RTCRtpSender\'s MediaStreamTrack if the track has a processedTrack', async () => {
+                        localTrack.processedTrack = 'foo';
+                        publishTrack(localTrack);
+                        test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
+                        await new Promise(resolve => setTimeout(resolve));
+                        sinon.assert.calledWith(localTrack._setSenderMediaStreamTrack, true);
+                      });
+
+                      it('should not update RTCRtpSender\'s MediaStreamTrack if the track does not have a processedTrack', async () => {
+                        publishTrack(localTrack);
+                        test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
+                        await new Promise(resolve => setTimeout(resolve));
+                        sinon.assert.notCalled(localTrack._setSenderMediaStreamTrack);
+                      });
+                    });
+                  }
                 } else {
                   it('should not raise a "trackPublished" event', () => {
                     assert(!trackPublishedEvent);
