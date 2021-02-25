@@ -32,6 +32,7 @@ require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/receiver');
 require('./spec/media/track/remotedatatrack');
 require('./spec/media/track/remotemediatrack');
+require('./spec/media/track/remotevideotrack');
 require('./spec/media/track/remotetrackpublication');
 require('./spec/media/track/sender');
 require('./spec/media/track/transceiver');
