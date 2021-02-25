@@ -3,12 +3,14 @@ const sinon = require('sinon');
 const Document = require('../../../lib/document');
 const documentVisibilityMonitor = require('../../../../lib/util/documentvisibilitymonitor');
 const { defer, waitForSometime } = require('../../../../lib/util');
+const { describe } = require('mocha');
 
 describe('DocumentVisibilityMonitor', () => {
   let addEventListenerStub;
   let removeEventListenerStub;
 
   before(() => {
+    documentVisibilityMonitor.clear();
     global.document = global.document || new Document();
     addEventListenerStub = sinon.spy(document, 'addEventListener');
     removeEventListenerStub = sinon.spy(document, 'removeEventListener');
@@ -36,12 +38,12 @@ describe('DocumentVisibilityMonitor', () => {
 
   describe('document visibility events: ', () => {
     [-1, 0, 3, 'some string', undefined, null].forEach(phase => {
-      it(`onVisible throws for invalid phase value: ${phase}`, () => {
-        assert.throws(() => documentVisibilityMonitor.onVisible(phase, () => {}));
+      it(`onVisibilityChange throws for invalid phase value: ${phase}`, () => {
+        assert.throws(() => documentVisibilityMonitor.onVisibilityChange(phase, () => {}));
       });
 
-      it(`offVisible throws for invalid phase value: ${phase}`, () => {
-        assert.throws(() => documentVisibilityMonitor.offVisible(phase, () => {}));
+      it(`offVisibilityChange throws for invalid phase value: ${phase}`, () => {
+        assert.throws(() => documentVisibilityMonitor.offVisibilityChange(phase, () => {}));
       });
     });
 
@@ -57,10 +59,10 @@ describe('DocumentVisibilityMonitor', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
 
           const callback = () => {};
-          documentVisibilityMonitor.onVisible(phase, callback);
+          documentVisibilityMonitor.onVisibilityChange(phase, callback);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          documentVisibilityMonitor.offVisible(phase, callback);
+          documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -69,16 +71,16 @@ describe('DocumentVisibilityMonitor', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
 
           const callback = () => {};
-          documentVisibilityMonitor.onVisible(phase, callback);
+          documentVisibilityMonitor.onVisibilityChange(phase, callback);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          documentVisibilityMonitor.onVisible(phase, callback);
+          documentVisibilityMonitor.onVisibilityChange(phase, callback);
           sinon.assert.callCount(document.addEventListener, 1);
 
-          documentVisibilityMonitor.offVisible(phase, callback);
+          documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 0);
 
-          documentVisibilityMonitor.offVisible(phase, callback);
+          documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -91,7 +93,7 @@ describe('DocumentVisibilityMonitor', () => {
             deferred.resolve();
           };
 
-          documentVisibilityMonitor.onVisible(phase, callback);
+          documentVisibilityMonitor.onVisibilityChange(phase, callback);
           sinon.assert.callCount(document.addEventListener, 1);
 
           global.document.visibilityState = 'visible';
@@ -99,7 +101,7 @@ describe('DocumentVisibilityMonitor', () => {
 
           await deferred.promise;
 
-          documentVisibilityMonitor.offVisible(phase, callback);
+          documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
 
@@ -113,7 +115,7 @@ describe('DocumentVisibilityMonitor', () => {
             deferred.resolve();
           };
 
-          documentVisibilityMonitor.onVisible(phase, callback);
+          documentVisibilityMonitor.onVisibilityChange(phase, callback);
           sinon.assert.callCount(document.addEventListener, 1);
 
           global.document.visibilityState = 'visible';
@@ -121,7 +123,7 @@ describe('DocumentVisibilityMonitor', () => {
 
           await deferred.promise;
 
-          documentVisibilityMonitor.offVisible(phase, callback);
+          documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 1);
         });
       });
@@ -146,9 +148,9 @@ describe('DocumentVisibilityMonitor', () => {
           deferred.resolve();
         };
 
-        documentVisibilityMonitor.onVisible(2, phase2Callback);
-        documentVisibilityMonitor.onVisible(1, phase1Callback);
-        documentVisibilityMonitor.onVisible(1, phase1Callback);
+        documentVisibilityMonitor.onVisibilityChange(2, phase2Callback);
+        documentVisibilityMonitor.onVisibilityChange(1, phase1Callback);
+        documentVisibilityMonitor.onVisibilityChange(1, phase1Callback);
 
         global.document.visibilityState = 'visible';
         global.document.dispatchEvent('visibilitychange');
@@ -157,9 +159,9 @@ describe('DocumentVisibilityMonitor', () => {
         assert.equal(phase1Called, 2);
         assert.equal(phase2Called, 1);
 
-        documentVisibilityMonitor.offVisible(2, phase2Callback);
-        documentVisibilityMonitor.offVisible(1, phase1Callback);
-        documentVisibilityMonitor.offVisible(1, phase1Callback);
+        documentVisibilityMonitor.offVisibilityChange(2, phase2Callback);
+        documentVisibilityMonitor.offVisibilityChange(1, phase1Callback);
+        documentVisibilityMonitor.offVisibilityChange(1, phase1Callback);
       });
     });
   });

@@ -21,6 +21,14 @@ class HTMLElement {
     }
     return this;
   }
+
+  play() {
+    return Promise.resolve();
+  }
+
+  pause() {
+    return Promise.resolve();
+  }
 }
 
 class HTMLBodyElement extends HTMLElement {
