@@ -89,7 +89,8 @@ describe('DocumentVisibilityMonitor', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
           const deferred = defer();
 
-          const callback = () => {
+          const callback = isVisible => {
+            assert(isVisible);
             deferred.resolve();
           };
 
@@ -110,7 +111,8 @@ describe('DocumentVisibilityMonitor', () => {
           sinon.assert.callCount(document.removeEventListener, 0);
           const deferred = defer();
 
-          const callback = async () => {
+          const callback = async isVisible => {
+            assert(isVisible);
             await waitForSometime(100);
             deferred.resolve();
           };
@@ -125,6 +127,32 @@ describe('DocumentVisibilityMonitor', () => {
 
           documentVisibilityMonitor.offVisibilityChange(phase, callback);
           sinon.assert.callCount(document.removeEventListener, 1);
+        });
+
+        [true, false].forEach(isVisible => {
+          it(`callback function is passed isVisible=${isVisible} when document becomes ${isVisible ? 'visible' : 'invisible'}`, async () => {
+            sinon.assert.callCount(document.addEventListener, 0);
+            sinon.assert.callCount(document.removeEventListener, 0);
+            const deferred = defer();
+
+            const callback = gotVisible => {
+              assert(isVisible === gotVisible);
+              deferred.resolve();
+            };
+
+            documentVisibilityMonitor.onVisibilityChange(phase, callback);
+            sinon.assert.callCount(document.addEventListener, 1);
+
+
+            global.document.visibilityState = isVisible ? 'visible' : 'hidden';
+            global.document.dispatchEvent('visibilitychange');
+
+            await deferred.promise;
+
+            documentVisibilityMonitor.offVisibilityChange(phase, callback);
+            sinon.assert.callCount(document.removeEventListener, 1);
+
+          });
         });
       });
     });
