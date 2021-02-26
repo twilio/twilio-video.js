@@ -21,7 +21,9 @@ const {
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
-  waitFor
+  waitFor,
+  setupAliceAndBob,
+  assertMediaFlow
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
@@ -84,43 +86,40 @@ describe('BandwidthProfileOptions', function() {
     });
 
 
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].forEach(run => {
-      it(`${run}: passes`, async () => {
-        const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-          createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-          await createLocalVideoTrack(smallVideoConstraints)
-        ]), 'local tracks');
-        // Initially disable Alice's audio
-        aliceTracks[0].enabled = false;
+    it('is fixed', async () => {
+      const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
+        createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
+        await createLocalVideoTrack(smallVideoConstraints)
+      ]), 'local tracks');
+      // Initially disable Alice's audio
+      aliceTracks[0].enabled = false;
 
-        const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
-        const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
+      const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
+      const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
 
-        // Alice and Bob publish their LocalTracks
-        await waitFor([
-          ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
-          ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
-          tracksSubscribed(aliceRemote, 2, 'subscribed to Alice'),
-          tracksSubscribed(bobRemote, 2, 'subscribed to Bob')
-        ], `all tracks to get published and subscribed: ${thisRoom.sid}`);
+      // Alice and Bob publish their LocalTracks
+      await waitFor([
+        ...aliceTracks.map(track => aliceLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
+        ...bobTracks.map(track => bobLocal.publishTrack(track, { priority: PRIORITY_STANDARD })),
+        tracksSubscribed(aliceRemote, 2, 'subscribed to Alice'),
+        tracksSubscribed(bobRemote, 2, 'subscribed to Bob')
+      ], `all tracks to get published and subscribed: ${thisRoom.sid}`);
 
-        const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
-          return [...videoTracks.values()][0].track;
-        });
-
-        monitorTrackSwitchOffs(aliceRemoteVideoTrack, 'Alice\'s Track');
-        monitorTrackSwitchOffs(bobRemoteVideoTrack, 'Bob\'s Track');
-
-        const bobDominant = dominantSpeakerChanged(thisRoom, bobRemote);
-        await waitFor(bobDominant, `Bob to be dominant speaker: ${thisRoom.sid}`, 30000, true);
-
-        await waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's Track to switch on: ${thisRoom.sid}`, 30000, true);
-        assert.strictEqual(bobRemoteVideoTrack.isSwitchedOff, false, `Bob's Track.isSwitchedOff = ${bobRemoteVideoTrack.isSwitchedOff}`);
-
-        await waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's Track [${aliceRemoteVideoTrack.sid}] to switch off: ${thisRoom.sid}`, 30000, true);
-        assert.strictEqual(aliceRemoteVideoTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteVideoTrack.isSwitchedOff}`);
-
+      const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
+        return [...videoTracks.values()][0].track;
       });
+
+      monitorTrackSwitchOffs(aliceRemoteVideoTrack, 'Alice\'s Track');
+      monitorTrackSwitchOffs(bobRemoteVideoTrack, 'Bob\'s Track');
+
+      const bobDominant = dominantSpeakerChanged(thisRoom, bobRemote);
+      await waitFor(bobDominant, `Bob to be dominant speaker: ${thisRoom.sid}`, 30000, true);
+
+      await waitFor(trackSwitchedOn(bobRemoteVideoTrack), `Bob's Track to switch on: ${thisRoom.sid}`, 30000, true);
+      assert.strictEqual(bobRemoteVideoTrack.isSwitchedOff, false, `Bob's Track.isSwitchedOff = ${bobRemoteVideoTrack.isSwitchedOff}`);
+
+      await waitFor(trackSwitchedOff(aliceRemoteVideoTrack), `Alice's Track [${aliceRemoteVideoTrack.sid}] to switch off: ${thisRoom.sid}`, 30000, true);
+      assert.strictEqual(aliceRemoteVideoTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteVideoTrack.isSwitchedOff}`);
     });
   });
 
@@ -266,6 +265,47 @@ describe('BandwidthProfileOptions', function() {
         }
         await completeRoom(sid);
       });
+    });
+
+
+  });
+
+  describe('renderHints', () => {
+    it('Bob can turn On/Off Alice\'s track on demand', async () => {
+      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+      const aliceOptions = { tracks: [aliceLocalVideo] };
+      const bobOptions = {
+        tracks: [],
+        loggerName: 'BobLogger',
+        bandwidthProfile: {
+          video: { dominantSpeakerPriority: PRIORITY_STANDARD }
+        },
+      };
+
+      const bobLogger = Logger.getLogger('BobLogger');
+      bobLogger.setLevel('info');
+
+      const { roomSid, bobRoom, aliceRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+
+      await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+      const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
+
+      // initially track should be switched on
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+
+      // call _setRenderHint to force switch OFF the track.
+      aliceRemoteTrack._setRenderHint({ enabled: false });
+      await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+
+      // call _setRenderHint to force switch ON the track.
+      aliceRemoteTrack._setRenderHint({ enabled: true });
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
     });
   });
 });
