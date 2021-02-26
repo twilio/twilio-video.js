@@ -28,25 +28,25 @@ describe('RenderHintsSignaling', () => {
     });
   });
 
-  describe('sendTrackHint', () => {
+  describe('setTrackHint', () => {
     it('updates track state', () => {
       const subject = makeTest(makeTransport());
-      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-      assert(subject._trackHints.has('foo'));
-      assert(subject._dirtyTracks.has('foo'));
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      assert(subject._trackSidsToRenderHints.has('foo'));
+      assert(subject._dirtyTrackSids.has('foo'));
     });
 
     it('flattens and sends updated track states ', () => {
       const mst = makeTransport();
       const subject = makeTest(mst);
-      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-      subject.sendTrackHint('bar', { enabled: false, renderDimension: { width: 100, height: 100 } });
-      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 101 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('bar', { enabled: false, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 101 } });
 
-      assert(subject._trackHints.has('foo'));
-      assert(subject._trackHints.has('bar'));
-      assert(subject._dirtyTracks.has('foo'));
-      assert(subject._dirtyTracks.has('bar'));
+      assert(subject._trackSidsToRenderHints.has('foo'));
+      assert(subject._trackSidsToRenderHints.has('bar'));
+      assert(subject._dirtyTrackSids.has('foo'));
+      assert(subject._dirtyTrackSids.has('bar'));
 
       const deferred = defer();
       mst.publish.callsFake(() => {
@@ -72,18 +72,18 @@ describe('RenderHintsSignaling', () => {
 
         // once published tracks shouldn't be dirty anymore.
         //  but state must be preserved.
-        assert(subject._trackHints.has('foo'));
-        assert(subject._trackHints.has('bar'));
-        assert(!subject._dirtyTracks.has('foo'));
-        assert(!subject._dirtyTracks.has('bar'));
+        assert(subject._trackSidsToRenderHints.has('foo'));
+        assert(subject._trackSidsToRenderHints.has('bar'));
+        assert(!subject._dirtyTrackSids.has('foo'));
+        assert(!subject._dirtyTrackSids.has('bar'));
       });
     });
 
     it('processes subsequent messages only after a reply is received', async () => {
       const mst = makeTransport();
       const subject = makeTest(mst);
-      subject.sendTrackHint('foo', { enabled: true });
-      subject.sendTrackHint('boo', { enabled: false });
+      subject.setTrackHint('foo', { enabled: true });
+      subject.setTrackHint('boo', { enabled: false });
 
       let publishCalls = 0;
       let deferred = defer();
@@ -110,7 +110,7 @@ describe('RenderHintsSignaling', () => {
       });
 
       // send another hint
-      subject.sendTrackHint('bar', { enabled: true, renderDimension: { width: 200, height: 200 } });
+      subject.setTrackHint('bar', { enabled: true, renderDimension: { width: 200, height: 200 } });
       await waitForSometime(10);
       assert(publishCalls, 1);
 
@@ -149,16 +149,16 @@ describe('RenderHintsSignaling', () => {
     });
   });
 
-  describe('deleteTrackState', () => {
+  describe('clearTrackHint', () => {
     it('deletes stored track state.', () => {
       let subject = makeTest(makeTransport());
-      subject.sendTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-      assert(subject._trackHints.has('foo'));
-      assert(subject._dirtyTracks.has('foo'));
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      assert(subject._trackSidsToRenderHints.has('foo'));
+      assert(subject._dirtyTrackSids.has('foo'));
 
-      subject.deleteTrackState('foo');
-      assert(!subject._trackHints.has('foo'));
-      assert(!subject._dirtyTracks.has('foo'));
+      subject.clearTrackHint('foo');
+      assert(!subject._trackSidsToRenderHints.has('foo'));
+      assert(!subject._dirtyTrackSids.has('foo'));
     });
   });
 });
