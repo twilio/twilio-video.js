@@ -241,19 +241,36 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
     });
 
     describe('#attach', () => {
-      it('enables the track if disabled', () => {
-        let track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+      let track;
+
+      beforeEach(() => {
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track.mediaStreamTrack.enabled = false;
+        track._captureFrames = sinon.stub();
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
             internalId: Date()
           };
         });
+      });
 
-        track.mediaStreamTrack.enabled = false;
+      it('enables the track if disabled', () => {
         let el1 = track.attach();
         assert(el1);
         assert.equal(track.mediaStreamTrack.enabled, true);
+      });
+
+      it('starts processing frames if processor exists', () => {
+        track.processor = 'foo';
+        track.attach();
+        sinon.assert.called(track._captureFrames);
+      });
+
+      it('do not start processing frames if processor does not exists', () => {
+        track.processor = null;
+        track.attach();
+        sinon.assert.notCalled(track._captureFrames);
       });
     });
 

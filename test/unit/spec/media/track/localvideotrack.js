@@ -21,6 +21,9 @@ describe('LocalVideoTrack', () => {
         constructor() {
           this._log = log;
         }
+        _canCaptureFrames() {
+          return parentClassContext._canCaptureFrames(...arguments);
+        }
         _captureFrames() {
           parentClassContext._captureFrames(...arguments);
         }
@@ -49,6 +52,7 @@ describe('LocalVideoTrack', () => {
   });
 
   beforeEach(() => {
+    parentClassContext._canCaptureFrames = sinon.spy();
     parentClassContext._captureFrames = sinon.spy();
     parentClassContext.addProcessor = sinon.spy();
     parentClassContext.removeProcessor = sinon.spy();
@@ -59,10 +63,23 @@ describe('LocalVideoTrack', () => {
     mediaStreamTrack = new MediaStreamTrack('foo', 'video');
     localVideoTrack = new LocalVideoTrack(mediaStreamTrack, {});
     localVideoTrack._trackSender = {
-      setMediaStreamTrack: sinon.stub().resolves({})
+      setMediaStreamTrack: sinon.stub().resolves({}),
+      _clones: new Set()
     };
     localVideoTrack._updateElementsMediaStreamTrack = sinon.stub();
     localVideoTrack.mediaStreamTrack = mediaStreamTrack;
+  });
+
+  describe('#_canCaptureFrames', () => {
+    it('should call parent class method with isPublishing equal to false', () => {
+      localVideoTrack._canCaptureFrames();
+      sinon.assert.calledWith(parentClassContext._canCaptureFrames, false);
+    });
+    it('should call parent class method with isPublishing equal to true', () => {
+      localVideoTrack._trackSender._clones.add('foo');
+      localVideoTrack._canCaptureFrames();
+      sinon.assert.calledWith(parentClassContext._canCaptureFrames, true);
+    });
   });
 
   describe('#addProcessor', () => {
