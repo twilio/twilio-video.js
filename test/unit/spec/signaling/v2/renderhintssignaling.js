@@ -6,7 +6,7 @@ const sinon = require('sinon');
 
 const RenderHintsSignaling = require('../../../../../lib/signaling/v2/renderhintssignaling.js');
 const log = require('../../../../lib/fakelog');
-const { defer } = require('../../../../../lib/util');
+const { defer, waitForSometime } = require('../../../../../lib/util');
 
 describe('RenderHintsSignaling', () => {
   describe('constructor', () => {
@@ -16,7 +16,7 @@ describe('RenderHintsSignaling', () => {
       assert.strictEqual(subject._transport, null);
     });
 
-    it('but gets assigned after ready', () => {
+    it('_transport assigned after ready', () => {
       const mst = makeTransport();
       const subject = makeTest(mst);
       return new Promise(resolve => {
@@ -76,6 +76,75 @@ describe('RenderHintsSignaling', () => {
         assert(subject._trackHints.has('bar'));
         assert(!subject._dirtyTracks.has('foo'));
         assert(!subject._dirtyTracks.has('bar'));
+      });
+    });
+
+    it('processes subsequent messages only after a reply is received', async () => {
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      subject.sendTrackHint('foo', { enabled: true });
+      subject.sendTrackHint('boo', { enabled: false });
+
+      let publishCalls = 0;
+      let deferred = defer();
+      mst.publish.callsFake(() => {
+        publishCalls++;
+        deferred.resolve();
+      });
+
+      // wait for message to get published.
+      await deferred.promise;
+      assert(publishCalls, 1);
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track_sid': 'foo',
+            'enabled': true,
+          }, {
+            'track_sid': 'boo',
+            'enabled': false,
+          }]
+        }
+      });
+
+      // send another hint
+      subject.sendTrackHint('bar', { enabled: true, renderDimension: { width: 200, height: 200 } });
+      await waitForSometime(10);
+      assert(publishCalls, 1);
+
+      const serverMessage = {
+        'type': 'render_hints',
+        'subscriber': {
+          'id': 42,
+          'hints': [
+            {
+              'track_sid': 'foo',
+              'result': 'OK'
+            },
+            {
+              'track_sid': 'boo',
+              'result': 'INVALID_RENDER_HINT'
+            }
+          ]
+        }
+      };
+
+      deferred = defer();
+      mst.emit('message', serverMessage);
+      await deferred.promise;
+      assert(publishCalls, 2);
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track_sid': 'bar',
+            'enabled': true,
+            'render_dimension': { height: 200, width: 200 },
+          }]
+        }
       });
     });
   });
