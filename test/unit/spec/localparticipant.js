@@ -457,6 +457,7 @@ describe('LocalParticipant', () => {
                       beforeEach(() => {
                         test.signaling.state = 'connected';
                         localTrack = createTrack();
+                        localTrack._captureFrames = sinon.stub();
                         localTrack._setSenderMediaStreamTrack = sinon.stub();
                       });
 
@@ -465,6 +466,7 @@ describe('LocalParticipant', () => {
                         publishTrack(localTrack);
                         test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
                         await new Promise(resolve => setTimeout(resolve));
+                        sinon.assert.calledOnce(localTrack._captureFrames);
                         sinon.assert.calledWith(localTrack._setSenderMediaStreamTrack, true);
                       });
 
@@ -472,6 +474,7 @@ describe('LocalParticipant', () => {
                         publishTrack(localTrack);
                         test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
                         await new Promise(resolve => setTimeout(resolve));
+                        sinon.assert.notCalled(localTrack._captureFrames);
                         sinon.assert.notCalled(localTrack._setSenderMediaStreamTrack);
                       });
                     });

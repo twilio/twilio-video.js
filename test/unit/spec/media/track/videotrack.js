@@ -538,8 +538,17 @@ describe('VideoTrack', () => {
           videoTrack.processor = null;
         }
       }, {
-        state: 'there are no video elements attached',
+        state: 'there are no video elements attached and isPublishing has default value',
         setState: () => {
+          videoTrack._attachments.clear();
+        }
+      }, {
+        state: 'there are no video elements attached and isPublishing false',
+        setState: () => {
+          videoTrack._origCanCaptureFrames = videoTrack._canCaptureFrames;
+          videoTrack._canCaptureFrames = () => {
+            return videoTrack._origCanCaptureFrames(false);
+          };
           videoTrack._attachments.clear();
         }
       }].forEach(({ state, setState }) => {
@@ -564,6 +573,43 @@ describe('VideoTrack', () => {
           await internalPromise();
           clock.tick(timeoutMs);
           sinon.assert.notCalled(processFrame);
+        });
+      });
+
+      describe('when isPublishing is true', () => {
+        let setup;
+
+        beforeEach(() => {
+          setup = () => {
+            videoTrack._origCanCaptureFrames = videoTrack._canCaptureFrames;
+            videoTrack._canCaptureFrames = () => {
+              return videoTrack._origCanCaptureFrames(true);
+            };
+            videoTrack._attachments.clear();
+          };
+        });
+
+        it('should not stop capturing frames if isPublishing is true and there are no attached elements', async () => {
+          videoTrack._captureFrames();
+
+          clock.tick(timeoutMs);
+          sinon.assert.calledOnce(processFrame);
+
+          setup();
+          await internalPromise();
+          clock.tick(timeoutMs);
+          sinon.assert.calledTwice(processFrame);
+        });
+
+        it('should start capturing frames if isPublishing is true and there are no attached elements', async () => {
+          setup();
+          videoTrack._captureFrames();
+          clock.tick(timeoutMs);
+          sinon.assert.calledOnce(processFrame);
+
+          await internalPromise();
+          clock.tick(timeoutMs);
+          sinon.assert.calledTwice(processFrame);
         });
       });
     });
