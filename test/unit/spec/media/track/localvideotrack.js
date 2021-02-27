@@ -64,7 +64,7 @@ describe('LocalVideoTrack', () => {
     localVideoTrack = new LocalVideoTrack(mediaStreamTrack, {});
     localVideoTrack._trackSender = {
       setMediaStreamTrack: sinon.stub().resolves({}),
-      _clones: new Set()
+      isPublishing: false,
     };
     localVideoTrack._updateElementsMediaStreamTrack = sinon.stub();
     localVideoTrack.mediaStreamTrack = mediaStreamTrack;
@@ -76,7 +76,7 @@ describe('LocalVideoTrack', () => {
       sinon.assert.calledWith(parentClassContext._canCaptureFrames, false);
     });
     it('should call parent class method with isPublishing equal to true', () => {
-      localVideoTrack._trackSender._clones.add('foo');
+      localVideoTrack._trackSender.isPublishing = true;
       localVideoTrack._canCaptureFrames();
       sinon.assert.calledWith(parentClassContext._canCaptureFrames, true);
     });
