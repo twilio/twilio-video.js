@@ -11,7 +11,7 @@ const {
   setupAliceAndBob,
   smallVideoConstraints,
   tracksSubscribed,
-  validateMediaFlow,
+  assertMediaFlow,
   waitFor,
   waitForEvent,
   waitForSometime
@@ -19,18 +19,6 @@ const {
 
 const createLocalTracks = require('../../../lib/createlocaltrack');
 const connect = require('../../../lib/connect');
-
-async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
-  let mediaFlowDetected = false;
-  try {
-    await validateMediaFlow(room, 2000);
-    mediaFlowDetected = true;
-  } catch (err) {
-    mediaFlowDetected = false;
-  }
-  errorMessage = errorMessage || `Unexpected mediaFlow ${mediaFlowDetected} in ${room.sid}`;
-  assert.equal(mediaFlowDetected, mediaFlowExpected, errorMessage);
-}
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];

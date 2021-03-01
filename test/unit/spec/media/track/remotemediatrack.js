@@ -338,11 +338,12 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
   });
 });
 
-function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, isSwitchedOff }) {
+function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
+  setRenderHint = setRenderHint || emptyFn;
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }
