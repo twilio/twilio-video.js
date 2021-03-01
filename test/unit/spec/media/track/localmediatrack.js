@@ -587,8 +587,8 @@ const { defer } = require('../../../../../lib/util');
           localMediaTrack.mediaStreamTrack.stop();
 
           // When document visible phase 2 callback is called, test whether MediaStreamTrack is re-acquired
-          const phase2Promise = new Promise(resolve => documentVisibilityMonitor.onVisible(2, function onVisible() {
-            documentVisibilityMonitor.offVisible(2, onVisible);
+          const phase2Promise = new Promise(resolve => documentVisibilityMonitor.onVisibilityChange(2, function onVisible() {
+            documentVisibilityMonitor.offVisibilityChange(2, onVisible);
             assert.notEqual(mediaStreamTrack, localMediaTrack.mediaStreamTrack);
             resolve();
           }));

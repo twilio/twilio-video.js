@@ -3,11 +3,13 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const log = require('../../../../lib/fakelog');
+const Document = require('../../../../lib/document');
 const { capitalize } = require('../../../../lib/util');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
 const RemoteAudioTrack = require('../../../../../lib/media/track/remoteaudiotrack');
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
 
 [
   ['audio', RemoteAudioTrack],
@@ -333,6 +335,74 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
             sid: track.sid
           });
         }
+      });
+    });
+
+    describe('workaroundWebKitBug212780', () => {
+      let addEventListenerStub;
+      let removeEventListenerStub;
+
+      before(() => {
+        documentVisibilityMonitor.clear();
+        global.document = global.document || new Document();
+        addEventListenerStub = sinon.spy(document, 'addEventListener');
+        removeEventListenerStub = sinon.spy(document, 'removeEventListener');
+      });
+
+      after(() => {
+        addEventListenerStub.restore();
+        removeEventListenerStub.restore();
+        if (global.document instanceof Document && kind === 'video') {
+          delete global.document;
+        }
+      });
+
+      describe('constructor', () => {
+        context('when called without workaroundWebKitBug1208516', () => {
+          let track;
+          before(() => {
+            document.visibilityState = 'visible';
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: false }, RemoteTrack });
+          });
+
+          it('does not register for document visibility change', () => {
+            assert(track._workaroundWebKitBug212780 === false);
+            sinon.assert.notCalled(document.addEventListener);
+          });
+        });
+
+        context('when called with workaroundWebKitBug1208516', () => {
+          let track;
+          before(() => {
+            document.visibilityState = 'visible';
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: true }, RemoteTrack });
+          });
+
+          it('sets _workaroundWebKitBug212780 to true', () => {
+            assert(track._workaroundWebKitBug212780 === true);
+          });
+
+          context('when an element is attached', () => {
+            let el;
+            before(() => {
+              el = track.attach();
+            });
+
+            it('listens for document visibility change', () => {
+              sinon.assert.callCount(document.addEventListener, 1);
+              sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
+              sinon.assert.callCount(document.removeEventListener, 0);
+            });
+
+            it('stops listening when element is detached', () => {
+              track.detach(el);
+              sinon.assert.callCount(document.addEventListener, 1);
+              sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
+              sinon.assert.callCount(document.removeEventListener, 1);
+              sinon.assert.calledWith(document.removeEventListener, 'visibilitychange');
+            });
+          });
+        });
       });
     });
   });
