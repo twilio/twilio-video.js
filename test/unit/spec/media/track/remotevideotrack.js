@@ -81,6 +81,7 @@ describe('RemoteVideoTrack', () => {
   });
 });
 
+
 function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
@@ -88,5 +89,11 @@ function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  class FakeIntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+  }
+  options.IntersectionObserver = FakeIntersectionObserver;
   return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }

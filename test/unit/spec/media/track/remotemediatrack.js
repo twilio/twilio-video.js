@@ -113,7 +113,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
 
           before(() => {
             arg = null;
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled, options: null, RemoteTrack });
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled, options: {}, RemoteTrack });
             track.once('disabled', _arg => {
               trackDisabled = true;
               arg = _arg;
@@ -166,7 +166,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
 
           before(() => {
             arg = null;
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff, isEnabled: true, options: null, RemoteTrack });
+            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff, isEnabled: true, options: {}, RemoteTrack });
             track.once('switchedOff', _arg => {
               trackSwitchedOff = true;
               arg = _arg;
@@ -208,7 +208,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
       let track;
 
       before(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: {}, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -244,7 +244,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
 
     describe('#attach', () => {
       it('enables the track if disabled', () => {
-        let track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        let track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: {}, RemoteTrack });
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
@@ -264,7 +264,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
       let el2;
       let track;
       beforeEach(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: {}, RemoteTrack });
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
@@ -304,7 +304,7 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
       let track;
 
       before(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: {}, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -415,5 +415,11 @@ function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  class FakeIntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+  }
+  options.IntersectionObserver = FakeIntersectionObserver;
   return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }
