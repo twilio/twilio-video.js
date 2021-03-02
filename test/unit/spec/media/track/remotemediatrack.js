@@ -272,6 +272,18 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         track.attach();
         sinon.assert.notCalled(track._captureFrames);
       });
+
+      it('set processedTrack to enabled if it exists', () => {
+        track.processedTrack = {};
+        track.attach();
+        assert(track.processedTrack.enabled);
+      });
+
+      it('do not set processedTrack to enabled if it does not exists', () => {
+        track.processedTrack = null;
+        track.attach();
+        assert(!track.processedTrack);
+      });
     });
 
     describe('#detach', () => {
@@ -311,6 +323,17 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
         assert.equal(track.mediaStreamTrack.enabled, true);
         track.detach(el2);
         assert.equal(track.mediaStreamTrack.enabled, false);
+      });
+
+      it('set processedTrack to disabled if it exists', () => {
+        track.processedTrack = {};
+        track.detach();
+        assert.equal(track.processedTrack.enabled, false);
+      });
+
+      it('do not set processedTrack to disabled if it does not exists', () => {
+        track.detach();
+        assert(!track.processedTrack);
       });
     });
 
