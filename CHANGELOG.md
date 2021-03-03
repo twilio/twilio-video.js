@@ -52,7 +52,11 @@ New Features
       : track.addProcessor(processor);
   });
 
-  // Remote video track
+  ```
+  
+  You can also toggle a blur filter on a RemoteVideoTrack as shown below.
+  
+  ```js
   room.on('trackSubscribed', track => {
     if (track.kind === 'video') {
       const { width, height } = track.dimensions;
