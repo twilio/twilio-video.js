@@ -183,4 +183,3 @@ function makeTest(mst) {
   subject.setup('foo');
   return subject;
 }
-

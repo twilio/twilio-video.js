@@ -415,5 +415,12 @@ function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  options = options || {};
+  class FakeIntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+  }
+  options.IntersectionObserver = FakeIntersectionObserver;
   return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }
