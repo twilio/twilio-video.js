@@ -2,13 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-2.13.0 (In Progress)
+2.13.0 (March 3, 2021)
 =====================
 
 New Features
 ------------
 
-**Video Processor API Pilot**
+**Video Processor API Pilot (Chrome only)**
 - You can now register a `VideoProcessor` with a VideoTrack in order to process its video frames. In a LocalVideoTrack, video frames are processed before being sent to the encoder. In a RemoteVideoTrack, video frames are processed before being sent to the attached `<video>` element(s). The `VideoProcessor` should implement the interface shown below. (VIDEO-3560, VIDEO-3561)
 
   ```ts
