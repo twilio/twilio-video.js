@@ -415,9 +415,7 @@ function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  if (options === null || options === undefined) {
-    options = {};
-  }
+  options = options || {};
   class FakeIntersectionObserver {
     constructor() {}
     observe() {}
