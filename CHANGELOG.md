@@ -2,6 +2,73 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
+2.13.0 (March 3, 2021)
+======================
+
+New Features
+------------
+
+**Video Processor API Pilot (Chrome only)**
+- You can now register a `VideoProcessor` with a VideoTrack in order to process its video frames. In a LocalVideoTrack, video frames are processed before being sent to the encoder. In a RemoteVideoTrack, video frames are processed before being sent to the attached `<video>` element(s). The `VideoProcessor` should implement the interface shown below. (VIDEO-3560, VIDEO-3561)
+
+  ```ts
+  abstract class VideoProcessor {
+    abstract processFrame(inputFrame: OffscreenCanvas)
+      : Promise<OffscreenCanvas | null>
+      | OffscreenCanvas | null;
+  }
+  ```
+
+  A VideoTrack provides new methods [addProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) and [removeProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#removeProcessor) which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
+
+  ```ts
+  import { createLocalVideoTrack } from 'twilio-video';
+
+  class BlurVideoProcessor {
+    private readonly _outputFrameCtx: CanvasRenderingContext2D;
+    private readonly _outputFrame: OffscreenCanvas;
+
+    constructor(width: number, height: number, blurRadius: number) {
+      this._outputFrame = new OffscreenCanvas(width, height);
+      this._outputFrameCtx = this._outputFrame.getContext('2d');
+      this._outputFrameCtx.filter = `blur(${blurRadius}px)`;
+    }
+
+    processFrame(inputFrame: OffscreenCanvas) {
+      this._outputFrameCtx.drawImage(inputFrame, 0, 0);
+      return this._outputFrame;
+    }
+  }
+
+  // Local video track
+  createLocalVideoTrack({
+    width: 1280,
+    height: 720
+  }).then(track => {
+    const processor = new BlurVideoProcessor(1280, 720, 5);
+    document.getElementById('preview').appendChild(track.attach());
+    document.getElementById('toggle-blur').onclick = () => track.processor
+      ? track.removeProcessor(processor)
+      : track.addProcessor(processor);
+  });
+
+  ```
+  
+  You can also toggle a blur filter on a RemoteVideoTrack as shown below.
+  
+  ```js
+  room.on('trackSubscribed', track => {
+    if (track.kind === 'video') {
+      const { width, height } = track.dimensions;
+      const processor = new BlurVideoProcessor(width, height, 3);
+      document.getElementById('preview-remote').appendChild(track.attach());
+      document.getElementById('toggle-blur-remote').onclick = () => track.processor
+        ? track.removeProcessor(processor)
+        : track.addProcessor(processor);
+    }
+  });
+  ```
+
 2.12.0 (Feb 10, 2020)
 =====================
 

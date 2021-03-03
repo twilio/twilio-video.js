@@ -449,6 +449,38 @@ describe('LocalParticipant', () => {
                   it('should raise a "trackPublished" event with the LocalTrackPublication after the Promise resolves', () => {
                     assert.equal(trackPublishedEvent, localTrackPublication);
                   });
+
+                  if (hasLocalTrack && kind === 'video' && trackType === 'LocalTrack') {
+                    ['connecting', 'connected'].forEach(state => {
+                      describe(`when handling processed tracks and signaling state is ${state}`, () => {
+                        let localTrack;
+
+                        beforeEach(() => {
+                          test.signaling.state = state;
+                          localTrack = createTrack();
+                          localTrack._captureFrames = sinon.stub();
+                          localTrack._setSenderMediaStreamTrack = sinon.stub();
+                        });
+
+                        it('should update RTCRtpSender\'s MediaStreamTrack if the track has a processedTrack', async () => {
+                          localTrack.processedTrack = 'foo';
+                          publishTrack(localTrack);
+                          test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
+                          await new Promise(resolve => setTimeout(resolve));
+                          sinon.assert.calledOnce(localTrack._captureFrames);
+                          sinon.assert.calledWith(localTrack._setSenderMediaStreamTrack, true);
+                        });
+
+                        it('should not update RTCRtpSender\'s MediaStreamTrack if the track does not have a processedTrack', async () => {
+                          publishTrack(localTrack);
+                          test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
+                          await new Promise(resolve => setTimeout(resolve));
+                          sinon.assert.notCalled(localTrack._captureFrames);
+                          sinon.assert.notCalled(localTrack._setSenderMediaStreamTrack);
+                        });
+                      });
+                    });
+                  }
                 } else {
                   it('should not raise a "trackPublished" event', () => {
                     assert(!trackPublishedEvent);

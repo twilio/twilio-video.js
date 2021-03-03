@@ -63,6 +63,19 @@ describe('MediaTrackSender', () => {
     });
   });
 
+  describe('isPublishing', () => {
+    it('should return true if there are clones', () => {
+      sender = new MediaTrackSender(mediaStreamTrack);
+      sender.clone();
+      assert(sender.isPublishing);
+    });
+
+    it('should return false if there are no clones', () => {
+      sender = new MediaTrackSender(mediaStreamTrack);
+      assert(!sender.isPublishing);
+    });
+  });
+
   describe('clone', () => {
     it('returns a new MediaTrackSender containing a clone of the underlying MediaStreamTrack', () => {
       sender = new MediaTrackSender(mediaStreamTrack);
