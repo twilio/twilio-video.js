@@ -19,7 +19,7 @@ New Features
   }
   ```
 
-  A VideoTrack provides new methods `addProcessor` and `removeProcessor` which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
+  A VideoTrack provides new methods [addProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) and [removeProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#removeProcessor) which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
 
   ```ts
   import { createLocalVideoTrack } from 'twilio-video';
@@ -40,6 +40,7 @@ New Features
     }
   }
 
+  // Local video track
   createLocalVideoTrack({
     width: 1280,
     height: 720
@@ -49,6 +50,18 @@ New Features
     document.getElementById('toggle-blur').onclick = () => track.processor
       ? track.removeProcessor(processor)
       : track.addProcessor(processor);
+  });
+
+  // Remote video track
+  room.on('trackSubscribed', track => {
+    if (track.kind === 'video') {
+      const { width, height } = track.dimensions;
+      const processor = new BlurVideoProcessor(width, height, 3);
+      document.getElementById('preview-remote').appendChild(track.attach());
+      document.getElementById('toggle-blur-remote').onclick = () => track.processor
+        ? track.removeProcessor(processor)
+        : track.addProcessor(processor);
+    }
   });
   ```
 
