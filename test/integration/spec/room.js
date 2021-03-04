@@ -603,7 +603,7 @@ describe('Room', function() {
     before(async () => {
       let thoseRooms;
       [, aliceRoom, thoseRooms] = await setup({
-        testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
+        testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1, idleTrackSwitchOff: false } } },
         otherOptions: { tracks: [] },
         participantNames: ['Alice', 'Bob', 'Charlie'],
         nTracks: 0

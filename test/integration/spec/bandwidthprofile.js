@@ -60,6 +60,7 @@ describe('BandwidthProfileOptions', function() {
           loggerName: 'Charlie',
           bandwidthProfile: {
             video: {
+              idleTrackSwitchOff: false,
               dominantSpeakerPriority: PRIORITY_STANDARD,
               maxTracks: 1
             }
@@ -169,6 +170,7 @@ describe('BandwidthProfileOptions', function() {
           testOptions: {
             bandwidthProfile: {
               video: {
+                idleTrackSwitchOff: false,
                 dominantSpeakerPriority,
                 ...trackLimitOptions
               }
@@ -282,7 +284,10 @@ describe('BandwidthProfileOptions', function() {
         tracks: [],
         loggerName: 'BobLogger',
         bandwidthProfile: {
-          video: { dominantSpeakerPriority: PRIORITY_STANDARD }
+          video: {
+            idleTrackSwitchOff: true,
+            dominantSpeakerPriority: PRIORITY_STANDARD
+          }
         },
       };
 
@@ -349,7 +354,10 @@ describe('BandwidthProfileOptions', function() {
         tracks: [],
         loggerName: 'BobLogger',
         bandwidthProfile: {
-          video: { dominantSpeakerPriority: PRIORITY_STANDARD }
+          video: {
+            idleTrackSwitchOff: false,
+            dominantSpeakerPriority: PRIORITY_STANDARD
+          }
         },
       };
 
