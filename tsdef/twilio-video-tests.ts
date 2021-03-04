@@ -236,6 +236,7 @@ async function initRoom() {
     maxVideoBitrate: 200,
     bandwidthProfile: {
       video: {
+        idleTrackSwitchOff: false,
         dominantSpeakerPriority: 'high',
         renderDimensions: {
           low: {

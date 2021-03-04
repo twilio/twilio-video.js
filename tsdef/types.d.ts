@@ -98,6 +98,7 @@ export interface VideoRenderDimensions {
 }
 
 export interface VideoBandwidthProfileOptions {
+  idleTrackSwitchOff?: boolean;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
   maxTracks?: number;
