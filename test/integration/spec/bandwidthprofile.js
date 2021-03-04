@@ -266,12 +266,83 @@ describe('BandwidthProfileOptions', function() {
         await completeRoom(sid);
       });
     });
+  });
 
+  describe('idleTrackSwitchOff', () => {
+    let roomSid = null;
+    let bobRoom;
+    let aliceRemote;
+    let aliceRemoteTrack;
+    let videoElement1;
+    let videoElement2;
+    before(async () => {
+      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+      const aliceOptions = { tracks: [aliceLocalVideo] };
+      const bobOptions = {
+        tracks: [],
+        loggerName: 'BobLogger',
+        bandwidthProfile: {
+          video: { dominantSpeakerPriority: PRIORITY_STANDARD }
+        },
+      };
 
+      const bobLogger = Logger.getLogger('BobLogger');
+      bobLogger.setLevel('info');
+
+      ({ roomSid, bobRoom, aliceRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions }));
+
+      await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+      aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
+    });
+
+    after(() => {
+      if (bobRoom) {
+        completeRoom(bobRoom);
+      }
+    });
+
+    it('Track turns off if video element is not attached initially', async () => {
+      // since no video elements are attached. Tracks should switch off initially
+      await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+    });
+
+    it('Track turns on when a video element is attached', async () => {
+      videoElement1 = aliceRemoteTrack.attach();
+      document.body.appendChild(videoElement1);
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+    });
+
+    it('Track turns off  when another video element is attached', async () => {
+      videoElement2 = aliceRemoteTrack.attach();
+      document.body.appendChild(videoElement2);
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+    });
+
+    it('tracks stays on when one of the video element is detached ', async () => {
+      aliceRemoteTrack.detach(videoElement2);
+      videoElement2.remove();
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+    });
+
+    it('tracks turns off when all video elements are detached ', async () => {
+      const elements = aliceRemoteTrack.detach();
+      elements.forEach(el => el.remove());
+      await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+      await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+    });
   });
 
   describe('renderHints', () => {
-    it('Bob can turn On/Off Alice\'s track on demand', async () => {
+    it('with _setRenderHint Bob can turn On/Off Alice\'s track on demand', async () => {
       const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
       const aliceOptions = { tracks: [aliceLocalVideo] };
       const bobOptions = {
