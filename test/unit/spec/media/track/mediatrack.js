@@ -452,6 +452,18 @@ describe('MediaTrack', () => {
       it('should remove the element from ._attachments', () => {
         assert(!track._attachments.has(el1));
       });
+
+      it('should remove the MediaTrack\'s MediaStreamTrack from the element\'s .srcObject MediaStream if there is a processedTrack', () => {
+        track = createMediaTrack('1', 'video');
+        track.processedTrack = { foo: 'ff' };
+        el1 = document.createElement('video');
+        el1.srcObject = new MediaStream();
+        el1.srcObject.removeTrack = sinon.stub();
+        el1.srcObject.addTrack(track.processedTrack);
+        track._attachments.add(el1);
+        track._detachElement(el1);
+        sinon.assert.calledWithExactly(el1.srcObject.removeTrack, track.processedTrack);
+      });
     });
 
     context('when the element is not attached', () => {

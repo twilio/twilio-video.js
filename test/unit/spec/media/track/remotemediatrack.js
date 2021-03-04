@@ -243,19 +243,48 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
     });
 
     describe('#attach', () => {
-      it('enables the track if disabled', () => {
-        let track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+      let track;
+
+      beforeEach(() => {
+        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track.mediaStreamTrack.enabled = false;
+        track._captureFrames = sinon.stub();
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
             internalId: Date()
           };
         });
+      });
 
-        track.mediaStreamTrack.enabled = false;
+      it('enables the track if disabled', () => {
         let el1 = track.attach();
         assert(el1);
         assert.equal(track.mediaStreamTrack.enabled, true);
+      });
+
+      it('starts processing frames if processor exists', () => {
+        track.processor = 'foo';
+        track.attach();
+        sinon.assert.called(track._captureFrames);
+      });
+
+      it('do not start processing frames if processor does not exists', () => {
+        track.processor = null;
+        track.attach();
+        sinon.assert.notCalled(track._captureFrames);
+      });
+
+      it('set processedTrack to enabled if it exists', () => {
+        track.processedTrack = {};
+        track.attach();
+        assert(track.processedTrack.enabled);
+      });
+
+      it('do not set processedTrack to enabled if it does not exists', () => {
+        track.processedTrack = null;
+        track.attach();
+        assert(!track.processedTrack);
       });
     });
 
@@ -296,6 +325,17 @@ const documentVisibilityMonitor = require('../../../../../lib/util/documentvisib
         assert.equal(track.mediaStreamTrack.enabled, true);
         track.detach(el2);
         assert.equal(track.mediaStreamTrack.enabled, false);
+      });
+
+      it('set processedTrack to disabled if it exists', () => {
+        track.processedTrack = {};
+        track.detach();
+        assert.equal(track.processedTrack.enabled, false);
+      });
+
+      it('do not set processedTrack to disabled if it does not exists', () => {
+        track.detach();
+        assert(!track.processedTrack);
       });
     });
 
