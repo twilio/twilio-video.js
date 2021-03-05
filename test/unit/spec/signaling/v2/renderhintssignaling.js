@@ -79,6 +79,34 @@ describe('RenderHintsSignaling', () => {
       });
     });
 
+    it('does nothing if track state did not change', async () => {
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      assert(subject._trackSidsToRenderHints.has('foo'));
+      assert(subject._dirtyTrackSids.has('foo'));
+
+      const published = defer();
+      mst.publish.callsFake(() => {
+        published.resolve();
+      });
+
+      await published.promise;
+
+      // once published tracks shouldn't be dirty anymore.
+      //  but state must be preserved.
+      assert(subject._trackSidsToRenderHints.has('foo'));
+      assert(!subject._dirtyTrackSids.has('foo'));
+
+      // subsequent setTrackHint with same values does not mark track as dirty
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      assert(!subject._dirtyTrackSids.has('foo'));
+
+      // but any changes causes it be marked dirty
+      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 100 } });
+      assert(subject._dirtyTrackSids.has('foo'));
+    });
+
     it('processes subsequent messages only after a reply is received', async () => {
       const mst = makeTransport();
       const subject = makeTest(mst);

@@ -2,6 +2,48 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
+2.14.0 (In Progress)
+====================
+New Features
+------------
+
+**Idle Track Switch Off**
+
+- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible.
+
+This feature is available in Group Rooms and is enabled by default if your application specifies any Bandwidth Profile options during connect.
+
+```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect(token, {
+    name: "my-new-room",
+    bandwidthProfile: {
+      video: {
+        idleTrackSwitchOff: true,
+        // Other Bandwidth Profile options...
+      }
+    }
+  });
+```
+
+Note: This feature rely on applications using `attach` and `detach` methods of `RemoteVideoTrack`. If your application currently uses the underlying MediaStreamTrack to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. This feature can be disabled by setting `idleTrackSwitchOff` property to false in the BandwidthProfileOptions dictionary.
+
+```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect(token, {
+    name: "my-new-room",
+    bandwidthProfile: {
+      video: {
+        idleTrackSwitchOff: false,
+        // Other Bandwidth Profile options
+      }
+    }
+  });
+```
+
+
 2.13.0 (March 3, 2021)
 ======================
 
@@ -53,10 +95,10 @@ New Features
   });
 
   ```
-  
+
   You can also toggle a blur filter on a RemoteVideoTrack as shown below.
-  
-  ```js
+
+  ```ts
   room.on('trackSubscribed', track => {
     if (track.kind === 'video') {
       const { width, height } = track.dimensions;

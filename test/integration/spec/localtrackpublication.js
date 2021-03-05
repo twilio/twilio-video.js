@@ -374,7 +374,11 @@ describe('LocalTrackPublication', function() {
         [, thisRoom, thoseRooms] = await setup({
           testOptions: {
             bandwidthProfile: {
-              video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
+              video: {
+                idleTrackSwitchOff: false,
+                maxTracks: 1,
+                dominantSpeakerPriority: 'low'
+              }
             },
             tracks: [dataTrack]
           },
@@ -516,7 +520,11 @@ describe('LocalTrackPublication', function() {
           const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
             aliceOptions: {
               bandwidthProfile: {
-                video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
+                video: {
+                  idleTrackSwitchOff: false,
+                  maxTracks: 1,
+                  dominantSpeakerPriority: 'low'
+                }
               },
               tracks: []
             },
@@ -624,7 +632,11 @@ describe('LocalTrackPublication', function() {
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: {
           bandwidthProfile: {
-            video: { maxTracks: 1, dominantSpeakerPriority: 'low' }
+            video: {
+              idleTrackSwitchOff: false,
+              maxTracks: 1,
+              dominantSpeakerPriority: 'low'
+            }
           },
           tracks: []
         },
