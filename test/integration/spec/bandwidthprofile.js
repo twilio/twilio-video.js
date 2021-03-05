@@ -321,7 +321,7 @@ describe('BandwidthProfileOptions', function() {
       await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
     });
 
-    it('Track turns off  when another video element is attached', async () => {
+    it('Track stays on when another video element is attached', async () => {
       videoElement2 = aliceRemoteTrack.attach();
       document.body.appendChild(videoElement2);
       await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
