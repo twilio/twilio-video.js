@@ -10,6 +10,7 @@ const RemoteAudioTrack = require('../../../../../lib/media/track/remoteaudiotrac
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
+const NullIntersectionObserver = require('../../../../../lib/util/nullintersectionobserver');
 
 [
   ['audio', RemoteAudioTrack],
@@ -456,11 +457,6 @@ function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
   options = options || {};
-  class FakeIntersectionObserver {
-    constructor() {}
-    observe() {}
-    unobserve() {}
-  }
-  options.IntersectionObserver = FakeIntersectionObserver;
+  options.IntersectionObserver = NullIntersectionObserver;
   return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }
