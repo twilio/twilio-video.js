@@ -101,6 +101,7 @@ describe('RemoteVideoTrack', () => {
     });
     after(() => {
       observeSpy.restore();
+      unobserveSpy.restore();
       if (global.document instanceof Document && kind === 'video') {
         delete global.document;
       }
@@ -130,6 +131,22 @@ describe('RemoteVideoTrack', () => {
       });
 
       it(' _setRenderHint gets called with { enable: false }', () => {
+        sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
+      });
+    });
+
+    context.only('when an element is', () => {
+      beforeEach(() => {
+        track.attach(el);
+      });
+
+      it('visible, _setRenderHint gets called with { enable: true }', () => {
+        IntersectionObserver.makeVisible(el);
+        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: undefined, width: undefined } });
+      });
+
+      it('invisible, _setRenderHint gets called with { enable: false }', () => {
+        IntersectionObserver.makeInvisible(el);
         sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
       });
     });
