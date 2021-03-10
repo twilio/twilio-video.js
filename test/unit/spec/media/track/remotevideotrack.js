@@ -92,13 +92,11 @@ describe('RemoteVideoTrack', () => {
       global.document = global.document || new Document();
       el = document.createElement('div');
       setRenderHintSpy = sinon.spy();
-      track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, setRenderHint: setRenderHintSpy, isEnabled: true, options: { IntersectionObserver: true }, RemoteTrack });
-
+      track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, setRenderHint: setRenderHintSpy, isEnabled: true, options: { IntersectionObserver: NullIntersectionObserver }, RemoteTrack });
       observeSpy = sinon.spy(NullIntersectionObserver.prototype, 'observe');
       unobserveSpy = sinon.spy(NullIntersectionObserver.prototype, 'unobserve');
-      window.IntersectionObserver = new NullIntersectionObserver();
-
     });
+
     after(() => {
       observeSpy.restore();
       unobserveSpy.restore();
@@ -135,19 +133,20 @@ describe('RemoteVideoTrack', () => {
       });
     });
 
-    context.only('when an element is', () => {
-      beforeEach(() => {
+    context('when an element is', () => {
+      before(() => {
         track.attach(el);
-      });
-
-      it('visible, _setRenderHint gets called with { enable: true }', () => {
-        IntersectionObserver.makeVisible(el);
-        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: undefined, width: undefined } });
+        setRenderHintSpy.reset();
       });
 
       it('invisible, _setRenderHint gets called with { enable: false }', () => {
-        IntersectionObserver.makeInvisible(el);
+        track._intersectionObserver.makeInvisible(el);
         sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
+      });
+
+      it('visible, _setRenderHint gets called with { enable: true }', () => {
+        track._intersectionObserver.makeVisible(el);
+        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: undefined, width: undefined } });
       });
     });
   });
