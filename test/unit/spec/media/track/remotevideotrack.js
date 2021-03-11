@@ -90,7 +90,7 @@ describe('RemoteVideoTrack', () => {
 
     before(() => {
       global.document = global.document || new Document();
-      el = document.createElement('div');
+      el = document.createElement('video');
       setRenderHintSpy = sinon.spy();
       track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, setRenderHint: setRenderHintSpy, isEnabled: true, options: { IntersectionObserver: NullIntersectionObserver }, RemoteTrack });
       observeSpy = sinon.spy(NullIntersectionObserver.prototype, 'observe');
@@ -115,7 +115,8 @@ describe('RemoteVideoTrack', () => {
       });
 
       it('_setRenderHint gets called with { enable: true }', () => {
-        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: undefined, width: undefined } });
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
       });
     });
 
@@ -146,7 +147,8 @@ describe('RemoteVideoTrack', () => {
 
       it('visible, _setRenderHint gets called with { enable: true }', () => {
         track._intersectionObserver.makeVisible(el);
-        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: undefined, width: undefined } });
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
       });
     });
   });
