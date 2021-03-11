@@ -8,7 +8,7 @@ const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
-const NullIntersectionObserver = require('../../../../../lib/util/nullintersectionobserver');
+const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserver');
 
 const kind = 'video';
 const RemoteTrack = RemoteVideoTrack;
@@ -116,7 +116,7 @@ describe('RemoteVideoTrack', () => {
 
       it('_setRenderHint gets called with { enable: true }', () => {
         sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimension', { height: sinon.match.any, width: sinon.match.any }));
       });
     });
 
@@ -148,7 +148,7 @@ describe('RemoteVideoTrack', () => {
       it('visible, _setRenderHint gets called with { enable: true }', () => {
         track._intersectionObserver.makeVisible(el);
         sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimension', { height: sinon.match.any, width: sinon.match.any }));
       });
     });
   });
