@@ -10,7 +10,7 @@ const RemoteAudioTrack = require('../../../../../lib/media/track/remoteaudiotrac
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
-const NullIntersectionObserver = require('../../../../../lib/util/nullintersectionobserver');
+const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserver');
 
 [
   ['audio', RemoteAudioTrack],

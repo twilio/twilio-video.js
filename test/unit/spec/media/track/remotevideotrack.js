@@ -2,16 +2,13 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
-// const log = require('../../../../lib/fakelog');
 const Document = require('../../../../lib/document');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
 const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrack');
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
-const NullIntersectionObserver = require('../../../../../lib/util/nullintersectionobserver');
+const { NullIntersectionObserver: IntersectionObserver, NullResizeObserver: ResizeObserver } = require('../../../../../lib/util/nullobserver');
 
-const kind = 'video';
-const RemoteTrack = RemoteVideoTrack;
 describe('RemoteVideoTrack', () => {
   describe('enableDocumentVisibilityTurnOff', () => {
     let addEventListenerStub;
@@ -27,7 +24,7 @@ describe('RemoteVideoTrack', () => {
     after(() => {
       addEventListenerStub.restore();
       removeEventListenerStub.restore();
-      if (global.document instanceof Document && kind === 'video') {
+      if (global.document instanceof Document) {
         delete global.document;
       }
     });
@@ -37,7 +34,7 @@ describe('RemoteVideoTrack', () => {
         let track;
         before(() => {
           document.visibilityState = 'visible';
-          track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { enableDocumentVisibilityTurnOff: false }, RemoteTrack });
+          track = makeTrack({ id: 'foo', sid: 'bar', options: { enableDocumentVisibilityTurnOff: false } });
         });
 
         it('does not register for document visibility change', () => {
@@ -50,7 +47,7 @@ describe('RemoteVideoTrack', () => {
         let track;
         before(() => {
           document.visibilityState = 'visible';
-          track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { enableDocumentVisibilityTurnOff: true }, RemoteTrack });
+          track = makeTrack({ id: 'foo', sid: 'bar', options: { enableDocumentVisibilityTurnOff: true } });
         });
 
         it('sets enableDocumentVisibilityTurnOff to true', () => {
@@ -92,15 +89,15 @@ describe('RemoteVideoTrack', () => {
       global.document = global.document || new Document();
       el = document.createElement('video');
       setRenderHintSpy = sinon.spy();
-      track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, setRenderHint: setRenderHintSpy, isEnabled: true, options: { IntersectionObserver: NullIntersectionObserver }, RemoteTrack });
-      observeSpy = sinon.spy(NullIntersectionObserver.prototype, 'observe');
-      unobserveSpy = sinon.spy(NullIntersectionObserver.prototype, 'unobserve');
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options: { IntersectionObserver } });
+      observeSpy = sinon.spy(IntersectionObserver.prototype, 'observe');
+      unobserveSpy = sinon.spy(IntersectionObserver.prototype, 'unobserve');
     });
 
     after(() => {
       observeSpy.restore();
       unobserveSpy.restore();
-      if (global.document instanceof Document && kind === 'video') {
+      if (global.document instanceof Document) {
         delete global.document;
       }
     });
@@ -112,11 +109,7 @@ describe('RemoteVideoTrack', () => {
 
       it('IntersectionObserver observe is called', () => {
         sinon.assert.callCount(observeSpy, 1);
-      });
-
-      it('_setRenderHint gets called with { enable: true }', () => {
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
+        sinon.assert.calledWith(observeSpy, el);
       });
     });
 
@@ -127,6 +120,7 @@ describe('RemoteVideoTrack', () => {
 
       it('IntersectionObserver unobserve is called', () => {
         sinon.assert.callCount(unobserveSpy, 1);
+        sinon.assert.calledWith(unobserveSpy, el);
       });
 
       it(' _setRenderHint gets called with { enable: false }', () => {
@@ -140,27 +134,130 @@ describe('RemoteVideoTrack', () => {
         setRenderHintSpy.reset();
       });
 
+      it('visible, _setRenderHint gets called with { enable: true }', () => {
+        track._intersectionObserver.makeVisible(el);
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
+        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimension', { height: sinon.match.any, width: sinon.match.any }));
+      });
+
       it('invisible, _setRenderHint gets called with { enable: false }', () => {
         track._intersectionObserver.makeInvisible(el);
         sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
       });
 
-      it('visible, _setRenderHint gets called with { enable: true }', () => {
-        track._intersectionObserver.makeVisible(el);
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
-        sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
+    });
+  });
+
+  describe('ResizeObserver', () => {
+    let track;
+    let el;
+    let observeSpy;
+    let unobserveSpy;
+    let setRenderHintSpy;
+
+    before(() => {
+      global.document = global.document || new Document();
+      el = document.createElement('video');
+      setRenderHintSpy = sinon.spy();
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options: { ResizeObserver } });
+      observeSpy = sinon.spy(ResizeObserver.prototype, 'observe');
+      unobserveSpy = sinon.spy(ResizeObserver.prototype, 'unobserve');
+    });
+
+    after(() => {
+      observeSpy.restore();
+      unobserveSpy.restore();
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
+    context('when an element is attached', () => {
+      beforeEach(() => {
+        track.attach(el);
+      });
+
+      it('ResizeObserver.observe is called', () => {
+        sinon.assert.callCount(observeSpy, 1);
+        sinon.assert.calledWith(observeSpy, el);
       });
     });
+
+    context('when an element is detached', () => {
+      beforeEach(() => {
+        track.detach(el);
+      });
+
+      it('ResizeObserver.unobserve is called', () => {
+        sinon.assert.callCount(unobserveSpy, 1);
+        sinon.assert.calledWith(unobserveSpy, el);
+      });
+    });
+
+    context('detects size change of visible element', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeVisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+        setRenderHintSpy.reset();
+      });
+
+      it('_setRenderHint gets called with { enable: true }', () => {
+        track._resizeObserver.resize(el);
+        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimension: { height: 100, width: 100 } });
+      });
+    });
+
+    context('ignores size change of invisible element', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeInvisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+        setRenderHintSpy.reset();
+      });
+
+      it('_setRenderHint does not get called', () => {
+        track._resizeObserver.resize(el);
+        sinon.assert.notCalled(setRenderHintSpy);
+      });
+    });
+
+    context('reports SDmax size among attached visible elements', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeVisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+
+        const el2 = document.createElement('video');
+        track.attach(el2);
+        track._intersectionObserver.makeVisible(el2);
+        el2.clientWidth = 200;
+        el2.clientHeight = 200;
+        setRenderHintSpy.reset();
+      });
+
+      it('_setRenderHint does not get called', () => {
+        // even though 100x100 element was resized.
+        track._resizeObserver.resize(el);
+
+        // expect reported size to be 200x200
+        sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimension: { height: 200, width: 200 } });
+      });
+    });
+
   });
 });
 
-function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, setRenderHint, isSwitchedOff }) {
+function makeTrack({ id, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
   setRenderHint = setRenderHint || emptyFn;
   isSwitchedOff = !!isSwitchedOff;
-  const mediaStreamTrack = new FakeMediaStreamTrack(kind);
+  isEnabled = typeof isEnabled === 'boolean' ? true : isEnabled;
+  const mediaStreamTrack = new FakeMediaStreamTrack('video');
   const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
-  options.IntersectionObserver = NullIntersectionObserver;
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
+  return new RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }
