@@ -148,7 +148,6 @@ export interface LocalTrackPublishOptions {
 }
 
 export interface MediaStreamTrackPublishOptions {
-  name?: string;
   priority?: Track.Priority;
 }
 

@@ -1,4 +1,4 @@
-import { EncodingParameters, LocalTrack, LocalTrackPublishOptions, NetworkQualityConfiguration } from './types';
+import { EncodingParameters, LocalTrack, LocalTrackPublishOptions, MediaStreamTrackPublishOptions, NetworkQualityConfiguration } from './types';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
 import { LocalTrackPublication } from './LocalTrackPublication';
@@ -15,7 +15,7 @@ export class LocalParticipant extends Participant {
   videoTracks: Map<Track.SID, LocalVideoTrackPublication>;
   signalingRegion: string;
 
-  publishTrack(track: LocalTrack | MediaStreamTrack, options?: LocalTrackPublishOptions): Promise<LocalTrackPublication>;
+  publishTrack(track: LocalTrack | MediaStreamTrack, options?: LocalTrackPublishOptions | MediaStreamTrackPublishOptions): Promise<LocalTrackPublication>;
   publishTracks(tracks: Array<LocalTrack | MediaStreamTrack>): Promise<LocalTrackPublication[]>;
   setNetworkQualityConfiguration(networkQualityConfiguration: NetworkQualityConfiguration): this;
   setParameters(encodingParameters?: EncodingParameters | null): this;
