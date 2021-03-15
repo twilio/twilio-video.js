@@ -25,56 +25,55 @@ describe('RemoteVideoTrack', () => {
       x => `when enableDocumentVisibilityTurnOff is ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
     ],
   ], ([idleTrackSwitchOff, renderHints, enableDocumentVisibilityTurnOff]) => {
+    let track;
+    let el;
+    let intersectionObserveSpy;
+    let intersectionUnobserveSpy;
+    let resizeObserveSpy;
+    let resizeUnobserveSpy;
+    let setRenderHintSpy;
+    let addEventListenerStub;
+    let removeEventListenerStub;
+    before(() => {
+      let options = { IntersectionObserver, ResizeObserver };
+      if (typeof enableDocumentVisibilityTurnOff === 'boolean') {
+        options.enableDocumentVisibilityTurnOff = enableDocumentVisibilityTurnOff;
+      }
+      if (typeof idleTrackSwitchOff === 'boolean') {
+        options.idleTrackSwitchOff = idleTrackSwitchOff;
+      }
+      if (typeof renderHints === 'boolean') {
+        options.renderHints = renderHints;
+      }
+
+      global.document = global.document || new Document();
+      documentVisibilityMonitor.clear();
+      addEventListenerStub = sinon.spy(document, 'addEventListener');
+      removeEventListenerStub = sinon.spy(document, 'removeEventListener');
+
+      el = document.createElement('video');
+      setRenderHintSpy = sinon.spy();
+
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options });
+      intersectionObserveSpy = sinon.spy(track._intersectionObserver, 'observe');
+      intersectionUnobserveSpy = sinon.spy(track._intersectionObserver, 'unobserve');
+      resizeObserveSpy = sinon.spy(track._resizeObserver, 'observe');
+      resizeUnobserveSpy = sinon.spy(track._resizeObserver, 'unobserve');
+    });
+
+    after(() => {
+      addEventListenerStub.restore();
+      removeEventListenerStub.restore();
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
+    const effectiveIdleTrackSwitchOff = idleTrackSwitchOff !== false;
+    const effectiveRenderHints = renderHints !== false;
+    const effectiveDocVisibility = effectiveIdleTrackSwitchOff && enableDocumentVisibilityTurnOff !== false;
+
     describe('constructor', () => {
-      let track;
-      let el;
-      let intersectionObserveSpy;
-      let intersectionUnobserveSpy;
-      let resizeObserveSpy;
-      let resizeUnobserveSpy;
-      let setRenderHintSpy;
-      let addEventListenerStub;
-      let removeEventListenerStub;
-
-      const effectiveIdleTrackSwitchOff = idleTrackSwitchOff !== false;
-      const effectiveRenderHints = renderHints !== false;
-      const effectiveDocVisibility = effectiveIdleTrackSwitchOff && enableDocumentVisibilityTurnOff !== false;
-
-      before(() => {
-        let options = { IntersectionObserver, ResizeObserver };
-        if (typeof enableDocumentVisibilityTurnOff === 'boolean') {
-          options.enableDocumentVisibilityTurnOff = enableDocumentVisibilityTurnOff;
-        }
-        if (typeof idleTrackSwitchOff === 'boolean') {
-          options.idleTrackSwitchOff = idleTrackSwitchOff;
-        }
-        if (typeof renderHints === 'boolean') {
-          options.renderHints = renderHints;
-        }
-
-        global.document = global.document || new Document();
-        documentVisibilityMonitor.clear();
-        addEventListenerStub = sinon.spy(document, 'addEventListener');
-        removeEventListenerStub = sinon.spy(document, 'removeEventListener');
-
-        el = document.createElement('video');
-        setRenderHintSpy = sinon.spy();
-
-        track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options });
-        intersectionObserveSpy = sinon.spy(track._intersectionObserver, 'observe');
-        intersectionUnobserveSpy = sinon.spy(track._intersectionObserver, 'unobserve');
-        resizeObserveSpy = sinon.spy(track._resizeObserver, 'observe');
-        resizeUnobserveSpy = sinon.spy(track._resizeObserver, 'unobserve');
-      });
-
-      after(() => {
-        addEventListenerStub.restore();
-        removeEventListenerStub.restore();
-        if (global.document instanceof Document) {
-          delete global.document;
-        }
-      });
-
       it('sets correct default for _idleTrackSwitchOff', () => {
         assert(track._idleTrackSwitchOff === effectiveIdleTrackSwitchOff);
       });
@@ -86,95 +85,96 @@ describe('RemoteVideoTrack', () => {
       it('sets correct default for _enableDocumentVisibilityTurnOff', () => {
         assert(track._enableDocumentVisibilityTurnOff === effectiveDocVisibility);
       });
-
-      context('when an element is attached', () => {
-        before(() => {
-          track.attach(el);
-        });
-
-        if (effectiveIdleTrackSwitchOff) {
-          it('IntersectionObserver observe is called', () => {
-            sinon.assert.callCount(intersectionObserveSpy, 1);
-            sinon.assert.calledWith(intersectionObserveSpy, el);
-          });
-        } else {
-          it('IntersectionObserver observe is not called', () => {
-            sinon.assert.notCalled(intersectionObserveSpy);
-          });
-        }
-
-        if (effectiveRenderHints) {
-          it('ResizeObserver observe is called', () => {
-            sinon.assert.callCount(resizeObserveSpy, 1);
-            sinon.assert.calledWith(resizeObserveSpy, el);
-          });
-        } else {
-          it('ResizeObserver observe is not called', () => {
-            sinon.assert.notCalled(resizeObserveSpy);
-          });
-        }
-
-        if (effectiveDocVisibility) {
-          it('listens for document visibility change', () => {
-            sinon.assert.callCount(document.addEventListener, 1);
-            sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
-            sinon.assert.callCount(document.removeEventListener, 0);
-          });
-        } else {
-          it('does not register for document visibility change', () => {
-            assert(track._enableDocumentVisibilityTurnOff === false);
-            sinon.assert.notCalled(document.addEventListener);
-          });
-        }
-      });
-
-      context('when an element is detached', () => {
-        before(() => {
-          track.detach(el);
-        });
-
-        if (effectiveIdleTrackSwitchOff) {
-          it('IntersectionObserver unobserve is called', () => {
-            sinon.assert.callCount(intersectionUnobserveSpy, 1);
-            sinon.assert.calledWith(intersectionUnobserveSpy, el);
-          });
-
-          it(' _setRenderHint gets called with { enable: false }', () => {
-            sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
-          });
-
-        } else {
-          it('IntersectionObserver unobserve is not called', () => {
-            sinon.assert.notCalled(intersectionUnobserveSpy);
-          });
-        }
-
-        if (effectiveRenderHints) {
-          it('ResizeObserver unobserve is called', () => {
-            sinon.assert.callCount(resizeUnobserveSpy, 1);
-            sinon.assert.calledWith(resizeUnobserveSpy, el);
-          });
-        } else {
-          it('ResizeObserver unobserve is not called', () => {
-            sinon.assert.notCalled(resizeUnobserveSpy);
-          });
-        }
-
-        if (effectiveDocVisibility) {
-          it('stops listening when element is detached', () => {
-            sinon.assert.callCount(document.addEventListener, 1);
-            sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
-            sinon.assert.callCount(document.removeEventListener, 1);
-            sinon.assert.calledWith(document.removeEventListener, 'visibilitychange');
-          });
-        } else {
-          it('does not start or stop listening for visibility', () => {
-            sinon.assert.notCalled(document.addEventListener);
-            sinon.assert.notCalled(document.removeEventListener);
-          });
-        }
-      });
     });
+
+    describe('when an element is attached', () => {
+      before(() => {
+        track.attach(el);
+      });
+
+      if (effectiveIdleTrackSwitchOff) {
+        it('IntersectionObserver observe is called', () => {
+          sinon.assert.callCount(intersectionObserveSpy, 1);
+          sinon.assert.calledWith(intersectionObserveSpy, el);
+        });
+      } else {
+        it('IntersectionObserver observe is not called', () => {
+          sinon.assert.notCalled(intersectionObserveSpy);
+        });
+      }
+
+      if (effectiveRenderHints) {
+        it('ResizeObserver observe is called', () => {
+          sinon.assert.callCount(resizeObserveSpy, 1);
+          sinon.assert.calledWith(resizeObserveSpy, el);
+        });
+      } else {
+        it('ResizeObserver observe is not called', () => {
+          sinon.assert.notCalled(resizeObserveSpy);
+        });
+      }
+
+      if (effectiveDocVisibility) {
+        it('listens for document visibility change', () => {
+          sinon.assert.callCount(document.addEventListener, 1);
+          sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
+          sinon.assert.callCount(document.removeEventListener, 0);
+        });
+      } else {
+        it('does not register for document visibility change', () => {
+          assert(track._enableDocumentVisibilityTurnOff === false);
+          sinon.assert.notCalled(document.addEventListener);
+        });
+      }
+    });
+
+    context('when an element is detached', () => {
+      before(() => {
+        track.detach(el);
+      });
+
+      if (effectiveIdleTrackSwitchOff) {
+        it('IntersectionObserver unobserve is called', () => {
+          sinon.assert.callCount(intersectionUnobserveSpy, 1);
+          sinon.assert.calledWith(intersectionUnobserveSpy, el);
+        });
+
+        it(' _setRenderHint gets called with { enable: false }', () => {
+          sinon.assert.calledWith(setRenderHintSpy, { enabled: false });
+        });
+
+      } else {
+        it('IntersectionObserver unobserve is not called', () => {
+          sinon.assert.notCalled(intersectionUnobserveSpy);
+        });
+      }
+
+      if (effectiveRenderHints) {
+        it('ResizeObserver unobserve is called', () => {
+          sinon.assert.callCount(resizeUnobserveSpy, 1);
+          sinon.assert.calledWith(resizeUnobserveSpy, el);
+        });
+      } else {
+        it('ResizeObserver unobserve is not called', () => {
+          sinon.assert.notCalled(resizeUnobserveSpy);
+        });
+      }
+
+      if (effectiveDocVisibility) {
+        it('stops listening when element is detached', () => {
+          sinon.assert.callCount(document.addEventListener, 1);
+          sinon.assert.calledWith(document.addEventListener, 'visibilitychange');
+          sinon.assert.callCount(document.removeEventListener, 1);
+          sinon.assert.calledWith(document.removeEventListener, 'visibilitychange');
+        });
+      } else {
+        it('does not start or stop listening for visibility', () => {
+          sinon.assert.notCalled(document.addEventListener);
+          sinon.assert.notCalled(document.removeEventListener);
+        });
+      }
+    });
+
   });
 });
 
