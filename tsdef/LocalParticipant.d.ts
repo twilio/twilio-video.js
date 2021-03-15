@@ -15,7 +15,8 @@ export class LocalParticipant extends Participant {
   videoTracks: Map<Track.SID, LocalVideoTrackPublication>;
   signalingRegion: string;
 
-  publishTrack(track: LocalTrack | MediaStreamTrack, options?: LocalTrackPublishOptions | MediaStreamTrackPublishOptions): Promise<LocalTrackPublication>;
+  publishTrack(track: LocalTrack, options?: LocalTrackPublishOptions): Promise<LocalTrackPublication>;
+  publishTrack(track: MediaStreamTrack, options?: MediaStreamTrackPublishOptions): Promise<LocalTrackPublication>;
   publishTracks(tracks: Array<LocalTrack | MediaStreamTrack>): Promise<LocalTrackPublication[]>;
   setNetworkQualityConfiguration(networkQualityConfiguration: NetworkQualityConfiguration): this;
   setParameters(encodingParameters?: EncodingParameters | null): this;
