@@ -1,6 +1,16 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
-**Support for the 1.x version ended on December 4th, 2020**. Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
+**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. 
+
+Support for the 1.x version ended on December 4th, 2020. 
+
+2.13.1 (March 17, 2021)
+=======================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Android Firefox Participants sometime failed to publish VP8 VideoTracks in a Group Room. (VIDEO-3736)
 
 2.14.0 (In Progress)
 ====================

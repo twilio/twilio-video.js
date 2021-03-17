@@ -8,14 +8,6 @@ known or a workaround is available. Please also take a look at the
 release. If your issue hasn't been reported, consider submitting
 [a new issue](https://github.com/twilio/twilio-video.js/issues/new).
 
-Android Firefox Participants sometimes fail to publish VP8 VideoTracks in Group Rooms
--------------------------------------------------------------------------------------
-
-If an Android Participant connects to a Group Room without video, and soon after tries
-to publish a VP8 VideoTrack, the publication fails due to this [bug](https://github.com/mozilla-mobile/fenix/issues/15179).
-You can work around this issue by publishing the VP8 VideoTrack while connecting to the
-Room by passing it to the SDK in the `ConnectOptions.tracks` array.
-
 Android Chrome 81+ Participants fail to subscribe to H264 VideoTracks in Group Rooms
 ------------------------------------------------------------------------------------
 
