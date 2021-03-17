@@ -147,8 +147,7 @@ export interface LocalTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-export interface MediaStreamTrackPublishOptions {
-  name?: string;
+export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
