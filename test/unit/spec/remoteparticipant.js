@@ -1571,6 +1571,7 @@ function makeSignaling(options) {
   signaling.identity = options.identity;
   signaling.state = options.state;
   signaling.tracks = options.trackSignalings || [];
+  signaling.clearTrackHint =  sinon.spy();
   return signaling;
 }
 
