@@ -4,6 +4,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 Support for the 1.x version ended on December 4th, 2020. 
 
+2.13.1 (March 17, 2021)
+=======================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Android Firefox Participants sometime failed to publish VP8 VideoTracks in a Group Room. (VIDEO-3736)
+
 2.13.0 (March 3, 2021)
 ======================
 
