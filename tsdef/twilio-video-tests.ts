@@ -256,6 +256,16 @@ async function initRoom() {
     },
   });
 
+  // with renderDimension=auto
+  await Video.connect('$TOKEN', {
+    bandwidthProfile: {
+      video: {
+        idleTrackSwitchOff: true,
+        renderDimensions: 'auto'
+      }
+    },
+  });
+
   localVideoTrack = await Video.createLocalVideoTrack({ name: 'camera' });
   await localVideoTrack.restart({ facingMode: 'environment' });
   localAudioTrack = await Video.createLocalAudioTrack({ name: 'microphone' });

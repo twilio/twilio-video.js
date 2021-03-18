@@ -103,7 +103,7 @@ export interface VideoBandwidthProfileOptions {
   maxSubscriptionBitrate?: number;
   maxTracks?: number;
   mode?: BandwidthProfileMode;
-  renderDimensions?: VideoRenderDimensions;
+  renderDimensions?: 'auto'|VideoRenderDimensions;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
