@@ -256,7 +256,7 @@ async function initRoom() {
     },
   });
 
-  // with renderDimension=auto
+  // with renderDimensions=auto
   await Video.connect('$TOKEN', {
     bandwidthProfile: {
       video: {

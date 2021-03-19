@@ -215,7 +215,7 @@ describe('IntersectionObserver', () => {
     it('visible, _setRenderHint gets called with { enable: true }', () => {
       track._intersectionObserver.makeVisible(el);
       sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
-      sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimension', { height: sinon.match.any, width: sinon.match.any }));
+      sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
     });
 
     it('invisible, _setRenderHint gets called with { enable: false }', () => {
@@ -261,7 +261,7 @@ describe('ResizeObserver', () => {
 
     it('_setRenderHint gets called with { enable: true }', () => {
       track._resizeObserver.resize(el);
-      sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimension: { height: 100, width: 100 } });
+      sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: 100, width: 100 } });
     });
   });
 
@@ -300,7 +300,7 @@ describe('ResizeObserver', () => {
       track._resizeObserver.resize(el);
 
       // expect reported size to be 200x200
-      sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimension: { height: 200, width: 200 } });
+      sinon.assert.calledWith(setRenderHintSpy, { enabled: true, renderDimensions: { height: 200, width: 200 } });
     });
   });
 

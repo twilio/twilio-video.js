@@ -31,7 +31,7 @@ describe('RenderHintsSignaling', () => {
   describe('setTrackHint', () => {
     it('updates track state', () => {
       const subject = makeTest(makeTransport());
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(subject._trackSidsToRenderHints.has('foo'));
       assert(subject._dirtyTrackSids.has('foo'));
     });
@@ -39,9 +39,9 @@ describe('RenderHintsSignaling', () => {
     it('flattens and sends updated track states ', () => {
       const mst = makeTransport();
       const subject = makeTest(mst);
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
-      subject.setTrackHint('bar', { enabled: false, renderDimension: { width: 100, height: 100 } });
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 101 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
+      subject.setTrackHint('bar', { enabled: false, renderDimensions: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 101, height: 101 } });
 
       assert(subject._trackSidsToRenderHints.has('foo'));
       assert(subject._trackSidsToRenderHints.has('bar'));
@@ -59,13 +59,13 @@ describe('RenderHintsSignaling', () => {
           subscriber: {
             id: sinon.match.number,
             hints: [{
-              'track_sid': 'foo',
+              'track': 'foo',
               'enabled': true,
-              'render_dimension': { height: 101, width: 101 },
+              'render_dimensions': { height: 101, width: 101 },
             }, {
-              'track_sid': 'bar',
+              'track': 'bar',
               'enabled': false,
-              'render_dimension': { height: 100, width: 100 },
+              'render_dimensions': { height: 100, width: 100 },
             }]
           }
         });
@@ -82,7 +82,7 @@ describe('RenderHintsSignaling', () => {
     it('does nothing if track state did not change', async () => {
       const mst = makeTransport();
       const subject = makeTest(mst);
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(subject._trackSidsToRenderHints.has('foo'));
       assert(subject._dirtyTrackSids.has('foo'));
 
@@ -99,11 +99,11 @@ describe('RenderHintsSignaling', () => {
       assert(!subject._dirtyTrackSids.has('foo'));
 
       // subsequent setTrackHint with same values does not mark track as dirty
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(!subject._dirtyTrackSids.has('foo'));
 
       // but any changes causes it be marked dirty
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 101, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 101, height: 100 } });
       assert(subject._dirtyTrackSids.has('foo'));
     });
 
@@ -128,17 +128,17 @@ describe('RenderHintsSignaling', () => {
         subscriber: {
           id: sinon.match.number,
           hints: [{
-            'track_sid': 'foo',
+            'track': 'foo',
             'enabled': true,
           }, {
-            'track_sid': 'boo',
+            'track': 'boo',
             'enabled': false,
           }]
         }
       });
 
       // send another hint
-      subject.setTrackHint('bar', { enabled: true, renderDimension: { width: 200, height: 200 } });
+      subject.setTrackHint('bar', { enabled: true, renderDimensions: { width: 200, height: 200 } });
       await waitForSometime(10);
       assert(publishCalls, 1);
 
@@ -148,11 +148,11 @@ describe('RenderHintsSignaling', () => {
           'id': 42,
           'hints': [
             {
-              'track_sid': 'foo',
+              'track': 'foo',
               'result': 'OK'
             },
             {
-              'track_sid': 'boo',
+              'track': 'boo',
               'result': 'INVALID_RENDER_HINT'
             }
           ]
@@ -168,9 +168,9 @@ describe('RenderHintsSignaling', () => {
         subscriber: {
           id: sinon.match.number,
           hints: [{
-            'track_sid': 'bar',
+            'track': 'bar',
             'enabled': true,
-            'render_dimension': { height: 200, width: 200 },
+            'render_dimensions': { height: 200, width: 200 },
           }]
         }
       });
@@ -180,7 +180,7 @@ describe('RenderHintsSignaling', () => {
   describe('clearTrackHint', () => {
     it('deletes stored track state.', () => {
       let subject = makeTest(makeTransport());
-      subject.setTrackHint('foo', { enabled: true, renderDimension: { width: 100, height: 100 } });
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(subject._trackSidsToRenderHints.has('foo'));
       assert(subject._dirtyTrackSids.has('foo'));
 
