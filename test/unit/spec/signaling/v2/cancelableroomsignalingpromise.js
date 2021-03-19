@@ -112,6 +112,72 @@ describe('createCancelableRoomSignalingPromise', () => {
     });
   });
 
+  [
+    {
+      name: 'case 1: no bandwidth profile specified',
+      options: {
+        bandwidthProfile: undefined,
+        idleTrackSwitchOff: true,
+        renderHints: true,
+      },
+      expected: {
+        trackPriority: false,
+        trackSwitchOff: false,
+        renderHints: false,
+      }
+    },
+    {
+      name: 'case 2: idleTrackSwitchOff enabled',
+      options: {
+        bandwidthProfile: {},
+        idleTrackSwitchOff: true,
+        renderHints: false,
+      },
+      expected: {
+        trackPriority: true,
+        trackSwitchOff: true,
+        renderHints: true
+      }
+    },
+    {
+      name: 'case 3: renderHints enabled',
+      options: {
+        bandwidthProfile: {},
+        idleTrackSwitchOff: false,
+        renderHints: true,
+      },
+      expected: {
+        trackPriority: true,
+        trackSwitchOff: true,
+        renderHints: true
+      }
+    },
+    {
+      name: 'case 3: no render_hints channel needed',
+      options: {
+        bandwidthProfile: {},
+        idleTrackSwitchOff: false,
+        renderHints: false,
+      },
+      expected: {
+        trackPriority: true,
+        trackSwitchOff: true,
+        renderHints: false,
+      }
+    },
+  ].forEach(testCase => {
+    it('passes correct option to transport for msp channels : ' + testCase.name, () => {
+      const test = makeTest(testCase.options);
+      test.createAndOfferDeferred.resolve();
+      return test.createAndOfferDeferred.promise.then(() => {
+        assert(test.transport);
+        assert(test.transport.options.trackPriority === testCase.expected.trackPriority);
+        assert(test.transport.options.renderHints === testCase.expected.renderHints);
+        assert(test.transport.options.trackSwitchOff === testCase.expected.trackSwitchOff);
+      });
+    });
+  });
+
   context('when the Transport emits a "connected" event with an initial Room state', () => {
     context('and the CancelablePromise was canceled', () => {
       it('the CancelablePromise rejects with a cancelation error', () => {
@@ -379,9 +445,11 @@ function makeTransportConstructor(testOptions) {
     this.localParticipant = localParticipant;
     this.peerConnectionManager = peerConnectionManager;
     this.wsServer = wsServer;
+
     testOptions.onIced = options.onIced;
     testOptions.transport = transport;
     transport.disconnect = sinon.spy(() => {});
+    transport.options = options;
     return transport;
   };
 }
