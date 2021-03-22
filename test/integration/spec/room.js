@@ -623,8 +623,7 @@ describe('Room', function() {
 
       // Let bob publish a LocalTrack with low priority.
       loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-      const bobTrackPub = bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW });
-      await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish LocalTrack: ${aliceRoom.sid}`);
+      const bobTrackPub = await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish LocalTrack: ${aliceRoom.sid}`);
       console.log('Bob\'s track:', bobTrackPub.trackSid);
 
       remoteBob = aliceRoom.participants.get(bob.sid);
@@ -665,8 +664,7 @@ describe('Room', function() {
       }));
 
       // Induce a track switch off by having charlie publish a track with high priority.
-      const charlieTrackPub = charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH });
-      await waitFor(charlieTrackPub, `${charlie.sid} to publish a high priority LocalTrack: ${aliceRoom.sid}`);
+      const charlieTrackPub = await waitFor(charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH }), `${charlie.sid} to publish a high priority LocalTrack: ${aliceRoom.sid}`);
       console.log('Charlie\'s Track:', charlieTrackPub.trackSid);
       await waitFor(tracksSubscribed(remoteCharlie, 1), `${alice.sid} to subscribe to charlie's RemoteTrack ${hiPriTrack.sid}: ${aliceRoom.sid}`);
 
@@ -702,8 +700,6 @@ describe('Room', function() {
       // Let Charlie unpublish the high priority LocalTrack.
       // NOTE(mmalavalli): This test fails if charlie disconnects from the Room, which might
       // be a potential bug.
-      // NOTE(mpatwardhan): Test  also fails if charlie unpublish track immediately (VIDEO-4191),
-      await waitForSometime(4000);
       charlie.unpublishTrack(hiPriTrack);
 
       // Alice should see track switch on event on all 4 objects.
