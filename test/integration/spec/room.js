@@ -6,7 +6,6 @@ const assert = require('assert');
 const {
   connect,
   createLocalTracks,
-  Logger,
   LocalDataTrack
 } = require('../../../lib');
 
@@ -604,14 +603,11 @@ describe('Room', function() {
     before(async () => {
       let thoseRooms;
       [, aliceRoom, thoseRooms] = await setup({
-        testOptions: { loggerName: 'Alice', tracks: [], bandwidthProfile: { video: { maxTracks: 1, idleTrackSwitchOff: false } } },
+        testOptions: { tracks: [], bandwidthProfile: { video: { maxTracks: 1 } } },
         otherOptions: { tracks: [] },
         participantNames: ['Alice', 'Bob', 'Charlie'],
         nTracks: 0
       });
-
-      const aliceLogger = Logger.getLogger('Charlie');
-      aliceLogger.setLevel('debug');
 
       [bobRoom, charlieRoom] = thoseRooms;
       alice = aliceRoom.localParticipant;
