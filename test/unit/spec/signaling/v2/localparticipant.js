@@ -7,7 +7,6 @@ const sinon = require('sinon');
 const DataTrackSender = require('../../../../../lib/data/sender');
 const EncodingParametersImpl = require('../../../../../lib/encodingparameters');
 const LocalParticipantV2 = require('../../../../../lib/signaling/v2/localparticipant');
-const TrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const NetworkQualityConfigurationImpl = require('../../../../../lib/networkqualityconfiguration');
 const { makeUUID } = require('../../../../../lib/util');
 
@@ -335,15 +334,12 @@ describe('LocalParticipantV2', () => {
   describe('LocalTrackPublicationV2#updated', () => {
     let localTrackPublication;
     let revision;
-    let trackPrioritySignaling;
     let updated;
 
     beforeEach(() => {
       localParticipant.addTrack(trackSender, name, priority);
       localTrackPublication = localParticipant.tracks.get(trackSender.id);
       revision = localParticipant.revision;
-      trackPrioritySignaling = sinon.createStubInstance(TrackPrioritySignaling);
-      localParticipant.setTrackPrioritySignaling(trackPrioritySignaling);
       localParticipant.once('updated', () => { updated = true; });
       updated = false;
     });

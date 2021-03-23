@@ -57,7 +57,11 @@ describe('RemoteVideoTrack', function() {
       [, thisRoom, thoseRooms] = await waitFor(setup({
         testOptions: {
           bandwidthProfile: {
-            video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
+            video: {
+              idleTrackSwitchOff: false,
+              maxTracks: 1,
+              dominantSpeakerPriority: 'low'
+            }
           },
           tracks: [dataTrack]
         },
@@ -200,7 +204,11 @@ describe('RemoteVideoTrack', function() {
         tracks: [],
         logLevel: 'warn',
         bandwidthProfile: {
-          video: { maxTracks: 1,  dominantSpeakerPriority: 'low' }
+          video: {
+            idleTrackSwitchOff: false,
+            maxTracks: 1,
+            dominantSpeakerPriority: 'low'
+          }
         },
       }, defaults);
 

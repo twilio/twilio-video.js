@@ -14,6 +14,7 @@ const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
 const second = 1000;
+const assert = require('assert');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -735,6 +736,17 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
   }
 }
 
+async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
+  let mediaFlowDetected = false;
+  try {
+    await validateMediaFlow(room, 2000);
+    mediaFlowDetected = true;
+  } catch (err) {
+    mediaFlowDetected = false;
+  }
+  errorMessage = errorMessage || `Unexpected mediaFlow ${mediaFlowDetected} in ${room.sid}`;
+  assert.equal(mediaFlowDetected, mediaFlowExpected, errorMessage);
+}
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -770,3 +782,4 @@ exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
 exports.setupAliceAndBob = setupAliceAndBob;
 exports.validateMediaFlow = validateMediaFlow;
+exports.assertMediaFlow = assertMediaFlow;

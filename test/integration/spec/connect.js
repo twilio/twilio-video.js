@@ -703,6 +703,7 @@ describe('connect', function() {
     });
   });
 
+  // eslint-disable-next-line no-warning-comments
   // TODO: The following tests verifies bitrates using default codec, OPUS.
   // We should also verify other codecs like ISAC, PCMU and PCMA.
   describe('called with EncodingParameters', () => {
@@ -802,6 +803,7 @@ describe('connect', function() {
           });
         });
 
+        // eslint-disable-next-line no-warning-comments
         // TODO: Remove firefox check once this firefox bug is fixed
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
         if (!isFirefox) {

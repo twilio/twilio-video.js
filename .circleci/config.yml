@@ -311,7 +311,28 @@ workflows:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
   Custom_Workflow:
-    when: << pipeline.parameters.custom_workflow >>
+    when:
+      and:
+        - << pipeline.parameters.custom_workflow >>
+        - equal: [ auto, << pipeline.parameters.test_files >> ]
+    jobs:
+      - run-integration-tests:
+          name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          bver: << pipeline.parameters.bver >>
+          topology: << pipeline.parameters.topology >>
+          test_stability: << pipeline.parameters.test_stability >>
+      - run-network-tests:
+          name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
+          browser: << pipeline.parameters.browser >>
+          topology: << pipeline.parameters.topology >>
+          test_stability: << pipeline.parameters.test_stability >>
+  Custom_Workflow_with_specific_test_file:
+    when:
+      and:
+        - << pipeline.parameters.custom_workflow >>
+        - not:
+            equal: [ auto, << pipeline.parameters.test_files >> ]
     jobs:
       - run-integration-tests:
           name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
@@ -320,12 +341,6 @@ workflows:
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
           parallelism: 1
-      - run-network-tests:
-          name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
-          browser: << pipeline.parameters.browser >>
-          topology: << pipeline.parameters.topology >>
-          test_stability: << pipeline.parameters.test_stability >>
-
   Backend_Workflow:
     when: << pipeline.parameters.backend_workflow >>
     jobs:

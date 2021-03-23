@@ -98,11 +98,12 @@ export interface VideoRenderDimensions {
 }
 
 export interface VideoBandwidthProfileOptions {
+  idleTrackSwitchOff?: boolean;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
   maxTracks?: number;
   mode?: BandwidthProfileMode;
-  renderDimensions?: VideoRenderDimensions;
+  renderDimensions?: 'auto'|VideoRenderDimensions;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
@@ -146,8 +147,7 @@ export interface LocalTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-export interface MediaStreamTrackPublishOptions {
-  name?: string;
+export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
