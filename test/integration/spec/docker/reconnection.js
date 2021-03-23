@@ -10,7 +10,6 @@ const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 
 const {
-  getRegionalizedIceServers,
   randomName,
   validateMediaFlow,
   waitToGoOffline,
@@ -41,16 +40,19 @@ const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'us2'];
 const DOCKER_PROXY_TURN_IP_RANGES = {
   au1: [
     '13.210.2.128-13.210.2.159',
-    '54.252.254.64-54.252.254.127'
+    '54.252.254.64-54.252.254.127',
+    '3.25.42.128-3.25.42.255'
   ],
   us1: [
     '34.203.254.0-34.203.254.255',
     '54.172.60.0-54.172.61.255',
-    '34.203.250.0-34.203.251.255'
+    '34.203.250.0-34.203.251.255',
+    '3.235.111.128-3.235.111.255'
   ],
   us2: [
     '34.216.110.128-34.216.110.159',
-    '54.244.51.0-54.244.51.255'
+    '54.244.51.0-54.244.51.255',
+    '44.234.69.0-44.234.69.12'
   ]
 };
 
@@ -65,16 +67,20 @@ function waitWhileNotDisconnected(disconnectPromise, promiseOrArray, message, ti
   })]);
 }
 
-// Resolves when room received n track started events.
-function waitForTracksToStart(room, n) {
-  return n <= 0 ? Promise.resolve() : new Promise(resolve => {
-    room.on('trackStarted', function trackStarted() {
-      if (--n <= 0) {
-        room.removeListener('trackStarted', trackStarted);
-        resolve();
-      }
+function getStartedPublications(room) {
+  return flatMap(room.participants, participant => {
+    return Array.from(participant.tracks.values()).filter(({ track }) => {
+      return track && track.isStarted;
     });
   });
+}
+
+// Resolves when room received n track started events.
+async function waitForTracksToStart(room, n) {
+  while (getStartedPublications(room).length < n) {
+    /* eslint-disable no-await-in-loop */
+    await waitOnceForRoomEvent(room, 'trackStarted');
+  }
 }
 
 /**
@@ -90,16 +96,12 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      // logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
     const token = getToken(identity);
 
     if (region) {
-      options.iceServers = await waitFor(
-        getRegionalizedIceServers(token, region, options),
-        `${sid}: get TURN servers regionalized to ${region}`);
       options.iceTransportPolicy = 'relay';
     }
 
@@ -181,6 +183,7 @@ describe('network:', function() {
     before(this.title, async function() {
       if (!isRunningInsideDocker) {
         this.skip();
+        return;
       }
       rooms = await setup(['Alice', 'Bob', 'Charlie'].map((identity, i) => {
         return { identity, region: DOCKER_PROXY_TURN_REGIONS[i] };
@@ -199,7 +202,7 @@ describe('network:', function() {
     });
 
     it('validate media flow', () => {
-      return waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+      return waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
     it('block all TURN regions', async () => {
@@ -238,10 +241,12 @@ describe('network:', function() {
       beforeEach(async function() {
         if (!isRunningInsideDocker) {
           this.skip();
+          return;
         }
-
-        await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
-        await waitToGoOnline();
+        if (!window.navigator.onLine) {
+          await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
+          await waitToGoOnline();
+        }
         currentNetworks = await readCurrentNetworks(dockerAPI);
         const setupOptions = identities.map(identity => ({ identity }));
         rooms = await setup(setupOptions);
@@ -257,7 +262,10 @@ describe('network:', function() {
           }
         });
         rooms = [];
-        await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+        if (!window.navigator.onLine) {
+          await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
+          await waitToGoOnline();
+        }
         if (sid) {
           await completeRoom(sid);
         }
@@ -274,6 +282,7 @@ describe('network:', function() {
         beforeEach(async function() {
           if (!isRunningInsideDocker) {
             this.skip();
+            return;
           }
           disconnectedPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
           localParticipantDisconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('disconnected', resolve)));
@@ -318,7 +327,7 @@ describe('network:', function() {
             await waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
 
             if (identities.length > 1) {
-              await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+              await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
             }
           });
         });
@@ -351,7 +360,7 @@ describe('network:', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
 
@@ -368,7 +377,6 @@ describe('network:', function() {
 
           // disconnect from current network(s).
           await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from network');
-
           await readCurrentNetworks(dockerAPI);
           await waitToGoOnline();
 
@@ -380,7 +388,7 @@ describe('network:', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
       });
@@ -442,9 +450,9 @@ describe('network:', function() {
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
           // should not be in network tests.
           aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
-          try {
-            await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 
+          try {
+            await waitFor(eventPromises, `waiting for event promises: Emitted events: ${eventsEmitted.map(({ event }) => event).join(',')}`, 2 * ONE_MINUTE);
             assert.equal(eventsEmitted.length, 8);
             eventsEmitted.forEach(item => {
               switch (item.event) {
@@ -473,6 +481,7 @@ describe('network:', function() {
     before(this.title, async function() {
       if (!isRunningInsideDocker) {
         this.skip();
+        return;
       }
 
       const identities = defaults.topology === 'peer-to-peer'

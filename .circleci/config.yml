@@ -228,6 +228,7 @@ jobs:
       TEST_TYPE: "network"
       BVER: "stable"
       BROWSER: << parameters.browser >>
+      ENVIRONMENT: "prod"
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
     executor: machine-executor

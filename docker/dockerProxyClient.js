@@ -155,12 +155,9 @@ class DockerProxyClient {
     const thisRequestNumber = requestNumber++;
     const logPrefix = `DockerProxyClient [${thisRequestNumber}]: `;
     try {
-      console.log(logPrefix + 'Requesting: ', api);
       const res = await fetch(this._serverUrl + api);
       const text = await res.text();
-      const json = text ? JSON.parse(text) : {};
-      console.log(logPrefix + 'Done: ', api, json);
-      return json;
+      return text ? JSON.parse(text) : {};
     } catch (err) {
       console.error(logPrefix + 'Threw  : ', err);
       throw err;
