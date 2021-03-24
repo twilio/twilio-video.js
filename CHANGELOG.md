@@ -14,58 +14,55 @@ Bug Fixes
 
 2.14.0 (In Progress)
 ====================
-
 New Features
 ------------
 
 **Idle Track Switch Off**
 
-- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible. This feature is available in Group Rooms and is enabled by default if your application specifies any Bandwidth Profile options during connect.
+- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible.
 
-```js
-  const { connect } = require('twilio-video');
+**Auto renderDimensions**
 
-  const room = await connect(token, {
-    name: "my-new-room",
-    bandwidthProfile: {
-      video: {
-        idleTrackSwitchOff: true,
+- The SDK now uses the dimensions of the video elements attached to a RemoteVideoTrack to determine the best video bitrate to receive. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video renderer with smaller dimensions.
+
+
+Both these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set legacy `renderDimensions` you must change the value to `"auto"` in order to take advantage of automatic hinting.
+
+  ```ts
+    const { connect } = require('twilio-video');
+
+    const room = await connect(token, {
+      name: "my-new-room",
+      bandwidthProfile: {
+        video: {
+          idleTrackSwitchOff: true,
+          renderDimensions: "auto",
+          // Other Bandwidth Profile options
+        }
       }
-    }
-  });
-```
+    });
+  ```
 
-Note: This feature relies on applications using the `attach` and `detach` methods of a RemoteVideoTrack. If your application currently uses the underlying MediaStreamTrack to associate RemoteVideoTracks to video elements, you will need to update your application to use those methods. This feature can be disabled by setting `idleTrackSwitchOff` property to false in the VideoBandwidthProfileOptions dictionary.
+Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the field in BandwidthProfileOptions dictionary. You can also specify explicit legacy renderDimensions based on priority instead of video element sizes.
 
-```js
-  const { connect } = require('twilio-video');
+  ```ts
+    const { connect } = require('twilio-video');
 
-  const room = await connect(token, {
-    name: "my-new-room",
-    bandwidthProfile: {
-      video: {
-        idleTrackSwitchOff: false,
+    const room = await connect(token, {
+      name: "my-new-room",
+      bandwidthProfile: {
+        video: {
+          idleTrackSwitchOff: false,
+          renderDimensions: {
+            low: { width: 320, height: 240 }
+            standard: { width: 640, height: 480 }
+            high: { width: 1080, height: 720 }
+          }
+          // Other Bandwidth Profile options
+        }
       }
-    }
-  });
-```
-
-**renderDimensions="auto"**
-- Applications specify `renderDimensions` in [Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api#specifying-a-bw-profile).   renderDimensions specify the display sizes of the video elements. Previously application specified video dimension for a track based on priority. Now applications can specify a value `"auto"` for renderDimensions. When its set to `"auto"` ( which is also default value ), SDK will monitor video elements and use their sizes to determine the bandwidth for the tracks dynamically. This means larger video element will get higher quality video stream than smaller video elements.
-
-```js
-  const { connect } = require('twilio-video');
-
-  const room = await connect(token, {
-    name: "my-new-room",
-    bandwidthProfile: {
-      video: {
-        renderDimensions: "auto",
-      }
-    }
-  });
-```
-
+    });
+  ```
 
 2.13.0 (March 3, 2021)
 ======================
