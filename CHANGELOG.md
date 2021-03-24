@@ -21,7 +21,7 @@ New Features
 
 - Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible.
 
-**Auto renderDimensions**
+**Auto Render Dimensions**
 
 - The SDK now uses the dimensions of the video elements attached to a RemoteVideoTrack to determine the best video bitrate to receive. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video renderer with smaller dimensions.
 
@@ -32,23 +32,23 @@ Both these features are available in Group Rooms and are enabled by default if y
     const { connect } = require('twilio-video');
 
     const room = await connect(token, {
-      name: "my-new-room",
+      name: 'my-new-room',
       bandwidthProfile: {
         video: {
           idleTrackSwitchOff: true,
-          renderDimensions: "auto",
+          renderDimensions: 'auto',
         }
       }
     });
   ```
 
-Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the field in BandwidthProfileOptions dictionary. You can also specify explicit legacy renderDimensions based on priority instead of video element sizes.
+Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the property in the VideoBandwidthProfileOptions dictionary. You can also specify explicit legacy `renderDimensions` if you want to allocate bandwidth based on Track priority instead of the dimensions of the attached video element(s).
 
   ```js
     const { connect } = require('twilio-video');
 
     const room = await connect(token, {
-      name: "my-new-room",
+      name: 'my-new-room',
       bandwidthProfile: {
         video: {
           idleTrackSwitchOff: false,
