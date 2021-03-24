@@ -1,8 +1,8 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
-**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. 
+**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version.
 
-Support for the 1.x version ended on December 4th, 2020. 
+Support for the 1.x version ended on December 4th, 2020.
 
 2.13.1 (March 17, 2021)
 =======================
@@ -45,6 +45,22 @@ Note: This feature relies on applications using the `attach` and `detach` method
     bandwidthProfile: {
       video: {
         idleTrackSwitchOff: false,
+      }
+    }
+  });
+```
+
+**renderDimensions="auto"**
+- Applications specify `renderDimensions` in [Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api#specifying-a-bw-profile).   renderDimensions specify the display sizes of the video elements. Previously application specified video dimension for a track based on priority. Now applications can specify a value `"auto"` for renderDimensions. When its set to `"auto"` ( which is also default value ), SDK will monitor video elements and use their sizes to determine the bandwidth for the tracks dynamically. This means larger video element will get higher quality video stream than smaller video elements.
+
+```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect(token, {
+    name: "my-new-room",
+    bandwidthProfile: {
+      video: {
+        renderDimensions: "auto",
       }
     }
   });
