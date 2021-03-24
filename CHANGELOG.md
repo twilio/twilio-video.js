@@ -28,7 +28,7 @@ New Features
 
 Both these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set legacy `renderDimensions` you must change the value to `"auto"` in order to take advantage of automatic hinting.
 
-  ```ts
+  ```js
     const { connect } = require('twilio-video');
 
     const room = await connect(token, {
@@ -37,7 +37,6 @@ Both these features are available in Group Rooms and are enabled by default if y
         video: {
           idleTrackSwitchOff: true,
           renderDimensions: "auto",
-          // Other Bandwidth Profile options
         }
       }
     });
@@ -45,7 +44,7 @@ Both these features are available in Group Rooms and are enabled by default if y
 
 Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the field in BandwidthProfileOptions dictionary. You can also specify explicit legacy renderDimensions based on priority instead of video element sizes.
 
-  ```ts
+  ```js
     const { connect } = require('twilio-video');
 
     const room = await connect(token, {
@@ -58,7 +57,6 @@ Note: These features rely on applications using [attach](https://media.twiliocdn
             standard: { width: 640, height: 480 }
             high: { width: 1080, height: 720 }
           }
-          // Other Bandwidth Profile options
         }
       }
     });
