@@ -1,16 +1,6 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
-**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. 
-
-Support for the 1.x version ended on December 4th, 2020. 
-
-2.13.1 (March 17, 2021)
-=======================
-
-Bug Fixes
----------
-
-- Fixed a bug where Android Firefox Participants sometime failed to publish VP8 VideoTracks in a Group Room. (VIDEO-3736)
+**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
 2.14.0 (In Progress)
 ====================
@@ -20,36 +10,56 @@ New Features
 
 **Idle Track Switch Off**
 
-- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible. This feature is available in Group Rooms and is enabled by default if your application specifies any Bandwidth Profile options during connect.
+- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible.
 
-```js
-  const { connect } = require('twilio-video');
+**Auto Render Dimensions**
 
-  const room = await connect(token, {
-    name: "my-new-room",
-    bandwidthProfile: {
-      video: {
-        idleTrackSwitchOff: true,
+- The SDK now uses the dimensions of the video elements attached to a RemoteVideoTrack to determine the best video bitrate to receive. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video renderer with smaller dimensions.
+
+
+Both these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set legacy `renderDimensions` you must change the value to `"auto"` in order to take advantage of automatic hinting.
+
+  ```js
+    const { connect } = require('twilio-video');
+
+    const room = await connect(token, {
+      name: 'my-new-room',
+      bandwidthProfile: {
+        video: {
+          idleTrackSwitchOff: true,
+          renderDimensions: 'auto',
+        }
       }
-    }
-  });
-```
+    });
+  ```
 
-Note: This feature relies on applications using the `attach` and `detach` methods of a RemoteVideoTrack. If your application currently uses the underlying MediaStreamTrack to associate RemoteVideoTracks to video elements, you will need to update your application to use those methods. This feature can be disabled by setting `idleTrackSwitchOff` property to false in the VideoBandwidthProfileOptions dictionary.
+Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the property in the VideoBandwidthProfileOptions dictionary. You can also specify explicit legacy `renderDimensions` if you want to allocate bandwidth based on Track priority instead of the dimensions of the attached video element(s).
 
-```js
-  const { connect } = require('twilio-video');
+  ```js
+    const { connect } = require('twilio-video');
 
-  const room = await connect(token, {
-    name: "my-new-room",
-    bandwidthProfile: {
-      video: {
-        idleTrackSwitchOff: false,
+    const room = await connect(token, {
+      name: 'my-new-room',
+      bandwidthProfile: {
+        video: {
+          idleTrackSwitchOff: false,
+          renderDimensions: {
+            low: { width: 320, height: 240 }
+            standard: { width: 640, height: 480 }
+            high: { width: 1080, height: 720 }
+          }
+        }
       }
-    }
-  });
-```
+    });
+  ```
 
+2.13.1 (March 17, 2021)
+=======================
+
+Bug Fixes
+---------
+
+- Fixed a bug where Android Firefox Participants sometime failed to publish VP8 VideoTracks in a Group Room. (VIDEO-3736)
 
 2.13.0 (March 3, 2021)
 ======================
