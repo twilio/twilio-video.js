@@ -128,9 +128,7 @@ function readCurrentNetworks(dockerAPI) {
 }
 
 describe('Network Reconnection', function() {
-  // TODO(mmalavalli): Remove if not necessary.
-  // this.retries(2);
-
+  this.retries(2);
   this.timeout(10 * ONE_MINUTE);
   let dockerAPI;
   let isRunningInsideDocker = false;
