@@ -127,12 +127,16 @@ function readCurrentNetworks(dockerAPI) {
   return waitFor(dockerAPI.getCurrentNetworks(), 'getCurrentNetworks');
 }
 
-describe('network:', function() {
-  this.retries(2);
-  this.timeout(8 * ONE_MINUTE);
-  let dockerAPI = new DockerProxyClient();
+describe('Network Reconnection', function() {
+  // TODO(mmalavalli): Remove if not necessary.
+  // this.retries(2);
+
+  this.timeout(10 * ONE_MINUTE);
+  let dockerAPI;
   let isRunningInsideDocker = false;
+
   before(this.title, async function() {
+    dockerAPI = new DockerProxyClient();
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 
@@ -143,10 +147,9 @@ describe('network:', function() {
   });
 
   it('connect rejects when network is down', async () => {
-    await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
-    await waitToGoOnline();
-    let currentNetworks = await readCurrentNetworks(dockerAPI);
+    const currentNetworks = await readCurrentNetworks(dockerAPI);
     const sid = await createRoom(name, defaults.topology);
+
     const options = Object.assign({
       audio: true,
       fake: true,
@@ -157,30 +160,31 @@ describe('network:', function() {
     await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
     await waitToGoOffline();
 
-    const start = new Date();
-    let room = null;
+    let connectError;
+    let room;
+
     try {
       room = await connect(getToken('Alice'), options);
     } catch (error) {
-      // this exception is expected.
-      const end = new Date();
-      const seconds = (end.getTime() - start.getTime()) / 1000;
-      console.log(error.message, error.stack, error);
-      assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
-      console.log(`Connect rejected after ${seconds} seconds:`, error.message);
-      return;
+      connectError = error;
     } finally {
-      console.log('resetting network');
+      if (room) {
+        room.disconnect();
+        await completeRoom(room.sid);
+      }
       await waitFor(dockerAPI.resetNetwork(), 'resetting network', RESET_NETWORK_TIMEOUT);
+      await waitToGoOnline();
     }
-    throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
+    assert(typeof room === 'undefined', `Unexpectedly joined a Room ${room && room.sid}`);
+    assert(connectError instanceof SignalingConnectionError
+      || connectError instanceof MediaConnectionError);
   });
 
-  describe('turn region blocking tests (@unstable: JSDK-2810)', () => {
+  describe('TURN region blocking tests (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
-    before(this.title, async function() {
+    beforeEach(async function() {
       if (!isRunningInsideDocker) {
         this.skip();
         return;
@@ -191,13 +195,15 @@ describe('network:', function() {
       disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
     });
 
-    after(async () => {
+    afterEach(async () => {
       if (rooms) {
         rooms.forEach(room => room.disconnect());
         if (rooms.length > 0) {
           await completeRoom(rooms[0].sid);
         }
         rooms = null;
+        await waitFor(dockerAPI.resetNetwork(), 'resetting network', RESET_NETWORK_TIMEOUT);
+        await waitToGoOnline();
       }
     });
 
@@ -205,7 +211,7 @@ describe('network:', function() {
       return waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
-    it('block all TURN regions', async () => {
+    it('block all TURN regions - Alice, Bob and Charlie\'s Rooms should emit reconnecting and reconnected events', async () => {
       const reconnectingPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
       const reconnectedPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnected'));
 
@@ -217,7 +223,7 @@ describe('network:', function() {
       return waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
     });
 
-    it('block specific TURN regions', async () => {
+    it('block specific TURN regions - Bob and Charlie\'s Rooms should emit reconnecting and reconnected events', async () => {
       const turnRegionsToBlock = DOCKER_PROXY_TURN_REGIONS.slice(1);
       const ipRanges = flatMap(turnRegionsToBlock, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
       const blockedRooms = rooms.slice(1);
@@ -233,7 +239,8 @@ describe('network:', function() {
 
 
   [['Alice'], ['Alice', 'Bob']].forEach(identities => {
-    describe(`${identities.length} Participant(s)`, () => {
+    // TODO(mmalavalli): Remove skip.
+    describe.skip(`${identities.length} Participant(s)`, () => {
       let rooms = [];
       let currentNetworks = null;
       let disconnected;
@@ -474,7 +481,8 @@ describe('network:', function() {
     });
   });
 
-  describe('ICE gathering timeout (@unstable: JSDK-2816)', () => {
+  // TODO(mmalavalli): Remove skip.
+  describe.skip('ICE gathering timeout (@unstable: JSDK-2816)', () => {
     let room;
     let disconnected;
 

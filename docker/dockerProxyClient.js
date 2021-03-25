@@ -10,7 +10,7 @@ let requestNumber = 0;
 class DockerProxyClient {
   /**
    * Construct a new {@link DockerProxyClient}.
-   * @param {string} serverUrl - url pointing to an instance of {@link DockerProxyServer}
+   * @param {string} [serverUrl] - url pointing to an instance of {@link DockerProxyServer}
    */
   constructor(serverUrl) {
     this._serverUrl = serverUrl || DOCKER_PROXY_SERVER_URL;
