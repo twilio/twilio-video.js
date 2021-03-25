@@ -102,6 +102,7 @@ async function setup(setupOptions) {
     const token = getToken(identity);
 
     if (region) {
+      options.region = region;
       options.iceTransportPolicy = 'relay';
     }
 
@@ -178,7 +179,7 @@ describe('Network Reconnection', function() {
       || connectError instanceof MediaConnectionError);
   });
 
-  describe('Media Reconnnection (@unstable: JSDK-2810)', () => {
+  describe('Media Reconnection (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
@@ -191,6 +192,7 @@ describe('Network Reconnection', function() {
         return { identity, region: DOCKER_PROXY_TURN_REGIONS[i] };
       }));
       disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
+      await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
     after(async () => {
@@ -203,10 +205,6 @@ describe('Network Reconnection', function() {
         await waitFor(dockerAPI.resetNetwork(), 'resetting network', RESET_NETWORK_TIMEOUT);
         await waitToGoOnline();
       }
-    });
-
-    it('should exchange media after joining the Room', () => {
-      return waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
     it('the Rooms of Participants whose TURN regions are blocked should emit reconnecting and reconnected events', async () => {
