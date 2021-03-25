@@ -178,11 +178,11 @@ describe('Network Reconnection', function() {
       || connectError instanceof MediaConnectionError);
   });
 
-  describe('TURN region blocking tests (@unstable: JSDK-2810)', () => {
+  describe('Media Reconnnection (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
-    beforeEach(async function() {
+    before(this.title, async function() {
       if (!isRunningInsideDocker) {
         this.skip();
         return;
@@ -193,7 +193,7 @@ describe('Network Reconnection', function() {
       disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
     });
 
-    afterEach(async () => {
+    after(async () => {
       if (rooms) {
         rooms.forEach(room => room.disconnect());
         if (rooms.length > 0) {
@@ -205,23 +205,11 @@ describe('Network Reconnection', function() {
       }
     });
 
-    it('validate media flow', () => {
+    it('should exchange media after joining the Room', () => {
       return waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
-    it('block all TURN regions - Alice, Bob and Charlie\'s Rooms should emit reconnecting and reconnected events', async () => {
-      const reconnectingPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
-      const reconnectedPromises = rooms.map(room => waitOnceForRoomEvent(room, 'reconnected'));
-
-      const ipRanges = flatMap(DOCKER_PROXY_TURN_REGIONS, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
-      await dockerAPI.blockIpRanges(ipRanges);
-      await waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
-
-      await dockerAPI.unblockIpRanges(ipRanges);
-      return waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
-    });
-
-    it('block specific TURN regions - Bob and Charlie\'s Rooms should emit reconnecting and reconnected events', async () => {
+    it('the Rooms of Participants whose TURN regions are blocked should emit reconnecting and reconnected events', async () => {
       const turnRegionsToBlock = DOCKER_PROXY_TURN_REGIONS.slice(1);
       const ipRanges = flatMap(turnRegionsToBlock, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
       const blockedRooms = rooms.slice(1);
@@ -234,7 +222,6 @@ describe('Network Reconnection', function() {
       return waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
     });
   });
-
 
   [['Alice'], ['Alice', 'Bob']].forEach(identities => {
     // TODO(mmalavalli): Remove skip.
