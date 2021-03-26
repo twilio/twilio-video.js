@@ -406,24 +406,24 @@ describe('BandwidthProfileOptions', function() {
     [
       {
         dimA: { width: 1024, height: 720 },
-        dimB: { width: 320, height: 240 },
+        dimB: { width: 50, height: 40 },
         idleTrackSwitchOff: true,
         expectBandwidthUsageIncrease: false
       },
       {
         dimA: { width: 1024, height: 720 },
-        dimB: { width: 320, height: 240 },
+        dimB: { width: 50, height: 40 },
         idleTrackSwitchOff: false,
         expectBandwidthUsageIncrease: false
       },
       {
-        dimA: { width: 320, height: 240 },
+        dimA: { width: 50, height: 40 },
         dimB: { width: 1024, height: 720 },
         idleTrackSwitchOff: true,
         expectBandwidthUsageIncrease: true
       },
       {
-        dimA: { width: 320, height: 240 },
+        dimA: { width: 50, height: 40 },
         dimB: { width: 1024, height: 720 },
         idleTrackSwitchOff: false,
         expectBandwidthUsageIncrease: true
@@ -462,7 +462,7 @@ describe('BandwidthProfileOptions', function() {
         // wait couple of seconds before running media flow test.
         await waitForSometime(2000);
 
-        const duration = 10000;
+        const duration = 15000;
         let { bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']);
         const bytesReceivedA = bytesReceivedAfter - bytesReceivedBefore;
         const kbps1 =  Math.round(((bytesReceivedA / testTimeMS) * 10) / 10);
