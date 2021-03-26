@@ -30,6 +30,7 @@ const {
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } = require('../../../lib/util/constants');
+const { waitForSometime } = require('../../../lib/util');
 
 function monitorTrackSwitchOffs(remoteTrack, trackName) {
   console.log(`${trackName} [${remoteTrack.sid}] ${remoteTrack.isSwitchedOff ? 'OFF' : 'ON'}`);
@@ -458,6 +459,9 @@ describe('BandwidthProfileOptions', function() {
         videoElement.setAttribute('height', `${dimA.height}`);
         videoElement.setAttribute('width', `${dimA.width}`);
 
+        // wait couple of seconds before running media flow test.
+        await waitForSometime(2000);
+
         const duration = 10000;
         let { bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']);
         const bytesReceivedA = bytesReceivedAfter - bytesReceivedBefore;
@@ -466,6 +470,9 @@ describe('BandwidthProfileOptions', function() {
 
         videoElement.setAttribute('height', `${dimB.height}`);
         videoElement.setAttribute('width', `${dimB.width}`);
+
+        // wait couple of seconds before running media flow test.
+        await waitForSometime(2000);
 
         ({ bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']));
         const bytesReceivedB = bytesReceivedAfter - bytesReceivedBefore;
