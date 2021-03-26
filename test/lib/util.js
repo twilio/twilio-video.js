@@ -713,7 +713,7 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
  * validates that media was flowing in given rooms.
  * @param {Room} room
  * @param {number} testTimeMS
- * @returns {Promise<>}
+ * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
 async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   // wait for some time.
@@ -734,6 +734,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
   if (bytesReceivedAfter <= bytesReceivedBefore) {
     throw new Error('no media flow detected');
   }
+  return { bytesReceivedBefore, bytesReceivedAfter, testTimeMS };
 }
 
 async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
