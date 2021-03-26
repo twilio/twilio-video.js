@@ -48,13 +48,13 @@ export default class VideoDriver {
   static sdkUrl(options: VideoDriverOptions): string {
     const subdomain: string = {
       dev: 'dev',
-      prod: 'media',
+      prod: '',
       stage: 'stage'
     }[options.realm || 'prod'];
     const versionPath: string = options.version
       ? `releases/${options.version}`
       : 'v1';
-    return `//${subdomain}.twiliocdn.com/sdk/js/video/${versionPath}/twilio-video.js`;
+    return `//sdk.${subdomain ? subdomain + '.' : ''}twilio.com/js/video/${versionPath}/twilio-video.js`;
   }
 
   /**

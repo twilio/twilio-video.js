@@ -10,7 +10,7 @@ For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-* [API Docs](//media.twiliocdn.com/sdk/js/video/latest/docs)
+* [API Docs](//sdk.twilio.com/js/video/latest/docs)
 * [Best Practices Guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices)
 * [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md)
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
