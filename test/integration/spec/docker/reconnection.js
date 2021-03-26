@@ -179,7 +179,8 @@ describe('Network Reconnection', function() {
       || connectError instanceof MediaConnectionError);
   });
 
-  describe('Media Reconnection (@unstable: JSDK-2810)', () => {
+  // TODO(mmalavalli): Investigate why this test is failing on Peer-to-Peer Rooms in Firefox.
+  (isFirefox &&  defaults.topology === 'peer-to-peer' ? describe.skip : describe)('Media Reconnection (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
@@ -221,245 +222,228 @@ describe('Network Reconnection', function() {
     });
   });
 
-  [['Alice'], ['Alice', 'Bob']].forEach(identities => {
-    // TODO(mmalavalli): Remove skip.
-    describe.skip(`${identities.length} Participant(s)`, () => {
-      let rooms = [];
-      let currentNetworks = null;
-      let disconnected;
+  describe('Signaling Reconnection', () => {
+    let rooms = [];
+    let currentNetworks = null;
+    let disconnected;
+
+    beforeEach(async function() {
+      if (!isRunningInsideDocker) {
+        this.skip();
+        return;
+      }
+      currentNetworks = await readCurrentNetworks(dockerAPI);
+      const setupOptions = ['Alice', 'Bob'].map(identity => ({ identity }));
+      rooms = await setup(setupOptions);
+      disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
+    });
+
+    afterEach(async () => {
+      let sid = null;
+      if (!window.navigator.onLine) {
+        await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
+        await waitToGoOnline();
+      }
+      rooms.forEach(room => {
+        if (room) {
+          room.disconnect();
+          sid = room.sid;
+        }
+      });
+      rooms = [];
+      if (sid) {
+        await completeRoom(sid);
+      }
+    });
+
+    describe('Network interruption', () => {
+      let disconnectedPromises;
+      let localParticipantDisconnectedPromises;
+      let localParticipantReconnectedPromises;
+      let localParticipantReconnectingPromises;
+      let reconnectedPromises;
+      let reconnectingPromises;
 
       beforeEach(async function() {
         if (!isRunningInsideDocker) {
           this.skip();
           return;
         }
-        if (!window.navigator.onLine) {
-          await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
-          await waitToGoOnline();
-        }
-        currentNetworks = await readCurrentNetworks(dockerAPI);
-        const setupOptions = identities.map(identity => ({ identity }));
-        rooms = await setup(setupOptions);
-        disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
+        disconnectedPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
+        localParticipantDisconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('disconnected', resolve)));
+        localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
+        localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
+        reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
+        reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
+        await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
+        await waitToGoOffline();
       });
 
-      afterEach(async () => {
-        let sid = null;
-        rooms.forEach(room => {
-          if (room) {
-            room.disconnect();
-            sid = room.sid;
-          }
-        });
-        rooms = [];
-        if (!window.navigator.onLine) {
-          await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
-          await waitToGoOnline();
-        }
-        if (sid) {
-          await completeRoom(sid);
-        }
+      it('should emit "reconnecting" on the Rooms and LocalParticipants', () => {
+        return Promise.all([
+          waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
+        ]);
       });
 
-      describe('Network interruption', () => {
-        let disconnectedPromises;
-        let localParticipantDisconnectedPromises;
-        let localParticipantReconnectedPromises;
-        let localParticipantReconnectingPromises;
-        let reconnectedPromises;
-        let reconnectingPromises;
-
-        beforeEach(async function() {
-          if (!isRunningInsideDocker) {
-            this.skip();
-            return;
-          }
-          disconnectedPromises = rooms.map(room => new Promise(resolve => room.once('disconnected', resolve)));
-          localParticipantDisconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('disconnected', resolve)));
-          localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
-          localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
-          reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
-          reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
-          await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
-          await waitToGoOffline();
-        });
-
-        it('should emit "reconnecting" on the Rooms and LocalParticipants', () => {
-          return Promise.all([
+      context('that is longer than the session timeout', () => {
+        it(`should emit "disconnected" on the Rooms and LocalParticipants${isFirefox ? ' - @unstable: JSDK-2811' : ''}`, async () => {
+          await Promise.all([
             waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
             waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
           ]);
+          return Promise.all([
+            waitFor(localParticipantDisconnectedPromises, `localParticipantDisconnectedPromises: ${rooms[0].sid}`, DISCONNECTED_TIMEOUT),
+            waitFor(disconnectedPromises, `disconnectedPromises: ${rooms[0].sid}`, DISCONNECTED_TIMEOUT)
+          ]);
         });
+      });
 
-        context('that is longer than the session timeout', () => {
-          it(`should emit "disconnected" on the Rooms and LocalParticipants${isFirefox ? ' - @unstable: JSDK-2811' : ''}`, async () => {
-            await Promise.all([
-              waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
-              waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
-            ]);
-            return Promise.all([
-              waitFor(localParticipantDisconnectedPromises, `localParticipantDisconnectedPromises: ${rooms[0].sid}`, DISCONNECTED_TIMEOUT),
-              waitFor(disconnectedPromises, `disconnectedPromises: ${rooms[0].sid}`, DISCONNECTED_TIMEOUT)
-            ]);
+      context('that recovers before the session timeout', () => {
+        it('should emit "reconnected" on the Rooms and LocalParticipants (@unstable: JSDK-2812)', async () => {
+          await waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
+          await waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
+
+          await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.connectToNetwork(networkId)), 'reconnect to original networks');
+          await readCurrentNetworks(dockerAPI);
+          await waitToGoOnline();
+
+          await waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
+          await waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
+          await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+        });
+      });
+    });
+
+    // NOTE: network handoff does not work Firefox because of following known issues
+    // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
+    // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
+    (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
+      it('Scenario 1 (jump): connected interface switches off and then a new interface switches on (@unstable: JSDK-2813)',  async () => {
+        const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
+        const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
+        const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
+        const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
+        const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
+
+        await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from networks');
+        await waitToGoOffline();
+        await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
+        await waitToGoOnline();
+        console.log('current networks:', await readCurrentNetworks(dockerAPI));
+
+        await Promise.all([
+          waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
+        ]);
+        await Promise.all([
+          waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT)
+        ]);
+        await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+      });
+
+      it('Scenario 2 (step) : new interface switches on and then the connected interface switches off (@unstable: JSDK-2814) ', async () => {
+        const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
+        const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
+        const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
+        const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
+
+        // create and connect to new network
+        const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
+        await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
+        await readCurrentNetworks(dockerAPI);
+
+        // disconnect from current network(s).
+        await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from network');
+        await readCurrentNetworks(dockerAPI);
+        await waitToGoOnline();
+
+        await Promise.all([
+          waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT),
+          waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT)
+        ]);
+
+        await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+      });
+    });
+
+    // TODO(mmalavalli): Remove skip.
+    describe.skip('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
+      it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
+        const [aliceRoom, bobRoom] = rooms;
+        const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+        const eventsEmitted = [];
+
+        const eventPromises = new Promise(resolve => {
+          const resolveIfAllEventsFired = () => eventsEmitted.length === 8 && resolve(eventsEmitted);
+          aliceRoom.localParticipant.on('reconnecting', () => {
+            eventsEmitted.push({ event: 'LocalParticipant#reconnecting' });
+            resolveIfAllEventsFired();
+          });
+
+          aliceRoom.localParticipant.on('reconnected', () => {
+            eventsEmitted.push({ event: 'LocalParticipant#reconnected' });
+            resolveIfAllEventsFired();
+          });
+
+          aliceRoom.on('reconnecting', error => {
+            eventsEmitted.push({ event: 'LocalRoom#reconnecting', error });
+            resolveIfAllEventsFired();
+          });
+
+          aliceRoom.on('reconnected', () => {
+            eventsEmitted.push({ event: 'LocalRoom#reconnected' });
+            resolveIfAllEventsFired();
+          });
+
+          aliceRemote.on('reconnecting', () => {
+            eventsEmitted.push({ event: 'RemoteParticipant#reconnecting' });
+            resolveIfAllEventsFired();
+          });
+
+          aliceRemote.on('reconnected', () => {
+            eventsEmitted.push({ event: 'RemoteParticipant#reconnected' });
+            resolveIfAllEventsFired();
+          });
+
+          bobRoom.on('participantReconnecting', participant => {
+            eventsEmitted.push({ event: 'RemoteRoom#participantReconnecting', participant });
+            resolveIfAllEventsFired();
+          });
+
+          bobRoom.on('participantReconnected', participant => {
+            eventsEmitted.push({ event: 'RemoteRoom#participantReconnected', participant });
+            resolveIfAllEventsFired();
           });
         });
 
-        context('that recovers before the session timeout', () => {
-          it('should emit "reconnected" on the Rooms and LocalParticipants (@unstable: JSDK-2812)', async () => {
-            await waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
-            await waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT);
+        // NOTE(mmalavalli): Simulate a signaling connection interruption by
+        // closing Alice's WebSocket transport. Then, wait until all the expected
+        // events are fired. NOTE: this does not work if connected quickly. Also this test is
+        // should not be in network tests.
+        aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
 
-            await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.connectToNetwork(networkId)), 'reconnect to original networks');
-            await readCurrentNetworks(dockerAPI);
-            await waitToGoOnline();
-
-            await waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
-            await waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
-
-            if (identities.length > 1) {
-              await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+        try {
+          await waitFor(eventPromises, `waiting for event promises: Emitted events: ${eventsEmitted.map(({ event }) => event).join(',')}`, 2 * ONE_MINUTE);
+          assert.equal(eventsEmitted.length, 8);
+          eventsEmitted.forEach(item => {
+            switch (item.event) {
+              case 'LocalRoom#reconnecting':
+                assert(item.error instanceof SignalingConnectionDisconnectedError);
+                break;
+              case 'RemoteRoom#participantReconnecting':
+              case 'RemoteRoom#participantReconnected':
+                assert.equal(item.participant, aliceRemote);
+                break;
             }
           });
-        });
-      });
-
-      // NOTE: network handoff does not work Firefox because of following known issues
-      // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1546562))
-      // ([bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1548318))
-      (isFirefox ? describe.skip : describe)('Network handoff reconnects to new network', () => {
-        it('Scenario 1 (jump): connected interface switches off and then a new interface switches on (@unstable: JSDK-2813)',  async () => {
-          const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
-          const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
-          const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
-          const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
-          const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
-
-          await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from networks');
-          await waitToGoOffline();
-          await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
-          await waitToGoOnline();
-          console.log('current networks:', await readCurrentNetworks(dockerAPI));
-
-          await Promise.all([
-            waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
-            waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT)
-          ]);
-          await Promise.all([
-            waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT),
-            waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT)
-          ]);
-
-          if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
-          }
-        });
-
-        it('Scenario 2 (step) : new interface switches on and then the connected interface switches off (@unstable: JSDK-2814) ', async () => {
-          const localParticipantReconnectedPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnected', resolve)));
-          const localParticipantReconnectingPromises = rooms.map(({ localParticipant }) => new Promise(resolve => localParticipant.once('reconnecting', resolve)));
-          const reconnectingPromises = rooms.map(room => new Promise(resolve => room.once('reconnecting', resolve)));
-          const reconnectedPromises = rooms.map(room => new Promise(resolve => room.once('reconnected', resolve)));
-
-          // create and connect to new network
-          const newNetwork = await waitFor(dockerAPI.createNetwork(), 'create network');
-          await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
-          await readCurrentNetworks(dockerAPI);
-
-          // disconnect from current network(s).
-          await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from network');
-          await readCurrentNetworks(dockerAPI);
-          await waitToGoOnline();
-
-          await Promise.all([
-            waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
-            waitWhileNotDisconnected(disconnected, reconnectingPromises, `reconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
-            waitWhileNotDisconnected(disconnected, localParticipantReconnectedPromises, `localParticipantReconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT),
-            waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT)
-          ]);
-
-          if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
-          }
-        });
-      });
-
-      // eslint-disable-next-line no-warning-comments
-      // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
-      // state is available in prod version of Room Service.
-      (identities.length > 1 ? describe : describe.skip)('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
-        it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
-          const [aliceRoom, bobRoom] = rooms;
-          const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
-          const eventsEmitted = [];
-
-          const eventPromises = new Promise(resolve => {
-            const resolveIfAllEventsFired = () => eventsEmitted.length === 8 && resolve(eventsEmitted);
-            aliceRoom.localParticipant.on('reconnecting', () => {
-              eventsEmitted.push({ event: 'LocalParticipant#reconnecting' });
-              resolveIfAllEventsFired();
-            });
-
-            aliceRoom.localParticipant.on('reconnected', () => {
-              eventsEmitted.push({ event: 'LocalParticipant#reconnected' });
-              resolveIfAllEventsFired();
-            });
-
-            aliceRoom.on('reconnecting', error => {
-              eventsEmitted.push({ event: 'LocalRoom#reconnecting', error });
-              resolveIfAllEventsFired();
-            });
-
-            aliceRoom.on('reconnected', () => {
-              eventsEmitted.push({ event: 'LocalRoom#reconnected' });
-              resolveIfAllEventsFired();
-            });
-
-            aliceRemote.on('reconnecting', () => {
-              eventsEmitted.push({ event: 'RemoteParticipant#reconnecting' });
-              resolveIfAllEventsFired();
-            });
-
-            aliceRemote.on('reconnected', () => {
-              eventsEmitted.push({ event: 'RemoteParticipant#reconnected' });
-              resolveIfAllEventsFired();
-            });
-
-            bobRoom.on('participantReconnecting', participant => {
-              eventsEmitted.push({ event: 'RemoteRoom#participantReconnecting', participant });
-              resolveIfAllEventsFired();
-            });
-
-            bobRoom.on('participantReconnected', participant => {
-              eventsEmitted.push({ event: 'RemoteRoom#participantReconnected', participant });
-              resolveIfAllEventsFired();
-            });
-          });
-
-          // NOTE(mmalavalli): Simulate a signaling connection interruption by
-          // closing Alice's WebSocket transport. Then, wait until all the expected
-          // events are fired. NOTE: this does not work if connected quickly. Also this test is
-          // should not be in network tests.
-          aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
-
-          try {
-            await waitFor(eventPromises, `waiting for event promises: Emitted events: ${eventsEmitted.map(({ event }) => event).join(',')}`, 2 * ONE_MINUTE);
-            assert.equal(eventsEmitted.length, 8);
-            eventsEmitted.forEach(item => {
-              switch (item.event) {
-                case 'LocalRoom#reconnecting':
-                  assert(item.error instanceof SignalingConnectionDisconnectedError);
-                  break;
-                case 'RemoteRoom#participantReconnecting':
-                case 'RemoteRoom#participantReconnected':
-                  assert.equal(item.participant, aliceRemote);
-                  break;
-              }
-            });
-          } catch (err) {
-            console.log('eventsEmitted:', eventsEmitted);
-            throw err;
-          }
-        });
+        } catch (err) {
+          console.log('eventsEmitted:', eventsEmitted);
+          throw err;
+        }
       });
     });
   });
