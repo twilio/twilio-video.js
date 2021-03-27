@@ -36,7 +36,25 @@ const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
 const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
 const RESET_NETWORK_TIMEOUT = 4 * ONE_MINUTE;
 
-const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'us2'];
+const DOCKER_PROXY_REGIONS = ['au1', 'us1', 'us2'];
+
+const DOCKER_PROXY_VSG_IP_RANGES = {
+  au1: [
+    '52.65.124.94-52.65.124.94',
+    '54.79.169.174-54.79.169.174'
+  ],
+  us1: [
+    '18.214.223.92-18.214.223.92',
+    '34.199.163.120-34.199.163.120',
+    '35.170.161.214-35.170.161.214'
+  ],
+  us2: [
+    '44.240.99.173-44.240.99.173',
+    '44.241.246.215-44.241.246.215',
+    '54.214.154.157-54.214.154.157'
+  ]
+};
+
 const DOCKER_PROXY_TURN_IP_RANGES = {
   au1: [
     '13.210.2.128-13.210.2.159',
@@ -190,7 +208,7 @@ describe('Network Reconnection', function() {
         return;
       }
       rooms = await setup(['Alice', 'Bob', 'Charlie'].map((identity, i) => {
-        return { identity, region: DOCKER_PROXY_TURN_REGIONS[i] };
+        return { identity, region: DOCKER_PROXY_REGIONS[i] };
       }));
       disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
       await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
@@ -209,7 +227,7 @@ describe('Network Reconnection', function() {
     });
 
     it('the Rooms of Participants whose TURN regions are blocked should emit reconnecting and reconnected events', async () => {
-      const turnRegionsToBlock = DOCKER_PROXY_TURN_REGIONS.slice(1);
+      const turnRegionsToBlock = DOCKER_PROXY_REGIONS.slice(1);
       const ipRanges = flatMap(turnRegionsToBlock, region => DOCKER_PROXY_TURN_IP_RANGES[region]);
       const blockedRooms = rooms.slice(1);
       const reconnectingPromises = blockedRooms.map(room => waitOnceForRoomEvent(room, 'reconnecting'));
@@ -232,8 +250,11 @@ describe('Network Reconnection', function() {
         this.skip();
         return;
       }
+      const setupOptions = [
+        { identity: 'Alice', region: 'us1' },
+        { identity: 'Bob', region: 'us2' }
+      ];
       currentNetworks = await readCurrentNetworks(dockerAPI);
-      const setupOptions = ['Alice', 'Bob'].map(identity => ({ identity }));
       rooms = await setup(setupOptions);
       disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
     });
@@ -370,8 +391,7 @@ describe('Network Reconnection', function() {
       });
     });
 
-    // TODO(mmalavalli): Remove skip.
-    describe.skip('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
+    describe('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
       it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
         const [aliceRoom, bobRoom] = rooms;
         const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
@@ -420,14 +440,17 @@ describe('Network Reconnection', function() {
           });
         });
 
-        // NOTE(mmalavalli): Simulate a signaling connection interruption by
-        // closing Alice's WebSocket transport. Then, wait until all the expected
-        // events are fired. NOTE: this does not work if connected quickly. Also this test is
-        // should not be in network tests.
-        aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
+        // Block Alice's signaling traffic.
+        await dockerAPI.blockIpRanges(DOCKER_PROXY_VSG_IP_RANGES[aliceRoom.localParticipant.signalingRegion], ['tcp']);
+
+        // Wait for Bob's Room to emit participantReconnecting event for Alice.
+        await waitOnceForRoomEvent(bobRoom, 'participantReconnecting');
+
+        // Unblock Alice's signaling traffic.
+        await dockerAPI.unblockIpRanges(DOCKER_PROXY_VSG_IP_RANGES[aliceRoom.localParticipant.signalingRegion], ['tcp']);
 
         try {
-          await waitFor(eventPromises, `waiting for event promises: Emitted events: ${eventsEmitted.map(({ event }) => event).join(',')}`, 2 * ONE_MINUTE);
+          await waitFor(eventPromises, 'event promises', 2 * ONE_MINUTE);
           assert.equal(eventsEmitted.length, 8);
           eventsEmitted.forEach(item => {
             switch (item.event) {
@@ -441,7 +464,7 @@ describe('Network Reconnection', function() {
             }
           });
         } catch (err) {
-          console.log('eventsEmitted:', eventsEmitted);
+          console.log('events emitted:', eventsEmitted.map(({ event }) => event));
           throw err;
         }
       });
