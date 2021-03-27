@@ -127,9 +127,10 @@ async function setup(setupOptions) {
     const room = await waitFor(connect(token, options), `${sid}: ${identity} connected`);
     const { iceTransportPolicy, iceServers } = options;
 
-    const shouldWaitForTracksStarted = iceTransportPolicy !== 'relay'
-      || !Array.isArray(iceServers)
-      || (iceServers.length > 0 && defaults.topology !== 'peer-to-peer');
+    const shouldWaitForTracksStarted = iceTransportPolicy !== 'relay' || (
+      (!Array.isArray(iceServers) || iceServers.length > 0)
+        && defaults.topology !== 'peer-to-peer'
+    );
 
     const nTracks = (setupOptions.length - 1) * 2;
     if (shouldWaitForTracksStarted) {
