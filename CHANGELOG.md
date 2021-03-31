@@ -7,6 +7,11 @@ Support for the 1.x version ended on December 4th, 2020.
 2.13.1 (March 17, 2021)
 =======================
 
+New Features
+------------
+
+- The [Video Processor API](https://sdk.twilio.com/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) has been promoted to beta. There are no changes to the API at this moment and we will continue to improve it on future releases.
+
 Bug Fixes
 ---------
 
