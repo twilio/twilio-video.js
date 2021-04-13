@@ -363,7 +363,7 @@ describe('BandwidthProfileOptions', function() {
   });
 
   describe('renderHints', () => {
-    it('with _setRenderHint Bob can turn On/Off Alice\'s track on demand', async () => {
+    it('with RemoteVideoTrack.switchOn/switchOff Bob can turn On/Off Alice\'s track on demand', async () => {
       const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
       const aliceOptions = { tracks: [aliceLocalVideo] };
       const bobOptions = {
@@ -390,14 +390,12 @@ describe('BandwidthProfileOptions', function() {
       assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
       await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
 
-      // call _setRenderHint to force switch OFF the track.
-      aliceRemoteTrack._setRenderHint({ enabled: false });
+      aliceRemoteTrack.switchOff();
       await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
       assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
       await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
 
-      // call _setRenderHint to force switch ON the track.
-      aliceRemoteTrack._setRenderHint({ enabled: true });
+      aliceRemoteTrack.switchOn();
       await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
       assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
       await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);

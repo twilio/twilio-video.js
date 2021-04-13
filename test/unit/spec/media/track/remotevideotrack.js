@@ -180,6 +180,90 @@ describe('RemoteVideoTrack', () => {
     });
 
   });
+
+  describe('#switchOn', () => {
+    [true, false, undefined].forEach(allowManualSwitchOff => {
+      let setRenderHintSpy;
+      let track;
+      beforeEach(() => {
+        setRenderHintSpy = sinon.spy();
+        track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options: { allowManualSwitchOff } });
+      });
+      if (allowManualSwitchOff !== false) {
+        it('calls _setRenderHint with enable = true when allowManualSwitchOff = ' + allowManualSwitchOff, () => {
+          track.switchOn();
+          sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', true));
+        });
+      } else {
+        it('throws an error when allowManualSwitchOff = ' + allowManualSwitchOff, () => {
+          let errorThrown = null;
+          try {
+            track.switchOn();
+          } catch (error) {
+            errorThrown = error;
+          }
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.subscribedTrackSwitchOff set to "manual"');
+          sinon.assert.notCalled(setRenderHintSpy);
+        });
+      }
+    });
+  });
+
+  describe('#switchOff', () => {
+    [true, false, undefined].forEach(allowManualSwitchOff => {
+      let setRenderHintSpy;
+      let track;
+      beforeEach(() => {
+        setRenderHintSpy = sinon.spy();
+        track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options: { allowManualSwitchOff } });
+      });
+      if (allowManualSwitchOff !== false) {
+        it('calls _setRenderHint with enable = true when allowManualSwitchOff = ' + allowManualSwitchOff, () => {
+          track.switchOff();
+          sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('enabled', false));
+        });
+      } else {
+        it('throws an error when allowManualSwitchOff = ' + allowManualSwitchOff, () => {
+          let errorThrown = null;
+          try {
+            track.switchOff();
+          } catch (error) {
+            errorThrown = error;
+          }
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOff only when connected with bandwidthProfile.video.subscribedTrackSwitchOff set to "manual"');
+          sinon.assert.notCalled(setRenderHintSpy);
+        });
+      }
+    });
+  });
+
+  describe('#setContentPreferences', () => {
+    [true, false, undefined].forEach(allowManualContentHints => {
+      let setRenderHintSpy;
+      let track;
+      beforeEach(() => {
+        setRenderHintSpy = sinon.spy();
+        track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintSpy, options: { allowManualContentHints } });
+      });
+      if (allowManualContentHints !== false) {
+        it('calls _setRenderHint with enable = true when allowManualContentHints = ' + allowManualContentHints, () => {
+          track.setContentPreferences({ renderDimensions: { width: 100, height: 101 } });
+          sinon.assert.calledWith(setRenderHintSpy, sinon.match.has('renderDimensions', { width: 100, height: 101 }));
+        });
+      } else {
+        it('throws an error when allowManualContentHints = ' + allowManualContentHints, () => {
+          let errorThrown = null;
+          try {
+            track.setContentPreferences({ renderDimensions: { width: 100, height: 101 } });
+          } catch (error) {
+            errorThrown = error;
+          }
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.renderDimensions set to "manual"');
+          sinon.assert.notCalled(setRenderHintSpy);
+        });
+      }
+    });
+  });
 });
 
 describe('IntersectionObserver', () => {
