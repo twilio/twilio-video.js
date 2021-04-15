@@ -561,6 +561,56 @@ describe('BandwidthProfileOptions', function() {
         [aliceRoom, bobRoom].forEach(room => room.disconnect());
       });
     });
+
+    it('manually switched offs tracks should not get turned on by auto events', async () => {
+      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+      const aliceOptions = { tracks: [aliceLocalVideo] };
+      const bobOptions = {
+        tracks: [],
+        loggerName: 'BobLogger',
+        bandwidthProfile: {
+          video: {
+            subscribedTrackSwitchOffMode: 'manual',
+            contentPreferencesMode: 'auto'
+          }
+        }
+      };
+
+      const bobLogger = Logger.getLogger('BobLogger');
+      bobLogger.setLevel('debug');
+
+      const { roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+      await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+      const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
+
+      // track should be switched On initially.
+      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch On: ${roomSid}`);
+
+      aliceRemoteTrack.switchOff();
+
+      // wait for track to switch off
+      await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch Off: ${roomSid}`);
+
+      let trackSwitchOnPromise = trackSwitchedOn(aliceRemoteTrack);
+
+      // attach element
+      const videoElement1 = aliceRemoteTrack.attach();
+      document.body.appendChild(videoElement1);
+      await waitForSometime(1000);
+
+      // resize element.
+      videoElement1.setAttribute('height', '100');
+      videoElement1.setAttribute('width', '100');
+      await waitForSometime(1000);
+
+      // detach element
+      aliceRemoteTrack.detach(videoElement1);
+      await waitForSometime(1000);
+
+      // none of above should cause track to switch on.
+      await waitForNot(trackSwitchOnPromise, `Alice's Track [${aliceRemoteTrack.sid}] to switch On unexpectedly: ${roomSid}`);
+      [aliceRoom, bobRoom].forEach(room => room.disconnect());
+    });
   });
 });
 
