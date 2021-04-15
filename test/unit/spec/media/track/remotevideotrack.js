@@ -246,7 +246,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.renderDimensions set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.contentPreferencesMode set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }
