@@ -375,7 +375,6 @@ describe('LocalTrackPublication', function() {
           testOptions: {
             bandwidthProfile: {
               video: {
-                idleTrackSwitchOff: false,
                 maxTracks: 1,
                 dominantSpeakerPriority: 'low'
               }
@@ -521,7 +520,6 @@ describe('LocalTrackPublication', function() {
             aliceOptions: {
               bandwidthProfile: {
                 video: {
-                  idleTrackSwitchOff: false,
                   maxTracks: 1,
                   dominantSpeakerPriority: 'low'
                 }
@@ -633,7 +631,6 @@ describe('LocalTrackPublication', function() {
         aliceOptions: {
           bandwidthProfile: {
             video: {
-              idleTrackSwitchOff: false,
               maxTracks: 1,
               dominantSpeakerPriority: 'low'
             }

@@ -1,7 +1,7 @@
 import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
-export interface ContentPreferences {
+export interface VideoContentPreferences {
   renderDimensions?: VideoTrack.Dimensions;
 }
 
@@ -14,7 +14,7 @@ export class RemoteVideoTrack extends VideoTrack {
   setPriority(priority: Track.Priority | null): this;
   switchOn(): this;
   switchOff(): this;
-  setContentPreferences(content: ContentPreferences): this;
+  setContentPreferences(content: VideoContentPreferences): this;
 
   on(event: 'dimensionsChanged', listener: (track: this) => void): this;
   on(event: 'disabled', listener: (track: this) => void): this;

@@ -63,7 +63,6 @@ describe('BandwidthProfileOptions', function() {
           loggerName: 'Charlie',
           bandwidthProfile: {
             video: {
-              idleTrackSwitchOff: false,
               dominantSpeakerPriority: PRIORITY_STANDARD,
               maxTracks: 1
             }
@@ -130,7 +129,7 @@ describe('BandwidthProfileOptions', function() {
   describe('bandwidthProfile.video', () => {
     combinationContext([
       [
-        [{ maxSubscriptionBitrate: 400 }, { maxTracks: 1 }],
+        [{ maxSubscriptionBitrate: 400,  maxTracks: 0 }, { maxTracks: 1 }], // maxTracks=0 specified to disable subscribedTrackSwitchOffMode.
         ({ maxSubscriptionBitrate, maxTracks }) => maxSubscriptionBitrate
           ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
           : `.maxTracks = ${maxTracks}`
@@ -173,7 +172,6 @@ describe('BandwidthProfileOptions', function() {
           testOptions: {
             bandwidthProfile: {
               video: {
-                idleTrackSwitchOff: false,
                 dominantSpeakerPriority,
                 ...trackLimitOptions
               }
@@ -274,8 +272,8 @@ describe('BandwidthProfileOptions', function() {
   });
 
 
-  [true, false].forEach(idleTrackSwitchOff => {
-    describe(`idleTrackSwitchOff (${idleTrackSwitchOff})`, () => {
+  ['auto', 'manual'].forEach(subscribedTrackSwitchOffMode => {
+    describe(`subscribedTrackSwitchOffMode (${subscribedTrackSwitchOffMode})`, () => {
       let roomSid = null;
       let bobRoom;
       let aliceRemote;
@@ -290,7 +288,7 @@ describe('BandwidthProfileOptions', function() {
           loggerName: 'BobLogger',
           bandwidthProfile: {
             video: {
-              idleTrackSwitchOff,
+              subscribedTrackSwitchOffMode,
               dominantSpeakerPriority: PRIORITY_STANDARD
             }
           },
@@ -311,8 +309,7 @@ describe('BandwidthProfileOptions', function() {
         }
       });
 
-
-      if (idleTrackSwitchOff) {
+      if (subscribedTrackSwitchOffMode === 'auto') {
         it('Track turns off if video element is not attached initially', async () => {
           // since no video elements are attached. Tracks should switch off initially
           await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
@@ -363,6 +360,108 @@ describe('BandwidthProfileOptions', function() {
   });
 
   describe('renderHints', () => {
+    [
+      {
+        testCase: 'subscribedTrackSwitchOffMode=manual',
+        bandwidthProfile: {
+          video: {
+            subscribedTrackSwitchOffMode: 'manual'
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'manual',
+        effectiveContentPreferencesMode: 'auto',
+      },
+      {
+        testCase: 'subscribedTrackSwitchOffMode=auto',
+        bandwidthProfile: {
+          video: {
+            subscribedTrackSwitchOffMode: 'auto'
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'auto',
+        effectiveContentPreferencesMode: 'auto',
+      },
+      {
+        testCase: 'subscribedTrackSwitchOffMode=unspecified',
+        bandwidthProfile: {
+          video: {
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'auto',
+        effectiveContentPreferencesMode: 'auto',
+      },
+      {
+        testCase: 'subscribedTrackSwitchOffMode=unspecified, maxTracks=5',
+        bandwidthProfile: {
+          video: {
+            maxTracks: 5,
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'disabled', // when maxTracks is specified, effectiveSubscribedTrackSwitchOffMode should be disabled.
+        effectiveContentPreferencesMode: 'auto',
+      },
+      {
+        testCase: 'contentPreferencesMode=manual',
+        bandwidthProfile: {
+          video: {
+            contentPreferencesMode: 'manual'
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'auto',
+        effectiveContentPreferencesMode: 'manual',
+      },
+      {
+        testCase: 'contentPreferencesMode=unspecified',
+        bandwidthProfile: {
+          video: {
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'auto',
+        effectiveContentPreferencesMode: 'auto',
+      },
+      {
+        testCase: 'contentPreferencesMode=unspecified, renderDimensions=specified',
+        bandwidthProfile: {
+          video: {
+            renderDimensions: {
+              low: { width: 100, height: 100 }
+            }
+          }
+        },
+        effectiveSubscribedTrackSwitchOffMode: 'auto',
+        effectiveContentPreferencesMode: 'disabled',
+      }
+    ].forEach(({ testCase, bandwidthProfile, effectiveSubscribedTrackSwitchOffMode,  effectiveContentPreferencesMode }) => {
+      beforeEach(() => {
+
+      });
+      afterEach(() => {
+
+      });
+
+      it('sets correct render hint options for RemoteVideoTracks when: ' + testCase, async () => {
+        const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+        const aliceOptions = { tracks: [aliceLocalVideo] };
+        const bobOptions = {
+          tracks: [],
+          loggerName: 'BobLogger',
+          bandwidthProfile
+        };
+
+        const bobLogger = Logger.getLogger('BobLogger');
+        bobLogger.setLevel('info');
+
+        const { roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
+
+        await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+        const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
+        assert(aliceRemoteTrack._subscribedTrackSwitchOffMode === effectiveSubscribedTrackSwitchOffMode);
+        assert(aliceRemoteTrack._contentPreferencesMode === effectiveContentPreferencesMode);
+
+        [aliceRoom, bobRoom].forEach(room => room.disconnect());
+      });
+    });
+
     it('with RemoteVideoTrack.switchOn/switchOff Bob can turn On/Off Alice\'s track on demand', async () => {
       const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
       const aliceOptions = { tracks: [aliceLocalVideo] };
@@ -371,7 +470,7 @@ describe('BandwidthProfileOptions', function() {
         loggerName: 'BobLogger',
         bandwidthProfile: {
           video: {
-            idleTrackSwitchOff: false,
+            subscribedTrackSwitchOffMode: 'manual',
             dominantSpeakerPriority: PRIORITY_STANDARD
           }
         },
@@ -405,29 +504,15 @@ describe('BandwidthProfileOptions', function() {
       {
         dimA: { width: 1024, height: 720 },
         dimB: { width: 50, height: 40 },
-        idleTrackSwitchOff: true,
         expectBandwidthUsageIncrease: false
       },
       {
         dimA: { width: 1024, height: 720 },
         dimB: { width: 50, height: 40 },
-        idleTrackSwitchOff: false,
         expectBandwidthUsageIncrease: false
-      },
-      {
-        dimA: { width: 50, height: 40 },
-        dimB: { width: 1024, height: 720 },
-        idleTrackSwitchOff: true,
-        expectBandwidthUsageIncrease: true
-      },
-      {
-        dimA: { width: 50, height: 40 },
-        dimB: { width: 1024, height: 720 },
-        idleTrackSwitchOff: false,
-        expectBandwidthUsageIncrease: true
       }
-    ].forEach(({ dimA, dimB, idleTrackSwitchOff, expectBandwidthUsageIncrease }) => {
-      it(`video dimension ${dimA.width}x${dimA.height} => ${dimB.width}x${dimB.height} ${expectBandwidthUsageIncrease ? 'increases' : 'decreases'} bandwidth usage, when idleTrackSwitchOff: ${idleTrackSwitchOff}`, async () => {
+    ].forEach(({ dimA, dimB, expectBandwidthUsageIncrease }) => {
+      it(`video dimension ${dimA.width}x${dimA.height} => ${dimB.width}x${dimB.height} ${expectBandwidthUsageIncrease ? 'increases' : 'decreases'} bandwidth usage`, async () => {
         const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
         const aliceOptions = { tracks: [aliceLocalVideo] };
         const bobOptions = {
@@ -435,7 +520,7 @@ describe('BandwidthProfileOptions', function() {
           loggerName: 'BobLogger',
           bandwidthProfile: {
             video: {
-              idleTrackSwitchOff,
+              contentPreferencesMode: 'manual',
               dominantSpeakerPriority: PRIORITY_STANDARD
             }
           },
