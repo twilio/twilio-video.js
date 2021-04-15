@@ -271,98 +271,10 @@ describe('BandwidthProfileOptions', function() {
     });
   });
 
-
-  ['auto', 'manual'].forEach(subscribedTrackSwitchOffMode => {
-    describe(`subscribedTrackSwitchOffMode (${subscribedTrackSwitchOffMode})`, () => {
-      let roomSid = null;
-      let bobRoom;
-      let aliceRemote;
-      let aliceRemoteTrack;
-      let videoElement1;
-      let videoElement2;
-      before(async () => {
-        const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-        const aliceOptions = { tracks: [aliceLocalVideo] };
-        const bobOptions = {
-          tracks: [],
-          loggerName: 'BobLogger',
-          bandwidthProfile: {
-            video: {
-              subscribedTrackSwitchOffMode,
-              dominantSpeakerPriority: PRIORITY_STANDARD
-            }
-          },
-        };
-
-        const bobLogger = Logger.getLogger('BobLogger');
-        bobLogger.setLevel('info');
-
-        ({ roomSid, bobRoom, aliceRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions }));
-
-        await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
-        aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
-      });
-
-      after(() => {
-        if (bobRoom) {
-          completeRoom(bobRoom);
-        }
-      });
-
-      if (subscribedTrackSwitchOffMode === 'auto') {
-        it('Track turns off if video element is not attached initially', async () => {
-          // since no video elements are attached. Tracks should switch off initially
-          await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
-        });
-
-        it('Track turns on when a video element is attached', async () => {
-          videoElement1 = aliceRemoteTrack.attach();
-          document.body.appendChild(videoElement1);
-          await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
-        });
-
-        it('Track stays on when another video element is attached', async () => {
-          videoElement2 = aliceRemoteTrack.attach();
-          document.body.appendChild(videoElement2);
-          await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
-        });
-
-        it('tracks stays on when one of the video element is detached ', async () => {
-          aliceRemoteTrack.detach(videoElement2);
-          videoElement2.remove();
-          await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
-        });
-
-        it('tracks turns off when all video elements are detached ', async () => {
-          const elements = aliceRemoteTrack.detach();
-          elements.forEach(el => el.remove());
-          await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
-        });
-      } else {
-        it('Track turns on even if video element is not attached initially', async () => {
-          // since no video elements are attached. Tracks should switch off initially
-          await waitForNot(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
-          assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-          await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
-        });
-      }
-    });
-  });
-
   describe('renderHints', () => {
     [
       {
-        testCase: 'subscribedTrackSwitchOffMode=manual',
+        testCase: 'when subscribedTrackSwitchOffMode=manual',
         bandwidthProfile: {
           video: {
             subscribedTrackSwitchOffMode: 'manual'
@@ -372,7 +284,7 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'auto',
       },
       {
-        testCase: 'subscribedTrackSwitchOffMode=auto',
+        testCase: 'when subscribedTrackSwitchOffMode=auto',
         bandwidthProfile: {
           video: {
             subscribedTrackSwitchOffMode: 'auto'
@@ -382,7 +294,7 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'auto',
       },
       {
-        testCase: 'subscribedTrackSwitchOffMode=unspecified',
+        testCase: 'when subscribedTrackSwitchOffMode=unspecified',
         bandwidthProfile: {
           video: {
           }
@@ -391,7 +303,7 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'auto',
       },
       {
-        testCase: 'subscribedTrackSwitchOffMode=unspecified, maxTracks=5',
+        testCase: 'when subscribedTrackSwitchOffMode=unspecified, maxTracks=5',
         bandwidthProfile: {
           video: {
             maxTracks: 5,
@@ -401,7 +313,7 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'auto',
       },
       {
-        testCase: 'contentPreferencesMode=manual',
+        testCase: 'when contentPreferencesMode=manual',
         bandwidthProfile: {
           video: {
             contentPreferencesMode: 'manual'
@@ -411,7 +323,7 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'manual',
       },
       {
-        testCase: 'contentPreferencesMode=unspecified',
+        testCase: 'when contentPreferencesMode=unspecified',
         bandwidthProfile: {
           video: {
           }
@@ -432,72 +344,147 @@ describe('BandwidthProfileOptions', function() {
         effectiveContentPreferencesMode: 'disabled',
       }
     ].forEach(({ testCase, bandwidthProfile, effectiveSubscribedTrackSwitchOffMode,  effectiveContentPreferencesMode }) => {
-      beforeEach(() => {
+      let aliceRoom;
+      let bobRoom;
+      let roomSid;
+      let aliceRemote;
+      let aliceRemoteTrack;
+      let videoElement1;
+      let videoElement2;
+      context(testCase, () => {
+        before(async () => {
+          const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+          const aliceOptions = { tracks: [aliceLocalVideo] };
+          const bobOptions = {
+            tracks: [],
+            loggerName: 'BobLogger',
+            bandwidthProfile
+          };
 
+          const bobLogger = Logger.getLogger('BobLogger');
+          bobLogger.setLevel('info');
+
+          ({ roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions }));
+
+          await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
+
+          aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
+        });
+
+        after(() => {
+          [aliceRoom, bobRoom].forEach(room => room.disconnect());
+        });
+
+        it('sets correct render hint options for RemoteVideoTracks', () => {
+          assert(aliceRemoteTrack._subscribedTrackSwitchOffMode === effectiveSubscribedTrackSwitchOffMode);
+          assert(aliceRemoteTrack._contentPreferencesMode === effectiveContentPreferencesMode);
+        });
+
+        if (effectiveSubscribedTrackSwitchOffMode === 'manual') {
+          it('switchOn/switchOff can be used to turn tracks on/off', async () => {
+            // initially track should be switched on
+            await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+
+            aliceRemoteTrack.switchOff();
+            await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+
+            aliceRemoteTrack.switchOn();
+            await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+          });
+        } else {
+          it('switchOff/switchOn methods throw an error', () => {
+            let switchOffError = false;
+            let switchOnError = false;
+            try {
+              aliceRemoteTrack.switchOff();
+            } catch (_e) {
+              switchOffError = true;
+            }
+
+            try {
+              aliceRemoteTrack.switchOn();
+            } catch (_e) {
+              switchOnError = true;
+            }
+
+            assert(switchOnError && switchOffError);
+          });
+        }
+
+        if (effectiveSubscribedTrackSwitchOffMode === 'auto') {
+          it('Track turns off if video element is not attached initially', async () => {
+            // since no video elements are attached. Tracks should switch off initially
+            await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+          });
+
+          it('Track turns on when a video element is attached', async () => {
+            videoElement1 = aliceRemoteTrack.attach();
+            document.body.appendChild(videoElement1);
+            await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+          });
+
+          it('Track stays on when another video element is attached', async () => {
+            videoElement2 = aliceRemoteTrack.attach();
+            document.body.appendChild(videoElement2);
+            await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+          });
+
+          it('tracks stays on when one of the video element is detached ', async () => {
+            aliceRemoteTrack.detach(videoElement2);
+            videoElement2.remove();
+            await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+          });
+
+          it('tracks turns off when all video elements are detached ', async () => {
+            const elements = aliceRemoteTrack.detach();
+            elements.forEach(el => el.remove());
+            await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
+          });
+        } else {
+          it('Track turns on even if video element is not attached initially', async () => {
+            // since no video elements are attached. Tracks should switch off initially
+            await waitForNot(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+            assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
+            await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
+          });
+        }
+
+        if (effectiveContentPreferencesMode === 'manual') {
+          it('setContentPreference does not throw', () => {
+            try {
+              aliceRemoteTrack.setContentPreferences({ renderDimensions: { width: 100, height: 100 } });
+            } catch (e) {
+              assert(false, 'was not expecting setContentPreferences to throw: ' + e);
+            }
+          });
+        } else {
+          it('setContentPreference throws', () => {
+            let errorThrown = false;
+            try {
+              aliceRemoteTrack.setContentPreferences({ renderDimensions: { width: 100, height: 100 } });
+            } catch (_e) {
+              errorThrown = true;
+            }
+            assert(errorThrown);
+          });
+        }
       });
-      afterEach(() => {
-
-      });
-
-      it('sets correct render hint options for RemoteVideoTracks when: ' + testCase, async () => {
-        const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-        const aliceOptions = { tracks: [aliceLocalVideo] };
-        const bobOptions = {
-          tracks: [],
-          loggerName: 'BobLogger',
-          bandwidthProfile
-        };
-
-        const bobLogger = Logger.getLogger('BobLogger');
-        bobLogger.setLevel('info');
-
-        const { roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
-
-        await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
-        const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
-        assert(aliceRemoteTrack._subscribedTrackSwitchOffMode === effectiveSubscribedTrackSwitchOffMode);
-        assert(aliceRemoteTrack._contentPreferencesMode === effectiveContentPreferencesMode);
-
-        [aliceRoom, bobRoom].forEach(room => room.disconnect());
-      });
-    });
-
-    it('with RemoteVideoTrack.switchOn/switchOff Bob can turn On/Off Alice\'s track on demand', async () => {
-      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-      const aliceOptions = { tracks: [aliceLocalVideo] };
-      const bobOptions = {
-        tracks: [],
-        loggerName: 'BobLogger',
-        bandwidthProfile: {
-          video: {
-            subscribedTrackSwitchOffMode: 'manual',
-            dominantSpeakerPriority: PRIORITY_STANDARD
-          }
-        },
-      };
-
-      const bobLogger = Logger.getLogger('BobLogger');
-      bobLogger.setLevel('info');
-
-      const { roomSid, bobRoom, aliceRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions });
-
-      await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
-      const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
-
-      // initially track should be switched on
-      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
-      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
-
-      aliceRemoteTrack.switchOff();
-      await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
-      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, true, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-      await assertMediaFlow(bobRoom, false, `was not expecting media flow: ${roomSid}`);
-
-      aliceRemoteTrack.switchOn();
-      await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
-      assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
-      await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
     });
 
     [
