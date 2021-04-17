@@ -30,14 +30,18 @@ Both of these features are available in Group Rooms and are enabled by default i
     name: "my-new-room",
     bandwidthProfile: {
       video: {
-        # Use "auto" defaults for both features. Be sure to remove "renderDimensions" and "maxTracks".
+        /* Defaults to "auto" for both features. Be sure to remove "renderDimensions" and "maxTracks". */
       }
     }
   });
   ```
+
 **Migrating to Attach APIs**
+
 The automatic behaviors rely on applications using the [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods or use the manual APIs.
+
 **Manual Controls**
+
   ```ts
   const room = await connect(token, {
     bandwidthProfile: {
@@ -48,12 +52,17 @@ The automatic behaviors rely on applications using the [attach](https://media.tw
     }
   });
   ```
+
 When manual controls are used you can operate directly on `RemoteVideoTrack` to specify preferences. For example, applications can:
+
 1. Force disabling a track.
+
   ```ts
   remoteTrack.switchOff();
   ```
+
 2. Enable and request QVGA video.
+
   ```ts
   # Only needed if switchOff() was called first.
   remoteTrack.switchOn();
@@ -61,6 +70,7 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
       renderDimensions: { width:  320, height: 240 }
   });
   ```
+
 3. Request HD (720p) video.
 
   ```ts
@@ -68,11 +78,14 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
       renderDimensions: { width:  1280, height: 720 }
   });
   ```
-- `subscribedTrackSwitchOffMode` Optional property (defaults to "auto") that when set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
-- `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
-- `renderDimensions` is deprecated and will raise a warning when set. Calling `switchOn()`, `switchOff()`, and `setContentPreferences()` on `RemoteVideoTrack` after setting `renderDimensions` is not allowed will raise an exception.
-- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
 
+- `subscribedTrackSwitchOffMode` Optional property (defaults to "auto") that when set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
+
+- `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
+
+- `renderDimensions` is deprecated and will raise a warning when set. Calling `switchOn()`, `switchOff()`, and `setContentPreferences()` on `RemoteVideoTrack` after setting `renderDimensions` is not allowed will raise an exception.
+
+- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
 
 2.13.1 (March 17, 2021)
 =======================
