@@ -198,7 +198,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.subscribedTrackSwitchOffMode set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when bandwidthProfile.video.subscribedTrackSwitchOffMode is set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }
@@ -222,7 +222,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOff only when connected with bandwidthProfile.video.subscribedTrackSwitchOffMode set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOff only when bandwidthProfile.video.subscribedTrackSwitchOffMode is set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }
@@ -246,7 +246,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when connected with bandwidthProfile.video.contentPreferencesMode set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when bandwidthProfile.video.contentPreferencesMode is set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }

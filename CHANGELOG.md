@@ -79,11 +79,11 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
   });
   ```
 
-- `subscribedTrackSwitchOffMode` Optional property (defaults to "auto") that when set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
+- `subscribedTrackSwitchOffMode` Optional property (defaults to `"auto"`).  When omitted or set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
 
 - `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
 
-- `renderDimensions` is deprecated and will raise a warning when set. Calling `switchOn()`, `switchOff()`, and `setContentPreferences()` on `RemoteVideoTrack` after setting `renderDimensions` is not allowed will raise an exception.
+- `renderDimensions` is deprecated and will raise a warning when set. Setting both `renderDimensions` and `contentPreferencesMode` is not allowed and will raise an exception.
 
 - `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
 
