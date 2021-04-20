@@ -489,9 +489,9 @@ describe('BandwidthProfileOptions', function() {
 
     [
       {
-        dimA: { width: 1024, height: 720 },
-        dimB: { width: 50, height: 40 },
-        expectBandwidthUsageIncrease: false
+        dimA: { width: 50, height: 40 },
+        dimB: { width: 1024, height: 720 },
+        expectBandwidthUsageIncrease: true
       },
       {
         dimA: { width: 1024, height: 720 },
@@ -507,7 +507,7 @@ describe('BandwidthProfileOptions', function() {
           loggerName: 'BobLogger',
           bandwidthProfile: {
             video: {
-              contentPreferencesMode: 'manual',
+              contentPreferencesMode: 'auto',
               dominantSpeakerPriority: PRIORITY_STANDARD
             }
           },
