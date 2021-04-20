@@ -22,7 +22,7 @@ New Features
   - **manual**: The application specifies the content preferences for individual tracks using `RemoteVideoTrack.setContentPreferences()`.
 - Note: If your application previously set the `renderDimensions` property, you should migrate to using `contentPreferencesMode` to take advantage of this feature.
 
-Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set the `renderDimensions` property you should migrate it to `contentPreferencesMode` in order to take advantage of automatic behavior.
+Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
 
   ```ts
   const { connect } = require('twilio-video');
