@@ -58,7 +58,6 @@ describe('RemoteVideoTrack', function() {
         testOptions: {
           bandwidthProfile: {
             video: {
-              idleTrackSwitchOff: false,
               maxTracks: 1,
               dominantSpeakerPriority: 'low'
             }
@@ -205,7 +204,6 @@ describe('RemoteVideoTrack', function() {
         logLevel: 'warn',
         bandwidthProfile: {
           video: {
-            idleTrackSwitchOff: false,
             maxTracks: 1,
             dominantSpeakerPriority: 'low'
           }

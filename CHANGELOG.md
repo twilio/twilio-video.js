@@ -8,50 +8,84 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-**Idle Track Switch Off**
+**Subscribed Track Switch Off**
 
-- Idle Track Switch Off uses document visibility, track attachments, and the visibility of video elements to determine whether a RemoteVideoTrack should be switched off. A RemoteVideoTrack will be switched off when the document is no longer visible, no video elements are attached to the track, or when the video elements attached to the track are not visible.
+- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Subscribed track switch off has two modes of operation:
+  - **auto** (default): The SDK determines whether tracks should be switched off based on document visibility, track attachments, and / or the visibility of video elements.
+  - **manual**: The application requests that individual tracks be switched off or on using the `RemoteVideoTrack.switchOff()` / `switchOn()` methods.
+- Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `subscribedTrackSwitchOffMode` to take advantage of this feature.
 
-**Auto Render Dimensions**
+**Video Content Preferences**
 
-- The SDK now uses the dimensions of the video elements attached to a RemoteVideoTrack to determine the best video bitrate to receive. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video renderer with smaller dimensions.
+- This feature allows subscribers to specify preferences about the media that they receive on a RemoteVideoTrack. Video content preferences has two modes of operation:
+  - **auto** (default): The SDK specifies content preferences based on video element size. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video element with smaller dimensions.
+  - **manual**: The application specifies the content preferences for individual tracks using `RemoteVideoTrack.setContentPreferences()`.
+- Note: If your application previously set the `renderDimensions` property, you should migrate to using `contentPreferencesMode` to take advantage of this feature.
 
+Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set the `renderDimensions` property you should migrate it to `contentPreferencesMode` in order to take advantage of automatic behavior.
 
-Both these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect. If your application previously set legacy `renderDimensions` you must change the value to `"auto"` in order to take advantage of automatic hinting.
-
-  ```js
-    const { connect } = require('twilio-video');
-
-    const room = await connect(token, {
-      name: 'my-new-room',
-      bandwidthProfile: {
-        video: {
-          idleTrackSwitchOff: true,
-          renderDimensions: 'auto',
-        }
+  ```ts
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    name: "my-new-room",
+    bandwidthProfile: {
+      video: {
+        /* Defaults to "auto" for both features. Be sure to remove "renderDimensions" and "maxTracks". */
       }
-    });
+    }
+  });
   ```
 
-Note: These features rely on applications using [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.13.1/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods. `idleTrackSwitchOff` can be disabled by specifying `false` for the property in the VideoBandwidthProfileOptions dictionary. You can also specify explicit legacy `renderDimensions` if you want to allocate bandwidth based on Track priority instead of the dimensions of the attached video element(s).
+**Migrating to Attach APIs**
 
-  ```js
-    const { connect } = require('twilio-video');
+The automatic behaviors rely on applications using the [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods or use the manual APIs.
 
-    const room = await connect(token, {
-      name: 'my-new-room',
-      bandwidthProfile: {
-        video: {
-          idleTrackSwitchOff: false,
-          renderDimensions: {
-            low: { width: 320, height: 240 }
-            standard: { width: 640, height: 480 }
-            high: { width: 1080, height: 720 }
-          }
-        }
+**Manual Controls**
+
+  ```ts
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        contentPreferencesMode: "manual",
+        subscribedTrackSwitchOffMode: "manual"
       }
-    });
+    }
+  });
   ```
+
+When manual controls are used you can operate directly on `RemoteVideoTrack` to specify preferences. For example, applications can:
+
+1. Force disabling a track.
+
+  ```ts
+  remoteTrack.switchOff();
+  ```
+
+2. Enable and request QVGA video.
+
+  ```ts
+  # Only needed if switchOff() was called first.
+  remoteTrack.switchOn();
+  remoteTrack.setContentPreferences({
+      renderDimensions: { width:  320, height: 240 }
+  });
+  ```
+
+3. Request HD (720p) video.
+
+  ```ts
+  remoteTrack.setContentPreferences({
+      renderDimensions: { width:  1280, height: 720 }
+  });
+  ```
+
+- `subscribedTrackSwitchOffMode` Optional property (defaults to `"auto"`).  When omitted or set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
+
+- `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
+
+- `renderDimensions` is deprecated and will raise a warning when set. Setting both `renderDimensions` and `contentPreferencesMode` is not allowed and will raise an exception.
+
+- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
 
 2.13.1 (March 17, 2021)
 =======================

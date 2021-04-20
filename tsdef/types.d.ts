@@ -91,6 +91,12 @@ export interface LogLevels {
 export type TrackSwitchOffMode = 'detected' | 'predicted' | 'disabled';
 export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
+export type VideoContentPreferencesMode = 'auto' | 'manual';
+export type SubscribedTrackSwitchOffMode = 'auto' | 'manual';
+
+/**
+* @deprecated
+*/
 export interface VideoRenderDimensions {
   high?: VideoTrack.Dimensions;
   low?: VideoTrack.Dimensions;
@@ -98,12 +104,19 @@ export interface VideoRenderDimensions {
 }
 
 export interface VideoBandwidthProfileOptions {
-  idleTrackSwitchOff?: boolean;
+  contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
+  /**
+  * @deprecated use subscribedTrackSwitchOffMode instead
+  */
   maxTracks?: number;
   mode?: BandwidthProfileMode;
-  renderDimensions?: 'auto'|VideoRenderDimensions;
+  /**
+  * @deprecated use contentPreferences instead
+  */
+  renderDimensions?: VideoRenderDimensions;
+  subscribedTrackSwitchOffMode?: SubscribedTrackSwitchOffMode;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
