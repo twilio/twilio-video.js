@@ -87,6 +87,12 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
 
 - `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
 
+Bug Fixes
+---------
+
+- Fixed a bug where loading `twilio-video.js` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
+
+
 2.13.1 (March 17, 2021)
 =======================
 
