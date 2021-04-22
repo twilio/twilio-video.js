@@ -57,6 +57,11 @@ describe('RemoteVideoTrack', () => {
       addEventListenerStub = sinon.spy(document, 'addEventListener');
       removeEventListenerStub = sinon.spy(document, 'removeEventListener');
 
+      const dummyElement = { oncanplay: sinon.spy() };
+      document.createElement = sinon.spy(() => {
+        return dummyElement;
+      });
+
       el = document.createElement('video');
       setRenderHintsSpy = sinon.spy();
 
@@ -140,6 +145,23 @@ describe('RemoteVideoTrack', () => {
         it('does not register for document visibility change', () => {
           assert(track._enableDocumentVisibilityTurnOff === false);
           sinon.assert.notCalled(document.addEventListener);
+        });
+      }
+    });
+
+    describe('after element receives started event', () => {
+      before(() => {
+        sinon.assert.callCount(setRenderHintsSpy, 0);
+        el.oncanplay(); // simulate started event.
+      });
+
+      if (effectiveSubscribedTrackSwitchOffMode === 'auto') {
+        it('_setRenderHint gets called', () => {
+          sinon.assert.callCount(setRenderHintsSpy, 1);
+        });
+      } else {
+        it('_setRenderHint does not gets called', () => {
+          sinon.assert.callCount(setRenderHintsSpy, 0);
         });
       }
     });
