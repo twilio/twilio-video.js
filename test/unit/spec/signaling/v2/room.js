@@ -65,7 +65,7 @@ describe('RoomV2', () => {
       });
     });
 
-    it.only('should periodically call .publishEvent on the underlying Transport', async () => {
+    it('should periodically call .publishEvent on the underlying Transport', async () => {
       const test = makeTest({
         localTracks: [
           { id: '1', kind: 'audio' },
