@@ -65,7 +65,7 @@ describe('RoomV2', () => {
       });
     });
 
-    it('should periodically call .publishEvent on the underlying Transport', async () => {
+    it.only('should periodically call .publishEvent on the underlying Transport', async () => {
       const test = makeTest({
         localTracks: [
           { id: '1', kind: 'audio' },
@@ -118,7 +118,10 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee'
+            baz: 'zee',
+            localCandidate: {
+              relayProtocol: 'bar'
+            }
           }
         ],
         [
@@ -178,7 +181,10 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee'
+            baz: 'zee',
+            localCandidate: {
+              relayProtocol: 'bar'
+            }
           }
         ],
         [
@@ -228,6 +234,13 @@ describe('RoomV2', () => {
         if (name === 'stats-report') {
           assert.deepEqual(payload, expectedArgs[i][2]);
           return;
+        }
+        if (name === 'active-ice-candidate-pair') {
+          if (expectedArgs[i][2].localCandidate) {
+            assert(payload.localCandidate.relayProtocol);
+          } else {
+            assert(!payload.localCandidate.relayProtocol);
+          }
         }
         assert.equal(payload.peerConnectionId, expectedArgs[i][2].peerConnectionId);
         const payloadProp = {
@@ -1901,7 +1914,12 @@ function makePeerConnectionManager(getRoom) {
 
     return new Map([
       ['foo', {
-        activeIceCandidatePair: { baz: 'zee' },
+        activeIceCandidatePair: {
+          baz: 'zee',
+          localCandidate: {
+            relayProtocol: 'bar'
+          }
+        },
         localAudioTrackStats,
         localVideoTrackStats,
         remoteAudioTrackStats,
