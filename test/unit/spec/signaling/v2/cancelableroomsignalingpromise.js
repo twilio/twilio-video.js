@@ -117,8 +117,8 @@ describe('createCancelableRoomSignalingPromise', () => {
       name: 'case 1: no bandwidth profile specified',
       options: {
         bandwidthProfile: undefined,
-        idleTrackSwitchOff: true,
-        renderHints: true,
+        subscribedTrackSwitchOffMode: 'auto',
+        contentPreferencesMode: 'auto',
       },
       expected: {
         trackPriority: false,
@@ -127,11 +127,11 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 2: idleTrackSwitchOff enabled',
+      name: 'case 2: subscribedTrackSwitchOffMode(manual) contentPreferencesMode(auto)',
       options: {
         bandwidthProfile: {},
-        idleTrackSwitchOff: true,
-        renderHints: false,
+        subscribedTrackSwitchOffMode: 'manual',
+        contentPreferencesMode: 'auto',
       },
       expected: {
         trackPriority: true,
@@ -140,11 +140,11 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 3: renderHints enabled',
+      name: 'case 2: subscribedTrackSwitchOffMode(manual) contentPreferencesMode(disabled)',
       options: {
         bandwidthProfile: {},
-        idleTrackSwitchOff: false,
-        renderHints: true,
+        subscribedTrackSwitchOffMode: 'manual',
+        contentPreferencesMode: 'disabled',
       },
       expected: {
         trackPriority: true,
@@ -153,11 +153,11 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 3: no render_hints channel needed',
+      name: 'case 3: subscribedTrackSwitchOffMode(disabled) contentPreferencesMode(disabled)',
       options: {
         bandwidthProfile: {},
-        idleTrackSwitchOff: false,
-        renderHints: false,
+        subscribedTrackSwitchOffMode: 'disabled',
+        contentPreferencesMode: 'disabled',
       },
       expected: {
         trackPriority: true,

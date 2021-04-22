@@ -236,7 +236,8 @@ async function initRoom() {
     maxVideoBitrate: 200,
     bandwidthProfile: {
       video: {
-        idleTrackSwitchOff: false,
+        subscribedTrackSwitchOffMode: 'auto',
+        contentPreferencesMode: 'auto',
         dominantSpeakerPriority: 'high',
         renderDimensions: {
           low: {
@@ -256,12 +257,12 @@ async function initRoom() {
     },
   });
 
-  // with renderDimensions=auto
+  // with manual contentPreferencesMode mode.
   await Video.connect('$TOKEN', {
     bandwidthProfile: {
       video: {
-        idleTrackSwitchOff: true,
-        renderDimensions: 'auto'
+        contentPreferencesMode: 'manual',
+        subscribedTrackSwitchOffMode: 'manual',
       }
     },
   });

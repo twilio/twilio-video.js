@@ -125,6 +125,39 @@ describe('connect', function() {
     });
   });
 
+  describe('should return a CancelablePromise that rejects when called with invalid bandwidth Profile options: ', () => {
+    [
+      {
+        name: 'both maxTracks and subscriberTrackSwitchOffMode=auto specified',
+        bandwidthProfile: { video: { maxTracks: 5,  subscribedTrackSwitchOffMode: 'auto' } }
+      },
+      {
+        name: 'both maxTracks and subscriberTrackSwitchOffMode=manual specified',
+        bandwidthProfile: { video: { maxTracks: 5,  subscribedTrackSwitchOffMode: 'manual' } }
+      },
+      {
+        name: 'both renderDimensions and contentPreferencesMode=auto specified',
+        bandwidthProfile: { video: { renderDimensions: {},  contentPreferencesMode: 'auto' } }
+      },
+      {
+        name: 'both renderDimensions and contentPreferencesMode=manual specified',
+        bandwidthProfile: { video: { renderDimensions: {},  contentPreferencesMode: 'manual' } }
+      },
+    ].forEach(testCase => {
+      it(testCase.name, async () => {
+        try {
+          const identity = randomName();
+          const token = getToken(identity);
+          const room = await connect(token, Object.assign({}, defaults, { bandwidthProfile: testCase.bandwidthProfile }));
+          room.disconnect();
+          throw new Error(`Connected to ${room.sid} with an invalid bandwidthProfile`);
+        } catch (error) {
+          assert(error instanceof TypeError);
+        }
+      });
+    });
+  });
+
   describe(`automaticSubscription (${defaults.topology} topology)`, () => {
     [undefined, true, false].forEach(automaticSubscription => {
       const automaticSubscriptionOptions = typeof automaticSubscription === 'boolean'
