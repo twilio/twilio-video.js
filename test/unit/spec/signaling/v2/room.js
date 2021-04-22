@@ -463,7 +463,12 @@ describe('RoomV2', () => {
       ];
       assert.deepEqual([...reports.values()], [
         {
-          activeIceCandidatePair: { baz: 'zee' },
+          activeIceCandidatePair: {
+            baz: 'zee',
+            localCandidate: {
+              relayProtocol: 'bar'
+            }
+          },
           localAudioTrackStats,
           localVideoTrackStats,
           remoteAudioTrackStats,
