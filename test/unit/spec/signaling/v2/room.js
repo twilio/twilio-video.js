@@ -118,9 +118,9 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee',
+            includesRelayProtocol: true,
             localCandidate: {
-              relayProtocol: 'bar'
+              relayProtocol: 'udp'
             }
           }
         ],
@@ -140,7 +140,7 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'bar',
-            zee: 'foo'
+            includesRelayProtocol: false
           }
         ],
         [
@@ -181,9 +181,9 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee',
+            includesRelayProtocol: true,
             localCandidate: {
-              relayProtocol: 'bar'
+              relayProtocol: 'udp'
             }
           }
         ],
@@ -203,7 +203,7 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'bar',
-            zee: 'foo'
+            includesRelayProtocol: false
           }
         ],
         [
@@ -236,7 +236,7 @@ describe('RoomV2', () => {
           return;
         }
         if (name === 'active-ice-candidate-pair') {
-          if (expectedArgs[i][2].localCandidate) {
+          if (expectedArgs[i][2].includesRelayProtocol) {
             assert(payload.localCandidate.relayProtocol);
           } else {
             assert(!payload.localCandidate.relayProtocol);
@@ -464,9 +464,9 @@ describe('RoomV2', () => {
       assert.deepEqual([...reports.values()], [
         {
           activeIceCandidatePair: {
-            baz: 'zee',
+            includesRelayProtocol: true,
             localCandidate: {
-              relayProtocol: 'bar'
+              relayProtocol: 'udp'
             }
           },
           localAudioTrackStats,
@@ -475,7 +475,7 @@ describe('RoomV2', () => {
           remoteVideoTrackStats
         },
         {
-          activeIceCandidatePair: { zee: 'foo' },
+          activeIceCandidatePair: { includesRelayProtocol: false },
           localAudioTrackStats,
           localVideoTrackStats,
           remoteAudioTrackStats,
@@ -1920,9 +1920,9 @@ function makePeerConnectionManager(getRoom) {
     return new Map([
       ['foo', {
         activeIceCandidatePair: {
-          baz: 'zee',
+          includesRelayProtocol: true,
           localCandidate: {
-            relayProtocol: 'bar'
+            relayProtocol: 'udp'
           }
         },
         localAudioTrackStats,
@@ -1931,7 +1931,7 @@ function makePeerConnectionManager(getRoom) {
         remoteVideoTrackStats
       }],
       ['bar', {
-        activeIceCandidatePair: { zee: 'foo' },
+        activeIceCandidatePair: { includesRelayProtocol: false },
         localAudioTrackStats,
         localVideoTrackStats,
         remoteAudioTrackStats,
