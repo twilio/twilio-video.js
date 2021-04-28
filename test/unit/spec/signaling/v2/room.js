@@ -119,9 +119,7 @@ describe('RoomV2', () => {
           {
             peerConnectionId: 'foo',
             includesRelayProtocol: true,
-            localCandidate: {
-              relayProtocol: 'udp'
-            }
+            relayProtocol: 'udp'
           }
         ],
         [
@@ -182,9 +180,7 @@ describe('RoomV2', () => {
           {
             peerConnectionId: 'foo',
             includesRelayProtocol: true,
-            localCandidate: {
-              relayProtocol: 'udp'
-            }
+            relayProtocol: 'udp'
           }
         ],
         [
@@ -237,9 +233,9 @@ describe('RoomV2', () => {
         }
         if (name === 'active-ice-candidate-pair') {
           if (expectedArgs[i][2].includesRelayProtocol) {
-            assert(payload.localCandidate.relayProtocol);
+            assert(payload.relayProtocol);
           } else {
-            assert(!payload.localCandidate.relayProtocol);
+            assert(!payload.relayProtocol);
           }
         }
         assert.equal(payload.peerConnectionId, expectedArgs[i][2].peerConnectionId);
@@ -465,9 +461,7 @@ describe('RoomV2', () => {
         {
           activeIceCandidatePair: {
             includesRelayProtocol: true,
-            localCandidate: {
-              relayProtocol: 'udp'
-            }
+            relayProtocol: 'udp'
           },
           localAudioTrackStats,
           localVideoTrackStats,
@@ -1921,9 +1915,7 @@ function makePeerConnectionManager(getRoom) {
       ['foo', {
         activeIceCandidatePair: {
           includesRelayProtocol: true,
-          localCandidate: {
-            relayProtocol: 'udp'
-          }
+          relayProtocol: 'udp'
         },
         localAudioTrackStats,
         localVideoTrackStats,
