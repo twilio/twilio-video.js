@@ -27,7 +27,7 @@ Both of these features are available in Group Rooms and are enabled by default i
   ```ts
   const { connect } = require('twilio-video');
   const room = await connect(token, {
-    name: "my-new-room",
+    name: 'my-new-room',
     bandwidthProfile: {
       video: {
         /* Defaults to "auto" for both features. Be sure to remove "renderDimensions" and "maxTracks". */
@@ -46,8 +46,8 @@ The automatic behaviors rely on applications using the [attach](https://media.tw
   const room = await connect(token, {
     bandwidthProfile: {
       video: {
-        contentPreferencesMode: "manual",
-        clientTrackSwitchOffControl: "manual"
+        contentPreferencesMode: 'manual',
+        clientTrackSwitchOffControl: 'manual'
       }
     }
   });
@@ -67,7 +67,7 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
   # Only needed if switchOff() was called first.
   remoteTrack.switchOn();
   remoteTrack.setContentPreferences({
-      renderDimensions: { width:  320, height: 240 }
+    renderDimensions: { width: 320, height: 240 }
   });
   ```
 
@@ -75,7 +75,7 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
 
   ```ts
   remoteTrack.setContentPreferences({
-      renderDimensions: { width:  1280, height: 720 }
+    renderDimensions: { width: 1280, height: 720 }
   });
   ```
 
@@ -92,7 +92,6 @@ Bug Fixes
 
 - Fixed a bug where loading `twilio-video.js` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
 - Fixed LocalDataTrackOptions TypeScript Definition to match documentation and extend properties from LocalTrackOptions. (VIDEO-5116)
-
 
 2.13.1 (March 17, 2021)
 =======================
