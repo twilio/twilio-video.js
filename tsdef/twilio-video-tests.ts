@@ -236,7 +236,7 @@ async function initRoom() {
     maxVideoBitrate: 200,
     bandwidthProfile: {
       video: {
-        subscribedTrackSwitchOffMode: 'auto',
+        clientTrackSwitchOffControl: 'auto',
         contentPreferencesMode: 'auto',
         dominantSpeakerPriority: 'high',
         renderDimensions: {
@@ -262,7 +262,7 @@ async function initRoom() {
     bandwidthProfile: {
       video: {
         contentPreferencesMode: 'manual',
-        subscribedTrackSwitchOffMode: 'manual',
+        clientTrackSwitchOffControl: 'manual',
       }
     },
   });

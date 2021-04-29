@@ -8,12 +8,12 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-**Subscribed Track Switch Off**
+**Client Track Switch Off Control**
 
-- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Subscribed track switch off has two modes of operation:
+- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client track switch off control has two modes of operation:
   - **auto** (default): The SDK determines whether tracks should be switched off based on document visibility, track attachments, and / or the visibility of video elements.
   - **manual**: The application requests that individual tracks be switched off or on using the `RemoteVideoTrack.switchOff()` / `switchOn()` methods.
-- Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `subscribedTrackSwitchOffMode` to take advantage of this feature.
+- Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `clientTrackSwitchOffControl` to take advantage of this feature.
 
 **Video Content Preferences**
 
@@ -47,7 +47,7 @@ The automatic behaviors rely on applications using the [attach](https://media.tw
     bandwidthProfile: {
       video: {
         contentPreferencesMode: "manual",
-        subscribedTrackSwitchOffMode: "manual"
+        clientTrackSwitchOffControl: "manual"
       }
     }
   });
@@ -79,13 +79,13 @@ When manual controls are used you can operate directly on `RemoteVideoTrack` to 
   });
   ```
 
-- `subscribedTrackSwitchOffMode` Optional property (defaults to `"auto"`).  When omitted or set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
+- `clientTrackSwitchOffControl` Optional property (defaults to `"auto"`).  When omitted or set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
 
 - `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
 
 - `renderDimensions` is deprecated and will raise a warning when set. Setting both `renderDimensions` and `contentPreferencesMode` is not allowed and will raise an exception.
 
-- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `subscribedTrackSwitchOffMode` is not allowed and will raise an exception.
+- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `clientTrackSwitchOffControl` is not allowed and will raise an exception.
 
 Bug Fixes
 ---------

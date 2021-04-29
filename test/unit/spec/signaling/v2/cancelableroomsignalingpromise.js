@@ -117,7 +117,7 @@ describe('createCancelableRoomSignalingPromise', () => {
       name: 'case 1: no bandwidth profile specified',
       options: {
         bandwidthProfile: undefined,
-        subscribedTrackSwitchOffMode: 'auto',
+        clientTrackSwitchOffControl: 'auto',
         contentPreferencesMode: 'auto',
       },
       expected: {
@@ -127,10 +127,10 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 2: subscribedTrackSwitchOffMode(manual) contentPreferencesMode(auto)',
+      name: 'case 2: clientTrackSwitchOffControl(manual) contentPreferencesMode(auto)',
       options: {
         bandwidthProfile: {},
-        subscribedTrackSwitchOffMode: 'manual',
+        clientTrackSwitchOffControl: 'manual',
         contentPreferencesMode: 'auto',
       },
       expected: {
@@ -140,10 +140,10 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 2: subscribedTrackSwitchOffMode(manual) contentPreferencesMode(disabled)',
+      name: 'case 2: clientTrackSwitchOffControl(manual) contentPreferencesMode(disabled)',
       options: {
         bandwidthProfile: {},
-        subscribedTrackSwitchOffMode: 'manual',
+        clientTrackSwitchOffControl: 'manual',
         contentPreferencesMode: 'disabled',
       },
       expected: {
@@ -153,10 +153,10 @@ describe('createCancelableRoomSignalingPromise', () => {
       }
     },
     {
-      name: 'case 3: subscribedTrackSwitchOffMode(disabled) contentPreferencesMode(disabled)',
+      name: 'case 3: clientTrackSwitchOffControl(disabled) contentPreferencesMode(disabled)',
       options: {
         bandwidthProfile: {},
-        subscribedTrackSwitchOffMode: 'disabled',
+        clientTrackSwitchOffControl: 'disabled',
         contentPreferencesMode: 'disabled',
       },
       expected: {
