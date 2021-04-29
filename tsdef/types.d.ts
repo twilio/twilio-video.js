@@ -92,7 +92,7 @@ export type TrackSwitchOffMode = 'detected' | 'predicted' | 'disabled';
 export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
 export type VideoContentPreferencesMode = 'auto' | 'manual';
-export type clientTrackSwitchOffControl = 'auto' | 'manual';
+export type ClientTrackSwitchOffControl = 'auto' | 'manual';
 
 /**
 * @deprecated
@@ -113,10 +113,10 @@ export interface VideoBandwidthProfileOptions {
   maxTracks?: number;
   mode?: BandwidthProfileMode;
   /**
-  * @deprecated use contentPreferences instead
+  * @deprecated use contentPreferencesMode instead
   */
   renderDimensions?: VideoRenderDimensions;
-  clientTrackSwitchOffControl?: clientTrackSwitchOffControl;
+  clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
