@@ -91,6 +91,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where loading `twilio-video.js` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
+- Fixed LocalDataTrackOptions TypeScript Definition to match documentation and extend properties from LocalTrackOptions. (VIDEO-5116)
 
 
 2.13.1 (March 17, 2021)
