@@ -92,7 +92,7 @@ export type TrackSwitchOffMode = 'detected' | 'predicted' | 'disabled';
 export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
 export type VideoContentPreferencesMode = 'auto' | 'manual';
-export type SubscribedTrackSwitchOffMode = 'auto' | 'manual';
+export type clientTrackSwitchOffControl = 'auto' | 'manual';
 
 /**
 * @deprecated
@@ -108,7 +108,7 @@ export interface VideoBandwidthProfileOptions {
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
   /**
-  * @deprecated use subscribedTrackSwitchOffMode instead
+  * @deprecated use clientTrackSwitchOffControl instead
   */
   maxTracks?: number;
   mode?: BandwidthProfileMode;
@@ -116,7 +116,7 @@ export interface VideoBandwidthProfileOptions {
   * @deprecated use contentPreferences instead
   */
   renderDimensions?: VideoRenderDimensions;
-  subscribedTrackSwitchOffMode?: SubscribedTrackSwitchOffMode;
+  clientTrackSwitchOffControl?: clientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
