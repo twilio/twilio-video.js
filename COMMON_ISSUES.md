@@ -69,10 +69,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari mobile
 <details>
-<summary>Mobile Safari Participants on iOS 13.0.1 sometimes fail to send audio</summary>
+<summary>Mobile Safari Participants on iOS 13.1-13.3 sometimes fail to send audio</summary>
 <p>
     
-   This issue happened due to regression on iOS 13.0.1. Find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=202405). 
+   This issue happened due to regression on iOS 13.1. The fix was released by Apple in iOS 13.4. Find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=202405). 
 </p>  
 </details>
 <details>
