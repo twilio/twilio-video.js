@@ -1,10 +1,8 @@
 Common Issues
 =============
 
-Do you experience an issue with twilio-video.js?
-Please review this list of known issues and workarounds before opening a new ticket.  
-We recommend regularly upgrading to the latest version of the SDK, which includes bug fixes and improvements, see 
-[CHANGELOG.md](CHANGELOG.md).
+Are you experiencing an issue with twilio-video.js? Please review this list of known issues and workarounds
+before opening a new issue. We recommend regularly upgrading to the latest version of the SDK, which includes new features, bug fixes and improvements (see [CHANGELOG.md](CHANGELOG.md)).
 
 
 ### Chrome desktop
@@ -12,7 +10,7 @@ We recommend regularly upgrading to the latest version of the SDK, which include
 <summary>Chrome memory leak might cause degraded experience in group rooms</summary>
 <p>
   
-   Chrome browser has a memory leak, which is most apparent in long running group rooms with 30+ participants if most of them share media tracks. Find more info [here](https://github.com/twilio/twilio-video.js/issues/1449)
+   Chrome has a memory leak, which is most apparent in long running Group Rooms with 30+ Participants with most of them share media. For details, go [here](https://github.com/twilio/twilio-video.js/issues/1449).
 </p>
 </details>
 
@@ -21,7 +19,7 @@ We recommend regularly upgrading to the latest version of the SDK, which include
 <summary>Android Chrome on Pixel 3 receives corrupted video frames with codec VP8</summary>
 <p>
   
-   It is an issue in the hardware VP8 encoder on the Pixel 3 devices. See [WebRTC ticket](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337).    To workaorund this issue you can prefer codec H264 on Pixel 3, find code example [here](https://github.com/twilio/video-quickstart-android/issues/470#issuecomment-623042880). 
+   This is an issue in the hardware VP8 encoder on the Pixel 3 devices. See [WebRTC ticket](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337). To work around this issue, please set H264 as the preferred video codec on Pixel 3. ([Example](https://github.com/twilio/video-quickstart-android/issues/470#issuecomment-623042880)). 
 </p>  
 </details>
 <details>
@@ -39,7 +37,7 @@ We recommend regularly upgrading to the latest version of the SDK, which include
 <summary>Echo issues in Safari when using external microphone</summary>
 <p>
   
-   It is an echo cancellation bug in Safari's implementation of WebRTC. Find more info [here](https://bugs.webkit.org/show_bug.cgi?id=213723)  
+   This is an echo cancellation bug in Safari's implementation of WebRTC. For more details, go [here](https://bugs.webkit.org/show_bug.cgi?id=213723).
    and [here](https://github.com/twilio/twilio-video.js/issues/1433) 
 </p>  
 </details>
