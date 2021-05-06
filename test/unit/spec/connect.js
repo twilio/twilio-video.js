@@ -14,7 +14,7 @@ const {
   WS_SERVER,
   DEFAULT_REGION,
   subscriptionMode,
-  subscribedTrackSwitchOffMode,
+  clientTrackSwitchOffControl,
   trackSwitchOffMode,
   trackPriority,
   videoContentPreferencesMode,
@@ -167,7 +167,7 @@ describe('connect', () => {
     const subscriptionModes = Object.values(subscriptionMode);
     const trackPriorities = Object.values(trackPriority);
     const trackSwitchOffModes = Object.values(trackSwitchOffMode);
-    const subscribedTrackSwitchOffModes = Object.values(subscribedTrackSwitchOffMode);
+    const clientTrackSwitchOffControls = Object.values(clientTrackSwitchOffControl);
     const contentPreferencesModes = Object.values(videoContentPreferencesMode);
 
     let mockSignaling;
@@ -212,14 +212,14 @@ describe('connect', () => {
       [{ video: { renderDimensions: { standard: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.standard.width is not a number', TypeError, 'number'],
       [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
       [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
-      [{ video: { subscribedTrackSwitchOffMode: 2 } }, `whose .video.subscribedTrackSwitchOffMode is not one of ${subscribedTrackSwitchOffModes.join(', ')}`, RangeError, subscribedTrackSwitchOffModes],
-      [{ video: { subscribedTrackSwitchOffMode: 'foo' } }, `whose .video.subscribedTrackSwitchOffMode is not one of ${subscribedTrackSwitchOffModes.join(', ')}`, RangeError, subscribedTrackSwitchOffModes],
-      [{ video: { subscribedTrackSwitchOffMode: 'auto', maxTracks: 5 } }, 'which specified both maxTracks and subscribedTrackSwitchOffMode', Error, 'options.bandwidthProfile.video.maTracks is deprecated. Use options.bandwidthProfile.video.subscribedTrackSwitchOffMode instead'],
-      [{ video: { subscribedTrackSwitchOffMode: 'manual', maxTracks: 5 } }, 'which specified both maxTracks and subscribedTrackSwitchOffMode', Error, 'options.bandwidthProfile.video.maTracks is deprecated. Use options.bandwidthProfile.video.subscribedTrackSwitchOffMode instead'],
+      [{ video: { clientTrackSwitchOffControl: 2 } }, `whose .video.clientTrackSwitchOffControl is not one of ${clientTrackSwitchOffControls.join(', ')}`, RangeError, clientTrackSwitchOffControls],
+      [{ video: { clientTrackSwitchOffControl: 'foo' } }, `whose .video.clientTrackSwitchOffControl is not one of ${clientTrackSwitchOffControls.join(', ')}`, RangeError, clientTrackSwitchOffControls],
+      [{ video: { clientTrackSwitchOffControl: 'auto', maxTracks: 5 } }, 'which specified both maxTracks and clientTrackSwitchOffControl', Error, 'options.bandwidthProfile.video.maxTracks is deprecated. Use options.bandwidthProfile.video.clientTrackSwitchOffControl instead.'],
+      [{ video: { clientTrackSwitchOffControl: 'manual', maxTracks: 5 } }, 'which specified both maxTracks and clientTrackSwitchOffControl', Error, 'options.bandwidthProfile.video.maxTracks is deprecated. Use options.bandwidthProfile.video.clientTrackSwitchOffControl instead.'],
       [{ video: { contentPreferencesMode: 2 } }, `whose .video.videoContentPreferences is not one of ${contentPreferencesModes.join(', ')}`, RangeError, contentPreferencesModes],
       [{ video: { contentPreferencesMode: 'foo' } }, `whose .video.videoContentPreferences is not one of ${contentPreferencesModes.join(', ')}`, RangeError, contentPreferencesModes],
-      [{ video: { contentPreferencesMode: 'auto', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead'],
-      [{ video: { contentPreferencesMode: 'manual', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead'],
+      [{ video: { contentPreferencesMode: 'auto', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead.'],
+      [{ video: { contentPreferencesMode: 'manual', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead.'],
     ].forEach(([bandwidthProfile, scenario, ExpectedError, expectedTypeOrValues]) => {
       context(scenario, () => {
         it(`should reject the CancelablePromise with a ${ExpectedError.name}`, async () => {

@@ -129,11 +129,11 @@ describe('connect', function() {
     [
       {
         name: 'both maxTracks and subscriberTrackSwitchOffMode=auto specified',
-        bandwidthProfile: { video: { maxTracks: 5,  subscribedTrackSwitchOffMode: 'auto' } }
+        bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'auto' } }
       },
       {
         name: 'both maxTracks and subscriberTrackSwitchOffMode=manual specified',
-        bandwidthProfile: { video: { maxTracks: 5,  subscribedTrackSwitchOffMode: 'manual' } }
+        bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'manual' } }
       },
       {
         name: 'both renderDimensions and contentPreferencesMode=auto specified',

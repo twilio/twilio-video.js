@@ -14,7 +14,7 @@ describe('RemoteVideoTrack', () => {
   combinationContext([
     [
       ['auto', 'manual', 'disabled', undefined],
-      x => `when subscribedTrackSwitchOffMode is ${typeof x === 'string' ? `set to ${x}` : 'not set'}`
+      x => `when clientTrackSwitchOffControl is ${typeof x === 'string' ? `set to ${x}` : 'not set'}`
     ],
     [
       ['auto', 'manual', 'disabled', undefined],
@@ -24,7 +24,7 @@ describe('RemoteVideoTrack', () => {
       [true, false, undefined],
       x => `when enableDocumentVisibilityTurnOff is ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
     ],
-  ], ([subscribedTrackSwitchOffMode, contentPreferencesMode, enableDocumentVisibilityTurnOff]) => {
+  ], ([clientTrackSwitchOffControl, contentPreferencesMode, enableDocumentVisibilityTurnOff]) => {
     let track;
     let el;
     let IntersectionObserverSpy;
@@ -43,8 +43,8 @@ describe('RemoteVideoTrack', () => {
       if (typeof enableDocumentVisibilityTurnOff === 'boolean') {
         options.enableDocumentVisibilityTurnOff = enableDocumentVisibilityTurnOff;
       }
-      if (typeof subscribedTrackSwitchOffMode === 'string') {
-        options.subscribedTrackSwitchOffMode = subscribedTrackSwitchOffMode;
+      if (typeof clientTrackSwitchOffControl === 'string') {
+        options.clientTrackSwitchOffControl = clientTrackSwitchOffControl;
       }
       if (typeof contentPreferencesMode === 'string') {
         options.contentPreferencesMode = contentPreferencesMode;
@@ -56,6 +56,11 @@ describe('RemoteVideoTrack', () => {
       documentVisibilityMonitor.clear();
       addEventListenerStub = sinon.spy(document, 'addEventListener');
       removeEventListenerStub = sinon.spy(document, 'removeEventListener');
+
+      const dummyElement = { oncanplay: sinon.spy() };
+      document.createElement = sinon.spy(() => {
+        return dummyElement;
+      });
 
       el = document.createElement('video');
       setRenderHintsSpy = sinon.spy();
@@ -75,15 +80,15 @@ describe('RemoteVideoTrack', () => {
       }
     });
 
-    const effectiveSubscribedTrackSwitchOffMode = subscribedTrackSwitchOffMode || 'auto';
+    const effectiveclientTrackSwitchOffControl = clientTrackSwitchOffControl || 'auto';
     const effectiveContentPreferencesMode = contentPreferencesMode || 'auto';
-    const effectiveDocVisibility = effectiveSubscribedTrackSwitchOffMode === 'auto' && enableDocumentVisibilityTurnOff !== false;
-    const autoTrackSwitchOff = effectiveSubscribedTrackSwitchOffMode === 'auto';
+    const effectiveDocVisibility = effectiveclientTrackSwitchOffControl === 'auto' && enableDocumentVisibilityTurnOff !== false;
+    const autoTrackSwitchOff = effectiveclientTrackSwitchOffControl === 'auto';
     const autoContentPreferencesMode = effectiveContentPreferencesMode === 'auto';
 
     describe('constructor', () => {
-      it('sets correct default for _subscribedTrackSwitchOffMode', () => {
-        assert(track._subscribedTrackSwitchOffMode === effectiveSubscribedTrackSwitchOffMode);
+      it('sets correct default for _clientTrackSwitchOffControl', () => {
+        assert(track._clientTrackSwitchOffControl === effectiveclientTrackSwitchOffControl);
       });
 
       it('sets correct default for _contentPreferencesMode', () => {
@@ -144,6 +149,23 @@ describe('RemoteVideoTrack', () => {
       }
     });
 
+    describe('after element receives started event', () => {
+      before(() => {
+        sinon.assert.callCount(setRenderHintsSpy, 0);
+        el.oncanplay(); // simulate started event.
+      });
+
+      if (effectiveclientTrackSwitchOffControl === 'auto') {
+        it('_setRenderHint gets called', () => {
+          sinon.assert.callCount(setRenderHintsSpy, 1);
+        });
+      } else {
+        it('_setRenderHint does not gets called', () => {
+          sinon.assert.callCount(setRenderHintsSpy, 0);
+        });
+      }
+    });
+
     describe('when an element is detached', () => {
       before(() => {
         track.detach(el);
@@ -184,7 +206,7 @@ describe('RemoteVideoTrack', () => {
       beforeEach(() => {
         setRenderHintsSpy.resetHistory();
       });
-      const allowManualSwitchOff = effectiveSubscribedTrackSwitchOffMode === 'manual';
+      const allowManualSwitchOff = effectiveclientTrackSwitchOffControl === 'manual';
       if (allowManualSwitchOff) {
         it('calls _setRenderHint with enable = true', () => {
           track.switchOn();
@@ -198,7 +220,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when bandwidthProfile.video.subscribedTrackSwitchOffMode is set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOn only when bandwidthProfile.video.clientTrackSwitchOffControl is set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }
@@ -208,7 +230,7 @@ describe('RemoteVideoTrack', () => {
       beforeEach(() => {
         setRenderHintsSpy.resetHistory();
       });
-      const allowManualSwitchOff = effectiveSubscribedTrackSwitchOffMode === 'manual';
+      const allowManualSwitchOff = effectiveclientTrackSwitchOffControl === 'manual';
       if (allowManualSwitchOff) {
         it('calls _setRenderHint with enable = false', () => {
           track.switchOff();
@@ -222,7 +244,7 @@ describe('RemoteVideoTrack', () => {
           } catch (error) {
             errorThrown = error;
           }
-          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOff only when bandwidthProfile.video.subscribedTrackSwitchOffMode is set to "manual"');
+          assert.strictEqual(errorThrown.message, 'Invalid state. You can call switchOff only when bandwidthProfile.video.clientTrackSwitchOffControl is set to "manual"');
           sinon.assert.notCalled(setRenderHintsSpy);
         });
       }
