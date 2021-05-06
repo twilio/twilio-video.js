@@ -142,9 +142,9 @@ export interface VP8CodecSettings extends VideoCodecSettings {
   simulcast?: boolean;
 }
 
-export interface LocalDataTrackOptions {
-  maxPacketLifeTime?: number;
-  maxRetransmits?: number;
+export interface LocalDataTrackOptions extends LocalTrackOptions {
+  maxPacketLifeTime?: number | null;
+  maxRetransmits?: number | null;
   ordered?: boolean;
 }
 
