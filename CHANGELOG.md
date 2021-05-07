@@ -2,15 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-2.14.0 (In Progress)
-====================
+2.14.0 (May 10, 2021)
+=====================
 
 New Features
 ------------
+This release contains a significant update to the Bandwidth Profile API. It allows for more efficient use of bandwidth and CPU in multi-party applications. In addition it provides developers with more dynamic control over which video tracks are delivered to the client and the preferred video resolution of the tracks. These capabilities are provided via the Client Track Switch Off Control and Content Preferences settings.
+
+Existing Bandwidth Profile settings will continue to function as before, however we recommend developers update their Bandwidth Profile settings to make use of these new capabilities at their earliest convenience.
 
 **Client Track Switch Off Control**
 
-- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client track switch off control has two modes of operation:
+- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client Track Switch Off Control has two modes of operation:
   - **auto** (default): The SDK determines whether tracks should be switched off based on document visibility, track attachments, and / or the visibility of video elements.
   - **manual**: The application requests that individual tracks be switched off or on using the `RemoteVideoTrack.switchOff()` / `switchOn()` methods.
 - Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `clientTrackSwitchOffControl` to take advantage of this feature.
@@ -22,7 +25,7 @@ New Features
   - **manual**: The application specifies the content preferences for individual tracks using `RemoteVideoTrack.setContentPreferences()`.
 - Note: If your application previously set the `renderDimensions` property, you should migrate to using `contentPreferencesMode` to take advantage of this feature.
 
-Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
+Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.14.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
 
   ```ts
   const { connect } = require('twilio-video');
