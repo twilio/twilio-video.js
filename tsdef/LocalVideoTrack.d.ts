@@ -1,4 +1,4 @@
-import { LocalTrackOptions } from './types';
+import { LocalTrackOptions } from './LocalTrackOptions';
 import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 

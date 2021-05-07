@@ -19,6 +19,7 @@ export { LocalDataTrack } from './LocalDataTrack';
 export { LocalDataTrackOptions } from './LocalDataTrackOptions';
 export { LocalDataTrackPublication } from './LocalDataTrackPublication';
 export { LocalParticipant } from './LocalParticipant';
+export { LocalTrackOptions } from './LocalTrackOptions';
 export { LocalTrackPublication } from './LocalTrackPublication';
 export { LocalVideoTrack } from './LocalVideoTrack';
 export { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
@@ -51,7 +52,6 @@ export {
   EncodingParameters,
   LocalAudioTrackStats,
   LocalTrack,
-  LocalTrackOptions,
   LocalTrackPublishOptions,
   LocalTrackStats,
   LocalVideoTrackStats,

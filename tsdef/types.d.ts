@@ -14,7 +14,6 @@ import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
-export { LocalTrackOptions } from './LocalTrackOptions';
 export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
 export type RemoteTrack = RemoteAudioTrack | RemoteVideoTrack | RemoteDataTrack;
 export type DataTrack = LocalDataTrack | RemoteDataTrack;

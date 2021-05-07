@@ -1,5 +1,5 @@
 import { AudioTrack } from './AudioTrack';
-import { LocalTrackOptions } from './types';
+import { LocalTrackOptions } from './LocalTrackOptions';
 import { Track } from './Track';
 
 export class LocalAudioTrack extends AudioTrack {
