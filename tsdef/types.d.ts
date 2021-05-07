@@ -2,6 +2,7 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
+import { LocalTrackOptions } from './LocalTrackOptions';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { RemoteAudioTrack } from './RemoteAudioTrack';
@@ -13,6 +14,7 @@ import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
+export { LocalTrackOptions } from './LocalTrackOptions';
 export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
 export type RemoteTrack = RemoteAudioTrack | RemoteVideoTrack | RemoteDataTrack;
 export type DataTrack = LocalDataTrack | RemoteDataTrack;
@@ -140,20 +142,6 @@ export interface VideoCodecSettings {
 export interface VP8CodecSettings extends VideoCodecSettings {
   codec: 'VP8';
   simulcast?: boolean;
-}
-
-export interface LocalDataTrackOptions extends LocalTrackOptions {
-  maxPacketLifeTime?: number | null;
-  maxRetransmits?: number | null;
-  ordered?: boolean;
-}
-
-export interface LocalTrackOptions {
-/**
- * @deprecated
- */
-  logLevel: LogLevel | LogLevels;
-  name?: string;
 }
 
 export interface LocalTrackPublishOptions {

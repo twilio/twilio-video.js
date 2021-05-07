@@ -16,13 +16,13 @@ export { AudioTrack } from './AudioTrack';
 export { LocalAudioTrack } from './LocalAudioTrack';
 export { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 export { LocalDataTrack } from './LocalDataTrack';
+export { LocalDataTrackOptions } from './LocalDataTrackOptions';
 export { LocalDataTrackPublication } from './LocalDataTrackPublication';
 export { LocalParticipant } from './LocalParticipant';
 export { LocalTrackPublication } from './LocalTrackPublication';
 export { LocalVideoTrack } from './LocalVideoTrack';
 export { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 export { Log } from './loglevel';
-export { VideoProcessor } from './VideoProcessor';
 export { Participant } from './Participant';
 export { RemoteAudioTrack } from './RemoteAudioTrack';
 export { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
@@ -50,7 +50,6 @@ export {
   DataTrackPublication,
   EncodingParameters,
   LocalAudioTrackStats,
-  LocalDataTrackOptions,
   LocalTrack,
   LocalTrackOptions,
   LocalTrackPublishOptions,
@@ -83,4 +82,5 @@ export {
   VideoTrackPublication,
   VP8CodecSettings
 } from './types';
+export { VideoProcessor } from './VideoProcessor';
 export { VideoTrack } from './VideoTrack';

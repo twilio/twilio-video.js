@@ -26,7 +26,7 @@ function getAudioTrack(track: Video.LocalAudioTrack) {
 }
 
 function getDataTrack(track: Video.LocalDataTrack) {
-  const localDataTrack = track;
+  const localDataTrack: Video.LocalDataTrack = new Video.LocalDataTrack({ name: 'coolroom', logLevel: 'off' });
   localDataTrack.send('hello world');
 }
 

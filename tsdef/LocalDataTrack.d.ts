@@ -1,4 +1,4 @@
-import { LocalDataTrackOptions } from './types';
+import { LocalDataTrackOptions } from './LocalDataTrackOptions';
 import { Track } from './Track';
 
 export class LocalDataTrack extends Track {
