@@ -30,6 +30,12 @@ function getDataTrack(track: Video.LocalDataTrack) {
   localDataTrack.send('hello world');
 }
 
+function makeDataTrack() {
+  const localTrackOptions: Video.LocalDataTrackOptions = { name: 'coolroom', logLevel: 'off' };
+  const localDataTrack: Video.LocalDataTrack = new Video.LocalDataTrack(localTrackOptions);
+  localDataTrack.send('hello world');
+}
+
 function getVideoTrack(track: Video.LocalVideoTrack) {
   const localVideoTrack = track;
   localVideoTrack.disable();
@@ -236,6 +242,8 @@ async function initRoom() {
     maxVideoBitrate: 200,
     bandwidthProfile: {
       video: {
+        clientTrackSwitchOffControl: 'auto',
+        contentPreferencesMode: 'auto',
         dominantSpeakerPriority: 'high',
         renderDimensions: {
           low: {
@@ -252,6 +260,16 @@ async function initRoom() {
     networkQuality: {
       local: 3,
       remote: 1,
+    },
+  });
+
+  // with manual contentPreferencesMode mode.
+  await Video.connect('$TOKEN', {
+    bandwidthProfile: {
+      video: {
+        contentPreferencesMode: 'manual',
+        clientTrackSwitchOffControl: 'manual',
+      }
     },
   });
 

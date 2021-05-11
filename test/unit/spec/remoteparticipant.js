@@ -1513,7 +1513,7 @@ function makeTest(options) {
   }
   options.trackSignalings = options.trackSignalings || [];
 
-  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, opts) {
+  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, setRenderHitsCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1521,13 +1521,14 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this.setPriority = setPriorityCallback;
+    this._setRenderHint = setRenderHitsCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
     this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
 
-  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, opts) {
+  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, setRenderHitsCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1535,6 +1536,7 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this.setPriority = setPriorityCallback;
+    this._setRenderHint = setRenderHitsCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
     this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
@@ -1569,6 +1571,7 @@ function makeSignaling(options) {
   signaling.identity = options.identity;
   signaling.state = options.state;
   signaling.tracks = options.trackSignalings || [];
+  signaling.clearTrackHint =  sinon.spy();
   return signaling;
 }
 

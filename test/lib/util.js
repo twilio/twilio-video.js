@@ -14,6 +14,7 @@ const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../lib/connect');
 const second = 1000;
+const assert = require('assert');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -712,7 +713,7 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
  * validates that media was flowing in given rooms.
  * @param {Room} room
  * @param {number} testTimeMS
- * @returns {Promise<>}
+ * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
 async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   // wait for some time.
@@ -733,8 +734,20 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
   if (bytesReceivedAfter <= bytesReceivedBefore) {
     throw new Error('no media flow detected');
   }
+  return { bytesReceivedBefore, bytesReceivedAfter, testTimeMS };
 }
 
+async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
+  let mediaFlowDetected = false;
+  try {
+    await validateMediaFlow(room, 2000);
+    mediaFlowDetected = true;
+  } catch (err) {
+    mediaFlowDetected = false;
+  }
+  errorMessage = errorMessage || `Unexpected mediaFlow ${mediaFlowDetected} in ${room.sid}`;
+  assert.equal(mediaFlowDetected, mediaFlowExpected, errorMessage);
+}
 
 exports.a = a;
 exports.capitalize = capitalize;
@@ -770,3 +783,4 @@ exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
 exports.setupAliceAndBob = setupAliceAndBob;
 exports.validateMediaFlow = validateMediaFlow;
+exports.assertMediaFlow = assertMediaFlow;

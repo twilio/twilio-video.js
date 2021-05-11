@@ -1,8 +1,100 @@
 The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
 
-**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. 
+**Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-Support for the 1.x version ended on December 4th, 2020. 
+2.14.0 (May 11, 2021)
+=====================
+
+New Features
+------------
+This release contains a significant update to the Bandwidth Profile API. It allows for more efficient use of bandwidth and CPU in multi-party applications. In addition it provides developers with more dynamic control over which video tracks are delivered to the client and the preferred video resolution of the tracks. These capabilities are provided via the Client Track Switch Off Control and Content Preferences settings.
+
+Existing Bandwidth Profile settings will continue to function as before, however we recommend developers update their Bandwidth Profile settings to make use of these new capabilities at their earliest convenience.
+
+**Client Track Switch Off Control**
+
+- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client Track Switch Off Control has two modes of operation:
+  - **auto** (default): The SDK determines whether tracks should be switched off based on document visibility, track attachments, and / or the visibility of video elements.
+  - **manual**: The application requests that individual tracks be switched off or on using the `RemoteVideoTrack.switchOff()` / `switchOn()` methods.
+- Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `clientTrackSwitchOffControl` to take advantage of this feature.
+
+**Video Content Preferences**
+
+- This feature allows subscribers to specify preferences about the media that they receive on a RemoteVideoTrack. Video content preferences has two modes of operation:
+  - **auto** (default): The SDK specifies content preferences based on video element size. A RemoteVideoTrack attached to a video element with larger dimensions will get a higher quality video compared to a RemoteVideoTrack attached to a video element with smaller dimensions.
+  - **manual**: The application specifies the content preferences for individual tracks using `RemoteVideoTrack.setContentPreferences()`.
+- Note: If your application previously set the `renderDimensions` property, you should migrate to using `contentPreferencesMode` to take advantage of this feature.
+
+Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.14.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
+
+  ```ts
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    name: 'my-new-room',
+    bandwidthProfile: {
+      video: {
+        /* Defaults to "auto" for both features. Be sure to remove "renderDimensions" and "maxTracks". */
+      }
+    }
+  });
+  ```
+
+**Migrating to Attach APIs**
+
+The automatic behaviors rely on applications using the [attach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#attach__anchor) and [detach](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/RemoteVideoTrack.html#detach__anchor) methods of `RemoteVideoTrack`. If your application currently uses the underlying `MediaStreamTrack` to associate Tracks to video elements, you will need to update your application to use the attach/detach methods or use the manual APIs.
+
+**Manual Controls**
+
+  ```ts
+  const room = await connect(token, {
+    bandwidthProfile: {
+      video: {
+        contentPreferencesMode: 'manual',
+        clientTrackSwitchOffControl: 'manual'
+      }
+    }
+  });
+  ```
+
+When manual controls are used you can operate directly on `RemoteVideoTrack` to specify preferences. For example, applications can:
+
+1. Force disabling a track.
+
+  ```ts
+  remoteTrack.switchOff();
+  ```
+
+2. Enable and request QVGA video.
+
+  ```ts
+  # Only needed if switchOff() was called first.
+  remoteTrack.switchOn();
+  remoteTrack.setContentPreferences({
+    renderDimensions: { width: 320, height: 240 }
+  });
+  ```
+
+3. Request HD (720p) video.
+
+  ```ts
+  remoteTrack.setContentPreferences({
+    renderDimensions: { width: 1280, height: 720 }
+  });
+  ```
+
+- `clientTrackSwitchOffControl` Optional property (defaults to `"auto"`).  When omitted or set to "auto" switches off a `RemoteVideoTrack` when no video element is attached to the track, when all attached video elements of the track are not visible, or when the Document is not visible.
+
+- `contentPreferencesMode` Optional property (defaults to `"auto"`). When omitted or set to `"auto"` allows the SDK to select video bitrate based on dimension information of the video elements attached to each `RemoteVideoTrack`.
+
+- `renderDimensions` is deprecated and will raise a warning when set. Setting both `renderDimensions` and `contentPreferencesMode` is not allowed and will raise an exception.
+
+- `maxTracks` is deprecated and will raise a warning when set. Setting both `maxTracks` and `clientTrackSwitchOffControl` is not allowed and will raise an exception.
+
+Bug Fixes
+---------
+
+- Fixed a bug where loading `twilio-video.js` resulted in page errors on Firefox Galaxy S9 simulation mode. (VIDEO-4654)
+- Fixed LocalDataTrackOptions TypeScript Definition to match documentation and extend properties from LocalTrackOptions. (VIDEO-5116)
 
 2.13.1 (March 17, 2021)
 =======================
@@ -68,9 +160,9 @@ New Features
   });
 
   ```
-  
+
   You can also toggle a blur filter on a RemoteVideoTrack as shown below.
-  
+
   ```js
   room.on('trackSubscribed', track => {
     if (track.kind === 'video') {

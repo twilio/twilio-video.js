@@ -8,7 +8,6 @@ const sinon = require('sinon');
 const { flatMap } = require('../../../../../lib/util');
 const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV2 = require('../../../../../lib/signaling/v2/room');
-const RealDominantSpeakerSignaling = require('../../../../../lib/signaling/v2/dominantspeakersignaling');
 const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const RealTrackSwitchOffSignaling = require('../../../../../lib/signaling/v2/trackswitchoffsignaling');
 const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remotetrackpublication');
@@ -119,7 +118,8 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee'
+            includesRelayProtocol: true,
+            relayProtocol: 'udp'
           }
         ],
         [
@@ -138,7 +138,7 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'bar',
-            zee: 'foo'
+            includesRelayProtocol: false
           }
         ],
         [
@@ -179,7 +179,8 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'foo',
-            baz: 'zee'
+            includesRelayProtocol: true,
+            relayProtocol: 'udp'
           }
         ],
         [
@@ -198,7 +199,7 @@ describe('RoomV2', () => {
           'active-ice-candidate-pair',
           {
             peerConnectionId: 'bar',
-            zee: 'foo'
+            includesRelayProtocol: false
           }
         ],
         [
@@ -229,6 +230,13 @@ describe('RoomV2', () => {
         if (name === 'stats-report') {
           assert.deepEqual(payload, expectedArgs[i][2]);
           return;
+        }
+        if (name === 'active-ice-candidate-pair') {
+          if (expectedArgs[i][2].includesRelayProtocol) {
+            assert(payload.relayProtocol);
+          } else {
+            assert(!payload.relayProtocol);
+          }
         }
         assert.equal(payload.peerConnectionId, expectedArgs[i][2].peerConnectionId);
         const payloadProp = {
@@ -314,26 +322,6 @@ describe('RoomV2', () => {
       it('dequeues any enqueued "trackAdded" events', () => {
         const test = makeTest();
         assert(test.peerConnectionManager.dequeue.calledWith('trackAdded'));
-      });
-
-      context('before the getTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-        it('calling getTrackTransceiver resolves to the MediaTrackSender', async () => {
-          const id = makeId();
-          const mediaStreamTrack = { id: id, kind: 'foo' };
-          const trackReceiver = makeTrackReceiver(mediaStreamTrack);
-          const peerConnectionManager = makePeerConnectionManager([], []);
-          peerConnectionManager.getTrackReceivers = () => [trackReceiver];
-
-          const test = makeTest({
-            participants: [
-              { sid: makeSid(), tracks: [] }
-            ],
-            peerConnectionManager: peerConnectionManager
-          });
-
-          const trackTransceiver = await test.participantV2s[0].getTrackTransceiver(id);
-          assert.equal(mediaStreamTrack, trackTransceiver.track);
-        });
       });
     });
   });
@@ -471,14 +459,17 @@ describe('RoomV2', () => {
       ];
       assert.deepEqual([...reports.values()], [
         {
-          activeIceCandidatePair: { baz: 'zee' },
+          activeIceCandidatePair: {
+            includesRelayProtocol: true,
+            relayProtocol: 'udp'
+          },
           localAudioTrackStats,
           localVideoTrackStats,
           remoteAudioTrackStats,
           remoteVideoTrackStats
         },
         {
-          activeIceCandidatePair: { zee: 'foo' },
+          activeIceCandidatePair: { includesRelayProtocol: false },
           localAudioTrackStats,
           localVideoTrackStats,
           remoteAudioTrackStats,
@@ -859,97 +850,6 @@ describe('RoomV2', () => {
           test.transport.publish.args[0][0]);
       });
     });
-
-    context('when the PeerConnectionManager emits a "trackAdded" event for a MediaStreamTrack with an ID that has', () => {
-      context('never been used before', () => {
-        context('before the getTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getTrackTransceiver resolves to the MediaTrackSender', async () => {
-            const test = makeTest({
-              participants: [
-                { sid: makeSid(), tracks: [] }
-              ]
-            });
-            const id = makeId();
-            const mediaStreamTrack = { id: id, kind: 'foo' };
-            const trackReceiver = makeTrackReceiver(mediaStreamTrack);
-            test.peerConnectionManager.emit('trackAdded', trackReceiver);
-            const trackTransceiver = await test.participantV2s[0].getTrackTransceiver(id);
-            assert.equal(mediaStreamTrack, trackTransceiver.track);
-          });
-        });
-
-        context('after the getTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getTrackTransceiver resolves to the MediaTrackSender', async () => {
-            const test = makeTest({
-              participants: [
-                { sid: makeSid(), tracks: [] }
-              ]
-            });
-            const id = makeId();
-            const mediaStreamTrack = { id: id, kind: 'foo' };
-            const trackReceiver = makeTrackReceiver(mediaStreamTrack);
-            const promise = test.participantV2s[0].getTrackTransceiver(id);
-            test.peerConnectionManager.emit('trackAdded', trackReceiver);
-            const trackTransceiver = await promise;
-            assert.equal(mediaStreamTrack, trackTransceiver.track);
-          });
-        });
-      });
-
-      context('been used before', () => {
-        context('before the getTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getTrackTransceiver resolves to the MediaTrackSender', async () => {
-            const test = makeTest({
-              participants: [
-                { sid: makeSid(), tracks: [] }
-              ]
-            });
-
-            const id = makeId();
-            const mediaStreamTrack1 = { id: id, kind: 'audio' };
-            const mediaStreamTrack2 = { id: id, kind: 'video' };
-            const trackReceiver1 = makeTrackReceiver(mediaStreamTrack1);
-            const trackReceiver2 = makeTrackReceiver(mediaStreamTrack2);
-
-            // First usage
-            test.peerConnectionManager.emit('trackAdded', trackReceiver1);
-            await test.participantV2s[0].getTrackTransceiver(id);
-
-            // Second usage
-            test.peerConnectionManager.emit('trackAdded', trackReceiver2);
-            const trackTransceiver2 = await test.participantV2s[0].getTrackTransceiver(id);
-            assert.equal(mediaStreamTrack2, trackTransceiver2.track);
-          });
-        });
-
-        context('after the getTrackTransceiver function passed to RemoteParticipantV2\'s is called with the MediaStreamTrack\'s ID', () => {
-          it('calling getTrackTransceiver resolves to the MediaTrackSender', async () => {
-            const test = makeTest({
-              participants: [
-                { sid: makeSid(), tracks: [] }
-              ]
-            });
-
-            const id = makeId();
-            const mediaStreamTrack1 = { id: id, kind: 'audio' };
-            const mediaStreamTrack2 = { id: id, kind: 'video' };
-            const trackReceiver1 = makeTrackReceiver(mediaStreamTrack1);
-            const trackReceiver2 = makeTrackReceiver(mediaStreamTrack2);
-
-            // First usage
-            let promise = test.participantV2s[0].getTrackTransceiver(id);
-            test.peerConnectionManager.emit('trackAdded', trackReceiver1);
-            await promise;
-
-            // Second usage
-            promise = test.participantV2s[0].getTrackTransceiver(id);
-            test.peerConnectionManager.emit('trackAdded', trackReceiver2);
-            const trackTransceiver2 = await promise;
-            assert.equal(mediaStreamTrack2, trackTransceiver2.track);
-          });
-        });
-      });
-    });
   });
 
   describe('when the Transport emits an "message" event containing Room state', () => {
@@ -1285,8 +1185,8 @@ describe('RoomV2', () => {
     let test;
 
     before(() => {
-      TrackPrioritySignaling = sinon.spy(function(param) {
-        const trackPrioritySignaling =  new RealTrackPrioritySignaling(param);
+      TrackPrioritySignaling = sinon.spy(function(a, b, c, d) {
+        const trackPrioritySignaling =  new RealTrackPrioritySignaling(a, b, c, d);
         if (!trackPrioritySignaling1) {
           trackPrioritySignaling1 = trackPrioritySignaling;
         }
@@ -1365,16 +1265,6 @@ describe('RoomV2', () => {
           sinon.assert.callCount(dataTrackReceiver1.toDataTransport, 1);
         });
 
-        it('should construct a TrackPrioritySignaling with the DataTrackTransport,', () => {
-          sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport1);
-        });
-
-        it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with the TrackPrioritySignaling', () => {
-          [...test.room.participants.values()].forEach(participant => {
-            sinon.assert.calledWith(participant.setTrackPrioritySignaling, trackPrioritySignaling1);
-          });
-        });
-
         describe('when the underlying DataTrackReceiver is closed and a new one is available, and', () => {
           before(() => {
             dataTrackReceiver1.emit('close');
@@ -1383,12 +1273,6 @@ describe('RoomV2', () => {
             dataTrackReceiver2 = makeTrackReceiver({ id: 'bar', kind: 'data' });
             dataTrackReceiver2.toDataTransport = sinon.spy(() => dataTrackTransport2);
             test.peerConnectionManager.emit('trackAdded', dataTrackReceiver2);
-          });
-
-          it('should call .setTrackPrioritySignaling on the RemoteParticipantV2 with null', () => {
-            [...test.room.participants.values()].forEach(participant => {
-              sinon.assert.calledWith(participant.setTrackPrioritySignaling, null);
-            });
           });
 
           describe('when an incoming connect/update RSP message contains the new RTCDataChannel ID of the TrackPriority MSP', () => {
@@ -1409,9 +1293,6 @@ describe('RoomV2', () => {
               sinon.assert.callCount(dataTrackReceiver2.toDataTransport, 1);
             });
 
-            it('should construct a TrackPrioritySignaling with the new DataTrackTransport,', () => {
-              sinon.assert.calledWith(TrackPrioritySignaling, dataTrackTransport2);
-            });
           });
         });
       });
@@ -1424,8 +1305,8 @@ describe('RoomV2', () => {
       let trackSwitchOffSignaling;
       let test;
       beforeEach(() => {
-        TrackSwitchOffSignaling = sinon.spy(function(param) {
-          trackSwitchOffSignaling = new RealTrackSwitchOffSignaling(param);
+        TrackSwitchOffSignaling = sinon.spy(function(a, b, c, d) {
+          trackSwitchOffSignaling = new RealTrackSwitchOffSignaling(a, b, c, d);
           return trackSwitchOffSignaling;
         });
 
@@ -1498,10 +1379,6 @@ describe('RoomV2', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
         });
 
-        it('constructs a TrackSwitchOffSignaling with the DataTrackTransport,', () => {
-          assert(TrackSwitchOffSignaling.calledWith(dataTrackTransport));
-        });
-
         function getTrackSwitchOffPromise(room, trackSid, off) {
           const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
           const track = remoteTracks.find(track => track.sid === trackSid);
@@ -1530,19 +1407,11 @@ describe('RoomV2', () => {
 
   describe('Dominant Speaker', () => {
     describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
-      let DominantSpeakerSignaling;
-      let dominantSpeakerSignaling;
       let dominantSpeaker;
       let test;
       beforeEach(() => {
-        DominantSpeakerSignaling = sinon.spy(function(param) {
-          dominantSpeakerSignaling = new RealDominantSpeakerSignaling(param);
-          return dominantSpeakerSignaling;
-        });
 
-        test = makeTest({
-          DominantSpeakerSignaling
-        });
+        test = makeTest({});
 
         test.room.on('dominantSpeakerChanged', () => {
           dominantSpeaker = test.room.dominantSpeakerSid;
@@ -1579,9 +1448,6 @@ describe('RoomV2', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
         });
 
-        it('constructs a DominantSpeakerSignaling with the DataTrackTransport,', () => {
-          assert(DominantSpeakerSignaling.calledWith(dataTrackTransport));
-        });
 
         it('starts updating when the track emits "message"', () => {
           dataTrackTransport.emit('message', { type: 'active_speaker', participant: 'bob' });
@@ -1622,9 +1488,6 @@ describe('RoomV2', () => {
             assert(dataTrackReceiver2.toDataTransport.calledOnce);
           });
 
-          it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
-            assert(DominantSpeakerSignaling.calledWith(dataTrackReceiver2));
-          });
 
           it('starts updating when new track emits "message"', () => {
             dataTrackReceiver2.emit('message', { type: 'active_speaker', participant: 'Charlie' });
@@ -1640,20 +1503,12 @@ describe('RoomV2', () => {
 
   describe('Network Quality Signaling', () => {
     describe('when update is called with an RSP message that negotiates Network Quality Signaling over RTCDataChannel', () => {
-      let networkQualitySignaling;
-      let NetworkQualitySignaling;
-
       let networkQualityMonitor;
       let NetworkQualityMonitor;
 
       let test;
 
       beforeEach(() => {
-        NetworkQualitySignaling = sinon.spy(function() {
-          networkQualitySignaling = {};
-          return networkQualitySignaling;
-        });
-
         let instanceNumber = 0;
         NetworkQualityMonitor = sinon.spy(function() {
           networkQualityMonitor = new EventEmitter();
@@ -1665,7 +1520,6 @@ describe('RoomV2', () => {
         });
 
         test = makeTest({
-          NetworkQualitySignaling,
           NetworkQualityMonitor,
         });
 
@@ -1698,14 +1552,6 @@ describe('RoomV2', () => {
 
         it('converts the DataTrackReciever to a DataTrackTransport,', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
-        });
-
-        it('constructs a NetworkQualitySignaling with the DataTrackTransport,', () => {
-          assert(NetworkQualitySignaling.calledWith(dataTrackTransport));
-        });
-
-        it('constructs a NetworkQualityMonitor with the NetworkQualitySignaling,', () => {
-          assert(NetworkQualityMonitor.calledWith(test.peerConnectionManager, networkQualitySignaling));
         });
 
         it('calls .start() on the NetworkQualityMonitor, and', () => {
@@ -1829,12 +1675,12 @@ describe('RoomV2', () => {
               assert(dataTrackReceiver2.toDataTransport.calledOnce);
             });
 
-            it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
-              assert(NetworkQualitySignaling.calledWith(dataTrackReceiver2));
-            });
+            // it('constructs new NetworkQualitySignaling with the dataTrackReceiver2,', () => {
+            //   assert(NetworkQualitySignaling.calledWith(dataTrackReceiver2));
+            // });
 
             it('constructs a NetworkQualityMonitor with the NetworkQualitySignaling,', () => {
-              assert(NetworkQualityMonitor.calledWith(test.peerConnectionManager, networkQualitySignaling));
+              // assert(NetworkQualityMonitor.calledWith(test.peerConnectionManager, networkQualitySignaling));
               assert(networkQualityMonitor.instanceNumber === 2);
             });
 
@@ -1854,15 +1700,15 @@ describe('RoomV2', () => {
       });
 
       describe('if the RoomV2 is disconnected before it gets the DataTrackReceiver', () => {
-        let NetworkQualitySignaling;
+        let NetworkQualityMonitor;
 
         let test;
 
         beforeEach(() => {
-          NetworkQualitySignaling = sinon.spy(function() {});
+          NetworkQualityMonitor = sinon.spy(function() {});
 
           test = makeTest({
-            NetworkQualitySignaling
+            NetworkQualityMonitor
           });
 
           test.transport.emit('message', {
@@ -1884,7 +1730,7 @@ describe('RoomV2', () => {
 
           await new Promise(resolve => setTimeout(resolve));
 
-          assert(NetworkQualitySignaling.notCalled);
+          assert(NetworkQualityMonitor.notCalled);
         });
       });
     });
@@ -1977,20 +1823,19 @@ function makeRemoteParticipantV2Constructor(testOptions) {
   testOptions = testOptions || {};
   testOptions.participantV2s = [];
 
-  function RemoteParticipantV2(initialState, getTrackTransceiver) {
+  function RemoteParticipantV2(initialState, getInitialTrackSwitchOffState, setPriority) {
     EventEmitter.call(this);
     this.revision = initialState.revision || 0;
     this.tracks = (initialState.tracks || []).reduce((tracks, track) => tracks.set(track.sid, track), new Map());
     this.state = initialState.state || 'connected';
     this.sid = initialState.sid;
-    this.getTrackTransceiver = getTrackTransceiver;
+    this.updateSubscriberTrackPriority = (trackSid, priority) => setPriority(trackSid, priority);
     this.disconnect = sinon.spy(() => {
       this.state = 'disconnected';
       this.emit('stateChanged', this.state);
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
-    this.setTrackPrioritySignaling = sinon.spy();
     testOptions.participantV2s.push(this);
   }
 
@@ -2068,14 +1913,17 @@ function makePeerConnectionManager(getRoom) {
 
     return new Map([
       ['foo', {
-        activeIceCandidatePair: { baz: 'zee' },
+        activeIceCandidatePair: {
+          includesRelayProtocol: true,
+          relayProtocol: 'udp'
+        },
         localAudioTrackStats,
         localVideoTrackStats,
         remoteAudioTrackStats,
         remoteVideoTrackStats
       }],
       ['bar', {
-        activeIceCandidatePair: { zee: 'foo' },
+        activeIceCandidatePair: { includesRelayProtocol: false },
         localAudioTrackStats,
         localVideoTrackStats,
         remoteAudioTrackStats,
@@ -2135,7 +1983,6 @@ function makeLocalParticipant(options) {
 
   localParticipant.connect = sinon.spy(() => localParticipant.emit('stateChanged', 'connected'));
   localParticipant.reconnecting = sinon.spy(() => localParticipant.emit('stateChanged', 'reconnecting'));
-  localParticipant.setTrackPrioritySignaling = sinon.spy();
   localParticipant.update = sinon.spy(localParticipantState => {
     localParticipantState.tracks.forEach(localTrackState => {
       const localTrackV2 = [...localParticipant.tracks.values()].find(track => track.id === localTrackState.id);

@@ -2,6 +2,7 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
+import { LocalTrackOptions } from './LocalTrackOptions';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { RemoteAudioTrack } from './RemoteAudioTrack';
@@ -91,6 +92,12 @@ export interface LogLevels {
 export type TrackSwitchOffMode = 'detected' | 'predicted' | 'disabled';
 export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
+export type VideoContentPreferencesMode = 'auto' | 'manual';
+export type ClientTrackSwitchOffControl = 'auto' | 'manual';
+
+/**
+* @deprecated
+*/
 export interface VideoRenderDimensions {
   high?: VideoTrack.Dimensions;
   low?: VideoTrack.Dimensions;
@@ -98,11 +105,19 @@ export interface VideoRenderDimensions {
 }
 
 export interface VideoBandwidthProfileOptions {
+  contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
+  /**
+  * @deprecated use clientTrackSwitchOffControl instead
+  */
   maxTracks?: number;
   mode?: BandwidthProfileMode;
+  /**
+  * @deprecated use contentPreferencesMode instead
+  */
   renderDimensions?: VideoRenderDimensions;
+  clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
@@ -128,26 +143,11 @@ export interface VP8CodecSettings extends VideoCodecSettings {
   simulcast?: boolean;
 }
 
-export interface LocalDataTrackOptions {
-  maxPacketLifeTime?: number;
-  maxRetransmits?: number;
-  ordered?: boolean;
-}
-
-export interface LocalTrackOptions {
-/**
- * @deprecated
- */
-  logLevel: LogLevel | LogLevels;
-  name?: string;
-}
-
 export interface LocalTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-export interface MediaStreamTrackPublishOptions {
-  name?: string;
+export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
