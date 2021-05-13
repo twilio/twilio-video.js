@@ -344,5 +344,12 @@ function useConnectionOptions() {
   return connectionOptions;
 }
 
+function runPreflight() {
+  const preflight: Video.Preflight = Video.runPreflight();
+  preflight.start();
+  preflight.stop();
+}
+
 initRoom();
 unpublishTracks();
+runPreflight();

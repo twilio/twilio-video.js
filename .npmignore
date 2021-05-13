@@ -3,6 +3,7 @@
 .github
 .idea
 .travis.yml
+.nyc_output
 *.sw*
 browsers
 coverage
@@ -14,3 +15,4 @@ npm-debug.log
 scripts
 test.json
 test/
+tsbuild

@@ -125,7 +125,7 @@ commands:
       - get-code-and-dependencies
       - run:
           name: Running Unit Tests
-          command: npm run cover
+          command: npm run test:unit
       - store_artifacts:
           path: ./coverage
           prefix: coverage

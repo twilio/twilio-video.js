@@ -11,7 +11,7 @@ build_script:
   - npm run clean
   - npm run lint
   - npm run docs
-  - npm run cover
+  - npm run test:unit
   - npm run build:es5
   - npm run build:js
   - npm run build:min.js

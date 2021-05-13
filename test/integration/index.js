@@ -8,6 +8,7 @@ require('./spec/logger');
 require('./spec/localparticipant');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');
+require('./spec/preflight');
 require('./spec/rest');
 require('./spec/room');
 require('./spec/util/insightspublisher');
