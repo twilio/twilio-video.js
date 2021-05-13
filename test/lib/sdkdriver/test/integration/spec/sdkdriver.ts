@@ -12,7 +12,7 @@ describe('SDKDriver', function() {
     describe(browser, () => {
       context('should create the BrowserDriver and start the web server', () => {
         const version = '1.6.0';
-        const sdkUrl = `//media.twiliocdn.com/sdk/js/video/releases/${version}/twilio-video.js`;
+        const sdkUrl = `//sdk.twilio.com/js/video/releases/${version}/twilio-video.js`;
         let browserDriver: TestDriver;
 
         before(async () => {

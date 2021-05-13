@@ -10,7 +10,7 @@ For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
-* [API Docs](//media.twiliocdn.com/sdk/js/video/latest/docs)
+* [API Docs](//sdk.twilio.com/js/video/latest/docs)
 * [Best Practices Guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices)
 * [Common Issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md)
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
@@ -77,7 +77,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//media.twiliocdn.com/sdk/js/video/releases/2.13.1/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.14.0/twilio-video.min.js"></script>
 
 ```
 
@@ -91,7 +91,7 @@ Usage
 -----
 
 The following is a simple example for connecting to a Room. For more information, refer to the
-[API Docs](//media.twiliocdn.com/sdk/js/video/latest/docs).
+[API Docs](//sdk.twilio.com/js/video/latest/docs).
 
 ```js
 const Video = require('twilio-video');
@@ -155,11 +155,11 @@ connect-src wss://global.vss.twilio.com wss://sdkgw.us1.twilio.com
 media-src mediastream:
 ```
 
-If you're loading twilio-video.js from [media.twiliocdn.com](https://media.twiliocdn.com),
+If you're loading twilio-video.js from `sdk.twilio.com`,
 you should also include the following `script-src` directive:
 
 ```
-script-src https://media.twiliocdn.com
+script-src https://sdk.twilio.com
 ```
 
 Keep in mind, you may need to merge these policy directives with your own if

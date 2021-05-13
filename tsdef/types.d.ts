@@ -2,6 +2,7 @@ import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
 import { LocalDataTrackPublication } from './LocalDataTrackPublication';
+import { LocalTrackOptions } from './LocalTrackOptions';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { RemoteAudioTrack } from './RemoteAudioTrack';
@@ -140,20 +141,6 @@ export interface VideoCodecSettings {
 export interface VP8CodecSettings extends VideoCodecSettings {
   codec: 'VP8';
   simulcast?: boolean;
-}
-
-export interface LocalDataTrackOptions {
-  maxPacketLifeTime?: number;
-  maxRetransmits?: number;
-  ordered?: boolean;
-}
-
-export interface LocalTrackOptions {
-/**
- * @deprecated
- */
-  logLevel: LogLevel | LogLevels;
-  name?: string;
 }
 
 export interface LocalTrackPublishOptions {

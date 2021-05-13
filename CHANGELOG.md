@@ -2,15 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-2.14.0 (In Progress)
-====================
+2.14.0 (May 11, 2021)
+=====================
 
 New Features
 ------------
+This release contains a significant update to the Bandwidth Profile API. It allows for more efficient use of bandwidth and CPU in multi-party applications. In addition it provides developers with more dynamic control over which video tracks are delivered to the client and the preferred video resolution of the tracks. These capabilities are provided via the Client Track Switch Off Control and Content Preferences settings.
+
+Existing Bandwidth Profile settings will continue to function as before, however we recommend developers update their Bandwidth Profile settings to make use of these new capabilities at their earliest convenience.
 
 **Client Track Switch Off Control**
 
-- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client track switch off control has two modes of operation:
+- This feature allows subscribers to control whether the media for a RemoteVideoTrack is received or not. Client Track Switch Off Control has two modes of operation:
   - **auto** (default): The SDK determines whether tracks should be switched off based on document visibility, track attachments, and / or the visibility of video elements.
   - **manual**: The application requests that individual tracks be switched off or on using the `RemoteVideoTrack.switchOff()` / `switchOn()` methods.
 - Note: If your application previously set the `maxTracks` property to limit the number of tracks visible, you should migrate to using `clientTrackSwitchOffControl` to take advantage of this feature.
@@ -22,7 +25,7 @@ New Features
   - **manual**: The application specifies the content preferences for individual tracks using `RemoteVideoTrack.setContentPreferences()`.
 - Note: If your application previously set the `renderDimensions` property, you should migrate to using `contentPreferencesMode` to take advantage of this feature.
 
-Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.12.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
+Both of these features are available in Group Rooms and are enabled by default if your application specifies [Bandwidth Profile Options](https://media.twiliocdn.com/sdk/js/video/releases/2.14.0/docs/global.html#BandwidthProfileOptions__anchor) during connect.
 
   ```ts
   const { connect } = require('twilio-video');
@@ -96,6 +99,11 @@ Bug Fixes
 2.13.1 (March 17, 2021)
 =======================
 
+New Features
+------------
+
+- The [Video Processor API](https://sdk.twilio.com/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) has been promoted to beta. There are no changes to the API at this moment and we will continue to improve it on future releases.
+
 Bug Fixes
 ---------
 
@@ -118,7 +126,7 @@ New Features
   }
   ```
 
-  A VideoTrack provides new methods [addProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) and [removeProcessor](https://media.twiliocdn.com/sdk/js/video/releases/2.13.0/docs/VideoTrack.html#removeProcessor) which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
+  A VideoTrack provides new methods [addProcessor](https://sdk.twilio.com/js/video/releases/2.13.0/docs/VideoTrack.html#addProcessor) and [removeProcessor](https://sdk.twilio.com/js/video/releases/2.13.0/docs/VideoTrack.html#removeProcessor) which can be used to add and remove a VideoProcessor. It also provides a new property `processor` which points to the current VideoProcessor being used by the VideoTrack. For example, you can toggle a blur filter on a LocalVideoTrack as shown below.
 
   ```ts
   import { createLocalVideoTrack } from 'twilio-video';
@@ -352,7 +360,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where a Participant in a large Group Room sometimes gets inadvertently
-  disconnected with a [MediaServerRemoteDescFailedError](https://media.twiliocdn.com/sdk/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
+  disconnected with a [MediaServerRemoteDescFailedError](https://sdk.twilio.com/js/video/releases/2.7.2/docs/MediaServerRemoteDescFailedError.html). (JSDK-2893)
 
 - Fixed a bug where `Room.getStats()` returned stats for only one of the temporal
   layers of a VP8 simulcast VideoTrack. Now, you will have a `LocalVideoTrackStats`
@@ -404,8 +412,8 @@ New Features
   LocalTrack that is published to a Room, you would have to unpublish it, create a new
   LocalTrack with the desired MediaTrackConstraints and publish it to the Room. Now,
   you can just `restart` the LocalTrack with the desired MediaTrackConstraints. For details,
-  please refer to the [LocaAudioTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalAudioTrack.html#restart__anchor)
-  and [LocalVideoTrack.restart()](https://media.twiliocdn.com/sdk/js/video/releases/2.7.0/docs/LocalVideoTrack.html#restart__anchor)
+  please refer to the [LocaAudioTrack.restart()](https://sdk.twilio.com/js/video/releases/2.7.0/docs/LocalAudioTrack.html#restart__anchor)
+  and [LocalVideoTrack.restart()](https://sdk.twilio.com/js/video/releases/2.7.0/docs/LocalVideoTrack.html#restart__anchor)
   documentation. (JSDK-2870)
 
 Bug Fixes
@@ -481,9 +489,9 @@ New Features
 
 - The client now retries connection attempts when `connect()` is called and the signaling server is busy. The client may attempt
   one or more connection attempts with a server specified backoff period. If the client exceeds all attempts
-  the CancelablePromise is rejected with a [SignalingServerBusyError](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/SignalingServerBusyError.html).
-  The status of the signaling connection can now be monitored by passing an [EventListener](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListener__anchor)
-  in ConnectOptions as shown in the code snippet below. Each event is documented [here](https://media.twiliocdn.com/sdk/js/video/releases/2.5.0/docs/global.html#EventListenerEvent). (JSDK-2777)
+  the CancelablePromise is rejected with a [SignalingServerBusyError](https://sdk.twilio.com/js/video/releases/2.5.0/docs/SignalingServerBusyError.html).
+  The status of the signaling connection can now be monitored by passing an [EventListener](https://sdk.twilio.com/js/video/releases/2.5.0/docs/global.html#EventListener__anchor)
+  in ConnectOptions as shown in the code snippet below. Each event is documented [here](https://sdk.twilio.com/js/video/releases/2.5.0/docs/global.html#EventListenerEvent). (JSDK-2777)
 
   ```js
   const { EventEmitter } = require('events');
@@ -766,7 +774,7 @@ New Features
 Bug Fixes
 ---------
 - Worked around an issue in chrome where it would sometimes stop sending updates on screen-share track if `maxVideoBitrate` was set for the track.
-You can limit bitrates on outgoing tracks using [Localparticipant.setParameters](https://media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta16/docs/LocalParticipant.html#setParameters__anchor) api. With this workaround, any bitrates set will not be applied to screen share track on chrome. (JSDK-2557)
+You can limit bitrates on outgoing tracks using [Localparticipant.setParameters](https://sdk.twilio.com/js/video/releases/2.0.0-beta16/docs/LocalParticipant.html#setParameters__anchor) api. With this workaround, any bitrates set will not be applied to screen share track on chrome. (JSDK-2557)
 
 - Fixed a race condition, that would sometimes cause a track to not get published if multiple tracks were added in quick succession (JSDK-2573)
 
@@ -829,7 +837,7 @@ New Features
   You can now configure how your available downlink bandwidth will be distributed
   among your subscribed RemoteVideoTracks by using a new optional ConnectOptions
   parameter `bandwidthProfile`. For more details, please refer to the `BandwidthProfileOptions`
-  [documentation](//media.twiliocdn.com/sdk/js/video/releases/2.0.0-beta14/docs/global.html#BandwidthProfileOptions).
+  [documentation](//sdk.twilio.com/js/video/releases/2.0.0-beta14/docs/global.html#BandwidthProfileOptions).
   Here is an example:
 
   ```js

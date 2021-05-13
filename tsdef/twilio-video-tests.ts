@@ -30,6 +30,12 @@ function getDataTrack(track: Video.LocalDataTrack) {
   localDataTrack.send('hello world');
 }
 
+function makeDataTrack() {
+  const localTrackOptions: Video.LocalDataTrackOptions = { name: 'coolroom', logLevel: 'off' };
+  const localDataTrack: Video.LocalDataTrack = new Video.LocalDataTrack(localTrackOptions);
+  localDataTrack.send('hello world');
+}
+
 function getVideoTrack(track: Video.LocalVideoTrack) {
   const localVideoTrack = track;
   localVideoTrack.disable();
