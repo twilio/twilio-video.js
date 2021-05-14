@@ -135,7 +135,7 @@
     "cover": "istanbul cover node_modules/mocha/bin/_mocha -- ./test/unit/index.js"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#VIDEO-4718/av-sync-metrics",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#dea68ee99426959cdc7d08c5d48e02abe2890650",
     "backoff": "^2.5.0",
     "ws": "^3.3.1",
     "xmlhttprequest": "^1.8.0"
