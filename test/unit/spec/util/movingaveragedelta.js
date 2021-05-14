@@ -24,8 +24,8 @@ describe('MovingAverageDelta', () => {
         movingAverageDelta.putSample(2000, 40);
       });
 
-      it('should return the result of (numerator1 - numerator0)', () => {
-        assert.equal(movingAverageDelta.get(), 1000);
+      it('should return 0', () => {
+        assert.equal(movingAverageDelta.get(), 0);
       });
     });
 
