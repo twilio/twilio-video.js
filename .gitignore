@@ -17,4 +17,6 @@ yarn.lock
 .env
 .idea
 .vscode
+.nyc_output
 pre-commit.sh
+tsbuild

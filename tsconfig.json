@@ -2,14 +2,18 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
+    "declaration": true,
     "target": "es5",
     "lib": ["es5", "es6", "es2016", "es2017.object", "dom"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "outDir": "tsbuild",
     "sourceMap": false,
     "strictNullChecks": true
   },
-  "files": ["tsdef/twilio-video-tests.ts"]
+  "include": [
+    "lib/**/*.ts"
+  ]
 }
