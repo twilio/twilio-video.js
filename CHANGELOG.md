@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug where `isSupported` is returning `true` on certain unsupported mobile browsers. With this release, `isSupported` should now match our list of [supported browsers](https://www.twilio.com/docs/video/javascript#supported-browsers).
+- Fixed a bug where `isSupported` was returning `true` on certain unsupported mobile browsers. With this release, `isSupported` should now return true only for the [browsers supported by twilio-video.js](https://www.twilio.com/docs/video/javascript#supported-browsers).
 
 2.14.0 (May 11, 2021)
 =====================
