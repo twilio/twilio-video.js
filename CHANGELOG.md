@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.14.1 (In Progress)
+=====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where `isSupported` was returning `true` on certain unsupported mobile browsers. With this release, `isSupported` should now return true only for the [browsers supported by twilio-video.js](https://www.twilio.com/docs/video/javascript#supported-browsers).
+
 2.14.0 (May 11, 2021)
 =====================
 
