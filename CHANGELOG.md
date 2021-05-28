@@ -10,6 +10,8 @@ Bug Fixes
 
 - Fixed a bug where `isSupported` was returning `true` on certain unsupported mobile browsers. With this release, `isSupported` should now return true only for the [browsers supported by twilio-video.js](https://www.twilio.com/docs/video/javascript#supported-browsers).
 
+- Updated [NetworkQualityBandwidthStats](https://sdk.twilio.com/js/video/releases/2.14.0/docs/NetworkQualityBandwidthStats.html) documentation to reflect the correct bandwidth units, in bits per second, instead of bytes.
+
 2.14.0 (May 11, 2021)
 =====================
 
