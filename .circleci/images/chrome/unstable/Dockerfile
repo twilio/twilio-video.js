@@ -1,10 +1,10 @@
-FROM circleci/node:10.0.0-stretch
+FROM circleci/node:latest
 
 USER root
 ENV BROWSER='chrome'
 ENV BVER='unstable'
 
-RUN echo "whoami: $(whoami)"
+RUN echo $(whoami)
 RUN echo "Installing Chrome: $BVER" \
 && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
 && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
@@ -12,9 +12,6 @@ RUN echo "Installing Chrome: $BVER" \
 && echo "Installing google-chrome-$BVER from apt-get" \
 && apt-get install -y google-chrome-$BVER \
 && rm -rf /var/lib/apt/lists/*
-
-# TODO(mmalavalli): Add iptables support once network tests are configured
-# to run here.
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
