@@ -21,7 +21,7 @@ processFrame(inputFrame: OffscreenCanvas)
 New signature:
 
 ```ts
-processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: OffscreenCanvas)
+processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: HTMLCanvasElement)
   : Promise<void> | void;
 ```
 
