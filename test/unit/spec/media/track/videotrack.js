@@ -374,7 +374,6 @@ describe('VideoTrack', () => {
     const internalPromise = () => Promise.resolve().then(Promise.resolve());
     let timeoutMs;
     let processFrame;
-    let internalOutputFrame;
 
     beforeEach(() => {
       timeoutMs = Math.floor(1000 / mediaStreamTrackSettings.frameRate);
@@ -390,7 +389,6 @@ describe('VideoTrack', () => {
 
       videoTrack._inputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
       videoTrack._outputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
-      internalOutputFrame = videoTrack._outputFrame;
     });
 
     describe('processFrame', () => {
