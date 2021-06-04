@@ -6,6 +6,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 =====================
 
 **Breaking Change on Video Processor API (Beta)**
+-------------------------------------------------
 
 [VideoProcessor.processFrame](https://sdk.twilio.com/js/video/releases/2.15.0/docs/global.html#VideoProcessor) method signature has been changed in order to improve performance.
 
