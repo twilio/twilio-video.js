@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 **Breaking Change on Video Processor API (Beta)**
 -------------------------------------------------
 
-[VideoProcessor.processFrame](https://sdk.twilio.com/js/video/releases/2.15.0/docs/global.html#VideoProcessor) method signature has been changed in order to improve performance.
+[VideoProcessor.processFrame](https://sdk.twilio.com/js/video/releases/2.15.0/docs/global.html#VideoProcessor) method signature has been changed in order to improve the performance of the [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.0/docs/VideoTrack.html#addProcessor). With this update, the output frame buffer is now provided to the `processFrame` method which should be used to draw the processed frame.
 
 Old signature:
 
@@ -23,6 +23,25 @@ New signature:
 ```ts
 processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: OffscreenCanvas)
   : Promise<void> | void;
+```
+
+Example:
+
+```js
+class GrayScaleProcessor {
+  constructor(percentage) {
+    this.percentage = percentage;
+  }
+  processFrame(inputFrameBuffer, outputFrameBuffer) {
+    const context = outputFrameBuffer.getContext('2d');
+    context.filter = `grayscale(${this.percentage}%)`;
+    context.drawImage(inputFrameBuffer, 0, 0, inputFrameBuffer.width, inputFrameBuffer.height);
+  }
+}
+
+Video.createLocalVideoTrack().then(function(videoTrack) {
+  videoTrack.addProcessor(new GrayScaleProcessor(100));
+});
 ```
 
 Bug Fixes
