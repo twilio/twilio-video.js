@@ -36,7 +36,8 @@ if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
     echo "========================================================="
     echo notpushed > ./logs/notpushed.txt
     SLACK_MESSAGE_TEXT="${BROWSER}-${BVER} is ${NEW_VERSION}"
-    curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
+    CLEANEDUP_SLACK_MESSAGE_TEXT=$(echo $SLACK_MESSAGE_TEXT|tr -d '\n\r\t')
+    curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$CLEANEDUP_SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
     exit 0
 fi
 
@@ -50,7 +51,8 @@ echo "Pushing browserContainer image for ${BROWSER}-${BVER}"
 docker push twilio/twilio-video-browsers:${BROWSER}-${BVER}
 echo pushed > ./logs/pushed.txt
 SLACK_MESSAGE_TEXT="Updated: ${BROWSER}-${BVER} => ${NEW_VERSION}"
-curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
+CLEANEDUP_SLACK_MESSAGE_TEXT=$(echo $SLACK_MESSAGE_TEXT|tr -d '\n\r\t')
+curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$CLEANEDUP_SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
 
 echo "========================================================="
 echo "Done Pushing browserContainer image for ${BROWSER}-${BVER}"
