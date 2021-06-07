@@ -2,8 +2,47 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-2.14.1 (In Progress)
+2.15.0 (In Progress)
 =====================
+
+**Breaking Change on Video Processor API (Beta)**
+-------------------------------------------------
+
+[VideoProcessor.processFrame](https://sdk.twilio.com/js/video/releases/2.15.0/docs/global.html#VideoProcessor) method signature has been changed in order to improve the performance of the [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.0/docs/VideoTrack.html#addProcessor). With this update, the output frame buffer is now provided to the `processFrame` method which should be used to draw the processed frame.
+
+Old signature:
+
+```ts
+processFrame(inputFrame: OffscreenCanvas)
+  : Promise<OffscreenCanvas | null>
+  | OffscreenCanvas | null;
+```
+
+New signature:
+
+```ts
+processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: HTMLCanvasElement)
+  : Promise<void> | void;
+```
+
+Example:
+
+```js
+class GrayScaleProcessor {
+  constructor(percentage) {
+    this.percentage = percentage;
+  }
+  processFrame(inputFrameBuffer, outputFrameBuffer) {
+    const context = outputFrameBuffer.getContext('2d');
+    context.filter = `grayscale(${this.percentage}%)`;
+    context.drawImage(inputFrameBuffer, 0, 0, inputFrameBuffer.width, inputFrameBuffer.height);
+  }
+}
+
+Video.createLocalVideoTrack().then(function(videoTrack) {
+  videoTrack.addProcessor(new GrayScaleProcessor(100));
+});
+```
 
 Bug Fixes
 ---------

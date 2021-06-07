@@ -374,11 +374,11 @@ describe('VideoTrack', () => {
     const internalPromise = () => Promise.resolve().then(Promise.resolve());
     let timeoutMs;
     let processFrame;
-    let internalOutputFrame;
 
     beforeEach(() => {
       timeoutMs = Math.floor(1000 / mediaStreamTrackSettings.frameRate);
       processFrame = sinon.spy();
+      videoTrack.processedTrack = processedTrack;
       videoTrack._attachments.add('foo');
       videoTrack.processor = { processFrame };
 
@@ -389,18 +389,13 @@ describe('VideoTrack', () => {
 
       videoTrack._inputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
       videoTrack._outputFrame = new OffscreenCanvas(mediaStreamTrackSettings.width, mediaStreamTrackSettings.height);
-      internalOutputFrame = videoTrack._outputFrame;
     });
 
     describe('processFrame', () => {
-      beforeEach(() => {
-        videoTrack.processedTrack = processedTrack;
-      });
-
       it('should pass the inputFrames to the processFrame method', () => {
         videoTrack._captureFrames();
         clock.tick(timeoutMs);
-        sinon.assert.calledWith(processFrame, videoTrack._inputFrame);
+        sinon.assert.calledWith(processFrame, videoTrack._inputFrame, videoTrack._outputFrame);
       });
 
       it('should update processedTrack\'s current frame', async () => {
@@ -411,58 +406,17 @@ describe('VideoTrack', () => {
         sinon.assert.calledOnce(processedTrack.requestFrame);
       });
 
-      [{
-        name: 'should draw the processed frame to the outputFrame if the return value is valid and not a promise',
-        getReturnValue: () => 'myframe',
-        expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
-      }, {
-        name: 'should draw the processed frame to the outputFrame if the return value is valid in a promise',
-        getReturnValue: () =>  Promise.resolve('myframe'),
-        expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 1280, height: 720 }
-      }, {
-        name: 'should drop the frame if processFrame throws an exception',
-        getReturnValue: () => { throw new Error('foo'); },
-        expectedDrawing: {}
-      }, {
-        name: 'should drop the frame if the internal output frame is null',
-        getReturnValue: () =>  Promise.resolve('myframe'),
-        expectedDrawing: {},
-        setup: () => {
-          videoTrack._outputFrame = null;
-        }
-      }, {
-        name: 'should drop the frame if processFrame returns null',
-        getReturnValue: () => null,
-        expectedDrawing: {}
-      }, {
-        name: 'should drop the frame if processFrame returns a promise which resolves to null',
-        getReturnValue: () => Promise.resolve(null),
-        expectedDrawing: {}
-      }, {
-        name: 'should update inputFrame dimension at runtime',
-        getReturnValue: () => 'myframe',
-        expectedDrawing: { image: 'myframe', x: 0, y: 0, width: 400, height: 200 },
-        setup: () => {
-          mediaStreamTrackSettings.width = 400;
-          mediaStreamTrackSettings.height = 200;
-        }
-      }].forEach(({ name, getReturnValue, expectedDrawing, setup }) => {
-        it(name, async () => {
-          if (setup) {
-            setup();
-          }
-          videoTrack.processor.processFrame = () => getReturnValue();
-          videoTrack._captureFrames();
-          clock.tick(timeoutMs);
-          await internalPromise();
-          assert.deepEqual(internalOutputFrame.drawing, expectedDrawing);
-          if (expectedDrawing.image) {
-            assert.equal(videoTrack._inputFrame.width, mediaStreamTrackSettings.width);
-            assert.equal(videoTrack._inputFrame.height, mediaStreamTrackSettings.height);
-            assert.equal(videoTrack._outputFrame.width, mediaStreamTrackSettings.width);
-            assert.equal(videoTrack._outputFrame.height, mediaStreamTrackSettings.height);
-          }
-        });
+      it('should update inputFrame dimension at runtime', async () => {
+        mediaStreamTrackSettings.width = 400;
+        mediaStreamTrackSettings.height = 200;
+        videoTrack.processor.processFrame = () => {};
+        videoTrack._captureFrames();
+        clock.tick(timeoutMs);
+        await internalPromise();
+        assert.equal(videoTrack._inputFrame.width, mediaStreamTrackSettings.width);
+        assert.equal(videoTrack._inputFrame.height, mediaStreamTrackSettings.height);
+        assert.equal(videoTrack._outputFrame.width, mediaStreamTrackSettings.width);
+        assert.equal(videoTrack._outputFrame.height, mediaStreamTrackSettings.height);
       });
     });
 
