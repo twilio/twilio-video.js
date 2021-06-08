@@ -19,6 +19,7 @@ let mediaStreamTrackSettings = {
 describe('VideoTrack', () => {
   let captureStream;
   let clock;
+  let eventObserver;
   let videoTrack;
   let mediaStreamTrack;
   let processedTrack;
@@ -46,6 +47,7 @@ describe('VideoTrack', () => {
     videoTrack._attach = sinon.stub();
     videoTrack._selectElement = sinon.stub();
     videoTrack._updateElementsMediaStreamTrack = sinon.stub();
+    eventObserver = videoTrack._processorEventObserver = new EventEmitter();
   });
 
   afterEach(() => {
@@ -187,6 +189,28 @@ describe('VideoTrack', () => {
           assert.equal(videoTrack._outputFrame.height, 0);
         });
 
+        it('should emit add event', () => {
+          videoTrack.processor = null;
+          const listener = sinon.stub();
+          const settings = {
+            width: 400,
+            height: 200,
+            frameRate: 22
+          };
+          eventObserver.on('add', listener);
+          videoTrack.mediaStreamTrack.getSettings = () => settings;
+          videoTrack.addProcessor(processor);
+
+          sinon.assert.calledOnce(listener);
+          sinon.assert.calledWithExactly(listener, {
+            processor,
+            captureHeight: settings.height,
+            captureWidth: settings.width,
+            inputFrameRate: settings.frameRate,
+            isRemoteVideoTrack: false
+          });
+        });
+
         it('should update the mediaStreamTrack of attached elements', () => {
           sinon.assert.calledOnce(videoTrack._updateElementsMediaStreamTrack);
         });
@@ -261,6 +285,13 @@ describe('VideoTrack', () => {
       videoTrack.removeProcessor(processor);
       clock.tick(50);
       sinon.assert.notCalled(cb);
+    });
+
+    it('should emit remove event', () => {
+      const listener = sinon.stub();
+      eventObserver.on('remove', listener);
+      videoTrack.removeProcessor(processor);
+      sinon.assert.calledOnce(listener);
     });
 
     it('should update attached video elements mediaStreamTrack', () => {
@@ -477,35 +508,37 @@ describe('VideoTrack', () => {
       });
 
       [{
-        state: 'mediaStreamTrack is disabled',
+        state: 'MediaStreamTrack is disabled',
         setState: () => {
           mediaStreamTrack.enabled = false;
         }
       }, {
-        state: 'mediaStreamTrack is ended',
+        state: 'MediaStreamTrack is ended',
         setState: () => {
           mediaStreamTrack.readyState = 'ended';
         }
       }, {
-        state: 'there is no VideoProcessor added',
+        state: 'VideoProcessor not detected.',
         setState: () => {
           videoTrack.processor = null;
         }
       }, {
         state: 'there are no video elements attached and isPublishing has default value',
+        message: 'VideoTrack is not publishing and there is no attached element.',
         setState: () => {
           videoTrack._attachments.clear();
         }
       }, {
         state: 'there are no video elements attached and isPublishing false',
+        message: 'VideoTrack is not publishing and there is no attached element.',
         setState: () => {
-          videoTrack._origCanCaptureFrames = videoTrack._canCaptureFrames;
-          videoTrack._canCaptureFrames = () => {
-            return videoTrack._origCanCaptureFrames(false);
+          videoTrack._origCheckIfCanCaptureFrames = videoTrack._checkIfCanCaptureFrames;
+          videoTrack._checkIfCanCaptureFrames = () => {
+            return videoTrack._origCheckIfCanCaptureFrames(false);
           };
           videoTrack._attachments.clear();
         }
-      }].forEach(({ state, setState }) => {
+      }].forEach(({ state, setState, message }) => {
         it(`should stop capturing frames if ${state}`, async () => {
           videoTrack._captureFrames();
 
@@ -516,6 +549,19 @@ describe('VideoTrack', () => {
           await internalPromise();
           clock.tick(timeoutMs);
           sinon.assert.calledOnce(processFrame);
+        });
+
+        it(`should emit stop event with a message if ${state}`, async () => {
+          const listener = sinon.stub();
+          eventObserver.on('stop', listener);
+          videoTrack._captureFrames();
+          clock.tick(timeoutMs);
+          setState();
+          await internalPromise();
+          clock.tick(timeoutMs);
+
+          sinon.assert.calledOnce(listener);
+          sinon.assert.calledWithExactly(listener, message || state);
         });
 
         it(`should not start capturing frames if ${state}`, async () => {
@@ -535,9 +581,9 @@ describe('VideoTrack', () => {
 
         beforeEach(() => {
           setup = () => {
-            videoTrack._origCanCaptureFrames = videoTrack._canCaptureFrames;
-            videoTrack._canCaptureFrames = () => {
-              return videoTrack._origCanCaptureFrames(true);
+            videoTrack._origCheckIfCanCaptureFrames = videoTrack._checkIfCanCaptureFrames;
+            videoTrack._checkIfCanCaptureFrames = () => {
+              return videoTrack._origCheckIfCanCaptureFrames(true);
             };
             videoTrack._attachments.clear();
           };
@@ -564,6 +610,26 @@ describe('VideoTrack', () => {
           await internalPromise();
           clock.tick(timeoutMs);
           sinon.assert.calledTwice(processFrame);
+        });
+
+        it('should emit start event after starting capturing frames', async () => {
+          setup();
+          const listener = sinon.stub();
+          eventObserver.on('start', listener);
+          videoTrack._captureFrames();
+          sinon.assert.calledOnce(listener);
+        });
+
+        it('should emit stats event when capturing frames', async () => {
+          setup();
+          const listener = sinon.stub();
+          eventObserver.on('stats', listener);
+          videoTrack._captureFrames();
+          clock.tick(timeoutMs);
+          await internalPromise();
+          clock.tick(timeoutMs);
+
+          sinon.assert.calledOnce(listener);
         });
       });
     });
