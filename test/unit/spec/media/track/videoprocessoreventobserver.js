@@ -14,7 +14,7 @@ describe('VideoProcessorEventObserver', () => {
   let listener;
   let clock;
 
-  const getBenchmark = (dummyValue) => ({
+  const getBenchmark = dummyValue => ({
     getRate: () => dummyValue,
     getAverageDelay: () => dummyValue
   });
@@ -141,21 +141,21 @@ describe('VideoProcessorEventObserver', () => {
     });
 
     it('should not save an entry if stats is null', () => {
-      observer._stats = null
+      observer._stats = null;
       clock.tick(1000);
       observer.emit('stats');
       assert(!observer._stats);
     });
 
     it('should not save an entry if processorInfo is null', () => {
-      observer._processorInfo = null
+      observer._processorInfo = null;
       clock.tick(1000);
       observer.emit('stats');
       assert.strictEqual(observer._stats.length, 0);
     });
 
     it('should not save an entry if benchmark is null', () => {
-      observer._processorInfo.processor._benchmark = null
+      observer._processorInfo.processor._benchmark = null;
       clock.tick(1000);
       observer.emit('stats');
       assert.strictEqual(observer._stats.length, 0);
@@ -238,7 +238,7 @@ describe('VideoProcessorEventObserver', () => {
         outputFrameRate: 3,
         processFrameDelay: 3,
         segmentationDelay: 3,
-      }, eventData)});
+      }, eventData) });
     });
   });
 

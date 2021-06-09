@@ -612,7 +612,7 @@ describe('VideoTrack', () => {
           sinon.assert.calledTwice(processFrame);
         });
 
-        it('should emit start event after starting capturing frames', async () => {
+        it('should emit start event after starting capturing frames', () => {
           setup();
           const listener = sinon.stub();
           eventObserver.on('start', listener);
