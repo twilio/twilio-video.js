@@ -39,6 +39,11 @@ describe('isSupported', () => {
       {}
     ],
     [
+      'Chrome on iPad',
+      'Mozilla/5.0 (iPad; CPU OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/91.0.4472.80 Mobile/15E148 Safari/604.1',
+      {}
+    ],
+    [
       'Electron',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Electron/3.1.12 Safari/537.36'
     ],

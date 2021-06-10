@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- `Video.isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
+- `isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
 
 **Breaking Change on Video Processor API (Beta)**
 -------------------------------------------------
