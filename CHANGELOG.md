@@ -5,6 +5,11 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.15.0 (In Progress)
 =====================
 
+New Features
+------------
+
+- `Video.isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
+
 **Breaking Change on Video Processor API (Beta)**
 -------------------------------------------------
 
@@ -56,6 +61,7 @@ Bug Fixes
 
 New Features
 ------------
+
 This release contains a significant update to the Bandwidth Profile API. It allows for more efficient use of bandwidth and CPU in multi-party applications. In addition it provides developers with more dynamic control over which video tracks are delivered to the client and the preferred video resolution of the tracks. These capabilities are provided via the Client Track Switch Off Control and Content Preferences settings.
 
 Existing Bandwidth Profile settings will continue to function as before, however we recommend developers update their Bandwidth Profile settings to make use of these new capabilities at their earliest convenience.
