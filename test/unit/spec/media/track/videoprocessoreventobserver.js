@@ -47,8 +47,8 @@ describe('VideoProcessorEventObserver', () => {
       captureWidth: captureInfo.captureWidth,
       fitType: processor._fitType,
       inputFrameRate: captureInfo.inputFrameRate,
-      isRemoteVideoTrack: captureInfo.isRemoteVideoTrack,
-      isSimdEnabled: processor._isSimdEnabled,
+      isRemoteVideoTrack: captureInfo.isRemoteVideoTrack.toString(),
+      isSimdEnabled: processor._isSimdEnabled.toString(),
       maskBlurRadius: processor._maskBlurRadius,
       name: processor._name,
       version: processor._version
