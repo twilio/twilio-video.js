@@ -24,12 +24,12 @@ Browser Support
 |             | Chrome | Edge (Chromium) | Firefox | Safari |
 | ------------|--------|-----------------|---------|--------|
 | **Android** | ✓      | -               | ✓       | -      |
-| **iOS**     | *      | -               | *       | ✓      |
+| **iOS**     | ✓      | -               | *       | ✓      |
 | **Linux**   | ✓      | -               | ✓       | -      |
 | **macOS**   | ✓      | ✓ **            | ✓       | ✓      |
 | **Windows** | ✓      | ✓ **            | ✓       | -      |
 
-\* Chrome and Firefox for iOS do not have access to WebRTC APIs, unlike Safari
+\* Firefox for iOS does not have access to WebRTC APIs, unlike Safari and Chrome
 for iOS.
 
 \*\* twilio-video.js supports the [Chromium-based Edge](https://www.microsoftedgeinsider.com/) browser.
