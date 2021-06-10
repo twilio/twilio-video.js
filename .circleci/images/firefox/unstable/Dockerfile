@@ -1,4 +1,4 @@
-FROM circleci/node:10.0.0-stretch
+FROM circleci/node:latest
 
 #
 # Install Java 11 LTS / OpenJDK 11
@@ -27,9 +27,6 @@ RUN FIREFOX_URL="https://download.mozilla.org/?product=firefox-nightly-latest-ss
 ENV BROWSER='firefox'
 ENV BVER='unstable'
 ENV FIREFOX_BIN=/opt/firefox/firefox
-
-# TODO(mmalavalli): Add iptables support once network tests are configured
-# to run here.
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
