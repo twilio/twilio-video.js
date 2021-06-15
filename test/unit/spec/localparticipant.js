@@ -479,6 +479,44 @@ describe('LocalParticipant', () => {
                           sinon.assert.notCalled(localTrack._setSenderMediaStreamTrack);
                         });
                       });
+
+                      describe(`when handling processor events and signaling state is ${state}`, () => {
+                        let localTrack;
+
+                        const runTest = async () => {
+                          publishTrack(localTrack);
+                          test.participant._signaling.tracks.get(localTrack.id).setSid('foo');
+                          await new Promise(resolve => setTimeout(resolve));
+                        };
+
+                        beforeEach(() => {
+                          test.signaling.state = state;
+                          localTrack = createTrack();
+                          localTrack._processorEventObserver = new EventEmitter();
+                          localTrack._captureFrames = sinon.stub();
+                          localTrack._setSenderMediaStreamTrack = sinon.stub();
+                        });
+
+                        it('should not raise an exception if the event observer does not exists', async () => {
+                          localTrack._processorEventObserver = null;
+                          await runTest();
+                        });
+
+                        it('should re-emit processor events to the participant event observer', async () => {
+                          await runTest();
+                          const listener = sinon.stub();
+                          const event = { name: 'foo', data: { bar: 'bar' } };
+                          test.participant._eventObserver.on('event', listener);
+                          localTrack._processorEventObserver.emit('event', event);
+
+                          sinon.assert.calledWithExactly(listener, {
+                            name: 'foo',
+                            payload: { bar: 'bar' },
+                            group: 'video-processor',
+                            level: 'info'
+                          });
+                        });
+                      });
                     });
                   }
                 } else {
@@ -1175,6 +1213,7 @@ function makeTest(options) {
   options.signaling = options.signaling || makeSignaling(options);
   options.tracks = options.tracks || [];
   options.log = log;
+  options.eventObserver = new EventEmitter();
   options.participant = options.participant ||
     new LocalParticipant(options.signaling, options.tracks, options);
   return options;

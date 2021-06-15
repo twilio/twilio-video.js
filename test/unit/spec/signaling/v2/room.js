@@ -226,7 +226,7 @@ describe('RoomV2', () => {
         ]
       ];
       await wait(225);
-      test.transport.publishEvent.args.slice(0, expectedArgs.length).forEach(([, name, payload], i) => {
+      test.transport.publishEvent.args.slice(0, expectedArgs.length).forEach(([/* group */, name, /* level */, payload], i) => {
         if (name === 'stats-report') {
           assert.deepEqual(payload, expectedArgs[i][2]);
           return;
