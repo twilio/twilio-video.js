@@ -58,7 +58,7 @@ const publicClasses = [
   'lib/util/twilioerror.js',
 
   // TS Files
-  'lib/preflight.ts',
+  'lib/preflight/preflighttest.ts',
 ];
 
 const publicConstructors = [

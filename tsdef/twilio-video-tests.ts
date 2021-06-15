@@ -345,8 +345,7 @@ function useConnectionOptions() {
 }
 
 function runPreflight() {
-  const preflight: Video.Preflight = Video.runPreflight();
-  preflight.start();
+  const preflight: Video.PreflightTest = Video.runPreflight('token', { region: 'us1' });
   preflight.stop();
 }
 
