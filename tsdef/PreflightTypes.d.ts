@@ -66,8 +66,8 @@ export interface PreflightReportTrackStats {
   jitter: Stats|null;
   rtt: Stats|null;
   mos: Stats|null;
-  outgoingBitrate: Stats|null;
-  incomingBitrate: Stats|null;
+  outgoingBitrate?: Stats|null;
+  incomingBitrate?: Stats|null;
   packetLoss: Stats|null;
 }
 

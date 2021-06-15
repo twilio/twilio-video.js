@@ -2,7 +2,6 @@
 'use strict';
 
 const assert = require('assert');
-// const testPreflight = require('../../../lib/preflight/preflight');
 const runPreflight = require('../../../es5/index').runPreflight;
 const getToken = require('../../lib/token');
 const defaults = require('../../lib/defaults');

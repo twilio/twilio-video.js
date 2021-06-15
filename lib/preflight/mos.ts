@@ -67,9 +67,9 @@ export function calculateMOSFromStandardizedStatsReport(report: StandardizedRepo
   return null;
 }
 
-export function mosToScore(mosValue: number|null): number {
+export function mosToScore(mosValue: number|null|undefined): number {
   let score = 0;
-  if (mosValue === null) {
+  if (!mosValue) {
     score = 0;
   } else if  (mosValue > 4.2) {
     score = 5;
@@ -84,9 +84,3 @@ export function mosToScore(mosValue: number|null): number {
   }
   return score;
 }
-
-// module.exports = {
-//   calculateMOS,
-//   calculateMOSFromStandardizedStatsReport,
-//   mosToScore
-// }

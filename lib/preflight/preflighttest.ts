@@ -1,14 +1,15 @@
 import { LocalAudioTrackStats, LocalVideoTrackStats, StatsReport } from '../../tsdef/types';
 import { PreflightOptions, PreflightReportTrackStats, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
 import { RTCStats, getTurnCredentials } from './getTurnCredentials';
+import { calculateMOS, mosToScore } from './mos';
 import { createAudioTrack, createVideoTrack } from './synthetic';
 import { TimeMeasurementImpl } from './TimeMeasurementImpl';
-import { calculateMOS } from './mos';
 import { makeStat } from './makeStat';
 
 const Log = require('../util/log');
 const { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } = require('../util/constants');
 const EventEmitter = require('../eventemitter');
+const MovingAverageDelta = require('../util/movingaveragedelta');
 const { waitForSometime } = require('../util');
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
@@ -120,6 +121,9 @@ export class PreflightTest extends EventEmitter {
   private _peerConnectionTiming = new TimeMeasurementImpl();
   private _mediaTiming = new TimeMeasurementImpl();
   private _connectTiming = new TimeMeasurementImpl();
+  private _sentBytesMovingAverage = new MovingAverageDelta();
+  private _receivedBytesMovingAverage = new MovingAverageDelta();
+
   /**
    * Constructs {@link PreflightTest}.
    * @param {string} token
@@ -170,16 +174,12 @@ export class PreflightTest extends EventEmitter {
         jitter: makeStat(collectedStats.localAudio.jitter),
         rtt: makeStat(collectedStats.localAudio.rtt),
         packetLoss: makeStat(collectedStats.localAudio.packetLoss),
-        outgoingBitrate: null, // TODO
-        incomingBitrate: null, // TODO
       },
       localVideo: {
         mos: videoMos,
         jitter: makeStat(collectedStats.localVideo.jitter),
         rtt: makeStat(collectedStats.localVideo.rtt),
         packetLoss: makeStat(collectedStats.localVideo.packetLoss),
-        outgoingBitrate: null, // TODO
-        incomingBitrate: null, // TODO
       },
       stats: {
         mos,
@@ -189,7 +189,7 @@ export class PreflightTest extends EventEmitter {
         incomingBitrate: makeStat(collectedStats.incomingBitrate),
         packetLoss: makeStat(collectedStats.packetLoss),
       },
-      qualityScore: 0, // TODO
+      qualityScore: mosToScore(mos?.average),
       selectedIceCandidatePairStats,
       iceCandidateStats: collectedStats.iceCandidateStats
     };
@@ -255,7 +255,7 @@ export class PreflightTest extends EventEmitter {
     let transport = senders.map(sender => sender.transport).find(notEmpty);
     if (typeof transport !== 'undefined') {
       const dtlsTransport = transport as RTCDtlsTransport;
-      dtlsTransport.addEventListener('statechange', ev => {
+      dtlsTransport.addEventListener('statechange', () => {
         if (dtlsTransport.state === 'connecting') {
           this._dtlsTiming.start();
         }
@@ -272,11 +272,11 @@ export class PreflightTest extends EventEmitter {
     let pcs: RTCPeerConnection[] = [];
     try {
       let elements = [];
-      localTracks = await this.executePreflightStep('acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
+      localTracks = await this.executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
       this.emit('progress', PreflightProgress.mediaAcquired);
 
       this._connectTiming.start();
-      let iceServers = await this.executePreflightStep('connect', () => getTurnCredentials(token, options));
+      let iceServers = await this.executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 
@@ -317,6 +317,12 @@ export class PreflightTest extends EventEmitter {
 
         return remoteTracksPromise;
       });
+      this.emit('debug', { remoteTracks });
+      remoteTracks.forEach(track => {
+        track.addEventListener('ended', () => log.warn(track.kind + ':ended'));
+        track.addEventListener('mute', () => log.warn(track.kind + ':muted'));
+        track.addEventListener('unmute', () => log.warn(track.kind + ':unmuted'));
+      });
       this.emit('progress', PreflightProgress.mediaSubscribed);
 
 
@@ -336,7 +342,7 @@ export class PreflightTest extends EventEmitter {
       this.emit('progress', PreflightProgress.mediaStarted);
 
       const collectedStats = await this.executePreflightStep('collect stats for duration',
-        () => collectRTCStatsForDuration({ duration: this.testDuration, collectedStats: initCollectedStats(), senderPC, receiverPC }));
+        () => this.collectRTCStatsForDuration({ duration: this.testDuration, collectedStats: initCollectedStats(), senderPC, receiverPC }));
 
       const report = await this.executePreflightStep('generate report', () => this.generatePreflightReport(collectedStats));
       this.emit('completed', report);
@@ -349,11 +355,102 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
+  private async collectRTCStats({ collectedStats, senderPC, receiverPC }: { collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }) {
+    const [subscriberStats, publisherStats] = await Promise.all([receiverPC, senderPC].map(pc => getStatsForPC(pc)));
+    {
+      // Note: we compute Mos only for publisherStats.
+      //  subscriberStats does not have all parameters to compute MoS
+      collectMOSData(publisherStats, collectedStats);
+      const { activeIceCandidatePair } = publisherStats;
+      if (activeIceCandidatePair) {
+        const { bytesSent, timestamp } = activeIceCandidatePair;
+        if (bytesSent && timestamp) {
+          this._sentBytesMovingAverage.putSample(bytesSent, timestamp);
+          collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get());
+        }
+      }
+    }
+    {
+      const { activeIceCandidatePair, remoteAudioTrackStats, remoteVideoTrackStats } = subscriberStats;
+      if (activeIceCandidatePair) {
+        const { bytesReceived, timestamp } = activeIceCandidatePair;
+        if (bytesReceived && timestamp) {
+          this._receivedBytesMovingAverage.putSample(bytesReceived, timestamp);
+          collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get());
+        }
+
+        const { currentRoundTripTime } = activeIceCandidatePair;
+        if (typeof currentRoundTripTime === 'number') {
+          collectedStats.rtt.push(currentRoundTripTime * 1000);
+        }
+
+        if (!collectedStats.selectedIceCandidatePairStats) {
+          collectedStats.selectedIceCandidatePairStats = {
+            localCandidate: activeIceCandidatePair.localCandidate,
+            remoteCandidate: activeIceCandidatePair.remoteCandidate
+          };
+        }
+      }
+
+      let packetsLost = 0;
+      let packetsReceived = 0;
+      if (remoteAudioTrackStats && remoteAudioTrackStats[0]) {
+        const remoteAudioTrack = remoteAudioTrackStats[0];
+        if (remoteAudioTrack.jitter !== null) {
+          collectedStats.jitter.push(remoteAudioTrack.jitter);
+        }
+        if (remoteAudioTrack.packetsLost !== null) {
+          packetsLost += remoteAudioTrack.packetsLost;
+        }
+        if (remoteAudioTrack.packetsReceived !== null) {
+          packetsReceived += remoteAudioTrack.packetsReceived;
+        }
+      }
+
+      if (remoteVideoTrackStats && remoteVideoTrackStats[0]) {
+        const remoteVideoTrack = remoteVideoTrackStats[0];
+        if (remoteVideoTrack.packetsLost !== null) {
+          packetsLost += remoteVideoTrack.packetsLost;
+        }
+        if (remoteVideoTrack.packetsReceived !== null) {
+          packetsReceived += remoteVideoTrack.packetsReceived;
+        }
+      }
+      collectedStats.packetLoss.push(packetsReceived ? packetsLost * 100 / packetsReceived : 0);
+    }
+  }
+
+  private async collectRTCStatsForDuration({ duration, collectedStats, senderPC, receiverPC }:
+    { duration: number; collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }): Promise<PreflightStats> {
+    const startTime = Date.now();
+
+    // take a sample every 1000ms.
+    const STAT_INTERVAL = Math.min(1000, duration);
+
+    await waitForSometime(STAT_INTERVAL);
+
+    await this.collectRTCStats({ collectedStats, senderPC, receiverPC });
+
+    const remainingDuration = duration - (Date.now() - startTime);
+
+    if (remainingDuration > 0) {
+      collectedStats = await this.collectRTCStatsForDuration({ duration: remainingDuration, collectedStats, senderPC, receiverPC });
+    } else {
+      const stats = await receiverPC.getStats();
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore: stats does have a values method.
+      collectedStats.iceCandidateStats = Array.from(stats.values()).filter((stat: RTCStats) => stat.type === 'local-candidate' || stat.type === 'remote-candidate');
+    }
+    return collectedStats;
+  }
 }
 
 
 interface InternalStatsReport extends StatsReport {
   activeIceCandidatePair: {
+    timestamp: number;
+    bytesSent: number;
+    bytesReceived: number;
     availableOutgoingBitrate?: number;
     availableIncomingBitrate?: number;
     currentRoundTripTime?: number;
@@ -399,69 +496,6 @@ function collectMOSData(publisherStats: StatsReport, collectedStats: PreflightSt
   localVideoTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localVideo, 'localVideo'));
 }
 
-function collectRTCStats({ collectedStats, senderPC, receiverPC }: { collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }) {
-  return Promise.all([receiverPC, senderPC].map(pc => getStatsForPC(pc)))
-    // eslint-disable-next-line consistent-return
-    .then(([subscriberStats, publisherStats]) => {
-      {
-        // Note: we compute Mos only for publisherStats.
-        //  subscriberStats does not have all parameters to compute MoS
-        collectMOSData(publisherStats, collectedStats);
-        const { activeIceCandidatePair } = publisherStats;
-        if (activeIceCandidatePair && typeof activeIceCandidatePair.availableOutgoingBitrate === 'number') {
-          collectedStats.outgoingBitrate.push(activeIceCandidatePair.availableOutgoingBitrate);
-        }
-      }
-      {
-
-        const { activeIceCandidatePair, remoteAudioTrackStats, remoteVideoTrackStats } = subscriberStats;
-        if (activeIceCandidatePair) {
-          const { currentRoundTripTime, availableIncomingBitrate } =  activeIceCandidatePair;
-          if (typeof currentRoundTripTime === 'number') {
-            collectedStats.rtt.push(currentRoundTripTime * 1000);
-          }
-          if (typeof availableIncomingBitrate === 'number') {
-            collectedStats.incomingBitrate.push(availableIncomingBitrate);
-          }
-
-          if (!collectedStats.selectedIceCandidatePairStats) {
-            collectedStats.selectedIceCandidatePairStats = {
-              localCandidate: activeIceCandidatePair.localCandidate,
-              remoteCandidate: activeIceCandidatePair.remoteCandidate
-            };
-          }
-        }
-
-        let packetsLost = 0;
-        let packetsReceived = 0;
-        if (remoteAudioTrackStats && remoteAudioTrackStats[0]) {
-          const remoteAudioTrack = remoteAudioTrackStats[0];
-          if (remoteAudioTrack.jitter !== null) {
-            collectedStats.jitter.push(remoteAudioTrack.jitter);
-          }
-          if (remoteAudioTrack.packetsLost !== null) {
-            packetsLost += remoteAudioTrack.packetsLost;
-          }
-          if (remoteAudioTrack.packetsReceived !== null) {
-            packetsReceived += remoteAudioTrack.packetsReceived;
-          }
-        }
-
-        if (remoteVideoTrackStats && remoteVideoTrackStats[0]) {
-          const remoteVideoTrack = remoteVideoTrackStats[0];
-          if (remoteVideoTrack.packetsLost !== null) {
-            packetsLost += remoteVideoTrack.packetsLost;
-          }
-          if (remoteVideoTrack.packetsReceived !== null) {
-            packetsReceived += remoteVideoTrack.packetsReceived;
-          }
-        }
-        collectedStats.packetLoss.push(packetsReceived ? packetsLost * 100 / packetsReceived : 0);
-      }
-    });
-}
-
-
 function initCollectedStats() : PreflightStats {
   return {
     jitter: [],
@@ -497,30 +531,6 @@ function initCollectedStats() : PreflightStats {
     iceCandidateStats: [],
   };
 
-}
-
-async function collectRTCStatsForDuration({ duration, collectedStats, senderPC, receiverPC }:
-  { duration: number; collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }): Promise<PreflightStats> {
-  const startTime = Date.now();
-
-  // take a sample every 1000ms.
-  const STAT_INTERVAL = Math.min(1000, duration);
-
-  await waitForSometime(STAT_INTERVAL);
-
-  await collectRTCStats({ collectedStats, senderPC, receiverPC });
-
-  const remainingDuration = duration - (Date.now() - startTime);
-
-  if (remainingDuration > 0) {
-    collectedStats = await collectRTCStatsForDuration({ duration: remainingDuration, collectedStats, senderPC, receiverPC });
-  } else {
-    const stats = await receiverPC.getStats();
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore: stats does have a values method.
-    collectedStats.iceCandidateStats = Array.from(stats.values()).filter((stat: RTCStats) => stat.type === 'local-candidate' || stat.type === 'remote-candidate');
-  }
-  return collectedStats;
 }
 
 

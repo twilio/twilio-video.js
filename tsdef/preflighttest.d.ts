@@ -10,6 +10,7 @@ export declare interface PreflightTest {
   on(event: 'completed', listener: (report: PreflightTestReport)=> void): this;
   on(event: 'failed', listener: (error: Error) => void): this;
 }
+
 export declare class PreflightTest {
   /**
    * Stops the test
