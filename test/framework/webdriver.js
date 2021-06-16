@@ -13,6 +13,9 @@ const webdriver = require('selenium-webdriver');
  */
 function buildWebDriverForChrome() {
   const chromeOptions = new chrome.Options()
+    .addArguments('headless')
+    .addArguments('no-sandbox')
+    .addArguments('disable-dev-shm-usage')
     .addArguments('allow-file-access-from-files')
     .addArguments('use-fake-device-for-media-stream')
     .addArguments('use-fake-ui-for-media-stream');

@@ -5,12 +5,14 @@ const { EventEmitter } = require('events');
 const sinon = require('sinon');
 
 const { name, version } = require('../../../../../package.json');
+const EventObserver = require('../../../../../lib/util/eventobserver');
 const TwilioConnectionTransport = require('../../../../../lib/signaling/v2/twilioconnectiontransport');
 const { RoomCompletedError, SignalingConnectionError } = require('../../../../../lib/util/twilio-video-errors');
 const TwilioError = require('../../../../../lib/util/twilioerror');
 const { defer } = require('../../../../../lib/util');
 
 const { combinations, waitForSometime } = require('../../../../lib/util');
+const log = require('../../../../lib/fakelog');
 
 describe('TwilioConnectionTransport', () => {
   combinations([
@@ -590,21 +592,23 @@ describe('TwilioConnectionTransport', () => {
   });
 
   describe('#publishEvent', () => {
+    let OrigDate;
     let test;
-    let ret;
 
     before(() => {
+      OrigDate = global.Date;
+      global.Date = { now() { return 5; } };
       test = makeTest();
       test.connect();
-      ret = test.transport.publishEvent('foo', 'bar', { baz: 1 });
+      test.transport.publishEvent('quality', 'bar', 'info', { baz: 1 });
+    });
+
+    after(() => {
+      global.Date = OrigDate;
     });
 
     it('should call .publish() on the underlying ._eventPublisher', () => {
-      sinon.assert.calledWith(test.eventPublisher.publish, 'foo', 'bar', { baz: 1 });
-    });
-
-    it('should return the value returned by calling .publish() on the underlying ._eventPublisher', () => {
-      assert.equal(ret, 'baz');
+      sinon.assert.calledWith(test.eventPublisher.publish, 'quality', 'bar', { baz: 1, elapsedTime: 5, level: 'info' });
     });
   });
 
@@ -1702,6 +1706,7 @@ function createTwilioConnection(options) {
 
 function makeTest(options) {
   options = options || {};
+  options.eventObserver = options.eventObserver || new EventObserver(0, log);
   options.reconnectBackOffJitter = options.reconnectBackOffJitter || 0;
   options.reconnectBackOffMs = options.reconnectBackOffMs || 0;
   options.name = 'name' in options ? options.name : makeName();
@@ -1769,7 +1774,7 @@ function makeInsightsPublisherConstructor(testOptions) {
   return function InsightsPublisher() {
     this.disconnect = sinon.spy(() => {});
     this.connect = sinon.spy(() => {});
-    this.publish = sinon.spy(() => 'baz');
+    this.publish = sinon.spy(() => {});
     testOptions.eventPublisher = this;
   };
 }

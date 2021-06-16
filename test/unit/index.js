@@ -36,6 +36,7 @@ require('./spec/media/track/remotevideotrack');
 require('./spec/media/track/remotetrackpublication');
 require('./spec/media/track/sender');
 require('./spec/media/track/transceiver');
+require('./spec/media/track/videoprocessoreventobserver');
 require('./spec/media/track/videotrack');
 
 require('./spec/signaling/participant');
@@ -67,13 +68,14 @@ require('./spec/util/eventobserver');
 require('./spec/util/documentvisibilitymonitor');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
+require('./spec/util/movingaveragedelta');
+require('./spec/util/networkmonitor');
 require('./spec/util/sdp');
 require('./spec/util/sdp/issue8329');
 require('./spec/util/support');
 require('./spec/util/trackmatcher/mid');
 require('./spec/util/trackmatcher/ordered');
 require('./spec/util/twilioerror');
-require('./spec/util/networkmonitor');
 
 require('./spec/webaudio/audiocontext');
 

@@ -2,6 +2,55 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.15.0 (June 16, 2021)
+=====================
+
+**Breaking Change on Video Processor API (Beta)**
+-------------------------------------------------
+
+[VideoProcessor.processFrame](https://sdk.twilio.com/js/video/releases/2.15.0/docs/global.html#VideoProcessor) method signature has been changed in order to improve the performance of the [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.0/docs/VideoTrack.html#addProcessor). With this update, the output frame buffer is now provided to the `processFrame` method which should be used to draw the processed frame.
+
+Old signature:
+
+```ts
+processFrame(inputFrame: OffscreenCanvas)
+  : Promise<OffscreenCanvas | null>
+  | OffscreenCanvas | null;
+```
+
+New signature:
+
+```ts
+processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: HTMLCanvasElement)
+  : Promise<void> | void;
+```
+
+Example:
+
+```js
+class GrayScaleProcessor {
+  constructor(percentage) {
+    this.percentage = percentage;
+  }
+  processFrame(inputFrameBuffer, outputFrameBuffer) {
+    const context = outputFrameBuffer.getContext('2d');
+    context.filter = `grayscale(${this.percentage}%)`;
+    context.drawImage(inputFrameBuffer, 0, 0, inputFrameBuffer.width, inputFrameBuffer.height);
+  }
+}
+
+Video.createLocalVideoTrack().then(function(videoTrack) {
+  videoTrack.addProcessor(new GrayScaleProcessor(100));
+});
+```
+
+Bug Fixes
+---------
+
+- Fixed a bug where `isSupported` was returning `true` on certain unsupported mobile browsers. With this release, `isSupported` should now return true only for the [browsers supported by twilio-video.js](https://www.twilio.com/docs/video/javascript#supported-browsers).
+
+- Updated [NetworkQualityBandwidthStats](https://sdk.twilio.com/js/video/releases/2.14.0/docs/NetworkQualityBandwidthStats.html) documentation to reflect the correct bandwidth units, in bits per second, instead of bytes.
+
 2.14.0 (May 11, 2021)
 =====================
 
@@ -176,7 +225,7 @@ New Features
   });
   ```
 
-2.12.0 (Feb 10, 2020)
+2.12.0 (Feb 10, 2021)
 =====================
 
 New Features
