@@ -24,7 +24,7 @@ Browser Support
 |             | Chrome | Edge (Chromium) | Firefox | Safari |
 | ------------|--------|-----------------|---------|--------|
 | **Android** | ✓      | -               | ✓       | -      |
-| **iOS**     | *      | -               | *       | ✓      |
+| **iOS**     | ✓      | -               | *       | ✓      |
 | **Linux**   | ✓      | -               | ✓       | -      |
 | **macOS**   | ✓      | ✓ **            | ✓       | ✓      |
 | **Windows** | ✓      | ✓ **            | ✓       | -      |
