@@ -72,8 +72,6 @@ export interface PreflightReportTrackStats {
 }
 
 export interface PreflightTestReport {
-  preflightSID: string;
-  sessionSID: string;
   testTiming: TimeMeasurement;
   networkTiming: NetworkTiming;
   stats: PreflightReportTrackStats

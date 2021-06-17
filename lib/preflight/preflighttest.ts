@@ -1,24 +1,27 @@
+import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
+
 import { LocalAudioTrackStats, LocalVideoTrackStats, StatsReport } from '../../tsdef/types';
 import { PreflightOptions, PreflightReportTrackStats, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
 import { RTCStats, getTurnCredentials } from './getTurnCredentials';
+
 import { calculateMOS, mosToScore } from './mos';
 import { createAudioTrack, createVideoTrack } from './synthetic';
 import { TimeMeasurementImpl } from './TimeMeasurementImpl';
 import { makeStat } from './makeStat';
 
-const Log = require('../util/log');
-const { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } = require('../util/constants');
+import Log = require('../util/log');
+
 const EventEmitter = require('../eventemitter');
-const MovingAverageDelta = require('../util/movingaveragedelta');
-const { waitForSometime } = require('../util');
+const {
+  RTCPeerConnection: DefaultRTCPeerConnection,
+  getStats: getStatistics
+}  = require('@twilio/webrtc');
+
+import MovingAverageDelta = require('../util/movingaveragedelta');
+import { waitForSometime } from '../util';
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
-const {
-  getStats: getStatistics,
-  RTCPeerConnection: DefaultRTCPeerConnection
-} = require('@twilio/webrtc');
 
-const log = new Log('default', 'preflight', DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
 
 /**
  * progress values that are sent by {@link PreflightTest#event:progress}
@@ -75,8 +78,8 @@ const PreflightProgress = {
 };
 
 declare interface InternalPreflightTestReport extends PreflightTestReport {
-  localAudio: PreflightReportTrackStats,
-  localVideo: PreflightReportTrackStats
+  localAudio?: PreflightReportTrackStats,
+  localVideo?: PreflightReportTrackStats
 }
 
 declare interface PreflightTrackStats {
@@ -91,7 +94,7 @@ declare interface PreflightStats {
   localVideo: PreflightTrackStats,
   remoteAudio: PreflightTrackStats,
   remoteVideo: PreflightTrackStats,
-  jitter: number[], // TODO: is this needed?
+  jitter: number[],
   rtt: number[],
   outgoingBitrate: number[],
   incomingBitrate: number[],
@@ -123,6 +126,8 @@ export class PreflightTest extends EventEmitter {
   private _connectTiming = new TimeMeasurementImpl();
   private _sentBytesMovingAverage = new MovingAverageDelta();
   private _receivedBytesMovingAverage = new MovingAverageDelta();
+  private _log: Log;
+  private _testDuration: number;
 
   /**
    * Constructs {@link PreflightTest}.
@@ -131,8 +136,8 @@ export class PreflightTest extends EventEmitter {
    */
   constructor(token: string, options: PreflightOptions) {
     super();
-
-    this.testDuration = options.duration || DEFAULT_TEST_DURATION;
+    this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
+    this._testDuration = options.duration || DEFAULT_TEST_DURATION;
     delete options.duration; // duration is not a Video.connect option.
 
     options = Object.assign(options, {
@@ -143,6 +148,11 @@ export class PreflightTest extends EventEmitter {
     this.runPreflightTest(token, options);
   }
 
+  toString(): string {
+    return '[Preflight]';
+  }
+
+
   /**
    * stops ongoing tests and emits error
    */
@@ -152,15 +162,10 @@ export class PreflightTest extends EventEmitter {
 
 
   private generatePreflightReport(collectedStats: PreflightStats) : InternalPreflightTestReport  {
-    // const { subscriber, publisher } = collectedStats;
     this._testTiming.stop();
     const selectedIceCandidatePairStats = collectedStats.selectedIceCandidatePairStats;
-    const audioMos = makeStat(collectedStats.localAudio.mos);
-    const videoMos = makeStat(collectedStats.localVideo.mos);
     const mos = makeStat(collectedStats.localAudio.mos.concat(collectedStats.localVideo.mos));
     return {
-      preflightSID: 'todo',
-      sessionSID: 'todo',
       testTiming: this._testTiming.getTimeMeasurement(),
       networkTiming: {
         dtls: this._dtlsTiming.getTimeMeasurement(),
@@ -168,18 +173,6 @@ export class PreflightTest extends EventEmitter {
         peerConnection: this._peerConnectionTiming.getTimeMeasurement(),
         connect: this._connectTiming.getTimeMeasurement(),
         media: this._mediaTiming.getTimeMeasurement()
-      },
-      localAudio: {
-        mos: audioMos,
-        jitter: makeStat(collectedStats.localAudio.jitter),
-        rtt: makeStat(collectedStats.localAudio.rtt),
-        packetLoss: makeStat(collectedStats.localAudio.packetLoss),
-      },
-      localVideo: {
-        mos: videoMos,
-        jitter: makeStat(collectedStats.localVideo.jitter),
-        rtt: makeStat(collectedStats.localVideo.rtt),
-        packetLoss: makeStat(collectedStats.localVideo.packetLoss),
       },
       stats: {
         mos,
@@ -205,8 +198,8 @@ export class PreflightTest extends EventEmitter {
    * @param {string} stepName - name for the step
    */
   private async executePreflightStep<T>(stepName: string, step: () => T|Promise<T>) : Promise<T> {
-    log.debug('Executing step: ', stepName);
-    const MAX_STEP_DURATION = this.testDuration + 10 * SECOND;
+    this._log.debug('Executing step: ', stepName);
+    const MAX_STEP_DURATION = this._testDuration + 10 * SECOND;
     if (this._stopped) {
       throw new Error('stopped');
     }
@@ -319,12 +312,11 @@ export class PreflightTest extends EventEmitter {
       });
       this.emit('debug', { remoteTracks });
       remoteTracks.forEach(track => {
-        track.addEventListener('ended', () => log.warn(track.kind + ':ended'));
-        track.addEventListener('mute', () => log.warn(track.kind + ':muted'));
-        track.addEventListener('unmute', () => log.warn(track.kind + ':unmuted'));
+        track.addEventListener('ended', () => this._log.warn(track.kind + ':ended'));
+        track.addEventListener('mute', () => this._log.warn(track.kind + ':muted'));
+        track.addEventListener('unmute', () => this._log.warn(track.kind + ':unmuted'));
       });
       this.emit('progress', PreflightProgress.mediaSubscribed);
-
 
       await this.executePreflightStep('wait for tracks to start', () => {
         return new Promise(resolve => {
@@ -342,7 +334,7 @@ export class PreflightTest extends EventEmitter {
       this.emit('progress', PreflightProgress.mediaStarted);
 
       const collectedStats = await this.executePreflightStep('collect stats for duration',
-        () => this.collectRTCStatsForDuration({ duration: this.testDuration, collectedStats: initCollectedStats(), senderPC, receiverPC }));
+        () => this.collectRTCStatsForDuration({ duration: this._testDuration, collectedStats: initCollectedStats(), senderPC, receiverPC }));
 
       const report = await this.executePreflightStep('generate report', () => this.generatePreflightReport(collectedStats));
       this.emit('completed', report);
@@ -463,7 +455,7 @@ function getStatsForPC(pc: RTCPeerConnection): Promise<InternalStatsReport> {
   return getStatistics(pc);
 }
 
-function collectMOSDataForTrack(srcTrackStats: LocalAudioTrackStats | LocalVideoTrackStats, targetTrackStats: PreflightTrackStats, name : 'localAudio' | 'localVideo') {
+function collectMOSDataForTrack(srcTrackStats: LocalAudioTrackStats | LocalVideoTrackStats, targetTrackStats: PreflightTrackStats) {
   if (srcTrackStats) {
     const { jitter, roundTripTime, packetsLost, packetsSent } =  srcTrackStats;
 
@@ -481,7 +473,6 @@ function collectMOSDataForTrack(srcTrackStats: LocalAudioTrackStats | LocalVideo
       targetTrackStats.packetLoss.push(fractionLost);
       if (typeof roundTripTime === 'number' && typeof jitter === 'number' && roundTripTime > 0) {
         const score = calculateMOS(roundTripTime, jitter, fractionLost);
-        log.debug(name, { score, roundTripTime, jitter, totalPackets, packetsLost, fractionLost });
         targetTrackStats.mos.push(score);
       }
     }
@@ -490,10 +481,8 @@ function collectMOSDataForTrack(srcTrackStats: LocalAudioTrackStats | LocalVideo
 
 function collectMOSData(publisherStats: StatsReport, collectedStats: PreflightStats) {
   const { localAudioTrackStats,  localVideoTrackStats } = publisherStats;
-  log.debug('audioTracks:', localAudioTrackStats.length);
-  log.debug('videoTracks:', localVideoTrackStats.length);
-  localAudioTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localAudio, 'localAudio'));
-  localVideoTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localVideo, 'localVideo'));
+  localAudioTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localAudio));
+  localVideoTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localVideo));
 }
 
 function initCollectedStats() : PreflightStats {

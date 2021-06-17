@@ -356,7 +356,7 @@ function runPreflight() {
     console.log('error ', error);
   });
 
-  preflight.on('progress', (progress: string ) => {
+  preflight.on('progress', (progress: string) => {
     // eslint-disable-next-line no-console
     console.log('progress ', progress);
   });
