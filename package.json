@@ -90,6 +90,7 @@
     "lint:ts": "eslint ./tsdef/*.ts",
     "lint": "npm-run-all lint:js lint:ts",
     "test:unit": "mocha ./test/unit/index.js",
+    "test:serversiderender": "mocha ./test/serversiderender/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration": "node ./scripts/karma.js karma/integration.conf.js",
     "test:umd:install": "npm install puppeteer@5.5.0",
