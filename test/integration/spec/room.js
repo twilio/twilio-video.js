@@ -7,7 +7,7 @@ const {
   connect,
   createLocalTracks,
   LocalDataTrack
-} = require('../../../es5');
+} = require('../../../lib');
 
 const {
   RoomCompletedError,

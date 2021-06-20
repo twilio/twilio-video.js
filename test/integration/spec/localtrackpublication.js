@@ -7,7 +7,7 @@ const {
   createLocalAudioTrack,
   createLocalVideoTrack,
   LocalDataTrack
-} = require('../../../es5');
+} = require('../../../lib');
 
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
 const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');

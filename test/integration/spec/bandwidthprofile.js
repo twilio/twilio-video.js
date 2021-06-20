@@ -8,7 +8,7 @@ const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('
 const defaults = require('../../lib/defaults');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
-const { Logger } = require('../../../es5');
+const { Logger } = require('../../../lib');
 
 const {
   capitalize,

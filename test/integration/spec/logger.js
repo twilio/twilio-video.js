@@ -4,7 +4,7 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const { Logger } = require('../../../es5');
+const { Logger } = require('../../../lib');
 const defaults = require('../../lib/defaults');
 const defaultConnect = require('../../../lib/connect');
 const getToken = require('../../lib/token');
