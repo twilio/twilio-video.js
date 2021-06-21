@@ -8,7 +8,7 @@ import { RTCStats, getTurnCredentials } from './getturncredentials';
 import { calculateMOS, mosToScore } from './mos';
 import { createAudioTrack, createVideoTrack } from './synthetic';
 import { Timer } from './timer';
-import { makeStat } from './makeStat';
+import { makeStat } from './makestat';
 
 const Log = require('../util/log');
 
@@ -28,7 +28,6 @@ const DEFAULT_TEST_DURATION = 10 * SECOND;
  * progress values that are sent by {@link PreflightTest#event:progress}
  * @enum {string}
  */
-// eslint-disable-next-line
 const PreflightProgress = {
   /**
    * Preflight test {@link PreflightTest} has successfully acquired media
