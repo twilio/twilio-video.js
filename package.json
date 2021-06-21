@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.15.0-dev",
+  "version": "2.15.2-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -100,6 +100,7 @@
     "test:unit": "npm-run-all test:unit:js test:unit:ts",
     "test:unit:js": "nyc --report-dir=./coverage/js --extension=.js --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha ./test/unit/index.js",
     "test:unit:ts": "nyc --report-dir=./coverage/ts --extension=.ts --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha -r ts-node/register ./test/unit/index.ts",
+    "test:serversiderender": "mocha ./test/serversiderender/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration": "npm run build:es5 && node ./scripts/karma.js karma/integration.conf.js",
     "test:umd:install": "npm install puppeteer@5.5.0",
@@ -144,7 +145,7 @@
     "clean": "rimraf ./coverage ./es5 ./dist ./tsbuild"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#dea68ee99426959cdc7d08c5d48e02abe2890650",
+    "@twilio/webrtc": "4.4.0",
     "backoff": "^2.5.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
