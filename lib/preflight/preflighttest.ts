@@ -136,7 +136,7 @@ export class PreflightTest extends EventEmitter {
     this._testDuration = options.duration || DEFAULT_TEST_DURATION;
 
     this._testTiming.start();
-    this.runPreflightTest(token, options);
+    this._runPreflightTest(token, options);
   }
 
   toString(): string {
@@ -152,7 +152,7 @@ export class PreflightTest extends EventEmitter {
   }
 
 
-  private generatePreflightReport(collectedStats: PreflightStats) : InternalPreflightTestReport  {
+  private _generatePreflightReport(collectedStats: PreflightStats) : InternalPreflightTestReport  {
     this._testTiming.stop();
     const selectedIceCandidatePairStats = collectedStats.selectedIceCandidatePairStats;
     const mos = makeStat(collectedStats.localAudio.mos.concat(collectedStats.localVideo.mos));
@@ -179,7 +179,7 @@ export class PreflightTest extends EventEmitter {
     };
   }
 
-  private async executePreflightStep<T>(stepName: string, step: () => T|Promise<T>) : Promise<T> {
+  private async _executePreflightStep<T>(stepName: string, step: () => T|Promise<T>) : Promise<T> {
     this._log.debug('Executing step: ', stepName);
     const MAX_STEP_DURATION = this._testDuration + 10 * SECOND;
     if (this._stopped) {
@@ -203,7 +203,7 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private trackNetworkTimings(pc: RTCPeerConnection) {
+  private _trackNetworkTimings(pc: RTCPeerConnection) {
     pc.addEventListener('iceconnectionstatechange', () => {
       if (pc.iceConnectionState === 'checking') {
         this._iceTiming.start();
@@ -242,16 +242,16 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private async runPreflightTest(token: string, options: PreflightOptions) {
+  private async _runPreflightTest(token: string, options: PreflightOptions) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
     try {
       let elements = [];
-      localTracks = await this.executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
+      localTracks = await this._executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
       this.emit('progress', PreflightProgress.mediaAcquired);
 
       this._connectTiming.start();
-      let iceServers = await this.executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
+      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 
@@ -261,7 +261,7 @@ export class PreflightTest extends EventEmitter {
       pcs.push(receiverPC);
 
       this._mediaTiming.start();
-      const remoteTracks = await this.executePreflightStep('Setup Peer Connections', async () => {
+      const remoteTracks = await this._executePreflightStep('Setup Peer Connections', async () => {
         senderPC.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => event.candidate && receiverPC.addIceCandidate(event.candidate));
         receiverPC.addEventListener('icecandidate', (event: RTCPeerConnectionIceEvent) => event.candidate && senderPC.addIceCandidate(event.candidate));
 
@@ -288,7 +288,7 @@ export class PreflightTest extends EventEmitter {
         const updatedAnswer = answer;
         await receiverPC.setLocalDescription(updatedAnswer);
         await senderPC.setRemoteDescription(updatedAnswer);
-        this.trackNetworkTimings(senderPC);
+        this._trackNetworkTimings(senderPC);
 
         return remoteTracksPromise;
       });
@@ -300,7 +300,7 @@ export class PreflightTest extends EventEmitter {
       });
       this.emit('progress', PreflightProgress.mediaSubscribed);
 
-      await this.executePreflightStep('wait for tracks to start', () => {
+      await this._executePreflightStep('wait for tracks to start', () => {
         return new Promise(resolve => {
           const element = document.createElement('video');
           element.autoplay = true;
@@ -315,10 +315,10 @@ export class PreflightTest extends EventEmitter {
       this._mediaTiming.stop();
       this.emit('progress', PreflightProgress.mediaStarted);
 
-      const collectedStats = await this.executePreflightStep('collect stats for duration',
-        () => this.collectRTCStatsForDuration({ duration: this._testDuration, collectedStats: initCollectedStats(), senderPC, receiverPC }));
+      const collectedStats = await this._executePreflightStep('collect stats for duration',
+        () => this._collectRTCStatsForDuration(this._testDuration, initCollectedStats(), senderPC, receiverPC));
 
-      const report = await this.executePreflightStep('generate report', () => this.generatePreflightReport(collectedStats));
+      const report = await this._executePreflightStep('generate report', () => this._generatePreflightReport(collectedStats));
       this.emit('completed', report);
 
     } catch (error) {
@@ -329,7 +329,7 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private async collectRTCStats({ collectedStats, senderPC, receiverPC }: { collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }) {
+  private async _collectRTCStats(collectedStats: PreflightStats, senderPC: RTCPeerConnection, receiverPC: RTCPeerConnection) {
     const [subscriberStats, publisherStats] = await Promise.all([receiverPC, senderPC].map(pc => getStatsForPC(pc)));
     {
       // Note: we compute Mos only for publisherStats.
@@ -394,8 +394,7 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private async collectRTCStatsForDuration({ duration, collectedStats, senderPC, receiverPC }:
-    { duration: number; collectedStats: PreflightStats; senderPC: RTCPeerConnection; receiverPC: RTCPeerConnection; }): Promise<PreflightStats> {
+  private async _collectRTCStatsForDuration(duration: number, collectedStats: PreflightStats, senderPC: RTCPeerConnection, receiverPC: RTCPeerConnection) : Promise<PreflightStats> {
     const startTime = Date.now();
 
     // take a sample every 1000ms.
@@ -403,12 +402,12 @@ export class PreflightTest extends EventEmitter {
 
     await waitForSometime(STAT_INTERVAL);
 
-    await this.collectRTCStats({ collectedStats, senderPC, receiverPC });
+    await this._collectRTCStats(collectedStats, senderPC, receiverPC);
 
     const remainingDuration = duration - (Date.now() - startTime);
 
     if (remainingDuration > 0) {
-      collectedStats = await this.collectRTCStatsForDuration({ duration: remainingDuration, collectedStats, senderPC, receiverPC });
+      collectedStats = await this._collectRTCStatsForDuration(remainingDuration, collectedStats, senderPC, receiverPC);
     } else {
       const stats = await receiverPC.getStats();
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -586,7 +585,7 @@ function initCollectedStats() : PreflightStats {
 /**
  * @method
  * @name runPreflight
- * @description Run a {@link Preflight} test.
+ * @description Run a preflight test.
  * @memberof module:twilio-video
  * @param {string} token - The Access Token string
  * @param {PreflightOptions} options - options for the test
