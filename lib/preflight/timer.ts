@@ -1,8 +1,7 @@
-/* eslint-disable no-undefined */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { TimeMeasurement } from '../../tsdef/PreflightTypes';
 
-export class TimeMeasurementImpl {
+export class Timer {
+  // eslint-disable-next-line no-undefined
   private _end: number | undefined = undefined;
   private _start: number;
 
@@ -24,7 +23,8 @@ export class TimeMeasurementImpl {
     return {
       start: this._start,
       end: this._end,
-      duration: typeof this._end === 'undefined' ? undefined : this._end - this._start
+      // eslint-disable-next-line no-undefined
+      duration: this._end === undefined ? undefined : this._end - this._start
     };
   }
 }

@@ -3,11 +3,11 @@ import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
 import { LocalAudioTrackStats, LocalVideoTrackStats, StatsReport } from '../../tsdef/types';
 
 import { PreflightOptions, PreflightReportStats, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
-import { RTCStats, getTurnCredentials } from './getTurnCredentials';
+import { RTCStats, getTurnCredentials } from './getturncredentials';
 
 import { calculateMOS, mosToScore } from './mos';
 import { createAudioTrack, createVideoTrack } from './synthetic';
-import { TimeMeasurementImpl } from './TimeMeasurementImpl';
+import { Timer } from './timer';
 import { makeStat } from './makeStat';
 
 const Log = require('../util/log');
@@ -114,12 +114,12 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
  */
 export class PreflightTest extends EventEmitter {
 
-  private _testTiming = new TimeMeasurementImpl();
-  private _dtlsTiming = new TimeMeasurementImpl();
-  private _iceTiming = new TimeMeasurementImpl();
-  private _peerConnectionTiming = new TimeMeasurementImpl();
-  private _mediaTiming = new TimeMeasurementImpl();
-  private _connectTiming = new TimeMeasurementImpl();
+  private _testTiming = new Timer();
+  private _dtlsTiming = new Timer();
+  private _iceTiming = new Timer();
+  private _peerConnectionTiming = new Timer();
+  private _mediaTiming = new Timer();
+  private _connectTiming = new Timer();
   private _sentBytesMovingAverage = new MovingAverageDelta();
   private _receivedBytesMovingAverage = new MovingAverageDelta();
   private _log: typeof Log;
@@ -134,11 +134,6 @@ export class PreflightTest extends EventEmitter {
     super();
     this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
     this._testDuration = options.duration || DEFAULT_TEST_DURATION;
-    delete options.duration; // duration is not a Video.connect option.
-
-    options = Object.assign(options, {
-      preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }]
-    });
 
     this._testTiming.start();
     this.runPreflightTest(token, options);

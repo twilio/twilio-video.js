@@ -2,18 +2,18 @@ const TwilioConnection = require('../twilioconnection.js');
 const { WS_SERVER, ICE_VERSION } = require('../util/constants');
 
 import { RTCIceServer, RTCStats } from './rtctypes';
-export { RTCStats, RTCIceServer };
-
 import { EventEmitter } from 'events';
 import { PreflightOptions } from '../../tsdef/PreflightTypes';
 
 
+export { RTCStats, RTCIceServer };
 export function getTurnCredentials(token: string, options: PreflightOptions): Promise<RTCIceServer[]> {
   return new Promise((resolve, reject) => {
-    options = Object.assign({
+    options = {
       environment: 'prod',
       region: 'gll',
-    }, options);
+      ...options
+    };
 
     // eslint-disable-next-line new-cap
     const wsServer = WS_SERVER(options.environment, options.region);

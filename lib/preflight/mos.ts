@@ -35,38 +35,6 @@ export function calculateMOS(rtt: number, jitter: number, fractionLost: number):
   return mos;
 }
 
-type StandardizedReport = {
-  trackId: string;
-  timestamp: number; // The Unix timestamp in milliseconds
-  ssrc: string; // SSRC of the MediaStreamTrack
-  roundTripTime?: number; // Round trip time in milliseconds
-  jitter?: number; // Jitter in milliseconds
-  packetsLost?: number; // packets lost.
-  packetsReceived?: number; // packets received.
-  packetsSent?: number; // packets sent.
-};
-
-const lastReports = new Map<string, StandardizedReport>();
-export function calculateMOSFromStandardizedStatsReport(report: StandardizedReport): number|null {
-  const lastReport = lastReports.get(report.ssrc);
-  let lastPackets = 0;
-  let lastPacketsLost = 0;
-  if (lastReport) {
-    lastPackets = lastReport.packetsReceived || lastReport.packetsSent || 0;
-    lastPacketsLost = lastReport.packetsLost || 0;
-    lastReports.set(report.ssrc, report);
-  }
-  const { roundTripTime, jitter, packetsLost, packetsReceived, packetsSent } =  report;
-  const newPackets = (packetsReceived || packetsSent || 0) - lastPackets;
-  if (newPackets > 0 && roundTripTime) {
-    const newPacketsLost = (packetsLost || 0) - lastPacketsLost;
-    const fractionLost = newPacketsLost / newPackets;
-    const score = calculateMOS(roundTripTime, jitter || 0, fractionLost);
-    return score;
-  }
-  return null;
-}
-
 export function mosToScore(mosValue: number|null|undefined): number {
   let score = 0;
   if (!mosValue) {
