@@ -28,49 +28,48 @@ const DEFAULT_TEST_DURATION = 10 * SECOND;
  * progress values that are sent by {@link PreflightTest#event:progress}
  * @enum {string}
  */
-const PreflightProgress = {
+const enum PreflightProgress {
   /**
    * Preflight test {@link PreflightTest} has successfully acquired media
    */
-  mediaAcquired: 'mediaAcquired',
+  mediaAcquired = 'mediaAcquired',
 
   /**
    * Preflight test {@link PreflightTest} has successfully connected both participants
    * to the room.
    */
-  connected: 'connected',
+  connected = 'connected',
 
   /**
    * Preflight test {@link PreflightTest} sees both participants discovered each other
    */
-  remoteConnected: 'remoteConnected',
+  remoteConnected = 'remoteConnected',
 
   /**
    * subscriberParticipant successfully subscribed to media tracks.
    */
-  mediaSubscribed: 'mediaSubscribed',
+  mediaSubscribed = 'mediaSubscribed',
 
   /**
    * media flow was detected.
    */
-  mediaStarted: 'mediaStarted',
+  mediaStarted = 'mediaStarted',
 
   /**
    * established DTLS connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
    */
-  dtlsConnected: 'dtlsConnected',
+  dtlsConnected = 'dtlsConnected',
 
   /**
    * established a PeerConnection, This is measured from PeerConnection `connecting` to `connected` state.
    */
-  peerConnectionConnected: 'peerConnectionConnected',
+  peerConnectionConnected = 'peerConnectionConnected',
 
   /**
    * established ICE connection. This is measured from ICE connection `checking` to `connected` state.
    */
-  iceConnected: 'iceConnected'
-
-};
+  iceConnected = 'iceConnected'
+}
 
 declare interface InternalPreflightTestReport extends PreflightTestReport {
   localAudio?: PreflightReportStats,
@@ -102,6 +101,8 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && typeof value !== 'undefined';
 }
 
+let nInstances = 0;
+
 /**
  * A {@link PreflightTest} monitors progress of an ongoing preflight test.
  * <br><br>
@@ -123,6 +124,7 @@ export class PreflightTest extends EventEmitter {
   private _receivedBytesMovingAverage = new MovingAverageDelta();
   private _log: typeof Log;
   private _testDuration: number;
+  private _instanceId: number;
 
   /**
    * Constructs {@link PreflightTest}.
@@ -133,15 +135,15 @@ export class PreflightTest extends EventEmitter {
     super();
     this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
     this._testDuration = options.duration || DEFAULT_TEST_DURATION;
+    this._instanceId = nInstances++;
 
     this._testTiming.start();
     this._runPreflightTest(token, options);
   }
 
   toString(): string {
-    return '[Preflight]';
+    return `[Preflight #${this._instanceId}]`;
   }
-
 
   /**
    * stops ongoing tests and emits error
@@ -149,7 +151,6 @@ export class PreflightTest extends EventEmitter {
   stop():void {
     this._stopped = true;
   }
-
 
   private _generatePreflightReport(collectedStats: PreflightStats) : InternalPreflightTestReport  {
     this._testTiming.stop();
