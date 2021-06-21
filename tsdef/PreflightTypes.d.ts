@@ -1,9 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { AudioCodec, AudioCodecSettings, OpusCodecSettings, VP8CodecSettings, VideoCodec, VideoCodecSettings } from './types';
-
 export interface PreflightOptions {
-  preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
   duration?: number;
   environment?: string;
   region?: string;
@@ -21,23 +16,6 @@ export interface NetworkTiming {
   ice?: TimeMeasurement;
   peerConnection?: TimeMeasurement;
   media?: TimeMeasurement;
-}
-
-interface RTCIceCandidate {
-  readonly candidate: string;
-  readonly component: RTCIceComponent | null;
-  readonly foundation: string | null;
-  readonly port: number | null;
-  readonly priority: number | null;
-  readonly protocol: RTCIceProtocol | null;
-  readonly relatedAddress: string | null;
-  readonly relatedPort: number | null;
-  readonly sdpMLineIndex: number | null;
-  readonly sdpMid: string | null;
-  readonly tcpType: RTCIceTcpCandidateType | null;
-  readonly type: RTCIceCandidateType | null;
-  readonly usernameFragment: string | null;
-  toJSON(): RTCIceCandidateInit;
 }
 
 export interface RTCIceCandidateStats {
@@ -62,7 +40,7 @@ export interface Stats {
   min: number;
 }
 
-export interface PreflightReportTrackStats {
+export interface PreflightReportStats {
   jitter: Stats|null;
   rtt: Stats|null;
   mos: Stats|null;
@@ -74,7 +52,7 @@ export interface PreflightReportTrackStats {
 export interface PreflightTestReport {
   testTiming: TimeMeasurement;
   networkTiming: NetworkTiming;
-  stats: PreflightReportTrackStats
+  stats: PreflightReportStats
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
   qualityScore: number
