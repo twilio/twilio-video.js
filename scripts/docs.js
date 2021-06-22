@@ -58,7 +58,7 @@ const publicClasses = [
   'lib/util/twilioerror.js',
 
   // TS Files
-  'lib/preflight.ts',
+  'lib/preflight/preflighttest.ts',
 ];
 
 const publicConstructors = [
@@ -108,7 +108,7 @@ const privateConstructors = [
   'TwilioError',
 
   // From TS Files
-  'Preflight',
+  'PreflightTest',
 ];
 
 const TwilioErrors = require('../lib/util/twilio-video-errors');

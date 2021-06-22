@@ -2,18 +2,19 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "declaration": true,
+    "declaration": false,
     "target": "es5",
-    "lib": ["es5", "es6", "es2016", "es2017.object", "dom"],
+    "lib": ["es5", "es6", "es2016", "es2017.object", "es2018.promise", "dom"],
+    "downlevelIteration": true,
     "module": "commonjs",
-    "moduleResolution": "node",
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "outDir": "tsbuild",
-    "sourceMap": false,
+    "outDir": "./es5",
+    "sourceMap": true,
     "strictNullChecks": true
   },
   "include": [
-    "lib/**/*.ts"
+    "lib/**/*.ts",
+    "lib/**/*.js"
   ]
 }
