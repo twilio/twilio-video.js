@@ -3,6 +3,7 @@
  * @property {string} status - The status of the test
  */
 
+import { EventEmitter } from 'events';
 import { PreflightTestReport } from '.';
 
 export declare interface PreflightTest {
@@ -11,7 +12,7 @@ export declare interface PreflightTest {
   on(event: 'failed', listener: (error: Error) => void): this;
 }
 
-export declare class PreflightTest {
+export declare class PreflightTest extends EventEmitter {
   /**
    * Stops the test
    */

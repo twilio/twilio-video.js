@@ -2,7 +2,7 @@ import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
 
 import { LocalAudioTrackStats, LocalVideoTrackStats, StatsReport } from '../../tsdef/types';
 
-import { PreflightOptions, PreflightReportStats, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
+import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
 import { RTCStats, getTurnCredentials } from './getturncredentials';
 
 import { calculateMOS, mosToScore } from './mos';
@@ -28,7 +28,7 @@ const DEFAULT_TEST_DURATION = 10 * SECOND;
  * progress values that are sent by {@link PreflightTest#event:progress}
  * @enum {string}
  */
-const enum PreflightProgress {
+enum PreflightProgress {
   /**
    * Preflight test {@link PreflightTest} has successfully acquired media
    */
@@ -69,11 +69,6 @@ const enum PreflightProgress {
    * established ICE connection. This is measured from ICE connection `checking` to `connected` state.
    */
   iceConnected = 'iceConnected'
-}
-
-declare interface InternalPreflightTestReport extends PreflightTestReport {
-  localAudio?: PreflightReportStats,
-  localVideo?: PreflightReportStats
 }
 
 declare interface PreflightTrackStats {
@@ -152,7 +147,7 @@ export class PreflightTest extends EventEmitter {
     this._stopped = true;
   }
 
-  private _generatePreflightReport(collectedStats: PreflightStats) : InternalPreflightTestReport  {
+  private _generatePreflightReport(collectedStats: PreflightStats) : PreflightTestReport  {
     this._testTiming.stop();
     const selectedIceCandidatePairStats = collectedStats.selectedIceCandidatePairStats;
     const mos = makeStat(collectedStats.localAudio.mos.concat(collectedStats.localVideo.mos));
@@ -278,13 +273,11 @@ export class PreflightTest extends EventEmitter {
         });
 
         const offer = await senderPC.createOffer();
-        // const updatedOffer = updateSDP(offer);
         const updatedOffer = offer;
         await senderPC.setLocalDescription(updatedOffer);
         await receiverPC.setRemoteDescription(updatedOffer);
 
         const answer = await receiverPC.createAnswer();
-        // const updatedAnswer = updateSDP(answer);
         const updatedAnswer = answer;
         await receiverPC.setLocalDescription(updatedAnswer);
         await senderPC.setRemoteDescription(updatedAnswer);
@@ -500,7 +493,6 @@ function initCollectedStats() : PreflightStats {
     selectedIceCandidatePairStats: null,
     iceCandidateStats: [],
   };
-
 }
 
 /**
@@ -585,11 +577,11 @@ function initCollectedStats() : PreflightStats {
 /**
  * @method
  * @name runPreflight
- * @description Run a preflight test.
+ * @description Run a preflight test. This method will start a test to check the quality of network connection.
  * @memberof module:twilio-video
  * @param {string} token - The Access Token string
  * @param {PreflightOptions} options - options for the test
- * @returns {PreflightTest} preflightTest - an instance to be used to monitor progress of the preflight test.
+ * @returns {PreflightTest} preflightTest - an instance to be used to monitor progress of the test.
  * @example
  * var { runPreflight } = require('twilio-video');
  * var preflight = runPreflight();
