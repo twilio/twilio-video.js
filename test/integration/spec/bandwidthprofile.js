@@ -280,7 +280,7 @@ describe('BandwidthProfileOptions', function() {
             clientTrackSwitchOffControl: 'manual'
           }
         },
-        effectiveclientTrackSwitchOffControl: 'manual',
+        effectiveClientTrackSwitchOffControl: 'manual',
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -290,7 +290,7 @@ describe('BandwidthProfileOptions', function() {
             clientTrackSwitchOffControl: 'auto'
           }
         },
-        effectiveclientTrackSwitchOffControl: 'auto',
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -299,7 +299,7 @@ describe('BandwidthProfileOptions', function() {
           video: {
           }
         },
-        effectiveclientTrackSwitchOffControl: 'auto',
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -309,7 +309,7 @@ describe('BandwidthProfileOptions', function() {
             maxTracks: 5,
           }
         },
-        effectiveclientTrackSwitchOffControl: 'disabled', // when maxTracks is specified, effectiveclientTrackSwitchOffControl should be disabled.
+        effectiveClientTrackSwitchOffControl: 'disabled', // when maxTracks is specified, effectiveClientTrackSwitchOffControl should be disabled.
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -319,7 +319,7 @@ describe('BandwidthProfileOptions', function() {
             contentPreferencesMode: 'manual'
           }
         },
-        effectiveclientTrackSwitchOffControl: 'auto',
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'manual',
       },
       {
@@ -328,7 +328,7 @@ describe('BandwidthProfileOptions', function() {
           video: {
           }
         },
-        effectiveclientTrackSwitchOffControl: 'auto',
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -340,10 +340,10 @@ describe('BandwidthProfileOptions', function() {
             }
           }
         },
-        effectiveclientTrackSwitchOffControl: 'auto',
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'disabled',
       }
-    ].forEach(({ testCase, bandwidthProfile, effectiveclientTrackSwitchOffControl,  effectiveContentPreferencesMode }) => {
+    ].forEach(({ testCase, bandwidthProfile, effectiveClientTrackSwitchOffControl,  effectiveContentPreferencesMode }) => {
       let aliceRoom;
       let bobRoom;
       let roomSid;
@@ -376,11 +376,11 @@ describe('BandwidthProfileOptions', function() {
         });
 
         it('sets correct render hint options for RemoteVideoTracks', () => {
-          assert(aliceRemoteTrack._clientTrackSwitchOffControl === effectiveclientTrackSwitchOffControl);
+          assert(aliceRemoteTrack._clientTrackSwitchOffControl === effectiveClientTrackSwitchOffControl);
           assert(aliceRemoteTrack._contentPreferencesMode === effectiveContentPreferencesMode);
         });
 
-        if (effectiveclientTrackSwitchOffControl === 'manual') {
+        if (effectiveClientTrackSwitchOffControl === 'manual') {
           it('switchOn/switchOff can be used to turn tracks on/off', async () => {
             // initially track should be switched on
             await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch on: ${roomSid}`);
@@ -417,7 +417,7 @@ describe('BandwidthProfileOptions', function() {
           });
         }
 
-        if (effectiveclientTrackSwitchOffControl === 'auto') {
+        if (effectiveClientTrackSwitchOffControl === 'auto') {
           it('Track turns off if video element is not attached initially', async () => {
             // since no video elements are attached. Tracks should switch off initially
             await waitFor(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);

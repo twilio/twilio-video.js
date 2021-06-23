@@ -274,131 +274,131 @@ describe('RemoteVideoTrack', () => {
       }
     });
   });
+
+  describe('IntersectionObserver', () => {
+    let track;
+    let el;
+    let observeSpy;
+    let unobserveSpy;
+    let setRenderHintsSpy;
+
+    before(() => {
+      global.document = global.document || new Document();
+      el = document.createElement('video');
+      setRenderHintsSpy = sinon.spy();
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { IntersectionObserver } });
+      observeSpy = sinon.spy(IntersectionObserver.prototype, 'observe');
+      unobserveSpy = sinon.spy(IntersectionObserver.prototype, 'unobserve');
+    });
+
+    after(() => {
+      observeSpy.restore();
+      unobserveSpy.restore();
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
+    context('when an element is', () => {
+      before(() => {
+        track.attach(el);
+        setRenderHintsSpy.resetHistory();
+      });
+
+      it('visible, _setRenderHint gets called with { enable: true }', () => {
+        track._intersectionObserver.makeVisible(el);
+        sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('enabled', true));
+        // sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
+      });
+
+      it('invisible, _setRenderHint gets called with { enable: false }', () => {
+        track._intersectionObserver.makeInvisible(el);
+        sinon.assert.calledWith(setRenderHintsSpy, { enabled: false });
+      });
+
+    });
+  });
+
+  describe('ResizeObserver', () => {
+    let track;
+    let el;
+    let observeSpy;
+    let unobserveSpy;
+    let setRenderHintsSpy;
+
+    before(() => {
+      global.document = global.document || new Document();
+      el = document.createElement('video');
+      setRenderHintsSpy = sinon.spy();
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { ResizeObserver } });
+      observeSpy = sinon.spy(track._resizeObserver, 'observe');
+      unobserveSpy = sinon.spy(track._resizeObserver, 'unobserve');
+    });
+
+    after(() => {
+      observeSpy.restore();
+      unobserveSpy.restore();
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
+    context('detects size change of visible element', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeVisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+        setRenderHintsSpy.resetHistory();
+      });
+
+      it('_setRenderHint gets called with { enable: true }', () => {
+        track._resizeObserver.resize(el);
+        sinon.assert.calledWith(setRenderHintsSpy, { renderDimensions: { height: 100, width: 100 } });
+      });
+    });
+
+    context('ignores size change of invisible element', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeInvisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+        setRenderHintsSpy.resetHistory();
+      });
+
+      it('_setRenderHint does not get called', () => {
+        track._resizeObserver.resize(el);
+        sinon.assert.notCalled(setRenderHintsSpy);
+      });
+    });
+
+    context('reports SDmax size among attached visible elements', () => {
+      before(() => {
+        track.attach(el);
+        track._intersectionObserver.makeVisible(el);
+        el.clientWidth = 100;
+        el.clientHeight = 100;
+
+        const el2 = document.createElement('video');
+        track.attach(el2);
+        track._intersectionObserver.makeVisible(el2);
+        el2.clientWidth = 200;
+        el2.clientHeight = 200;
+        setRenderHintsSpy.resetHistory();
+      });
+
+      it('_setRenderHint does not get called', () => {
+        // even though 100x100 element was resized.
+        track._resizeObserver.resize(el);
+
+        // expect reported size to be 200x200
+        sinon.assert.calledWith(setRenderHintsSpy, { renderDimensions: { height: 200, width: 200 } });
+      });
+    });
+  });
 });
 
-describe('IntersectionObserver', () => {
-  let track;
-  let el;
-  let observeSpy;
-  let unobserveSpy;
-  let setRenderHintsSpy;
-
-  before(() => {
-    global.document = global.document || new Document();
-    el = document.createElement('video');
-    setRenderHintsSpy = sinon.spy();
-    track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { IntersectionObserver } });
-    observeSpy = sinon.spy(IntersectionObserver.prototype, 'observe');
-    unobserveSpy = sinon.spy(IntersectionObserver.prototype, 'unobserve');
-  });
-
-  after(() => {
-    observeSpy.restore();
-    unobserveSpy.restore();
-    if (global.document instanceof Document) {
-      delete global.document;
-    }
-  });
-
-  context('when an element is', () => {
-    before(() => {
-      track.attach(el);
-      setRenderHintsSpy.reset();
-    });
-
-    it('visible, _setRenderHint gets called with { enable: true }', () => {
-      track._intersectionObserver.makeVisible(el);
-      sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('enabled', true));
-      sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
-    });
-
-    it('invisible, _setRenderHint gets called with { enable: false }', () => {
-      track._intersectionObserver.makeInvisible(el);
-      sinon.assert.calledWith(setRenderHintsSpy, { enabled: false });
-    });
-
-  });
-});
-
-describe('ResizeObserver', () => {
-  let track;
-  let el;
-  let observeSpy;
-  let unobserveSpy;
-  let setRenderHintsSpy;
-
-  before(() => {
-    global.document = global.document || new Document();
-    el = document.createElement('video');
-    setRenderHintsSpy = sinon.spy();
-    track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { ResizeObserver } });
-    observeSpy = sinon.spy(track._resizeObserver, 'observe');
-    unobserveSpy = sinon.spy(track._resizeObserver, 'unobserve');
-  });
-
-  after(() => {
-    observeSpy.restore();
-    unobserveSpy.restore();
-    if (global.document instanceof Document) {
-      delete global.document;
-    }
-  });
-
-  context('detects size change of visible element', () => {
-    before(() => {
-      track.attach(el);
-      track._intersectionObserver.makeVisible(el);
-      el.clientWidth = 100;
-      el.clientHeight = 100;
-      setRenderHintsSpy.reset();
-    });
-
-    it('_setRenderHint gets called with { enable: true }', () => {
-      track._resizeObserver.resize(el);
-      sinon.assert.calledWith(setRenderHintsSpy, { enabled: true, renderDimensions: { height: 100, width: 100 } });
-    });
-  });
-
-  context('ignores size change of invisible element', () => {
-    before(() => {
-      track.attach(el);
-      track._intersectionObserver.makeInvisible(el);
-      el.clientWidth = 100;
-      el.clientHeight = 100;
-      setRenderHintsSpy.reset();
-    });
-
-    it('_setRenderHint does not get called', () => {
-      track._resizeObserver.resize(el);
-      sinon.assert.notCalled(setRenderHintsSpy);
-    });
-  });
-
-  context('reports SDmax size among attached visible elements', () => {
-    before(() => {
-      track.attach(el);
-      track._intersectionObserver.makeVisible(el);
-      el.clientWidth = 100;
-      el.clientHeight = 100;
-
-      const el2 = document.createElement('video');
-      track.attach(el2);
-      track._intersectionObserver.makeVisible(el2);
-      el2.clientWidth = 200;
-      el2.clientHeight = 200;
-      setRenderHintsSpy.reset();
-    });
-
-    it('_setRenderHint does not get called', () => {
-      // even though 100x100 element was resized.
-      track._resizeObserver.resize(el);
-
-      // expect reported size to be 200x200
-      sinon.assert.calledWith(setRenderHintsSpy, { enabled: true, renderDimensions: { height: 200, width: 200 } });
-    });
-  });
-
-});
 
 function makeTrack({ id, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
