@@ -68,16 +68,16 @@ executors:
     docker:
       - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
     environment:
       <<: *defaultEnv
   generic-executor:
     docker:
       - image: alpine:3.7
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
     environment:
       <<: *defaultEnv
   machine-executor:
@@ -132,6 +132,9 @@ commands:
   integration-tests:
     steps:
       - get-code-and-dependencies
+      - run:
+          name: "echo environment variables from dockerhub-pulls context"
+          command: echo $DOCKER_HUB_USERNAME
       - run:
           name: Running Integration Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
@@ -316,6 +319,7 @@ workflows:
                 - master
     jobs:
       - Build-Docker-Test-Image:
+          context: dockerhub-push
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
@@ -327,12 +331,14 @@ workflows:
         - equal: [ auto, << pipeline.parameters.test_files >> ]
     jobs:
       - run-integration-tests:
+          context: dockerhub-pulls
           name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
       - run-network-tests:
+          context: dockerhub-pulls
           name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           topology: << pipeline.parameters.topology >>

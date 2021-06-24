@@ -19,6 +19,7 @@ ls -alt
 echo "Package.json version:"
 cat package.json | grep version
 echo "running tests"
+echo "DOCKER_HUB_USERNAME: ${DOCKER_HUB_USERNAME}"
 
 case ${ENVIRONMENT} in
 dev)
