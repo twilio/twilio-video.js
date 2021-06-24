@@ -5,6 +5,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.15.1 (June 21, 2021)
 =====================
 
+New Features
+------------
+
+_Updated June 24, 2021_
+
+- The [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.1/docs/VideoTrack.html#addProcessor) has been promoted to GA. There are no changes to the API at this moment and we will continue to improve it on future releases.
+
 Bug Fixes
 ---------
 
