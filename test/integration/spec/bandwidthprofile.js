@@ -449,6 +449,14 @@ describe('BandwidthProfileOptions', function() {
             await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
           });
 
+          it('tracks does not turns off if video element is detached and attached quickly ', async () => {
+            const aliceTrackSwitchOffPromise = trackSwitchedOff(aliceRemoteTrack);
+            aliceRemoteTrack.detach(videoElement2);
+            await waitForSometime(10);
+            aliceRemoteTrack.attach(videoElement2);
+            await waitForNot(aliceTrackSwitchOffPromise, `Alice's Track [${aliceRemoteTrack.sid}] to not switch off: ${roomSid}`);
+          });
+
           it('tracks turns off when all video elements are detached ', async () => {
             const elements = aliceRemoteTrack.detach();
             elements.forEach(el => el.remove());
@@ -459,7 +467,7 @@ describe('BandwidthProfileOptions', function() {
         } else {
           it('Track turns on even if video element is not attached initially', async () => {
             // since no video elements are attached. Tracks should switch off initially
-            await waitForNot(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch off: ${roomSid}`);
+            await waitForNot(trackSwitchedOff(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to not switch off: ${roomSid}`);
             assert.strictEqual(aliceRemoteTrack.isSwitchedOff, false, `Alice's Track.isSwitchedOff = ${aliceRemoteTrack.isSwitchedOff}`);
             await assertMediaFlow(bobRoom, true, `was expecting media flow: ${roomSid}`);
           });

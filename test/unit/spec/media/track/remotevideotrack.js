@@ -9,6 +9,7 @@ const RemoteVideoTrack = require('../../../../../lib/media/track/remotevideotrac
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 const documentVisibilityMonitor = require('../../../../../lib/util/documentvisibilitymonitor');
 const { NullIntersectionObserver: IntersectionObserver, NullResizeObserver: ResizeObserver } = require('../../../../../lib/util/nullobserver');
+const { waitForSometime } = require('../../../../../lib/util');
 
 describe('RemoteVideoTrack', () => {
   combinationContext([
@@ -80,15 +81,15 @@ describe('RemoteVideoTrack', () => {
       }
     });
 
-    const effectiveclientTrackSwitchOffControl = clientTrackSwitchOffControl || 'auto';
+    const effectiveClientTrackSwitchOffControl = clientTrackSwitchOffControl || 'auto';
     const effectiveContentPreferencesMode = contentPreferencesMode || 'auto';
-    const effectiveDocVisibility = effectiveclientTrackSwitchOffControl === 'auto' && enableDocumentVisibilityTurnOff !== false;
-    const autoTrackSwitchOff = effectiveclientTrackSwitchOffControl === 'auto';
+    const effectiveDocVisibility = effectiveClientTrackSwitchOffControl === 'auto' && enableDocumentVisibilityTurnOff !== false;
+    const autoTrackSwitchOff = effectiveClientTrackSwitchOffControl === 'auto';
     const autoContentPreferencesMode = effectiveContentPreferencesMode === 'auto';
 
     describe('constructor', () => {
       it('sets correct default for _clientTrackSwitchOffControl', () => {
-        assert(track._clientTrackSwitchOffControl === effectiveclientTrackSwitchOffControl);
+        assert(track._clientTrackSwitchOffControl === effectiveClientTrackSwitchOffControl);
       });
 
       it('sets correct default for _contentPreferencesMode', () => {
@@ -155,8 +156,9 @@ describe('RemoteVideoTrack', () => {
         el.oncanplay(); // simulate started event.
       });
 
-      if (effectiveclientTrackSwitchOffControl === 'auto') {
-        it('_setRenderHint gets called', () => {
+      if (effectiveClientTrackSwitchOffControl === 'auto') {
+        it('_setRenderHint gets called with a delay', async () => {
+          await waitForSometime(1000);
           sinon.assert.callCount(setRenderHintsSpy, 1);
         });
       } else {
@@ -177,7 +179,8 @@ describe('RemoteVideoTrack', () => {
       });
 
       if (autoTrackSwitchOff) {
-        it(' _setRenderHint gets called with { enable: false }', () => {
+        it(' _setRenderHint gets called with { enable: false } after a delay', async () => {
+          await waitForSometime(200);
           sinon.assert.calledWith(setRenderHintsSpy, { enabled: false });
         });
       }
@@ -206,7 +209,7 @@ describe('RemoteVideoTrack', () => {
       beforeEach(() => {
         setRenderHintsSpy.resetHistory();
       });
-      const allowManualSwitchOff = effectiveclientTrackSwitchOffControl === 'manual';
+      const allowManualSwitchOff = effectiveClientTrackSwitchOffControl === 'manual';
       if (allowManualSwitchOff) {
         it('calls _setRenderHint with enable = true', () => {
           track.switchOn();
@@ -230,7 +233,7 @@ describe('RemoteVideoTrack', () => {
       beforeEach(() => {
         setRenderHintsSpy.resetHistory();
       });
-      const allowManualSwitchOff = effectiveclientTrackSwitchOffControl === 'manual';
+      const allowManualSwitchOff = effectiveClientTrackSwitchOffControl === 'manual';
       if (allowManualSwitchOff) {
         it('calls _setRenderHint with enable = false', () => {
           track.switchOff();
@@ -308,14 +311,13 @@ describe('RemoteVideoTrack', () => {
       it('visible, _setRenderHint gets called with { enable: true }', () => {
         track._intersectionObserver.makeVisible(el);
         sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('enabled', true));
-        // sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('renderDimensions', { height: sinon.match.any, width: sinon.match.any }));
       });
 
-      it('invisible, _setRenderHint gets called with { enable: false }', () => {
+      it('invisible, _setRenderHint gets called with { enable: false } after some delay', async () => {
         track._intersectionObserver.makeInvisible(el);
+        await waitForSometime(1000);
         sinon.assert.calledWith(setRenderHintsSpy, { enabled: false });
       });
-
     });
   });
 
