@@ -292,8 +292,8 @@ jobs:
     docker:
       - image: circleci/node:latest
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
 
     steps:
       - run:
@@ -479,7 +479,7 @@ workflows:
   Release-candidate:
     jobs:
       - trigger-qe-tests:
-          context: sdks-qe
+          context: [sdks-qe, dockerhub-pulls]
           filters:
             tags:
               only:
