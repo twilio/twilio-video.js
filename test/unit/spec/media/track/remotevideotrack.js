@@ -309,8 +309,13 @@ describe('RemoteVideoTrack', () => {
       });
 
       it('visible, _setRenderHint gets called with { enable: true }', () => {
+        el.clientWidth = 103;
+        el.clientHeight = 104;
         track._intersectionObserver.makeVisible(el);
         sinon.assert.calledWith(setRenderHintsSpy, sinon.match.has('enabled', true));
+
+        // also dimensions get updated.
+        sinon.assert.calledWith(setRenderHintsSpy, { renderDimensions: { width: 103, height: 104 } });
       });
 
       it('invisible, _setRenderHint gets called with { enable: false } after some delay', async () => {
