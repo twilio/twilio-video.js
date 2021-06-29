@@ -2,8 +2,22 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-2.15.1 (In Progress)
+2.15.2 (In Progress)
+====================
+
+Bug Fixes
+---------
+Fixed a bug where setting clientTrackSwitchOffControl to auto caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (JSDK-5226).
+
+2.15.1 (June 21, 2021)
 =====================
+
+New Features
+------------
+
+_Updated June 24, 2021_
+
+- The [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.1/docs/VideoTrack.html#addProcessor) has been promoted to GA. There are no changes to the API at this moment and we will continue to improve it on future releases.
 
 Bug Fixes
 ---------

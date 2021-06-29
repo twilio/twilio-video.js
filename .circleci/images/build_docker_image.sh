@@ -44,7 +44,7 @@ fi
 # push newly generated image
 if [ "${CIRCLECI}" == "true" ]; then
     echo "Logging in to Docker Hub"
-    echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
+    echo "${DOCKER_HUB_PASSWORD}" | docker login --username "${DOCKER_HUB_USERNAME}" --password-stdin
 fi
 
 echo "Pushing browserContainer image for ${BROWSER}-${BVER}"
