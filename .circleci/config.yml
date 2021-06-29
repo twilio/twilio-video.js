@@ -68,16 +68,16 @@ executors:
     docker:
       - image: twilio/twilio-video-browsers:<<parameters.browser>>-<<parameters.bver>>
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
     environment:
       <<: *defaultEnv
   generic-executor:
     docker:
       - image: alpine:3.7
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
     environment:
       <<: *defaultEnv
   machine-executor:
@@ -292,8 +292,8 @@ jobs:
     docker:
       - image: circleci/node:latest
         auth:
-          username: $DOCKER_USERNAME
-          password: $DOCKER_PASSWORD
+          username: $DOCKER_HUB_USERNAME
+          password: $DOCKER_HUB_PASSWORD
 
     steps:
       - run:
@@ -316,6 +316,7 @@ workflows:
                 - master
     jobs:
       - Build-Docker-Test-Image:
+          context: dockerhub-push
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
@@ -327,12 +328,14 @@ workflows:
         - equal: [ auto, << pipeline.parameters.test_files >> ]
     jobs:
       - run-integration-tests:
+          context: dockerhub-pulls
           name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
           topology: << pipeline.parameters.topology >>
           test_stability: << pipeline.parameters.test_stability >>
       - run-network-tests:
+          context: dockerhub-pulls
           name: Network(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >> << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           topology: << pipeline.parameters.topology >>
@@ -345,6 +348,7 @@ workflows:
             equal: [ auto, << pipeline.parameters.test_files >> ]
     jobs:
       - run-integration-tests:
+          context: dockerhub-pulls
           name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
           browser: << pipeline.parameters.browser >>
           bver: << pipeline.parameters.bver >>
@@ -355,6 +359,7 @@ workflows:
     when: << pipeline.parameters.backend_workflow >>
     jobs:
       - run-integration-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
@@ -363,6 +368,7 @@ workflows:
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
       - run-network-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
@@ -374,6 +380,7 @@ workflows:
     when: << pipeline.parameters.backend_group_workflow >>
     jobs:
       - run-integration-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
@@ -382,6 +389,7 @@ workflows:
               topology: ["group"]
               test_stability: ["stable"]
       - run-network-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
@@ -392,9 +400,12 @@ workflows:
   Pull_Request_Workflow:
     when: << pipeline.parameters.pr_workflow >>
     jobs:
-      - Build
-      - UnitTests
+      - Build:
+          context: dockerhub-pulls
+      - UnitTests:
+          context: dockerhub-pulls
       - run-integration-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
@@ -404,6 +415,7 @@ workflows:
               test_stability: ["stable"]
           requires: [Build, UnitTests]
       - run-integration-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
@@ -413,6 +425,7 @@ workflows:
               test_stability: ["unstable"]
           requires: [Build, UnitTests]
       - run-network-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
@@ -421,21 +434,27 @@ workflows:
               test_stability: ["stable", "unstable"]
           requires: [Build, UnitTests]
       - Framework-tests:
+          context: dockerhub-pulls
           name: "framework tests"
           requires: [Build, UnitTests]
       - UMD-tests:
+          context: dockerhub-pulls
           name: "umd tests"
           requires: [Build, UnitTests]
       - ServerSideRender-tests:
+          context: dockerhub-pulls
           name: "serversiderender tests"
           requires: [Build, UnitTests]
 
   Release_Workflow:
     when: << pipeline.parameters.release_workflow >>
     jobs:
-      - Build
-      - UnitTests
+      - Build:
+          context: dockerhub-pulls
+      - UnitTests:
+          context: dockerhub-pulls
       - run-integration-tests:
+          context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
@@ -445,6 +464,7 @@ workflows:
               test_stability: ["stable"]
           requires: [Build, UnitTests]
       - ExecuteRelease:
+          context: dockerhub-pulls
           dryRun: true
           name: Release dry run
           requires: [Build, UnitTests]
@@ -453,13 +473,13 @@ workflows:
           requires: [Release dry run]
       - ExecuteRelease:
           dryRun: false
-          context: sdk_js
+          context: [sdk_js, dockerhub-pulls]
           requires: [hold]
 
   Release-candidate:
     jobs:
       - trigger-qe-tests:
-          context: sdks-qe
+          context: [sdks-qe, dockerhub-pulls]
           filters:
             tags:
               only:
