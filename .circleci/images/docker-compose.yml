@@ -35,7 +35,7 @@ services:
       dockerfile: ./${BROWSER}/${BVER}/Dockerfile
   integrationTests: # runs integration tets. Expects that sources are mounted.
     <<: *runtimeDefaults
-    command: bash -c "npm install --no-optional && npm run test:integration"
+    command: bash -c "npm install --no-optional --legacy-peer-deps && npm run test:integration"
   bash: # runs bash shell inside container. helpful for debugging
     <<: *runtimeDefaults
     command: bash
