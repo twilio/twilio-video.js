@@ -31,9 +31,27 @@ describe('RenderHintsSignaling', () => {
   describe('setTrackHint', () => {
     it('updates track state', () => {
       const subject = makeTest(makeTransport());
-      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
+
+      // update enabled state.
+      subject.setTrackHint('foo', { enabled: false });
       assert(subject._trackSidsToRenderHints.has('foo'));
-      assert(subject._dirtyTrackSids.has('foo'));
+      const trackState = subject._trackSidsToRenderHints.get('foo');
+      assert.deepStrictEqual(trackState, {
+        enabled: false,
+        isEnabledDirty: true,
+        isDimensionDirty: false
+      });
+
+      // update render dimensions.
+      subject.setTrackHint('foo', { renderDimensions: { width: 100, height: 100 } });
+      const trackState2 = subject._trackSidsToRenderHints.get('foo');
+      assert.deepStrictEqual(trackState2, {
+        enabled: false,
+        renderDimensions: { width: 100, height: 100 },
+        isEnabledDirty: true,
+        isDimensionDirty: true
+      });
+
     });
 
     it('flattens and sends updated track states ', () => {
@@ -45,8 +63,6 @@ describe('RenderHintsSignaling', () => {
 
       assert(subject._trackSidsToRenderHints.has('foo'));
       assert(subject._trackSidsToRenderHints.has('bar'));
-      assert(subject._dirtyTrackSids.has('foo'));
-      assert(subject._dirtyTrackSids.has('bar'));
 
       const deferred = defer();
       mst.publish.callsFake(() => {
@@ -74,8 +90,8 @@ describe('RenderHintsSignaling', () => {
         //  but state must be preserved.
         assert(subject._trackSidsToRenderHints.has('foo'));
         assert(subject._trackSidsToRenderHints.has('bar'));
-        assert(!subject._dirtyTrackSids.has('foo'));
-        assert(!subject._dirtyTrackSids.has('bar'));
+        assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, false);
+        assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, false);
       });
     });
 
@@ -84,7 +100,9 @@ describe('RenderHintsSignaling', () => {
       const subject = makeTest(mst);
       subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(subject._trackSidsToRenderHints.has('foo'));
-      assert(subject._dirtyTrackSids.has('foo'));
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, true);
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, true);
+
 
       const published = defer();
       mst.publish.callsFake(() => {
@@ -96,15 +114,24 @@ describe('RenderHintsSignaling', () => {
       // once published tracks shouldn't be dirty anymore.
       //  but state must be preserved.
       assert(subject._trackSidsToRenderHints.has('foo'));
-      assert(!subject._dirtyTrackSids.has('foo'));
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, false);
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, false);
 
       // subsequent setTrackHint with same values does not mark track as dirty
       subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
-      assert(!subject._dirtyTrackSids.has('foo'));
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, false);
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, false);
 
       // but any changes causes it be marked dirty
-      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 101, height: 100 } });
-      assert(subject._dirtyTrackSids.has('foo'));
+      subject.setTrackHint('foo', { renderDimensions: { width: 101, height: 100 } });
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, true);
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, false);
+
+      // but any changes causes it be marked dirty
+      subject.setTrackHint('foo', { enabled: false });
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, true);
+      assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, true);
+
     });
 
     it('processes subsequent messages only after a reply is received', async () => {
@@ -182,11 +209,9 @@ describe('RenderHintsSignaling', () => {
       let subject = makeTest(makeTransport());
       subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
       assert(subject._trackSidsToRenderHints.has('foo'));
-      assert(subject._dirtyTrackSids.has('foo'));
 
       subject.clearTrackHint('foo');
       assert(!subject._trackSidsToRenderHints.has('foo'));
-      assert(!subject._dirtyTrackSids.has('foo'));
     });
   });
 });

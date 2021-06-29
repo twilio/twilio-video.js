@@ -10,7 +10,30 @@ New Features
 
 - `isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
 
-2.15.0 (In Progress)
+2.15.2 (In Progress)
+====================
+
+Bug Fixes
+---------
+
+Fixed a bug where setting clientTrackSwitchOffControl to auto caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (JSDK-5226).
+
+2.15.1 (June 21, 2021)
+=====================
+
+New Features
+------------
+
+_Updated June 24, 2021_
+
+- The [Video Processor API](https://sdk.twilio.com/js/video/releases/2.15.1/docs/VideoTrack.html#addProcessor) has been promoted to GA. There are no changes to the API at this moment and we will continue to improve it on future releases.
+
+Bug Fixes
+---------
+
+- Fixed a bug where twilio-video was throwing an exception in a server-side rendering application.
+
+2.15.0 (June 16, 2021)
 =====================
 
 **Breaking Change on Video Processor API (Beta)**
