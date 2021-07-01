@@ -31,21 +31,6 @@ function getStatValues(report: RTCStatsReport, statName: string, kind: string[],
   return results;
 }
 
-// returns set of reports where stat was found in the getStats report.
-// async function findStat(pc: RTCPeerConnection, statName: string) {
-//   const foundInReport = new Set<string>();
-//   const stats = await pc.getStats();
-//   stats.forEach(stat => {
-//     if (['outbound-rtp', 'remote-inbound-rtp', 'inbound-rtp', 'remote-inbound-rtp', 'candidate-pair'].includes(stat.type)) {
-//       if (typeof stats[statName] === 'undefined') {
-//         foundInReport.add(stat.type + '-' + stat.kind);
-//       }
-//     }
-//   });
-//   return foundInReport;
-// }
-
-
 export async function getCombinedConnectionStats({ publisher, subscriber }: { publisher: RTCPeerConnection, subscriber: RTCPeerConnection }): Promise<CombinedConnectionStats> {
   const [publisherStats, subscriberStats] = await Promise.all([publisher, subscriber].map(pc => pc.getStats()));
 
