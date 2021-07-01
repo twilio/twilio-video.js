@@ -141,10 +141,11 @@
     "build": "npm-run-all clean lint docs test:unit test:integration build:es5 build:js build:min.js test:umd",
     "build:quick": "npm-run-all clean lint docs build:es5 build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
+    "watch": "tsc -w",
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#preflight",
+    "@twilio/webrtc": "4.4.0",
     "backoff": "^2.5.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"

@@ -1,25 +1,18 @@
 import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
-
-import { LocalAudioTrackStats, LocalVideoTrackStats, StatsReport } from '../../tsdef/types';
-
 import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
-import { RTCStats, getTurnCredentials } from './getturncredentials';
-
 import { calculateMOS, mosToScore } from './mos';
 import { createAudioTrack, createVideoTrack } from './synthetic';
+import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
+import { getCombinedConnectionStats } from './getCombinedConnectionStats';
+import { getTurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
+import { waitForSometime } from '../util';
 
 const Log = require('../util/log');
-
 const EventEmitter = require('../eventemitter');
-const {
-  RTCPeerConnection: DefaultRTCPeerConnection,
-  getStats: getStatistics
-}  = require('@twilio/webrtc');
-
 const MovingAverageDelta = require('../util/movingaveragedelta');
-import { waitForSometime } from '../util';
+
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
 
@@ -71,23 +64,13 @@ enum PreflightProgress {
   iceConnected = 'iceConnected'
 }
 
-declare interface PreflightTrackStats {
-  mos: number[],
-  jitter: number[],
-  rtt: number[],
-  packetLoss: number[]
-}
-
 declare interface PreflightStats {
-  localAudio: PreflightTrackStats,
-  localVideo: PreflightTrackStats,
-  remoteAudio: PreflightTrackStats,
-  remoteVideo: PreflightTrackStats,
   jitter: number[],
   rtt: number[],
   outgoingBitrate: number[],
   incomingBitrate: number[],
-  packetLoss: number[],
+  packetLoss: number[], // fraction of packets lost.
+  mos: number[],
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null,
   iceCandidateStats: RTCIceCandidateStats[],
 }
@@ -116,6 +99,7 @@ export class PreflightTest extends EventEmitter {
   private _mediaTiming = new Timer();
   private _connectTiming = new Timer();
   private _sentBytesMovingAverage = new MovingAverageDelta();
+  private _packetLossMovingAverage = new MovingAverageDelta();
   private _receivedBytesMovingAverage = new MovingAverageDelta();
   private _log: typeof Log;
   private _testDuration: number;
@@ -149,8 +133,7 @@ export class PreflightTest extends EventEmitter {
 
   private _generatePreflightReport(collectedStats: PreflightStats) : PreflightTestReport  {
     this._testTiming.stop();
-    const selectedIceCandidatePairStats = collectedStats.selectedIceCandidatePairStats;
-    const mos = makeStat(collectedStats.localAudio.mos.concat(collectedStats.localVideo.mos));
+    const mos = makeStat(collectedStats.mos);
     return {
       testTiming: this._testTiming.getTimeMeasurement(),
       networkTiming: {
@@ -168,8 +151,8 @@ export class PreflightTest extends EventEmitter {
         incomingBitrate: makeStat(collectedStats.incomingBitrate),
         packetLoss: makeStat(collectedStats.packetLoss),
       },
-      qualityScore: mosToScore(mos?.average),
-      selectedIceCandidatePairStats,
+      qualityScore: mos ? mosToScore(mos.average) : 0,
+      selectedIceCandidatePairStats: collectedStats.selectedIceCandidatePairStats,
       iceCandidateStats: collectedStats.iceCandidateStats
     };
   }
@@ -250,8 +233,8 @@ export class PreflightTest extends EventEmitter {
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 
-      const senderPC: RTCPeerConnection = new DefaultRTCPeerConnection({ iceServers, iceTransportPolicy: 'relay', bundlePolicy: 'max-bundle' });
-      const receiverPC: RTCPeerConnection = new DefaultRTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
+      const senderPC: RTCPeerConnection = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'relay', bundlePolicy: 'max-bundle' });
+      const receiverPC: RTCPeerConnection = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
       pcs.push(senderPC);
       pcs.push(receiverPC);
 
@@ -323,67 +306,32 @@ export class PreflightTest extends EventEmitter {
   }
 
   private async _collectRTCStats(collectedStats: PreflightStats, senderPC: RTCPeerConnection, receiverPC: RTCPeerConnection) {
-    const [subscriberStats, publisherStats] = await Promise.all([receiverPC, senderPC].map(pc => getStatsForPC(pc)));
-    {
-      // Note: we compute Mos only for publisherStats.
-      //  subscriberStats does not have all parameters to compute MoS
-      collectMOSData(publisherStats, collectedStats);
-      const { activeIceCandidatePair } = publisherStats;
-      if (activeIceCandidatePair) {
-        const { bytesSent, timestamp } = activeIceCandidatePair;
-        if (bytesSent && timestamp) {
-          this._sentBytesMovingAverage.putSample(bytesSent, timestamp);
-          collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get());
-        }
-      }
+    const combinedStats = await getCombinedConnectionStats({ publisher: senderPC, subscriber: receiverPC });
+    const { timestamp, bytesSent, bytesReceived, packets, packetsLost, roundTripTime, jitter, selectedIceCandidatePairStats, iceCandidateStats } = combinedStats;
+    const hasLastData = collectedStats.jitter.length > 0;
+    collectedStats.jitter.push(jitter);
+    collectedStats.rtt.push(roundTripTime);
+
+    this._sentBytesMovingAverage.putSample(bytesSent, timestamp);
+    this._receivedBytesMovingAverage.putSample(bytesReceived, timestamp);
+    this._packetLossMovingAverage.putSample(packetsLost, packets);
+
+    if (hasLastData) {
+      collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get());
+      collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get());
+      const fractionPacketLost = this._packetLossMovingAverage.get();
+      collectedStats.packetLoss.push(fractionPacketLost);
+
+      const score = calculateMOS(roundTripTime, jitter, fractionPacketLost);
+      collectedStats.mos.push(score);
     }
-    {
-      const { activeIceCandidatePair, remoteAudioTrackStats, remoteVideoTrackStats } = subscriberStats;
-      if (activeIceCandidatePair) {
-        const { bytesReceived, timestamp } = activeIceCandidatePair;
-        if (bytesReceived && timestamp) {
-          this._receivedBytesMovingAverage.putSample(bytesReceived, timestamp);
-          collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get());
-        }
 
-        const { currentRoundTripTime } = activeIceCandidatePair;
-        if (typeof currentRoundTripTime === 'number') {
-          collectedStats.rtt.push(currentRoundTripTime * 1000);
-        }
+    if (!collectedStats.selectedIceCandidatePairStats) {
+      collectedStats.selectedIceCandidatePairStats = selectedIceCandidatePairStats;
+    }
 
-        if (!collectedStats.selectedIceCandidatePairStats) {
-          collectedStats.selectedIceCandidatePairStats = {
-            localCandidate: activeIceCandidatePair.localCandidate,
-            remoteCandidate: activeIceCandidatePair.remoteCandidate
-          };
-        }
-      }
-
-      let packetsLost = 0;
-      let packetsReceived = 0;
-      if (remoteAudioTrackStats && remoteAudioTrackStats[0]) {
-        const remoteAudioTrack = remoteAudioTrackStats[0];
-        if (remoteAudioTrack.jitter !== null) {
-          collectedStats.jitter.push(remoteAudioTrack.jitter);
-        }
-        if (remoteAudioTrack.packetsLost !== null) {
-          packetsLost += remoteAudioTrack.packetsLost;
-        }
-        if (remoteAudioTrack.packetsReceived !== null) {
-          packetsReceived += remoteAudioTrack.packetsReceived;
-        }
-      }
-
-      if (remoteVideoTrackStats && remoteVideoTrackStats[0]) {
-        const remoteVideoTrack = remoteVideoTrackStats[0];
-        if (remoteVideoTrack.packetsLost !== null) {
-          packetsLost += remoteVideoTrack.packetsLost;
-        }
-        if (remoteVideoTrack.packetsReceived !== null) {
-          packetsReceived += remoteVideoTrack.packetsReceived;
-        }
-      }
-      collectedStats.packetLoss.push(packetsReceived ? packetsLost * 100 / packetsReceived : 0);
+    if (!collectedStats.iceCandidateStats) {
+      collectedStats.iceCandidateStats = iceCandidateStats;
     }
   }
 
@@ -401,18 +349,13 @@ export class PreflightTest extends EventEmitter {
 
     if (remainingDuration > 0) {
       collectedStats = await this._collectRTCStatsForDuration(remainingDuration, collectedStats, senderPC, receiverPC);
-    } else {
-      const stats = await receiverPC.getStats();
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore: stats does have a values method.
-      collectedStats.iceCandidateStats = Array.from(stats.values()).filter((stat: RTCStats) => stat.type === 'local-candidate' || stat.type === 'remote-candidate');
     }
     return collectedStats;
   }
 }
 
 
-interface InternalStatsReport extends StatsReport {
+export interface InternalStatsReport extends StatsReport {
   activeIceCandidatePair: {
     timestamp: number;
     bytesSent: number;
@@ -425,67 +368,10 @@ interface InternalStatsReport extends StatsReport {
   }
 }
 
-function getStatsForPC(pc: RTCPeerConnection): Promise<InternalStatsReport> {
-  return getStatistics(pc);
-}
-
-function collectMOSDataForTrack(srcTrackStats: LocalAudioTrackStats | LocalVideoTrackStats, targetTrackStats: PreflightTrackStats) {
-  if (srcTrackStats) {
-    const { jitter, roundTripTime, packetsLost, packetsSent } =  srcTrackStats;
-
-    if (typeof srcTrackStats.roundTripTime === 'number') {
-      targetTrackStats.rtt.push(srcTrackStats.roundTripTime * 1000);
-    }
-    if (typeof srcTrackStats.jitter === 'number') {
-      targetTrackStats.jitter.push(srcTrackStats.jitter);
-    }
-
-    const totalPackets = packetsSent;
-
-    if (totalPackets) {
-      const fractionLost = (packetsLost || 0) / totalPackets;
-      targetTrackStats.packetLoss.push(fractionLost);
-      if (typeof roundTripTime === 'number' && typeof jitter === 'number' && roundTripTime > 0) {
-        const score = calculateMOS(roundTripTime, jitter, fractionLost);
-        targetTrackStats.mos.push(score);
-      }
-    }
-  }
-}
-
-function collectMOSData(publisherStats: StatsReport, collectedStats: PreflightStats) {
-  const { localAudioTrackStats,  localVideoTrackStats } = publisherStats;
-  localAudioTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localAudio));
-  localVideoTrackStats.forEach(trackStats => collectMOSDataForTrack(trackStats, collectedStats.localVideo));
-}
-
 function initCollectedStats() : PreflightStats {
   return {
+    mos: [],
     jitter: [],
-    localAudio: {
-      mos: [],
-      jitter: [],
-      rtt: [],
-      packetLoss: []
-    },
-    localVideo: {
-      mos: [],
-      jitter: [],
-      rtt: [],
-      packetLoss: []
-    },
-    remoteAudio: {
-      mos: [],
-      jitter: [],
-      rtt: [],
-      packetLoss: []
-    },
-    remoteVideo: {
-      mos: [],
-      jitter: [],
-      rtt: [],
-      packetLoss: []
-    },
     rtt: [],
     outgoingBitrate: [],
     incomingBitrate: [],

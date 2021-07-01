@@ -10,11 +10,47 @@ export interface RTCStats {
   type?: RTCStatsType;
 }
 
-export type RTCIceCredentialType = 'oauth' | 'password';
-
 export interface RTCIceServer {
-  credential?: string | RTCOAuthCredential;
-  credentialType?: RTCIceCredentialType;
+  credential?: string;
+  credentialType?: 'password' | undefined;
   urls: string | string[];
   username?: string;
+}
+
+
+type RTCStatsIceCandidatePairState = 'failed' | 'frozen' | 'in-progress' | 'succeeded' | 'waiting';
+
+export interface RTCIceCandidatePairStats extends RTCStats {
+  availableIncomingBitrate?: number;
+  availableOutgoingBitrate?: number;
+  bytesDiscardedOnSend?: number;
+  bytesReceived?: number;
+  bytesSent?: number;
+  circuitBreakerTriggerCount?: number;
+  consentExpiredTimestamp?: number;
+  consentRequestsSent?: number;
+  currentRoundTripTime?: number;
+  currentRtt?: number;
+  firstRequestTimestamp?: number;
+  lastPacketReceivedTimestamp?: number;
+  lastPacketSentTimestamp?: number;
+  lastRequestTimestamp?: number;
+  lastResponseTimestamp?: number;
+  localCandidateId?: string;
+  nominated?: boolean;
+  packetsDiscardedOnSend?: number;
+  packetsReceived?: number;
+  packetsSent?: number;
+  priority?: number;
+  remoteCandidateId?: string;
+  requestsReceived?: number;
+  requestsSent?: number;
+  responsesReceived?: number;
+  responsesSent?: number;
+  retransmissionsReceived?: number;
+  retransmissionsSent?: number;
+  state?: RTCStatsIceCandidatePairState;
+  totalRoundTripTime?: number;
+  totalRtt?: number;
+  transportId?: string;
 }
