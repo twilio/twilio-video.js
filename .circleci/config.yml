@@ -99,7 +99,7 @@ commands:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Installing dependencies
-          command: npm install
+          command: npm install --legacy-peer-deps
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:
@@ -153,9 +153,6 @@ commands:
   umd-tests:
     steps:
       - build
-      - run:
-          name: Installing dependencies
-          command: npm install
       - run:
           name: Installing UMD test dependencies
           command: npm run test:umd:install
