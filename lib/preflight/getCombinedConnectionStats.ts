@@ -113,14 +113,22 @@ function makeStandardCandidateStats(input: any) : RTCIceCandidateStats {
 }
 
 function extractSelectedActiveCandidatePair(stats: RTCStatsReport) : SelectedIceCandidatePairStats | null {
-  let activeCandidatePairStatsFound: RTCIceCandidatePairStats|null = null;
-  stats.forEach(statPair => {
-    if (statPair.type === 'candidate-pair' && statPair.nominated) {
-      if (activeCandidatePairStatsFound === null || (Number(activeCandidatePairStatsFound.priority) < Number(statPair.priority))) {
-        activeCandidatePairStatsFound = statPair;
-      }
+  let selectedCandidatePairId:string|null = null;
+  const candidatePairs: RTCIceCandidatePairStats[] = [];
+  stats.forEach(stat => {
+    if (stat.type === 'transport' && stat.selectedCandidatePairId) {
+      selectedCandidatePairId = stat.selectedCandidatePairId;
+    } else if (stat.type === 'candidate-pair') {
+      candidatePairs.push(stat);
     }
   });
+
+  const activeCandidatePairStatsFound = candidatePairs.find(pair =>
+    // Firefox
+    pair.selected ||
+    // Spec-compliant way
+    (selectedCandidatePairId && pair.id === selectedCandidatePairId)
+  );
 
   if (!activeCandidatePairStatsFound) {
     return null;

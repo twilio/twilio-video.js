@@ -21,6 +21,7 @@ export interface RTCIceServer {
 type RTCStatsIceCandidatePairState = 'failed' | 'frozen' | 'in-progress' | 'succeeded' | 'waiting';
 
 export interface RTCIceCandidatePairStats extends RTCStats {
+  selected: boolean,
   availableIncomingBitrate?: number;
   availableOutgoingBitrate?: number;
   bytesDiscardedOnSend?: number;
