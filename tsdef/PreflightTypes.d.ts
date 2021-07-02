@@ -19,13 +19,13 @@ export interface NetworkTiming {
 }
 
 export interface RTCIceCandidateStats {
-  transportId: string;
+  transportId?: string;
   address?: string;
   port?: number;
   protocol?: string;
   candidateType?: string;
   priority?: number;
-  url?: number;
+  url?: string;
   relayProtocol?: number;
 }
 
@@ -55,7 +55,7 @@ export interface PreflightTestReport {
   stats: PreflightReportStats
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
-  qualityScore: number
+  qualityScore: number;
 }
 
 

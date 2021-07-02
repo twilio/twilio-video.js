@@ -13,18 +13,13 @@ function assertTimeMeasurement(measurement) {
 }
 
 function assertStat(stat, statName) {
-  if (!stat) {
-    // eslint-disable-next-line no-console
-    console.log(`${statName} is ${stat}`);
-  } else {
-    assert.strictEqual(typeof stat.min, 'number', `wrong typeof stat.min: ${typeof stat.min} for ${stat}`);
-    assert.strictEqual(typeof stat.max, 'number', `wrong typeof stat.max: ${typeof stat.max} for ${stat}`);
-    assert.strictEqual(typeof stat.average, 'number', `wrong typeof stat.average: ${typeof stat.average} for ${stat}`);
-  }
+  assert.strictEqual(typeof stat.min, 'number', `wrong typeof stat.min: ${typeof stat.min} for ${statName}`);
+  assert.strictEqual(typeof stat.max, 'number', `wrong typeof stat.max: ${typeof stat.max} for ${statName}`);
+  assert.strictEqual(typeof stat.average, 'number', `wrong typeof stat.average: ${typeof stat.average} for ${statName}`);
 }
 
 function assertIceCandidate(candidate) {
-  assert.strictEqual(typeof candidate.ip, 'string', `candidate.ip=${typeof candidate.ip}`);
+  assert.strictEqual(typeof candidate.address, 'string', `candidate.address=${typeof candidate.address}`);
   assert.strictEqual(typeof candidate.port, 'number', `candidate.port=${typeof candidate.port}`);
   assert.strictEqual(typeof candidate.candidateType, 'string', `candidate.candidateType=${typeof candidate.candidateType}`);
 }
@@ -39,9 +34,10 @@ function validateReport(report)  {
   assertStat(report.stats.rtt, 'rtt');
   assertStat(report.stats.outgoingBitrate, 'outgoingBitrate');
   assertStat(report.stats.incomingBitrate, 'incomingBitrate');
-  assertStat(report.stats.packetLoss);
+  assertStat(report.stats.packetLoss, 'packetLoss');
   assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
   assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
+  assert.strictEqual(typeof report.qualityScore, 'number', `wrong typeof stat.qualityScore = ${typeof report.qualityScore}`);
 }
 
 describe('preflight', function() {
