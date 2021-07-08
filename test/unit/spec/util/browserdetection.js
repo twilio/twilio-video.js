@@ -5,12 +5,18 @@ const { isChromeIOS } = require('../../../../lib/util/browserdetection');
 
 describe('isChromeIOS', () => {
   let oldAgent;
-  before(() => {
+  beforeEach(() => {
     oldAgent = navigator.userAgent;
   });
 
-  after(() => {
+  afterEach(() => {
     navigator.userAgent = oldAgent;
+    if (global.chrome) {
+      delete global.chrome;
+    }
+    if (navigator.brave) {
+      delete navigator.brave;
+    }
   });
 
   [
