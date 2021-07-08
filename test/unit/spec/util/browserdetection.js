@@ -1,9 +1,9 @@
 'use strict';
 
 const assert = require('assert');
-const { isChromeIOS } = require('../../../../lib/util/support');
+const { isChromeIOS } = require('../../../../lib/util/browserdetection');
 
-describe.only('isChromeIOS', () => {
+describe('isChromeIOS', () => {
   let oldAgent;
   before(() => {
     oldAgent = navigator.userAgent;
@@ -41,15 +41,50 @@ describe.only('isChromeIOS', () => {
 
   [
     [
-      'Firefox on iPhone',
-      'Mozilla/5.0 (iPhone; CPU OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/33.1 Mobile/15E148 Safari/605.1.15'
-    ],
-    [
       'Brave on iPhone',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.2 Mobile/15E148 Safari/604.1',
       null,
       {}
-    ]
+    ],
+    [
+      'Moto G7 Android Chrome',
+      'Mozilla/5.0 (Linux; Android 9; moto g(7) power) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.96 Mobile Safari/537.36'
+    ],
+    [
+      'Chrome on Windows',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
+      { runtime: {} }
+    ],
+    [
+      'Edge (Chromium) on Windows',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063',
+      { runtime: {} }
+    ],
+    [
+      'Edge on iPhone',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 EdgiOS/46.3.13 Mobile/15E148 Safari/605.1.15'
+    ],
+    [
+      'Edge on Android',
+      'Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Mobile Safari/537.36 EdgA/46.3.4.5155'
+    ],
+    [
+      'Firefox on Android',
+      'Mozilla/5.0 (Android 7.0; Mobile; rv:54.0) Gecko/54.0 Firefox/54.0'
+    ],
+    [
+      'Firefox on iPhone',
+      'Mozilla/5.0 (iPhone; CPU OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/33.1 Mobile/15E148 Safari/605.1.15'
+    ],
+    [
+      'Firefox on Windows',
+      'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/69.0'
+    ],
+    [
+      'Safari on Mac',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Safari/605.1.15'
+    ],
+
   ].forEach(([browser, useragent, chrome, brave]) => {
     it('returns false for: ' + browser, () => {
       navigator.userAgent = useragent;
