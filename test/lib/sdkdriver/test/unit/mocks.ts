@@ -1,4 +1,4 @@
-import * as EventTarget from '../../../../../lib/eventtarget';
+import * as EventTarget from '../../../../../es5/eventtarget';
 import { EventEmitter } from 'events';
 import * as sinon from 'sinon';
 import { inherits } from 'util';

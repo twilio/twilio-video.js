@@ -97,7 +97,7 @@
     "lint:js": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
     "lint:ts": "eslint ./tsdef/*.ts ./lib/**/*.ts",
     "lint": "npm-run-all lint:js lint:ts",
-    "test:unit": "npm-run-all test:unit:js test:unit:ts",
+    "test:unit": "npm-run-all build:es5 test:unit:js test:unit:ts",
     "test:unit:js": "nyc --report-dir=./coverage/js --extension=.js --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha ./test/unit/index.js",
     "test:unit:ts": "nyc --report-dir=./coverage/ts --extension=.ts --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha -r ts-node/register ./test/unit/index.ts",
     "test:serversiderender": "mocha ./test/serversiderender/index.js",

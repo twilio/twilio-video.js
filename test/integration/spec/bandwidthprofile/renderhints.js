@@ -3,9 +3,9 @@
 'use strict';
 
 const assert = require('assert');
-const { video: createLocalVideoTrack } = require('../../../../lib/createlocaltrack');
+const { video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
-const { Logger } = require('../../../../lib');
+const { Logger } = require('../../../../es5');
 
 const {
   tracksSubscribed,
@@ -18,8 +18,8 @@ const {
   waitForNot
 } = require('../../../lib/util');
 
-const { trackPriority: { PRIORITY_STANDARD } } = require('../../../../lib/util/constants');
-const { waitForSometime } = require('../../../../lib/util');
+const { trackPriority: { PRIORITY_STANDARD } } = require('../../../../es5/util/constants');
+const { waitForSometime } = require('../../../../es5/util');
 
 describe('BandwidthProfileOptions: renderHints', function() {
   // eslint-disable-next-line no-invalid-this
