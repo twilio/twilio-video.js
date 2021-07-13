@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 
-const isSupported = require('../../../../lib/util/support');
+const isSupported = require('../../../../es5/util/support');
 
 describe('isBrowserSupported', () => {
   context('when called in a browser that has the getUserMedia and RTCPeerConnection APIs', () => {

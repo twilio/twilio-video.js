@@ -5,15 +5,15 @@ const assert = require('assert');
 const { EventEmitter } = require('events');
 const { getUserMedia } = require('@twilio/webrtc');
 
-const connect = require('../../../lib/connect');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
-const createLocalTracks = require('../../../lib/createlocaltracks');
-const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
-const Room = require('../../../lib/room');
-const { flatMap } = require('../../../lib/util');
-const CancelablePromise = require('../../../lib/util/cancelablepromise');
-const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../lib/util/sdp');
-const TwilioError = require('../../../lib/util/twilioerror');
+const connect = require('../../../es5/connect');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
+const createLocalTracks = require('../../../es5/createlocaltracks');
+const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
+const Room = require('../../../es5/room');
+const { flatMap } = require('../../../es5/util');
+const CancelablePromise = require('../../../es5/util/cancelablepromise');
+const { createCodecMapForMediaSection, createPtToCodecName, getMediaSections } = require('../../../es5/util/sdp');
+const TwilioError = require('../../../es5/util/twilioerror');
 
 const {
   MediaConnectionError,
@@ -21,7 +21,7 @@ const {
   TrackNameIsDuplicatedError,
   TrackNameTooLongError,
   MediaServerRemoteDescFailedError
-} = require('../../../lib/util/twilio-video-errors');
+} = require('../../../es5/util/twilio-video-errors');
 
 const defaults = require('../../lib/defaults');
 const { isChrome, isFirefox, isSafari } = require('../../lib/guessbrowser');
@@ -44,7 +44,7 @@ const {
   waitFor
 } = require('../../lib/util');
 
-const { trackPriority: { PRIORITY_STANDARD } } = require('../../../lib/util/constants');
+const { trackPriority: { PRIORITY_STANDARD } } = require('../../../es5/util/constants');
 
 const safariVersion = isSafari && Number(navigator.userAgent.match(/Version\/([0-9.]+)/)[1]);
 

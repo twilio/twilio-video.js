@@ -1,6 +1,6 @@
 'use strict';
 
-const EventTarget = require('../../lib/eventtarget');
+const EventTarget = require('../../es5/eventtarget');
 
 class MockConnection extends EventTarget {
   constructor(type = null) {

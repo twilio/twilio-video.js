@@ -1,6 +1,6 @@
 'use strict';
 
-const EventTarget = require('../../lib/eventtarget');
+const EventTarget = require('../../es5/eventtarget');
 
 const randomName = require('../lib/util').randomName;
 
