@@ -6,7 +6,7 @@ const assert = require('assert');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../../lib/createlocaltrack');
 const defaults = require('../../../lib/defaults');
 const { completeRoom } = require('../../../lib/rest');
-const { Logger } = require('../../../../lib');
+const { Logger } = require('../../../../es5');
 
 const {
   createSyntheticAudioStreamTrack,

@@ -21,7 +21,7 @@ const {
 } = require('../../../lib/util');
 
 const DockerProxyClient = require('../../../../docker/dockerProxyClient');
-const { connect } = require('../../../../lib');
+const { connect } = require('../../../../es5');
 const { flatMap } = require('../../../../lib/util');
 
 const {

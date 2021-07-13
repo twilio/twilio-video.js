@@ -10,7 +10,7 @@ const {
   createLocalTracks,
   createLocalVideoTrack,
   LocalDataTrack
-} = require('../../../../lib');
+} = require('../../../../es5');
 
 const RemoteAudioTrackPublication = require('../../../../lib/media/track/remoteaudiotrackpublication');
 const RemoteDataTrackPublication = require('../../../../lib/media/track/remotedatatrackpublication');

@@ -5,7 +5,7 @@ const assert = require('assert');
 const {
   connect,
   createLocalTracks
-} = require('../../../../lib');
+} = require('../../../../es5');
 
 const defaults = require('../../../lib/defaults');
 const getToken = require('../../../lib/token');
