@@ -10,16 +10,16 @@ const {
   LocalDataTrack
 } = require('../../../../es5');
 
-const LocalTrackPublication = require('../../../../lib/media/track/localtrackpublication');
-const RemoteAudioTrack = require('../../../../lib/media/track/remoteaudiotrack');
-const RemoteAudioTrackPublication = require('../../../../lib/media/track/remoteaudiotrackpublication');
-const RemoteDataTrack = require('../../../../lib/media/track/remotedatatrack');
-const RemoteDataTrackPublication = require('../../../../lib/media/track/remotedatatrackpublication');
-const RemoteVideoTrack = require('../../../../lib/media/track/remotevideotrack');
-const RemoteVideoTrackPublication = require('../../../../lib/media/track/remotevideotrackpublication');
-const { flatMap } = require('../../../../lib/util');
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../../lib/util/constants');
-const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../../lib/util/twilio-video-errors');
+const LocalTrackPublication = require('../../../../es5/media/track/localtrackpublication');
+const RemoteAudioTrack = require('../../../../es5/media/track/remoteaudiotrack');
+const RemoteAudioTrackPublication = require('../../../../es5/media/track/remoteaudiotrackpublication');
+const RemoteDataTrack = require('../../../../es5/media/track/remotedatatrack');
+const RemoteDataTrackPublication = require('../../../../es5/media/track/remotedatatrackpublication');
+const RemoteVideoTrack = require('../../../../es5/media/track/remotevideotrack');
+const RemoteVideoTrackPublication = require('../../../../es5/media/track/remotevideotrackpublication');
+const { flatMap } = require('../../../../es5/util');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../../es5/util/constants');
+const { TrackNameIsDuplicatedError, TrackNameTooLongError } = require('../../../../es5/util/twilio-video-errors');
 
 const defaults = require('../../../lib/defaults');
 const { isFirefox, isSafari } = require('../../../lib/guessbrowser');

@@ -12,17 +12,17 @@ const {
 const {
   RoomCompletedError,
   ParticipantMaxTracksExceededError
-} = require('../../../lib/util/twilio-video-errors');
+} = require('../../../es5/util/twilio-video-errors');
 
 const { isChrome, isSafari } = require('../../lib/guessbrowser');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
-const RemoteParticipant = require('../../../lib/remoteparticipant');
-const { flatMap, smallVideoConstraints } = require('../../../lib/util');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
+const RemoteParticipant = require('../../../es5/remoteparticipant');
+const { flatMap, smallVideoConstraints } = require('../../../es5/util');
 
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom, startRecording, stopRecording, getRoom } = require('../../lib/rest');
 const getToken = require('../../lib/token');
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../lib/util/constants');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW } } = require('../../../es5/util/constants');
 
 const {
   createSyntheticAudioStreamTrack,

@@ -3,8 +3,8 @@
 'use strict';
 
 const assert = require('assert');
-const connect = require('../../../../lib/connect');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../../lib/createlocaltrack');
+const connect = require('../../../../es5/connect');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
@@ -24,8 +24,8 @@ const {
   waitFor
 } = require('../../../lib/util');
 
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../../lib/util/constants');
-const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } = require('../../../../lib/util/constants');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../../es5/util/constants');
+const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } = require('../../../../es5/util/constants');
 
 function monitorTrackSwitchOffs(remoteTrack, trackName) {
   console.log(`${trackName} [${remoteTrack.sid}] ${remoteTrack.isSwitchedOff ? 'OFF' : 'ON'}`);
