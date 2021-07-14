@@ -58,12 +58,12 @@ const LocalAudioTrack = internals.LocalAudioTrack;
 const LocalVideoTrack = internals.LocalVideoTrack;
 const LocalDataTrack = internals.LocalDataTrack;
 
-export {
-  runPreflight,
+module.exports = {
   connect,
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
+  runPreflight,
   isSupported,
   version,
   Logger,
@@ -71,4 +71,3 @@ export {
   LocalVideoTrack,
   LocalDataTrack
 };
-
