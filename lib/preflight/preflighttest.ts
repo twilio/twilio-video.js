@@ -226,7 +226,7 @@ export class PreflightTest extends EventEmitter {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
       this.emit('progress', PreflightProgress.mediaAcquired);
-      this.emit('debug', { remoteTracks: localTracks });
+      this.emit('debug', { localTracks });
 
       this._connectTiming.start();
       let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
