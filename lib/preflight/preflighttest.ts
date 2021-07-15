@@ -16,7 +16,6 @@ const MovingAverageDelta = require('../util/movingaveragedelta');
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
 
-
 /**
  * progress values that are sent by {@link PreflightTest#event:progress}
  * @enum {string}
@@ -227,6 +226,7 @@ export class PreflightTest extends EventEmitter {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
       this.emit('progress', PreflightProgress.mediaAcquired);
+      this.emit('debug', { localTracks });
 
       this._connectTiming.start();
       let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
@@ -315,12 +315,13 @@ export class PreflightTest extends EventEmitter {
     this._sentBytesMovingAverage.putSample(bytesSent, timestamp);
     this._receivedBytesMovingAverage.putSample(bytesReceived, timestamp);
     this._packetLossMovingAverage.putSample(packetsLost, packets);
-
     if (hasLastData) {
       collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get());
       collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get());
       const fractionPacketLost = this._packetLossMovingAverage.get();
-      collectedStats.packetLoss.push(fractionPacketLost);
+      const percentPacketsLost = Math.min(100, fractionPacketLost * 100);
+
+      collectedStats.packetLoss.push(percentPacketsLost);
 
       const score = calculateMOS(roundTripTime, jitter, fractionPacketLost);
       collectedStats.mos.push(score);
