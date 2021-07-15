@@ -2,6 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.15.2 (July 15, 2021)
+======================
+
+Bug Fixes
+---------
+Fixed a bug where setting clientTrackSwitchOffControl to `auto` caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (VIDEO-5226).
+
 2.15.1 (June 21, 2021)
 =====================
 
