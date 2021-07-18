@@ -6,7 +6,6 @@ let requestId = 200;
 function fetchRequest(options, postData) {
   const thisRequest = requestId++;
   const logPrefix = `fetchRequest[${thisRequest}]: `;
-  console.log(logPrefix + 'Processing ', postData);
   return new Promise((resolve, reject) => {
     let clientRequest = http.request(options, res => {
       const requestFailed = res.statusCode !== 200 && res.statusCode !== 201;
@@ -27,7 +26,6 @@ function fetchRequest(options, postData) {
           if (requestFailed) {
             console.warn(logPrefix + 'requestFailed2 returned:', res.statusCode, postData);
           }
-          console.log(logPrefix + 'resolving');
           resolve(parsedData);
         } catch (e) {
           console.error(logPrefix + 'rejecting:', e);
