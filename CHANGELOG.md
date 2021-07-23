@@ -10,13 +10,12 @@ New Features
 
 - `isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
 
-2.15.2 (In Progress)
-====================
+2.15.2 (July 15, 2021)
+======================
 
 Bug Fixes
 ---------
-
-Fixed a bug where setting clientTrackSwitchOffControl to auto caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (JSDK-5226).
+Fixed a bug where setting clientTrackSwitchOffControl to `auto` caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (VIDEO-5226).
 
 2.15.1 (June 21, 2021)
 =====================
