@@ -14,6 +14,7 @@ const {
   randomName,
   participantsConnected,
   tracksSubscribed,
+  tracksUnpublished,
   waitForSometime,
   waitFor,
   trackStarted
@@ -28,14 +29,13 @@ function getTracksOfKind(participant, kind) {
   // eslint-disable-next-line no-invalid-this
   this.timeout(5 * 60 * 1000);
 
-  it(' tracks works even after 50 connect disconnects ', async () => {
+  it('tracks continue to start after 50 connect disconnects ', async () => {
     const localAudioTrack = await createLocalAudioTrack({ fake: true });
     const localVideoTrack = await createLocalVideoTrack(smallVideoConstraints);
     const roomName = await createRoom(randomName(), defaults.topology);
     const connectOptions = Object.assign({
       name: roomName,
-      tracks: [localAudioTrack, localVideoTrack],
-      logLevel: 'warn',
+      tracks: [localAudioTrack, localVideoTrack]
     }, defaults);
 
     const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
@@ -70,4 +70,61 @@ function getTracksOfKind(participant, kind) {
     aliceRoom.disconnect();
     await completeRoom(aliceRoom.sid);
   });
+
+  it('tracks continue to start after 50 publish/unpublish ', async () => {
+    const localAudioTrack = await createLocalAudioTrack({ fake: true });
+    const localVideoTrack = await createLocalVideoTrack(smallVideoConstraints);
+    const roomName = await createRoom(randomName(), defaults.topology);
+    const connectOptions = Object.assign({
+      name: roomName,
+      tracks: []
+    }, defaults);
+
+    const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
+    const bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `Bob to join room: ${aliceRoom.sid}`);
+    // wait for Bob to see alice connected.
+    await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${aliceRoom.sid}`);
+
+    const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+
+    async function publishAndVerifyStarted(i) {
+
+      // eslint-disable-next-line no-console
+      console.log(`${i}] Alice publishing tracks`);
+      // alice publishes two tracks.
+      const audioPublication = await waitFor(aliceRoom.localParticipant.publishTrack(localAudioTrack), `Alice to publish a audio track: ${aliceRoom.sid}`);
+      const videoPublication = await waitFor(aliceRoom.localParticipant.publishTrack(localVideoTrack), `Alice to publish a video track: ${aliceRoom.sid}`);
+
+      await waitFor(tracksSubscribed(aliceRemote, 2), `${i}] Bob to see Alice's track: ${aliceRoom.sid}`);
+
+      const remoteVideoTracks = getTracksOfKind(aliceRemote, 'video');
+      const remoteAudioTracks = getTracksOfKind(aliceRemote, 'audio');
+      assert.strictEqual(remoteVideoTracks.length, 1);
+      assert.strictEqual(remoteAudioTracks.length, 1);
+
+      // bob sees tracks published by alice started.
+      await waitFor(trackStarted(remoteVideoTracks[0]), `${i}] Bob to see Alice's video track started: ${aliceRoom.sid}`);
+      await waitFor(trackStarted(remoteAudioTracks[0]), `${i}] Bob to see Alice's audio track started: ${aliceRoom.sid}`);
+
+      const bobSeesUnpublished =  tracksUnpublished(aliceRemote, 2);
+
+      // alice un-publishes tracks.
+      audioPublication.unpublish();
+      videoPublication.unpublish();
+
+      // bob sees tracks unpublished.
+      await waitFor(bobSeesUnpublished, `${i}] Bob to see tracks unpublished: ${aliceRoom.sid} `);
+
+      await waitForSometime(1000);
+    }
+
+    for (let i = 0; i < 50; i++) {
+      // eslint-disable-next-line no-await-in-loop
+      await publishAndVerifyStarted(i);
+    }
+
+    aliceRoom.disconnect();
+    await completeRoom(aliceRoom.sid);
+  });
+
 });
