@@ -40,6 +40,8 @@ function getTracksOfKind(participant, kind) {
 
     const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
     async function joinRoomAndEnsureTracksStarted(i) {
+      // eslint-disable-next-line no-console
+      console.log(`${i}] connecting to room ${aliceRoom.sid}`);
       const bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `${i}] Bob to join room: ${aliceRoom.sid}`);
 
       // wait for Bob to see alice connected.
@@ -62,7 +64,7 @@ function getTracksOfKind(participant, kind) {
     // Alice joins room first.
     for (let i = 0; i < 50; i++) {
       // eslint-disable-next-line no-await-in-loop
-      await joinRoomAndEnsureTracksStarted();
+      await joinRoomAndEnsureTracksStarted(i);
     }
 
     aliceRoom.disconnect();
