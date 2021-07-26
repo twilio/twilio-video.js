@@ -7,8 +7,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 Bug Fixes
 ---------
-Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of further WebMediaPlayers once there are already 75 (desktop) or 40 (mobile) players. Fixed a related bug where the SDK was not cleaning up an internally maintained media elements.
-Please ensure that your application cleans up media elements as well after they are detached.
+Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of  WebMediaPlayers once there are already 75 (desktop) or 40 (mobile) players. Fixed a related bug where the SDK was not cleaning up internally maintained media elements.
+Please ensure that your application cleans up media elements as well after they are detached (VIDEO-6336).
 ```js
   const elements = track.detach();
   elements.forEach(el => {
