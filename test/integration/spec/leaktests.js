@@ -25,7 +25,9 @@ function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
 }
 
-(isChrome ? describe : describe.skip)('VIDEO-6336: media element leak detection', function() {
+// eslint-disable-next-line no-warning-comments
+// TODO(mpatwardhan): Fix VIDEO-6356 and enable this test for p2p rooms.
+(isChrome && defaults.topology !== 'peer-to-peer' ? describe : describe.skip)('VIDEO-6336: media element leak detection', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(5 * 60 * 1000);
 
