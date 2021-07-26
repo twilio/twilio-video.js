@@ -1,12 +1,13 @@
 import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
 import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
 import { calculateMOS, mosToScore } from './mos';
-import { createAudioTrack, createVideoTrack } from './synthetic';
 import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
 import { getCombinedConnectionStats } from './getCombinedConnectionStats';
 import { getTurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
+import { syntheticAudio } from './syntheticaudio';
+import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
 
 const Log = require('../util/log');
@@ -224,7 +225,7 @@ export class PreflightTest extends EventEmitter {
     let pcs: RTCPeerConnection[] = [];
     try {
       let elements = [];
-      localTracks = await this._executePreflightStep('Acquire media', () => [createAudioTrack(), createVideoTrack({ width: 1920, height: 1080 })]);
+      localTracks = await this._executePreflightStep('Acquire media', () => [syntheticAudio(), syntheticVideo({ width: 640, height: 480 })]);
       this.emit('progress', PreflightProgress.mediaAcquired);
       this.emit('debug', { localTracks });
 
