@@ -7,6 +7,7 @@ require('./spec/bandwidthprofile/regressions');
 require('./spec/bandwidthprofile/renderhints');
 require('./spec/bandwidthprofile/video');
 require('./spec/connect');
+require('./spec/leaktests');
 require('./spec/logger');
 require('./spec/localparticipant/networkqualitylevel');
 require('./spec/localparticipant/publishunpublishtrack');
