@@ -10,6 +10,21 @@ New Features
 
 - `isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
 
+2.15.3 (In Progress)
+====================
+
+Bug Fixes
+---------
+Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of further WebMediaPlayers once there are already 75 (desktop) or 40 (mobile) players. Fixed a related bug where the SDK was not cleaning up an internally maintained media elements.
+Please ensure that your application cleans up media elements as well after they are detached.
+```js
+  const elements = track.detach();
+  elements.forEach(el => {
+    el.remove();
+    el.srcObject = null;
+  });
+```
+
 2.15.2 (July 15, 2021)
 ======================
 
