@@ -9,7 +9,7 @@ Bug Fixes
 ---------
 Fixed a bug where the SDK was not cleaning up internally maintained media elements. This causes memory leaks on certain use cases such as reconnecting or republishing to a room (VIDEO-6336).
 
-Additionally, Chrome 92 started enforcing limit on number of WebMediaPlayers. This blocks creation of WebMediaPlayers once the limit is reached - 75 for desktop and 40 for mobile. This SDK update will help prevent running into this limit issue on use cases such as reconnecting or republishing to a room. Please ensure that your application cleans up media elements as well after they are detached.
+Additionally, Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of WebMediaPlayers once the limit is reached - 75 for desktop and 40 for mobile. This SDK update will help prevent running into this limit issue on use cases such as reconnecting or republishing to a room. Please ensure that your application cleans up media elements as well after they are detached.
 
 ```js
 const elements = track.detach();
