@@ -117,7 +117,7 @@ const { defer } = require('../../../../../lib/util');
     describe('#_setMediaStreamTrack', () => {
       let dummyElement;
       beforeEach(() => {
-        dummyElement = { oncanplay: 'bar' };
+        dummyElement = { oncanplay: 'bar', remove: sinon.spy() };
         document.createElement = sinon.spy(() => {
           return dummyElement;
         });
@@ -340,7 +340,8 @@ const { defer } = require('../../../../../lib/util');
       const dummyElement = {
         oncanplay: null,
         videoWidth: 320,
-        videoHeight: 240
+        videoHeight: 240,
+        remove: sinon.spy()
       };
 
       before(() => {

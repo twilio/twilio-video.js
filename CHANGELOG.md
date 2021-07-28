@@ -2,6 +2,25 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.15.3 (July 28, 2021)
+======================
+
+Bug Fixes
+---------
+Fixed a bug where the SDK was not cleaning up internally maintained media elements. This causes memory leaks on certain use cases such as reconnecting or republishing to a room (VIDEO-6336).
+
+Additionally, Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of WebMediaPlayers once the limit is reached - 75 for desktop and 40 for mobile. This SDK update will help prevent running into this limit issue on use cases such as reconnecting or republishing to a room. Please ensure that your application cleans up media elements as well after they are detached.
+
+```js
+const elements = track.detach();
+elements.forEach(el => {
+  el.remove();
+  el.srcObject = null;
+});
+```
+
+Please be aware that your application may still run into the Chrome's WebMediaPlayers limit for large rooms where participants exceeds this limit.
+
 2.15.2 (July 15, 2021)
 ======================
 
