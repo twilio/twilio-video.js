@@ -22,6 +22,10 @@ class HTMLElement {
     return this;
   }
 
+  remove() {
+
+  }
+
   play() {
     return Promise.resolve();
   }
