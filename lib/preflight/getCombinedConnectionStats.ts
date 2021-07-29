@@ -39,7 +39,8 @@ export async function getCombinedConnectionStats({ publisher, subscriber }: { pu
 
   // jitter: subscriber, inbound-rtp, audio
   //         Note: chrome has jitter for video, but not Safari.
-  const jitter = getStatValues(subscriberStats, 'jitter', ['audio', 'video'], ['inbound-rtp']).reduce((a, b) => Math.max(a, b), 0);
+  //         Note: also jitter values are in seconds, but chrome's video jitter values were found to be are too big to be in seconds.
+  const jitter = getStatValues(subscriberStats, 'jitter', ['audio'], ['inbound-rtp']).reduce((a, b) => Math.max(a, b), 0);
 
   // packets, packetsLost:
   //              subscriber, audio, inbound-rtp,
