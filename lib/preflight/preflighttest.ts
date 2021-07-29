@@ -317,8 +317,9 @@ export class PreflightTest extends EventEmitter {
     this._receivedBytesMovingAverage.putSample(bytesReceived, timestamp);
     this._packetLossMovingAverage.putSample(packetsLost, packets);
     if (hasLastData) {
-      collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get());
-      collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get());
+      // convert BytesMovingAverage which is in bytes/millisecond to bits/second
+      collectedStats.outgoingBitrate.push(this._sentBytesMovingAverage.get() * 1000 * 8);
+      collectedStats.incomingBitrate.push(this._receivedBytesMovingAverage.get() * 1000 * 8);
       const fractionPacketLost = this._packetLossMovingAverage.get();
       const percentPacketsLost = Math.min(100, fractionPacketLost * 100);
 
@@ -362,8 +363,6 @@ export interface InternalStatsReport extends StatsReport {
     timestamp: number;
     bytesSent: number;
     bytesReceived: number;
-    availableOutgoingBitrate?: number;
-    availableIncomingBitrate?: number;
     currentRoundTripTime?: number;
     localCandidate: RTCIceCandidateStats;
     remoteCandidate: RTCIceCandidateStats;
@@ -411,7 +410,7 @@ function initCollectedStats() : PreflightStats {
 /**
  * Represents RTC related stats that were observed during preflight test
  * @typedef {object} PreflightReportStats
- * @property {Stats} [jitter] - Packet delay variation
+ * @property {Stats} [jitter] - Packet delay variation in seconds
  * @property {Stats} [rtt] - Round trip time, to the server back to the client in milliseconds.
  * @property {Stats} [mos] - mos score (1 to 5)
  * @property {Stats} [outgoingBitrate] - Outgoing bitrate in bits per second.
