@@ -7,13 +7,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 **New Features**
 -----------------------
 
-This release includes the **Preflight API Public Beta** (`runPreflight`) to help test connectivity with Twilio servers and estimate media quality for a Participant. It can be used to detect issues prior to joining a Video Room or as part of a troubleshooting page.  
+This release includes the **Preflight API Public Beta** (`runPreflight`) to help test connectivity with Twilio servers and estimate media quality for a Participant. It can be used to detect issues prior to joining a Video Room or as part of a troubleshooting page.
 
 The API connects two peer connections using Twilio's TURN servers. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying connectivity, it generates a report with statistics on the connection.
 
 `runPreflight` was originally introduced as an experimental API in `2.8.0-beta1` and has been updated based on feedback. In short, usage of the API will now be free of charge.
 
-Example: 
+Example:
 
 ```ts
 const { runPreflight } = require('twilio-video');
@@ -63,14 +63,33 @@ A few things to note:
 - This function uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API"> web audio API's.</a> Browser's autoplay policies sometimes require user action before accessing these APIs. Please ensure that this API is called in response to user action like a button click.
 - `preflightTest` emits a `failed` event to indicate test failures. You can use the Preflight `progress` events to better understand where the test failed and refer to
 [this guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices#connection-errors) for interpreting common errors.
-- Stats are based on the P2P connection. This means that the `outgoingBitrate` and `incomingBitrate` returned in the `stats` object are not a measure of uplink / downlink bandwidth. 
+- Stats are based on the P2P connection. This means that the `outgoingBitrate` and `incomingBitrate` returned in the `stats` object are not a measure of uplink / downlink bandwidth.
 
-2.15.2 (In Progress)
-====================
+2.15.3 (July 28, 2021)
+======================
 
 Bug Fixes
 ---------
-Fixed a bug where setting clientTrackSwitchOffControl to auto caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (JSDK-5226).
+Fixed a bug where the SDK was not cleaning up internally maintained media elements. This causes memory leaks on certain use cases such as reconnecting or republishing to a room (VIDEO-6336).
+
+Additionally, Chrome 92 [started enforcing](https://chromium-review.googlesource.com/c/chromium/src/+/2816118) limit on number of WebMediaPlayers. This blocks creation of WebMediaPlayers once the limit is reached - 75 for desktop and 40 for mobile. This SDK update will help prevent running into this limit issue on use cases such as reconnecting or republishing to a room. Please ensure that your application cleans up media elements as well after they are detached.
+
+```js
+const elements = track.detach();
+elements.forEach(el => {
+  el.remove();
+  el.srcObject = null;
+});
+```
+
+Please be aware that your application may still run into the Chrome's WebMediaPlayers limit for large rooms where participants exceeds this limit.
+
+2.15.2 (July 15, 2021)
+======================
+
+Bug Fixes
+---------
+Fixed a bug where setting clientTrackSwitchOffControl to `auto` caused the tracks to get switched off aggressively, which resulted in momentary black track during app layout changes (VIDEO-5226).
 
 2.15.1 (June 21, 2021)
 =====================

@@ -56,7 +56,7 @@ describe('MediaTrack', () => {
       track._detachElement = sinon.spy();
       track._attachments.delete = sinon.spy();
 
-      dummyElement = { oncanplay: 'bar' };
+      dummyElement = { oncanplay: 'bar', remove: sinon.spy() };
       track._createElement = sinon.spy(() => {
         return dummyElement;
       });
