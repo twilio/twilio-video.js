@@ -21,48 +21,42 @@ const DEFAULT_TEST_DURATION = 10 * SECOND;
  * progress values that are sent by {@link PreflightTest#event:progress}
  * @enum {string}
  */
-enum PreflightProgress {
+const PreflightProgress = {
   /**
-   * Preflight test {@link PreflightTest} has successfully acquired media
+   * {@link PreflightTest} has successfully generated synthetic tracks
    */
-  mediaAcquired = 'mediaAcquired',
+  mediaAcquired: 'mediaAcquired',
 
   /**
-   * Preflight test {@link PreflightTest} has successfully connected both participants
-   * to the room.
+   * {@link PreflightTest} has successfully connected to twilio server and obtained turn credentials
    */
-  connected = 'connected',
-
-  /**
-   * Preflight test {@link PreflightTest} sees both participants discovered each other
-   */
-  remoteConnected = 'remoteConnected',
+  connected: 'connected',
 
   /**
    * subscriberParticipant successfully subscribed to media tracks.
    */
-  mediaSubscribed = 'mediaSubscribed',
+  mediaSubscribed: 'mediaSubscribed',
 
   /**
    * media flow was detected.
    */
-  mediaStarted = 'mediaStarted',
+  mediaStarted: 'mediaStarted',
 
   /**
    * established DTLS connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
    */
-  dtlsConnected = 'dtlsConnected',
+  dtlsConnected: 'dtlsConnected',
 
   /**
    * established a PeerConnection, This is measured from PeerConnection `connecting` to `connected` state.
    */
-  peerConnectionConnected = 'peerConnectionConnected',
+  peerConnectionConnected: 'peerConnectionConnected',
 
   /**
    * established ICE connection. This is measured from ICE connection `checking` to `connected` state.
    */
-  iceConnected = 'iceConnected'
-}
+  iceConnected: 'iceConnected'
+};
 
 declare interface PreflightStats {
   jitter: number[],
