@@ -9,7 +9,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 This release includes the **Preflight API Public Beta** (`runPreflight`) to help test connectivity with Twilio servers and estimate media quality for a Participant. It can be used to detect issues prior to joining a Video Room or as part of a troubleshooting page.
 
-The API connects two peer connections using Twilio's TURN servers. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying connectivity, it generates a report with statistics on the connection.
+The API connects two peer connections using Twilio's Signaling and TURN servers. It publishes synthetic audio and video tracks from one participant and ensures that other participant receives media on those tracks. After successfully verifying connectivity, it generates a report with statistics on the connection.
 
 `runPreflight` was originally introduced as an experimental API in `2.8.0-beta1` and has been updated based on feedback. In short, usage of the API will now be free of charge.
 
@@ -63,7 +63,7 @@ A few things to note:
 - This function uses <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API"> web audio API's.</a> Browser's autoplay policies sometimes require user action before accessing these APIs. Please ensure that this API is called in response to user action like a button click.
 - `preflightTest` emits a `failed` event to indicate test failures. You can use the Preflight `progress` events to better understand where the test failed and refer to
 [this guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices#connection-errors) for interpreting common errors.
-- Stats are based on the P2P connection. This means that the `outgoingBitrate` and `incomingBitrate` returned in the `stats` object are not a measure of uplink / downlink bandwidth.
+- Stats are based on the P2P connections. This means that the bitrate stats returned in the report are not a measure of uplink / downlink available bandwidth.
 
 2.15.3 (July 28, 2021)
 ======================
