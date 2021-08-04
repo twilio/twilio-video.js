@@ -32,12 +32,11 @@ function validateReport(report)  {
   assertTimeMeasurement(report.networkTiming.media);
   assertStat(report.stats.jitter, 'jitter');
   assertStat(report.stats.rtt, 'rtt');
-  assertStat(report.stats.outgoingBitrate, 'outgoingBitrate');
-  assertStat(report.stats.incomingBitrate, 'incomingBitrate');
   assertStat(report.stats.packetLoss, 'packetLoss');
   assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
   assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
-  assert.strictEqual(typeof report.qualityScore, 'number', `wrong typeof stat.qualityScore = ${typeof report.qualityScore}`);
+  assert(report.iceCandidateStats.length > 0);
+  report.iceCandidateStats.forEach(iceCandidate => assertIceCandidate(iceCandidate));
 }
 
 describe('preflight', function() {
