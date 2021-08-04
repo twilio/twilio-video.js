@@ -44,8 +44,6 @@ export interface PreflightReportStats {
   jitter: Stats|null;
   rtt: Stats|null;
   mos: Stats|null;
-  outgoingBitrate?: Stats|null;
-  incomingBitrate?: Stats|null;
   packetLoss: Stats|null;
 }
 
@@ -55,7 +53,6 @@ export interface PreflightTestReport {
   stats: PreflightReportStats
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
-  qualityScore: number;
 }
 
 
