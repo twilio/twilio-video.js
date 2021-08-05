@@ -43,7 +43,6 @@ export interface Stats {
 export interface PreflightReportStats {
   jitter: Stats|null;
   rtt: Stats|null;
-  mos: Stats|null;
   packetLoss: Stats|null;
 }
 

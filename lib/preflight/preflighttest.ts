@@ -127,7 +127,6 @@ export class PreflightTest extends EventEmitter {
 
   private _generatePreflightReport(collectedStats: PreflightStats) : PreflightTestReport  {
     this._testTiming.stop();
-    const mos = makeStat(collectedStats.mos);
     return {
       testTiming: this._testTiming.getTimeMeasurement(),
       networkTiming: {
@@ -138,7 +137,6 @@ export class PreflightTest extends EventEmitter {
         media: this._mediaTiming.getTimeMeasurement()
       },
       stats: {
-        mos,
         jitter: makeStat(collectedStats.jitter),
         rtt: makeStat(collectedStats.rtt),
         packetLoss: makeStat(collectedStats.packetLoss),
