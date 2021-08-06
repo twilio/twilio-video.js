@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 
-const InsightsPublisher = require('../../../../lib/util/insightspublisher');
+const InsightsPublisher = require('../../../../es5/util/insightspublisher');
 
 const defaults = require('../../../lib/defaults');
 const getToken = require('../../../lib/token');

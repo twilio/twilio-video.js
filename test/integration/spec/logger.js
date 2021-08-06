@@ -4,9 +4,9 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const { Logger } = require('../../../lib');
+const { Logger } = require('../../../es5');
 const defaults = require('../../lib/defaults');
-const defaultConnect = require('../../../lib/connect');
+const defaultConnect = require('../../../es5/connect');
 const getToken = require('../../lib/token');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const { randomName } = require('../../lib/util');
