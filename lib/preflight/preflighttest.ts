@@ -1,8 +1,8 @@
 import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
 import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
-import { calculateMOS, mosToScore } from './mos';
 import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
+import { calculateMOS } from './mos';
 import { getCombinedConnectionStats } from './getCombinedConnectionStats';
 import { getTurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
@@ -329,8 +329,6 @@ export class PreflightTest extends EventEmitter {
 
   private async _collectRTCStatsForDuration(duration: number, collectedStats: PreflightStats, senderPC: RTCPeerConnection, receiverPC: RTCPeerConnection) : Promise<PreflightStats> {
     const startTime = Date.now();
-
-    // take a sample every 1000ms.
     const STAT_INTERVAL = Math.min(1000, duration);
 
     await waitForSometime(STAT_INTERVAL);
@@ -401,7 +399,6 @@ function initCollectedStats() : PreflightStats {
  * @typedef {object} PreflightReportStats
  * @property {Stats} [jitter] - Packet delay variation in seconds
  * @property {Stats} [rtt] - Round trip time, to the server back to the client in milliseconds.
- * @property {Stats} [mos] - mos score (1 to 5)
  * @property {Stats} [packetLoss] - Packet loss as a percent of total packets sent.
 */
 
