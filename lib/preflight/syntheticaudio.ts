@@ -15,6 +15,7 @@ export function syntheticAudio(): MediaStreamTrack {
   const originalStop = track.stop;
   track.stop = () => {
     originalStop.call(track);
+    audioContextFactory.release(holder);
   };
   return track;
 }
