@@ -23,6 +23,7 @@ require('./spec/data/receiver');
 require('./spec/data/transport');
 
 require('./spec/media/track/es5/localdatatrack');
+require('./spec/media/track/audiotrack');
 require('./spec/media/track/mediatrack');
 require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
