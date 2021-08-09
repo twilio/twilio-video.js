@@ -2,12 +2,12 @@
 'use strict';
 
 const assert = require('assert');
-const { trackPriority } = require('../../../lib/util/constants');
-const LocalDataTrack = require('../../../lib/media/track/es5/localdatatrack');
+const { trackPriority } = require('../../../es5/util/constants');
+const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
-const connect = require('../../../lib/connect');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
+const connect = require('../../../es5/connect');
 const getToken = require('../../lib/token');
 const { isFirefox } = require('../../lib/guessbrowser');
 

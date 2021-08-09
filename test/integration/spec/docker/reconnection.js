@@ -21,14 +21,14 @@ const {
 } = require('../../../lib/util');
 
 const DockerProxyClient = require('../../../../docker/dockerProxyClient');
-const { connect } = require('../../../../lib');
-const { flatMap } = require('../../../../lib/util');
+const { connect } = require('../../../../es5');
+const { flatMap } = require('../../../../es5/util');
 
 const {
   SignalingConnectionError,
   MediaConnectionError,
   SignalingConnectionDisconnectedError
-} = require('../../../../lib/util/twilio-video-errors');
+} = require('../../../../es5/util/twilio-video-errors');
 
 const ONE_MINUTE = 60 * 1000;
 const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;

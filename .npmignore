@@ -3,6 +3,7 @@
 .github
 .idea
 .travis.yml
+.nyc_output
 *.sw*
 browsers
 coverage
