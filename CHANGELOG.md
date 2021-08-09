@@ -34,8 +34,6 @@ preflightTest.on('completed', (report: PreflightTestReport) => {
   console.log("Test completed in " + report.testTiming.duration + " milliseconds.");
   console.log(" It took " + report.networkTiming.connect?.duration + " milliseconds to connect");
   console.log(" It took " + report.networkTiming.media?.duration + " milliseconds to receive media");
-  console.log("rtt max: " + report.stats.rtt.max + ", rtt avg: " + report.stats.rtt.avg);
-
 });
 ```
 
