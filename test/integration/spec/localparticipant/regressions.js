@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../lib/util/constants');
+const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../es5/util/constants');
 const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat(DEFAULT_CHROME_SDP_SEMANTICS);
 
 const {
@@ -10,13 +10,13 @@ const {
   createLocalTracks,
   createLocalVideoTrack,
   LocalDataTrack
-} = require('../../../../lib');
+} = require('../../../../es5');
 
-const RemoteAudioTrackPublication = require('../../../../lib/media/track/remoteaudiotrackpublication');
-const RemoteDataTrackPublication = require('../../../../lib/media/track/remotedatatrackpublication');
-const RemoteVideoTrackPublication = require('../../../../lib/media/track/remotevideotrackpublication');
-const { flatMap } = require('../../../../lib/util');
-const { getMediaSections } = require('../../../../lib/util/sdp');
+const RemoteAudioTrackPublication = require('../../../../es5/media/track/remoteaudiotrackpublication');
+const RemoteDataTrackPublication = require('../../../../es5/media/track/remotedatatrackpublication');
+const RemoteVideoTrackPublication = require('../../../../es5/media/track/remotevideotrackpublication');
+const { flatMap } = require('../../../../es5/util');
+const { getMediaSections } = require('../../../../es5/util/sdp');
 
 const defaults = require('../../../lib/defaults');
 const { isChrome, isFirefox } = require('../../../lib/guessbrowser');

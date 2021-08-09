@@ -1,4 +1,4 @@
-FROM circleci/node:10.0.0-stretch
+FROM circleci/node:lts-browsers
 
 #
 # Install Java 11 LTS / OpenJDK 11

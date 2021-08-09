@@ -7,16 +7,16 @@ const {
   createLocalAudioTrack,
   createLocalVideoTrack,
   LocalDataTrack
-} = require('../../../lib');
+} = require('../../../es5');
 
-const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../lib/util/constants');
-const RemoteAudioTrack = require('../../../lib/media/track/remoteaudiotrack');
-const RemoteAudioTrackPublication = require('../../../lib/media/track/remoteaudiotrackpublication');
-const RemoteDataTrack = require('../../../lib/media/track/remotedatatrack');
-const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatatrackpublication');
-const RemoteVideoTrack = require('../../../lib/media/track/remotevideotrack');
-const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
-const { flatMap } = require('../../../lib/util');
+const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../es5/util/constants');
+const RemoteAudioTrack = require('../../../es5/media/track/remoteaudiotrack');
+const RemoteAudioTrackPublication = require('../../../es5/media/track/remoteaudiotrackpublication');
+const RemoteDataTrack = require('../../../es5/media/track/remotedatatrack');
+const RemoteDataTrackPublication = require('../../../es5/media/track/remotedatatrackpublication');
+const RemoteVideoTrack = require('../../../es5/media/track/remotevideotrack');
+const RemoteVideoTrackPublication = require('../../../es5/media/track/remotevideotrackpublication');
+const { flatMap } = require('../../../es5/util');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');

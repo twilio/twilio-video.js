@@ -13,7 +13,6 @@ const publicClasses = [
   'lib/connect.js',
   'lib/createlocaltrack.js',
   'lib/createlocaltracks.js',
-  'lib/index.js',
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
@@ -55,7 +54,11 @@ const publicClasses = [
   'lib/stats/remoteaudiotrackstats.js',
   'lib/stats/remotevideotrackstats.js',
   'lib/util/twilio-video-errors.js',
-  'lib/util/twilioerror.js'
+  'lib/util/twilioerror.js',
+
+  // TS Files
+  'lib/index.ts',
+  'lib/preflight/preflighttest.ts',
 ];
 
 const publicConstructors = [
@@ -102,7 +105,10 @@ const privateConstructors = [
   'RemoteTrackStats',
   'RemoteAudioTrackStats',
   'RemoteVideoTrackStats',
-  'TwilioError'
+  'TwilioError',
+
+  // From TS Files
+  'PreflightTest',
 ];
 
 const TwilioErrors = require('../lib/util/twilio-video-errors');

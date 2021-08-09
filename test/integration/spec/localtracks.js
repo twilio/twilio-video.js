@@ -17,8 +17,8 @@ const {
   waitForSometime
 } = require('../../lib/util');
 
-const createLocalTracks = require('../../../lib/createlocaltrack');
-const connect = require('../../../lib/connect');
+const createLocalTracks = require('../../../es5/createlocaltrack');
+const connect = require('../../../es5/connect');
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = createLocalTracks[kind];

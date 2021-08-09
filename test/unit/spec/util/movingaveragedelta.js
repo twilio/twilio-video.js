@@ -14,8 +14,8 @@ describe('MovingAverageDelta', () => {
         movingAverageDelta.putSample(1000, 40);
       });
 
-      it('should return the result of Math.round(numerator0 / denominator0)', () => {
-        assert.equal(movingAverageDelta.get(), Math.round(1000 / 40));
+      it('should return the result of numerator0 / denominator0', () => {
+        assert.equal(movingAverageDelta.get(), 1000 / 40);
       });
     });
 
@@ -31,11 +31,11 @@ describe('MovingAverageDelta', () => {
 
     context('when the third sample is put', () => {
       before(() => {
-        movingAverageDelta.putSample(3000, 80);
+        movingAverageDelta.putSample(3000, 81);
       });
 
-      it('should return the result of Math.round((numerator2 - numerator1) / (denominator2 - denominator1))', () => {
-        assert.equal(movingAverageDelta.get(), Math.round(1000 / 40));
+      it('should return the result of (numerator2 - numerator1) / (denominator2 - denominator1)', () => {
+        assert.equal(movingAverageDelta.get(), 1000 / 41);
       });
     });
   });

@@ -30,10 +30,27 @@ export type NetworkQualityLevel = number;
 
 export type NetworkQualityVerbosity = 0 | 1 | 2 | 3;
 
-export class NetworkQualityStats {
-  level: NetworkQualityLevel;
-  audio: NetworkQualityMediaStats | null;
-  video: NetworkQualityMediaStats | null;
+export class NetworkQualityFractionLostStats {
+  fractionLost: number | null;
+  level: NetworkQualityLevel | null;
+}
+
+export class NetworkQualityBandwidthStats {
+  actual: number | null;
+  available: number | null;
+  level: NetworkQualityLevel | null;
+}
+
+export class NetworkQualityLatencyStats {
+  jitter: number | null;
+  rtt: number | null;
+  level: NetworkQualityLevel | null;
+}
+
+export class NetworkQualitySendOrRecvStats {
+  bandwidth: NetworkQualityBandwidthStats | null;
+  latency: NetworkQualityLatencyStats | null;
+  fractionLost: NetworkQualityFractionLostStats | null;
 }
 
 export class NetworkQualityMediaStats {
@@ -43,25 +60,10 @@ export class NetworkQualityMediaStats {
   recvStats: NetworkQualitySendOrRecvStats | null;
 }
 
-export class NetworkQualitySendOrRecvStats {
-  bandwidth: NetworkQualityBandwidthStats | null;
-  latency: NetworkQualityLatencyStats | null;
-  fractionLost: NetworkQualityFractionLostStats | null;
-}
-
-export class NetworkQualityBandwidthStats {
-  actual: number | null;
-  available: number | null;
-  level: NetworkQualityLevel | null;
-}
-export class NetworkQualityFractionLostStats {
-  fractionLost: number | null;
-  level: NetworkQualityLevel | null;
-}
-export class NetworkQualityLatencyStats {
-  jitter: number | null;
-  rtt: number | null;
-  level: NetworkQualityLevel | null;
+export class NetworkQualityStats {
+  level: NetworkQualityLevel;
+  audio: NetworkQualityMediaStats | null;
+  video: NetworkQualityMediaStats | null;
 }
 
 export interface NetworkQualityConfiguration {
@@ -151,6 +153,15 @@ export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
+export interface CreateLocalTrackOptions extends MediaTrackConstraints {
+  /**
+   * @deprecated
+   */
+  logLevel?: LogLevel | LogLevels;
+  name?: string;
+  workaroundWebKitBug180748?: boolean;
+}
+
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
   automaticSubscription?: boolean;
@@ -188,14 +199,6 @@ export interface ConnectOptions {
   video?: boolean | CreateLocalTrackOptions;
 }
 
-export interface CreateLocalTrackOptions extends MediaTrackConstraints {
-  /**
-   * @deprecated
-   */
-  logLevel?: LogLevel | LogLevels;
-  name?: string;
-  workaroundWebKitBug180748?: boolean;
-}
 export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
   /**
@@ -218,6 +221,7 @@ export class LocalTrackStats extends TrackStats {
   bytesSent: number | null;
   packetsSent: number | null;
   roundTripTime: number | null;
+  jitter: number | null;
 }
 
 export class LocalVideoTrackStats extends LocalTrackStats {
@@ -229,7 +233,6 @@ export class LocalVideoTrackStats extends LocalTrackStats {
 
 export class LocalAudioTrackStats extends LocalTrackStats {
   audioLevel: AudioLevel | null;
-  jitter: number | null;
 }
 
 export class RemoteTrackStats extends TrackStats {

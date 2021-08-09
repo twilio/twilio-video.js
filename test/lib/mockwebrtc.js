@@ -3,7 +3,7 @@
 const { EventEmitter } = require('events');
 const WebSocket = require('ws');
 
-const util = require('../../lib/util');
+const util = require('../../es5/util');
 
 function Event(type) {
   this.type = type;

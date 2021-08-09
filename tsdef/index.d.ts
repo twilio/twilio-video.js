@@ -1,7 +1,10 @@
 import { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
+import { PreflightOptions, PreflightTestReport } from './PreflightTypes';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { Log } from './loglevel';
+
+import { PreflightTest } from './preflighttest';
 import { Room } from './Room';
 
 export const isSupported: boolean;
@@ -11,6 +14,7 @@ export function connect(token: string, options?: ConnectOptions): Promise<Room>;
 export function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrack>;
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
+export function runPreflight(token: string, options?: PreflightOptions): PreflightTest;
 
 export { AudioTrack } from './AudioTrack';
 export { LocalAudioTrack } from './LocalAudioTrack';
@@ -25,6 +29,7 @@ export { LocalVideoTrack } from './LocalVideoTrack';
 export { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 export { Log } from './loglevel';
 export { Participant } from './Participant';
+export { PreflightTest, PreflightOptions, PreflightTestReport };
 export { RemoteAudioTrack } from './RemoteAudioTrack';
 export { RemoteAudioTrackPublication } from './RemoteAudioTrackPublication';
 export { RemoteDataTrack } from './RemoteDataTrack';
