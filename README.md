@@ -4,7 +4,7 @@ for building video applications with twilio-video.js.
 twilio-video.js
 ===============
 
-[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![CircleCI](https://circleci.com/gh/twilio/twilio-video.js/tree/master.svg?style=svg&circle-token=80e91c8284c21ff16d3003702e17b903c0b32f1d)](https://circleci.com/gh/twilio/twilio-video.js/tree/master) [![Windows Build status](https://ci.appveyor.com/api/projects/status/gi5cj6dpfudsqhtg?svg=true)](https://ci.appveyor.com/project/markandrus/twilio-video-js)
+[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![CircleCI](https://circleci.com/gh/twilio/twilio-video.js/tree/master.svg?style=svg&circle-token=80e91c8284c21ff16d3003702e17b903c0b32f1d)](https://circleci.com/gh/twilio/twilio-video.js/tree/master)
 
 For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
