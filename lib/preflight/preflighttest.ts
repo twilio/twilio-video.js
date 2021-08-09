@@ -44,11 +44,13 @@ const PreflightProgress = {
 
   /**
    * established DTLS connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
+   * On Safari, Support for measuring this is missing, this event will be not be emitted on Safari.
    */
   dtlsConnected: 'dtlsConnected',
 
   /**
    * established a PeerConnection, This is measured from PeerConnection `connecting` to `connected` state.
+   * On Firefox, Support for measuring this is missing, this event will be not be emitted on Firefox.
    */
   peerConnectionConnected: 'peerConnectionConnected',
 
@@ -374,9 +376,9 @@ function initCollectedStats() : PreflightStats {
  * @typedef {object} NetworkTiming
  * @property {TimeMeasurement} [connect] - Time to establish signaling connection and acquire turn credentials
  * @property {TimeMeasurement} [media] - Time to start media. This is measured from calling connect to remote media getting started.
- * @property {TimeMeasurement} [dtls] - Time to establish dtls connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
+ * @property {TimeMeasurement} [dtls] - Time to establish dtls connection. This is measured from RTCDtlsTransport `connecting` to `connected` state. (Not available on Safari)
  * @property {TimeMeasurement} [ice] - Time to establish ice connectivity. This is measured from ICE connection `checking` to `connected` state.
- * @property {TimeMeasurement} [peerConnection] - Time to establish peer connectivity. This is measured from PeerConnection `connecting` to `connected` state.
+ * @property {TimeMeasurement} [peerConnection] - Time to establish peer connectivity. This is measured from PeerConnection `connecting` to `connected` state. (Not available on Firefox)
  */
 
 /**
