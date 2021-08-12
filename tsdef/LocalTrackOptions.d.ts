@@ -6,4 +6,5 @@ export interface LocalTrackOptions {
    */
     logLevel: LogLevel | LogLevels;
     name?: string;
+    workaroundWebKitBug1208516?: boolean
   }

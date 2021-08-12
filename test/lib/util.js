@@ -6,13 +6,13 @@
 
 const sinon = require('sinon');
 const { EventEmitter } = require('events');
-const { capitalize } = require('../../lib/util');
+const { capitalize } = require('../../es5/util');
 const { isSafari } = require('./guessbrowser');
 const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
-const connect = require('../../lib/connect');
+const connect = require('../../es5/connect');
 const second = 1000;
 const assert = require('assert');
 

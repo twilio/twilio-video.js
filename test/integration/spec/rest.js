@@ -23,8 +23,8 @@ const {
   unsubscribeTrack
 } = require('../../lib/rest');
 
-const connect = require('../../../lib/connect');
-const { RoomMaxParticipantsExceededError } = require('../../../lib/util/twilio-video-errors');
+const connect = require('../../../es5/connect');
+const { RoomMaxParticipantsExceededError } = require('../../../es5/util/twilio-video-errors');
 
 describe('REST APIs', function() {
   // eslint-disable-next-line no-invalid-this

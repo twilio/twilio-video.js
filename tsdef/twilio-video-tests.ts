@@ -344,5 +344,27 @@ function useConnectionOptions() {
   return connectionOptions;
 }
 
+function runPreflight() {
+  const preflight: Video.PreflightTest = Video.runPreflight('token', { region: 'us1' });
+  preflight.on('completed', (report: Video.PreflightTestReport) => {
+    // eslint-disable-next-line no-console
+    console.log('report ', report);
+  });
+
+  preflight.on('failed', (error: Error) => {
+    // eslint-disable-next-line no-console
+    console.log('error ', error);
+  });
+
+  preflight.on('progress', (progress: string) => {
+    // eslint-disable-next-line no-console
+    console.log('progress ', progress);
+  });
+
+
+  preflight.stop();
+}
+
 initRoom();
 unpublishTracks();
+runPreflight();
