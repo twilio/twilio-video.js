@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -268,7 +267,6 @@ const connect = require('../../../es5/connect');
 
       // Bob restarts the track.
       await bobLocalTrackA.restart();
-      console.log(`bob replaces the track: mediaStreamTrack track old: ${bobLocalTrackA.id}, new: ${bobLocalTrackA.mediaStreamTrack.id}`);
 
       // Charlie joins a room after sometime.
       await waitForSometime(5000);

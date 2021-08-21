@@ -1,4 +1,4 @@
-/* eslint-disable no-console, no-undefined */
+/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -1463,12 +1463,10 @@ describe('connect', function() {
 
         const aliceBitrateSilenceAvg = Math.round(aliceBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
         const aliceBitrateSpeechAvg = Math.round(aliceBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / aliceBitratesSpeech.length);
-        console.log(`Avg. bitrate reduction during silence (Alice): ${Math.round(100 * aliceBitrateSilenceAvg / aliceBitrateSpeechAvg)}`);
         assert(bitrateTests[aliceDtx](aliceBitrateSpeechAvg, aliceBitrateSilenceAvg));
 
         const bobBitrateSilenceAvg = Math.round(bobBitratesSilence.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
         const bobBitrateSpeechAvg = Math.round(bobBitratesSpeech.reduce((sum, bitrate) => sum + bitrate, 0) / bobBitratesSpeech.length);
-        console.log(`Avg. bitrate reduction during silence (Bob): ${Math.round(100 * bobBitrateSilenceAvg / bobBitrateSpeechAvg)}`);
         assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
       });
 

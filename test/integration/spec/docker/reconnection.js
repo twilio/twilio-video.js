@@ -1,5 +1,4 @@
 /* eslint-disable no-invalid-this */
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -90,7 +89,6 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      // logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
@@ -155,20 +153,13 @@ describe('network:', function() {
     await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), 'disconnect from all networks');
     await waitToGoOffline();
 
-    const start = new Date();
     let room = null;
     try {
       room = await connect(getToken('Alice'), options);
     } catch (error) {
-      // this exception is expected.
-      const end = new Date();
-      const seconds = (end.getTime() - start.getTime()) / 1000;
-      console.log(error.message, error.stack, error);
       assert(error instanceof SignalingConnectionError || error instanceof MediaConnectionError);
-      console.log(`Connect rejected after ${seconds} seconds:`, error.message);
       return;
     } finally {
-      console.log('resetting network');
       await waitFor(dockerAPI.resetNetwork(), 'resetting network', RESET_NETWORK_TIMEOUT);
     }
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
@@ -339,7 +330,6 @@ describe('network:', function() {
           await waitToGoOffline();
           await waitFor(dockerAPI.connectToNetwork(newNetwork.Id), 'connect to network');
           await waitToGoOnline();
-          console.log('current networks:', await readCurrentNetworks(dockerAPI));
 
           await Promise.all([
             waitWhileNotDisconnected(disconnected, localParticipantReconnectingPromises, `localParticipantReconnectingPromises: ${rooms[0].sid}`, RECONNECTING_TIMEOUT),
@@ -442,25 +432,20 @@ describe('network:', function() {
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
           // should not be in network tests.
           aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
-          try {
-            await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
+          await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 
-            assert.equal(eventsEmitted.length, 8);
-            eventsEmitted.forEach(item => {
-              switch (item.event) {
-                case 'LocalRoom#reconnecting':
-                  assert(item.error instanceof SignalingConnectionDisconnectedError);
-                  break;
-                case 'RemoteRoom#participantReconnecting':
-                case 'RemoteRoom#participantReconnected':
-                  assert.equal(item.participant, aliceRemote);
-                  break;
-              }
-            });
-          } catch (err) {
-            console.log('eventsEmitted:', eventsEmitted);
-            throw err;
-          }
+          assert.equal(eventsEmitted.length, 8);
+          eventsEmitted.forEach(item => {
+            switch (item.event) {
+              case 'LocalRoom#reconnecting':
+                assert(item.error instanceof SignalingConnectionDisconnectedError);
+                break;
+              case 'RemoteRoom#participantReconnecting':
+              case 'RemoteRoom#participantReconnected':
+                assert.equal(item.participant, aliceRemote);
+                break;
+            }
+          });
         });
       });
     });

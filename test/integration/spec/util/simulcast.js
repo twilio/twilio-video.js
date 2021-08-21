@@ -4,7 +4,7 @@ const assert = require('assert');
 const { guessBrowser } = require('@twilio/webrtc/lib/util');
 const { getSdpFormat } = require('@twilio/webrtc/lib/util/sdp');
 const { getMediaSections, setSimulcast } = require('../../../../es5/util/sdp');
-const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
+const { RTCPeerConnection } = require('@twilio/webrtc');
 const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../es5/util/constants');
 
 const isChrome = guessBrowser() === 'chrome';
