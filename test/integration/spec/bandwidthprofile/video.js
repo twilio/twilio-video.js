@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable no-undefined */
 'use strict';
 
@@ -27,21 +26,9 @@ const {
 const { trackPriority: { PRIORITY_HIGH, PRIORITY_LOW, PRIORITY_STANDARD } } = require('../../../../es5/util/constants');
 const { trackSwitchOffMode: { MODE_DISABLED, MODE_DETECTED, MODE_PREDICTED } } = require('../../../../es5/util/constants');
 
-function monitorTrackSwitchOffs(remoteTrack, trackName) {
-  console.log(`${trackName} [${remoteTrack.sid}] ${remoteTrack.isSwitchedOff ? 'OFF' : 'ON'}`);
-  remoteTrack.on('switchedOff', () => {
-    console.log(`${trackName} [${remoteTrack.sid}] OFF!`);
-  });
-  remoteTrack.on('switchedOn', () => {
-    console.log(`${trackName} [${remoteTrack.sid}] ON!`);
-  });
-}
-
 describe('BandwidthProfileOptions: video', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
-  // eslint-disable-next-line no-invalid-this
-  // this.retries(2);
 
   if (defaults.topology === 'peer-to-peer') {
     it('should not run', () => {});
@@ -135,9 +122,6 @@ describe('BandwidthProfileOptions: video', function() {
         const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
           return [...videoTracks.values()][0].track;
         });
-
-        monitorTrackSwitchOffs(aliceRemoteVideoTrack, 'Alice\'s Track');
-        monitorTrackSwitchOffs(bobRemoteVideoTrack, 'Bob\'s Track');
 
         // for a participant (dominant, passive ) that gets switched off, what will be off an don
         const switched = {

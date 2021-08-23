@@ -1,11 +1,9 @@
-/* eslint-disable no-console */
 /* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
 const { video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
-const { Logger } = require('../../../../es5');
 
 const {
   tracksSubscribed,
@@ -116,19 +114,10 @@ describe('BandwidthProfileOptions: renderHints', function() {
         before(async () => {
           const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
           const aliceOptions = { tracks: [aliceLocalVideo] };
-          const bobOptions = {
-            tracks: [],
-            loggerName: 'BobLogger',
-            bandwidthProfile
-          };
-
-          const bobLogger = Logger.getLogger('BobLogger');
-          bobLogger.setLevel('info');
+          const bobOptions = { tracks: [], bandwidthProfile };
 
           ({ roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions }));
-
           await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
-
           aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
         });
 
@@ -273,7 +262,6 @@ describe('BandwidthProfileOptions: renderHints', function() {
         const aliceOptions = { tracks: [aliceLocalVideo] };
         const bobOptions = {
           tracks: [],
-          loggerName: 'BobLogger',
           bandwidthProfile: {
             video: {
               contentPreferencesMode: 'auto',
@@ -282,11 +270,7 @@ describe('BandwidthProfileOptions: renderHints', function() {
           },
         };
 
-        const bobLogger = Logger.getLogger('BobLogger');
-        bobLogger.setLevel('info');
-
         const { roomSid, aliceRoom, bobRoom, aliceRemote } = await setupAliceAndBob({ aliceOptions,  bobOptions });
-
         await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
         const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
 
@@ -302,10 +286,8 @@ describe('BandwidthProfileOptions: renderHints', function() {
         await waitForSometime(2000);
 
         const duration = 15000;
-        let { bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']);
+        let { bytesReceivedBefore, bytesReceivedAfter } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']);
         const bytesReceivedA = bytesReceivedAfter - bytesReceivedBefore;
-        const kbps1 =  Math.round(((bytesReceivedA / testTimeMS) * 10) / 10);
-        console.log('KBPS 1: ', kbps1);
 
         videoElement.setAttribute('height', `${dimB.height}`);
         videoElement.setAttribute('width', `${dimB.width}`);
@@ -313,10 +295,8 @@ describe('BandwidthProfileOptions: renderHints', function() {
         // wait couple of seconds before running media flow test.
         await waitForSometime(2000);
 
-        ({ bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']));
+        ({ bytesReceivedBefore, bytesReceivedAfter } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']));
         const bytesReceivedB = bytesReceivedAfter - bytesReceivedBefore;
-        const kbps2 =  Math.round(((bytesReceivedB / testTimeMS) * 10) / 10);
-        console.log('KBPS 2: ', kbps2);
 
         aliceRemoteTrack.detach(videoElement);
         videoElement.remove();
@@ -336,7 +316,6 @@ describe('BandwidthProfileOptions: renderHints', function() {
       const aliceOptions = { tracks: [aliceLocalVideo] };
       const bobOptions = {
         tracks: [],
-        loggerName: 'BobLogger',
         bandwidthProfile: {
           video: {
             clientTrackSwitchOffControl: 'manual',
@@ -345,16 +324,12 @@ describe('BandwidthProfileOptions: renderHints', function() {
         }
       };
 
-      const bobLogger = Logger.getLogger('BobLogger');
-      bobLogger.setLevel('debug');
-
       const { roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
       await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
       const aliceRemoteTrack = Array.from(aliceRemote.videoTracks.values())[0].track;
 
       // track should be switched On initially.
       await waitFor(trackSwitchedOn(aliceRemoteTrack), `Alice's Track [${aliceRemoteTrack.sid}] to switch On: ${roomSid}`);
-
       aliceRemoteTrack.switchOff();
 
       // wait for track to switch off

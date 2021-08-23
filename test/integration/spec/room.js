@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -614,17 +613,13 @@ describe('Room', function() {
       bob = bobRoom.localParticipant;
       charlie = charlieRoom.localParticipant;
 
-      console.log('Alice: ', alice.sid);
-      console.log('Bob: ', bob.sid);
-      console.log('Charlie: ', charlie.sid);
 
       // Create a high priority LocalTrack for charlie.
       hiPriTrack = await createLocalVideoTrack(smallVideoConstraints);
 
       // Let bob publish a LocalTrack with low priority.
       loPriTrack = await createLocalVideoTrack(smallVideoConstraints);
-      const bobTrackPub = await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish LocalTrack: ${aliceRoom.sid}`);
-      console.log('Bob\'s track:', bobTrackPub.trackSid);
+      await waitFor(bob.publishTrack(loPriTrack, { priority: PRIORITY_LOW }), `${bob.sid} to publish LocalTrack: ${aliceRoom.sid}`);
 
       remoteBob = aliceRoom.participants.get(bob.sid);
 
@@ -664,8 +659,7 @@ describe('Room', function() {
       }));
 
       // Induce a track switch off by having charlie publish a track with high priority.
-      const charlieTrackPub = await waitFor(charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH }), `${charlie.sid} to publish a high priority LocalTrack: ${aliceRoom.sid}`);
-      console.log('Charlie\'s Track:', charlieTrackPub.trackSid);
+      await waitFor(charlie.publishTrack(hiPriTrack, { priority: PRIORITY_HIGH }), `${charlie.sid} to publish a high priority LocalTrack: ${aliceRoom.sid}`);
       await waitFor(tracksSubscribed(remoteCharlie, 1), `${alice.sid} to subscribe to charlie's RemoteTrack ${hiPriTrack.sid}: ${aliceRoom.sid}`);
 
       // we should see track switch off event on all 4 objects.

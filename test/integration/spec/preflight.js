@@ -25,8 +25,6 @@ function assertIceCandidate(candidate) {
 }
 
 function validateReport(report)  {
-  // eslint-disable-next-line no-console
-  console.log('report: ', JSON.stringify(report, null, 4));
   assertTimeMeasurement(report.testTiming);
   assertTimeMeasurement(report.networkTiming.connect);
   assertTimeMeasurement(report.networkTiming.media);
@@ -47,16 +45,11 @@ describe('preflight', function() {
     token = getToken(randomName(), {});
   });
 
-  it('completes and generates test report', async () => {
-    const environment = defaults.environment;
+  it('completes and generates test report', () => new Promise((resolve, reject) => {
+    const { environment } = defaults;
     const options = { environment };
     const preflight = runPreflight(token, options);
-    const deferred = {};
     const progressReceived = [];
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
 
     preflight.on('completed', report => {
       validateReport(report);
@@ -75,48 +68,22 @@ describe('preflight', function() {
       }
 
       assert.deepStrictEqual(expectedProgress.sort(), progressReceived.sort());
-      deferred.resolve();
+      resolve();
     });
 
-    preflight.on('progress', progress => {
-      // eslint-disable-next-line no-console
-      console.log('progress:', progress);
-      progressReceived.push(progress);
-    });
-
-    preflight.on('failed', error => {
-      // eslint-disable-next-line no-console
-      console.log('failed:', error);
-      deferred.reject(error);
-    });
+    preflight.on('progress', progress => progressReceived.push(progress));
+    preflight.on('failed', reject);
 
     preflight.on('warning', (name, text) => {
       // eslint-disable-next-line no-console
-      console.log('warning:', name, text);
+      console.warn('warning:', name, text);
     });
+  }));
 
-    await deferred.promise;
-  });
-
-  it('fails when bad token is supplied', async () => {
+  it('fails when bad token is supplied', () => new Promise((resolve, reject) => {
     const preflight = runPreflight('badToken');
-    const deferred = {};
-    deferred.promise = new Promise((resolve, reject) => {
-      deferred.resolve = resolve;
-      deferred.reject = reject;
-    });
-
-    preflight.on('completed', () => {
-      deferred.reject('preflight completed unexpectedly');
-    });
-
-    preflight.on('failed', error => {
-      // eslint-disable-next-line no-console
-      console.log('preflight failed as expected:', error);
-      deferred.resolve();
-    });
-
-    await deferred.promise;
-  });
+    preflight.on('completed', () => reject('preflight completed unexpectedly'));
+    preflight.on('failed', resolve);
+  }));
 });
 

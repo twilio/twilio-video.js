@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /* eslint-disable no-undefined */
 'use strict';
 
@@ -20,16 +19,6 @@ const {
 } = require('../../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../../lib/util/constants');
-
-function monitorTrackSwitchOffs(remoteTrack, trackName) {
-  console.log(`${trackName} [${remoteTrack.sid}] ${remoteTrack.isSwitchedOff ? 'OFF' : 'ON'}`);
-  remoteTrack.on('switchedOff', () => {
-    console.log(`${trackName} [${remoteTrack.sid}] OFF!`);
-  });
-  remoteTrack.on('switchedOn', () => {
-    console.log(`${trackName} [${remoteTrack.sid}] ON!`);
-  });
-}
 
 describe('BandwidthProfileOptions: regressions', function() {
   // eslint-disable-next-line no-invalid-this
@@ -100,9 +89,6 @@ describe('BandwidthProfileOptions: regressions', function() {
       const [aliceRemoteVideoTrack, bobRemoteVideoTrack] = [aliceRemote, bobRemote].map(({ videoTracks }) => {
         return [...videoTracks.values()][0].track;
       });
-
-      monitorTrackSwitchOffs(aliceRemoteVideoTrack, 'Alice\'s Track');
-      monitorTrackSwitchOffs(bobRemoteVideoTrack, 'Bob\'s Track');
 
       const bobDominant = dominantSpeakerChanged(thisRoom, bobRemote);
       await waitFor(bobDominant, `Bob to be dominant speaker: ${thisRoom.sid}`, 30000, true);

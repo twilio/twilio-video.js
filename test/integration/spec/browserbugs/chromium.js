@@ -19,7 +19,6 @@ const { isChrome } = require('../../../lib/guessbrowser');
     const answer = await bob.createAnswer();
     await alice.setRemoteDescription(answer);
     await bob.setLocalDescription(answer);
-    // console.log('done');
     const nextOffer = await bob.createOffer();
     await bob.setLocalDescription(nextOffer);
   });

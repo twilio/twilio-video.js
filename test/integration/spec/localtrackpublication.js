@@ -73,8 +73,6 @@ describe('LocalTrackPublication', function() {
 
     const trackPriorityChanged = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
       assert.equal(priority, PRIORITY_HIGH);
-      // eslint-disable-next-line no-console
-      console.log('alice saw track priority high');
       resolve();
     }));
 
