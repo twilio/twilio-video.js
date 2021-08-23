@@ -145,7 +145,7 @@
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#49f022079ec4d57bf41b71a414845c2ef0dcb121",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#56ec12f6fa55f574566ed3ab4350ceaa6519359f",
     "backoff": "^2.5.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
