@@ -1,9 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const { isChromeIOS } = require('../../../../lib/util/browserdetection');
+const { isIOSChrome } = require('@twilio/webrtc/lib/util');
 
-describe('isChromeIOS', () => {
+// TODO(joma): Move the contents of this file to twilio-webrtc.js.
+describe('isIOSChrome', () => {
   let oldAgent;
   beforeEach(() => {
     oldAgent = navigator.userAgent;
@@ -41,7 +42,7 @@ describe('isChromeIOS', () => {
       if (chrome) {
         global.chrome = chrome;
       }
-      assert.equal(isChromeIOS(), true);
+      assert.equal(isIOSChrome(), true);
     });
   });
 
@@ -100,7 +101,7 @@ describe('isChromeIOS', () => {
       if (brave) {
         navigator.brave = brave;
       }
-      assert.equal(isChromeIOS(), false);
+      assert.equal(isIOSChrome(), false);
     });
   });
 });

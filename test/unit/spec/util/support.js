@@ -156,6 +156,18 @@ describe('isSupported', () => {
       {}
     ],
     [
+      'Chrome on iPhone OS version 10.3',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1',
+      null,
+      {}
+    ],
+    [
+      'Chrome on iPad OS version 12.0',
+      'Mozilla/5.0 (iPad; CPU OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/71.0.3578.77 Mobile/15E148 Safari/605.1',
+      null,
+      {}
+    ],
+    [
       'Opera',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 OPR/56.0.3051.52'
     ],
