@@ -80,7 +80,7 @@
     "tslint": "5.8.0",
     "twilio": "^3.49.0",
     "twilio-release-tool": "^1.0.2",
-    "typescript": "^4.0.5",
+    "typescript": "4.2.2",
     "uglify-js": "^2.8.22",
     "vinyl-fs": "^2.4.4",
     "vinyl-source-stream": "^1.1.0",
@@ -145,7 +145,7 @@
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
-    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#d535165d0aa4893e40840497d51bb92eb57d01d2",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#4.5.0-rc1",
     "backoff": "^2.5.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
