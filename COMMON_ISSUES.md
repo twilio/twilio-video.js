@@ -15,10 +15,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </details>
 
 <details>
-<summary>With opus dtx enabled, sometimes background noise is heard on muted audio tracks</summary>
+<summary>With opus dtx enabled, sometimes background noise is heard on muted AudioTracks</summary>
 <p>
 
-   Twilio-video enables DTX (discontinuous transmission) by default for opus. Webrtc has an issue which sometimes causes background noise to be heard on muted track when DTX is enabled, For details, see [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=13051).
+   twilio-video.js enables DTX (discontinuous transmission) by default for opus. Webrtc has an issue which sometimes causes background noise to be heard on muted track when DTX is enabled, For details, see [here](https://bugs.chromium.org/p/webrtc/issues/detail?id=13051).
    To workaround this issue, you can disable the dtx with:
   ```js
   const { connect } = require('twilio-video');
