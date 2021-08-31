@@ -2,6 +2,12 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.17.0 (In Progress)
+====================
+Bug Fixes
+---------
+Fixed a bug that causes low framerate from Safari participants with simulcast enabled. (VIDEO-6263)
+
 2.16.0 (August 11, 2021)
 ========================
 **New Features**

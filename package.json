@@ -80,7 +80,7 @@
     "tslint": "5.8.0",
     "twilio": "^3.49.0",
     "twilio-release-tool": "^1.0.2",
-    "typescript": "^4.0.5",
+    "typescript": "4.2.2",
     "uglify-js": "^2.8.22",
     "vinyl-fs": "^2.4.4",
     "vinyl-source-stream": "^1.1.0",
