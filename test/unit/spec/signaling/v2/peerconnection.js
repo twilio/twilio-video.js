@@ -960,7 +960,8 @@ describe('PeerConnectionV2', () => {
       async function setup() {
         let tracks;
         if (chromeScreenTrack) {
-          tracks = [{ id: 'foo', kind: 'video', label: 'screen:123' }];
+          const getSettings = () => { return { width: 1280, height: 720 }; };
+          tracks = [{ id: 'foo', kind: 'video', label: 'screen:123', getSettings }];
         }
         test = makeTest({
           offers: 3,
@@ -2290,7 +2291,8 @@ function makePeerConnectionV2(options) {
   options.id = options.id || makeId();
 
   const pc = options.pc || makePeerConnection(options);
-  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video' }];
+  const getSettings = () => { return { width: 1280, height: 720 }; };
+  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
 
   const Backoff = {
