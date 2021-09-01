@@ -4,9 +4,11 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 2.17.0 (In Progress)
 ====================
+
 Bug Fixes
 ---------
-Fixed a bug that causes low framerate from Safari participants with simulcast enabled. (VIDEO-6263)
+
+- Fixed a bug where the VideoTracks of Safari Participants with VP8 simulcast enabled sometimes had low frame rates. (VIDEO-6263)
 
 2.16.0 (August 11, 2021)
 ========================
