@@ -4,10 +4,11 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 2.17.0 (In Progress)
 ====================
+
 **New Features**
 ----------------
 
-- `isSupported` now returns `true` for iOS Chrome. (VIDEO-5723)
+- twilio-video.js now supports Chrome on iOS versions 14.3 and above. (VIDEO-5723)
 
 2.16.0 (August 11, 2021)
 ========================
