@@ -5,12 +5,18 @@ const isSupported = require('../../../../lib/util/support');
 
 describe('isSupported', () => {
   let oldAgent;
-  before(() => {
+  beforeEach(() => {
     oldAgent = navigator.userAgent;
   });
 
-  after(() => {
+  afterEach(() => {
     navigator.userAgent = oldAgent;
+    if (global.chrome) {
+      delete global.chrome;
+    }
+    if (navigator.brave) {
+      delete navigator.brave;
+    }
   });
 
   [
@@ -32,6 +38,16 @@ describe('isSupported', () => {
       'Headless Chrome',
       'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/81.0.4044.0 Safari/537.36',
       { runtime: {} }
+    ],
+    [
+      'Chrome on iPhone',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/90.0.4430.216 Mobile/15E148 Safari/604.1',
+      {}
+    ],
+    [
+      'Chrome on iPad',
+      'Mozilla/5.0 (iPad; CPU OS 14_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/91.0.4472.80 Mobile/15E148 Safari/604.1',
+      {}
     ],
     [
       'Electron',
@@ -87,11 +103,6 @@ describe('isSupported', () => {
 
   [
     [
-      'Chrome on iPhone',
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/90.0.4430.216 Mobile/15E148 Safari/604.1',
-      {}
-    ],
-    [
       'Firefox on iPhone',
       'Mozilla/5.0 (iPhone; CPU OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/33.1 Mobile/15E148 Safari/605.1.15'
     ],
@@ -141,6 +152,18 @@ describe('isSupported', () => {
     [
       'Latest Desktop Brave',
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.113 Safari/537.36',
+      null,
+      {}
+    ],
+    [
+      'Chrome on iPhone OS version 10.3',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1',
+      null,
+      {}
+    ],
+    [
+      'Chrome on iPad OS version 12.0',
+      'Mozilla/5.0 (iPad; CPU OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/71.0.3578.77 Mobile/15E148 Safari/605.1',
       null,
       {}
     ],
