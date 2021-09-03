@@ -80,6 +80,53 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('._updateEncodings', () => {
+    [
+      {
+        testName: 'resolution >= 960x540',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: 'resolution >= 960x540 (no simulcast)',
+        width: 960,
+        height: 540,
+        encodings: [{}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: '960x540 > resolution >= 480x270',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
+      },
+      {
+        testName: '960x540 > resolution >= 480x270 (no simulcast)',
+        width: 480,
+        height: 270,
+        encodings: [{}], // input encodings has only one layer
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: 'resolution <= 480x270',
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      }
+    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
+      it(testName, () => {
+        const test = makeTest();
+        test.pcv2._updateEncodings(width, height, encodings);
+        assert.deepStrictEqual(encodings, expectedEncodings);
+      });
+    });
+  });
+
+
   describe('.iceConnectionState', () => {
     it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
       const test = makeTest();
