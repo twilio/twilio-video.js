@@ -4,11 +4,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 2.17.0 (In Progress)
 ====================
-
 **New Features**
 ----------------
 
 - twilio-video.js now supports Chrome on iOS versions 14.3 and above. (VIDEO-5723)
+
+Bug Fixes
+---------
+
+- Fixed a bug where the VideoTracks of Safari Participants with VP8 simulcast enabled sometimes had low frame rates. (VIDEO-6263)
 
 2.16.0 (August 11, 2021)
 ========================
