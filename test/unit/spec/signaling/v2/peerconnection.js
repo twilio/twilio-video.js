@@ -80,6 +80,53 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('._updateEncodings', () => {
+    [
+      {
+        testName: 'resolution >= 960x540',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: 'resolution >= 960x540 (no simulcast)',
+        width: 960,
+        height: 540,
+        encodings: [{}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: '960x540 > resolution >= 480x270',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
+      },
+      {
+        testName: '960x540 > resolution >= 480x270 (no simulcast)',
+        width: 480,
+        height: 270,
+        encodings: [{}], // input encodings has only one layer
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        testName: 'resolution <= 480x270',
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      }
+    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
+      it(testName, () => {
+        const test = makeTest();
+        test.pcv2._updateEncodings(width, height, encodings);
+        assert.deepStrictEqual(encodings, expectedEncodings);
+      });
+    });
+  });
+
+
   describe('.iceConnectionState', () => {
     it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
       const test = makeTest();
@@ -960,7 +1007,8 @@ describe('PeerConnectionV2', () => {
       async function setup() {
         let tracks;
         if (chromeScreenTrack) {
-          tracks = [{ id: 'foo', kind: 'video', label: 'screen:123' }];
+          const getSettings = () => { return { width: 1280, height: 720 }; };
+          tracks = [{ id: 'foo', kind: 'video', label: 'screen:123', getSettings }];
         }
         test = makeTest({
           offers: 3,
@@ -1161,6 +1209,18 @@ describe('PeerConnectionV2', () => {
         }
       }
 
+      function itShouldSetResolutionScale() {
+        if (isRTCRtpSenderParamsSupported) {
+          it('should set RTCRtpEncodingParameters.scaleResolutionDownBy to 1 for all video senders', () => {
+            test.pc.getSenders().forEach(sender => {
+              if (sender.track.kind === 'video') {
+                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].scaleResolutionDownBy', 1));
+              }
+            });
+          });
+        }
+      }
+
       // NOTE(mroberts): This test should really be extended. Instead of popping
       // arguments off of `setCodecPreferences`, we should validate that we
       // apply transformed remote SDPs and emit transformed local SDPs.
@@ -1206,6 +1266,7 @@ describe('PeerConnectionV2', () => {
 
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
+        itShouldSetResolutionScale();
         itShouldMaybeSetNetworkPriority();
       }
 
@@ -2277,7 +2338,8 @@ function makePeerConnectionV2(options) {
   options.id = options.id || makeId();
 
   const pc = options.pc || makePeerConnection(options);
-  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video' }];
+  const getSettings = () => { return { width: 1280, height: 720 }; };
+  const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
 
   const Backoff = {
