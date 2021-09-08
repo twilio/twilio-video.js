@@ -13,6 +13,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where the VideoTracks of Safari Participants with VP8 simulcast enabled sometimes had low frame rates. (VIDEO-6263)
+- Fixed a bug where the screen share track got restarted as a camera track if it was ended when the application was foreground. (VIDEO-3977)
 
 2.16.0 (August 11, 2021)
 ========================
