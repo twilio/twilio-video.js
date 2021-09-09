@@ -164,6 +164,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
+  adaptiveSimulcast?: boolean,
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
