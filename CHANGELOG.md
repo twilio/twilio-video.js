@@ -2,6 +2,19 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
+2.17.0 (September 14, 2021)
+===========================
+New Features
+------------
+
+- twilio-video.js now supports Chrome on iOS versions 14.3 and above. (VIDEO-5723)
+
+Bug Fixes
+---------
+
+- Fixed a bug where the VideoTracks of Safari Participants with VP8 simulcast enabled sometimes had low frame rates. (VIDEO-6263)
+- Fixed a bug where the screen share track got restarted as a camera track if it was ended when the application was foreground. (VIDEO-3977)
+
 2.16.0 (August 11, 2021)
 ========================
 **New Features**
@@ -152,6 +165,7 @@ Bug Fixes
 
 New Features
 ------------
+
 This release contains a significant update to the Bandwidth Profile API. It allows for more efficient use of bandwidth and CPU in multi-party applications. In addition it provides developers with more dynamic control over which video tracks are delivered to the client and the preferred video resolution of the tracks. These capabilities are provided via the Client Track Switch Off Control and Content Preferences settings.
 
 Existing Bandwidth Profile settings will continue to function as before, however we recommend developers update their Bandwidth Profile settings to make use of these new capabilities at their earliest convenience.
