@@ -1,12 +1,7 @@
-**NEW:** Please check out our [Best Practices Guide](https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices)
-for building video applications with twilio-video.js.
-
 twilio-video.js
 ===============
 
 [![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![CircleCI](https://circleci.com/gh/twilio/twilio-video.js/tree/master.svg?style=svg&circle-token=80e91c8284c21ff16d3003702e17b903c0b32f1d)](https://circleci.com/gh/twilio/twilio-video.js/tree/master)
-
-For 1.x, go [here](https://github.com/twilio/twilio-video.js/tree/support-1.x/).
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
@@ -17,6 +12,11 @@ twilio-video.js allows you to add real-time voice and video to your web apps.
 * [React-based Multi-party Video App](https://github.com/twilio/twilio-video-app-react)
 
 **We want your feedback!** Please feel free to open a [GitHub issue](https://github.com/twilio/twilio-video.js/issues) for suggested improvements or feature requests. If you need technical support, contact [help@twilio.com](mailto:help@twilio.com).
+
+Changelog
+---------
+
+View [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md) for details about our releases.
 
 Browser Support
 ---------------
@@ -136,11 +136,6 @@ function trackUnsubscribed(track) {
 }
 ```
 
-Changelog
----------
-
-See [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGELOG.md).
-
 Content Security Policy (CSP)
 -----------------------------
 
@@ -162,10 +157,6 @@ script-src https://sdk.twilio.com
 Keep in mind, you may need to merge these policy directives with your own if
 you're using other services.
 
-License
--------
-
-See [LICENSE.md](https://github.com/twilio/twilio-video.js/blob/master/LICENSE.md).
 
 Building
 --------
@@ -221,9 +212,28 @@ Tips
 ln -s ../../pre-commit.sh .git/hooks/pre-commit
 ```
 
+Related
+-------
+### Applications using twilio-video.js
+- [Twilio Video React App](https://github.com/twilio/twilio-video-app-react)
+- [Twilio Video Javascript Quickstart](https://github.com/twilio/video-quickstart-js)
+- [Twilio Video Diagnostics App](https://github.com/twilio/twilio-video-diagnostics-react-app/blob/main/README.md)
+
+### Developer tools
+- [Twilio Video Processors](https://twilio.github.io/twilio-video-processors.js/index.html)
+- [Twilio Video Room Monitor](https://github.com/twilio/twilio-video-room-monitor.js)
+- [Twilio RTC Diagnostics SDK](https://github.com/twilio/rtc-diagnostics)
+
 Contributing
 ------------
 
 Bug fixes welcome! If you're not familiar with the GitHub pull
 request/contribution process,
 [this is a nice tutorial](https://gun.io/blog/how-to-github-fork-branch-and-pull-request/).
+
+
+License
+-------
+
+See [LICENSE.md](https://github.com/twilio/twilio-video.js/blob/master/LICENSE.md).
+
