@@ -2,10 +2,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x will End of Life on September 8th, 2021.** Check [this guide](https://www.twilio.com/docs/video/migrating-1x-2x) to plan your migration to the latest 2.x version. Support for the 1.x version ended on December 4th, 2020.
 
-2.17.0 (In Progress)
-====================
-**New Features**
-----------------
+2.17.0 (September 14, 2021)
+===========================
+New Features
+------------
 
 - twilio-video.js now supports Chrome on iOS versions 14.3 and above. (VIDEO-5723)
 
