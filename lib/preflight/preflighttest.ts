@@ -153,8 +153,7 @@ export class PreflightTest extends EventEmitter {
       },
       selectedIceCandidatePairStats: collectedStats ? collectedStats.selectedIceCandidatePairStats : null,
       iceCandidateStats: collectedStats ? collectedStats.iceCandidateStats : [],
-
-      // internal properties.
+      // NOTE(mpatwardhan): internal properties.
       error: error?.toString(),
       mos: makeStat(collectedStats?.mos),
     };
@@ -222,6 +221,7 @@ export class PreflightTest extends EventEmitter {
       });
     }
   }
+
   private _setupInsights({ token, environment = DEFAULT_ENVIRONMENT, realm = DEFAULT_REALM } : {
     token: string,
     environment?: string,
