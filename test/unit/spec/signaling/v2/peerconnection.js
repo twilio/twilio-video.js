@@ -1211,12 +1211,11 @@ describe('PeerConnectionV2', () => {
 
       function itShouldNotSetResolutionScale() {
         if (isRTCRtpSenderParamsSupported) {
-          it('should set RTCRtpEncodingParameters.scaleResolutionDownBy for any video senders', () => {
+          it('should not set RTCRtpEncodingParameters.scaleResolutionDownBy for any video senders', () => {
             test.pc.getSenders().forEach(sender => {
               if (sender.track.kind === 'video') {
                 sinon.assert.calledWith(sender.setParameters, sinon.match(({ encodings }) => {
-                  const found = encodings.find(encoding => typeof encoding.scaleResolutionDownBy !== 'undefined');
-                  return !found;
+                  return !encodings.find(encoding => typeof encoding.scaleResolutionDownBy !== 'undefined');
                 }));
               }
             });
