@@ -1209,17 +1209,6 @@ describe('PeerConnectionV2', () => {
         }
       }
 
-      function itShouldSetResolutionScale() {
-        if (isRTCRtpSenderParamsSupported) {
-          it('should set RTCRtpEncodingParameters.scaleResolutionDownBy to 1 for all video senders', () => {
-            test.pc.getSenders().forEach(sender => {
-              if (sender.track.kind === 'video') {
-                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].scaleResolutionDownBy', 1));
-              }
-            });
-          });
-        }
-      }
 
       // NOTE(mroberts): This test should really be extended. Instead of popping
       // arguments off of `setCodecPreferences`, we should validate that we
@@ -1266,7 +1255,6 @@ describe('PeerConnectionV2', () => {
 
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
-        itShouldSetResolutionScale();
         itShouldMaybeSetNetworkPriority();
       }
 
