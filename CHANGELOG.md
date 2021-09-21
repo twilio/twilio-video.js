@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug which caused Chrome screen share tracks to receive lower resolution. (VIDEO-7000)
+- Fixed a regression in `2.17.0` which caused Chrome screen share tracks to be encoded at lower dimensions. (VIDEO-7000)
 
 2.17.0 (September 14, 2021)
 ===========================
