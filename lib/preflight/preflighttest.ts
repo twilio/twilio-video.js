@@ -272,6 +272,7 @@ export class PreflightTest extends EventEmitter {
           }
         };
         eventObserver.emit('event', insightsReport);
+        setTimeout(() => eventPublisher.disconnect(), 1000);
       }
     };
   }
