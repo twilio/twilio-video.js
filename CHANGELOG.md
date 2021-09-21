@@ -9,6 +9,29 @@ Bug Fixes
 
 - Fixed a bug which caused Chrome screen share tracks to receive lower resolution. (VIDEO-7000)
 
+Change
+------
+
+- Added options to turn off Safari specific workarounds (VIDEO-7012).
+  Now you can turn off workarounds for `playPausedElementsIfNotBackgrounded`, `workaroundWebKitBug212780` for remote Tracks with,
+  ```ts
+  const { connect } = require('twilio-video');
+  const room = await connect(token, {
+    name: 'my-new-room',
+    playPausedElementsIfNotBackgrounded: false,
+    workaroundWebKitBug212780: false,
+  });
+  ```
+
+  To turn off the `playPausedElementsIfNotBackgrounded` for local Tracks you can specify
+  ```ts
+  const { createLocalVideoTrack } = require('twilio-video');
+  const localVideoTrack = await createLocalVideoTrack({
+    playPausedElementsIfNotBackgrounded: false
+  });
+  ```
+
+
 2.17.0 (September 14, 2021)
 ===========================
 New Features

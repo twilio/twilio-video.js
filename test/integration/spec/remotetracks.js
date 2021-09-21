@@ -18,6 +18,7 @@ const {
   smallVideoConstraints,
   randomName,
   participantsConnected,
+  setupAliceAndBob,
   tracksSubscribed,
   trackSwitchedOff,
   trackSwitchedOn,
@@ -251,6 +252,58 @@ describe('RemoteVideoTrack', function() {
         waitFor(trackSwitchedOff(remoteTrackB), `track B to get switched off: ${roomSid}`)
       ], `trackA => On, trackB => Off: ${roomSid}`);
     });
+  });
+});
+
+describe('respects connect options for remote track workarounds', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+
+  let aliceRoom; let bobRoom; let roomSid; let bobRemote; let aliceRemote;
+  let aliceTracks; let bobTracks;
+  beforeEach(async () => {
+    [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(async () => [
+      createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
+      await createLocalVideoTrack(smallVideoConstraints),
+    ]), 'create local tracks');
+
+    ({ aliceRoom, bobRoom, roomSid, aliceRemote, bobRemote } = await waitFor(setupAliceAndBob({
+      aliceOptions: {
+        playPausedElementsIfNotBackgrounded: true,
+        workaroundWebKitBug212780: true,
+        tracks: aliceTracks
+      },
+      bobOptions: {
+        playPausedElementsIfNotBackgrounded: false,
+        workaroundWebKitBug212780: false,
+        tracks: bobTracks
+      }
+    }), 'Alice and Bob to join the Room'));
+
+    await waitFor(tracksSubscribed(aliceRemote, 2), `Bob to See Alice's track: ${roomSid}`);
+    await waitFor(tracksSubscribed(bobRemote, 2), `Alice to See Bob's track: ${roomSid}`);
+  });
+
+  it('Bob sees remote track workarounds disabled', () => {
+    const aliceRemoteTracks = [...aliceRemote.tracks.values()].map(({ track }) => track);
+    aliceRemoteTracks.forEach(track => {
+      assert(track._workaroundWebKitBug212780 === false, `Unexpected track._workaroundWebKitBug212780 = ${track._workaroundWebKitBug212780}`);
+      assert(track._playPausedElementsIfNotBackgrounded === false, `Unexpected track._playPausedElementsIfNotBackgrounded = ${track._playPausedElementsIfNotBackgrounded}`);
+    });
+  });
+
+  it('Alice sees remote track workarounds enabled', () => {
+    const bobRemoteTracks = [...bobRemote.tracks.values()].map(({ track }) => track);
+    bobRemoteTracks.forEach(track => {
+      assert(track._workaroundWebKitBug212780 === true, `Unexpected track._workaroundWebKitBug212780 = ${track._workaroundWebKitBug212780}`);
+      assert(track._playPausedElementsIfNotBackgrounded === true, `Unexpected track._playPausedElementsIfNotBackgrounded = ${track._playPausedElementsIfNotBackgrounded}`);
+    });
+  });
+
+  afterEach(() => {
+    [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
+    [...aliceTracks, ...bobTracks].forEach(track => track.stop());
+    return completeRoom(roomSid);
   });
 });
 

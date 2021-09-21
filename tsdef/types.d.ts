@@ -160,6 +160,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
+  playPausedElementsIfNotBackgrounded?: boolean;
 }
 
 export interface ConnectOptions {
@@ -189,6 +190,9 @@ export interface ConnectOptions {
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
+
+  playPausedRemoteElementsIfNotBackgrounded?: boolean;
+  workaroundWebKitBug212780?: boolean;
 
   /**
    * @deprecated use Video.Logger.
