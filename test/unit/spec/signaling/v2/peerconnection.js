@@ -1209,12 +1209,14 @@ describe('PeerConnectionV2', () => {
         }
       }
 
-      function itShouldSetResolutionScale() {
+      function itShouldNotSetResolutionScale() {
         if (isRTCRtpSenderParamsSupported) {
-          it('should set RTCRtpEncodingParameters.scaleResolutionDownBy to 1 for all video senders', () => {
+          it('should not set RTCRtpEncodingParameters.scaleResolutionDownBy for any video senders', () => {
             test.pc.getSenders().forEach(sender => {
               if (sender.track.kind === 'video') {
-                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].scaleResolutionDownBy', 1));
+                sinon.assert.calledWith(sender.setParameters, sinon.match(({ encodings }) => {
+                  return !encodings.find(encoding => typeof encoding.scaleResolutionDownBy !== 'undefined');
+                }));
               }
             });
           });
@@ -1266,7 +1268,7 @@ describe('PeerConnectionV2', () => {
 
         itShouldApplyBandwidthConstraints();
         itShouldApplyCodecPreferences();
-        itShouldSetResolutionScale();
+        itShouldNotSetResolutionScale();
         itShouldMaybeSetNetworkPriority();
       }
 
