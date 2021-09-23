@@ -10,7 +10,6 @@ import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
 
-
 const Log = require('../util/log');
 const EventEmitter = require('../eventemitter');
 const MovingAverageDelta = require('../util/movingaveragedelta');
@@ -248,6 +247,20 @@ export class PreflightTest extends EventEmitter {
         const rtt = report.stats.rtt || undefinedValue;
         const packetLoss = report.stats.packetLoss || undefinedValue;
         const mos  = report.mos || undefinedValue;
+
+        // stringify important info from ice candidates.
+        const candidateTypeToProtocols = new Map<string, string[]>();
+        report.iceCandidateStats.forEach(candidateStats => {
+          if (candidateStats.candidateType && candidateStats.protocol) {
+            let protocols = candidateTypeToProtocols.get(candidateStats.candidateType) || [];
+            if (protocols.indexOf(candidateStats.protocol) < 0) {
+              protocols.push(candidateStats.protocol);
+            }
+            candidateTypeToProtocols.set(candidateStats.candidateType, protocols);
+          }
+        });
+        const iceCandidateStats = JSON.stringify(Object.fromEntries(candidateTypeToProtocols));
+
         const insightsReport  = {
           name: 'report',
           group: 'preflight',
@@ -263,7 +276,7 @@ export class PreflightTest extends EventEmitter {
             mediaTiming: report.networkTiming.media,
             selectedLocalCandidate: report.selectedIceCandidatePairStats?.localCandidate,
             selectedRemoteCandidate: report.selectedIceCandidatePairStats?.remoteCandidate,
-            iceCandidateStats: report.iceCandidateStats,
+            iceCandidateStats,
             jitter,
             rtt,
             packetLoss,
