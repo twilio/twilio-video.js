@@ -54,6 +54,13 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari desktop
 <details>
+<summary>Failures to setLocalDescription on Safari 15 when using older adapter.js version</summary>
+<p>
+   If your applications uses [webrtc-adapter](https://github.com/webrtcHacks/adapter) as a dependency, Please note that older versions of webrtc-adapter have a bug where it tries to write to RTCPeerConnection.sdp, which causes an exception ("Client is unable to apply a remote media description - Attempted to assign to readonly property…") on Safari 15. To fix this issue, please update your adapter.js version to the one (^7.7.1) with the [fix](https://github.com/webrtcHacks/adapter/commit/de0348c756b7bda11a700bf7ea9e9393cab16421)
+</p>
+</details>
+
+<details>
 <summary>Echo issues in Safari when using external microphone</summary>
 <p>
 
