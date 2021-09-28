@@ -10,6 +10,7 @@ import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
 
+const { WS_SERVER } = require('../util/constants');
 const Log = require('../util/log');
 const EventEmitter = require('../eventemitter');
 const MovingAverageDelta = require('../util/movingaveragedelta');
@@ -78,6 +79,12 @@ declare interface PreflightTestReportInternal extends PreflightTestReport {
   error?: string,
   mos?: Stats|null
 }
+
+declare interface PreflightOptionsInternal extends PreflightOptions {
+  environment?: string;
+  wsServer?: string;
+}
+
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && typeof value !== 'undefined';
 }
@@ -115,12 +122,18 @@ export class PreflightTest extends EventEmitter {
    */
   constructor(token: string, options: PreflightOptions) {
     super();
+    const internalOptions = {
+      environment: 'prod',
+      region: 'gll',
+      ...(options as PreflightOptionsInternal)
+    };
+
     this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
     this._testDuration = options.duration || DEFAULT_TEST_DURATION;
     this._instanceId = nInstances++;
 
     this._testTiming.start();
-    this._runPreflightTest(token, options);
+    this._runPreflightTest(token, internalOptions);
   }
 
   toString(): string {
@@ -243,10 +256,10 @@ export class PreflightTest extends EventEmitter {
     const undefinedValue = undefined;
     return {
       reportToInsights: ({ report }: { report: PreflightTestReportInternal }) => {
-        const jitter = report.stats.jitter || undefinedValue;
-        const rtt = report.stats.rtt || undefinedValue;
-        const packetLoss = report.stats.packetLoss || undefinedValue;
-        const mos  = report.mos || undefinedValue;
+        const jitterStats = report.stats.jitter || undefinedValue;
+        const rttStats = report.stats.rtt || undefinedValue;
+        const packetLossStats = report.stats.packetLoss || undefinedValue;
+        const mosStats  = report.mos || undefinedValue;
 
         // stringify important info from ice candidates.
         const candidateTypeToProtocols = new Map<string, string[]>();
@@ -277,10 +290,10 @@ export class PreflightTest extends EventEmitter {
             selectedLocalCandidate: report.selectedIceCandidatePairStats?.localCandidate,
             selectedRemoteCandidate: report.selectedIceCandidatePairStats?.remoteCandidate,
             iceCandidateStats,
-            jitter,
-            rtt,
-            packetLoss,
-            mos,
+            jitterStats,
+            rttStats,
+            packetLossStats,
+            mosStats,
             error: report.error
           }
         };
@@ -290,7 +303,7 @@ export class PreflightTest extends EventEmitter {
     };
   }
 
-  private async _runPreflightTest(token: string, options: PreflightOptions) {
+  private async _runPreflightTest(token: string, options: PreflightOptionsInternal) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
     const { reportToInsights } = this._setupInsights({ token, environment: options.environment });
@@ -301,7 +314,9 @@ export class PreflightTest extends EventEmitter {
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
+      // eslint-disable-next-line new-cap
+      const wsServer: string = options.wsServer || WS_SERVER(options.environment, options.region);
+      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer));
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 

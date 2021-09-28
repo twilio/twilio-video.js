@@ -1,6 +1,5 @@
 export interface PreflightOptions {
   duration?: number;
-  environment?: string;
   region?: string;
 }
 
