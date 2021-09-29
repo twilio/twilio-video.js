@@ -122,18 +122,16 @@ export class PreflightTest extends EventEmitter {
    */
   constructor(token: string, options: PreflightOptions) {
     super();
-    const internalOptions = {
-      environment: 'prod',
-      region: 'gll',
-      ...(options as PreflightOptionsInternal)
-    };
+    const internalOptions = options as PreflightOptionsInternal;
+    const { environment = 'prod', region = 'gll', duration = DEFAULT_TEST_DURATION } = internalOptions;
+    // eslint-disable-next-line new-cap
+    const wsServer = internalOptions.wsServer || WS_SERVER(environment, region);
 
     this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
-    this._testDuration = options.duration || DEFAULT_TEST_DURATION;
+    this._testDuration = duration;
     this._instanceId = nInstances++;
-
     this._testTiming.start();
-    this._runPreflightTest(token, internalOptions);
+    this._runPreflightTest(token, environment, wsServer);
   }
 
   toString(): string {
@@ -298,15 +296,15 @@ export class PreflightTest extends EventEmitter {
           }
         };
         eventObserver.emit('event', insightsReport);
-        setTimeout(() => eventPublisher.disconnect(), 1000);
+        setTimeout(() => eventPublisher.disconnect(), 2000);
       }
     };
   }
 
-  private async _runPreflightTest(token: string, options: PreflightOptionsInternal) {
+  private async _runPreflightTest(token: string, environment: string, wsServer: string) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
-    const { reportToInsights } = this._setupInsights({ token, environment: options.environment });
+    const { reportToInsights } = this._setupInsights({ token, environment });
     try {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [syntheticAudio(), syntheticVideo({ width: 640, height: 480 })]);
@@ -314,8 +312,6 @@ export class PreflightTest extends EventEmitter {
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      // eslint-disable-next-line new-cap
-      const wsServer: string = options.wsServer || WS_SERVER(options.environment, options.region);
       let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer));
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
