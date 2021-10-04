@@ -1875,6 +1875,7 @@ function makePeerConnectionManager(getRoom) {
   peerConnectionManager.setTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
   peerConnectionManager.setIceReconnectTimeout = sinon.spy(() => {});
+  peerConnectionManager.setEffectiveAdaptiveSimulcast = sinon.spy(() => {});
 
   // eslint-disable-next-line require-await
   peerConnectionManager.getStats = async () => {
