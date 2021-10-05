@@ -248,9 +248,6 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledOnce(test.twilioConnection.close);
       });
 
-      it('should call .disconnect() on the underlying ._eventPublisher', () => {
-        sinon.assert.calledOnce(test.eventPublisher.disconnect);
-      });
     });
 
     context('"connecting"', () => {
@@ -281,9 +278,6 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledOnce(test.twilioConnection.close);
       });
 
-      it('should call .disconnect() on the underlying ._eventPublisher', () => {
-        sinon.assert.calledOnce(test.eventPublisher.disconnect);
-      });
     });
 
     context('"disconnected"', () => {
@@ -307,9 +301,6 @@ describe('TwilioConnectionTransport', () => {
         assert(!test.twilioConnection.close.calledTwice);
       });
 
-      it('should not call .disconnect() on the underlying ._eventPublisher', () => {
-        sinon.assert.calledOnce(test.eventPublisher.disconnect);
-      });
     });
 
     context('"syncing"', () => {
@@ -344,9 +335,6 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledOnce(test.twilioConnection.close);
       });
 
-      it('should call .disconnect() on the underlying ._eventPublisher', () => {
-        sinon.assert.calledOnce(test.eventPublisher.disconnect);
-      });
     });
   });
 
@@ -600,15 +588,23 @@ describe('TwilioConnectionTransport', () => {
       global.Date = { now() { return 5; } };
       test = makeTest();
       test.connect();
-      test.transport.publishEvent('quality', 'bar', 'info', { baz: 1 });
     });
 
     after(() => {
       global.Date = OrigDate;
     });
 
-    it('should call .publish() on the underlying ._eventPublisher', () => {
-      sinon.assert.calledWith(test.eventPublisher.publish, 'quality', 'bar', { baz: 1, elapsedTime: 5, level: 'info' });
+    it('should emit an event on underlying ._eventObserver', () => {
+      let eventWasEmitted = false;
+      test.eventObserver.on('event', ({ group, name, level, payload }) => {
+        eventWasEmitted = true;
+        assert(group, 'quality');
+        assert(name, 'bar');
+        assert(level, 'info');
+        assert(payload, { baz: 1, elapsedTime: 5, level: 'info' });
+      });
+      test.transport.publishEvent('quality', 'bar', 'info', { baz: 1 });
+      assert(eventWasEmitted);
     });
   });
 
@@ -1706,7 +1702,7 @@ function createTwilioConnection(options) {
 
 function makeTest(options) {
   options = options || {};
-  options.eventObserver = options.eventObserver || new EventObserver(0, log);
+  options.eventObserver = options.eventObserver || new EventObserver(makeInsightsPublisher(), 0, log);
   options.reconnectBackOffJitter = options.reconnectBackOffJitter || 0;
   options.reconnectBackOffMs = options.reconnectBackOffMs || 0;
   options.name = 'name' in options ? options.name : makeName();
@@ -1722,8 +1718,6 @@ function makeTest(options) {
   options.localParticipant = options.localParticipant || makeLocalParticipant(options);
   options.onIced = options.onIced || sinon.spy(() => Promise.resolve());
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
-  options.InsightsPublisher = options.InsightsPublisher || makeInsightsPublisherConstructor(options);
-  options.NullInsightsPublisher = options.NullInsightsPublisher || makeInsightsPublisherConstructor(options);
   options.TwilioConnection = options.TwilioConnection || createTwilioConnection(options);
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
@@ -1770,11 +1764,10 @@ function makePeerConnectionManager() {
   return { getStates: () => [] };
 }
 
-function makeInsightsPublisherConstructor(testOptions) {
-  return function InsightsPublisher() {
-    this.disconnect = sinon.spy(() => {});
-    this.connect = sinon.spy(() => {});
-    this.publish = sinon.spy(() => {});
-    testOptions.eventPublisher = this;
+function makeInsightsPublisher() {
+  return {
+    disconnect: sinon.spy(() => {}),
+    connect: sinon.spy(() => {}),
+    publish: sinon.spy(() => {}),
   };
 }
