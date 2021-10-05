@@ -1,6 +1,5 @@
 export interface PreflightOptions {
   duration?: number;
-  environment?: string;
   region?: string;
 }
 
@@ -26,7 +25,7 @@ export interface RTCIceCandidateStats {
   candidateType?: string;
   priority?: number;
   url?: string;
-  relayProtocol?: number;
+  relayProtocol?: string;
 }
 
 export interface SelectedIceCandidatePairStats {

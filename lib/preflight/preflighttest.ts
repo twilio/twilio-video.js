@@ -1,5 +1,5 @@
-import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from '../util/constants';
-import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
+import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL, DEFAULT_REALM, SDK_NAME, SDK_VERSION } from '../util/constants';
+import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats, Stats } from '../../tsdef/PreflightTypes';
 import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
 import { calculateMOS } from './mos';
@@ -10,9 +10,13 @@ import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
 
+const { WS_SERVER } = require('../util/constants');
 const Log = require('../util/log');
 const EventEmitter = require('../eventemitter');
 const MovingAverageDelta = require('../util/movingaveragedelta');
+const EventObserver = require('../util/eventobserver');
+const InsightsPublisher = require('../util/insightspublisher');
+const { createSID, sessionSID } = require('../util/sid');
 
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
@@ -71,6 +75,16 @@ declare interface PreflightStats {
   iceCandidateStats: RTCIceCandidateStats[],
 }
 
+declare interface PreflightTestReportInternal extends PreflightTestReport {
+  error?: string,
+  mos?: Stats|null
+}
+
+declare interface PreflightOptionsInternal extends PreflightOptions {
+  environment?: string;
+  wsServer?: string;
+}
+
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && typeof value !== 'undefined';
 }
@@ -108,12 +122,16 @@ export class PreflightTest extends EventEmitter {
    */
   constructor(token: string, options: PreflightOptions) {
     super();
-    this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
-    this._testDuration = options.duration || DEFAULT_TEST_DURATION;
-    this._instanceId = nInstances++;
+    const internalOptions = options as PreflightOptionsInternal;
+    const { environment = 'prod', region = 'gll', duration = DEFAULT_TEST_DURATION } = internalOptions;
+    // eslint-disable-next-line new-cap
+    const wsServer = internalOptions.wsServer || WS_SERVER(environment, region);
 
+    this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
+    this._testDuration = duration;
+    this._instanceId = nInstances++;
     this._testTiming.start();
-    this._runPreflightTest(token, options);
+    this._runPreflightTest(token, environment, wsServer);
   }
 
   toString(): string {
@@ -127,7 +145,7 @@ export class PreflightTest extends EventEmitter {
     this._stopped = true;
   }
 
-  private _generatePreflightReport(collectedStats: PreflightStats) : PreflightTestReport  {
+  private _generatePreflightReport(collectedStats?: PreflightStats, error? : Error) : PreflightTestReportInternal  {
     this._testTiming.stop();
     return {
       testTiming: this._testTiming.getTimeMeasurement(),
@@ -139,12 +157,15 @@ export class PreflightTest extends EventEmitter {
         media: this._mediaTiming.getTimeMeasurement()
       },
       stats: {
-        jitter: makeStat(collectedStats.jitter),
-        rtt: makeStat(collectedStats.rtt),
-        packetLoss: makeStat(collectedStats.packetLoss),
+        jitter: makeStat(collectedStats?.jitter),
+        rtt: makeStat(collectedStats?.rtt),
+        packetLoss: makeStat(collectedStats?.packetLoss),
       },
-      selectedIceCandidatePairStats: collectedStats.selectedIceCandidatePairStats,
-      iceCandidateStats: collectedStats.iceCandidateStats
+      selectedIceCandidatePairStats: collectedStats ? collectedStats.selectedIceCandidatePairStats : null,
+      iceCandidateStats: collectedStats ? collectedStats.iceCandidateStats : [],
+      // NOTE(mpatwardhan): internal properties.
+      error: error?.toString(),
+      mos: makeStat(collectedStats?.mos),
     };
   }
 
@@ -211,9 +232,79 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private async _runPreflightTest(token: string, options: PreflightOptions) {
+  private _setupInsights({ token, environment = DEFAULT_ENVIRONMENT, realm = DEFAULT_REALM } : {
+    token: string,
+    environment?: string,
+    realm?: string
+  }) {
+    const eventPublisherOptions = {};
+    const eventPublisher = new InsightsPublisher(
+      token,
+      SDK_NAME,
+      SDK_VERSION,
+      environment,
+      realm,
+      eventPublisherOptions);
+
+    // event publisher requires room sid/participant sid. supply fake ones.
+    eventPublisher.connect('PREFLIGHT_ROOM_SID', 'PREFLIGHT_PARTICIPANT');
+    const eventObserver = new EventObserver(eventPublisher, Date.now(), this._log);
+
+    // eslint-disable-next-line no-undefined
+    const undefinedValue = undefined;
+    return {
+      reportToInsights: ({ report }: { report: PreflightTestReportInternal }) => {
+        const jitterStats = report.stats.jitter || undefinedValue;
+        const rttStats = report.stats.rtt || undefinedValue;
+        const packetLossStats = report.stats.packetLoss || undefinedValue;
+        const mosStats  = report.mos || undefinedValue;
+
+        // stringify important info from ice candidates.
+        const candidateTypeToProtocols = new Map<string, string[]>();
+        report.iceCandidateStats.forEach(candidateStats => {
+          if (candidateStats.candidateType && candidateStats.protocol) {
+            let protocols = candidateTypeToProtocols.get(candidateStats.candidateType) || [];
+            if (protocols.indexOf(candidateStats.protocol) < 0) {
+              protocols.push(candidateStats.protocol);
+            }
+            candidateTypeToProtocols.set(candidateStats.candidateType, protocols);
+          }
+        });
+        const iceCandidateStats = JSON.stringify(Object.fromEntries(candidateTypeToProtocols));
+
+        const insightsReport  = {
+          name: 'report',
+          group: 'preflight',
+          level: report.error ? 'error' : 'info',
+          payload: {
+            sessionSID,
+            preflightSID: createSID('PF'),
+            testTiming: report.testTiming,
+            dtlsTiming: report.networkTiming.dtls,
+            iceTiming: report.networkTiming.ice,
+            peerConnectionTiming: report.networkTiming.peerConnection,
+            connectTiming: report.networkTiming.connect,
+            mediaTiming: report.networkTiming.media,
+            selectedLocalCandidate: report.selectedIceCandidatePairStats?.localCandidate,
+            selectedRemoteCandidate: report.selectedIceCandidatePairStats?.remoteCandidate,
+            iceCandidateStats,
+            jitterStats,
+            rttStats,
+            packetLossStats,
+            mosStats,
+            error: report.error
+          }
+        };
+        eventObserver.emit('event', insightsReport);
+        setTimeout(() => eventPublisher.disconnect(), 2000);
+      }
+    };
+  }
+
+  private async _runPreflightTest(token: string, environment: string, wsServer: string) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
+    const { reportToInsights } = this._setupInsights({ token, environment });
     try {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [syntheticAudio(), syntheticVideo({ width: 640, height: 480 })]);
@@ -221,7 +312,7 @@ export class PreflightTest extends EventEmitter {
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, options));
+      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer));
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 
@@ -287,9 +378,12 @@ export class PreflightTest extends EventEmitter {
         () => this._collectRTCStatsForDuration(this._testDuration, initCollectedStats(), senderPC, receiverPC));
 
       const report = await this._executePreflightStep('generate report', () => this._generatePreflightReport(collectedStats));
+      reportToInsights({ report });
       this.emit('completed', report);
 
     } catch (error) {
+      // eslint-disable-next-line no-undefined
+      reportToInsights({ report: this._generatePreflightReport(undefined, error) });
       this.emit('failed', error);
     } finally {
       pcs.forEach(pc => pc.close());
