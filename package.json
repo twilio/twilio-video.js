@@ -147,7 +147,6 @@
   "dependencies": {
     "@twilio/webrtc": "4.5.1",
     "backoff": "^2.5.0",
-    "diff": "^5.0.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
   },

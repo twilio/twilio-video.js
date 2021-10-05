@@ -3,6 +3,7 @@
 const assert = require('assert');
 const { isIOSChrome } = require('@twilio/webrtc/lib/util');
 
+// eslint-disable-next-line no-warning-comments
 // TODO(joma): Move the contents of this file to twilio-webrtc.js.
 describe('isIOSChrome', () => {
   let oldAgent;
