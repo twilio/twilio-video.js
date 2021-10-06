@@ -164,7 +164,6 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
-  adaptiveSimulcast?: boolean,
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -189,7 +188,7 @@ export interface ConnectOptions {
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings>;
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | 'auto';
 
   /**
    * @deprecated use Video.Logger.
