@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.18.0 (in progress)
+====================
+
+New Features
+------------
+
+- When a LocalParticipant tries to publish a LocalVideoTrack in an [Audio Only Group Room](todo_docs_link_here),
+  it will fail with a [RoomTrackKindNotSupportedError](todo_docs_link_here). (VIDEO-7242)
+
 2.17.1 (September 21, 2021)
 ===========================
 Bug Fixes
