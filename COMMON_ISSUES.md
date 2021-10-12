@@ -99,6 +99,18 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari mobile
 <details>
+<summary>iOS 15:Low audio volume in Safari</summary>
+<p>
+   Safari on iOS version 15, sometimes routes audio to the earpiece and not the speakers by default. Which customers some time perceive as low audio volume. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1586) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230902).
+</p>
+</details>
+<details>
+<summary>"iOS 15: Audio is lost in a video call after an interruption with a phone call</summary>
+<p>
+   Due to a regression on Safari on iOS 15, an incoming call causes local and sometimes remote media playback to stop. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230537).
+</p>
+</details>
+<details>
 <summary>Mobile Safari Participants on iOS 13.1-13.3 sometimes fail to send audio</summary>
 <p>
 
@@ -110,18 +122,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <p>
 
    This issue happened due to regression in Safari's WebKit in iOS version 14.2, the fix got rolled out in iOS 14.3 beta3. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1296) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=218762).
-</p>
-</details>
-<details>
-<summary>Low audio volume in Safari on iOS 15</summary>
-<p>
-   Safari on iOS version 15, sometimes routes audio to the earpiece and not the speakers by default. Which customers some time perceive as low audio volume. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1586) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230902).
-</p>
-</details>
-<details>
-<summary>Incoming phone calls cause disruption in webrtc calls</summary>
-<p>
-   Due to a regression on Safari on iOS 15, an incoming call causes local and sometimes remote media playback to stop. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230537).
 </p>
 </details>
 
