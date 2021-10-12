@@ -47,7 +47,6 @@ preflightTest.on('progress', (progress: string) => {
 
 preflightTest.on('failed', (error: Error) => {
   console.error('preflight error:', error);
-  deferred.reject && deferred.reject(error);
 });
 
 preflightTest.on('completed', (report: PreflightTestReport) => {
