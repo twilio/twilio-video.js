@@ -15,9 +15,10 @@ const {
   waitFor
 } = require('../../lib/util');
 
-const { environment, topology } = require('../../lib/defaults');
-
-(environment !== 'prod' && topology === 'group' ? describe : describe.skip)('Audio Only Rooms', function() {
+// TODO(mmalavalli): Enable once Audio Only Rooms is available.
+// const { topology } = require('../../lib/defaults');
+// (topology === 'group' ? describe : describe.skip)('Audio Only Rooms', function() {
+describe.skip('Audio Only Rooms', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -41,7 +42,7 @@ const { environment, topology } = require('../../lib/defaults');
         ({ aliceLocal, aliceRemote, aliceRoom, bobRoom, roomSid } = await setupAliceAndBob({
           aliceOptions: { tracks: { connect: tracks, publishTrack: [] }[api] },
           bobOptions: { tracks: [] },
-          onAliceConnected: room => room.once('trackPublicationFailed', error => {
+          onAliceConnected: ({ localParticipant }) => localParticipant.once('trackPublicationFailed', error => {
             publicationError = error;
           }),
           roomOptions: { AudioOnly: true },
@@ -95,9 +96,10 @@ const { environment, topology } = require('../../lib/defaults');
       });
 
       it('should fail to publish the video Track with error code 53125', () => {
-        assert(publicationError instanceof RoomTrackKindNotSupportedError);
-        assert.strictEqual(publicationError.code, 53125);
-        if (api === 'publishTrack') {
+        if (api === 'connect') {
+          assert(publicationError instanceof RoomTrackKindNotSupportedError);
+          assert.strictEqual(publicationError.code, 53125);
+        } else if (api === 'publishTrack') {
           const publishError = publicationsOrErrors.find(publicationOrError => !(publicationOrError instanceof LocalTrackPublication));
           assert(publishError instanceof RoomTrackKindNotSupportedError);
           assert.strictEqual(publishError.code, 53125);
