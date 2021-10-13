@@ -7,6 +7,7 @@ const { RoomTrackKindNotSupportedError } = require('../../../es5/util/twilio-vid
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const LocalTrackPublication = require('../../../es5/media/track/localtrackpublication');
 const { completeRoom } = require('../../lib/rest');
+const { topology } = require('../../lib/defaults');
 
 const {
   setupAliceAndBob,
@@ -15,7 +16,7 @@ const {
   waitFor
 } = require('../../lib/util');
 
-describe('Audio Only Rooms', function() {
+(topology === 'group' ? describe : describe.skip)('Audio Only Rooms', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
