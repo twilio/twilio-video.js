@@ -15,10 +15,7 @@ const {
   waitFor
 } = require('../../lib/util');
 
-// TODO(mmalavalli): Enable once Audio Only Rooms is available.
-// const { topology } = require('../../lib/defaults');
-// (topology === 'group' ? describe : describe.skip)('Audio Only Rooms', function() {
-describe.skip('Audio Only Rooms', function() {
+describe('Audio Only Rooms', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
