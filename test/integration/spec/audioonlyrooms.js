@@ -7,6 +7,7 @@ const { RoomTrackKindNotSupportedError } = require('../../../es5/util/twilio-vid
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const LocalTrackPublication = require('../../../es5/media/track/localtrackpublication');
 const { completeRoom } = require('../../lib/rest');
+const { isFirefox } = require('../../lib/guessbrowser');
 const { topology } = require('../../lib/defaults');
 
 const {
@@ -16,7 +17,8 @@ const {
   waitFor
 } = require('../../lib/util');
 
-(topology === 'group' ? describe : describe.skip)('Audio Only Rooms', function() {
+// TODO(mmalavalli): Enable tests for firefox once VIDEO-7341 is fixed by the VMS team.
+(topology === 'group' && !isFirefox ? describe : describe.skip)('Audio Only Rooms', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 

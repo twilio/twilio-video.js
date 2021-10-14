@@ -11,6 +11,12 @@ New Features
 - When a LocalParticipant tries to publish a LocalVideoTrack in an [Audio Only Group Room](https://www.twilio.com/docs/video/api/rooms-resource#example-4-create-an-audio-only-group-room),
   it will fail with a [RoomTrackKindNotSupportedError](https://sdk.twilio.com/js/video/releases/2.18.0/docs/RoomTrackKindNotSupportedError.html). (VIDEO-7242)
 
+Known Issue
+------------
+
+In Firefox, although the publishing of a LocalVideoTrack in an Audio Only Group Room fails,
+the **RoomTrackKindNotSupportedError** is not raised. We are actively working on fixing this issue.
+
 2.17.1 (September 21, 2021)
 ===========================
 Bug Fixes
