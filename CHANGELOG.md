@@ -2,6 +2,21 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.18.0 (October 13, 2021)
+=========================
+
+New Features
+------------
+
+- When a LocalParticipant tries to publish a LocalVideoTrack in an [Audio Only Group Room](https://www.twilio.com/docs/video/api/rooms-resource#example-4-create-an-audio-only-group-room),
+  it will fail with a [RoomTrackKindNotSupportedError](https://sdk.twilio.com/js/video/releases/2.18.0/docs/RoomTrackKindNotSupportedError.html). (VIDEO-7242)
+
+Known Issue
+------------
+
+In Firefox, although the publishing of a LocalVideoTrack in an Audio Only Group Room fails,
+the **RoomTrackKindNotSupportedError** is not raised. We are actively working on fixing this issue.
+
 2.17.1 (September 21, 2021)
 ===========================
 Bug Fixes

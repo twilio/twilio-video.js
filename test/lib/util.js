@@ -456,19 +456,28 @@ const isRTCRtpSenderParamsSupported = typeof RTCRtpSender !== 'undefined'
   && typeof RTCRtpSender.prototype.setParameters === 'function';
 
 // setup two users room
-async function setupAliceAndBob({ aliceOptions, bobOptions }) {
-  const roomName = await createRoom(randomName(), defaults.topology);
+async function setupAliceAndBob({
+  aliceOptions,
+  bobOptions,
+  onAliceConnected = () => {},
+  onBobConnected = () => {},
+  roomOptions = {},
+  waitForMediaConnection = true
+}) {
+  const roomName = await createRoom(randomName(), defaults.topology, roomOptions);
   aliceOptions = Object.assign({
     name: roomName,
   }, aliceOptions, defaults);
 
   const aliceRoom = await connect(getToken('Alice'), aliceOptions);
+  onAliceConnected(aliceRoom);
 
   bobOptions = Object.assign({
     name: roomName,
   }, bobOptions, defaults);
 
   const bobRoom = await connect(getToken('Bob'), bobOptions);
+  onBobConnected(bobRoom);
 
   await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'Alice and Bob to connect');
 
@@ -478,23 +487,24 @@ async function setupAliceAndBob({ aliceOptions, bobOptions }) {
   const aliceRemote = bobRoom.participants.get(aliceLocal.sid);
   const bobRemote = aliceRoom.participants.get(bobLocal.sid);
 
-  const peerConnectionManagers = [aliceRoom, bobRoom]
-    .map(({ _signaling: { _peerConnectionManager } }) => _peerConnectionManager);
-
-  // NOTE(mmalavalli): In Circle CI Firefox, for some reason, only one of the Participants
-  // ICE goes to connected state instead of the expected behavior (both Participants' ICE should go
-  // to connected state). So, until we know more, we wait for only one Participant to reach
-  // ICE connected state.
-  // eslint-disable-next-line no-warning-comments
-  // TODO(mmalavalli): Wait for both Participants to reach ICE connected state.
-  await waitFor(Promise.race(peerConnectionManagers.map(pcm => new Promise(resolve => {
-    pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
-      if (pcm.iceConnectionState === 'connected') {
-        pcm.removeListener('iceConnectionStateChanged', onIceConnectionStateChanged);
-        resolve();
-      }
-    });
-  }))), 'Alice or Bob to establish a media connection');
+  if (waitForMediaConnection) {
+    const peerConnectionManagers = [aliceRoom, bobRoom]
+      .map(({ _signaling: { _peerConnectionManager } }) => _peerConnectionManager);
+    // NOTE(mmalavalli): In Circle CI Firefox, for some reason, only one of the Participants
+    // ICE goes to connected state instead of the expected behavior (both Participants' ICE should go
+    // to connected state). So, until we know more, we wait for only one Participant to reach
+    // ICE connected state.
+    // eslint-disable-next-line no-warning-comments
+    // TODO(mmalavalli): Wait for both Participants to reach ICE connected state.
+    await waitFor(Promise.race(peerConnectionManagers.map(pcm => new Promise(resolve => {
+      pcm.on('iceConnectionStateChanged', function onIceConnectionStateChanged() {
+        if (pcm.iceConnectionState === 'connected') {
+          pcm.removeListener('iceConnectionStateChanged', onIceConnectionStateChanged);
+          resolve();
+        }
+      });
+    }))), 'Alice or Bob to establish a media connection');
+  }
 
   return { aliceRoom, bobRoom, aliceLocal, bobLocal, aliceRemote, bobRemote, roomSid, roomName };
 }
