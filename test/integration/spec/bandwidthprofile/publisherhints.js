@@ -9,7 +9,7 @@ const { Logger } = require('../../../../es5');
 const connect = require('../../../../es5/connect');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
-// const connect = require('../../../../es5/connect');
+const { isFirefox } = require('../../../lib/guessbrowser');
 
 const {
   tracksSubscribed,
@@ -37,37 +37,36 @@ async function getSimulcastLayerReport(room) {
 // for a given room, returns array of simulcast layers that are active.
 // it checks for active layers by gathering layer stats 1 sec apart.
 async function getActiveLayers({ room, initialWaitMS = 10000, activeTimeMS = 5000 }) {
-  console.log('waiting ', initialWaitMS);
   await waitForSometime(initialWaitMS);
-  console.log('done waiting ', initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
-  console.log('waiting ', activeTimeMS);
   await waitForSometime(activeTimeMS);
-  console.log('done waiting ', activeTimeMS);
   const layersAfter = await getSimulcastLayerReport(room);
 
   const activeLayers = [];
+  const inactiveLayers = [];
   Array.from(layersAfter.keys()).forEach(ssrc => {
     const layerStatsAfter = layersAfter.get(ssrc);
     const layerStatsBefore = layersBefore.get(ssrc);
     const bytesSentAfter = layerStatsAfter.bytesSent;
     const bytesSentBefore = layerStatsBefore ? layerStatsBefore.bytesSent : 0;
-    if (bytesSentAfter > bytesSentBefore) {
-      const diffBytes = bytesSentAfter - bytesSentBefore;
-      const dimensions = layerStatsAfter.dimensions;
+    const diffBytes = bytesSentAfter - bytesSentBefore;
+    const dimensions = layerStatsAfter.dimensions;
+    if (diffBytes > 0) {
       activeLayers.push({ dimensions, diffBytes });
+    } else {
+      inactiveLayers.push({ dimensions, diffBytes });
     }
   });
-  return activeLayers;
+  return { activeLayers, inactiveLayers };
 }
 
 describe('preferredVideoCodecs = auto', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
   // eslint-disable-next-line no-invalid-this
-  // this.retries(2);
+  this.retries(2);
   if (defaults.topology === 'peer-to-peer') {
-    describe('revert to unicast', () => {
+    describe('reverts to unicast', () => {
       let roomSid;
       let aliceRemote;
       let aliceRoom;
@@ -98,7 +97,7 @@ describe('preferredVideoCodecs = auto', function() {
 
         ({ roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions }));
       });
-      afterEach(() => {
+      after(() => {
         [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
       });
 
@@ -107,7 +106,7 @@ describe('preferredVideoCodecs = auto', function() {
         await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
         await waitFor(tracksSubscribed(aliceRemote, 1), `Alice to subscribe to Bob's track: ${roomSid}`);
 
-        await waitForSometime(2000);
+        await waitForSometime(5000);
 
         const aliceSimulcastLayers = await getSimulcastLayerReport(aliceRoom);
         const bobSimulcastLayers = await getSimulcastLayerReport(bobRoom);
@@ -122,55 +121,45 @@ describe('preferredVideoCodecs = auto', function() {
         testCase: 'enables simulcast for VP8 rooms',
         roomOptions: { VideoCodecs: ['VP8'] },
         expectedCodec: 'VP8',
-        expectedSimulcast: true
+        expectedLayers: isFirefox ? 1 : 3
       },
       {
         testCase: 'does not enable simulcast for H264 rooms',
         roomOptions: { VideoCodecs: ['H264'] },
         expectedCodec: 'H264',
-        expectedSimulcast: false
       },
-    ].forEach(({ testCase, roomOptions, expectedCodec, expectedSimulcast }) => {
-      describe(testCase, () => {
-        // eslint-disable-next-line no-invalid-this
-        this.timeout(120 * 1000);
-        let roomSid = null;
-        beforeEach(async () => {
-          roomSid = await createRoom(randomName(), defaults.topology, roomOptions);
-        });
-
-        it(`uses videoCodec: ${expectedCodec}`, async () => {
-          const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-          const room = await connect(getToken('Alice'), {
-            ...defaults,
-            tracks: [aliceLocalVideo],
-            name: roomSid,
-            loggerName: 'AliceLogger',
-            preferredVideoCodecs: 'auto',
-            bandwidthProfile: {
-              video: {
-                contentPreferencesMode: 'manual',
-                clientTrackSwitchOffControl: 'manual'
-              }
+    ].forEach(({ testCase, roomOptions, expectedCodec, expectedLayers }) => {
+      it(testCase, async () => {
+        const roomSid = await createRoom(randomName(), defaults.topology, roomOptions);
+        const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
+        const room = await connect(getToken('Alice'), {
+          ...defaults,
+          tracks: [aliceLocalVideo],
+          name: roomSid,
+          loggerName: 'AliceLogger',
+          preferredVideoCodecs: 'auto',
+          bandwidthProfile: {
+            video: {
+              contentPreferencesMode: 'manual',
+              clientTrackSwitchOffControl: 'manual'
             }
-          });
-
-          const simulcastLayers = await getSimulcastLayerReport(room);
-          await waitForSometime(2000);
-          const layerArray = Array.from(simulcastLayers.values());
-          layerArray.forEach(layer => layer.codec === expectedCodec);
-          assert(layerArray.length = expectedSimulcast ? 3 : 1);
+          }
         });
 
-        afterEach(() => {
-          completeRoom(roomSid);
-        });
+        await waitForSometime(2000);
+        const simulcastLayers = await getSimulcastLayerReport(room);
+        const layerArray = Array.from(simulcastLayers.values());
+        layerArray.forEach(layer => layer.codec === expectedCodec);
+        if (expectedLayers) {
+          assert.strictEqual(layerArray.length, expectedLayers, `layers: ${layerArray.length}, expected: ${expectedLayers} : room: ${roomSid}`);
+        }
+        completeRoom(roomSid);
       });
     });
   }
 });
 
-if (defaults.topology !== 'peer-to-peer') {
+if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
   describe('adaptive simulcast', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120 * 1000);
@@ -184,107 +173,195 @@ if (defaults.topology !== 'peer-to-peer') {
     before(async () => {
       roomSid = await createRoom(randomName(), defaults.topology);
     });
-
-    it('When Alice joins the room, all layers get turned off.', async () => {
-      const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-      aliceRoom = await connect(getToken('Alice'), {
-        ...defaults,
-        tracks: [aliceLocalVideo],
-        name: roomSid,
-        loggerName: 'AliceLogger',
-        preferredVideoCodecs: 'auto',
-        bandwidthProfile
-      });
-
-      const activeLayers = await getActiveLayers({ room: aliceRoom });
-      console.log(activeLayers);
-      // eslint-disable-next-line no-warning-comments
-      // TODO(mpatwardhan): enable assertions after VIDEO-7185 is fixed.
-      // assert(activeLayers.length === 0);
-
-      aliceVideoTrackPublication = [...aliceRoom.localParticipant.tracks.values()][0];
+    after(() => {
+      completeRoom(roomSid);
+      roomSid = null;
     });
 
-    describe('After Bob joins the room', () => {
-      let bobRoom = null;
-      let aliceInBobsRoom = null;
+    context('Alice joins the room', () => {
       before(async () => {
-        bobRoom = await connect(getToken('Bob'), {
+        const aliceLocalVideo = await waitFor(createLocalVideoTrack({
+          width: 1280,
+          height: 720
+        }), 'alice local video track');
+        aliceRoom = await connect(getToken('Alice'), {
           ...defaults,
-          tracks: [],
+          tracks: [aliceLocalVideo],
           name: roomSid,
-          loggerName: 'BobLogger',
+          loggerName: 'AliceLogger',
           preferredVideoCodecs: 'auto',
           bandwidthProfile
         });
-        const bobLogger = Logger.getLogger('BobLogger');
-        const aliceLogger = Logger.getLogger('AliceLogger');
-        bobLogger.setLevel('ERROR');
-        aliceLogger.setLevel('WARN');
-
-
-        await waitFor(participantsConnected(bobRoom, 1), `wait for Bob to see alice: ${roomSid}`);
-        aliceInBobsRoom = bobRoom.participants.get(aliceRoom.localParticipant.sid);
-        await waitFor(tracksSubscribed(aliceInBobsRoom, 1), `wait for Bob to see alice's track: ${roomSid}`);
-        console.log('makarand: bobRoom.videoTracks:', aliceInBobsRoom.videoTracks);
-        aliceRemoteVideoForBob = aliceInBobsRoom.videoTracks.get(aliceVideoTrackPublication.trackSid).track;
+        Logger.getLogger('AliceLogger').setLevel('WARN');
+        console.log(`Alice joined the room: ${roomSid}: ${aliceRoom.localParticipant.sid}`);
+        console.log('Alice Track Settings:', aliceLocalVideo.mediaStreamTrack.getSettings());
       });
-      [
-        {
-          testCase: 'c1 bob renders @ 640x360',
-          actions: { switchOff: false, switchOn: true, renderDimensions: { width: 640, height: 360 } },
-          expectedActiveLayers: 2
-        },
-        {
-          testCase: 'c2 bob switches off',
-          actions: { switchOff: true, switchOn: false },
-          expectedActiveLayers: 0
-        },
-        {
-          testCase: 'c3 bob switch on and renders @ 1280x720',
-          actions: { switchOff: false, switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-          expectedActiveLayers: 3
-        },
-        {
-          testCase: 'c4 bob request 640x360',
-          actions: { renderDimensions: { width: 640, height: 360 } },
-          expectedActiveLayers: 2
-        },
-        {
-          testCase: 'c5 bob request 320x180',
-          actions: { renderDimensions: { width: 320, height: 180 } },
-          expectedActiveLayers: 1
-        },
-        {
-          testCase: 'c7 bob switches off',
-          actions: { switchOff: true },
-          expectedActiveLayers: 0
-        },
-      ].forEach(({ testCase, actions, expectedActiveLayers }) => {
-        it(testCase, async () => {
-          console.log(`executing ${testCase}`);
 
-          if (actions.switchOn) {
-            console.log('switching on');
-            aliceRemoteVideoForBob.switchOn();
-            await waitFor(trackSwitchedOn(aliceRemoteVideoForBob), `track to switch on: ${aliceRemoteVideoForBob.sid}`);
-          }
-          if (actions.switchOff) {
-            console.log('switching off');
-            aliceRemoteVideoForBob.switchOff();
-            await waitFor(trackSwitchedOff(aliceRemoteVideoForBob), `track to switch off: ${aliceRemoteVideoForBob.sid}`);
-          }
-          if (actions.renderDimensions) {
-            console.log('setting  renderDimensions', actions.renderDimensions);
-            aliceRemoteVideoForBob.setContentPreferences({ renderDimensions: actions.renderDimensions });
-          }
-          const activeLayers = await getActiveLayers({ room: aliceRoom });
-          console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
-          assert(activeLayers.length === expectedActiveLayers, `was expecting expectedActiveLayers=${expectedActiveLayers} but found: ${activeLayers.length}`);
+      describe('While Alice is alone in the room', () => {
+        it('c1: all layers get turned off.', async () => {
+          const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
+          console.log({ activeLayers, inactiveLayers });
+          assert(activeLayers.length === 0, `was expecting expectedActiveLayers=0 but found: ${activeLayers.length} in ${roomSid}`);
+        });
+      });
+
+      context('Bob joins the room', () => {
+        let bobRoom = null;
+        before(async () => {
+          aliceVideoTrackPublication = [...aliceRoom.localParticipant.tracks.values()][0];
+          bobRoom = await connect(getToken('Bob'), {
+            ...defaults,
+            tracks: [],
+            name: roomSid,
+            loggerName: 'BobLogger',
+            preferredVideoCodecs: 'auto',
+            bandwidthProfile
+          });
+          console.log(`Bob joined the room: ${roomSid}: ${bobRoom.localParticipant.sid}`);
+          Logger.getLogger('BobLogger').setLevel('ERROR');
+
+          await waitFor(participantsConnected(bobRoom, 1), `wait for Bob to see alice: ${roomSid}`);
+          const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
+          await waitFor(tracksSubscribed(aliceRemote, 1), `wait for Bob to see alice's track: ${roomSid}`);
+          aliceRemoteVideoForBob = aliceRemote.videoTracks.get(aliceVideoTrackPublication.trackSid).track;
+        });
+        [
+          {
+            testCase: 'c2: two layers get turned on',
+            bob: {  }, // no action yet.
+            expectedActiveLayers: 2
+          },
+          {
+            testCase: 'c3: Bob switches off',
+            bob: { switchOff: true, switchOn: false },
+            expectedActiveLayers: 0
+          },
+          {
+            testCase: 'c4 bob switch on and renders @ 1280x720',
+            bob: { switchOff: false, switchOn: true, renderDimensions: { width: 1280, height: 720 } },
+            expectedActiveLayers: 3
+          },
+          {
+            testCase: 'c5: Bob request 640x360',
+            bob: { renderDimensions: { width: 640, height: 360 } },
+            expectedActiveLayers: 2
+          },
+          {
+            testCase: 'c6: Bob request 320x180',
+            bob: { renderDimensions: { width: 320, height: 180 } },
+            expectedActiveLayers: 1
+          },
+          {
+            testCase: 'c7: Bob switches off',
+            bob: { switchOff: true },
+            expectedActiveLayers: 0
+          },
+        ].forEach(({ testCase, bob, expectedActiveLayers }) => {
+          it(testCase, async () => {
+            console.log(`executing ${testCase}`);
+            await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
+            const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
+            console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
+            console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
+            assert(activeLayers.length === expectedActiveLayers, `was expecting expectedActiveLayers=${expectedActiveLayers} but found: ${activeLayers.length} in ${roomSid}`);
+          });
+        });
+
+        context('Charlie joins the room', () => {
+          let charlieRoom = null;
+          let aliceRemoteVideoForCharlie = null;
+          before(async () => {
+            charlieRoom = await connect(getToken('Charlie'), {
+              ...defaults,
+              tracks: [],
+              name: roomSid,
+              loggerName: 'CharlieLogger',
+              preferredVideoCodecs: 'auto',
+              bandwidthProfile
+            });
+            console.log(`Charlie joined the room: ${roomSid}: ${charlieRoom.localParticipant.sid}`);
+            Logger.getLogger('CharlieLogger').setLevel('ERROR');
+
+            await waitFor(participantsConnected(charlieRoom, 2), `wait for Bob to see alice and Bob: ${roomSid}`);
+            const aliceRemote = charlieRoom.participants.get(aliceRoom.localParticipant.sid);
+            await waitFor(tracksSubscribed(aliceRemote, 1), `wait for Charlie to see alice's track: ${roomSid}`);
+            aliceRemoteVideoForCharlie = aliceRemote.videoTracks.get(aliceVideoTrackPublication.trackSid).track;
+          });
+          [
+            {
+              testCase: 'c8: charlie joined (no render hints yet)',
+              expectedActiveLayers: 2
+            },
+            {
+              testCase: 'c9: charlie requests 320x180',
+              charlie: { switchOff: false, switchOn: true, renderDimensions: { width: 320, height: 180 } },
+              expectedActiveLayers: 1
+            },
+            {
+              testCase: 'c10 Charlie Switches off',
+              charlie: { switchOff: true },
+              expectedActiveLayers: 0
+            },
+            {
+              testCase: 'c11: Bob requests 1280x720',
+              bob: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
+              expectedActiveLayers: 3
+            },
+            {
+              testCase: 'c12: Charlie requests 1280x720',
+              charlie: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
+              expectedActiveLayers: 3
+            },
+            {
+              testCase: 'c13: Charlie switches off, Bob: 640x360',
+              bob: { renderDimensions: { width: 640, height: 360 } },
+              charlie: { switchOff: true },
+              expectedActiveLayers: 2
+            },
+            {
+              testCase: 'c14: Charlie SwitchOn @ 320x180, Bob switch off',
+              bob: { switchOff: true },
+              charlie: { switchOn: true, renderDimensions: { width: 320, height: 180 } },
+              expectedActiveLayers: 1
+            },
+            {
+              testCase: 'c15: Charlie switches off',
+              charlie: { switchOff: true },
+              expectedActiveLayers: 0
+            },
+          ].forEach(({ testCase, bob, charlie, expectedActiveLayers }) => {
+            it(testCase, async () => {
+              console.log(`executing ${testCase}`);
+              await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
+              await executeRemoteTrackActions(charlie, aliceRemoteVideoForCharlie, 'Charlie');
+
+              const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
+              console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
+              console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
+              assert(activeLayers.length === expectedActiveLayers, `was expecting expectedActiveLayers=${expectedActiveLayers} but found: ${activeLayers.length} in ${roomSid}`);
+            });
+          });
         });
       });
     });
   });
 }
 
-
+async function executeRemoteTrackActions(actions, remoteTrack, actor) {
+  if (actions) {
+    if (actions.switchOn) {
+      console.log(`${actor} switching on`);
+      remoteTrack.switchOn();
+      await waitFor(trackSwitchedOn(remoteTrack), `track to switch on: ${remoteTrack.sid}`);
+    }
+    if (actions.switchOff) {
+      console.log(`${actor} switching off`);
+      remoteTrack.switchOff();
+      await waitFor(trackSwitchedOff(remoteTrack), `track to switch off: ${remoteTrack.sid}`);
+    }
+    if (actions.renderDimensions) {
+      console.log(`${actor} setting renderDimensions`, actions.renderDimensions);
+      remoteTrack.setContentPreferences({ renderDimensions: actions.renderDimensions });
+    }
+  }
+}
