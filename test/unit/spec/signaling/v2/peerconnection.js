@@ -412,13 +412,15 @@ describe('PeerConnectionV2', () => {
       [
         [true, false],
         x => `When a publisher hint was previously ${x ? '' : 'not '} queued`
+      ],
+      [
+        [true, false],
+        x => `When a rtpSender.setParameters ${x ? 'resolves' : 'rejects'}`
       ]
-    ], ([signalingState, hasQueuedHint]) => {
+    ], ([signalingState, hasQueuedHint, setParameterSuccess]) => {
 
       let trackSender;
-      let resultPromise;
       let deferred;
-
       beforeEach(async () => {
         test = makeTest({ offers: 1 });
 
@@ -444,12 +446,11 @@ describe('PeerConnectionV2', () => {
             deferred
           });
         }
-
-        resultPromise = test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
       });
 
       if (deferred) {
         it('resolves stale hint promise with "HINT_ABANDONED"', async () => {
+          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
           const result = await deferred.promise;
           assert(result, 'HINT_ABANDONED');
         });
@@ -464,13 +465,13 @@ describe('PeerConnectionV2', () => {
 
       it('for a unknown track sender resolves to "COULD_NOT_APPLY_HINT"', async () => {
         const unknownTrackSender = {};
-        let resultPromise = await test.pcv2._setPublisherHint(unknownTrackSender, makePublisherHints(0, true));
-        assert(resultPromise, 'COULD_NOT_APPLY_HINT');
+        const result  = await test.pcv2._setPublisherHint(unknownTrackSender, makePublisherHints(0, true));
+        assert(result, 'COULD_NOT_APPLY_HINT');
       });
 
       if (signalingState === 'have-local-offer') {
         it('queues the hint for later processing', done => {
-          resultPromise = test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          const resultPromise = test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
           const queued = test.pcv2._mediaTrackSenderToPublisherHints.get(trackSender);
           assert.deepEqual(queued.encodings, makePublisherHints(0, true));
 
@@ -484,10 +485,22 @@ describe('PeerConnectionV2', () => {
       }
       if (signalingState === 'stable') {
         it('applies given encodings', () => {
+          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
           const rtpSender = test.pcv2._rtpSenders.get(trackSender);
           sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
             return parameters.encodings[0].active === true;
           }));
+        });
+
+        let expectedResult = setParameterSuccess ? 'OK' : 'COULD_NOT_APPLY_HINT';
+        it(`resolves to ${expectedResult}`, async () => {
+          test.pc.getSenders().forEach(sender => {
+            sender.setParameters = sinon.spy(() =>
+              setParameterSuccess ? Promise.resolve('good result') : Promise.reject('bad error')
+            );
+          });
+          const result = await test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          assert.strictEqual(result, expectedResult);
         });
       }
     });
