@@ -397,6 +397,147 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  function makePublisherHints(layerIndex, enabled) {
+    // eslint-disable-next-line camelcase
+    return [{ enabled, layer_index: layerIndex }];
+  }
+
+  describe('_setPublisherHint', () => {
+    let test;
+    combinationContext([
+      [
+        ['stable', 'have-local-offer', 'closed'],
+        x => `in signalingState "${x}"`
+      ],
+      [
+        [true, false],
+        x => `When a publisher hint was previously ${x ? '' : 'not '} queued`
+      ],
+      [
+        [true, false],
+        x => `When a rtpSender.setParameters ${x ? 'resolves' : 'rejects'}`
+      ]
+    ], ([signalingState, hasQueuedHint, setParameterSuccess]) => {
+
+      let trackSender;
+      let deferred;
+      beforeEach(async () => {
+        test = makeTest({ offers: 1 });
+
+        switch (signalingState) {
+          case 'closed':
+            test.pcv2.close();
+            break;
+          case 'stable':
+            break;
+          case 'have-local-offer':
+            await test.pcv2.offer();
+            break;
+        }
+
+        const tracks = [{ id: 1 }];
+        trackSender = makeMediaTrackSender(tracks[0]);
+        test.pcv2.addMediaTrackSender(trackSender);
+
+        if (hasQueuedHint) {
+          deferred = defer();
+          test.pcv2._mediaTrackSenderToPublisherHints.set(trackSender, {
+            encodings: makePublisherHints(1, true),
+            deferred
+          });
+        }
+      });
+
+      if (deferred) {
+        it('resolves stale hint promise with "HINT_ABANDONED"', async () => {
+          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          const result = await deferred.promise;
+          assert(result, 'HINT_ABANDONED');
+        });
+      }
+      if (signalingState === 'closed') {
+        it('returns a promise that resolves to "COULD_NOT_APPLY_HINT"', async () => {
+          // eslint-disable-next-line camelcase
+          const result = await test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          assert(result, 'COULD_NOT_APPLY_HINT');
+        });
+      }
+
+      it('for a unknown track sender resolves to "COULD_NOT_APPLY_HINT"', async () => {
+        const unknownTrackSender = {};
+        const result  = await test.pcv2._setPublisherHint(unknownTrackSender, makePublisherHints(0, true));
+        assert(result, 'COULD_NOT_APPLY_HINT');
+      });
+
+      if (signalingState === 'have-local-offer') {
+        it('queues the hint for later processing', done => {
+          const resultPromise = test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          const queued = test.pcv2._mediaTrackSenderToPublisherHints.get(trackSender);
+          assert.deepEqual(queued.encodings, makePublisherHints(0, true));
+
+          resultPromise.then(result => {
+            assert(result, 'whatever');
+            done();
+          });
+
+          queued.deferred.resolve('whatever');
+        });
+      }
+      if (signalingState === 'stable') {
+        it('applies given encodings', () => {
+          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          const rtpSender = test.pcv2._rtpSenders.get(trackSender);
+          sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
+            return parameters.encodings[0].active === true;
+          }));
+        });
+
+        let expectedResult = setParameterSuccess ? 'OK' : 'COULD_NOT_APPLY_HINT';
+        it(`resolves to ${expectedResult}`, async () => {
+          test.pc.getSenders().forEach(sender => {
+            sender.setParameters = sinon.spy(() =>
+              setParameterSuccess ? Promise.resolve('good result') : Promise.reject('bad error')
+            );
+          });
+          const result = await test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+          assert.strictEqual(result, expectedResult);
+        });
+      }
+    });
+  });
+
+  describe('_handleQueuedPublisherHints', () => {
+    let test;
+    let trackSender;
+    let deferred;
+
+    beforeEach(() => {
+      test = makeTest({ offers: 1 });
+      const tracks = [{ id: 1 }];
+      trackSender = makeMediaTrackSender(tracks[0]);
+      test.pcv2.addMediaTrackSender(trackSender);
+
+      deferred = defer();
+      test.pcv2._mediaTrackSenderToPublisherHints.set(trackSender, {
+        encodings: makePublisherHints(0, false),
+        deferred
+      });
+
+      test.pcv2._handleQueuedPublisherHints();
+    });
+
+    it('processes queued hints', async () => {
+      const result = await deferred.promise;
+      assert(result, 'OK');
+
+      const rtpSender = test.pcv2._rtpSenders.get(trackSender);
+      sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
+        return parameters.encodings[0].active === false;
+      }));
+      assert.strictEqual(test.pcv2._mediaTrackSenderToPublisherHints.size, 0);
+    });
+  });
+
   describe('#close', () => {
     ['closed', 'stable', 'have-local-offer'].forEach(signalingState => {
       let test;
