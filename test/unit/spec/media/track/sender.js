@@ -173,7 +173,7 @@ describe('MediaTrackSender', () => {
       let publisherHitCallBack;
       let result;
       let errorResult;
-      let trackSender
+      let trackSender;
       beforeEach(async () => {
         const msTrackOrig = makeMediaStreamTrack({ id: 'original' });
         trackSender = new MediaTrackSender(msTrackOrig);
