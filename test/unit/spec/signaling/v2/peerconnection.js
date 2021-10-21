@@ -449,10 +449,10 @@ describe('PeerConnectionV2', () => {
       });
 
       if (deferred) {
-        it('resolves stale hint promise with "HINT_ABANDONED"', async () => {
+        it('resolves stale hint promise with "REQUEST_SKIPPED"', async () => {
           test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
           const result = await deferred.promise;
-          assert(result, 'HINT_ABANDONED');
+          assert(result, 'REQUEST_SKIPPED');
         });
       }
       if (signalingState === 'closed') {
@@ -463,10 +463,10 @@ describe('PeerConnectionV2', () => {
         });
       }
 
-      it('for a unknown track sender resolves to "COULD_NOT_APPLY_HINT"', async () => {
+      it('for a unknown track sender resolves to "UNKNOWN_TRACK"', async () => {
         const unknownTrackSender = {};
         const result  = await test.pcv2._setPublisherHint(unknownTrackSender, makePublisherHints(0, true));
-        assert(result, 'COULD_NOT_APPLY_HINT');
+        assert(result, 'UNKNOWN_TRACK');
       });
 
       if (signalingState === 'have-local-offer') {
