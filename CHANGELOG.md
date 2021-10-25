@@ -2,6 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.19.0 (In Progress)
+====================
+New Features
+------------
+
+(PlaceHolder) This release introduces adaptive simulcast. Adaptive simulcast can be enabled by specifying `preferredVideoCodecs="auto"` in connect options.
+
 2.18.0 (October 13, 2021)
 =========================
 

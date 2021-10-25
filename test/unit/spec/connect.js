@@ -334,6 +334,35 @@ describe('connect', () => {
     });
   });
 
+  describe('called with ConnectOptions#preferredVideoCodecs = auto', () => {
+    it('throws when ConnectOptions has maxVideoBitrate', async () => {
+      const mockSignaling = new Signaling();
+      mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
+      function signaling() {
+        return mockSignaling;
+      }
+
+      let errorThrown = null;
+      try {
+        await connect(token, {
+          signaling,
+          iceServers: [],
+          tracks: [],
+          preferredVideoCodecs: 'auto',
+          maxVideoBitrate: 100
+        });
+
+        assert(false);
+      } catch (error) {
+        errorThrown = error;
+      }
+
+      assert(errorThrown);
+      assert(errorThrown instanceof TypeError);
+      assert(errorThrown.message, 'Illegal call to connect: ConnectOptions "maxVideoBitrate" is not compatible with "preferredVideoCodecs=auto"');
+    });
+  });
+
   describe('called without ConnectOptions#tracks', () => {
     it('automatically acquires LocalTracks', () => {
       const createLocalTracks = sinon.spy();
