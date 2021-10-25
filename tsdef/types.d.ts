@@ -76,6 +76,7 @@ export type AudioLevel = number;
 export type AudioCodec = 'isac' | 'opus' | 'PCMA' | 'PCMU';
 export type VideoCodec = 'H264' | 'VP8' | 'VP9';
 
+export type VideoEncodingMode = 'auto';
 /**
  * @deprecated
  */
@@ -188,7 +189,7 @@ export interface ConnectOptions {
   networkQuality?: boolean | NetworkQualityConfiguration;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
-  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | 'auto';
+  preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | VideoEncodingMode;
 
   /**
    * @deprecated use Video.Logger.
