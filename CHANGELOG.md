@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Change
 ------------
 
-- We released a **Preflight API Public Beta** (`runPreflight`) in 2.16, This release adds some instrumentation to collect metrics from the API usage.
+- We released a **Preflight API Public Beta** (`runPreflight`) in 2.16.0, This release adds some instrumentation to collect metrics from the API usage. If you are using this API please update to this version. We would also love to hear about your feedback on this API before making it generally available.
 
 
 2.18.0 (October 13, 2021)
