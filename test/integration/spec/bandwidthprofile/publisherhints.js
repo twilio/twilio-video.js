@@ -127,7 +127,7 @@ describe('preferredVideoCodecs = auto', function() {
         testCase: 'enables simulcast for VP8 rooms',
         roomOptions: { VideoCodecs: ['VP8'] },
         expectedCodec: 'VP8',
-        expectedLayers: isFirefox ? 1 : 3
+        expectedLayers: 3
       },
       {
         testCase: 'does not enable simulcast for H264 rooms',
@@ -135,7 +135,7 @@ describe('preferredVideoCodecs = auto', function() {
         expectedCodec: 'H264',
       },
     ].forEach(({ testCase, roomOptions, expectedCodec, expectedLayers }) => {
-      it(testCase, async () => {
+      (isFirefox ? it.skip : it)(testCase, async () => {
         const roomSid = await createRoom(randomName(), defaults.topology, roomOptions);
         const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
         const room = await connect(getToken('Alice'), {
