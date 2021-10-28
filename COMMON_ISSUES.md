@@ -36,6 +36,13 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
+<summary>Chrome on iOS 15.1 crashes when publishing a VideoTrack using H264 codec</summary>
+<p>
+
+   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+</p>
+</details>
+<details>
 <summary>Android Chrome on Pixel 3 receives corrupted video frames with codec VP8</summary>
 <p>
 
