@@ -36,10 +36,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
-<summary>Chrome on iOS 15.1 crashes when publishing a VideoTrack using H264 codec</summary>
+<summary>Chrome on iOS 15.1 crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
 <p>
 
-   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room or when muting the VideoTrack. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
 </p>
 </details>
 <details>
@@ -61,10 +61,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari desktop
 <details>
-<summary>Safari 15.1 crashes when publishing a VideoTrack using H264 codec</summary>
+<summary>Safari 15.1 crashes when muting a VideoTrack that is using an H264 codec</summary>
 <p>
 
-   This issue happens due to a regression on Safari 15.1 where using an H264 codec causes the browser to crash when joining a room. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+   This issue happens due to a regression on Safari 15.1 where muting a VideoTrack that is using an H264 codec causes the browser to crash. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
 </p>
 </details>
 
@@ -114,10 +114,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari mobile
 <details>
-<summary>iOS 15.1: Browser crashes when publishing a VideoTrack using H264 codec</summary>
+<summary>iOS 15.1: Browser crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
 <p>
 
-   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room or when muting the VideoTrack. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
 </p>
 </details>
 <details>
