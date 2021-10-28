@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.18.1-rc1",
+  "version": "2.18.1-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
