@@ -270,40 +270,6 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
             assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
           });
         });
-
-        // ['HD', 'SD', 'VGA', 'NONE'].forEach(resolution => {
-        //   it.skip('Bob requests: ' + resolution, async () => {
-        //     const resolutionToRenderDimensions = {
-        //       'HD': { width: 1280, height: 720 },
-        //       'SD': { width: 640, height: 360 },
-        //       'VGA': { width: 320, height: 180 }
-        //     };
-
-        //     const renderDimensions = resolutionToRenderDimensions[resolution];
-        //     const switchOn = !!renderDimensions;
-        //     const switchOff = !renderDimensions;
-        //     console.log(`Bob executing ${resolution}`);
-        //     await executeRemoteTrackActions({ switchOn, switchOff, renderDimensions }, aliceRemoteVideoForBob, 'Bob');
-
-        //     const { activeLayers } = await getActiveLayers({ room: aliceRoom });
-
-        //     switch (resolution) {
-        //       case 'HD':
-        //         assert(activeLayers.length >= 2, `Unexpected activeLayers.length: ${activeLayers.length}`);
-        //         break;
-        //       case 'SD':
-        //         assert(activeLayers.length === 2, `Unexpected activeLayers.length: ${activeLayers.length}`);
-        //         break;
-        //       case 'VGA':
-        //         assert(activeLayers.length === 1, `Unexpected activeLayers.length: ${activeLayers.length}`);
-        //         break;
-        //       case 'NONE':
-        //         assert(activeLayers.length === 0, `Unexpected activeLayers.length: ${activeLayers.length}`);
-        //         break;
-        //     }
-        //   });
-        // });
-
         context('Charlie joins the room', () => {
           let charlieRoom = null;
           let aliceRemoteVideoForCharlie = null;
