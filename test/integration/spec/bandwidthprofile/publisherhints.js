@@ -36,7 +36,7 @@ async function getSimulcastLayerReport(room) {
 
 // for a given room, returns array of simulcast layers that are active.
 // it checks for active layers by gathering layer stats 1 sec apart.
-async function getActiveLayers({ room, initialWaitMS = 10000, activeTimeMS = 5000 }) {
+async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000 }) {
   await waitForSometime(initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
   await waitForSometime(activeTimeMS);
@@ -57,6 +57,9 @@ async function getActiveLayers({ room, initialWaitMS = 10000, activeTimeMS = 500
       inactiveLayers.push({ dimensions, diffBytes });
     }
   });
+
+  console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
+  console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
   return { activeLayers, inactiveLayers };
 }
 
@@ -172,7 +175,6 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
     let aliceVideoTrackPublication = null;
     let aliceRemoteVideoForBob = null;
     let aliceRoom = null;
-    // let aliceRemoteVideoForCharlie = null;
     const bandwidthProfile = { video: { contentPreferencesMode: 'manual', clientTrackSwitchOffControl: 'manual' } };
     before(async () => {
       roomSid = await createRoom(randomName(), defaults.topology);
@@ -183,10 +185,12 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
     });
 
     context('Alice joins the room', () => {
+      let aliceLocalVideo;
       before(async () => {
-        const aliceLocalVideo = await waitFor(createLocalVideoTrack({ width: 1280, height: 720 }), 'alice local video track');
+        aliceLocalVideo = await waitFor(createLocalVideoTrack({ width: 1280, height: 720 }), 'alice local video track');
         const { height, width } = aliceLocalVideo.mediaStreamTrack.getSettings();
-        console.log('Alice Track Settings:', { height, width });
+        assert.strictEqual(height, 720);
+        assert.strictEqual(width, 1280);
         aliceRoom = await connect(getToken('Alice'), {
           ...defaults,
           tracks: [aliceLocalVideo],
@@ -197,13 +201,11 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         });
         Logger.getLogger('AliceLogger').setLevel('WARN');
         console.log(`Alice joined the room: ${roomSid}: ${aliceRoom.localParticipant.sid}`);
-        console.log('Alice Track Settings:', aliceLocalVideo.mediaStreamTrack.getSettings());
       });
 
       describe('While Alice is alone in the room', () => {
         it('c1: all layers get turned off.', async () => {
-          const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
-          console.log({ activeLayers, inactiveLayers });
+          const { activeLayers } = await getActiveLayers({ room: aliceRoom });
           assert(activeLayers.length === 0, `was expecting expectedActiveLayers=0 but found: ${activeLayers.length} in ${roomSid}`);
         });
       });
@@ -228,16 +230,17 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           await waitFor(tracksSubscribed(aliceRemote, 1), `wait for Bob to see alice's track: ${roomSid}`);
           aliceRemoteVideoForBob = aliceRemote.videoTracks.get(aliceVideoTrackPublication.trackSid).track;
         });
+
         [
           {
-            testCase: 'c2: two layers get turned on',
+            testCase: 'c2: layers get turned on',
             bob: {  }, // no action yet.
-            expectedActiveLayers: 2
+            expectedActiveLayers: layers => layers >= 2
           },
           {
             testCase: 'c3: Bob switches off',
             bob: { switchOff: true, switchOn: false },
-            expectedActiveLayers: 0
+            expectedActiveLayers: layers => layers === 0
           },
           {
             testCase: 'c4 bob switch on and renders @ 1280x720',
@@ -247,32 +250,59 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           {
             testCase: 'c5: Bob request 640x360',
             bob: { renderDimensions: { width: 640, height: 360 } },
-            expectedActiveLayers: 2
+            expectedActiveLayers: layers => layers === 2
           },
           {
             testCase: 'c6: Bob request 320x180',
             bob: { renderDimensions: { width: 320, height: 180 } },
-            expectedActiveLayers: 1
+            expectedActiveLayers: layers => layers === 1
           },
           {
             testCase: 'c7: Bob switches off',
             bob: { switchOff: true },
-            expectedActiveLayers: 0
+            expectedActiveLayers: layers => layers === 0
           },
         ].forEach(({ testCase, bob, expectedActiveLayers }) => {
           it(testCase, async () => {
             console.log(`executing ${testCase}`);
             await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
-            const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
-            console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
-            console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
-            if (typeof expectedActiveLayers === 'function') {
-              assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
-            } else {
-              assert(activeLayers.length === expectedActiveLayers, `was expecting expectedActiveLayers=${expectedActiveLayers} but found: ${activeLayers.length} in ${roomSid}`);
-            }
+            const { activeLayers } = await getActiveLayers({ room: aliceRoom });
+            assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
           });
         });
+
+        // ['HD', 'SD', 'VGA', 'NONE'].forEach(resolution => {
+        //   it.skip('Bob requests: ' + resolution, async () => {
+        //     const resolutionToRenderDimensions = {
+        //       'HD': { width: 1280, height: 720 },
+        //       'SD': { width: 640, height: 360 },
+        //       'VGA': { width: 320, height: 180 }
+        //     };
+
+        //     const renderDimensions = resolutionToRenderDimensions[resolution];
+        //     const switchOn = !!renderDimensions;
+        //     const switchOff = !renderDimensions;
+        //     console.log(`Bob executing ${resolution}`);
+        //     await executeRemoteTrackActions({ switchOn, switchOff, renderDimensions }, aliceRemoteVideoForBob, 'Bob');
+
+        //     const { activeLayers } = await getActiveLayers({ room: aliceRoom });
+
+        //     switch (resolution) {
+        //       case 'HD':
+        //         assert(activeLayers.length >= 2, `Unexpected activeLayers.length: ${activeLayers.length}`);
+        //         break;
+        //       case 'SD':
+        //         assert(activeLayers.length === 2, `Unexpected activeLayers.length: ${activeLayers.length}`);
+        //         break;
+        //       case 'VGA':
+        //         assert(activeLayers.length === 1, `Unexpected activeLayers.length: ${activeLayers.length}`);
+        //         break;
+        //       case 'NONE':
+        //         assert(activeLayers.length === 0, `Unexpected activeLayers.length: ${activeLayers.length}`);
+        //         break;
+        //     }
+        //   });
+        // });
 
         context('Charlie joins the room', () => {
           let charlieRoom = null;
@@ -296,45 +326,45 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           });
           [
             {
-              testCase: 'c8: charlie joined (no render hints yet)',
-              expectedActiveLayers: 2
+              testCase: 'c8: Charlie joined (no render hints yet)',
+              expectedActiveLayers: layers => layers >= 2
             },
             {
-              testCase: 'c9: charlie requests 320x180',
+              testCase: 'c9: Charlie requests 320x180',
               charlie: { switchOff: false, switchOn: true, renderDimensions: { width: 320, height: 180 } },
-              expectedActiveLayers: 1
+              expectedActiveLayers: layers => layers === 1
             },
             {
               testCase: 'c10 Charlie Switches off',
               charlie: { switchOff: true },
-              expectedActiveLayers: 0
+              expectedActiveLayers: layers => layers === 0
             },
             {
               testCase: 'c11: Bob requests 1280x720',
               bob: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: 3
+              expectedActiveLayers: layers => layers >= 2
             },
             {
               testCase: 'c12: Charlie requests 1280x720',
               charlie: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: 3
+              expectedActiveLayers: layers => layers >= 2
             },
             {
               testCase: 'c13: Charlie switches off, Bob: 640x360',
               bob: { renderDimensions: { width: 640, height: 360 } },
               charlie: { switchOff: true },
-              expectedActiveLayers: 2
+              expectedActiveLayers: layers => layers === 2
             },
             {
               testCase: 'c14: Charlie SwitchOn @ 320x180, Bob switch off',
               bob: { switchOff: true },
               charlie: { switchOn: true, renderDimensions: { width: 320, height: 180 } },
-              expectedActiveLayers: 1
+              expectedActiveLayers: layers => layers === 1
             },
             {
               testCase: 'c15: Charlie switches off',
               charlie: { switchOff: true },
-              expectedActiveLayers: 0
+              expectedActiveLayers: layers => layers === 0
             },
           ].forEach(({ testCase, bob, charlie, expectedActiveLayers }) => {
             it(testCase, async () => {
@@ -342,18 +372,35 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
               await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
               await executeRemoteTrackActions(charlie, aliceRemoteVideoForCharlie, 'Charlie');
 
-              const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom });
-              console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
-              console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
-              assert(activeLayers.length === expectedActiveLayers, `was expecting expectedActiveLayers=${expectedActiveLayers} but found: ${activeLayers.length} in ${roomSid}`);
+              const { activeLayers } = await getActiveLayers({ room: aliceRoom });
+              assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
             });
+          });
+
+          it('adaptive simulcast continue to work after replace track', async () => {
+            // have both bob and charlie turn off tracks.
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForCharlie, 'Charlie');
+            let { activeLayers } = await getActiveLayers({ room: aliceRoom });
+
+            assert(activeLayers.length === 0, `unexpected activeLayers.length after switch off #1: ${activeLayers.length} in ${roomSid}`);
+
+            // now restart the track
+            console.log('restarting the track');
+            await aliceLocalVideo.restart();
+
+            // have bob switch on and off tracks again to retrigger SFU.
+            await executeRemoteTrackActions({ switchOn: true }, aliceRemoteVideoForBob, 'Bob');
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
+
+            ({ activeLayers } = (await getActiveLayers({ room: aliceRoom })));
+            assert(activeLayers.length === 0, `unexpected activeLayers.length after switchOff #2: ${activeLayers.length} in ${roomSid}`);
           });
         });
       });
     });
   });
 }
-
 async function executeRemoteTrackActions(actions, remoteTrack, actor) {
   if (actions) {
     if (actions.switchOn) {
