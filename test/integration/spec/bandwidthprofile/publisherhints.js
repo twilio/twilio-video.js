@@ -135,6 +135,7 @@ describe('preferredVideoCodecs = auto', function() {
         expectedCodec: 'H264',
       },
     ].forEach(({ testCase, roomOptions, expectedCodec, expectedLayers }) => {
+      // firefox does not support simulcast.
       (isFirefox ? it.skip : it)(testCase, async () => {
         const roomSid = await createRoom(randomName(), defaults.topology, roomOptions);
         const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
