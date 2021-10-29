@@ -14,6 +14,7 @@ const {
   createRoomConnectEventPayload
 } = require('../../../../lib/util');
 
+const { sessionSID } = require('../../../../lib/util/sid');
 describe('util', () => {
   describe('createRoomConnectEventPayload', () => {
     [
@@ -145,6 +146,7 @@ describe('util', () => {
       it(testCase, () => {
         const event = createRoomConnectEventPayload(connectOptions);
         const defaultOptions = {
+          sessionSID,
           'audio': 'false',
           'audioTracks': 0,
           'automaticSubscription': 'false',

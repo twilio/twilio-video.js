@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.18.1 (October 29, 2021)
+=========================
+
+Changes
+-------
+
+- Added some metrics to track the usage of the **Preflight API Public Beta** (`runPreflight`). There are no changes to the public APIs in this release. (VIDEO-6891)
+
 2.18.0 (October 13, 2021)
 =========================
 
