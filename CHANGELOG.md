@@ -29,6 +29,13 @@ Example:
 
 Note that this option is incompatible with connect option `maxVideoMaxBitrate`, and will result in an error at connect time if specified along with the new options.
 
+2.18.1 (October 29, 2021)
+=========================
+
+Changes
+-------
+
+- Added some metrics to track the usage of the **Preflight API Public Beta** (`runPreflight`). There are no changes to the public APIs in this release. (VIDEO-6891)
 
 2.18.0 (October 13, 2021)
 =========================
