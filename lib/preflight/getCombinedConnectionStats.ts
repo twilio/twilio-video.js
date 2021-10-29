@@ -80,7 +80,6 @@ function makeStandardCandidateStats(input: any) : RTCIceCandidateStats {
     { key: 'priority', type: 'number' },
     { key: 'protocol', altKeys: ['transport'], type: 'string' },
     { key: 'url', type: 'string' },
-    { key: 'deleted', type: 'boolean' },
     { key: 'relayProtocol', type: 'string' },
   ];
 
