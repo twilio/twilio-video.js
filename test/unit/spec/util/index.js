@@ -99,6 +99,11 @@ describe('util', () => {
         expectedPayload: { maxVideoBitrate: 100 },
       },
       {
+        testCase: 'maxVideoBitrate specified as non-number string',
+        connectOptions: { maxVideoBitrate: 'foo' },
+        expectedPayload: {},
+      },
+      {
         testCase: 'maxAudioBitrate specified as number',
         connectOptions: { maxAudioBitrate: 100 },
         expectedPayload: { maxAudioBitrate: 100 },
@@ -107,6 +112,11 @@ describe('util', () => {
         testCase: 'maxAudioBitrate specified as string',
         connectOptions: { maxAudioBitrate: '100' },
         expectedPayload: { maxAudioBitrate: 100 },
+      },
+      {
+        testCase: 'maxAudioBitrate specified as non-number string',
+        connectOptions: { maxAudioBitrate: 'foo' },
+        expectedPayload: {},
       },
       {
         testCase: 'networkQuality true',
