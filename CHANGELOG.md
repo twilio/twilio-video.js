@@ -30,9 +30,9 @@ Example:
 Known Limitations
 -----------------
 
-- This feature is not supported on some configurations. In following cases specifying `preferredVideoCodecs="auto"` will revert back to using unicast.
+- This feature is not supported on some configurations. In the following cases specifying `preferredVideoCodecs="auto"` will revert back to using unicast.
   - When publisher is using firefox
-  - When room is configured to use H264 codec
+  - When room is configured to use H.264 codec
   - Peer-to-Peer rooms
 - When the room or participant publishing is being recorded, the SFU will not disable any simulcast layers.
 
