@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-This release introduces new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in connect options. When joining a group room with this feature enabled SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side.
+This release introduces new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in connect options. When joining a group room with this feature enabled the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side.
 
 If your application is currently using VP8 simulcast we recommend that you switch to this option.
 
@@ -27,13 +27,13 @@ Example:
   });
   ```
 
-Additional notes:
+Known Limitations:
 - This feature is incompatible with connect option `maxVideoBitrate`, and will result in an error at connect time if specified along with the new option.
 - This feature is not supported on some configurations. In following cases specifying `preferredVideoCodecs="auto"` will revert back to using unicast.
   - Firefox,
   - When room is configured to use H264 codec
   - Peer-to-Peer rooms.
-- When room is being recorded, SFU will not disable layers, as they need to be recorded.
+- When the room or participant publishing is being recorded, the SFU will not disable any simulcast layers.
 
 
 2.18.1 (October 29, 2021)
