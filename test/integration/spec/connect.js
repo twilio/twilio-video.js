@@ -167,6 +167,7 @@ describe('connect', function() {
         errorThrown = error;
       }
       assert(errorThrown);
+      assert.equal(errorThrown.message, 'encodingParameters must be an encodingParameters.maxVideoBitrate is not compatible with "preferredVideoCodecs=auto"');
       assert(errorThrown instanceof TypeError);
     });
   });
