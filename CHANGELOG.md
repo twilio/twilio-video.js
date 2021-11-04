@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-This release introduces a new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in connect options. When joining a group room with this feature enabled the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. The beta currently does not support setting a max bitrate for your simulcast layers.
+This release introduces a new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. The beta currently does not support setting a max bitrate for your simulcast layers.
 
 If your application is currently using VP8 simulcast we recommend that you switch to this option.
 
@@ -30,11 +30,12 @@ Example:
 Known Limitations
 -----------------
 
-- This feature is not supported on some configurations. In the following cases specifying `preferredVideoCodecs="auto"` will revert back to using unicast.
-  - When publisher is using firefox
-  - When room is configured to use H.264 codec
-  - Peer-to-Peer rooms
-- When the room or participant publishing is being recorded, the SFU will not disable any simulcast layers.
+- Specifying `preferredVideoCodecs="auto"` will revert to unicast in the following cases:
+  - The publisher is using Firefox.
+  - The publisher has preferred the H264 codec.
+  - The Room is configured to support only the H264 codec.
+  - Peer-to-Peer Rooms
+- When the Room is being recorded, the SFU will not disable any simulcast layers of the publisher's VideoTrack.
 
 
 2.18.1 (October 29, 2021)
