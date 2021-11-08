@@ -261,7 +261,7 @@ trouble with twilio-video.js, ensure these are not running.
 </p>
 </details>
 <details>
-<summary>VideoTracks goes black and page freezes on certain interruptions</summary>
+<summary>VideoTracks goes black and the page freezes on certain interruptions</summary>
 <p>
 
    Certain interruptions such as incoming calls, backgrounding the browser or switching between apps causes VideoTracks on Chrome and Safari on iOS 15.1 to go black. Sometimes, the whole page also freezes and become unresponsive causing audio and video to cut off. These issues are regressions on iOS 15.1. See the following bugs for more details.
