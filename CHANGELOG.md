@@ -7,25 +7,25 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-This release introduces a new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. The beta currently does not support setting a max bitrate for your simulcast layers.
+- This release introduces a new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Controls` and `Video Content Preferences`. These two flags allows the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. The beta currently does not support setting a max bitrate for your simulcast layers.
 
 If your application is currently using VP8 simulcast we recommend that you switch to this option.
 
 Example:
 
-  ```ts
-  const { connect } = require('twilio-video');
+```ts
+const { connect } = require('twilio-video');
 
-  const room = await connect(token, {
-    preferredVideoCodecs: 'auto',
-    bandwidthProfile: {
-      video: {
-        contentPreferencesMode: 'auto',
-        clientTrackSwitchOffControl: 'auto'
-      }
+const room = await connect(token, {
+  preferredVideoCodecs: 'auto',
+  bandwidthProfile: {
+    video: {
+      contentPreferencesMode: 'auto',
+      clientTrackSwitchOffControl: 'auto'
     }
-  });
-  ```
+  }
+});
+\`\`\`
 
 Known Limitations
 -----------------
