@@ -25,7 +25,7 @@ const room = await connect(token, {
     }
   }
 });
-\`\`\`
+```
 
 Known Limitations
 -----------------
