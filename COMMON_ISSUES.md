@@ -252,7 +252,7 @@ trouble with twilio-video.js, ensure these are not running.
 </p>
 </details>
 <details>
-<summary>Browser crasshes when publishing or muting a VideoTrack that is using an H264 codec</summary>
+<summary>Browser crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
 <p>
 
    Chrome and Safari on iOS 15.1 and Desktop Safari 15.1 crashes when a VideoTrack is muted that is using an H264 codec. Additionally, both Chrome and Safari on iOS 15.1 also crashes when a VideoTrack using an H264 is published.
@@ -281,7 +281,6 @@ trouble with twilio-video.js, ensure these are not running.
 
     const onPause = () => {
       wasInterrupted = true;
-      console.log('xxxxx onPause');
     };
 
     const onPlay = () => {
@@ -289,7 +288,6 @@ trouble with twilio-video.js, ensure these are not running.
         track.detach(el);
         track.attach(el);
         wasInterrupted = false;
-        console.log('xxxxx onPlay');
       }
     };
 
