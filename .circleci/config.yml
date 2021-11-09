@@ -324,6 +324,10 @@ workflows:
         - << pipeline.parameters.custom_workflow >>
         - equal: [ auto, << pipeline.parameters.test_files >> ]
     jobs:
+      - Build:
+          context: dockerhub-pulls
+      - UnitTests:
+          context: dockerhub-pulls
       - run-integration-tests:
           context: dockerhub-pulls
           name: Integration(<< pipeline.parameters.test_stability >>) << pipeline.parameters.environment >> << pipeline.parameters.browser >>(<< pipeline.parameters.bver >>) << pipeline.parameters.topology >>
