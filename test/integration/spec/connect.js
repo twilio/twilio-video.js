@@ -780,15 +780,15 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+        [sid, thisRoom, thoseRooms, peerConnections] = await waitFor(setup({
           testOptions: encodingParameters,
           otherOptions: { tracks: [] },
           nTracks: 0
-        });
+        }), 'setting up room');
 
         // Grab 5 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
-        const bitrates = await pollOutgoingBitrate(thisRoom, 5);
+        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 5), `polling outgoing bitrate: ${thisRoom.sid}`);
 
         const average = items => {
           let avg = items.reduce((x, y) => x + y) / items.length;
