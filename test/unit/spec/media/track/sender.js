@@ -4,6 +4,8 @@
 const assert = require('assert');
 const MediaTrackSender = require('../../../../../lib/media/track/sender');
 const Document = require('../../../../lib/document');
+const sinon = require('sinon');
+const { combinationContext } = require('../../../../lib/util');
 
 describe('MediaTrackSender', () => {
   before(() => {
@@ -120,4 +122,126 @@ describe('MediaTrackSender', () => {
       });
     });
   });
+
+  describe('setPublisherHint', () => {
+    it('resolves to "COULD_NOT_APPLY_HINT" when publisher hint callback is not set', async () => {
+      const trackSender = new MediaTrackSender(mediaStreamTrack);
+      const rtpSender = { track: 'foo' };
+      trackSender.addSender(rtpSender);
+      // eslint-disable-next-line camelcase
+      const result = await trackSender.setPublisherHint({ enabled: false, layer_index: 0 });
+      assert.strictEqual(result, 'COULD_NOT_APPLY_HINT');
+    });
+
+    it('forwards to callback if set', async () => {
+      const trackSender = new MediaTrackSender(mediaStreamTrack);
+      const rtpSender1 = { track: 'foo' };
+      const rtpSender2 = { track: 'bar' };
+      // eslint-disable-next-line camelcase
+      const encodings = [{ enabled: false, layer_index: 0 }];
+      const publisherHintCallback = payload => {
+        assert.deepStrictEqual(encodings, payload);
+        return Promise.resolve('OK');
+      };
+      trackSender.addSender(rtpSender2);
+      trackSender.addSender(rtpSender1, publisherHintCallback);
+
+      // eslint-disable-next-line camelcase
+      const result = await trackSender.setPublisherHint(encodings);
+      assert.strictEqual(result, 'OK');
+    });
+  });
+
+  describe('setMediaStreamTrack', () => {
+    combinationContext([
+      [
+        [true, false],
+        x => `when replaceTrack ${x ? 'resolves' : 'rejects'}`
+      ],
+      [
+        [true, false],
+        x => `when publisher hint callback is ${x ? '' : 'not '} set`
+      ],
+      [
+        [true, false],
+        x => `when publisherHitCallBack ${x ? 'resolves' : 'rejects'}`
+      ],
+    ], ([replaceTrackSuccess, publisherHintCallbackSet, publisherHintSuccess]) => {
+
+      let msTrackReplaced;
+      let rtpSender;
+      let publisherHitCallBack;
+      let result;
+      let errorResult;
+      let trackSender;
+      beforeEach(async () => {
+        const msTrackOrig = makeMediaStreamTrack({ id: 'original' });
+        trackSender = new MediaTrackSender(msTrackOrig);
+        msTrackReplaced = makeMediaStreamTrack({ id: 'replaced' });
+        rtpSender = {
+          track: 'foo',
+          replaceTrack: sinon.spy(() => replaceTrackSuccess ? Promise.resolve('yay') : Promise.reject('boo'))
+        };
+
+        publisherHitCallBack = sinon.spy(() => publisherHintSuccess ? Promise.resolve('yes') : Promise.reject('no'));
+        if (publisherHintCallbackSet) {
+          trackSender.addSender(rtpSender, publisherHitCallBack);
+        } else {
+          trackSender.addSender(rtpSender);
+        }
+
+        try {
+          result = await trackSender.setMediaStreamTrack(msTrackReplaced);
+        } catch (error) {
+          errorResult = error;
+        }
+      });
+
+      it('calls RTCRtpSender.replaceTrack', () => {
+        sinon.assert.calledWith(rtpSender.replaceTrack, msTrackReplaced);
+      });
+
+      if (replaceTrackSuccess) {
+        it('resolves', () => {
+          assert(result);
+          assert(!errorResult);
+        });
+      } else {
+        it('rejects', () => {
+          assert(!result);
+          assert(errorResult);
+        });
+      }
+
+      if (publisherHintCallbackSet && replaceTrackSuccess) {
+        it('sets default publisher hint', () => {
+          sinon.assert.calledWith(publisherHitCallBack, [
+            // eslint-disable-next-line camelcase
+            { enabled: true, layer_index: 0 },
+            // eslint-disable-next-line camelcase
+            { enabled: true, layer_index: 1 },
+            // eslint-disable-next-line camelcase
+            { enabled: true, layer_index: 2 }
+          ]);
+        });
+      } else {
+        it('does not set default publisher hint', () => {
+          sinon.assert.notCalled(publisherHitCallBack);
+        });
+      }
+
+      it('always replaces the track', () => {
+        assert.strictEqual(trackSender.track.id, 'replaced');
+      });
+    });
+  });
 });
+
+function makeMediaStreamTrack({ id = 'foo', kind = 'baz', readyState = 'zee' }) {
+  return {
+    id, kind, readyState,
+    clone: () => {
+      return { id: 'cloned_' + id, kind, readyState };
+    }
+  };
+}

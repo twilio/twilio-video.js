@@ -13,7 +13,7 @@ const {
   setSimulcast,
   unifiedPlanFilterLocalCodecs,
   removeSSRCAttributes,
-  revertSimulcastForNonVP8MediaSections,
+  revertSimulcast,
   unifiedPlanAddOrRewriteNewTrackIds,
   unifiedPlanAddOrRewriteTrackIds
 } = require('../../../../../lib/util/sdp');
@@ -800,7 +800,7 @@ a=ssrc:1111111111 label:d8b9a935-da54-4d21-a8de-522c87258244\r
   });
 });
 
-describe('revertSimulcastForNonVP8MediaSections', () => {
+describe('revertSimulcast', () => {
   combinationContext([
     [
       ['planb', 'unified'],
@@ -811,10 +811,14 @@ describe('revertSimulcastForNonVP8MediaSections', () => {
       x => `when the preferred payload type in answer is${x ? '' : ' not'} VP8`
     ],
     [
+      [true, false],
+      x => `when revertForAll is${x ? ' true' : ' false'}`
+    ],
+    [
       [new Set(['01234']), new Set(['01234', '56789'])],
       x => `when retransmission is${x.size === 2 ? '' : ' not'} supported`
     ]
-  ], ([sdpType, isVP8PreferredPayloadType, ssrcs]) => {
+  ], ([sdpType, isVP8PreferredPayloadType, revertForAll, ssrcs]) => {
     let sdp;
     let simSdp;
     let remoteSdp;
@@ -835,10 +839,10 @@ describe('revertSimulcastForNonVP8MediaSections', () => {
       } else {
         remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'H264' }]);
       }
-      revertedSdp = revertSimulcastForNonVP8MediaSections(simSdp, sdp, remoteSdp);
+      revertedSdp = revertSimulcast(simSdp, sdp, remoteSdp, revertForAll);
     });
 
-    if (isVP8PreferredPayloadType) {
+    if (isVP8PreferredPayloadType && !revertForAll) {
       it('should not revert simulcast SSRCs', () => {
         assert.equal(revertedSdp, simSdp);
       });
