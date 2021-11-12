@@ -5,7 +5,6 @@ const cors = require('cors');
 const isDocker = require('is-docker')();
 const fetchRequest = require('./fetchRequest');
 
-
 const DOCKER_PROXY_SERVER_PORT = 3032;
 const DOCKER_PROXY_VERSION = 1.00;
 const DOCKER_API_VERSION = '1.40';
