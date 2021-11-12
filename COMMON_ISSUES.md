@@ -36,13 +36,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
-<summary>Chrome on iOS 15.1 crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
-<p>
-
-   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room or when muting the VideoTrack. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
-</p>
-</details>
-<details>
 <summary>Android Chrome on Pixel 3 receives corrupted video frames with codec VP8</summary>
 <p>
 
@@ -60,14 +53,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </details>
 
 ### Safari desktop
-<details>
-<summary>Safari 15.1 crashes when muting a VideoTrack that is using an H264 codec</summary>
-<p>
-
-   This issue happens due to a regression on Safari 15.1 where muting a VideoTrack that is using an H264 codec causes the browser to crash. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
-</p>
-</details>
-
 <details>
 <summary>Failures to publish tracks on Safari 15</summary>
 <p>
@@ -113,13 +98,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </details>
 
 ### Safari mobile
-<details>
-<summary>iOS 15.1: Browser crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
-<p>
-
-   This issue happens due to a regression on iOS 15.1 where using an H264 codec causes the browser to crash when joining a room or when muting the VideoTrack. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
-</p>
-</details>
 <details>
 <summary>iOS 15: Low audio volume in Safari</summary>
 <p>
@@ -271,5 +249,69 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
+</p>
+</details>
+<details>
+<summary>Browser crashes when publishing or muting a VideoTrack that is using an H264 codec</summary>
+<p>
+
+   Chrome and Safari on iOS 15.1 and Desktop Safari 15.1 crashes when a VideoTrack is muted that is using an H264 codec. Additionally, both Chrome and Safari on iOS 15.1 also crashes when a VideoTrack using an H264 is published.
+
+   This issue happens due to a regression on iOS 15.1 and Safari 15.1. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+</p>
+</details>
+<details>
+<summary>VideoTracks goes black and the page freezes on certain interruptions</summary>
+<p>
+
+   Certain interruptions such as incoming calls, backgrounding the browser or switching between apps causes VideoTracks on Chrome and Safari on iOS 15.1 to go black. Sometimes, the whole page also freezes and become unresponsive causing audio and video to cut off. These issues are regressions on iOS 15.1. See the following bugs for more details.
+
+   * [Page freezing](https://bugs.webkit.org/show_bug.cgi?id=230922#c12)
+   * [VideoTrack going black](https://bugs.webkit.org/show_bug.cgi?id=232599)
+
+   A workaround can be implemented to prevent the VideoTrack from going black. This workaround however doesn't prevent the issue where sometimes the page freezes. It is recommended to apply this workaround on Chrome and Safari on iOS 15.1.
+
+  ```js
+  // Keeps track of video elements and their event listeners
+  const videoElements = {};
+
+  // Listen to onPlay and onPause events and intelligently re-attach the video element
+  function shimVideoElement(track, el) {
+    let wasInterrupted = false;
+
+    const onPause = () => {
+      wasInterrupted = true;
+    };
+
+    const onPlay = () => {
+      if (wasInterrupted) {
+        track.detach(el);
+        track.attach(el);
+        wasInterrupted = false;
+      }
+    };
+
+    el.addEventListener('pause', onPause);
+    el.addEventListener('play', onPlay);
+
+    // Track this element so we can remove the listeners
+    videoElements[el] = { onPause, onPlay };
+  }
+  ```
+
+  Apply the workaround after attaching the video element.
+
+  ```js
+  videoTrack.attach(videoElement);
+  shimVideoElement(videoTrack, videoElement);
+  ```
+
+  Remove the listeners before detaching the video element.
+
+  ```js
+  const { onPause, onPlay } = videoElements[videoElement];
+  videoElement.removeEventListener('pause', onPause);
+  videoElement.removeEventListener('play', onPlay);
+  ```
 </p>
 </details>
