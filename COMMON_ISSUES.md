@@ -57,7 +57,7 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <summary>Browser crashes when muting a VideoTrack that is using an H264 codec on Safari 15.1</summary>
 <p>
 
-    Due to a regression on Safari 15.1, the browser crashes when a VideoTrack is muted that is using an H264 codec. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
+   Due to a regression on Safari 15.1, the browser crashes when a VideoTrack is muted that is using an H264 codec. Please use VP8 as a workaround for now. See more details [here](https://github.com/twilio/twilio-video.js/issues/1611).
 </p>
 </details>
 <details>
