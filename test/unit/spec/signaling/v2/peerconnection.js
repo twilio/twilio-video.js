@@ -484,8 +484,16 @@ describe('PeerConnectionV2', () => {
         });
       }
       if (signalingState === 'stable') {
-        it('applies given encodings', () => {
-          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
+        it('applies given encodings if provided', () => {
+          test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, false));
+          const rtpSender = test.pcv2._rtpSenders.get(trackSender);
+          sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
+            return parameters.encodings[0].active === false;
+          }));
+        });
+
+        it('resets hints in none provided', () => {
+          test.pcv2._setPublisherHint(trackSender, null);
           const rtpSender = test.pcv2._rtpSenders.get(trackSender);
           sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
             return parameters.encodings[0].active === true;
