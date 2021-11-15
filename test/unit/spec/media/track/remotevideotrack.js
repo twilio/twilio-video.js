@@ -58,7 +58,7 @@ describe('RemoteVideoTrack', () => {
       addEventListenerStub = sinon.spy(document, 'addEventListener');
       removeEventListenerStub = sinon.spy(document, 'removeEventListener');
 
-      const dummyElement = { oncanplay: sinon.spy() };
+      const dummyElement = { oncanplay: sinon.spy(), addEventListener: sinon.spy(), removeEventListener: sinon.spy() };
       document.createElement = sinon.spy(() => {
         return dummyElement;
       });

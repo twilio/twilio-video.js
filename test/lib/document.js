@@ -33,6 +33,9 @@ class HTMLElement {
   pause() {
     return Promise.resolve();
   }
+
+  addEventListener() {}
+  removeEventListener() {}
 }
 
 class HTMLBodyElement extends HTMLElement {
