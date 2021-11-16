@@ -414,7 +414,7 @@ workflows:
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
-          requires: [Build, UnitTests]
+          requires: [Build]
       - run-integration-tests:
           context: dockerhub-pulls
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
@@ -424,7 +424,7 @@ workflows:
               bver: ["stable"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["unstable"]
-          requires: [Build, UnitTests]
+          requires: [Build]
       - run-network-tests:
           context: dockerhub-pulls
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
@@ -433,19 +433,19 @@ workflows:
               browser: ["chrome", "firefox"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable", "unstable"]
-          requires: [Build, UnitTests]
+          requires: [Build]
       - Framework-tests:
           context: dockerhub-pulls
           name: "framework tests"
-          requires: [Build, UnitTests]
+          requires: [Build]
       - UMD-tests:
           context: dockerhub-pulls
           name: "umd tests"
-          requires: [Build, UnitTests]
+          requires: [Build]
       - ServerSideRender-tests:
           context: dockerhub-pulls
           name: "serversiderender tests"
-          requires: [Build, UnitTests]
+          requires: [Build]
 
   Release_Workflow:
     when: << pipeline.parameters.release_workflow >>
