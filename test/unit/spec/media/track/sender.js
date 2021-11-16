@@ -215,14 +215,7 @@ describe('MediaTrackSender', () => {
 
       if (publisherHintCallbackSet && replaceTrackSuccess) {
         it('sets default publisher hint', () => {
-          sinon.assert.calledWith(publisherHitCallBack, [
-            // eslint-disable-next-line camelcase
-            { enabled: true, layer_index: 0 },
-            // eslint-disable-next-line camelcase
-            { enabled: true, layer_index: 1 },
-            // eslint-disable-next-line camelcase
-            { enabled: true, layer_index: 2 }
-          ]);
+          sinon.assert.calledWith(publisherHitCallBack, null);
         });
       } else {
         it('does not set default publisher hint', () => {
