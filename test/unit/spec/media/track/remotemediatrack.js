@@ -253,7 +253,10 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
-            internalId: Date()
+            internalId: Date(),
+            addEventListener: sinon.spy(),
+            removeEventListener: sinon.spy()
+
           };
         });
       });
@@ -298,7 +301,9 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
-            internalId: Date()
+            internalId: Date(),
+            addEventListener: sinon.spy(),
+            removeEventListener: sinon.spy()
           };
         });
 
