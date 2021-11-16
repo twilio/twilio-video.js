@@ -74,9 +74,14 @@ describe('util', () => {
         expectedPayload: { preferredAudioCodecs: JSON.stringify([{ codec: 'VP8', simulcast: true }]) },
       },
       {
-        testCase: 'name specified',
+        testCase: 'name specified as string',
         connectOptions: { name: 'room name goes here' },
         expectedPayload: { roomName: 'room name goes here' },
+      },
+      {
+        testCase: 'name specified as number',
+        connectOptions: { name: 1234 },
+        expectedPayload: { roomName: '1234' },
       },
       {
         testCase: 'region specified',
@@ -84,14 +89,34 @@ describe('util', () => {
         expectedPayload: { region: 'in1' },
       },
       {
-        testCase: 'maxVideoBitrate specified',
+        testCase: 'maxVideoBitrate specified as number',
         connectOptions: { maxVideoBitrate: 100 },
         expectedPayload: { maxVideoBitrate: 100 },
       },
       {
-        testCase: 'maxAudioBitrate specified',
+        testCase: 'maxVideoBitrate specified as string',
+        connectOptions: { maxVideoBitrate: '100' },
+        expectedPayload: { maxVideoBitrate: 100 },
+      },
+      {
+        testCase: 'maxVideoBitrate specified as non-number string',
+        connectOptions: { maxVideoBitrate: 'foo' },
+        expectedPayload: {},
+      },
+      {
+        testCase: 'maxAudioBitrate specified as number',
         connectOptions: { maxAudioBitrate: 100 },
         expectedPayload: { maxAudioBitrate: 100 },
+      },
+      {
+        testCase: 'maxAudioBitrate specified as string',
+        connectOptions: { maxAudioBitrate: '100' },
+        expectedPayload: { maxAudioBitrate: 100 },
+      },
+      {
+        testCase: 'maxAudioBitrate specified as non-number string',
+        connectOptions: { maxAudioBitrate: 'foo' },
+        expectedPayload: {},
       },
       {
         testCase: 'networkQuality true',

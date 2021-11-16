@@ -1,8 +1,8 @@
 'use strict';
-
 require('./spec/browserbugs/chromium');
 require('./spec/docker/reconnection');
 require('./spec/docker/docker');
+require('./spec/bandwidthprofile/publisheerhints.js');
 require('./spec/bandwidthprofile/regressions');
 require('./spec/bandwidthprofile/renderhints');
 require('./spec/bandwidthprofile/video');

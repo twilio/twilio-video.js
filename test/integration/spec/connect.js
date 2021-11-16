@@ -125,6 +125,53 @@ describe('connect', function() {
     });
   });
 
+  describe('preferredVideoCodecs = auto', () => {
+    it('should rejects with a TypeError when maxVideoBitrate is specified at connect', async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      const cancelablePromise = connect(token, Object.assign({}, defaults, {
+        tracks: [],
+        preferredVideoCodecs: 'auto',
+        maxVideoBitrate: 10000,
+      }));
+
+      let errorThrown = null;
+      try {
+        await cancelablePromise;
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(errorThrown instanceof TypeError);
+      assert(cancelablePromise instanceof CancelablePromise);
+    });
+
+    it('should throw on subsequent setParameters if maxVideoBitrate is specified', async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      const room = await connect(token, Object.assign({}, defaults, {
+        tracks: [],
+        preferredVideoCodecs: 'auto'
+      }));
+
+      let errorThrown = null;
+      try {
+        room.localParticipant.setParameters({ maxAudioBitrate: 100 });
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(!errorThrown);
+
+      try {
+        room.localParticipant.setParameters({ maxVideoBitrate: 100 });
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(errorThrown);
+      assert.equal(errorThrown.message, 'encodingParameters must be an encodingParameters.maxVideoBitrate is not compatible with "preferredVideoCodecs=auto"');
+      assert(errorThrown instanceof TypeError);
+    });
+  });
+
   describe('should return a CancelablePromise that rejects when called with invalid bandwidth Profile options: ', () => {
     [
       {
@@ -780,15 +827,15 @@ describe('connect', function() {
       let thoseRooms;
 
       before(async () => {
-        [sid, thisRoom, thoseRooms, peerConnections] = await setup({
+        [sid, thisRoom, thoseRooms, peerConnections] = await waitFor(setup({
           testOptions: encodingParameters,
           otherOptions: { tracks: [] },
           nTracks: 0
-        });
+        }), 'setting up room');
 
         // Grab 5 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
-        const bitrates = await pollOutgoingBitrate(thisRoom, 5);
+        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 5), `polling outgoing bitrate: ${thisRoom.sid}`);
 
         const average = items => {
           let avg = items.reduce((x, y) => x + y) / items.length;
