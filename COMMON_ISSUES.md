@@ -36,6 +36,13 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
+<summary>Android 12: Video distortion on Chrome when hardware acceleration is enabled</summary>
+<p>
+
+   This is a VP8 encoder issue on Android 12. As a workaround, you can disable hardware encoding in chrome from chrome://flags. Please see this [github ticket](https://github.com/twilio/twilio-video.js/issues/1627) and this [Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1237677) for more details.
+</p>
+</details>
+<details>
 <summary>Android Chrome on Pixel 3 receives corrupted video frames with codec VP8</summary>
 <p>
 
