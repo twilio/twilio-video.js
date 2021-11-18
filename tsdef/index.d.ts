@@ -1,4 +1,4 @@
-import { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
+import { CancelablePromise, ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
 import { PreflightOptions, PreflightTestReport } from './PreflightTypes';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';

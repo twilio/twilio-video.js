@@ -258,3 +258,6 @@ export class StatsReport {
   remoteAudioTrackStats: RemoteAudioTrackStats[];
   remoteVideoTrackStats: RemoteVideoTrackStats[];
 }
+interface CancelablePromise<T> extends Promise<T> {
+  cancel: () => void;
+}
