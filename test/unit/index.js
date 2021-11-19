@@ -76,8 +76,7 @@ require('./spec/util/networkmonitor');
 require('./spec/util/sdp');
 require('./spec/util/sdp/issue8329');
 require('./spec/util/support');
-require('./spec/util/trackmatcher/mid');
-require('./spec/util/trackmatcher/ordered');
+require('./spec/util/trackmatcher.js');
 require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');

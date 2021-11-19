@@ -18,14 +18,13 @@
 
 /**
  * Create an SDP string.
- * @param {'planb' | 'unified'} type
  * @param {TracksByKind} kinds
  * @param {number} [maxAudioBitrate]
  * @param {number} [maxVideoBitrate]
  * @param {boolean} [withAppData = true]
  * @returns {string} sdp
  */
-function makeSdpWithTracks(type, kinds, maxAudioBitrate, maxVideoBitrate, withAppData = true) {
+function makeSdpWithTracks(kinds, maxAudioBitrate, maxVideoBitrate, withAppData = true) {
   const session = `\
 v=0\r
 o=- 0 1 IN IP4 0.0.0.0\r
@@ -42,9 +41,9 @@ a=fingerprint:sha-256 00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:0
     }[kind];
 
     const bLine = kind === 'audio' && typeof maxAudioBitrate === 'number'
-      ? `b=${type === 'planb' ? 'AS' : 'TIAS'}:${maxAudioBitrate}\r\n`
+      ? `b=TIAS:${maxAudioBitrate}\r\n`
       : kind === 'video' && typeof maxVideoBitrate === 'number'
-        ? `b=${type === 'planb' ? 'AS' : 'TIAS'}:${maxVideoBitrate}\r\n`
+        ? `b=TIAS:${maxVideoBitrate}\r\n`
         : '';
 
     const media = `\
@@ -69,31 +68,29 @@ a=rtcp-mux\r
       const { id, ssrc } = typeof trackAndSSRC === 'string'
         ? { id: trackAndSSRC, ssrc: 1 }
         : trackAndSSRC;
-      return sdp + (type === 'planb' ? '' : media + `\
-a=msid:-${type === 'planb' || withAppData ? ` ${id}` : ''}\r
-`) + `\
+      return sdp + media + `\
+a=msid:-${withAppData ? ` ${id}` : ''}\r
 a=ssrc:${ssrc} cname:0\r
-a=ssrc:${ssrc} msid:${type === 'planb' ? 'stream' : '-'}${type === 'planb' || withAppData ? ` ${id}` : ''}\r
+a=ssrc:${ssrc} msid:-${withAppData ? ` ${id}` : ''}\r
 a=mid:mid_${id}\r
 `;
-    }, sdp + (type === 'planb' ? media : ''));
+    }, sdp);
   }, session);
 }
 
 /**
  * Make an sdp to test simulcast.
- * @param {'planb' | 'unified'} type
  * @param {Array<string>} ssrcs
  * @returns {string} sdp
  */
-function makeSdpForSimulcast(type, ssrcs) {
-  const sdp = makeSdpWithTracks(type, {
+function makeSdpForSimulcast(ssrcs) {
+  const sdp = makeSdpWithTracks({
     audio: ['audio-1'],
     video: [{ id: 'video-1', ssrc: ssrcs[0] }]
   });
   const ssrcSdpLines = ssrcs.length === 2 ? [
     `a=ssrc:${ssrcs[1]} cname:0`,
-    `a=ssrc:${ssrcs[1]} msid:${type === 'planb' ? 'stream' : '-'} video-1`
+    `a=ssrc:${ssrcs[1]} msid:- video-1`
   ] : [];
   const fidSdpLines = ssrcs.length === 2
     ? [`a=ssrc-group:FID ${ssrcs.join(' ')}`]
