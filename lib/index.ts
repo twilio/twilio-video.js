@@ -8,6 +8,7 @@ import { runPreflight } from './preflight/preflighttest';
 
 const internals = {
   connect: require('./connect'),
+  connectAsMediaExtension: require('./connectasmediaextension'),
   createLocalAudioTrack: require('./createlocaltrack').audio,
   createLocalTracks: require('./createlocaltracks'),
   createLocalVideoTrack: require('./createlocaltrack').video,
@@ -21,6 +22,10 @@ const internals = {
 
 function connect(token: string, options?: ConnectOptions): Promise<Room> {
   return internals.connect(token, options);
+}
+
+function connectAsMediaExtension(options?: ConnectOptions): Promise<Room> {
+  return internals.connectAsMediaExtension(options);
 }
 
 function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrackType> {
@@ -60,6 +65,7 @@ const LocalDataTrack = internals.LocalDataTrack;
 
 module.exports = {
   connect,
+  connectAsMediaExtension,
   createLocalAudioTrack,
   createLocalTracks,
   createLocalVideoTrack,
