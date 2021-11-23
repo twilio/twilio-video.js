@@ -179,6 +179,37 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <p>
 
    Safari on iOS version 15, sometimes routes audio to the earpiece and not the speakers by default. Which customers some time perceive as low audio volume. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1586) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230902).
+
+   As a workaround, you can pipe all remote audio tracks into a single audio context for iOS 15. Using a gain node, you can increase the gain value to increase the audio volume levels. See example below.
+
+   ```js
+   // Make sure to reuse the audioContext object as browsers
+   // have limits to the number of AudioContext instances you can create.
+   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+   function attachAudioTrack(track) {
+     const audioNode = audioContext.createMediaStreamSource(new MediaStream([track.mediaStreamTrack]));
+     const gainNode = audioContext.createGain();
+     
+     // Adjust this value depending on your customers' preference
+     gainNode.gain.value = 20;
+     
+     audioNode.connect(gainNode);
+     gainNode.connect(audioContext.destination);
+   }
+
+   // Attach the remote audio track once received.
+   attachAudioTrack(remoteAudioTrack);
+   ```
+
+   This workaround has the following potential side effects.
+
+   * There is a possibility of the introduction of echo. Please adjust the gain value and check for echo while testing the workaround.
+   * The output volume might end up really high if the user switches headsets.
+   * The default volume might end up really high once Apple rolls out the fix for this issue.
+
+   Keeping the side effects in mind, you might need to adjust your UI to improve the experience. For example, you can turn off this workaround by default and have a "call to action" in your UI that allows the user to turn the volume up if they cannot hear any audio. This button will then apply the workaround. Another option is to listen for `devicechange` events to determine if the user switches headsets. When this happens, you will have the ability to reset the gain value.
+
 </p>
 </details>
 <details>
