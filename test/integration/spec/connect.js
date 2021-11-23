@@ -720,6 +720,27 @@ describe('connect', function() {
     });
   });
 
+  describe('called with a Room name and', () => {
+    let sid;
+    let cancelablePromise;
+
+    before(async () => {
+      sid = await createRoom(randomName(), defaults.topology);
+      const options = Object.assign({ name: sid, tracks: [] }, defaults);
+      cancelablePromise = connect(getToken(randomName()), options);
+    });
+
+    after(() => completeRoom(sid));
+
+    it('should return a promise that resolves to a room', async () => {
+      let finallyCalled = false;
+      await cancelablePromise.finally(() => {
+        finallyCalled = true;
+      });
+      assert(finallyCalled);
+    });
+  });
+
   (isRTCRtpSenderParamsSupported ? describe : describe.skip)('DSCP tagging', () => {
     combinationContext([
       [
