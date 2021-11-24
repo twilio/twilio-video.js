@@ -186,7 +186,7 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
    function attachAudioTrack(remoteAudioTrack) {
-     const audioNode = audioContext.createMediaStreamSource(new MediaStream([track.mediaStreamTrack]));
+     const audioNode = audioContext.createMediaStreamSource(new MediaStream([remoteAudioTrack.mediaStreamTrack]));
      const gainNode = audioContext.createGain();
      
      // Adjust this value depending on your customers' preference
