@@ -178,16 +178,14 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <summary>iOS 15: Low audio volume in Safari</summary>
 <p>
 
-   Safari on iOS version 15, sometimes routes audio to the earpiece and not the speakers by default. Which customers some time perceive as low audio volume. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1586) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230902).
-
-   As a workaround, you can pipe all remote audio tracks into a single audio context for iOS 15. Using a gain node, you can increase the gain value to increase the audio volume levels. See example below.
+   Safari on iOS version 15, sometimes routes audio to the earpiece and not the speakers by default. Which customers some time perceive as low audio volume. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1586) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230902). As a workaround, you can pipe all remote audio tracks into a single audio context for iOS 15. Using a gain node, you can increase the gain value to increase the audio volume levels. See example below.
 
    ```js
    // Make sure to reuse the audioContext object as browsers
    // have limits to the number of AudioContext instances you can create.
    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-   function attachAudioTrack(track) {
+   function attachAudioTrack(remoteAudioTrack) {
      const audioNode = audioContext.createMediaStreamSource(new MediaStream([track.mediaStreamTrack]));
      const gainNode = audioContext.createGain();
      
@@ -198,7 +196,7 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
      gainNode.connect(audioContext.destination);
    }
 
-   // Attach the remote audio track once received.
+   // Attach the RemoteAudioTrack once received.
    attachAudioTrack(remoteAudioTrack);
    ```
 
