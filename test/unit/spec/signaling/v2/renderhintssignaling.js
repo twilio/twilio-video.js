@@ -131,7 +131,6 @@ describe('RenderHintsSignaling', () => {
       subject.setTrackHint('foo', { enabled: false });
       assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, true);
       assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, true);
-
     });
 
     it('processes subsequent messages only after a reply is received', async () => {
@@ -195,6 +194,69 @@ describe('RenderHintsSignaling', () => {
         subscriber: {
           id: sinon.match.number,
           hints: [{
+            'track': 'bar',
+            'enabled': true,
+            'render_dimensions': { height: 200, width: 200 },
+          }]
+        }
+      });
+    });
+
+    it('re-sends all hints if server does not respond', async () => {
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
+      subject.setTrackHint('boo', { enabled: false });
+
+      let publishCalls = 0;
+      let deferred = defer();
+      mst.publish.callsFake(() => {
+        publishCalls++;
+        deferred.resolve();
+      });
+
+      // wait for message to get published.
+      await deferred.promise;
+      assert(publishCalls, 1);
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track': 'foo',
+            'render_dimensions': { height: 100, width: 100 },
+            'enabled': true,
+          }, {
+            'track': 'boo',
+            'enabled': false,
+          }]
+        }
+      });
+
+      // send another hint
+      subject.setTrackHint('bar', { enabled: true, renderDimensions: { width: 200, height: 200 } });
+      await waitForSometime(50);
+      assert(publishCalls, 1);
+
+      // now wait longer w/o server response
+      deferred = defer();
+      await deferred.promise;
+      assert(publishCalls, 2);
+
+      // expect publish to be called with all the hints.
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track': 'foo',
+            'render_dimensions': { height: 100, width: 100 },
+            'enabled': true,
+          }, {
+            'track': 'boo',
+            'enabled': false,
+          },
+          {
             'track': 'bar',
             'enabled': true,
             'render_dimensions': { height: 200, width: 200 },
