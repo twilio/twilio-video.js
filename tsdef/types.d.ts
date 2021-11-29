@@ -260,5 +260,4 @@ export class StatsReport {
 }
 export interface CancelablePromise<T> extends Promise<T> {
   cancel: () => void;
-  finally(onfinally?: (() => void) | undefined | null): Promise<T>;
 }
