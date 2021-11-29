@@ -720,7 +720,7 @@ describe('connect', function() {
     });
   });
 
-  describe('called with a Room name and', () => {
+  describe.only('called with a Room name and', () => {
     let sid;
     let cancelablePromise;
 
@@ -732,8 +732,39 @@ describe('connect', function() {
 
     after(() => completeRoom(sid));
 
-    it('should return a promise that resolves to a room', async () => {
+    it('should return a promise', async () => {
       let finallyCalled = false;
+      await cancelablePromise.finally(() => {
+        finallyCalled = true;
+      });
+      assert(finallyCalled);
+    });
+
+    it('should resolve with a room and finally is called', async () => {
+      let finallyCalled = false;
+      let room;
+      let errorThrown = null;
+      try {
+        room = await cancelablePromise;
+      } catch (error) {
+        errorThrown = error;
+      }
+      await cancelablePromise.finally(() => {
+        finallyCalled = true;
+      });
+      assert(finallyCalled);
+      assert(!errorThrown);
+      assert(room instanceof Room);
+    });
+
+    it('should reject and finally is called', async () => {
+      let finallyCalled = false;
+      try {
+        await cancelablePromise;
+        throw new Error('Connecting to room, but expecting to cancel');
+      } catch (error) {
+        assert(error);
+      }
       await cancelablePromise.finally(() => {
         finallyCalled = true;
       });
