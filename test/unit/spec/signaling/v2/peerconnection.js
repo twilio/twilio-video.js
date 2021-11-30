@@ -375,7 +375,7 @@ describe('PeerConnectionV2', () => {
           stream = { getTracks() { return tracks; } };
           const trackSender = makeMediaTrackSender(track);
           setup(test, trackSender);
-          test.pc.addTransceiver = sinon.spy(() => ({ sender: { track }}));
+          test.pc.addTransceiver = sinon.spy(() => ({ sender: { track } }));
           result = test.pcv2.addMediaTrackSender(trackSender);
         });
 
@@ -628,7 +628,7 @@ describe('PeerConnectionV2', () => {
         return id || label;
       }
 
-      test.pcv2._trackMatcher = trackMatcher
+      test.pcv2._trackMatcher = trackMatcher;
 
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel1 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
@@ -1947,7 +1947,7 @@ describe('PeerConnectionV2', () => {
       });
     });
   });
-  
+
   describe('"trackAdded" event', () => {
     context('when "track" events are supported by the underlying RTCPeerConnection', () => {
       let test;
@@ -1972,7 +1972,7 @@ describe('PeerConnectionV2', () => {
 
         const trackPromise = new Promise(resolve => test.pcv2.once('trackAdded', resolve));
         const trackMatcher = { match: sinon.stub(), update: sinon.stub() };
-        test.pcv2._trackMatcher = trackMatcher
+        test.pcv2._trackMatcher = trackMatcher;
 
         pc.emit('track', {
           type: 'track',
@@ -2012,13 +2012,13 @@ describe('PeerConnectionV2', () => {
 
       // Wait for the internal promise to resolve
       await new Promise(resolve => setTimeout(resolve, 1));
-      
+
       const senders = test.pc.getSenders();
       const audioSender = senders.filter(s => s.track.kind === 'audio')[0];
       const videoSender = senders.filter(s => s.track.kind === 'video')[0];
 
-      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [ { maxBitrate: 20 } ] });
-      assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [ { maxBitrate: 30 } ] });
+      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20 }] });
+      assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 30 }] });
     });
   });
 

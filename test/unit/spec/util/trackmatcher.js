@@ -91,7 +91,7 @@ describe('TrackMatcher', () => {
       const trackMatcher = new TrackMatcher();
 
       test.sdps.forEach((tracksByKind, i) => {
-        const sdp = makeSdpWithTracks('unified', tracksByKind);
+        const sdp = makeSdpWithTracks(tracksByKind);
         const matchesByKind = test.matches[i];
 
         trackMatcher.update(sdp);
