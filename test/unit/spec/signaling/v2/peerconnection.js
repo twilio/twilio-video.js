@@ -1099,10 +1099,6 @@ describe('PeerConnectionV2', () => {
         x => `when the remote peer is ${x ? '' : 'not '}an ICE-lite agent`
       ],
       [
-        [true, false],
-        x => `When RTCRtpSenderParameters is ${x ? '' : 'not '}supported by WebRTC`
-      ],
-      [
         [true, false, undefined],
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
