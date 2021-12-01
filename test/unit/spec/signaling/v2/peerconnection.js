@@ -701,7 +701,7 @@ describe('PeerConnectionV2', () => {
       });
     });
 
-    it('returns the local description if Reoffer is triggered', async () => {
+    it('returns the local description if reoffer is triggered', async () => {
       const offer = makeOffer({ noMedia: true });
       const answer = makeAnswer({ noMedia: true });
       const test = makeTest({ offers: [offer, offer], answers: [answer] });
