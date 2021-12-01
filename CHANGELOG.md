@@ -28,8 +28,7 @@ const room = await connect(token, {
 });
 ```
 
-Known Limitations
------------------
+### Known Limitations
 
 - Specifying `preferredVideoCodecs="auto"` will revert to unicast in the following cases:
   - The publisher is using Firefox.
@@ -37,6 +36,11 @@ Known Limitations
   - The Room is configured to support only the H264 codec.
   - Peer-to-Peer Rooms
 - When the Room is being recorded, the SFU will not disable any simulcast layers of the publisher's VideoTrack.
+
+Changes
+-------
+
+- In [October 2019](#200-beta15-october-24-2019), twilio-video.js started using Unified Plan where available, while also maintaining support for earlier browser versions with Plan B as the default SDP format. With this release, twilio-video.js will now stop supporting the Plan B SDP format and will use Unified Plan as the default SDP format. Please refer to this [changelog](#200-beta15-october-24-2019) and this [public advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for more related information.
 
 Bug Fixes
 ---------
