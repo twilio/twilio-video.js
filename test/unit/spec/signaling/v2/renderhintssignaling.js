@@ -202,7 +202,9 @@ describe('RenderHintsSignaling', () => {
       });
     });
 
-    it('re-sends all hints if server does not respond', async () => {
+    it('re-sends all hints if server does not respond', async function() {
+      // eslint-disable-next-line no-invalid-this
+      this.timeout(10 * 1000); // this test takes more than 2 seconds.
       const mst = makeTransport();
       const subject = makeTest(mst);
       subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
