@@ -206,7 +206,9 @@ export interface CreateLocalTracksOptions {
    * @deprecated
    */
   logLevel?: LogLevel | LogLevels;
+  loggerName?: string;
   video?: boolean | CreateLocalTrackOptions;
+  [others: string]: any;
 }
 
 export class TrackStats {

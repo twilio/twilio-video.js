@@ -1,5 +1,7 @@
 'use strict';
 
+import { CreateLocalTracksOptions } from '../tsdef/types';
+
 const asLocalTrack = require('./util').asLocalTrack;
 const buildLogLevels = require('./util').buildLogLevels;
 const getUserMedia = require('@twilio/webrtc').getUserMedia;
@@ -77,11 +79,24 @@ let createLocalTrackCalls = 0;
  * });
  *
  */
-function createLocalTracks(options) {
+function createLocalTracks(options: CreateLocalTracksOptions) {
   const isAudioVideoAbsent =
     !(options && ('audio' in options || 'video' in options));
 
-  options = Object.assign({
+  // options = Object.assign({
+  //   audio: isAudioVideoAbsent,
+  //   getUserMedia,
+  //   loggerName: DEFAULT_LOGGER_NAME,
+  //   logLevel: DEFAULT_LOG_LEVEL,
+  //   LocalAudioTrack,
+  //   LocalDataTrack,
+  //   LocalVideoTrack,
+  //   MediaStreamTrack,
+  //   Log,
+  //   video: isAudioVideoAbsent
+  // }, options);
+
+  options = { ...options,
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
@@ -91,8 +106,7 @@ function createLocalTracks(options) {
     LocalVideoTrack,
     MediaStreamTrack,
     Log,
-    video: isAudioVideoAbsent
-  }, options);
+    video: isAudioVideoAbsent };
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(options.logLevel);
