@@ -231,12 +231,16 @@ let localVideoTrack: Video.LocalVideoTrack | null = null;
 let localAudioTrack: Video.LocalAudioTrack | null = null;
 
 // Testing finally method
-Video.connect('$TOKEN', {
+const maybeRoom = Video.connect('$TOKEN', {
   name: 'room-name',
   video: false,
   audio: false
+}).then(room => {
+  return room;
+}).catch(err => {
+  throw new Error(err);
 }).finally(() => {
-  return 'Finally Connected to a Room!';
+  return 'Finally happened!';
 });
 
 async function initRoom() {
