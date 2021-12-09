@@ -5,6 +5,7 @@
 const assert = require('assert');
 const EventEmitter = require('events');
 const sinon = require('sinon');
+const util = require('@twilio/webrtc/lib/util');
 
 const EventTarget = require('../../../../../lib/eventtarget');
 const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor.js');
@@ -116,8 +117,15 @@ describe('PeerConnectionV2', () => {
         height: 180,
         encodings: [{}, {}, {}],
         expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
-      }
-    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
+      },
+      {
+        testName: 'resolution <= 480x270',
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      },
+    ].forEach(({ width, height, encodings, expectedEncodings, testName, browser }) => {
       it(testName, () => {
         const test = makeTest();
         test.pcv2._updateEncodings(width, height, encodings);
@@ -126,6 +134,93 @@ describe('PeerConnectionV2', () => {
     });
   });
 
+  describe('._maybeUpdateEncodings', () => {
+    let stub;
+    beforeEach(() => {
+      stub = sinon.stub(util, 'guessBrowser');
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
+    [
+      {
+        browser: 'chrome',
+        testName: 'updates encoding for chrome user media track',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] }
+      },
+      {
+        browser: 'chrome',
+        testName: 'does not update encodings for chrome screen share track',
+        isScreenShare: true,
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] }
+      },
+      {
+        browser: 'chrome',
+        testName: 'does not update encodings when not using adaptive simulcast',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'updates encoding for safari (irrespective of adaptiveSimulcast) ',
+        isScreenShare: true,
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'does not update encoding for audio tracks',
+        kind: 'audio',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'firefox',
+        testName: 'does not update encodings',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
+      it(`${browser}:${testName}`, () => {
+        stub = stub.returns(browser);
+        const trackSettings = { width, height };
+        if (isScreenShare) {
+          trackSettings.displaySurface = 'monitor';
+        }
+        const mediaStreamTrack = {
+          kind,
+          getSettings: () => trackSettings
+        };
+
+        const test = makeTest({ preferredCodecs, isChromeScreenShareTrack: () => isScreenShare });
+        const updated = test.pcv2._maybeUpdateEncodings(mediaStreamTrack, encodings);
+        const shouldUpdate = !!expectedEncodings;
+        assert(updated === shouldUpdate, `_maybeUpdateEncodings returned unexpected: ${updated}`);
+        if (expectedEncodings) {
+          assert.deepStrictEqual(encodings, expectedEncodings);
+        }
+        stub.resetHistory();
+      });
+    });
+  });
 
   describe('.iceConnectionState', () => {
     it('equals the underlying RTCPeerConnection\'s .iceConnectionState', () => {
@@ -2512,7 +2607,7 @@ function makePeerConnectionV2(options) {
   options.sessionTimeout = options.sessionTimeout || 100;
   options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
-  options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
+  options.preferredCodecs = options.preferredCodecs || { audio: [], video: [] };
   options.options = {
     Backoff: options.Backoff,
     Event: function(type) { return { type: type }; },
