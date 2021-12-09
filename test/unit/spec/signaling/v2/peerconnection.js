@@ -117,15 +117,8 @@ describe('PeerConnectionV2', () => {
         height: 180,
         encodings: [{}, {}, {}],
         expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
-      },
-      {
-        testName: 'resolution <= 480x270',
-        width: 320,
-        height: 180,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
-      },
-    ].forEach(({ width, height, encodings, expectedEncodings, testName, browser }) => {
+      }
+    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
       it(testName, () => {
         const test = makeTest();
         test.pcv2._updateEncodings(width, height, encodings);
