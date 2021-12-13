@@ -220,7 +220,7 @@ describe('RenderHintsSignaling', () => {
 
       clock.tick(1000);
       await deferred.promise;
-      assert(publishCalls === 1);
+      assert.equal(publishCalls, 1);
       sinon.assert.calledWith(mst.publish, {
         type: 'render_hints',
         subscriber: {
@@ -266,12 +266,7 @@ describe('RenderHintsSignaling', () => {
         }
       });
 
-      // simulate bunch of clock ticks at 2 second intervals for 40 seconds.
-      let timeToWait = 40000;
-      while (timeToWait > 0) {
-        clock.tick(2000); // simulate 2 seconds
-        timeToWait -= 2000;
-      }
+      clock.tick(40000); // simulate 40 seconds
 
       // we expect 2nd retry to be made 2 second after 1st, and subsequent retries at exponential intervals.
       assert.equal(publishCalls, 6);
