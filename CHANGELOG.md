@@ -44,6 +44,7 @@ Bug Fixes
 - Fixed a bug where setting clientTrackSwitchOffControl to `auto` caused the RemoteVideoTrack's to get switched off even while playing in picture-in-picture window. (VIDEO-6677)
   Note that this fix does not work on firefox because firefox does not yet implement [picture-in-picture](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API) APIs.
 - Fixed a bug where `clientTrackSwitchOffControl` and `contentPreferencesMode` sometimes did not work as expected during network glitches. (VIDEO-7654)
+- Fixed a bug where connect was returning a Promise type instead of a CancelablePromise. (VIDEO-7831)
 
 2.18.1 (October 29, 2021)
 =========================
