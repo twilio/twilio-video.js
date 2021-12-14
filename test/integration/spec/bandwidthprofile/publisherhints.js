@@ -52,9 +52,9 @@ async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000
     const diffBytes = bytesSentAfter - bytesSentBefore;
     const dimensions = layerStatsAfter.dimensions;
     if (diffBytes > 0) {
-      activeLayers.push({ dimensions, diffBytes });
+      activeLayers.push({ dimensions, diffBytes, beforeDim: layerStatsBefore?.dimensions });
     } else {
-      inactiveLayers.push({ dimensions, diffBytes });
+      inactiveLayers.push({ dimensions, diffBytes, beforeDim: layerStatsBefore?.dimensions });
     }
   });
 
@@ -168,6 +168,39 @@ describe('preferredVideoCodecs = auto', function() {
 });
 
 if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
+  describe('adaptive simulcast layers', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.timeout(120 * 1000);
+
+    [
+      { width: 1280, height: 720, expectedActive: 3 },
+      { width: 640, height: 480, expectedActive: 2 },
+      { width: 480, height: 270, expectedActive: 2 },
+      { width: 320, height: 180, expectedActive: 1 },
+    ].forEach(({ width, height, expectedActive }) => {
+      it(`are configured correctly for ${width}x${height}`, async () => {
+        const roomSid = await createRoom(randomName(), defaults.topology);
+        const bandwidthProfile = { video: { contentPreferencesMode: 'manual', clientTrackSwitchOffControl: 'manual' } };
+        const aliceLocalVideo = await waitFor(createLocalVideoTrack({ width, height }), 'alice local video track');
+        const aliceRoom = await connect(getToken('Alice'), {
+          ...defaults,
+          tracks: [aliceLocalVideo],
+          name: roomSid,
+          loggerName: 'AliceLogger',
+          preferredVideoCodecs: 'auto',
+          bandwidthProfile
+        });
+        console.log('room sid: ', aliceRoom.sid);
+        Logger.getLogger('AliceLogger').setLevel('WARN');
+        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 1000, activeTimeMS: 20000 });
+        assert.equal(activeLayers.length, expectedActive);
+        assert.equal(activeLayers.length + inactiveLayers.length, 3);
+        aliceRoom.disconnect();
+        completeRoom(roomSid);
+      });
+    });
+  });
+
   describe('adaptive simulcast', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120 * 1000);
