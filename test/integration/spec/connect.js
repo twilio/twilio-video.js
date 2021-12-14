@@ -4,6 +4,7 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 const { getUserMedia } = require('@twilio/webrtc');
+const sinon = require('sinon');
 
 const connect = require('../../../es5/connect');
 const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
@@ -670,6 +671,52 @@ describe('connect', function() {
         assert(error instanceof Error);
         assert.equal(error.message, 'Canceled');
       }
+    });
+  });
+
+  describe.only('called with a Room name and', () => {
+    let sid;
+    let cancelablePromise;
+
+    before(async () => {
+      sid = await createRoom(randomName(), defaults.topology);
+      const options = Object.assign({ name: sid, tracks: [] }, defaults);
+      cancelablePromise = connect(getToken(randomName()), options);
+    });
+
+    after(() => completeRoom(sid));
+
+    it('should return a promise', async () => {
+      const onFinally = sinon.stub();
+      await cancelablePromise.finally(onFinally);
+      sinon.assert.calledOnce(onFinally);
+    });
+
+    it('should resolve with a room and finally is called', async () => {
+      const onFinally = sinon.stub();
+      let room;
+      let errorThrown = null;
+      try {
+        room = await cancelablePromise.finally(onFinally);
+      } catch (error) {
+        errorThrown = error;
+      }
+      sinon.assert.calledOnce(onFinally);
+      assert(!errorThrown);
+      assert(room instanceof Room);
+    });
+
+    it('should reject and finally is called', async () => {
+      const onFinally = sinon.stub();
+      let err;
+      try {
+        await cancelablePromise.finally(onFinally);
+        throw new Error('Connecting to room, but expecting to cancel');
+      } catch (error) {
+        err = error;
+      }
+      assert(err);
+      sinon.assert.calledOnce(onFinally);
     });
   });
 
