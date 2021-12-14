@@ -744,11 +744,10 @@ describe('connect', function() {
       let room;
       let errorThrown = null;
       try {
-        room = await cancelablePromise;
+        room = await cancelablePromise.finally(onFinally);
       } catch (error) {
         errorThrown = error;
       }
-      await cancelablePromise.finally(onFinally);
       sinon.assert.calledOnce(onFinally);
       assert(!errorThrown);
       assert(room instanceof Room);
@@ -756,13 +755,14 @@ describe('connect', function() {
 
     it('should reject and finally is called', async () => {
       const onFinally = sinon.stub();
+      let err;
       try {
-        await cancelablePromise;
+        await cancelablePromise.finally(onFinally);
         throw new Error('Connecting to room, but expecting to cancel');
       } catch (error) {
-        assert(error);
+        err = error;
       }
-      await cancelablePromise.finally(onFinally);
+      assert(err);
       sinon.assert.calledOnce(onFinally);
     });
   });
