@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.18.3 (In Progress)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where connect was returning a Promise type instead of a CancelablePromise. (VIDEO-7831)
+
 2.18.2 (December 15, 2021)
 ==========================
 
