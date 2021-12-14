@@ -58,7 +58,7 @@ describe('RemoteVideoTrack', () => {
       addEventListenerStub = sinon.spy(document, 'addEventListener');
       removeEventListenerStub = sinon.spy(document, 'removeEventListener');
 
-      const dummyElement = { oncanplay: sinon.spy() };
+      const dummyElement = { oncanplay: sinon.spy(), addEventListener: sinon.spy(), removeEventListener: sinon.spy() };
       document.createElement = sinon.spy(() => {
         return dummyElement;
       });
@@ -136,6 +136,11 @@ describe('RemoteVideoTrack', () => {
         sinon.assert.calledWith(resizeObserveSpy, el);
       });
 
+      it('pip events are hooked up', () => {
+        sinon.assert.calledWith(el.addEventListener, 'enterpictureinpicture');
+        sinon.assert.calledWith(el.addEventListener, 'leavepictureinpicture');
+      });
+
       if (effectiveDocVisibility) {
         it('listens for document visibility change', () => {
           sinon.assert.callCount(document.addEventListener, 1);
@@ -188,6 +193,11 @@ describe('RemoteVideoTrack', () => {
       it('ResizeObserver unobserve is called', () => {
         sinon.assert.callCount(resizeUnobserveSpy, 1);
         sinon.assert.calledWith(resizeUnobserveSpy, el);
+      });
+
+      it('pip events are unhooked', () => {
+        sinon.assert.calledWith(el.removeEventListener, 'enterpictureinpicture');
+        sinon.assert.calledWith(el.removeEventListener, 'leavepictureinpicture');
       });
 
       if (effectiveDocVisibility) {
