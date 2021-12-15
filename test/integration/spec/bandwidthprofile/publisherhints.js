@@ -175,7 +175,6 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
     [
       { width: 1280, height: 720, expectedActive: 3 },
       { width: 640, height: 480, expectedActive: 2 },
-      { width: 480, height: 270, expectedActive: 2 },
       { width: 320, height: 180, expectedActive: 1 },
     ].forEach(({ width, height, expectedActive }) => {
       it(`are configured correctly for ${width}x${height}`, async () => {
@@ -186,13 +185,11 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           ...defaults,
           tracks: [aliceLocalVideo],
           name: roomSid,
-          loggerName: 'AliceLogger',
           preferredVideoCodecs: 'auto',
           bandwidthProfile
         });
         console.log('room sid: ', aliceRoom.sid);
-        Logger.getLogger('AliceLogger').setLevel('WARN');
-        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 1000, activeTimeMS: 20000 });
+        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 0, activeTimeMS: 30000 });
         assert.equal(activeLayers.length, expectedActive);
         assert.equal(activeLayers.length + inactiveLayers.length, 3);
         aliceRoom.disconnect();
