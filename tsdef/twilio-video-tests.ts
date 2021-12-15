@@ -230,6 +230,19 @@ let room: Video.Room | null = null;
 let localVideoTrack: Video.LocalVideoTrack | null = null;
 let localAudioTrack: Video.LocalAudioTrack | null = null;
 
+// Testing finally method
+const maybeRoom = Video.connect('$TOKEN', {
+  name: 'room-name',
+  video: false,
+  audio: false
+}).then(room => {
+  return room;
+}).catch(err => {
+  throw new Error(err);
+}).finally(() => {
+  return 'Finally happened!';
+});
+
 async function initRoom() {
   room = await Video.connect('$TOKEN', {
     name: 'room-name',
