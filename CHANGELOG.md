@@ -9,6 +9,7 @@ Bug Fixes
 ---------
 
 - Fixed a bug where connect was returning a Promise type instead of a CancelablePromise. (VIDEO-7831)
+- Fixed a bug where `audioLevel`, `frameRate`, and `captureDimensions` WebRTC stats are returning null on certain browsers. With this release, these stats are now populated whenever they are available. (VIDEO-3600)
 
 2.18.2 (December 15, 2021)
 ==========================
