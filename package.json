@@ -136,7 +136,7 @@
     "test:framework:install": "npm install chromedriver && npm install selenium-webdriver && npm install geckodriver && npm install puppeteer",
     "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
-    "build:es5": "rimraf ./es5 && tsc tsdef/twilio-video-tests.ts --noEmit && tsc",
+    "build:es5": "rimraf ./es5 && tsc tsdef/twilio-video-tests.ts --noEmit --lib es2018,dom && tsc ",
     "build:js": "node ./scripts/build.js ./src/twilio-video.js ./LICENSE.md ./dist/twilio-video.js",
     "build:min.js": "uglifyjs ./dist/twilio-video.js -o ./dist/twilio-video.min.js --comments \"/^! twilio-video.js/\" -b beautify=false,ascii_only=true",
     "build": "npm-run-all clean lint docs test:unit test:integration build:es5 build:js build:min.js test:umd",
@@ -146,7 +146,7 @@
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
-    "@twilio/webrtc": "4.5.1",
+    "@twilio/webrtc": "github:twilio/twilio-webrtc.js#4.5.2-rc1",
     "backoff": "^2.5.0",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
