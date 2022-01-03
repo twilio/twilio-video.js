@@ -674,7 +674,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('called with a Room name and', () => {
+  describe('called with a Room name and', () => {
     let sid;
     let cancelablePromise;
 
