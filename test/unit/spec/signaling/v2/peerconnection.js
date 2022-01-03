@@ -105,6 +105,14 @@ describe('PeerConnectionV2', () => {
         expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
       },
       {
+        testName: '960x540 > resolution >= 480x270 (disableOnly)',
+        disableOnly: true,
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{}, {}, { active: false }]
+      },
+      {
         testName: '960x540 > resolution >= 480x270 (no simulcast)',
         width: 480,
         height: 270,
@@ -117,11 +125,20 @@ describe('PeerConnectionV2', () => {
         height: 180,
         encodings: [{}, {}, {}],
         expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      },
+      {
+        testName: 'resolution <= 480x270 (disable only)',
+        disableOnly: true,
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{}, { active: false }, { active: false }]
       }
-    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
+
+    ].forEach(({ width, height, encodings, expectedEncodings, testName, disableOnly }) => {
       it(testName, () => {
         const test = makeTest();
-        test.pcv2._updateEncodings(width, height, encodings);
+        test.pcv2._updateEncodings(width, height, encodings, disableOnly);
         assert.deepStrictEqual(encodings, expectedEncodings);
       });
     });

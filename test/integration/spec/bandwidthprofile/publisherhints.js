@@ -10,6 +10,7 @@ const connect = require('../../../../es5/connect');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 const { isFirefox } = require('../../../lib/guessbrowser');
+const SECOND = 1000;
 
 const {
   tracksSubscribed,
@@ -36,7 +37,7 @@ async function getSimulcastLayerReport(room) {
 
 // for a given room, returns array of simulcast layers that are active.
 // it checks for active layers by gathering layer stats 1 sec apart.
-async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000 }) {
+async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND }) {
   await waitForSometime(initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
   await waitForSometime(activeTimeMS);
@@ -52,14 +53,18 @@ async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000
     const diffBytes = bytesSentAfter - bytesSentBefore;
     const dimensions = layerStatsAfter.dimensions;
     if (diffBytes > 0) {
-      activeLayers.push({ dimensions, diffBytes, beforeDim: layerStatsBefore?.dimensions });
+      activeLayers.push({ ssrc, dimensions, diffBytes });
     } else {
-      inactiveLayers.push({ dimensions, diffBytes, beforeDim: layerStatsBefore?.dimensions });
+      inactiveLayers.push({ ssrc, dimensions, diffBytes });
     }
   });
 
-  console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
-  console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
+  function layersToString(layers) {
+    return layers.map(({ ssrc, dimensions }) => `${ssrc}: ${dimensions.width}x${dimensions.height}`).join(', ');
+  }
+
+  console.log('activeLayers: ', layersToString(activeLayers));
+  console.log('inactiveLayers: ', layersToString(inactiveLayers));
   return { activeLayers, inactiveLayers };
 }
 
@@ -189,7 +194,8 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           bandwidthProfile
         });
         console.log('room sid: ', aliceRoom.sid);
-        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 0, activeTimeMS: 30000 });
+        await waitForSometime(2 * SECOND);
+        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 1 * SECOND, activeTimeMS: 30 * SECOND });
         assert.equal(activeLayers.length, expectedActive);
         assert.equal(activeLayers.length + inactiveLayers.length, 3);
         aliceRoom.disconnect();
@@ -236,8 +242,9 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
 
       describe('While Alice is alone in the room', () => {
         it('c1: all layers get turned off.', async () => {
-          const { activeLayers } = await getActiveLayers({ room: aliceRoom });
-          assert(activeLayers.length === 0, `was expecting expectedActiveLayers=0 but found: ${activeLayers.length} in ${roomSid}`);
+          // initially SFU might take upto 30 seconds to turn off all layers.
+          const { activeLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 30 * SECOND });
+          assert(activeLayers.length === 0, `1) was expecting expectedActiveLayers=0 but found: ${activeLayers.length} in ${roomSid}`);
         });
       });
 
@@ -276,7 +283,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           {
             testCase: 'c4 bob switch on and renders @ 1280x720',
             bob: { switchOff: false, switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-            expectedActiveLayers: layers => layers >= 2
+            expectedActiveLayers: layers => layers === 3
           },
           {
             testCase: 'c5: Bob request 640x360',
@@ -339,12 +346,12 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
             {
               testCase: 'c11: Bob requests 1280x720',
               bob: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: layers => layers >= 2
+              expectedActiveLayers: layers => layers === 3
             },
             {
               testCase: 'c12: Charlie requests 1280x720',
               charlie: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: layers => layers >= 2
+              expectedActiveLayers: layers => layers === 3
             },
             {
               testCase: 'c13: Charlie switches off, Bob: 640x360',
