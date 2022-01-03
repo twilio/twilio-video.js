@@ -161,6 +161,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
+  workaroundWebKitBug1208516?: boolean;
 }
 
 export interface ConnectOptions {
@@ -201,14 +202,13 @@ export interface ConnectOptions {
 }
 
 export interface CreateLocalTracksOptions {
-  audio?: boolean | CreateLocalTrackOptions;
+  audio?: CreateLocalTrackOptions;
   /**
    * @deprecated
    */
   logLevel?: LogLevel | LogLevels;
   loggerName?: string;
-  video?: boolean | CreateLocalTrackOptions;
-  [others: string]: any;
+  video?: CreateLocalTrackOptions;
 }
 
 export class TrackStats {
@@ -262,4 +262,10 @@ export class StatsReport {
 }
 export interface CancelablePromise<T> extends Promise<T> {
   cancel: () => void;
+}
+
+export type extraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
+
+export class TwilioError extends Error {
+  code: number;
 }
