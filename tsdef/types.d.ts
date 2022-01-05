@@ -208,6 +208,7 @@ export interface CreateLocalTracksOptions {
    */
   logLevel?: LogLevel | LogLevels;
   loggerName?: string;
+  tracks?: LocalTrack[];
   video?: CreateLocalTrackOptions;
 }
 

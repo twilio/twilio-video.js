@@ -1,6 +1,6 @@
 'use strict';
 
-import { CreateLocalTracksOptions, extraLocalTrackOption, extraLocalTrackOptionsInt, TwilioError } from '../tsdef/types';
+import { CreateLocalTracksOptions, TwilioError, extraLocalTrackOption } from '../tsdef/types';
 
 const asLocalTrack = require('./util').asLocalTrack;
 const buildLogLevels = require('./util').buildLogLevels;
@@ -93,8 +93,6 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
     LocalVideoTrack,
     MediaStreamTrack,
     Log,
-    name,
-    tracks,
     video: isAudioVideoAbsent,
   }, options);
 
@@ -106,7 +104,11 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
   // as the LocalTrack name in asLocalTrack(). So we pass a copy of
   // "options" without the "name".
   const localTrackOptions = Object.assign({ log }, config);
-  delete localTrackOptions.name;
+
+  // NOTE(joma): CreateLocalTracksOptions type does not really have a "name" property when used publicly by customers.
+  // But we are passing this property when used internally by other JS files.
+  // We can update this "any" type once those JS files are converted to TS.
+  delete (localTrackOptions as any).name;
 
   if (config.audio === false && config.video === false) {
     log.info('Neither audio nor video requested, so returning empty LocalTracks');
@@ -163,7 +165,11 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
     log.info('Call to getUserMedia successful; got MediaStreamTracks:',
       mediaStreamTracks);
 
-    return mediaStreamTracks.map(mediaStreamTrack  => asLocalTrack(mediaStreamTrack, Object.assign((extraLocalTrackOptions as any)[mediaStreamTrack.kind], localTrackOptions)));
+    return mediaStreamTracks.map(mediaStreamTrack  => {
+      const options = extraLocalTrackOptions[mediaStreamTrack.kind as 'audio' | 'video'];
+      const localTrack = asLocalTrack(mediaStreamTrack, { ...options, ...localTrackOptions });
+      return localTrack;
+    });
   }, (error: TwilioError) => {
     log.warn('Call to getUserMedia failed:', error);
     throw error;
@@ -184,6 +190,8 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
  *   levels.
  * @property {string} [loggerName='twilio-video'] - The name of the logger. Use this name when accessing the logger used by the SDK.
  *   See [examples](module-twilio-video.html#.connect) for details.
+ * @property {Array<LocalTrack|MediaStreamTrack>} [tracks] - The {@link LocalTrack}s or MediaStreamTracks which is used to construct the LocalTrack.
+ *   These tracks can be obtained by constructing them from the MediaStream.
  * @property {boolean|CreateLocalTrackOptions} [video=true] - Whether or not to
  *   get local video with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
