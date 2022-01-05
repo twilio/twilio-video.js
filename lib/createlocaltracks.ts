@@ -1,6 +1,6 @@
 'use strict';
 
-import { CreateLocalTracksOptions, TwilioError, extraLocalTrackOption } from '../tsdef/types';
+import { CreateLocalTracksOptions, extraLocalTrackOption, TwilioError } from '../tsdef/types';
 
 const asLocalTrack = require('./util').asLocalTrack;
 const buildLogLevels = require('./util').buildLogLevels;
@@ -79,11 +79,24 @@ let createLocalTrackCalls = 0;
  * });
  *
  */
-function createLocalTracks(options: CreateLocalTracksOptions) {
-  const isAudioVideoAbsent =
+export function createLocalTracks(options: CreateLocalTracksOptions) {
+  const isAudioVideoAbsent: boolean =
     !(options && ('audio' in options || 'video' in options));
 
-  const config = Object.assign({
+  // const config = Object.assign({
+  //   audio: isAudioVideoAbsent,
+  //   getUserMedia,
+  //   loggerName: DEFAULT_LOGGER_NAME,
+  //   logLevel: DEFAULT_LOG_LEVEL,
+  //   LocalAudioTrack,
+  //   LocalDataTrack,
+  //   LocalVideoTrack,
+  //   MediaStreamTrack,
+  //   Log,
+  //   video: isAudioVideoAbsent,
+  // }, options);
+
+  const config = {
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
@@ -94,7 +107,8 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
     MediaStreamTrack,
     Log,
     video: isAudioVideoAbsent,
-  }, options);
+    ...options,
+  };
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(config.logLevel);
@@ -196,5 +210,3 @@ function createLocalTracks(options: CreateLocalTracksOptions) {
  *   get local video with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
  */
-
-export default createLocalTracks;
