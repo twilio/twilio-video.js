@@ -83,20 +83,7 @@ export function createLocalTracks(options: CreateLocalTracksOptions) {
   const isAudioVideoAbsent: boolean =
     !(options && ('audio' in options || 'video' in options));
 
-  // const config = Object.assign({
-  //   audio: isAudioVideoAbsent,
-  //   getUserMedia,
-  //   loggerName: DEFAULT_LOGGER_NAME,
-  //   logLevel: DEFAULT_LOG_LEVEL,
-  //   LocalAudioTrack,
-  //   LocalDataTrack,
-  //   LocalVideoTrack,
-  //   MediaStreamTrack,
-  //   Log,
-  //   video: isAudioVideoAbsent,
-  // }, options);
-
-  const config = {
+  const config = Object.assign({
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
@@ -107,8 +94,7 @@ export function createLocalTracks(options: CreateLocalTracksOptions) {
     MediaStreamTrack,
     Log,
     video: isAudioVideoAbsent,
-    ...options,
-  };
+  }, options);
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(config.logLevel);
