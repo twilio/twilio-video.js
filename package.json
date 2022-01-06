@@ -99,7 +99,7 @@
     "lint": "npm-run-all lint:js lint:ts",
     "printVersion": "node --version && npm --version",
     "test:unit": "npm-run-all printVersion build:es5 test:unit:js test:unit:ts",
-    "test:unit:js": "nyc --report-dir=./coverage/js --extension=.js --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha ./test/unit/index.js",
+    "test:unit:js": "nyc --report-dir=./coverage/js --extension=.js --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha -r ts-node/register ./test/unit/index.js",
     "test:unit:ts": "nyc --report-dir=./coverage/ts --extension=.ts --include=lib/**/* --reporter=html --reporter=lcov --reporter=text mocha -r ts-node/register ./test/unit/index.ts",
     "test:serversiderender": "mocha ./test/serversiderender/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
