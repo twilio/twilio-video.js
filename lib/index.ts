@@ -4,13 +4,14 @@ import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudio
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
+import defaultCreateLocalTracks from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
 
 const internals = {
   connect: require('./connect'),
   createLocalAudioTrack: require('./createlocaltrack').audio,
-  createLocalTracks: require('./createlocaltracks'),
   createLocalVideoTrack: require('./createlocaltrack').video,
+  createLocalTracks: defaultCreateLocalTracks,
   isSupported: require('./util/support')(),
   version: require('../package.json').version,
   Logger: require('./vendor/loglevel'),
