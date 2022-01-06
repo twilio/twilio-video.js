@@ -1,17 +1,16 @@
 'use strict';
-import type { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
+import type { ConnectOptions, CreateLocalTrackOptions } from '../tsdef/types';
 import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
-import defaultCreateLocalTracks from './createlocaltracks';
+import createLocalTracks from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
 
 const internals = {
   connect: require('./connect'),
   createLocalAudioTrack: require('./createlocaltrack').audio,
   createLocalVideoTrack: require('./createlocaltrack').video,
-  createLocalTracks: defaultCreateLocalTracks,
   isSupported: require('./util/support')(),
   version: require('../package.json').version,
   Logger: require('./vendor/loglevel'),
@@ -26,10 +25,6 @@ function connect(token: string, options?: ConnectOptions): Promise<Room> {
 
 function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrackType> {
   return internals.createLocalAudioTrack(options);
-}
-
-function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
-  return internals.createLocalTracks(options);
 }
 
 function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrackType> {

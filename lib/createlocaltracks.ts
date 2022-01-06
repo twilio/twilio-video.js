@@ -1,6 +1,6 @@
 'use strict';
 
-import { CreateLocalTracksOptions, extraLocalTrackOption, TwilioError } from '../tsdef/types';
+import { CreateLocalTracksOptions, LocalTrack, TwilioError, extraLocalTrackOption } from '../tsdef/types';
 
 const asLocalTrack = require('./util').asLocalTrack;
 const buildLogLevels = require('./util').buildLogLevels;
@@ -79,7 +79,7 @@ let createLocalTrackCalls = 0;
  * });
  *
  */
-export default function createLocalTracks(options?: CreateLocalTracksOptions) {
+export default function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
   const isAudioVideoAbsent =
     !(options && ('audio' in options || 'video' in options));
 
