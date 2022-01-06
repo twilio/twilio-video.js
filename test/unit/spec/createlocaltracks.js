@@ -3,7 +3,7 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const createLocalTracks = require('../../../lib/createlocaltracks');
+import createLocalTracks from '../../../lib/createlocaltracks';
 
 const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemediastream');
 
