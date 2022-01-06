@@ -81,69 +81,6 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('._updateEncodings', () => {
-    [
-      {
-        testName: 'resolution >= 960x540',
-        width: 960,
-        height: 540,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }]
-      },
-      {
-        testName: 'resolution >= 960x540 (no simulcast)',
-        width: 960,
-        height: 540,
-        encodings: [{}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
-      },
-      {
-        testName: '960x540 > resolution >= 480x270',
-        width: 480,
-        height: 270,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
-      },
-      {
-        testName: '960x540 > resolution >= 480x270 (disableOnly)',
-        disableOnly: true,
-        width: 480,
-        height: 270,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{}, {}, { active: false }]
-      },
-      {
-        testName: '960x540 > resolution >= 480x270 (no simulcast)',
-        width: 480,
-        height: 270,
-        encodings: [{}], // input encodings has only one layer
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
-      },
-      {
-        testName: 'resolution <= 480x270',
-        width: 320,
-        height: 180,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
-      },
-      {
-        testName: 'resolution <= 480x270 (disable only)',
-        disableOnly: true,
-        width: 320,
-        height: 180,
-        encodings: [{}, {}, {}],
-        expectedEncodings: [{}, { active: false }, { active: false }]
-      }
-
-    ].forEach(({ width, height, encodings, expectedEncodings, testName, disableOnly }) => {
-      it(testName, () => {
-        const test = makeTest();
-        test.pcv2._updateEncodings(width, height, encodings, disableOnly);
-        assert.deepStrictEqual(encodings, expectedEncodings);
-      });
-    });
-  });
-
   describe('._maybeUpdateEncodings', () => {
     let stub;
     beforeEach(() => {
@@ -157,21 +94,80 @@ describe('PeerConnectionV2', () => {
     [
       {
         browser: 'chrome',
-        testName: 'updates encoding for chrome user media track',
+        testName: 'video, resolution >= 960x540',
         width: 960,
         height: 540,
         encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }],
-        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] }
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }]
       },
       {
         browser: 'chrome',
-        testName: 'does not update encodings for chrome screen share track',
+        testName: '960x540 > resolution >= 480x270',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'resolution <= 480x270',
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: '960x540 > resolution >= 480x270 (disableOnly only disables layers)',
+        disableOnly: true,
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{}, {}, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: '960x540 > resolution >= 480x270 (no simulcast)',
+        width: 480,
+        height: 270,
+        encodings: [{}], // input encodings has only one layer
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'video, resolution >= 960x540 (no simulcast)',
+        width: 960,
+        height: 540,
+        encodings: [{}],
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'resolution <= 480x270 (disable only)',
+        disableOnly: true,
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{}, { active: false }, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'screen share track: only two layers are enabled',
         isScreenShare: true,
         width: 960,
         height: 540,
         encodings: [{}, {}, {}],
-        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] }
+        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }],
+      },
+      {
+        browser: 'chrome',
+        testName: 'screen share track: disableOnly only disables layers',
+        disableOnly: true,
+        isScreenShare: true,
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{}, {}, { active: false }],
       },
       {
         browser: 'chrome',
@@ -184,7 +180,6 @@ describe('PeerConnectionV2', () => {
       {
         browser: 'safari',
         testName: 'updates encoding for safari (irrespective of adaptiveSimulcast) ',
-        isScreenShare: true,
         width: 480,
         height: 270,
         encodings: [{}, {}, {}],
@@ -206,9 +201,8 @@ describe('PeerConnectionV2', () => {
         width: 480,
         height: 270,
         encodings: [{}, {}, {}],
-        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
-      },
-    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
+      }
+    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, disableOnly = false, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
       it(`${browser}:${testName}`, () => {
         stub = stub.returns(browser);
         const trackSettings = { width, height };
@@ -220,8 +214,9 @@ describe('PeerConnectionV2', () => {
           getSettings: () => trackSettings
         };
 
+        preferredCodecs = preferredCodecs || { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] };
         const test = makeTest({ preferredCodecs, isChromeScreenShareTrack: () => isScreenShare });
-        const updated = test.pcv2._maybeUpdateEncodings(mediaStreamTrack, encodings);
+        const updated = test.pcv2._maybeUpdateEncodings(mediaStreamTrack, encodings, disableOnly);
         const shouldUpdate = !!expectedEncodings;
         assert(updated === shouldUpdate, `_maybeUpdateEncodings returned unexpected: ${updated}`);
         if (expectedEncodings) {
@@ -229,6 +224,7 @@ describe('PeerConnectionV2', () => {
         }
         stub.resetHistory();
       });
+      return true;
     });
   });
 

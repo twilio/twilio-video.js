@@ -36,12 +36,33 @@ async function getSimulcastLayerReport(room) {
 }
 
 // for a given room, returns array of simulcast layers that are active.
-// it checks for active layers by gathering layer stats 1 sec apart.
-async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND }) {
+// it checks for active layers by gathering layer stats activeTimeMS apart.
+async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND, intermediatePrefix = '' }) {
   await waitForSometime(initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
   await waitForSometime(activeTimeMS);
   const layersAfter = await getSimulcastLayerReport(room);
+  // debug code.
+  // if (intermediatePrefix) {
+  //   await waitForSometime(initialWaitMS);
+  // } else {
+  //   for (let i = 0; i < initialWaitMS / 1000; i++) {
+  //     // eslint-disable-next-line no-await-in-loop
+  //     await getActiveLayers({ room, initialWaitMS: 0, activeTimeMS: 1 * SECOND, intermediatePrefix: `initial ${i}/${initialWaitMS / 1000}` });
+  //   }
+  // }
+
+  // const layersBefore = await getSimulcastLayerReport(room);
+
+  // if (intermediatePrefix) {
+  //   await waitForSometime(activeTimeMS);
+  // } else {
+  //   for (let i = 0; i < activeTimeMS / 1000; i++) {
+  //     // eslint-disable-next-line no-await-in-loop
+  //     await getActiveLayers({ room, initialWaitMS: 0, activeTimeMS: 1 * SECOND, intermediatePrefix: `${i}/${activeTimeMS / 1000}` });
+  //   }
+  // }
+  // const layersAfter = await getSimulcastLayerReport(room);
 
   const activeLayers = [];
   const inactiveLayers = [];
@@ -51,20 +72,21 @@ async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS
     const bytesSentAfter = layerStatsAfter.bytesSent;
     const bytesSentBefore = layerStatsBefore ? layerStatsBefore.bytesSent : 0;
     const diffBytes = bytesSentAfter - bytesSentBefore;
-    const dimensions = layerStatsAfter.dimensions;
+
+    const width = layerStatsAfter?.dimensions?.width || layerStatsBefore?.dimensions?.width || 0;
+    const height = layerStatsAfter?.dimensions?.height || layerStatsBefore?.dimensions?.height || 0;
     if (diffBytes > 0) {
-      activeLayers.push({ ssrc, dimensions, diffBytes });
+      activeLayers.push({ ssrc, width, height, diffBytes });
     } else {
-      inactiveLayers.push({ ssrc, dimensions, diffBytes });
+      inactiveLayers.push({ ssrc, width, height, diffBytes });
     }
   });
 
   function layersToString(layers) {
-    return layers.map(({ ssrc, dimensions }) => `${ssrc}: ${dimensions.width}x${dimensions.height}`).join(', ');
+    return layers.map(({ ssrc, width, height }) => `${ssrc}: ${width}x${height}`).join(', ');
   }
 
-  console.log('activeLayers: ', layersToString(activeLayers));
-  console.log('inactiveLayers: ', layersToString(inactiveLayers));
+  console.log(`${intermediatePrefix || ' *** '}: active: ${layersToString(activeLayers)}, inactive: ${layersToString(inactiveLayers)}`);
   return { activeLayers, inactiveLayers };
 }
 
@@ -186,6 +208,9 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         const roomSid = await createRoom(randomName(), defaults.topology);
         const bandwidthProfile = { video: { contentPreferencesMode: 'manual', clientTrackSwitchOffControl: 'manual' } };
         const aliceLocalVideo = await waitFor(createLocalVideoTrack({ width, height }), 'alice local video track');
+        assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().height, height);
+        assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().width, width);
+
         const aliceRoom = await connect(getToken('Alice'), {
           ...defaults,
           tracks: [aliceLocalVideo],
@@ -194,8 +219,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           bandwidthProfile
         });
         console.log('room sid: ', aliceRoom.sid);
-        await waitForSometime(2 * SECOND);
-        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 1 * SECOND, activeTimeMS: 30 * SECOND });
+        const { activeLayers, inactiveLayers } = await getActiveLayers({ room: aliceRoom, initialWaitMS: 2 * SECOND, activeTimeMS: 20 * SECOND });
         assert.equal(activeLayers.length, expectedActive);
         assert.equal(activeLayers.length + inactiveLayers.length, 3);
         aliceRoom.disconnect();
@@ -283,7 +307,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           {
             testCase: 'c4 bob switch on and renders @ 1280x720',
             bob: { switchOff: false, switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-            expectedActiveLayers: layers => layers === 3
+            expectedActiveLayers: layers => layers >= 2
           },
           {
             testCase: 'c5: Bob request 640x360',
@@ -346,12 +370,12 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
             {
               testCase: 'c11: Bob requests 1280x720',
               bob: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: layers => layers === 3
+              expectedActiveLayers: layers => layers >= 2
             },
             {
               testCase: 'c12: Charlie requests 1280x720',
               charlie: { switchOn: true, renderDimensions: { width: 1280, height: 720 } },
-              expectedActiveLayers: layers => layers === 3
+              expectedActiveLayers: layers => layers >= 2
             },
             {
               testCase: 'c13: Charlie switches off, Bob: 640x360',
