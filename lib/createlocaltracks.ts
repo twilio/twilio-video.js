@@ -79,7 +79,7 @@ let createLocalTrackCalls = 0;
  * });
  *
  */
-export default function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
+export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
   const isAudioVideoAbsent =
     !(options && ('audio' in options || 'video' in options));
 

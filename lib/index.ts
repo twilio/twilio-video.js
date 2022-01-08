@@ -4,7 +4,7 @@ import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudio
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
-import createLocalTracks from './createlocaltracks';
+import { createLocalTracks } from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
 
 const internals = {
@@ -57,8 +57,8 @@ const LocalDataTrack = internals.LocalDataTrack;
 module.exports = {
   connect,
   createLocalAudioTrack,
-  createLocalTracks,
   createLocalVideoTrack,
+  createLocalTracks,
   runPreflight,
   isSupported,
   version,
