@@ -5,7 +5,7 @@
     "declaration": false,
     "esModuleInterop": true,
     "target": "es5",
-    "lib": ["es5", "es6", "es2016", "es2019", "dom"],
+    "lib": ["es2019", "dom"],
     "downlevelIteration": true,
     "module": "commonjs",
     "noImplicitAny": true,

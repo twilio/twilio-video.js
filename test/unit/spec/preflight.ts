@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import assert from 'assert';
 import { runPreflight } from '../../../lib/preflight/preflighttest';
 
 describe('Preflight', () => {
