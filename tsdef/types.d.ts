@@ -264,7 +264,3 @@ export class StatsReport {
 export interface CancelablePromise<T> extends Promise<T> {
   cancel: () => void;
 }
-
-export class TwilioError extends Error {
-  code: number;
-}
