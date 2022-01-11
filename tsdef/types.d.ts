@@ -87,7 +87,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'off';
  */
 export interface LogLevels {
   default: LogLevel;
-  media: LogLevel;
+  media: LogLevel
   signaling: LogLevel;
   webrtc: LogLevel;
 }
@@ -264,8 +264,6 @@ export class StatsReport {
 export interface CancelablePromise<T> extends Promise<T> {
   cancel: () => void;
 }
-
-export type extraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
 
 export class TwilioError extends Error {
   code: number;
