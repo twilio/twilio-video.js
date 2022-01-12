@@ -605,7 +605,7 @@ describe('PeerConnectionV2', () => {
           test.pcv2._setPublisherHint(trackSender, null);
           const rtpSender = test.pcv2._rtpSenders.get(trackSender);
           sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
-            return parameters.encodings[0].active === true;
+            return !('active' in parameters.encodings[0]);
           }));
         });
 
