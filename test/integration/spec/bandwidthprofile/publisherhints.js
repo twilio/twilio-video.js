@@ -3,7 +3,7 @@
 'use strict';
 
 const assert = require('assert');
-const { video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
+const { video: createLocalVideoTrack, audio: createLocalAudioTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
 const { Logger } = require('../../../../es5');
 const connect = require('../../../../es5/connect');
@@ -403,6 +403,23 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
               const { activeLayers } = await getActiveLayers({ room: aliceRoom });
               assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
             });
+          });
+
+          it('subsequent negotiations does not cause layers to be enabled', async () => {
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForCharlie, 'Charlie');
+            let { activeLayers } = await getActiveLayers({ room: aliceRoom });
+
+            assert(activeLayers.length === 0, `unexpected activeLayers.length after switch off: ${activeLayers.length} in ${roomSid}`);
+
+            const aliceLocalAudio = await waitFor(createLocalAudioTrack(), 'alice local audio track');
+
+            // Bob publishes track
+            await waitFor(aliceRoom.localParticipant.publishTrack(aliceLocalAudio), `Alice to publish audio track: ${roomSid}`);
+            await waitForSometime(5000);
+
+            ({ activeLayers } = (await getActiveLayers({ room: aliceRoom })));
+            assert(activeLayers.length === 0, `unexpected activeLayers.length after track publish: ${activeLayers.length} in ${roomSid}`);
           });
 
           it('adaptive simulcast continue to work after replace track', async () => {
