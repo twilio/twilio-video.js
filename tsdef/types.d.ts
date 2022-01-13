@@ -87,7 +87,7 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'off';
  */
 export interface LogLevels {
   default: LogLevel;
-  media: LogLevel
+  media: LogLevel;
   signaling: LogLevel;
   webrtc: LogLevel;
 }

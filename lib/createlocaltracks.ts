@@ -3,7 +3,7 @@
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
 
 const { asLocalTrack, buildLogLevels } = require('./util');
-const { getUserMedia } = require('@twilio/webrtc');
+const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
 
 const {
   LocalAudioTrack,
@@ -11,7 +11,6 @@ const {
   LocalVideoTrack
 } = require('./media/track/es5');
 
-const MediaStreamTrack = require('@twilio/webrtc').MediaStreamTrack;
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
@@ -124,7 +123,9 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     return fullOptions.tracks;
   }
 
-  const extraLocalTrackOptions: { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; } = {
+  type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
+
+  const extraLocalTrackOptions: ExtraLocalTrackOptions = {
     audio: fullOptions.audio && fullOptions.audio.name
       ? { name: fullOptions.audio.name }
       : {},

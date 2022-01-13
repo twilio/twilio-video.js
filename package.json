@@ -95,7 +95,7 @@
   "types": "./tsdef/index.d.ts",
   "scripts": {
     "lint:js": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
-    "lint:ts": "eslint ./tsdef/*.ts ./lib/**/*.ts ./lib/*.ts",
+    "lint:ts": "eslint ./tsdef/*.ts ./lib/**/*.ts",
     "lint": "npm-run-all lint:js lint:ts",
     "printVersion": "node --version && npm --version",
     "test:unit": "npm-run-all printVersion build:es5 test:unit:js test:unit:ts",

@@ -15,7 +15,6 @@
     "strictNullChecks": true
   },
   "include": [
-    "lib/*.ts",
     "lib/**/*.ts",
     "lib/**/*.js"
   ]
