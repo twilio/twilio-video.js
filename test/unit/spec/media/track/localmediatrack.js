@@ -482,18 +482,20 @@ const { defer } = require('../../../../../lib/util');
 
       context('when called with workaroundWebKitBug1208516', () => {
         let localMediaTrack = null;
-
+        let shouldGUMReject = 0;
         before(() => {
           document.visibilityState = 'visible';
           localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], {
-            workaroundWebKitBug1208516: true
+            workaroundWebKitBug1208516: true,
           }, {}, [
             'addEventListener',
             'removeEventListener'
-          ]);
+          ],
+          () => shouldGUMReject-- > 0);
         });
 
         after(() => {
+          // window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
           addEventListenerStub.resetHistory();
           removeEventListenerStub.resetHistory();
         });
@@ -508,6 +510,21 @@ const { defer } = require('../../../../../lib/util');
           ['ended', 'unmute'].forEach(event => {
             sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.addEventListener, event);
           });
+        });
+
+        it('should not cause unhandled rejections from failure in GUM', async () => {
+          let unhandledRejections = 0;
+          const unhandledRejectionHandler = () => unhandledRejections++;
+          process.on('unhandledRejection', unhandledRejectionHandler);
+
+          document.visibilityState = 'visible';
+          localMediaTrack.mediaStreamTrack.readyState = 'ended';
+          shouldGUMReject = 1; // let gum reject for next call.
+          document.emit('visibilitychange', document.visibilityState);
+
+          await waitForSometime(100);
+          process.off('unhandledRejection', unhandledRejectionHandler);
+          assert.equal(unhandledRejections, 0, `unhandled rejections: ${unhandledRejections}`);
         });
 
         it('should call setMediaStreamTrack on all senders when document is visible and MediaStreamTrack has ended', async () => {
@@ -623,7 +640,7 @@ const { defer } = require('../../../../../lib/util');
   });
 });
 
-function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}, stubMediaStreamTrackMethods = []) {
+function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints = {}, stubMediaStreamTrackMethods = [], shouldGUMReject) {
   const mediaStreamTrack = new MediaStreamTrack(kind);
   stubMethods(mediaStreamTrack, stubMediaStreamTrackMethods);
 
@@ -635,6 +652,9 @@ function createLocalMediaTrack(LocalMediaTrack, kind, options = {}, constraints 
       return stream;
     }),
     gUMSilentTrackWorkaround: (_log, gum, constraints) => gum(constraints).then(stream => {
+      if (shouldGUMReject && shouldGUMReject()) {
+        throw new Error('GUM Rejected');
+      }
       stream.getTracks().forEach(track => stubMethods(track, stubMediaStreamTrackMethods));
       return stream;
     })
