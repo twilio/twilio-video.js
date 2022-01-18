@@ -482,7 +482,7 @@ const { defer } = require('../../../../../lib/util');
 
       context('when called with workaroundWebKitBug1208516', () => {
         let localMediaTrack = null;
-        let shouldGUMReject = 0;
+        let gumRejections = 0;
         before(() => {
           document.visibilityState = 'visible';
           localMediaTrack = createLocalMediaTrack(LocalMediaTrack, kind[description], {
@@ -491,11 +491,10 @@ const { defer } = require('../../../../../lib/util');
             'addEventListener',
             'removeEventListener'
           ],
-          () => shouldGUMReject-- > 0);
+          () => gumRejections-- > 0);
         });
 
         after(() => {
-          // window.removeEventListener('unhandledrejection', unhandledRejectionHandler);
           addEventListenerStub.resetHistory();
           removeEventListenerStub.resetHistory();
         });
@@ -519,7 +518,7 @@ const { defer } = require('../../../../../lib/util');
 
           document.visibilityState = 'visible';
           localMediaTrack.mediaStreamTrack.readyState = 'ended';
-          shouldGUMReject = 1; // let gum reject for next call.
+          gumRejections = 1; // let gum reject for next call.
           document.emit('visibilitychange', document.visibilityState);
 
           await waitForSometime(100);
