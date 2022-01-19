@@ -22,7 +22,7 @@ let createLocalTrackCalls = 0;
 
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
-
+type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
 
 /**
  * Request {@link LocalTrack}s. By default, it requests a
@@ -122,8 +122,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     log.debug('LocalTracks:', fullOptions.tracks);
     return fullOptions.tracks;
   }
-
-  type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
 
   const extraLocalTrackOptions: ExtraLocalTrackOptions = {
     audio: fullOptions.audio && fullOptions.audio.name
