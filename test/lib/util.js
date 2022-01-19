@@ -719,8 +719,46 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
   return totalBytesReceived;
 }
 
+
+async function getIceConnectionStats(pc) {
+  const stats = await pc.getStats();
+  const statsArray = Array.from(stats.values());
+  const activePairStats = statsArray.find(stat => stat.type === 'candidate-pair' && stat.nominated);
+  return activePairStats || {
+    bytesReceived: 0,
+    bytesSent: 0
+  };
+}
+
 /**
- * validates that media was flowing in given rooms.
+ * resolves if media flow is as expected.
+ * @param {Room} room
+ * @param {number} testTimeMS - time to monitor
+ * @returns {Promise<>}
+ */
+async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) {
+  const pc = room._signaling._peerConnectionManager._peerConnections.values().next().value._peerConnection;
+  let bytesReceivedBefore = (await getIceConnectionStats(pc)).bytesReceived;
+
+  const STATS_READINGS_INTERVAL = 2000;
+  while (testTimeMS > 0) {
+    await waitForSometime(STATS_READINGS_INTERVAL);
+    testTimeMS -= STATS_READINGS_INTERVAL;
+
+    const { bytesReceived } = (await getIceConnectionStats(pc));
+
+    const newBytesReceived = bytesReceived > bytesReceivedBefore;
+    if (newBytesReceived === mediaExpected) {
+      console.log(`makarand: waitForMediaFlow resolving = newBytesReceived=${newBytesReceived} (mediaExpected: ${mediaExpected})`);
+      return Promise.resolve();
+    }
+    bytesReceivedBefore = bytesReceived;
+  }
+  return Promise.reject(`unexpected media flow ${mediaExpected}`);
+}
+
+/**
+ * validates that remote media was flowing in given rooms.
  * @param {Room} room
  * @param {number} testTimeMS
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
@@ -793,4 +831,5 @@ exports.waitToGoOffline = waitToGoOffline;
 exports.trackPublishPriorityChanged = trackPublishPriorityChanged;
 exports.setupAliceAndBob = setupAliceAndBob;
 exports.validateMediaFlow = validateMediaFlow;
+exports.waitForMediaFlow = waitForMediaFlow;
 exports.assertMediaFlow = assertMediaFlow;
