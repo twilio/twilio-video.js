@@ -37,32 +37,11 @@ async function getSimulcastLayerReport(room) {
 
 // for a given room, returns array of simulcast layers that are active.
 // it checks for active layers by gathering layer stats activeTimeMS apart.
-async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND, intermediatePrefix = '' }) {
+async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND }) {
   await waitForSometime(initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
   await waitForSometime(activeTimeMS);
   const layersAfter = await getSimulcastLayerReport(room);
-  // debug code.
-  // if (intermediatePrefix) {
-  //   await waitForSometime(initialWaitMS);
-  // } else {
-  //   for (let i = 0; i < initialWaitMS / 1000; i++) {
-  //     // eslint-disable-next-line no-await-in-loop
-  //     await getActiveLayers({ room, initialWaitMS: 0, activeTimeMS: 1 * SECOND, intermediatePrefix: `initial ${i}/${initialWaitMS / 1000}` });
-  //   }
-  // }
-
-  // const layersBefore = await getSimulcastLayerReport(room);
-
-  // if (intermediatePrefix) {
-  //   await waitForSometime(activeTimeMS);
-  // } else {
-  //   for (let i = 0; i < activeTimeMS / 1000; i++) {
-  //     // eslint-disable-next-line no-await-in-loop
-  //     await getActiveLayers({ room, initialWaitMS: 0, activeTimeMS: 1 * SECOND, intermediatePrefix: `${i}/${activeTimeMS / 1000}` });
-  //   }
-  // }
-  // const layersAfter = await getSimulcastLayerReport(room);
 
   const activeLayers = [];
   const inactiveLayers = [];
@@ -86,7 +65,7 @@ async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS
     return layers.map(({ ssrc, width, height }) => `${ssrc}: ${width}x${height}`).join(', ');
   }
 
-  console.log(`${intermediatePrefix || ' *** '}: active: ${layersToString(activeLayers)}, inactive: ${layersToString(inactiveLayers)}`);
+  console.log(`active: ${layersToString(activeLayers)}, inactive: ${layersToString(inactiveLayers)}`);
   return { activeLayers, inactiveLayers };
 }
 
