@@ -35,7 +35,6 @@ stage)
   export API_KEY_SECRET=${API_KEY_SECRET_STAGE}
   export API_KEY_SID=${API_KEY_SID_STAGE}
   export REGIONS='au1,ie1,us1'
-  export TEST_FILES='/home/circleci/project/test/integration/spec/leaktests.js'
   ;;
 prod)
   echo "Testing against prod"
