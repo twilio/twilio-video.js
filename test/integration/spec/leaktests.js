@@ -4,8 +4,8 @@
 const assert = require('assert');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../lib/createlocaltrack');
-const connect = require('../../../lib/connect');
+const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
+const connect = require('../../../es5/connect');
 const getToken = require('../../lib/token');
 const { isChrome } = require('../../lib/guessbrowser');
 
