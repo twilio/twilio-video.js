@@ -80,7 +80,7 @@ async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS
     return layers.map(({ ssrc, width, height }) => `${ssrc}: ${width}x${height}`).join(', ');
   }
 
-  console.log(`active: ${layersToString(activeLayers)}, inactive: ${layersToString(inactiveLayers)}`);
+  console.log(`active: [${layersToString(activeLayers)}], inactive: [${layersToString(inactiveLayers)}]`);
   return { activeLayers, inactiveLayers };
 }
 
@@ -214,8 +214,13 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         });
         console.log('room sid: ', aliceRoom.sid);
 
+        // we may not see all layers active simultaneously, because SFU disables layers as it discovers them
+        // and HD layers get started late. Verify that we see expected number of see unique active ssrc
+        const uniqueActiveSSRC = new Set();
         await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers, inactiveLayers }) => {
-          return activeLayers.length === expectedActive && activeLayers.length + inactiveLayers.length === 3;
+          activeLayers.forEach(({ ssrc }) => uniqueActiveSSRC.add(ssrc));
+          assert(activeLayers.length + inactiveLayers.length === 3);
+          return uniqueActiveSSRC.size === expectedActive;
         } });
 
         aliceRoom.disconnect();
