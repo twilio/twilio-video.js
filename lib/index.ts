@@ -1,5 +1,6 @@
 'use strict';
 import type { ConnectOptions, CreateLocalTrackOptions } from '../tsdef/types';
+import type { ConnectOptionsInternal } from '../tsdef/ConnectOptionsInternal';
 import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
@@ -19,15 +20,25 @@ const internals = {
   LocalVideoTrack: require('./media/track/es5').LocalVideoTrack
 };
 
+interface CreateLocalTrackOptionsInternal extends CreateLocalTrackOptions {
+  createLocalTracks: typeof createLocalTracks
+}
+
 function connect(token: string, options?: ConnectOptions): Promise<Room> {
+  const internalOptions = options as ConnectOptionsInternal;
+  internalOptions.createLocalTracks = createLocalTracks;
   return internals.connect(token, options);
 }
 
 function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrackType> {
+  const internalOptions = options as CreateLocalTrackOptionsInternal;
+  internalOptions.createLocalTracks = createLocalTracks;
   return internals.createLocalAudioTrack(options);
 }
 
 function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrackType> {
+  const internalOptions = options as CreateLocalTrackOptionsInternal;
+  internalOptions.createLocalTracks = createLocalTracks;
   return internals.createLocalVideoTrack(options);
 }
 
