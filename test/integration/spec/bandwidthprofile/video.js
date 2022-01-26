@@ -3,11 +3,10 @@
 'use strict';
 
 const assert = require('assert');
-const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5/index');
+const { Logger, connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5');
 const defaults = require('../../../lib/defaults');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
-const { Logger } = require('../../../../es5');
 
 const {
   capitalize,

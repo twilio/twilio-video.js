@@ -6,7 +6,7 @@ const { EventEmitter } = require('events');
 const { getUserMedia } = require('@twilio/webrtc');
 const sinon = require('sinon');
 
-const { connect, createLocalTracks, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5/index');
+const { connect, createLocalTracks, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const Room = require('../../../es5/room');
 const { flatMap } = require('../../../es5/util');

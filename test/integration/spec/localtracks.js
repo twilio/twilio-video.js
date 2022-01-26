@@ -17,7 +17,7 @@ const {
   waitForSometime
 } = require('../../lib/util');
 
-const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5/index');
+const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
 
 ['audio', 'video'].forEach(kind => {
   const createLocalTrack = kind === 'audio' ? createLocalAudioTrack : createLocalVideoTrack;
