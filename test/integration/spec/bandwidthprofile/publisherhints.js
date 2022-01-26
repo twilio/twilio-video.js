@@ -8,6 +8,7 @@ const { Logger, connect, createLocalVideoTrack } = require('../../../../es5');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 const { isFirefox } = require('../../../lib/guessbrowser');
+const SECOND = 1000;
 
 const {
   tracksSubscribed,
@@ -32,9 +33,24 @@ async function getSimulcastLayerReport(room) {
   return ssrcToLocalVideoTrackStats;
 }
 
+// waits for active layers to match the condition, samples every incrementalWaitTime.
+// resolves when active layers matches the condition. rejects after totalWaitTimeMS
+async function waitForActiveLayers({ room, condition, incrementalWaitTime = 5 * SECOND, totalWaitTimeMS = 30 * SECOND }) {
+  let waitTime = 0;
+  while (totalWaitTimeMS > waitTime) {
+    // eslint-disable-next-line no-await-in-loop
+    const { activeLayers, inactiveLayers } = await getActiveLayers({ room, initialWaitMS: 0, activeTimeMS: incrementalWaitTime });
+    waitTime += incrementalWaitTime;
+    if (condition({ activeLayers, inactiveLayers })) {
+      return;
+    }
+  }
+  throw new Error('waitForActiveLayers failed');
+}
+
 // for a given room, returns array of simulcast layers that are active.
-// it checks for active layers by gathering layer stats 1 sec apart.
-async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000 }) {
+// it checks for active layers by gathering layer stats activeTimeMS apart.
+async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS = 3 * SECOND }) {
   await waitForSometime(initialWaitMS);
   const layersBefore = await getSimulcastLayerReport(room);
   await waitForSometime(activeTimeMS);
@@ -48,16 +64,21 @@ async function getActiveLayers({ room, initialWaitMS = 5000, activeTimeMS = 3000
     const bytesSentAfter = layerStatsAfter.bytesSent;
     const bytesSentBefore = layerStatsBefore ? layerStatsBefore.bytesSent : 0;
     const diffBytes = bytesSentAfter - bytesSentBefore;
-    const dimensions = layerStatsAfter.dimensions;
+
+    const width = layerStatsAfter?.dimensions?.width || layerStatsBefore?.dimensions?.width || 0;
+    const height = layerStatsAfter?.dimensions?.height || layerStatsBefore?.dimensions?.height || 0;
     if (diffBytes > 0) {
-      activeLayers.push({ dimensions, diffBytes });
+      activeLayers.push({ ssrc, width, height, diffBytes });
     } else {
-      inactiveLayers.push({ dimensions, diffBytes });
+      inactiveLayers.push({ ssrc, width, height, diffBytes });
     }
   });
 
-  console.log(`activeLayers ${JSON.stringify(activeLayers)}`);
-  console.log(`inactiveLayers ${JSON.stringify(inactiveLayers)}`);
+  function layersToString(layers) {
+    return layers.map(({ ssrc, width, height }) => `${ssrc}: ${width}x${height}`).join(', ');
+  }
+
+  console.log(`active: [${layersToString(activeLayers)}], inactive: [${layersToString(inactiveLayers)}]`);
   return { activeLayers, inactiveLayers };
 }
 
@@ -166,6 +187,46 @@ describe('preferredVideoCodecs = auto', function() {
 });
 
 if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
+  describe('adaptive simulcast layers', function() {
+    // eslint-disable-next-line no-invalid-this
+    this.timeout(120 * 1000);
+
+    [
+      { width: 1280, height: 720, expectedActive: 3 },
+      { width: 640, height: 480, expectedActive: 2 },
+      { width: 320, height: 180, expectedActive: 1 },
+    ].forEach(({ width, height, expectedActive }) => {
+      it(`are configured correctly for ${width}x${height}`, async () => {
+        const roomSid = await createRoom(randomName(), defaults.topology);
+        const bandwidthProfile = { video: { contentPreferencesMode: 'manual', clientTrackSwitchOffControl: 'manual' } };
+        const aliceLocalVideo = await waitFor(createLocalVideoTrack({ width, height }), 'alice local video track');
+        assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().height, height);
+        assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().width, width);
+
+        const aliceRoom = await connect(getToken('Alice'), {
+          ...defaults,
+          tracks: [aliceLocalVideo],
+          name: roomSid,
+          preferredVideoCodecs: 'auto',
+          bandwidthProfile
+        });
+        console.log('room sid: ', aliceRoom.sid);
+
+        // we may not see all layers active simultaneously, because SFU disables layers as it discovers them
+        // and HD layers get started late. Verify that we see expected number of see unique active ssrc
+        const uniqueActiveSSRC = new Set();
+        await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers, inactiveLayers }) => {
+          activeLayers.forEach(({ ssrc }) => uniqueActiveSSRC.add(ssrc));
+          assert(activeLayers.length + inactiveLayers.length === 3);
+          return uniqueActiveSSRC.size === expectedActive;
+        } });
+
+        aliceRoom.disconnect();
+        completeRoom(roomSid);
+      });
+    });
+  });
+
   describe('adaptive simulcast', function() {
     // eslint-disable-next-line no-invalid-this
     this.timeout(120 * 1000);
@@ -204,8 +265,19 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
 
       describe('While Alice is alone in the room', () => {
         it('c1: all layers get turned off.', async () => {
-          const { activeLayers } = await getActiveLayers({ room: aliceRoom });
-          assert(activeLayers.length === 0, `was expecting expectedActiveLayers=0 but found: ${activeLayers.length} in ${roomSid}`);
+          // initially SFU might take upto 30 seconds to turn off all layers.
+          await waitForActiveLayers({ room: aliceRoom, condition: ({ activeLayers }) => activeLayers.length === 0 });
+        });
+
+        it('VIDEO-8391 track layers get reset when track is unpublished and published again', async () => {
+          const aliceVideoTrackPublication = [...aliceRoom.localParticipant.tracks.values()][0];
+          aliceVideoTrackPublication.unpublish();
+
+          await waitForSometime(2000);
+
+          await waitFor(aliceRoom.localParticipant.publishTrack(aliceLocalVideo), `alice to publish track again in ${roomSid}`);
+
+          await waitForActiveLayers({ room: aliceRoom, incrementalWaitTime: 3 * SECOND, condition: ({ activeLayers }) => activeLayers.length >= 2 });
         });
       });
 
@@ -265,8 +337,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           it(testCase, async () => {
             console.log(`executing ${testCase}`);
             await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
-            const { activeLayers } = await getActiveLayers({ room: aliceRoom });
-            assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
+            await waitForActiveLayers({ room: aliceRoom, condition: ({ activeLayers }) => expectedActiveLayers(activeLayers.length) });
           });
         });
         context('Charlie joins the room', () => {
@@ -337,18 +408,30 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
               await executeRemoteTrackActions(bob, aliceRemoteVideoForBob, 'Bob');
               await executeRemoteTrackActions(charlie, aliceRemoteVideoForCharlie, 'Charlie');
 
-              const { activeLayers } = await getActiveLayers({ room: aliceRoom });
-              assert(expectedActiveLayers(activeLayers.length), `unexpected activeLayers.length: ${activeLayers.length} in ${roomSid}`);
+              await waitForActiveLayers({ room: aliceRoom, condition: ({ activeLayers }) => expectedActiveLayers(activeLayers.length) });
             });
+          });
+
+          it('subsequent negotiations does not cause layers to be enabled', async () => {
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
+            await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForCharlie, 'Charlie');
+            await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers }) => activeLayers.length === 0 });
+
+            // assert(activeLayers.length === 0, `unexpected activeLayers.length after switch off: ${activeLayers.length} in ${roomSid}`);
+            const aliceLocalAudio = await waitFor(createLocalAudioTrack(), 'alice local audio track');
+
+            // Bob publishes track
+            await waitFor(aliceRoom.localParticipant.publishTrack(aliceLocalAudio), `Alice to publish audio track: ${roomSid}`);
+
+            await waitForActiveLayers({ room: aliceRoom, condition: ({ activeLayers }) => activeLayers.length === 0 });
           });
 
           it('adaptive simulcast continue to work after replace track', async () => {
             // have both bob and charlie turn off tracks.
             await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
             await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForCharlie, 'Charlie');
-            let { activeLayers } = await getActiveLayers({ room: aliceRoom });
 
-            assert(activeLayers.length === 0, `unexpected activeLayers.length after switch off #1: ${activeLayers.length} in ${roomSid}`);
+            await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers }) => activeLayers.length === 0 });
 
             // now restart the track
             console.log('restarting the track');
@@ -358,8 +441,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
             await executeRemoteTrackActions({ switchOn: true }, aliceRemoteVideoForBob, 'Bob');
             await executeRemoteTrackActions({ switchOff: true }, aliceRemoteVideoForBob, 'Bob');
 
-            ({ activeLayers } = (await getActiveLayers({ room: aliceRoom })));
-            assert(activeLayers.length === 0, `unexpected activeLayers.length after switchOff #2: ${activeLayers.length} in ${roomSid}`);
+            await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers }) => activeLayers.length === 0 });
           });
         });
       });
