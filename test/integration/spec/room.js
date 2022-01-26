@@ -6,6 +6,8 @@ const assert = require('assert');
 const {
   connect,
   createLocalTracks,
+  createLocalAudioTrack,
+  createLocalVideoTrack,
   LocalDataTrack
 } = require('../../../es5');
 
@@ -15,7 +17,6 @@ const {
 } = require('../../../es5/util/twilio-video-errors');
 
 const { isChrome, isSafari } = require('../../lib/guessbrowser');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
 const RemoteParticipant = require('../../../es5/remoteparticipant');
 const { flatMap, smallVideoConstraints } = require('../../../es5/util');
 

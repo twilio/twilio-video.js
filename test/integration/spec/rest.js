@@ -23,7 +23,7 @@ const {
   unsubscribeTrack
 } = require('../../lib/rest');
 
-const connect = require('../../../es5/connect');
+const { connect } = require('../../../es5/index');
 const { RoomMaxParticipantsExceededError } = require('../../../es5/util/twilio-video-errors');
 
 describe('REST APIs', function() {
