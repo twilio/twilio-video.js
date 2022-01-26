@@ -4,7 +4,7 @@
 
 const assert = require('assert');
 const defaults = require('../../../lib/defaults');
-const { Logger, connect, createLocalVideoTrack } = require('../../../../es5');
+const { Logger, connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 const { isFirefox } = require('../../../lib/guessbrowser');
