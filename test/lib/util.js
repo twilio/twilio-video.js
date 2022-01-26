@@ -749,12 +749,11 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
 
     const newBytesReceived = bytesReceived > bytesReceivedBefore;
     if (newBytesReceived === mediaExpected) {
-      console.log(`makarand: waitForMediaFlow resolving = newBytesReceived=${newBytesReceived} (mediaExpected: ${mediaExpected})`);
-      return Promise.resolve();
+      return;
     }
     bytesReceivedBefore = bytesReceived;
   }
-  return Promise.reject(`unexpected media flow ${mediaExpected}`);
+  throw new Error(`unexpected media flow (was expecting: ${mediaExpected}) in room:${room.sid}`);
 }
 
 /**
