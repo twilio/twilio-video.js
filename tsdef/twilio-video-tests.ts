@@ -295,7 +295,7 @@ async function initRoom() {
   room.participants.forEach(participantConnected);
 
   localTracks = await Video.createLocalTracks();
-  await Video.connect('my-token', {
+  await Video.connect('$TOKEN', {
     name: 'my-cool-room',
     tracks: localTracks
   });
