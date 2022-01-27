@@ -3,12 +3,10 @@
 'use strict';
 
 const assert = require('assert');
-const connect = require('../../../../es5/connect');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
+const { Logger, connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5');
 const defaults = require('../../../lib/defaults');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
-const { Logger } = require('../../../../es5');
 
 const {
   capitalize,
@@ -193,4 +191,3 @@ describe('BandwidthProfileOptions: video', function() {
     });
   });
 });
-
