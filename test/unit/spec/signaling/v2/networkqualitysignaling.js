@@ -64,18 +64,85 @@ describe('NetworkQualitySignaling', () => {
         describe('and #put has been called once,', () => {
           let inputs;
 
-          beforeEach(async () => {
-            inputs = createInputs();
-            nqs.put(inputs);
+          it('calls .publish on the underlying MediaSignalingTransport on exponential timer', async () => {
+            nqs.put(createInputs());
             await wait();
-            didNotPublish(mst, inputs);
-          });
+            didNotPublish(mst);
 
-          it('calls .publish on the underlying MediaSignalingTransport 1 s after receiving a NetworkQualityLevel', async () => {
+            // calls 1st publish after 5 seconds.
+            clock.tick(4999);
+            await wait();
+            didNotPublish(mst);
+
+            clock.tick(1);
+            await wait();
+            didPublish(mst);
+
+            // next at 10 seconds.
+            nqs.put(createInputs());
+            clock.tick(9999);
+            await wait();
+            didNotPublish(mst);
+
+            clock.tick(1);
+            await wait();
+            didPublish(mst);
+
+            clock.tick(19999);
+            await wait();
+            didNotPublish(mst);
+
+            // it waits for input to be available when called on timer
+            clock.tick(1);
+            await wait();
+            didNotPublish(mst);
+
+            nqs.put(createInputs());
+            await wait();
+            didPublish(mst);
+
+            // when a input is received on the underlying MediaSignalingTransport calls publish after 1 second.
+            nqs.put(createInputs());
             receiveMessage(mst);
             clock.tick(1000);
             await wait();
-            didPublish(mst, inputs);
+            didPublish(mst);
+
+            // and next time timer is reset to 5 seconds.
+            nqs.put(createInputs());
+            await wait();
+            didNotPublish(mst);
+
+            clock.tick(4999);
+            await wait();
+            didNotPublish(mst);
+
+            clock.tick(1);
+            await wait();
+            didPublish(mst);
+          });
+
+          it('if input is received immediately after timer fired, only one publish is sent', async () => {
+            await wait();
+            didNotPublish(mst);
+
+            // timer is ready to fire.
+            clock.tick(5000);
+            receiveMessage(mst);
+
+            nqs.put(createInputs());
+            await wait();
+            didPublish(mst);
+
+            // and next input is sent on timer again only after 5 seconds.
+            clock.tick(1000);
+            nqs.put(createInputs());
+            await wait();
+            didNotPublish(mst);
+
+            clock.tick(4000);
+            await wait();
+            didPublish(mst);
           });
         });
 
@@ -356,7 +423,7 @@ function didPublish(mst) {
     reportLevel: 1,
     remoteReportLevel: 0
   });
-  mst.publish.reset();
+  mst.publish.resetHistory();
 }
 
 function receiveMessage(mst, levels) {
