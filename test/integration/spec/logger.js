@@ -6,7 +6,7 @@ const sinon = require('sinon');
 
 const { Logger } = require('../../../es5');
 const defaults = require('../../lib/defaults');
-const defaultConnect = require('../../../es5/connect');
+const defaultConnect = require('../../../es5').connect;
 const getToken = require('../../lib/token');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const { randomName } = require('../../lib/util');
