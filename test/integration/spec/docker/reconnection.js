@@ -137,15 +137,15 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
     isRunningInsideDocker = await dockerAPI.isDocker();
   });
 
-  after(async function() {
-    await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
-  });
-
   this.beforeEach(function() {
     if (!isRunningInsideDocker) {
       this.skip();
     }
   });
+  this.afterEach(async function() {
+    await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+  });
+
 
   it('media connection restores even when participant is not subscribed to media', async () => {
     await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
