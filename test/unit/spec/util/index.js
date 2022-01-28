@@ -275,9 +275,7 @@ describe('util', () => {
   });
 
   describe('chromeScreenShare', () => {
-    const validLabels = ['web-contents-media-stream://1174:3', 'window:1561:0', 'screen:2077749241:0'];
-    const invalidLabels = ['foo:bar:12356', 'fizz:123456:78901', 'fakelabel://123456'];
-    const mediaStreamTrack = {
+    const userMediaTrack = {
       kind: 'video',
       id: '1aaadf6e-6a4f-465b-96bf-1a35a2d3ac2b',
       enabled: true,
@@ -286,8 +284,30 @@ describe('util', () => {
       onunmute: null,
       readyState: 'live',
       onended: null,
-      contentHint: ''
+      contentHint: '',
+      getSettings: () => {
+        return {
+        };
+      }
     };
+
+    const screenShareTrack = {
+      kind: 'video',
+      id: '1aaadf6e-6a4f-465b-96bf-1a35a2d3ac2b',
+      enabled: true,
+      muted: true,
+      onmute: null,
+      onunmute: null,
+      readyState: 'live',
+      onended: null,
+      contentHint: '',
+      getSettings: () => {
+        return {
+          displaySurface: 'monitor'
+        };
+      }
+    };
+
     let stub;
 
     beforeEach(() => {
@@ -299,26 +319,20 @@ describe('util', () => {
     });
 
     [['chrome', true], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool]) => {
-      it(`valid labels should return ${expectedBool} for ${browser}`, () => {
+      it(`screen share track should return ${expectedBool} for ${browser}`, () => {
         stub = stub.returns(browser);
-        validLabels.forEach(label => {
-          mediaStreamTrack.label = label;
-          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
-          assert.equal(expectedBool, screenShare);
-          stub.resetHistory();
-        });
+        const screenShare = isChromeScreenShareTrack(screenShareTrack);
+        assert.equal(expectedBool, screenShare);
+        stub.resetHistory();
       });
     });
 
     [['chrome', false], ['firefox', false], ['safari', false]].forEach(([browser, expectedBool]) => {
-      it(`invalid labels should return ${expectedBool} for ${browser}`, () => {
+      it(`user Media Track track should return ${expectedBool} for ${browser}`, () => {
         stub = stub.returns(browser);
-        invalidLabels.forEach(label => {
-          mediaStreamTrack.label = label;
-          const screenShare = isChromeScreenShareTrack(mediaStreamTrack);
-          assert.equal(expectedBool, screenShare);
-          stub.resetHistory();
-        });
+        const screenShare = isChromeScreenShareTrack(userMediaTrack);
+        assert.equal(expectedBool, screenShare);
+        stub.resetHistory();
       });
     });
   });
