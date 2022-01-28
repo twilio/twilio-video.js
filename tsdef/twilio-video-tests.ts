@@ -357,6 +357,12 @@ function useConnectionOptions() {
   return connectionOptions;
 }
 
+function useAdaptiveSimulcast() {
+  const connectionOptions: Video.ConnectOptions = {
+    preferredVideoCodecs: 'auto',
+  };
+}
+
 function runPreflight() {
   const preflight: Video.PreflightTest = Video.runPreflight('token', { region: 'us1' });
   preflight.on('completed', (report: Video.PreflightTestReport) => {

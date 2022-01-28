@@ -2,6 +2,47 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.19.0 (January 31, 2022)
+=========================
+
+New Features
+------------
+
+- This release introduces a new feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage for the publishing client. It works best when used along with `Client Track Switch Off Control` and `Video Content Preferences`. These two flags allow the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. This feature cannot be used alongside `maxVideoBitrate`.
+
+If your application is currently using VP8 simulcast we recommend that you switch to this option.
+
+Example:
+
+```ts
+const { connect } = require('twilio-video');
+
+const room = await connect(token, {
+  preferredVideoCodecs: 'auto',
+  bandwidthProfile: {
+    video: {
+      contentPreferencesMode: 'auto',
+      clientTrackSwitchOffControl: 'auto'
+    }
+  }
+});
+```
+
+Known Limitations
+-----------------
+
+- Specifying `preferredVideoCodecs="auto"` will revert to unicast in the following cases:
+  - The publisher is using Firefox.
+  - The publisher has preferred the H264 codec.
+  - The Room is configured to support only the H264 codec.
+  - Peer-to-Peer Rooms
+- When the participant is being recorded, the SFU will not disable any simulcast layers of the participant's VideoTrack.
+
+Bug Fixes
+---------
+
+- Fixed a bug where `clientTrackSwitchOffControl` and `contentPreferencesMode` sometimes did not work as expected during network glitches. (VIDEO-7654)
+
 2.18.3 (January 4, 2022)
 ========================
 

@@ -131,7 +131,6 @@ describe('RenderHintsSignaling', () => {
       subject.setTrackHint('foo', { enabled: false });
       assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isDimensionDirty, true);
       assert.strictEqual(subject._trackSidsToRenderHints.get('foo').isEnabledDirty, true);
-
     });
 
     it('processes subsequent messages only after a reply is received', async () => {
@@ -149,7 +148,7 @@ describe('RenderHintsSignaling', () => {
 
       // wait for message to get published.
       await deferred.promise;
-      assert(publishCalls, 1);
+      assert.equal(publishCalls, 1);
       sinon.assert.calledWith(mst.publish, {
         type: 'render_hints',
         subscriber: {
@@ -167,7 +166,7 @@ describe('RenderHintsSignaling', () => {
       // send another hint
       subject.setTrackHint('bar', { enabled: true, renderDimensions: { width: 200, height: 200 } });
       await waitForSometime(10);
-      assert(publishCalls, 1);
+      assert.equal(publishCalls, 1);
 
       const serverMessage = {
         'type': 'render_hints',
@@ -189,7 +188,7 @@ describe('RenderHintsSignaling', () => {
       deferred = defer();
       mst.emit('message', serverMessage);
       await deferred.promise;
-      assert(publishCalls, 2);
+      assert.equal(publishCalls, 2);
       sinon.assert.calledWith(mst.publish, {
         type: 'render_hints',
         subscriber: {
@@ -201,6 +200,108 @@ describe('RenderHintsSignaling', () => {
           }]
         }
       });
+    });
+
+    it('re-sends all hints with exponential backoff until server responds', async function() {
+      let clock = sinon.useFakeTimers();
+      const mst = makeTransport();
+      const subject = makeTest(mst);
+      subject.setTrackHint('foo', { enabled: true, renderDimensions: { width: 100, height: 100 } });
+      subject.setTrackHint('boo', { enabled: false });
+
+      let publishCalls = 0;
+      let publishTimes = [];
+      let deferred = defer();
+      mst.publish.callsFake(() => {
+        publishCalls++;
+        publishTimes.push(Date.now());
+        deferred.resolve();
+      });
+
+      clock.tick(1000);
+      await deferred.promise;
+      assert.equal(publishCalls, 1);
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track': 'foo',
+            'render_dimensions': { height: 100, width: 100 },
+            'enabled': true,
+          }, {
+            'track': 'boo',
+            'enabled': false,
+          }]
+        }
+      });
+
+      // send another hint
+      subject.setTrackHint('bar', { enabled: true, renderDimensions: { width: 200, height: 200 } });
+      assert.equal(publishCalls, 1);
+
+      clock.tick(2000); // simulate 2 seconds
+
+      // we should expect 1st retry  now.
+      assert.equal(publishCalls, 2);
+
+      // expect publish to be called with all the hints.
+      sinon.assert.calledWith(mst.publish, {
+        type: 'render_hints',
+        subscriber: {
+          id: sinon.match.number,
+          hints: [{
+            'track': 'foo',
+            'render_dimensions': { height: 100, width: 100 },
+            'enabled': true,
+          }, {
+            'track': 'boo',
+            'enabled': false,
+          },
+          {
+            'track': 'bar',
+            'enabled': true,
+            'render_dimensions': { height: 200, width: 200 },
+          }]
+        }
+      });
+
+      clock.tick(40000); // simulate 40 seconds
+
+      // we expect 2nd retry to be made 2 second after 1st, and subsequent retries at exponential intervals.
+      assert.equal(publishCalls, 6);
+      assert.equal(publishTimes[2] - publishTimes[1], 2000);
+      assert.equal(publishTimes[3] - publishTimes[2], 4000);
+      assert.equal(publishTimes[4] - publishTimes[3], 8000);
+      assert.equal(publishTimes[5] - publishTimes[4], 16000);
+
+      // simulate a server response.
+      const serverMessage = {
+        'type': 'render_hints',
+        'subscriber': {
+          'id': 42,
+          'hints': [
+            {
+              'track': 'foo',
+              'result': 'OK'
+            },
+            {
+              'track': 'boo',
+              'result': 'INVALID_RENDER_HINT'
+            },
+            {
+              'track': 'bar',
+              'result': 'OK'
+            }
+          ]
+        }
+      };
+      mst.emit('message', serverMessage);
+
+      // simulate more time and verify that timer stops retrying.
+      clock.tick(100000); // simulate 100 seconds
+      assert.equal(publishCalls, 6);
+      clock.restore();
     });
   });
 

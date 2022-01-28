@@ -1046,6 +1046,8 @@ function makePeerConnectionV2Constructor(testOptions) {
 
     peerConnectionV2.removeMediaTrackSender = sinon.spy();
 
+    peerConnectionV2.setEffectiveAdaptiveSimulcast = sinon.spy();
+
     peerConnectionV2.setConfiguration = sinon.spy(configuration => {
       peerConnectionV2.configuration = configuration;
     });

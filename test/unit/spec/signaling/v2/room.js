@@ -1798,6 +1798,7 @@ function makeTest(options) {
 
   options.RemoteParticipantV2 = options.RemoteParticipantV2 || makeRemoteParticipantV2Constructor(options);
   options.localTracks = (options.localTracks || []).map(track => {
+    track.trackTransceiver = new EventEmitter();
     const eventEmitter = new EventEmitter();
     return Object.assign(eventEmitter, track);
   });
@@ -1875,6 +1876,7 @@ function makePeerConnectionManager(getRoom) {
   peerConnectionManager.setTrackSenders = sinon.spy(() => {});
   peerConnectionManager.getTrackReceivers = sinon.spy(() => []);
   peerConnectionManager.setIceReconnectTimeout = sinon.spy(() => {});
+  peerConnectionManager.setEffectiveAdaptiveSimulcast = sinon.spy(() => {});
 
   // eslint-disable-next-line require-await
   peerConnectionManager.getStats = async () => {

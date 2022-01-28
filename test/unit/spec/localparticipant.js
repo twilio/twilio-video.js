@@ -1247,6 +1247,7 @@ function makeSignaling(options) {
   signaling.setBandwidthProfile = sinon.spy(() => {});
   signaling.setNetworkQualityConfiguration = sinon.spy(() => {});
   signaling.setParameters = sinon.spy(() => {});
+  signaling.getParameters = sinon.spy(() => { return {}; });
   return signaling;
 }
 

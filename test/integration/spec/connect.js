@@ -126,6 +126,53 @@ describe('connect', function() {
     });
   });
 
+  describe('preferredVideoCodecs = auto', () => {
+    it('should rejects with a TypeError when maxVideoBitrate is specified at connect', async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      const cancelablePromise = connect(token, Object.assign({}, defaults, {
+        tracks: [],
+        preferredVideoCodecs: 'auto',
+        maxVideoBitrate: 10000,
+      }));
+
+      let errorThrown = null;
+      try {
+        await cancelablePromise;
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(errorThrown instanceof TypeError);
+      assert(cancelablePromise instanceof CancelablePromise);
+    });
+
+    it('should throw on subsequent setParameters if maxVideoBitrate is specified', async () => {
+      const identity = randomName();
+      const token = getToken(identity);
+      const room = await connect(token, Object.assign({}, defaults, {
+        tracks: [],
+        preferredVideoCodecs: 'auto'
+      }));
+
+      let errorThrown = null;
+      try {
+        room.localParticipant.setParameters({ maxAudioBitrate: 100 });
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(!errorThrown);
+
+      try {
+        room.localParticipant.setParameters({ maxVideoBitrate: 100 });
+      } catch (error) {
+        errorThrown = error;
+      }
+      assert(errorThrown);
+      assert.equal(errorThrown.message, 'encodingParameters must be an encodingParameters.maxVideoBitrate is not compatible with "preferredVideoCodecs=auto"');
+      assert(errorThrown instanceof TypeError);
+    });
+  });
+
   describe('should return a CancelablePromise that rejects when called with invalid bandwidth Profile options: ', () => {
     [
       {
