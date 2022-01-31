@@ -4,11 +4,6 @@ const https = require('https');
 
 const { apiKeySecret, apiKeySid } = require('../env');
 const { environment } = require('../lib/defaults');
-const { version } = require('../../package.json');
-
-const HOST_NAME_ECS = environment === 'prod'
-  ? 'ecs.us1.twilio.com'
-  : `ecs.${environment}-us1.twilio.com`;
 
 const HOST_NAME_REST = environment === 'prod'
   ? 'video.twilio.com'
@@ -72,26 +67,6 @@ function post(config, data) {
 }
 
 /**
- * Make an ECS request.
- * @param {string} token
- * @returns {Promise<*>}
- */
-function postECS(token) {
-  return post({
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'X-Twilio-Token': token,
-    },
-    hostname: HOST_NAME_ECS,
-    path: '/v2/Configuration'
-  }, {
-    service: 'video',
-    // eslint-disable-next-line camelcase
-    sdk_version: version
-  });
-}
-
-/**
  * Make an REST request.
  * @param {string} path
  * @param {*} data
@@ -124,7 +99,6 @@ function getREST(path) {
   });
 }
 
-exports.ecs = postECS;
 exports.rest = postREST;
 exports.getREST = getREST;
 

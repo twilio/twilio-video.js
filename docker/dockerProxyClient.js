@@ -10,7 +10,7 @@ let requestNumber = 0;
 class DockerProxyClient {
   /**
    * Construct a new {@link DockerProxyClient}.
-   * @param {string} serverUrl - url pointing to an instance of {@link DockerProxyServer}
+   * @param {string} [serverUrl] - url pointing to an instance of {@link DockerProxyServer}
    */
   constructor(serverUrl) {
     this._serverUrl = serverUrl || DOCKER_PROXY_SERVER_URL;
@@ -155,12 +155,9 @@ class DockerProxyClient {
     const thisRequestNumber = requestNumber++;
     const logPrefix = `DockerProxyClient [${thisRequestNumber}]: `;
     try {
-      console.log(logPrefix + 'Requesting: ', api);
       const res = await fetch(this._serverUrl + api);
       const text = await res.text();
-      const json = text ? JSON.parse(text) : {};
-      console.log(logPrefix + 'Done: ', api, json);
-      return json;
+      return text ? JSON.parse(text) : {};
     } catch (err) {
       console.error(logPrefix + 'Threw  : ', err);
       throw err;

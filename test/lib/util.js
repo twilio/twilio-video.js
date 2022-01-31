@@ -10,7 +10,6 @@ const { capitalize } = require('../../es5/util');
 const { isSafari } = require('./guessbrowser');
 const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
-const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
 const connect = require('../../es5/connect');
 const second = 1000;
@@ -690,23 +689,6 @@ function waitForEvent(emitter, event) {
   return new Promise(resolve => emitter.once(event, resolve));
 }
 
-/**
- * Get the regionalized RTCIceServers[].
- * @param {string} token
- * @param {string} region
- * @returns {Promise<RTCIceServer[]>}
- */
-async function getRegionalizedIceServers(token, region) {
-  const config = await ecs(token);
-  const videoConfig = config.video || {};
-  const nts = videoConfig.network_traversal_service || {};
-  const iceServers = nts.ice_servers || [];
-  iceServers.forEach(iceServer => {
-    iceServer.urls = iceServer.urls.replace(/global/, region);
-  });
-  return iceServers;
-}
-
 function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
@@ -767,7 +749,6 @@ exports.combinationContext = combinationContext;
 exports.combinations = combinations;
 exports.isRTCRtpSenderParamsSupported = isRTCRtpSenderParamsSupported;
 exports.dominantSpeakerChanged = dominantSpeakerChanged;
-exports.getRegionalizedIceServers = getRegionalizedIceServers;
 exports.makeEncodingParameters = makeEncodingParameters;
 exports.pairs = pairs;
 exports.participantsConnected = participantsConnected;

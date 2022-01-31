@@ -65,10 +65,8 @@ class DockerProxyServer {
       app.get(endpoint, async ({ params }, res, next) => {
         const thisRequestNumber = requestNumber++;
         const logPrefix = `DockerProxyServer [${thisRequestNumber}]: `;
-        console.log(logPrefix + 'Executing: ', endpoint, params);
         try {
           const data = await this[handleRequest](params);
-          console.log(logPrefix + 'Done executing: ', endpoint, params);
           return res.send(data);
         } catch (err) {
           console.error(logPrefix + 'Error executing: ', endpoint, params);
@@ -78,10 +76,7 @@ class DockerProxyServer {
     });
 
     return new Promise((resolve, reject) => {
-      this._server = app.listen(this._serverPort, () => {
-        console.log(`DockerProxyServer listening on port ${this._serverPort}!`);
-        resolve();
-      });
+      this._server = app.listen(this._serverPort, resolve);
       this._server.once('error', reject);
     });
   }
