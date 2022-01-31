@@ -3,8 +3,10 @@
 'use strict';
 
 const assert = require('assert');
+const { video: createLocalVideoTrack, audio: createLocalAudioTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
-const { Logger, connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5');
+const { Logger } = require('../../../../es5');
+const connect = require('../../../../es5/connect');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 const { isFirefox } = require('../../../lib/guessbrowser');

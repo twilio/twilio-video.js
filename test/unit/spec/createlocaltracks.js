@@ -1,11 +1,11 @@
 'use strict';
 
-import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
-import { createLocalTracks } from '../../../lib/createlocaltracks';
+const assert = require('assert');
+const sinon = require('sinon');
 
-import assert from 'assert';
-import sinon from 'sinon';
+const createLocalTracks = require('../../../lib/createlocaltracks');
 
+const { FakeMediaStreamTrack, fakeGetUserMedia } = require('../../lib/fakemediastream');
 
 describe('createLocalTracks', () => {
   [
