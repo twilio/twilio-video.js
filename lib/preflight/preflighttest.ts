@@ -9,6 +9,7 @@ import { makeStat } from './makestat';
 import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
+import { TwilioError } from '../../tsdef/TwilioError';
 
 const { WS_SERVER } = require('../util/constants');
 const Log = require('../util/log');
@@ -17,6 +18,10 @@ const MovingAverageDelta = require('../util/movingaveragedelta');
 const EventObserver = require('../util/eventobserver');
 const InsightsPublisher = require('../util/insightspublisher');
 const { createSID, sessionSID } = require('../util/sid');
+const {
+  SignalingConnectionTimeoutError,
+  MediaConnectionError
+} = require('../util/twilio-video-errors');
 
 const SECOND = 1000;
 const DEFAULT_TEST_DURATION = 10 * SECOND;
@@ -145,7 +150,7 @@ export class PreflightTest extends EventEmitter {
     this._stopped = true;
   }
 
-  private _generatePreflightReport(collectedStats?: PreflightStats, error? : Error) : PreflightTestReportInternal  {
+  private _generatePreflightReport(collectedStats?: PreflightStats) : PreflightTestReportInternal  {
     this._testTiming.stop();
     return {
       testTiming: this._testTiming.getTimeMeasurement(),
@@ -164,12 +169,11 @@ export class PreflightTest extends EventEmitter {
       selectedIceCandidatePairStats: collectedStats ? collectedStats.selectedIceCandidatePairStats : null,
       iceCandidateStats: collectedStats ? collectedStats.iceCandidateStats : [],
       // NOTE(mpatwardhan): internal properties.
-      error: error?.toString(),
       mos: makeStat(collectedStats?.mos),
     };
   }
 
-  private async _executePreflightStep<T>(stepName: string, step: () => T|Promise<T>) : Promise<T> {
+  private async _executePreflightStep<T>(stepName: string, step: () => T|Promise<T>, timeoutError?: TwilioError|Error) : Promise<T> {
     this._log.debug('Executing step: ', stepName);
     const MAX_STEP_DURATION = this._testDuration + 10 * SECOND;
     if (this._stopped) {
@@ -180,7 +184,7 @@ export class PreflightTest extends EventEmitter {
     let timer: number | null = null;
     const timeoutPromise = new Promise((_resolve, reject) => {
       timer = setTimeout(() => {
-        reject(new Error(`Timed out waiting for : ${stepName}`));
+        reject(timeoutError || new Error(`${stepName} timeout.`));
       }, MAX_STEP_DURATION) as unknown as number;
     });
     try {
@@ -193,43 +197,53 @@ export class PreflightTest extends EventEmitter {
     }
   }
 
-  private _trackNetworkTimings(pc: RTCPeerConnection) {
-    pc.addEventListener('iceconnectionstatechange', () => {
-      if (pc.iceConnectionState === 'checking') {
-        this._iceTiming.start();
-      }
-      if (pc.iceConnectionState === 'connected') {
-        this._iceTiming.stop();
-        this.emit('progress', PreflightProgress.iceConnected);
-      }
-    });
+  private _collectNetworkTimings(pc: RTCPeerConnection): Promise<void> {
+    return new Promise(resolve => {
+      let dtlsTransport: RTCDtlsTransport;
 
-    // firefox does not support connectionstatechange.
-    pc.addEventListener('connectionstatechange', () => {
-      if (pc.connectionState === 'connecting') {
-        this._peerConnectionTiming.start();
-      }
-      if (pc.connectionState === 'connected') {
-        this._peerConnectionTiming.stop();
-        this.emit('progress', PreflightProgress.peerConnectionConnected);
-      }
-    });
-
-    // Safari does not expose sender.transport.
-    let senders = pc.getSenders();
-    let transport = senders.map(sender => sender.transport).find(notEmpty);
-    if (typeof transport !== 'undefined') {
-      const dtlsTransport = transport as RTCDtlsTransport;
-      dtlsTransport.addEventListener('statechange', () => {
-        if (dtlsTransport.state === 'connecting') {
-          this._dtlsTiming.start();
+      pc.addEventListener('iceconnectionstatechange', () => {
+        if (pc.iceConnectionState === 'checking') {
+          this._iceTiming.start();
         }
-        if (dtlsTransport.state === 'connected') {
-          this._dtlsTiming.stop();
-          this.emit('progress', PreflightProgress.dtlsConnected);
+        if (pc.iceConnectionState === 'connected') {
+          this._iceTiming.stop();
+          this.emit('progress', PreflightProgress.iceConnected);
+          if (!dtlsTransport || dtlsTransport && dtlsTransport.state === 'connected') {
+            resolve();
+          }
         }
       });
-    }
+  
+      // firefox does not support connectionstatechange.
+      pc.addEventListener('connectionstatechange', () => {
+        if (pc.connectionState === 'connecting') {
+          this._peerConnectionTiming.start();
+        }
+        if (pc.connectionState === 'connected') {
+          this._peerConnectionTiming.stop();
+          this.emit('progress', PreflightProgress.peerConnectionConnected);
+        }
+      });
+  
+      // Safari does not expose sender.transport.
+      let senders = pc.getSenders();
+      let transport = senders.map(sender => sender.transport).find(notEmpty);
+      if (typeof transport !== 'undefined') {
+        dtlsTransport = transport as RTCDtlsTransport;
+        dtlsTransport.addEventListener('statechange', () => {
+          if (dtlsTransport.state === 'connecting') {
+            this._dtlsTiming.start();
+          }
+          if (dtlsTransport.state === 'connected') {
+            this._dtlsTiming.stop();
+            this.emit('progress', PreflightProgress.dtlsConnected);
+            if (pc.iceConnectionState === 'connected') {
+              resolve();
+            }
+          }
+        });
+      }
+    });
   }
 
   private _setupInsights({ token, environment = DEFAULT_ENVIRONMENT, realm = DEFAULT_REALM } : {
@@ -308,11 +322,13 @@ export class PreflightTest extends EventEmitter {
     try {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [syntheticAudio(), syntheticVideo({ width: 640, height: 480 })]);
+
       this.emit('progress', PreflightProgress.mediaAcquired);
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer));
+      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
+
       this._connectTiming.stop();
       this.emit('progress', PreflightProgress.connected);
 
@@ -347,10 +363,10 @@ export class PreflightTest extends EventEmitter {
         const updatedAnswer = answer;
         await receiverPC.setLocalDescription(updatedAnswer);
         await senderPC.setRemoteDescription(updatedAnswer);
-        this._trackNetworkTimings(senderPC);
+        await this._collectNetworkTimings(senderPC);
 
         return remoteTracksPromise;
-      });
+      }, new MediaConnectionError());
       this.emit('debug', { remoteTracks });
       remoteTracks.forEach(track => {
         track.addEventListener('ended', () => this._log.warn(track.kind + ':ended'));
@@ -359,7 +375,7 @@ export class PreflightTest extends EventEmitter {
       });
       this.emit('progress', PreflightProgress.mediaSubscribed);
 
-      await this._executePreflightStep('wait for tracks to start', () => {
+      await this._executePreflightStep('Wait for tracks to start', () => {
         return new Promise(resolve => {
           const element = document.createElement('video');
           element.autoplay = true;
@@ -370,21 +386,21 @@ export class PreflightTest extends EventEmitter {
           this.emit('debugElement', element);
           element.oncanplay = resolve;
         });
-      });
+      }, new MediaConnectionError());
       this._mediaTiming.stop();
       this.emit('progress', PreflightProgress.mediaStarted);
 
-      const collectedStats = await this._executePreflightStep('collect stats for duration',
+      const collectedStats = await this._executePreflightStep('Collect stats for duration',
         () => this._collectRTCStatsForDuration(this._testDuration, initCollectedStats(), senderPC, receiverPC));
 
-      const report = await this._executePreflightStep('generate report', () => this._generatePreflightReport(collectedStats));
+      const report = await this._executePreflightStep('Generate report', () => this._generatePreflightReport(collectedStats));
       reportToInsights({ report });
       this.emit('completed', report);
 
     } catch (error) {
-      // eslint-disable-next-line no-undefined
-      reportToInsights({ report: this._generatePreflightReport(undefined, error) });
-      this.emit('failed', error);
+      const preflightReport = this._generatePreflightReport();
+      reportToInsights({ report: {...preflightReport, error} });
+      this.emit('failed', error, preflightReport);
     } finally {
       pcs.forEach(pc => pc.close());
       localTracks.forEach(track => track.stop());
@@ -530,6 +546,7 @@ function initCollectedStats() : PreflightStats {
 /**
  * Preflight test has encountered a failed and is now stopped.
  * @param {TwilioError|Error} error - error object
+ * @param {PreflightTestReport} report - results of the test.
  * @event PreflightTest#failed
  */
 
@@ -554,8 +571,8 @@ function initCollectedStats() : PreflightStats {
  *   console.log('preflight progress:', progress);
  * });
  *
- * preflightTest.on('failed', error => {
- *   console.error('preflight error:', error);
+ * preflightTest.on('failed', (error, report) => {
+ *   console.error('preflight error:', error, report);
  * });
  *
  * preflightTest.on('completed', report => {

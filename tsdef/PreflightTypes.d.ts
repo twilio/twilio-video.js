@@ -52,5 +52,3 @@ export interface PreflightTestReport {
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
 }
-
-
