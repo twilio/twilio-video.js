@@ -3,9 +3,8 @@
 'use strict';
 
 const assert = require('assert');
-const { video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
-const { Logger } = require('../../../../es5');
+const { Logger, createLocalVideoTrack } = require('../../../../es5');
 
 const {
   tracksSubscribed,
@@ -382,4 +381,3 @@ describe('BandwidthProfileOptions: renderHints', function() {
     });
   });
 });
-

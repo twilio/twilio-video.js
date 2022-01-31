@@ -6,8 +6,7 @@ const { trackPriority } = require('../../../es5/util/constants');
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../es5/createlocaltrack');
-const connect = require('../../../es5/connect');
+const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
 const getToken = require('../../lib/token');
 const { isFirefox } = require('../../lib/guessbrowser');
 
