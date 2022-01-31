@@ -49,7 +49,4 @@ const env = [
   }
 });
 
-// eslint-disable-next-line no-console
-console.log('Using account: ', env.accountSid);
-
 module.exports = env;
