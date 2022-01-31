@@ -1,15 +1,15 @@
 'use strict';
-import type { ConnectOptions, CreateLocalTrackOptions } from '../tsdef/types';
+import type { ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
 import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
-import { createLocalTracks } from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
 
 const internals = {
   connect: require('./connect'),
   createLocalAudioTrack: require('./createlocaltrack').audio,
+  createLocalTracks: require('./createlocaltracks'),
   createLocalVideoTrack: require('./createlocaltrack').video,
   isSupported: require('./util/support')(),
   version: require('../package.json').version,
@@ -20,27 +20,19 @@ const internals = {
 };
 
 function connect(token: string, options?: ConnectOptions): Promise<Room> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.connect(token, internalOptions);
+  return internals.connect(token, options);
 }
 
 function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrackType> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.createLocalAudioTrack(internalOptions);
+  return internals.createLocalAudioTrack(options);
+}
+
+function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
+  return internals.createLocalTracks(options);
 }
 
 function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrackType> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.createLocalVideoTrack(internalOptions);
+  return internals.createLocalVideoTrack(options);
 }
 
 /**
@@ -69,8 +61,8 @@ const LocalDataTrack = internals.LocalDataTrack;
 module.exports = {
   connect,
   createLocalAudioTrack,
-  createLocalVideoTrack,
   createLocalTracks,
+  createLocalVideoTrack,
   runPreflight,
   isSupported,
   version,

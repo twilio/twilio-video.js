@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 
-const createLocalTracks = require('../../../es5/index').createLocalTracks;
+const createLocalTracks = require('../../../es5/createlocaltracks');
 const { RoomTrackKindNotSupportedError } = require('../../../es5/util/twilio-video-errors');
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const LocalTrackPublication = require('../../../es5/media/track/localtrackpublication');
