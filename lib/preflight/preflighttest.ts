@@ -2,6 +2,7 @@ import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL, DEFAULT_RE
 import { PreflightOptions, PreflightTestReport, RTCIceCandidateStats, SelectedIceCandidatePairStats, Stats } from '../../tsdef/PreflightTypes';
 import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
+import { TwilioError } from '../../tsdef/TwilioError';
 import { calculateMOS } from './mos';
 import { getCombinedConnectionStats } from './getCombinedConnectionStats';
 import { getTurnCredentials } from './getturncredentials';
@@ -9,7 +10,6 @@ import { makeStat } from './makestat';
 import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
 import { waitForSometime } from '../util';
-import { TwilioError } from '../../tsdef/TwilioError';
 
 const { WS_SERVER } = require('../util/constants');
 const Log = require('../util/log');
@@ -213,7 +213,7 @@ export class PreflightTest extends EventEmitter {
           }
         }
       });
-  
+
       // firefox does not support connectionstatechange.
       pc.addEventListener('connectionstatechange', () => {
         if (pc.connectionState === 'connecting') {
@@ -224,7 +224,7 @@ export class PreflightTest extends EventEmitter {
           this.emit('progress', PreflightProgress.peerConnectionConnected);
         }
       });
-  
+
       // Safari does not expose sender.transport.
       let senders = pc.getSenders();
       let transport = senders.map(sender => sender.transport).find(notEmpty);
@@ -399,7 +399,7 @@ export class PreflightTest extends EventEmitter {
 
     } catch (error) {
       const preflightReport = this._generatePreflightReport();
-      reportToInsights({ report: {...preflightReport, error} });
+      reportToInsights({ report: { ...preflightReport, error } });
       this.emit('failed', error, preflightReport);
     } finally {
       pcs.forEach(pc => pc.close());
