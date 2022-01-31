@@ -115,6 +115,7 @@ export class PreflightTest extends EventEmitter {
   private _connectTiming = new Timer();
   private _sentBytesMovingAverage = new MovingAverageDelta();
   private _packetLossMovingAverage = new MovingAverageDelta();
+  private _progressEvents: string[] = [];
   private _receivedBytesMovingAverage = new MovingAverageDelta();
   private _log: typeof Log;
   private _testDuration: number;
@@ -168,6 +169,7 @@ export class PreflightTest extends EventEmitter {
       },
       selectedIceCandidatePairStats: collectedStats ? collectedStats.selectedIceCandidatePairStats : null,
       iceCandidateStats: collectedStats ? collectedStats.iceCandidateStats : [],
+      progressEvents: this._progressEvents,
       // NOTE(mpatwardhan): internal properties.
       mos: makeStat(collectedStats?.mos),
     };
@@ -207,7 +209,7 @@ export class PreflightTest extends EventEmitter {
         }
         if (pc.iceConnectionState === 'connected') {
           this._iceTiming.stop();
-          this.emit('progress', PreflightProgress.iceConnected);
+          this._updateProgress(PreflightProgress.iceConnected);
           if (!dtlsTransport || dtlsTransport && dtlsTransport.state === 'connected') {
             resolve();
           }
@@ -221,7 +223,7 @@ export class PreflightTest extends EventEmitter {
         }
         if (pc.connectionState === 'connected') {
           this._peerConnectionTiming.stop();
-          this.emit('progress', PreflightProgress.peerConnectionConnected);
+          this._updateProgress(PreflightProgress.peerConnectionConnected);
         }
       });
 
@@ -236,7 +238,7 @@ export class PreflightTest extends EventEmitter {
           }
           if (dtlsTransport.state === 'connected') {
             this._dtlsTiming.stop();
-            this.emit('progress', PreflightProgress.dtlsConnected);
+            this._updateProgress(PreflightProgress.dtlsConnected);
             if (pc.iceConnectionState === 'connected') {
               resolve();
             }
@@ -323,14 +325,14 @@ export class PreflightTest extends EventEmitter {
       let elements = [];
       localTracks = await this._executePreflightStep('Acquire media', () => [syntheticAudio(), syntheticVideo({ width: 640, height: 480 })]);
 
-      this.emit('progress', PreflightProgress.mediaAcquired);
+      this._updateProgress(PreflightProgress.mediaAcquired);
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
       let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
 
       this._connectTiming.stop();
-      this.emit('progress', PreflightProgress.connected);
+      this._updateProgress(PreflightProgress.connected);
 
       const senderPC: RTCPeerConnection = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'relay', bundlePolicy: 'max-bundle' });
       const receiverPC: RTCPeerConnection = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
@@ -373,7 +375,7 @@ export class PreflightTest extends EventEmitter {
         track.addEventListener('mute', () => this._log.warn(track.kind + ':muted'));
         track.addEventListener('unmute', () => this._log.warn(track.kind + ':unmuted'));
       });
-      this.emit('progress', PreflightProgress.mediaSubscribed);
+      this._updateProgress(PreflightProgress.mediaSubscribed);
 
       await this._executePreflightStep('Wait for tracks to start', () => {
         return new Promise(resolve => {
@@ -388,7 +390,7 @@ export class PreflightTest extends EventEmitter {
         });
       }, new MediaConnectionError());
       this._mediaTiming.stop();
-      this.emit('progress', PreflightProgress.mediaStarted);
+      this._updateProgress(PreflightProgress.mediaStarted);
 
       const collectedStats = await this._executePreflightStep('Collect stats for duration',
         () => this._collectRTCStatsForDuration(this._testDuration, initCollectedStats(), senderPC, receiverPC));
@@ -454,6 +456,11 @@ export class PreflightTest extends EventEmitter {
     }
     return collectedStats;
   }
+
+  private _updateProgress(name: string): void {
+    this._progressEvents.push(name);
+    this.emit('progress', name);
+  }
 }
 
 
@@ -494,16 +501,16 @@ function initCollectedStats() : PreflightStats {
 /**
  * Represents stats for a numerical metric.
  * @typedef {object} Stats
- * @property  {number} [average] - average value observed.
- * @property  {number} [max] - max value observed.
- * @property  {number} [min] - min value observed.
+ * @property  {number} [average] - Average value observed.
+ * @property  {number} [max] - Max value observed.
+ * @property  {number} [min] - Min value observed.
  */
 
 /**
  * Represents stats for a numerical metric.
  * @typedef {object} SelectedIceCandidatePairStats
- * @property  {RTCIceCandidateStats} [localCandidate] - selected local ice candidate
- * @property  {RTCIceCandidateStats} [remoteCandidate] - selected local ice candidate
+ * @property  {RTCIceCandidateStats} [localCandidate] - Selected local ice candidate
+ * @property  {RTCIceCandidateStats} [remoteCandidate] - Selected local ice candidate
  */
 
 /**
@@ -521,7 +528,8 @@ function initCollectedStats() : PreflightStats {
  * @property {NetworkTiming} [networkTiming] - Network related time measurements.
  * @property {PreflightReportStats} [stats] - RTC related stats captured during the test.
  * @property {Array<RTCIceCandidateStats>} [iceCandidateStats] - List of gathered ice candidates.
- * @property {SelectedIceCandidatePairStats} selectedIceCandidatePairStats - stats for the ice candidates that were used for the connection.
+ * @property {SelectedIceCandidatePairStats} selectedIceCandidatePairStats - Stats for the ice candidates that were used for the connection.
+ * @property {Array<PreflightProgress>} [progressEvents] - {@link PreflightProgress} events detected during the test.
  */
 
 /**
@@ -539,20 +547,22 @@ function initCollectedStats() : PreflightStats {
 
 /**
  * Preflight test has completed successfully.
- * @param {PreflightTestReport} report - results of the test.
+ * @param {PreflightTestReport} report - Results of the test.
  * @event PreflightTest#completed
  */
 
 /**
- * Preflight test has encountered a failed and is now stopped.
- * @param {TwilioError|Error} error - error object
- * @param {PreflightTestReport} report - results of the test.
+ * Preflight test has encountered a failure and is now stopped.
+ * @param {TwilioError|Error} error - A TwilioError or a DOMException.
+ * Possible TwilioErrors include Signaling and Media related errors which can be found
+ * <a href="https://www.twilio.com/docs/video/build-js-video-application-recommendations-and-best-practices#connection-errors" target="_blank">here</a>.
+ * @param {PreflightTestReport} report - Partial results gathered during the test. Use this information to help determine the cause of failure.
  * @event PreflightTest#failed
  */
 
 /**
  * Emitted to indicate progress of the test
- * @param {PreflightProgress} progress - indicates the status completed.
+ * @param {PreflightProgress} progress - Indicates the status completed.
  * @event PreflightTest#progress
  */
 
@@ -562,8 +572,8 @@ function initCollectedStats() : PreflightStats {
  * @description Run a preflight test. This method will start a test to check the quality of network connection.
  * @memberof module:twilio-video
  * @param {string} token - The Access Token string
- * @param {PreflightOptions} options - options for the test
- * @returns {PreflightTest} preflightTest - an instance to be used to monitor progress of the test.
+ * @param {PreflightOptions} options - Options for the test
+ * @returns {PreflightTest} preflightTest - An instance to be used to monitor progress of the test.
  * @example
  * var { runPreflight } = require('twilio-video');
  * var preflight = runPreflight();
