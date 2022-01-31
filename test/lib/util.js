@@ -12,7 +12,7 @@ const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
-const { connect } = require('../../es5');
+const connect = require('../../es5/connect');
 const second = 1000;
 const assert = require('assert');
 

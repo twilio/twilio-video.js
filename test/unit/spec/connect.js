@@ -504,10 +504,6 @@ describe('connect', () => {
       it('does not set shouldStopLocalTracks on the LocalParticipant', async () => {
         const stream = await fakeGetUserMedia({ audio: true, video: true });
         const tracks = stream.getTracks().map(track => new FakeLocalTrack(track));
-        // eslint-disable-next-line require-await
-        async function createLocalTracks() {
-          return tracks;
-        }
 
         const mockSignaling = new Signaling();
         mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
@@ -521,7 +517,6 @@ describe('connect', () => {
         }
 
         await connect(token, {
-          createLocalTracks,
           LocalAudioTrack: FakeLocalTrack,
           LocalParticipant,
           LocalVideoTrack: FakeLocalTrack,
