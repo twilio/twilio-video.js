@@ -12,9 +12,9 @@ The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/mo
 
 - The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
 
-- Signaling and Media Connection errors are now properly surfaced via the [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed).
+- Signaling and Media Connection errors are now properly surfaced via the [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event.
 
-- [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test.
+- [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
 2.19.0 (January 31, 2022)
 =========================

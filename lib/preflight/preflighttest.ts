@@ -42,29 +42,29 @@ const PreflightProgress = {
   connected: 'connected',
 
   /**
-   * subscriberParticipant successfully subscribed to media tracks.
+   * SubscriberParticipant successfully subscribed to media tracks.
    */
   mediaSubscribed: 'mediaSubscribed',
 
   /**
-   * media flow was detected.
+   * Media flow was detected.
    */
   mediaStarted: 'mediaStarted',
 
   /**
-   * established DTLS connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
+   * Established DTLS connection. This is measured from RTCDtlsTransport `connecting` to `connected` state.
    * On Safari, Support for measuring this is missing, this event will be not be emitted on Safari.
    */
   dtlsConnected: 'dtlsConnected',
 
   /**
-   * established a PeerConnection, This is measured from PeerConnection `connecting` to `connected` state.
+   * Established a PeerConnection, This is measured from PeerConnection `connecting` to `connected` state.
    * On Firefox, Support for measuring this is missing, this event will be not be emitted on Firefox.
    */
   peerConnectionConnected: 'peerConnectionConnected',
 
   /**
-   * established ICE connection. This is measured from ICE connection `checking` to `connected` state.
+   * Established ICE connection. This is measured from ICE connection `checking` to `connected` state.
    */
   iceConnected: 'iceConnected'
 };
@@ -530,6 +530,7 @@ function initCollectedStats() : PreflightStats {
  * @property {Array<RTCIceCandidateStats>} [iceCandidateStats] - List of gathered ice candidates.
  * @property {SelectedIceCandidatePairStats} selectedIceCandidatePairStats - Stats for the ice candidates that were used for the connection.
  * @property {Array<PreflightProgress>} [progressEvents] - {@link PreflightProgress} events detected during the test.
+ * Use this information to determine which steps were completed and which ones were not.
  */
 
 /**
