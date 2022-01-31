@@ -48,7 +48,6 @@ prod)
   ;;
 esac
 
-echo "Using account: ${ACCOUNT_SID}"
 case ${TEST_TYPE} in
 network)
   echo "Running network tests"
