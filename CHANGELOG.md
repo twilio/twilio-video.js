@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug where were network quality score stops updating after network glitches. (VIDEO-8413)
+- Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
 
 
 2.19.0 (January 31, 2022)
