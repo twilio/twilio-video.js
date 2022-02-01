@@ -15,7 +15,6 @@ const { createRoom } = require('../lib/rest');
 const connect = require('../../es5/connect');
 const second = 1000;
 const assert = require('assert');
-const { resolve } = require('../../es5/util/cancelablepromise');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -674,7 +673,6 @@ function waitForNot(promise, message, timeoutMS = 5 * second) {
     }
   }).catch(() => {
     // notPromise rejections are okay.
-    resolve();
   });
 
   return Promise.race([notPromise, timeoutPromise]);
