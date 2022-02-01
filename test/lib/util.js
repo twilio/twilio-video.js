@@ -15,6 +15,7 @@ const { createRoom } = require('../lib/rest');
 const connect = require('../../es5/connect');
 const second = 1000;
 const assert = require('assert');
+const { resolve } = require('../../es5/util/cancelablepromise');
 
 function a(word) {
   return word.toLowerCase().match(/^[aeiou]/) ? 'an' : 'a';
@@ -650,7 +651,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
  * sometimes our tests want to ensure that an event does *not* happen
  * this function helps with such waits. It ensures that given promise does not resolve
  * in given time.
- * Returns a promise that gets rejected if input promise settled in timeoutMS.
+ * Returns a promise that gets rejected if input promise resolved in timeoutMS.
  * @param {Promise} promise - Promise that we do want to see resolved.
  * @param {string} message - indicates the message logged in case of failure.
  * @param {number} timeoutMS - time to wait in milliseconds.
@@ -671,6 +672,9 @@ function waitForNot(promise, message, timeoutMS = 5 * second) {
       timer = null;
       throw new Error(message);
     }
+  }).catch(() => {
+    // notPromise rejections are okay.
+    resolve();
   });
 
   return Promise.race([notPromise, timeoutPromise]);
