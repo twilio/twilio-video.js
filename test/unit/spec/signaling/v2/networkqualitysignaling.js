@@ -77,22 +77,23 @@ describe('NetworkQualitySignaling', () => {
             await wait();
             didPublish(mst);
 
-            // next at 10 seconds.
+            // next at 7.5 seconds.
             nqs.put(createInputs());
-            clock.tick(9999);
+            clock.tick(7400);
             await wait();
             didNotPublish(mst);
 
-            clock.tick(1);
+            clock.tick(100);
             await wait();
             didPublish(mst);
 
-            clock.tick(19999);
+            // next at 11.25 seconds.
+            clock.tick(112400);
             await wait();
             didNotPublish(mst);
 
             // it waits for input to be available when called on timer
-            clock.tick(1);
+            clock.tick(100);
             await wait();
             didNotPublish(mst);
 
