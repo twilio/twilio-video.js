@@ -401,7 +401,7 @@ export class PreflightTest extends EventEmitter {
 
     } catch (error) {
       const preflightReport = this._generatePreflightReport();
-      reportToInsights({ report: { ...preflightReport, error } });
+      reportToInsights({ report: { ...preflightReport, error: error?.toString() } });
       this.emit('failed', error, preflightReport);
     } finally {
       pcs.forEach(pc => pc.close());
