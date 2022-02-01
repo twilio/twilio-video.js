@@ -62,7 +62,6 @@ describe('NetworkQualitySignaling', () => {
 
       describe('but no NetworkQualityLevel has been received,', () => {
         describe('and #put has been called once,', () => {
-          let inputs;
 
           it('calls .publish on the underlying MediaSignalingTransport on exponential timer', async () => {
             nqs.put(createInputs());
@@ -102,6 +101,7 @@ describe('NetworkQualitySignaling', () => {
             didPublish(mst);
 
             // when a input is received on the underlying MediaSignalingTransport calls publish after 1 second.
+            await wait();
             nqs.put(createInputs());
             receiveMessage(mst);
             clock.tick(1000);
@@ -135,6 +135,7 @@ describe('NetworkQualitySignaling', () => {
             didPublish(mst);
 
             // and next input is sent on timer again only after 5 seconds.
+            await wait();
             clock.tick(1000);
             nqs.put(createInputs());
             await wait();
