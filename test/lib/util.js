@@ -716,9 +716,11 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      statReport[trackType].forEach(trackStats => {
-        totalBytesReceived += trackStats.bytesReceived;
-      });
+      if (statReport[trackType]) {
+        statReport[trackType].forEach(trackStats => {
+          totalBytesReceived += trackStats.bytesReceived;
+        });
+      }
     });
   });
   return totalBytesReceived;
