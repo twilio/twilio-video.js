@@ -5,8 +5,6 @@
 # and run any job locally with:
 # circleci local execute -c config_processed.yml --job "firefox stable group"
 version: 2.1
-orbs:
-  node: circleci/node@5.0.0
 parameters:
   environment:
     type: enum
@@ -83,7 +81,8 @@ executors:
     environment:
       <<: *defaultEnv
   machine-executor:
-    machine: true
+    machine:
+      image: ubuntu-2004:202111-02
     environment:
       <<: *defaultEnv
 commands:
@@ -141,9 +140,6 @@ commands:
   network-tests:
     steps:
       - get-code # note: network tests run inside docker - the dependencies will be fetched inside docker image.
-      - node/install:
-          install-yarn: true
-          node-version: '16.13'
       - run:
           name: Running Network Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
