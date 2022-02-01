@@ -202,14 +202,14 @@ export interface ConnectOptions {
 }
 
 export interface CreateLocalTracksOptions {
-  audio?: CreateLocalTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions;
   /**
    * @deprecated
    */
   logLevel?: LogLevel | LogLevels;
   loggerName?: string;
   tracks?: LocalTrack[];
-  video?: CreateLocalTrackOptions;
+  video?: boolean | CreateLocalTrackOptions;
 }
 
 export class TrackStats {
