@@ -542,9 +542,14 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
 
 let random = 1;
 async function verifyOnline() {
-  const result = await fetch('http://www.google.com?' + random, { mode: 'no-cors', cache: 'no-store' });
-  if (!result) {
-    throw new Error('fetch returned undefined');
+  try {
+    const result = await fetch('http://www.google.com?' + random, { mode: 'no-cors', cache: 'no-store' });
+    if (!result) {
+      throw new Error('fetch returned undefined');
+    }
+  } catch (error) {
+    console.log('fetch failed: ', error);
+    throw error;
   }
 }
 
