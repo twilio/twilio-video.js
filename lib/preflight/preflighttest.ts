@@ -458,7 +458,7 @@ export class PreflightTest extends EventEmitter {
   }
 
   private _updateProgress(name: string): void {
-    this._progressEvents.push({timestamp: Date.now(), name});
+    this._progressEvents.push({ timestamp: Date.now(), name });
     this.emit('progress', name);
   }
 }

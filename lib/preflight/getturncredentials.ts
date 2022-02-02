@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const TwilioConnection = require('../twilioconnection.js');
 const { ICE_VERSION } = require('../util/constants');
 const { createTwilioError, SignalingConnectionError } = require('../util/twilio-video-errors');
@@ -31,7 +32,6 @@ export function getTurnCredentials(token: string, wsServer: string): Promise<RTC
       }
     });
 
-    // eslint-disable-next-line camelcase
     twilioConnection.on('message', (messageData: {
       code: number;
       message: string;
@@ -41,7 +41,11 @@ export function getTurnCredentials(token: string, wsServer: string): Promise<RTC
       const { code, message, ice_servers, type } = messageData;
       if ((type === 'iced' || type === 'error') && !done) {
         done = true;
-        type === 'iced' ? resolve(ice_servers) : reject(createTwilioError(code, message));
+        if (type === 'iced') {
+          resolve(ice_servers);
+        } else {
+          reject(createTwilioError(code, message));
+        }
         twilioConnection.close();
       }
     });
