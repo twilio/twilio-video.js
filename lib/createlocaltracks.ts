@@ -24,6 +24,15 @@ let createLocalTrackCalls = 0;
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
 type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
 
+interface InternalOptions extends CreateLocalTracksOptions {
+  getUserMedia: any;
+  LocalAudioTrack: any;
+  LocalDataTrack: any;
+  LocalVideoTrack: any;
+  MediaStreamTrack: any;
+  Log: any;
+};
+
 /**
  * Request {@link LocalTrack}s. By default, it requests a
  * {@link LocalAudioTrack} and a {@link LocalVideoTrack}.
@@ -85,7 +94,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   const isAudioVideoAbsent =
     !(options && ('audio' in options || 'video' in options));
 
-  const fullOptions = Object.assign({
+  const fullOptions: InternalOptions = {
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
@@ -96,7 +105,8 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     MediaStreamTrack,
     Log,
     video: isAudioVideoAbsent,
-  }, options);
+    ...options,
+  };
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(fullOptions.logLevel);
@@ -124,10 +134,10 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   }
 
   const extraLocalTrackOptions: ExtraLocalTrackOptions = {
-    audio: fullOptions.audio && fullOptions.audio.name
+    audio: typeof fullOptions.audio === 'object' && fullOptions.audio.name
       ? { name: fullOptions.audio.name }
       : {},
-    video: fullOptions.video && fullOptions.video.name
+    video: typeof fullOptions.video === 'object' && fullOptions.video.name
       ? { name: fullOptions.video.name }
       : {}
   };
@@ -135,18 +145,18 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   extraLocalTrackOptions.audio.isCreatedByCreateLocalTracks = true;
   extraLocalTrackOptions.video.isCreatedByCreateLocalTracks = true;
 
-  if (fullOptions.audio && typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
+  if (typeof fullOptions.audio === 'object' && typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
-  if (fullOptions.video && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
+  if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
     extraLocalTrackOptions.video.workaroundWebKitBug1208516 = fullOptions.video.workaroundWebKitBug1208516;
   }
 
-  if (fullOptions.audio) {
+  if (typeof fullOptions.audio === 'object') {
     delete fullOptions.audio.name;
   }
-  if (fullOptions.video) {
+  if (typeof fullOptions.video === 'object') {
     delete fullOptions.video.name;
   }
 
@@ -155,7 +165,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     video: fullOptions.video
   };
 
-  const workaroundWebKitBug180748 = fullOptions.audio && fullOptions.audio.workaroundWebKitBug180748;
+  const workaroundWebKitBug180748 = typeof fullOptions.audio === 'object' && fullOptions.audio.workaroundWebKitBug180748;
 
   try {
     const mediaStream = await (workaroundWebKitBug180748
