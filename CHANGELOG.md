@@ -7,6 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
 - Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
 
 

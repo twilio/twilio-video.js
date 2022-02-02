@@ -1,11 +1,12 @@
 version: '3'
 # Note: This file is used to build run the integration tests.
 #   for running integration tests
-#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run integrationTests
+#   BROWSER=chrome BVER=stable docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
 #   to build container with browsers that will be used by integrationTests:
-#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml build browserContainer
+#   BROWSER=chrome BVER=stable docker-compose --file=.circleci/images/docker-compose.yml build browserContainer
 #   to run bash for debugging the container:
-#   BROWSER=chrome BVER=stable docker-compose --file=./docker-compose.yml run bash
+#   BROWSER=chrome BVER=stable docker-compose --file=.circleci/images/docker-compose.yml run bash
+
 services:
   defaults: &defaults
     user: root
