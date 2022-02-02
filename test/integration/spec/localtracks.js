@@ -17,10 +17,11 @@ const {
   waitForSometime
 } = require('../../lib/util');
 
-const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
+const createLocalTracks = require('../../../es5/createlocaltrack');
+const connect = require('../../../es5/connect');
 
 ['audio', 'video'].forEach(kind => {
-  const createLocalTrack = kind === 'audio' ? createLocalAudioTrack : createLocalVideoTrack;
+  const createLocalTrack = createLocalTracks[kind];
   const description = 'Local' + kind[0].toUpperCase() + kind.slice(1) + 'Track';
 
   const options = {

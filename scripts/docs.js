@@ -12,6 +12,7 @@ const docs = process.argv[2];
 const publicClasses = [
   'lib/connect.js',
   'lib/createlocaltrack.js',
+  'lib/createlocaltracks.js',
   'lib/room.js',
   'lib/media/track/index.js',
   'lib/media/track/audiotrack.js',
@@ -56,7 +57,6 @@ const publicClasses = [
   'lib/util/twilioerror.js',
 
   // TS Files
-  'lib/createlocaltracks.ts',
   'lib/index.ts',
   'lib/preflight/preflighttest.ts',
 ];

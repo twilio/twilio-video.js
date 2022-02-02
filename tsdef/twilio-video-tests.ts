@@ -229,7 +229,6 @@ function LocalParticipant(localParticipant: Video.LocalParticipant) {
 let room: Video.Room | null = null;
 let localVideoTrack: Video.LocalVideoTrack | null = null;
 let localAudioTrack: Video.LocalAudioTrack | null = null;
-let localTracks: Video.LocalTrack[] | null = null;
 
 // Testing finally method
 const maybeRoom = Video.connect('$TOKEN', {
@@ -293,12 +292,6 @@ async function initRoom() {
   await localAudioTrack.restart({ channelCount: 3 });
   room.localParticipant.publishTrack(localAudioTrack);
   room.participants.forEach(participantConnected);
-
-  localTracks = await Video.createLocalTracks();
-  await Video.connect('$TOKEN', {
-    name: 'my-cool-room',
-    tracks: localTracks
-  });
 
   room.on('participantConnected', participantConnected);
   room.on('participantDisconnected', participantDisconnected);

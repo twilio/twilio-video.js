@@ -6,6 +6,7 @@ if (typeof window === 'undefined') {
 
 require('./spec/connect');
 require('./spec/createlocaltrack');
+require('./spec/createlocaltracks');
 require('./spec/encodingparameters');
 require('./spec/localparticipant');
 require('./spec/networkqualityconfiguration');

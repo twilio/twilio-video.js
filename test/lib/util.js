@@ -12,7 +12,7 @@ const defaults = require('../lib/defaults');
 const getToken = require('../lib/token');
 const { ecs } = require('../lib/post');
 const { createRoom } = require('../lib/rest');
-const { connect } = require('../../es5');
+const connect = require('../../es5/connect');
 const second = 1000;
 const assert = require('assert');
 
@@ -542,9 +542,14 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
 
 let random = 1;
 async function verifyOnline() {
-  const result = await fetch('http://www.google.com?' + random, { mode: 'no-cors', cache: 'no-store' });
-  if (!result) {
-    throw new Error('fetch returned undefined');
+  try {
+    const result = await fetch('http://www.google.com?' + random, { mode: 'no-cors', cache: 'no-store' });
+    if (!result) {
+      throw new Error('fetch returned undefined');
+    }
+  } catch (error) {
+    console.log('fetch failed: ', error);
+    throw error;
   }
 }
 
@@ -645,7 +650,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
  * sometimes our tests want to ensure that an event does *not* happen
  * this function helps with such waits. It ensures that given promise does not resolve
  * in given time.
- * Returns a promise that gets rejected if input promise settled in timeoutMS.
+ * Returns a promise that gets rejected if input promise resolved in timeoutMS.
  * @param {Promise} promise - Promise that we do want to see resolved.
  * @param {string} message - indicates the message logged in case of failure.
  * @param {number} timeoutMS - time to wait in milliseconds.
@@ -666,6 +671,8 @@ function waitForNot(promise, message, timeoutMS = 5 * second) {
       timer = null;
       throw new Error(message);
     }
+  }).catch(() => {
+    // notPromise rejections are okay.
   });
 
   return Promise.race([notPromise, timeoutPromise]);
@@ -711,9 +718,11 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      statReport[trackType].forEach(trackStats => {
-        totalBytesReceived += trackStats.bytesReceived;
-      });
+      if (statReport[trackType]) {
+        statReport[trackType].forEach(trackStats => {
+          totalBytesReceived += trackStats.bytesReceived;
+        });
+      }
     });
   });
   return totalBytesReceived;
