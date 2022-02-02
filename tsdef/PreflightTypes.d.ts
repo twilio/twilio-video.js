@@ -40,7 +40,7 @@ export interface Stats {
 }
 
 export interface ProgressEvent {
-  timestamp: number;
+  duration: number;
   name: string;
 }
 

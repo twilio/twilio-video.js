@@ -295,7 +295,7 @@ export class PreflightTest extends EventEmitter {
           payload: {
             sessionSID,
             preflightSID: createSID('PF'),
-            progressEvents: report.progressEvents,
+            progressEvents: JSON.stringify(report.progressEvents),
             testTiming: report.testTiming,
             dtlsTiming: report.networkTiming.dtls,
             iceTiming: report.networkTiming.ice,
@@ -458,7 +458,8 @@ export class PreflightTest extends EventEmitter {
   }
 
   private _updateProgress(name: string): void {
-    this._progressEvents.push({ timestamp: Date.now(), name });
+    const duration = Date.now() - this._testTiming.getTimeMeasurement().start;
+    this._progressEvents.push({ duration, name });
     this.emit('progress', name);
   }
 }
@@ -522,9 +523,9 @@ function initCollectedStats() : PreflightStats {
 */
 
 /**
- * A {@link PreflightProgress} event with a timestamp for when the event was raised.
+ * A {@link PreflightProgress} event with timing information.
  * @typedef {object} ProgressEvent
- * @property {number} [timestamp] - Timestamp for when the event was raised.
+ * @property {number} [duration] - The duration of the event, measured from the start of the test.
  * @property {string} [name] - The {@link PreflightProgress} event name.
  */
 
