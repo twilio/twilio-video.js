@@ -8,6 +8,27 @@ const defaults = require('../../lib/defaults');
 const { randomName } = require('../../lib/util');
 const { isFirefox, isSafari } = require('../../lib/guessbrowser');
 
+const expectedProgress = [
+  'mediaAcquired',
+  'connected',
+  'mediaSubscribed',
+  'iceConnected',
+  'mediaStarted'
+];
+if (!isFirefox) {
+  expectedProgress.push('peerConnectionConnected');
+}
+if (!isSafari) {
+  expectedProgress.push('dtlsConnected');
+}
+
+function assertProgressEvents(progressEvents) {
+  progressEvents.forEach(({ timestamp, name }) => {
+    assert.strictEqual(typeof timestamp, 'number');
+    assert(expectedProgress.includes(name));
+  });
+}
+
 function assertTimeMeasurement(measurement) {
   assert.equal(typeof measurement.duration, 'number');
 }
@@ -36,6 +57,7 @@ function validateReport(report)  {
   assertIceCandidate(report.selectedIceCandidatePairStats.localCandidate);
   assertIceCandidate(report.selectedIceCandidatePairStats.remoteCandidate);
   assert(report.iceCandidateStats.length > 0);
+  assertProgressEvents(report.progressEvents);
   report.iceCandidateStats.forEach(iceCandidate => assertIceCandidate(iceCandidate));
 }
 
@@ -60,19 +82,6 @@ describe('preflight', function() {
 
     preflight.on('completed', report => {
       validateReport(report);
-      const expectedProgress = [
-        'mediaAcquired',
-        'connected',
-        'mediaSubscribed',
-        'iceConnected',
-        'mediaStarted'
-      ];
-      if (!isFirefox) {
-        expectedProgress.push('peerConnectionConnected');
-      }
-      if (!isSafari) {
-        expectedProgress.push('dtlsConnected');
-      }
 
       assert.deepStrictEqual(expectedProgress.sort(), progressReceived.sort());
       deferred.resolve();
@@ -99,6 +108,9 @@ describe('preflight', function() {
   });
 
   it('fails when bad token is supplied', async () => {
+    let errorResult;
+    let reportResult;
+
     const preflight = runPreflight('badToken');
     const deferred = {};
     deferred.promise = new Promise((resolve, reject) => {
@@ -110,13 +122,18 @@ describe('preflight', function() {
       deferred.reject('preflight completed unexpectedly');
     });
 
-    preflight.on('failed', error => {
+    preflight.on('failed', (error, report) => {
       // eslint-disable-next-line no-console
       console.log('preflight failed as expected:', error);
+      errorResult = error;
+      reportResult = report;
       deferred.resolve();
     });
 
     await deferred.promise;
+
+    assert.strictEqual(errorResult.toString(), 'TwilioError 20101: Invalid Access Token');
+    assert.strictEqual(typeof reportResult, 'object');
   });
 });
 
