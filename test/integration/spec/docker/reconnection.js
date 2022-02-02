@@ -138,14 +138,13 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
   });
 
   this.beforeEach(function() {
-    if (!isRunningInsideDocker) {
+    if (!isRunningInsideDocker || isFirefox || defaults.topology === 'peer-to-peer') {
       this.skip();
     }
   });
   this.afterEach(async function() {
     await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
   });
-
 
   it('media connection restores even when participant is not subscribed to media', async () => {
     await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
@@ -174,8 +173,8 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
     await readCurrentNetworks(dockerAPI);
     await waitToGoOnline();
 
-    // wait for media flow to begin again.
-    await waitForMediaFlow(room, true);
+    // wait upto a minute for media flow to begin again.
+    await waitForMediaFlow(room, true, 60000);
   });
 });
 
