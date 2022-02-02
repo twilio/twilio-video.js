@@ -133,10 +133,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     return fullOptions.tracks;
   }
 
-  if (typeof fullOptions.audio === 'object') {
-    fullOptions.audio.name;
-  }
-
   const extraLocalTrackOptions: ExtraLocalTrackOptions = {
     audio: typeof fullOptions.audio === 'object' && fullOptions.audio.name
       ? { name: fullOptions.audio.name }
