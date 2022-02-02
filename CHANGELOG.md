@@ -10,8 +10,10 @@ Bug Fixes
 - Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
 - Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
 
+
 2.19.0 (January 31, 2022)
 =========================
+
 New Features
 ------------
 
