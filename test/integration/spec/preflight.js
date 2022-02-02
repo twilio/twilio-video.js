@@ -23,8 +23,8 @@ if (!isSafari) {
 }
 
 function assertProgressEvents(progressEvents) {
-  progressEvents.forEach(({ timestamp, name }) => {
-    assert.strictEqual(typeof timestamp, 'number');
+  progressEvents.forEach(({ duration, name }) => {
+    assert.strictEqual(typeof duration, 'number');
     assert(expectedProgress.includes(name));
   });
 }
