@@ -5,6 +5,7 @@
 const assert = require('assert');
 const EventEmitter = require('events');
 const sinon = require('sinon');
+const util = require('@twilio/webrtc/lib/util');
 
 const EventTarget = require('../../../../../lib/eventtarget');
 const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor.js');
@@ -80,49 +81,158 @@ describe('PeerConnectionV2', () => {
     });
   });
 
-  describe('._updateEncodings', () => {
+  describe('._maybeUpdateEncodings', () => {
+    let stub;
+    beforeEach(() => {
+      stub = sinon.stub(util, 'guessBrowser');
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
     [
       {
-        testName: 'resolution >= 960x540',
+        browser: 'chrome',
+        testName: 'video, resolution >= 960x540 (defaults)',
         width: 960,
         height: 540,
         encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 4 }, { active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }]
+        expectedEncodings: [{ scaleResolutionDownBy: 4 }, { scaleResolutionDownBy: 2 }, { scaleResolutionDownBy: 1 }]
       },
       {
-        testName: 'resolution >= 960x540 (no simulcast)',
-        width: 960,
-        height: 540,
-        encodings: [{}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
-      },
-      {
-        testName: '960x540 > resolution >= 480x270',
+        browser: 'chrome',
+        testName: '960x540 > resolution >= 480x270 (defaults)',
         width: 480,
         height: 270,
         encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 2 }, { active: true, scaleResolutionDownBy: 1 }, { active: false }]
+        expectedEncodings: [{ scaleResolutionDownBy: 2 }, { scaleResolutionDownBy: 1 }, { active: false }]
       },
       {
+        browser: 'chrome',
+        testName: 'resolution <= 480x270 (defaults)',
+        width: 320,
+        height: 180,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: '960x540 > resolution >= 480x270 (keeps layers disabled if disabled originally)',
+        width: 480,
+        height: 270,
+        encodings: [{ scaleResolutionDownBy: 2, active: true }, { scaleResolutionDownBy: 1, active: false }, { active: true }],
+        expectedEncodings: [{ scaleResolutionDownBy: 2, active: true }, { scaleResolutionDownBy: 1, active: false }, { active: false }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'resolution <= 480x270 (trackReplaced removes active flag when trackReplaced)',
+        width: 320,
+        trackReplaced: true,
+        height: 180,
+        encodings: [{ scaleResolutionDownBy: 4, active: false }, { scaleResolutionDownBy: 2, active: true }, { scaleResolutionDownBy: 1, active: true }],
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+      },
+      {
+        browser: 'chrome',
         testName: '960x540 > resolution >= 480x270 (no simulcast)',
         width: 480,
         height: 270,
         encodings: [{}], // input encodings has only one layer
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }]
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }]
       },
       {
-        testName: 'resolution <= 480x270',
-        width: 320,
-        height: 180,
+        browser: 'chrome',
+        testName: 'video, resolution >= 960x540 (no simulcast)',
+        width: 960,
+        height: 540,
+        encodings: [{}],
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }]
+      },
+      {
+        browser: 'chrome',
+        testName: 'screen share track (defaults)',
+        isScreenShare: true,
+        width: 960,
+        height: 540,
         encodings: [{}, {}, {}],
-        expectedEncodings: [{ active: true, scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }, { scaleResolutionDownBy: 1 }, { active: false }],
+      },
+      {
+        browser: 'chrome',
+        testName: 'screen share track (keeps layers disabled if disabled originally)',
+        isScreenShare: true,
+        width: 960,
+        height: 540,
+        encodings: [{ scaleResolutionDownBy: 1, active: true }, { scaleResolutionDownBy: 1, active: false }, { scaleResolutionDownBy: 1, active: true }],
+        expectedEncodings: [{ scaleResolutionDownBy: 1, active: true }, { scaleResolutionDownBy: 1, active: false }, { active: false }],
+      },
+      {
+        browser: 'chrome',
+        testName: 'screen share track (trackReplaced)',
+        isScreenShare: true,
+        trackReplaced: true,
+        width: 960,
+        height: 540,
+        encodings: [{ scaleResolutionDownBy: 1, active: true }, { scaleResolutionDownBy: 1, active: false }, { scaleResolutionDownBy: 1, active: true }],
+        expectedEncodings: [{ scaleResolutionDownBy: 1 }, { scaleResolutionDownBy: 1 }, { active: false }],
+      },
+      {
+        browser: 'chrome',
+        testName: 'does not update encodings when not using adaptive simulcast',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'updates encoding for safari (irrespective of adaptiveSimulcast) ',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ scaleResolutionDownBy: 2 }, { scaleResolutionDownBy: 1 }, { active: false }],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'does not update encoding for audio tracks',
+        kind: 'audio',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'firefox',
+        testName: 'does not update encodings',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
       }
-    ].forEach(({ width, height, encodings, expectedEncodings, testName }) => {
-      it(testName, () => {
-        const test = makeTest();
-        test.pcv2._updateEncodings(width, height, encodings);
-        assert.deepStrictEqual(encodings, expectedEncodings);
+    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, trackReplaced = false, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
+      it(`${browser}:${testName}`, () => {
+        stub = stub.returns(browser);
+        const trackSettings = { width, height };
+        if (isScreenShare) {
+          trackSettings.displaySurface = 'monitor';
+        }
+        const mediaStreamTrack = {
+          kind,
+          getSettings: () => trackSettings
+        };
+
+        preferredCodecs = preferredCodecs || { audio: [], video: [{ codec: 'vp8', simulcast: true, adaptiveSimulcast: true }] };
+        const test = makeTest({ preferredCodecs, isChromeScreenShareTrack: () => isScreenShare });
+        const updated = test.pcv2._maybeUpdateEncodings(mediaStreamTrack, encodings, trackReplaced);
+        const shouldUpdate = !!expectedEncodings;
+        assert(updated === shouldUpdate, `_maybeUpdateEncodings returned unexpected: ${updated}`);
+        if (expectedEncodings) {
+          assert.deepStrictEqual(encodings, expectedEncodings);
+        }
+        stub.resetHistory();
       });
+      return true;
     });
   });
 
@@ -491,7 +601,7 @@ describe('PeerConnectionV2', () => {
           test.pcv2._setPublisherHint(trackSender, null);
           const rtpSender = test.pcv2._rtpSenders.get(trackSender);
           sinon.assert.calledWith(rtpSender.setParameters, sinon.match(parameters => {
-            return parameters.encodings[0].active === true;
+            return !('active' in parameters.encodings[0]);
           }));
         });
 
@@ -2529,7 +2639,7 @@ function makePeerConnectionV2(options) {
   options.isChromeScreenShareTrack = options.isChromeScreenShareTrack || sinon.spy(() => false);
   options.sessionTimeout = options.sessionTimeout || 100;
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
-  options.preferredCodecs = options.preferredcodecs || { audio: [], video: [] };
+  options.preferredCodecs = options.preferredCodecs || { audio: [], video: [] };
   options.options = {
     Backoff: options.Backoff,
     Event: function(type) { return { type: type }; },

@@ -39,6 +39,11 @@ export interface Stats {
   min: number;
 }
 
+export interface ProgressEvent {
+  duration: number;
+  name: string;
+}
+
 export interface PreflightReportStats {
   jitter: Stats|null;
   rtt: Stats|null;
@@ -51,6 +56,5 @@ export interface PreflightTestReport {
   stats: PreflightReportStats
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
+  progressEvents: ProgressEvent[];
 }
-
-

@@ -6,6 +6,8 @@ const CancelablePromise = require('../../../../lib/util/cancelablepromise');
 
 const { a } = require('../../../lib/util');
 
+const sinon = require('sinon');
+
 describe('CancelablePromise', () => {
   describe('constructor', () => {
     it('should return an instance of CancelablePromise', () => {
@@ -334,6 +336,56 @@ describe('CancelablePromise', () => {
             cancelablePromise.catch(() => {});
           });
         }
+      });
+    });
+  });
+
+  describe('#finally', () => {
+    ['rejected', 'resolved', 'unresolved', 'unrejected'].forEach(type => {
+      describe(`called on ${a(type)} ${type} CancelablePromise`, () => {
+        let cancelablePromise;
+        let resultOrReason;
+        let resolveOrReject;
+        let resolved;
+
+        beforeEach(() => {
+          resultOrReason = {};
+          resolveOrReject = null;
+
+          cancelablePromise = new CancelablePromise((resolve, reject) => {
+            switch (type) {
+              case 'canceled':
+                resolveOrReject = () => reject(resultOrReason);
+                break;
+              case 'rejected':
+                reject(resultOrReason);
+                break;
+              case 'resolved':
+                resolve(resultOrReason);
+                break;
+              case 'unrejected':
+                resolveOrReject = () => reject(resultOrReason);
+                break;
+              case 'unresolved':
+                resolveOrReject = () => resolve(resultOrReason);
+                break;
+            }
+          }, () => {
+            resolveOrReject();
+          }).then(result => {
+            resolved = result;
+          });
+        });
+
+        it('should have called finally', async () => {
+          const onFinally = sinon.stub();
+          await cancelablePromise.finally(onFinally);
+          if (resolveOrReject) {
+            resolveOrReject();
+          }
+          sinon.assert.calledOnce(onFinally);
+          assert(cancelablePromise instanceof CancelablePromise);
+        });
       });
     });
   });

@@ -8,15 +8,35 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
+The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor) API has been promoted to GA. Below are the changes included in this release. (VIDEO-7728)
+
+- The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
+
+- Signaling and Media Connection errors are now properly surfaced via the [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event.
+
+- [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
+
+
+Other changes in this release includes:
+
 - In [October 2019](#200-beta15-october-24-2019), twilio-video.js started using Unified Plan where available, while also maintaining support for earlier browser versions with Plan B as the default SDP format. With this release, twilio-video.js will now stop supporting the Plan B SDP format and will only support the Unified Plan SDP format. Please refer to this [changelog](#200-beta15-october-24-2019) and this [public advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for more related information. (VIDEO-6587)
 
-2.19.0 (In Progress)
+2.19.1 (In Progress)
 ====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
+- Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
+
+2.19.0 (January 31, 2022)
+=========================
 
 New Features
 ------------
 
-- This release introduces a new beta feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage. It works best when used along with `Client Track Switch Off Control` and `Video Content Preferences`. These two flags allow the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. The beta currently does not support setting a max bitrate for your simulcast layers.
+- This release introduces a new feature **Adaptive Simulcast**. This opt-in feature can be enabled by setting `preferredVideoCodecs="auto"` in ConnectOptions. When joining a group room with this feature enabled, the SDK will use VP8 simulcast, and will enable/disable simulcast layers dynamically, thus improving bandwidth and CPU usage for the publishing client. It works best when used along with `Client Track Switch Off Control` and `Video Content Preferences`. These two flags allow the SFU to determine which simulcast layers are needed, thus allowing it to disable the layers not needed on publisher side. This feature cannot be used alongside `maxVideoBitrate`.
 
 If your application is currently using VP8 simulcast we recommend that you switch to this option.
 
@@ -36,21 +56,37 @@ const room = await connect(token, {
 });
 ```
 
-### Known Limitations
+Known Limitations
+-----------------
 
 - Specifying `preferredVideoCodecs="auto"` will revert to unicast in the following cases:
   - The publisher is using Firefox.
   - The publisher has preferred the H264 codec.
   - The Room is configured to support only the H264 codec.
   - Peer-to-Peer Rooms
-- When the Room is being recorded, the SFU will not disable any simulcast layers of the publisher's VideoTrack.
+- When the participant is being recorded, the SFU will not disable any simulcast layers of the participant's VideoTrack.
 
 Bug Fixes
 ---------
 
-- Fixed a bug where setting clientTrackSwitchOffControl to `auto` caused the RemoteVideoTrack's to get switched off even while playing in picture-in-picture window. (VIDEO-6677)
-  Note that this fix does not work on firefox because firefox does not yet implement [picture-in-picture](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API) APIs.
 - Fixed a bug where `clientTrackSwitchOffControl` and `contentPreferencesMode` sometimes did not work as expected during network glitches. (VIDEO-7654)
+
+2.18.3 (January 4, 2022)
+========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where connect was returning a Promise type instead of a CancelablePromise. (VIDEO-7831)
+- Fixed a bug where `audioLevel`, `frameRate`, and `captureDimensions` WebRTC stats are returning null on certain browsers. With this release, these stats are now populated whenever they are available. (VIDEO-3600)
+
+2.18.2 (December 15, 2021)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where setting `clientTrackSwitchOffControl` to `auto` caused the RemoteVideoTracks to get switched off while playing in picture-in-picture mode. Note that this fix does not apply to Firefox as it does not yet implement [picture-in-picture](https://developer.mozilla.org/en-US/docs/Web/API/Picture-in-Picture_API) APIs. (VIDEO-6677)
 
 2.18.1 (October 29, 2021)
 =========================
