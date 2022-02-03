@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.19.1 (In Progress)
+====================
+Bug Fixes
+---------
+
+- Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
+- Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
+
+
 2.19.0 (January 31, 2022)
 =========================
 
