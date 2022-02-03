@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
-The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor) API has been promoted to GA. Below are the changes included in this release.
+The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor) API has been promoted to GA. Below are the changes included in this release. (VIDEO-7728)
 
 - The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
 
@@ -16,8 +16,14 @@ The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/mo
 
 - [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
+
+Other changes in this release includes:
+
+- In [October 2019](#200-beta15-october-24-2019), twilio-video.js started using Unified Plan where available, while also maintaining support for earlier browser versions with Plan B as the default SDP format. With this release, twilio-video.js will now stop supporting the Plan B SDP format and will only support the Unified Plan SDP format. Please refer to this [changelog](#200-beta15-october-24-2019) and this [public advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for more related information. (VIDEO-6587)
+
 2.19.1 (In Progress)
 ====================
+
 Bug Fixes
 ---------
 

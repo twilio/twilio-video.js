@@ -480,11 +480,12 @@ describe('PeerConnectionV2', () => {
       context(scenario, () => {
         beforeEach(() => {
           test = makeTest();
-          const tracks = [{ id: 1 }];
+          const track = { id: 1 };
+          const tracks = [track];
           stream = { getTracks() { return tracks; } };
-          const trackSender = makeMediaTrackSender(tracks[0]);
+          const trackSender = makeMediaTrackSender(track);
           setup(test, trackSender);
-          test.pc.addTrack = sinon.spy(() => {});
+          test.pc.addTransceiver = sinon.spy(() => ({ sender: { track } }));
           result = test.pcv2.addMediaTrackSender(trackSender);
         });
 
@@ -493,23 +494,18 @@ describe('PeerConnectionV2', () => {
         });
 
         if (scenario === 'been added') {
-          it('does not call addTrack on the underlying RTCPeerConnection', () => {
-            sinon.assert.notCalled(test.pc.addTrack);
+          it('does not call addTransceiver on the underlying RTCPeerConnection', () => {
+            sinon.assert.notCalled(test.pc.addTransceiver);
           });
           return;
         }
 
-        it('calls addTrack on the underlying RTCPeerConnection', () => {
-          sinon.assert.calledWith(test.pc.addTrack, stream.getTracks()[0]);
+        it('calls addTransceiver on the underlying RTCPeerConnection', () => {
+          sinon.assert.calledWith(test.pc.addTransceiver, stream.getTracks()[0]);
         });
       });
     });
   });
-
-  function makePublisherHints(layerIndex, enabled) {
-    // eslint-disable-next-line camelcase
-    return [{ enabled, layer_index: layerIndex }];
-  }
 
   describe('_setPublisherHint', () => {
     let test;
@@ -739,6 +735,7 @@ describe('PeerConnectionV2', () => {
   describe('#getTrackReceivers', () => {
     it('returns DataTrackReceivers and MediaTrackReceivers for any RTCDataChannels and MediaStreamTracks raised by the underlying RTCPeerConnection that have yet to be closed/ended', () => {
       const test = makeTest();
+      const trackMatcher = { match: sinon.stub(), update: sinon.stub() };
       const dataChannel1 = makeDataChannel();
       const dataChannel2 = makeDataChannel();
       const dataChannel3 = makeDataChannel();
@@ -748,6 +745,8 @@ describe('PeerConnectionV2', () => {
       function getTrackIdOrChannelLabel({ id, label }) {
         return id || label;
       }
+
+      test.pcv2._trackMatcher = trackMatcher;
 
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel1 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
@@ -763,6 +762,10 @@ describe('PeerConnectionV2', () => {
 
       assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
         [dataChannel2, dataChannel3, mediaTrack2].map(getTrackIdOrChannelLabel));
+
+      sinon.assert.calledWith(trackMatcher.match, { type: 'track', track: mediaTrack1 });
+      sinon.assert.calledWith(trackMatcher.match, { type: 'track', track: mediaTrack2 });
+      sinon.assert.calledWith(trackMatcher.update, null);
     });
   });
 
@@ -814,6 +817,16 @@ describe('PeerConnectionV2', () => {
           assert.deepEqual(test.pcv2.getState(), expectedState(test));
         });
       });
+    });
+
+    it('returns the local description if reoffer is triggered', async () => {
+      const offer = makeOffer({ noMedia: true });
+      const answer = makeAnswer({ noMedia: true });
+      const test = makeTest({ offers: [offer, offer], answers: [answer] });
+      await test.pcv2.offer();
+      // Triggers Reoffer when the sdp has fewer audio and/or video send* m= lines
+      await test.pcv2.update(test.state().setDescription(answer, 1));
+      assert.deepEqual(test.pcv2.getState(), test.state().setDescription(test.offers[1], 2));
     });
 
     it('returns last stable answer version when while new offer is being processed', async () => {
@@ -1204,20 +1217,15 @@ describe('PeerConnectionV2', () => {
         x => `when the remote peer is ${x ? '' : 'not '}an ICE-lite agent`
       ],
       [
-        [true, false],
-        x => `When RTCRtpSenderParameters is ${x ? '' : 'not '}supported by WebRTC`
-      ],
-      [
         [true, false, undefined],
         x => `When enableDscp is ${typeof x === 'undefined' ? 'not specified' : `set to ${x}`}`
       ],
       [
         [true, false],
-        // limit only to isRTCRtpSenderParamsSupported
         x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
       ],
     // eslint-disable-next-line consistent-return
-    ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, isRTCRtpSenderParamsSupported, enableDscp, chromeScreenTrack]) => {
+    ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, enableDscp, chromeScreenTrack]) => {
       // these combinations grow exponentially
       // skip the ones that do not make much sense to test.
       if (vmsFailOver && (!initial || type !== 'offer' || signalingState !== 'have-local-offer')) {
@@ -1225,12 +1233,7 @@ describe('PeerConnectionV2', () => {
         return;
       }
 
-      if (!isRTCRtpSenderParamsSupported && (chromeScreenTrack || enableDscp)) {
-        // screen share track and dscp options have special cases only when isRTCRtpSenderParamsSupported.
-        return;
-      }
-
-      if (iceLite && (isRTCRtpSenderParamsSupported || enableDscp || chromeScreenTrack)) {
+      if (iceLite && (enableDscp || chromeScreenTrack)) {
         // iceLite does not need repeat for all combination of unrelated variables.
         return;
       }
@@ -1275,9 +1278,9 @@ describe('PeerConnectionV2', () => {
           maxVideoBitrate: 50,
           enableDscp,
           isChromeScreenShareTrack: () => chromeScreenTrack,
-          isRTCRtpSenderParamsSupported,
           tracks,
         });
+
         descriptions = [];
         const ufrag = 'foo';
 
@@ -1433,26 +1436,19 @@ describe('PeerConnectionV2', () => {
 
       function itShouldApplyBandwidthConstraints() {
         it('should apply the specified bandwidth constraints for AudioTracks and non-screen VideoTracks (Chrome only)', () => {
-          if (isRTCRtpSenderParamsSupported) {
-            test.pc.getSenders().forEach(sender => {
-              const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
-              if (sender.track.kind === 'video' && chromeScreenTrack)  {
-                sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
-              } else {
-                sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
-              }
-            });
-            return;
-          }
-          const maxVideoBitrate = test.setBitrateParameters.args[0].pop();
-          const maxAudioBitrate = test.setBitrateParameters.args[0].pop();
-          assert.equal(maxAudioBitrate, test.maxAudioBitrate);
-          assert.equal(maxVideoBitrate, test.maxVideoBitrate);
+          test.pc.getSenders().forEach(sender => {
+            const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
+            if (sender.track.kind === 'video' && chromeScreenTrack)  {
+              sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+            } else {
+              sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
+            }
+          });
         });
       }
 
       function itShouldMaybeSetNetworkPriority() {
-        if (enableDscp && isRTCRtpSenderParamsSupported) {
+        if (enableDscp) {
           it('should set RTCRtpEncodingParameters.networkPriority to "high" all RTCRtpSenders', () => {
             test.pc.getSenders().forEach(sender => {
               sinon.assert.calledWith(sender.setParameters, sinon.match.hasNested('encodings[0].networkPriority', 'high'));
@@ -1468,17 +1464,15 @@ describe('PeerConnectionV2', () => {
       }
 
       function itShouldNotSetResolutionScale() {
-        if (isRTCRtpSenderParamsSupported) {
-          it('should not set RTCRtpEncodingParameters.scaleResolutionDownBy for any video senders', () => {
-            test.pc.getSenders().forEach(sender => {
-              if (sender.track.kind === 'video') {
-                sinon.assert.calledWith(sender.setParameters, sinon.match(({ encodings }) => {
-                  return !encodings.find(encoding => typeof encoding.scaleResolutionDownBy !== 'undefined');
-                }));
-              }
-            });
+        it('should not set RTCRtpEncodingParameters.scaleResolutionDownBy for any video senders', () => {
+          test.pc.getSenders().forEach(sender => {
+            if (sender.track.kind === 'video') {
+              sinon.assert.calledWith(sender.setParameters, sinon.match(({ encodings }) => {
+                return !encodings.find(encoding => typeof encoding.scaleResolutionDownBy !== 'undefined');
+              }));
+            }
           });
-        }
+        });
       }
 
       // NOTE(mroberts): This test should really be extended. Instead of popping
@@ -2095,6 +2089,8 @@ describe('PeerConnectionV2', () => {
         const mediaStream = { id: 'abc' };
 
         const trackPromise = new Promise(resolve => test.pcv2.once('trackAdded', resolve));
+        const trackMatcher = { match: sinon.stub(), update: sinon.stub() };
+        test.pcv2._trackMatcher = trackMatcher;
 
         pc.emit('track', {
           type: 'track',
@@ -2129,10 +2125,18 @@ describe('PeerConnectionV2', () => {
       test = makeTest({ offers: 3, answers: 3 });
     });
 
-    it('should emit a "description" event with a new offer', async () => {
+    it('should call setParameters with the correct values', async () => {
       test.encodingParameters.update({ maxAudioBitrate: 20, maxVideoBitrate: 30 });
-      const { description } = await new Promise(resolve => test.pcv2.once('description', resolve));
-      assert.deepEqual({ type: description.type, sdp: description.sdp }, test.pc.localDescription);
+
+      // Wait for the internal promise to resolve
+      await new Promise(resolve => setTimeout(resolve, 1));
+
+      const senders = test.pc.getSenders();
+      const audioSender = senders.filter(s => s.track.kind === 'audio')[0];
+      const videoSender = senders.filter(s => s.track.kind === 'video')[0];
+
+      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20 }] });
+      assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 30 }] });
     });
   });
 
@@ -2385,6 +2389,7 @@ describe('PeerConnectionV2', () => {
       });
     });
   });
+
 });
 
 /**
@@ -2425,8 +2430,9 @@ class MockPeerConnection extends EventEmitter {
   constructor(offers, answers, errorScenario) {
     super();
 
-    this.senders = [];
     this.receivers = [];
+    this.senders = [];
+    this.transceivers = [];
 
     this.offerIndex = 0;
     this.answerIndex = 0;
@@ -2541,12 +2547,25 @@ class MockPeerConnection extends EventEmitter {
     }
   }
 
+  addTransceiver(track) {
+    const sender = this.addTrack(track);
+    const transceiver = {
+      sender
+    };
+    this.transceivers.push(transceiver);
+    return transceiver;
+  }
+
   getSenders() {
     return this.senders;
   }
 
   getReceivers() {
     return this.receivers;
+  }
+
+  getTransceivers() {
+    return this.transceivers;
   }
 
   addIceCandidate() {
@@ -2619,7 +2638,6 @@ function makePeerConnectionV2(options) {
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
   options.isChromeScreenShareTrack = options.isChromeScreenShareTrack || sinon.spy(() => false);
   options.sessionTimeout = options.sessionTimeout || 100;
-  options.setBitrateParameters = options.setBitrateParameters || sinon.spy(sdp => sdp);
   options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
   options.preferredCodecs = options.preferredCodecs || { audio: [], video: [] };
   options.options = {
@@ -2630,9 +2648,7 @@ function makePeerConnectionV2(options) {
     RTCSessionDescription: identity,
     isChromeScreenShareTrack: options.isChromeScreenShareTrack,
     eventObserver: options.eventObserver || { emit: sinon.spy() },
-    isRTCRtpSenderParamsSupported: options.isRTCRtpSenderParamsSupported,
     sessionTimeout: options.sessionTimeout,
-    setBitrateParameters: options.setBitrateParameters,
     setCodecPreferences: options.setCodecPreferences
   };
 
@@ -2744,6 +2760,10 @@ function makeDescription(type, options) {
       type === 'pranswer') {
     const session = 'session' in options ? options.session : Number.parseInt(Math.random() * 1000);
     description.sdp = 'o=- ' + session + '\r\n';
+    if (!options.noMedia) {
+      description.sdp += 'm=video 9 UDP/TLS/RTP/SAVPF 99 22\r\na=sendrecv\r\n';
+      description.sdp += 'm=audio 9 UDP/TLS/RTP/SAVPF 111 9 0 8 126\r\na=sendrecv\r\n';
+    }
     if (options.iceLite) {
       description.sdp += 'a=ice-lite\r\n';
     }
@@ -2830,8 +2850,8 @@ function makeDataTrackSender(id) {
 }
 
 function makeMediaTrackSender(track) {
-  const id = track.id || makeId();
-  const kind = track.kind || makeMediaKind();
+  const id = track.id = track.id || makeId();
+  const kind = track.kind = track.kind || makeMediaKind();
   return {
     id,
     kind,
@@ -2850,6 +2870,10 @@ function makeDataChannel(id) {
   return dataChannel;
 }
 
+function makePublisherHints(layerIndex, enabled) {
+  // eslint-disable-next-line camelcase
+  return [{ enabled, layer_index: layerIndex }];
+}
 
 /**
  * @interface MockPeerConnectionOptions
