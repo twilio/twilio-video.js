@@ -2,6 +2,20 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.20.0 (In Progress)
+====================
+
+Changes
+-------
+
+The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor) API has been promoted to GA. Below are the changes included in this release.
+
+- The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
+
+- Signaling and Media Connection errors are now properly surfaced via the [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event.
+
+- [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
+
 2.19.1 (In Progress)
 ====================
 Bug Fixes
@@ -9,7 +23,6 @@ Bug Fixes
 
 - Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
 - Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
-
 
 2.19.0 (January 31, 2022)
 =========================
