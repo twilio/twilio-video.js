@@ -16,6 +16,14 @@ The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/mo
 
 - [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
+2.19.1 (In Progress)
+====================
+Bug Fixes
+---------
+
+- Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
+- Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
+
 2.19.0 (January 31, 2022)
 =========================
 
