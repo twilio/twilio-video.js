@@ -1,11 +1,9 @@
 'use strict';
 
-import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
+import * as assert from 'assert';
+import * as sinon from 'sinon';
 import { createLocalTracks } from '../../../lib/createlocaltracks';
-
-import assert from 'assert';
-import sinon from 'sinon';
-
+import { fakeGetUserMedia, FakeMediaStreamTrack } from '../../lib/fakemediastream';
 
 describe('createLocalTracks', () => {
   [
