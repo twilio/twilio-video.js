@@ -13,6 +13,7 @@ const {
   getRegionalizedIceServers,
   randomName,
   validateMediaFlow,
+  waitForMediaFlow,
   waitToGoOffline,
   waitToGoOnline,
   smallVideoConstraints,
@@ -124,6 +125,58 @@ async function setup(setupOptions) {
 function readCurrentNetworks(dockerAPI) {
   return waitFor(dockerAPI.getCurrentNetworks(), 'getCurrentNetworks');
 }
+
+describe('VIDEO-8315: IceConnectionMonitor Test', function() {
+  // alice joins the room with audio video tracks
+  // network interrupts for 10 seconds, and then restores.
+  // alice validates media flow.
+  this.timeout(8 * ONE_MINUTE);
+  let dockerAPI = new DockerProxyClient();
+  let isRunningInsideDocker = false;
+  before(this.title, async function() {
+    isRunningInsideDocker = await dockerAPI.isDocker();
+  });
+
+  this.beforeEach(function() {
+    if (!isRunningInsideDocker || isFirefox || defaults.topology === 'peer-to-peer') {
+      this.skip();
+    }
+  });
+  this.afterEach(async function() {
+    await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+  });
+
+  it('media connection restores even when participant is not subscribed to media', async () => {
+    await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
+    await waitToGoOnline();
+    let currentNetworks = await readCurrentNetworks(dockerAPI);
+    const sid = await createRoom(name, defaults.topology);
+    const options = Object.assign({
+      audio: true,
+      fake: true,
+      name: sid,
+      video: smallVideoConstraints
+    }, defaults);
+
+    const room = await connect(getToken('Alice'), options);
+    await waitForMediaFlow(room, true);
+
+    // disconnect network
+    await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.disconnectFromNetwork(networkId)), `disconnect from all networks: ${room.sid}`);
+    await waitToGoOffline();
+
+    // wait for media flow to stop
+    await waitForMediaFlow(room, false);
+
+    // re-attach network
+    await waitFor(currentNetworks.map(({ Id: networkId }) => dockerAPI.connectToNetwork(networkId)), `reconnect to original networks: ${room.sid}`);
+    await readCurrentNetworks(dockerAPI);
+    await waitToGoOnline();
+
+    // wait upto a minute for media flow to begin again.
+    await waitForMediaFlow(room, true, 60000);
+  });
+});
 
 describe('network:', function() {
   this.retries(2);

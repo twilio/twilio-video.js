@@ -188,7 +188,7 @@ describe('IceConnectionMonitor', () => {
       });
     });
 
-    it('returns null if no stats of type in-boundrtp were found', () => {
+    it('returns  stats even if no stats of type in-boundrtp were found', () => {
       const chromeFakeStats = new Map(Object.entries({
         'RTCIceCandidatePair_4OFKCmYa_Mi4ThK96': {
           'id': 'RTCIceCandidatePair_A',
@@ -223,7 +223,9 @@ describe('IceConnectionMonitor', () => {
         }
       });
       return monitor._getIceConnectionStats().then(activePair => {
-        assert.equal(activePair, null);
+        assert.equal(activePair.bytesReceived, 20);
+        assert.equal(activePair.nominated, true);
+        assert.equal(activePair.id, 'RTCIceCandidatePair_B');
       });
     });
 
