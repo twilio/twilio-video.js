@@ -585,7 +585,7 @@ function initCollectedStats() : PreflightStats {
  * @returns {PreflightTest} preflightTest - An instance to be used to monitor progress of the test.
  * @example
  * var { runPreflight } = require('twilio-video');
- * var preflight = runPreflight();
+ * var preflight = runPreflight(token, preflightOptions);
  * preflightTest.on('progress', progress => {
  *   console.log('preflight progress:', progress);
  * });
