@@ -18,7 +18,7 @@ Thank you @morninng @eroidaaruqaj [#1622](https://github.com/twilio/twilio-video
 
 - [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
-You can learn more about `runPreflight` usage in the documentation, [here](twilio.com/docs/video/troubleshooting/preflight-api).
+You can learn more about `runPreflight` usage in the documentation, [here](https://twilio.com/docs/video/troubleshooting/preflight-api).
 
 Other changes in this release includes:
 
