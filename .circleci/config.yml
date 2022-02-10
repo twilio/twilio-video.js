@@ -144,13 +144,6 @@ commands:
           name: Running Network Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
       - save-test-results
-  framework-tests:
-    steps:
-      - build
-      - run:
-          name: Running Framework Tests
-          command: scripts/circleci-run-tests.sh
-      - save-test-results
   umd-tests:
     steps:
       - build
@@ -237,12 +230,6 @@ jobs:
       TEST_STABILITY: << parameters.test_stability >>
     executor: machine-executor
     steps: [network-tests]
-  Framework-tests:
-    environment:
-      TEST_TYPE: "framework"
-      BROWSER: "chrome"
-    executor: docker-with-browser
-    steps: [framework-tests]
   UMD-tests:
     environment:
       BROWSER: "chrome"
@@ -434,10 +421,6 @@ workflows:
               browser: ["chrome", "firefox"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable", "unstable"]
-          requires: [Build, UnitTests]
-      - Framework-tests:
-          context: dockerhub-pulls
-          name: "framework tests"
           requires: [Build, UnitTests]
       - UMD-tests:
           context: dockerhub-pulls
