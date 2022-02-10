@@ -1,8 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../es5/util/constants');
-const sdpFormat = require('@twilio/webrtc/lib/util/sdp').getSdpFormat(DEFAULT_CHROME_SDP_SEMANTICS);
 
 const {
   connect,
@@ -139,9 +137,6 @@ describe('LocalParticipant: regresions', function() {
       assert.equal(thatTrack.sid, thisLocalTrackPublication1.trackSid);
       assert.equal(thatTrack.kind, thisLocalTrackPublication1.kind);
       assert.equal(thatTrack.enabled, thisLocalTrackPublication1.enabled);
-      if (isChrome && sdpFormat === 'planb') {
-        assert.equal(thatTrack.mediaStreamTrack.readyState, 'ended');
-      }
     });
 
     it('should eventually raise a "trackSubscribed" event for the published LocalVideoTrack', () => {

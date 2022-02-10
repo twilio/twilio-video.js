@@ -2,13 +2,10 @@
 
 const assert = require('assert');
 const { guessBrowser } = require('@twilio/webrtc/lib/util');
-const { getSdpFormat } = require('@twilio/webrtc/lib/util/sdp');
 const { getMediaSections, setSimulcast } = require('../../../../es5/util/sdp');
 const { RTCPeerConnection, RTCSessionDescription } = require('@twilio/webrtc');
-const { DEFAULT_CHROME_SDP_SEMANTICS } = require('../../../../es5/util/constants');
 
 const isChrome = guessBrowser() === 'chrome';
-const sdpFormat = getSdpFormat(DEFAULT_CHROME_SDP_SEMANTICS);
 
 describe('setSimulcast', () => {
   let answer1;
@@ -41,7 +38,7 @@ describe('setSimulcast', () => {
 
         offer1 = createSdp === 'createOffer' ? new RTCSessionDescription({
           type: offer.type,
-          sdp: setSimulcast(offer.sdp, sdpFormat, trackIdsToAttributes)
+          sdp: setSimulcast(offer.sdp, trackIdsToAttributes)
         }) : offer;
 
         await pc1.setLocalDescription(offer1);
@@ -50,7 +47,7 @@ describe('setSimulcast', () => {
 
         answer1 = createSdp === 'createAnswer' ? new RTCSessionDescription({
           type: answer.type,
-          sdp: setSimulcast(answer.sdp, sdpFormat, trackIdsToAttributes)
+          sdp: setSimulcast(answer.sdp, trackIdsToAttributes)
         }) : answer;
 
         await pc2.setLocalDescription(answer1);
@@ -59,7 +56,7 @@ describe('setSimulcast', () => {
 
         offer2 = createSdp === 'createOffer' ? new RTCSessionDescription({
           type: _offer.type,
-          sdp: setSimulcast(_offer.sdp, sdpFormat, trackIdsToAttributes)
+          sdp: setSimulcast(_offer.sdp, trackIdsToAttributes)
         }) : _offer;
 
         await pc2.setRemoteDescription(offer2);
@@ -100,7 +97,7 @@ describe('setSimulcast', () => {
 
       offer1 = new RTCSessionDescription({
         type: offer.type,
-        sdp: setSimulcast(offer.sdp, sdpFormat, trackIdsToAttributes)
+        sdp: setSimulcast(offer.sdp, trackIdsToAttributes)
       });
 
       await pc1.setLocalDescription(offer1);
@@ -109,7 +106,7 @@ describe('setSimulcast', () => {
 
       offer2 = new RTCSessionDescription({
         type: _offer.type,
-        sdp: setSimulcast(_offer.sdp, sdpFormat, trackIdsToAttributes)
+        sdp: setSimulcast(_offer.sdp, trackIdsToAttributes)
       });
     });
 
