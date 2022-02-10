@@ -2,14 +2,36 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.20.0 (February 10, 2022)
+==========================
+
+Changes
+-------
+
+The Preflight API ([runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor)), originally released in [2.16.0](#2160-august-11-2021), has been promoted to GA.
+
+Thank you @morninng @eroidaaruqaj [#1622](https://github.com/twilio/twilio-video.js/issues/1622) for your feedback. Based on this feedback, we have made the following changes to `runPreflight`. (VIDEO-7728)
+
+- The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
+
+- Signaling and Media Connection errors are now properly surfaced via the [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event.
+
+- [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
+
+You can learn more about `runPreflight` usage in the documentation, [here](twilio.com/docs/video/troubleshooting/preflight-api).
+
+Other changes in this release includes:
+
+- In [October 2019](#200-beta15-october-24-2019), twilio-video.js started using Unified Plan where available, while also maintaining support for earlier browser versions with Plan B as the default SDP format. With this release, twilio-video.js will now stop supporting the Plan B SDP format and will only support the Unified Plan SDP format. Please refer to this [changelog](#200-beta15-october-24-2019) and this [public advisory](https://support.twilio.com/hc/en-us/articles/360039098974-Upcoming-Breaking-Changes-in-Twilio-Video-JavaScript-SDK-Google-Chrome) for more related information. (VIDEO-6587)
+
 2.19.1 (February 7, 2022)
 =========================
+
 Bug Fixes
 ---------
 
 - Fixed a bug where media connection was not getting reconnected after a network interruption if participant was not subscribed to any tracks. (VIDEO-8315)
 - Fixed a bug where network quality score stops updating after network glitches. (VIDEO-8413)
-
 
 2.19.0 (January 31, 2022)
 =========================
