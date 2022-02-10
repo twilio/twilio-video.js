@@ -8,7 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
-The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor) API has been promoted to GA. Below are the changes included in this release. (VIDEO-7728)
+The Preflight API ([runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/module-twilio-video.html#.runPreflight__anchor)), originally released in [2.16.0](#2160-august-11-2021), has been promoted to GA.
+
+Thank you @morninng @eroidaaruqaj [#1622](https://github.com/twilio/twilio-video.js/issues/1622) for your feedback. Based on this feedback, we have made the following changes to `runPreflight`. (VIDEO-7728)
 
 - The [failed](https://sdk.twilio.com/js/video/releases/2.20.0/docs/PreflightTest.html#event:failed) event now provides a [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) which include partial results gathered during the test. Use this in addition to the error object to get more insights on the failure.
 
@@ -16,6 +18,7 @@ The [Video.runPreflight](https://sdk.twilio.com/js/video/releases/2.20.0/docs/mo
 
 - [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
+You can learn more about `runPreflight` usage in the documentation, [here](twilio.com/docs/video/troubleshooting/preflight-api).
 
 Other changes in this release includes:
 
