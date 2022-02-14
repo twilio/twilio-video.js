@@ -1,10 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const { makeSdpWithTracks } = require('../../../../lib/mocksdp');
-const OrderedTrackMatcher = require('../../../../../lib/util/sdp/trackmatcher/ordered');
+const { makeSdpWithTracks } = require('../../../lib/mocksdp');
+const TrackMatcher = require('../../../../lib/util/sdp/trackmatcher.js');
 
-describe('OrderedTrackMatcher', () => {
+describe('TrackMatcher', () => {
   const tests = [
     // Add a first, then a second, and then two more audio MediaStreamTracks
     {
@@ -86,24 +86,22 @@ describe('OrderedTrackMatcher', () => {
     }
   ];
 
-  it('should match new MediaStreamTrack IDs in the order in which they appear in the SDP', () => {
+  it('should match new MediaStreamTrack IDs to their MIDs in the SDP', () => {
     tests.forEach(test => {
-      const trackMatcher = new OrderedTrackMatcher();
+      const trackMatcher = new TrackMatcher();
 
       test.sdps.forEach((tracksByKind, i) => {
-        const sdp = makeSdpWithTracks('planb', tracksByKind);
+        const sdp = makeSdpWithTracks(tracksByKind);
         const matchesByKind = test.matches[i];
 
         trackMatcher.update(sdp);
 
         ['audio', 'video'].forEach(kind => {
-          const event = { track: { kind } };
           const matches = matchesByKind[kind] || [];
-
           matches.forEach(match => {
+            const event = { transceiver: { mid: `mid_${match}` } };
             assert.equal(trackMatcher.match(event), match);
           });
-          assert.equal(trackMatcher.match(event), null);
         });
       });
     });

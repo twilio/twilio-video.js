@@ -3,10 +3,9 @@
 'use strict';
 
 const assert = require('assert');
-const { audio: createLocalAudioTrack, video: createLocalVideoTrack } = require('../../../../es5/createlocaltrack');
 const defaults = require('../../../lib/defaults');
 const { completeRoom } = require('../../../lib/rest');
-const { Logger } = require('../../../../es5');
+const { createLocalAudioTrack, createLocalVideoTrack, Logger } = require('../../../../es5');
 
 const {
   createSyntheticAudioStreamTrack,
@@ -115,4 +114,3 @@ describe('BandwidthProfileOptions: regressions', function() {
     });
   });
 });
-

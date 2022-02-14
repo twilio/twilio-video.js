@@ -6,7 +6,6 @@ if (typeof window === 'undefined') {
 
 require('./spec/connect');
 require('./spec/createlocaltrack');
-require('./spec/createlocaltracks');
 require('./spec/encodingparameters');
 require('./spec/localparticipant');
 require('./spec/networkqualityconfiguration');
@@ -76,8 +75,7 @@ require('./spec/util/networkmonitor');
 require('./spec/util/sdp');
 require('./spec/util/sdp/issue8329');
 require('./spec/util/support');
-require('./spec/util/trackmatcher/mid');
-require('./spec/util/trackmatcher/ordered');
+require('./spec/util/trackmatcher.js');
 require('./spec/util/twilioerror');
 
 require('./spec/webaudio/audiocontext');

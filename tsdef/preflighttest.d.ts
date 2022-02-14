@@ -9,7 +9,7 @@ import { PreflightTestReport } from '.';
 export declare interface PreflightTest {
   on(event: 'progress', listener: (progress: string) => void): this;
   on(event: 'completed', listener: (report: PreflightTestReport)=> void): this;
-  on(event: 'failed', listener: (error: Error) => void): this;
+  on(event: 'failed', listener: (error: Error, report: PreflightTestReport) => void): this;
 }
 
 export declare class PreflightTest extends EventEmitter {

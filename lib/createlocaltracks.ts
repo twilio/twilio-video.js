@@ -1,8 +1,9 @@
 'use strict';
 
-const asLocalTrack = require('./util').asLocalTrack;
-const buildLogLevels = require('./util').buildLogLevels;
-const getUserMedia = require('@twilio/webrtc').getUserMedia;
+import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
+
+const { asLocalTrack, buildLogLevels } = require('./util');
+const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
 
 const {
   LocalAudioTrack,
@@ -10,7 +11,6 @@ const {
   LocalVideoTrack
 } = require('./media/track/es5');
 
-const MediaStreamTrack = require('@twilio/webrtc').MediaStreamTrack;
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
@@ -19,6 +19,19 @@ const workaround180748 = require('./webaudio/workaround180748');
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
+
+
+type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
+type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
+
+interface InternalOptions extends CreateLocalTracksOptions {
+  getUserMedia: any;
+  LocalAudioTrack: any;
+  LocalDataTrack: any;
+  LocalVideoTrack: any;
+  MediaStreamTrack: any;
+  Log: any;
+};
 
 /**
  * Request {@link LocalTrack}s. By default, it requests a
@@ -77,11 +90,11 @@ let createLocalTrackCalls = 0;
  * });
  *
  */
-function createLocalTracks(options) {
+export async function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]> {
   const isAudioVideoAbsent =
     !(options && ('audio' in options || 'video' in options));
 
-  options = Object.assign({
+  const fullOptions: InternalOptions = {
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
@@ -91,80 +104,90 @@ function createLocalTracks(options) {
     LocalVideoTrack,
     MediaStreamTrack,
     Log,
-    video: isAudioVideoAbsent
-  }, options);
+    video: isAudioVideoAbsent,
+    ...options,
+  };
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
-  const logLevels = buildLogLevels(options.logLevel);
-  const log = new options.Log('default', logComponentName, logLevels, options.loggerName);
+  const logLevels = buildLogLevels(fullOptions.logLevel);
+  const log = new fullOptions.Log('default', logComponentName, logLevels, fullOptions.loggerName);
+
+  const localTrackOptions = Object.assign({ log }, fullOptions);
 
   // NOTE(mmalavalli): The Room "name" in "options" was being used
   // as the LocalTrack name in asLocalTrack(). So we pass a copy of
   // "options" without the "name".
-  const localTrackOptions = Object.assign({ log }, options);
-  delete localTrackOptions.name;
+  // NOTE(joma): CreateLocalTracksOptions type does not really have a "name" property when used publicly by customers.
+  // But we are passing this property when used internally by other JS files.
+  // We can update this "any" type once those JS files are converted to TS.
+  delete (localTrackOptions as any).name;
 
-  if (options.audio === false && options.video === false) {
+  if (fullOptions.audio === false && fullOptions.video === false) {
     log.info('Neither audio nor video requested, so returning empty LocalTracks');
-    return Promise.resolve([]);
+    return [];
   }
 
-  if (options.tracks) {
+  if (fullOptions.tracks) {
     log.info('Adding user-provided LocalTracks');
-    log.debug('LocalTracks:', options.tracks);
-    return Promise.resolve(options.tracks);
+    log.debug('LocalTracks:', fullOptions.tracks);
+    return fullOptions.tracks;
   }
 
-  const extraLocalTrackOptions = {
-    audio: options.audio && options.audio.name
-      ? { name: options.audio.name }
+  const extraLocalTrackOptions: ExtraLocalTrackOptions = {
+    audio: typeof fullOptions.audio === 'object' && fullOptions.audio.name
+      ? { name: fullOptions.audio.name }
       : {},
-    video: options.video && options.video.name
-      ? { name: options.video.name }
+    video: typeof fullOptions.video === 'object' && fullOptions.video.name
+      ? { name: fullOptions.video.name }
       : {}
   };
 
   extraLocalTrackOptions.audio.isCreatedByCreateLocalTracks = true;
   extraLocalTrackOptions.video.isCreatedByCreateLocalTracks = true;
 
-  if (options.audio && typeof options.audio.workaroundWebKitBug1208516 === 'boolean') {
-    extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = options.audio.workaroundWebKitBug1208516;
+  if (typeof fullOptions.audio === 'object' && typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
+    extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
-  if (options.video && typeof options.video.workaroundWebKitBug1208516 === 'boolean') {
-    extraLocalTrackOptions.video.workaroundWebKitBug1208516 = options.video.workaroundWebKitBug1208516;
+  if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
+    extraLocalTrackOptions.video.workaroundWebKitBug1208516 = fullOptions.video.workaroundWebKitBug1208516;
   }
 
-  if (options.audio) {
-    delete options.audio.name;
+  if (typeof fullOptions.audio === 'object') {
+    delete fullOptions.audio.name;
   }
-  if (options.video) {
-    delete options.video.name;
+  if (typeof fullOptions.video === 'object') {
+    delete fullOptions.video.name;
   }
 
   const mediaStreamConstraints = {
-    audio: options.audio,
-    video: options.video
+    audio: fullOptions.audio,
+    video: fullOptions.video
   };
 
-  const workaroundWebKitBug180748 = options.audio && options.audio.workaroundWebKitBug180748;
+  const workaroundWebKitBug180748 = typeof fullOptions.audio === 'object' && fullOptions.audio.workaroundWebKitBug180748;
 
-  const mediaStreamPromise = workaroundWebKitBug180748
-    ? workaround180748(log, options.getUserMedia, mediaStreamConstraints)
-    : options.getUserMedia(mediaStreamConstraints);
+  try {
+    const mediaStream = await (workaroundWebKitBug180748
+      ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
+      : fullOptions.getUserMedia(mediaStreamConstraints));
 
-  return mediaStreamPromise.then(mediaStream => {
-    const mediaStreamTracks = mediaStream.getAudioTracks().concat(mediaStream.getVideoTracks());
+    const mediaStreamTracks = [
+      ...mediaStream.getAudioTracks(),
+      ...mediaStream.getVideoTracks(),
+    ];
 
     log.info('Call to getUserMedia successful; got MediaStreamTracks:',
       mediaStreamTracks);
 
-    return mediaStreamTracks.map(mediaStreamTrack => asLocalTrack(mediaStreamTrack, Object.assign(
-      extraLocalTrackOptions[mediaStreamTrack.kind], localTrackOptions)));
-  }, error => {
+    return mediaStreamTracks.map(mediaStreamTrack => asLocalTrack(mediaStreamTrack, {
+      ...extraLocalTrackOptions[mediaStreamTrack.kind as 'audio' | 'video'],
+      ...localTrackOptions,
+    }));
+  } catch (error) {
     log.warn('Call to getUserMedia failed:', error);
     throw error;
-  });
+  }
 }
 
 /**
@@ -185,5 +208,3 @@ function createLocalTracks(options) {
  *   get local video with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
  */
-
-module.exports = createLocalTracks;
