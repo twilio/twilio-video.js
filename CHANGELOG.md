@@ -2,6 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.21.0 (In Progress)
+==========================
+
+New Features
+------------
+- twilio-video.js now supports WKWebView and SFSafariViewController on the latest version of iOS. Thank you @codeborne for your contributions. (VIDEO-8374)
+
 2.20.0 (February 10, 2022)
 ==========================
 
