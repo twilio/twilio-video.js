@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug that was introduced in 2.19.0 where `LocalVideoTrack` from older iOS devices (14.x) did not publish media (VIDEO-8770)
+- Fixed a bug that was introduced in 2.19.0 where the published LocalVideoTracks of Participants on older iOS versions 14.5 and below did not encode and transmit media. (VIDEO-8770)
 
 2.20.0 (February 10, 2022)
 ==========================
