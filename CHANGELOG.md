@@ -2,6 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.20.1 (In Progress)
+====================
+Bug Fixes
+---------
+
+- Fixed a bug that was introduced in 2.19.0 where the published LocalVideoTracks of Participants on older iOS versions 14.5 and below did not encode and transmit media. (VIDEO-8770)
+
 2.20.0 (February 10, 2022)
 ==========================
 

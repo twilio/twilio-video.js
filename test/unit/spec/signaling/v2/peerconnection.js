@@ -126,12 +126,12 @@ describe('PeerConnectionV2', () => {
       },
       {
         browser: 'chrome',
-        testName: 'resolution <= 480x270 (trackReplaced removes active flag when trackReplaced)',
+        testName: 'resolution <= 480x270 (trackReplaced sets active flags)',
         width: 320,
         trackReplaced: true,
         height: 180,
         encodings: [{ scaleResolutionDownBy: 4, active: false }, { scaleResolutionDownBy: 2, active: true }, { scaleResolutionDownBy: 1, active: true }],
-        expectedEncodings: [{ scaleResolutionDownBy: 1 }, { active: false }, { active: false }]
+        expectedEncodings: [{ scaleResolutionDownBy: 1, active: true }, { active: false }, { active: false }]
       },
       {
         browser: 'chrome',
@@ -192,6 +192,25 @@ describe('PeerConnectionV2', () => {
         height: 270,
         encodings: [{}, {}, {}],
         expectedEncodings: [{ scaleResolutionDownBy: 2 }, { scaleResolutionDownBy: 1 }, { active: false }],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'does not delete active property for safari',
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ scaleResolutionDownBy: 2 }, { scaleResolutionDownBy: 1 }, { active: false }],
+        preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'safari',
+        testName: 'sets active when trackReplaced',
+        trackReplaced: true,
+        width: 480,
+        height: 270,
+        encodings: [{}, {}, {}],
+        expectedEncodings: [{ scaleResolutionDownBy: 2, active: true }, { scaleResolutionDownBy: 1, active: true }, { active: false }],
         preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
       },
       {
