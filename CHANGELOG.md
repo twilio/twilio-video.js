@@ -9,6 +9,13 @@ New Features
 ------------
 - twilio-video.js now supports WKWebView and SFSafariViewController on the latest version of iOS. Thank you @codeborne for your contributions. (VIDEO-8374)
 
+2.20.1 (Feb 17, 2022)
+=====================
+Bug Fixes
+---------
+
+- Fixed a bug that was introduced in 2.19.0 where the published LocalVideoTracks of Participants on older iOS versions 14.5 and below did not encode and transmit media. (VIDEO-8770)
+
 2.20.0 (February 10, 2022)
 ==========================
 
@@ -25,7 +32,7 @@ Thank you @morninng @eroidaaruqaj [#1622](https://github.com/twilio/twilio-video
 
 - [PreflightTestReport](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightTestReport) now includes a `progressEvents` property. This new property is an array of [PreflightProgress](https://sdk.twilio.com/js/video/releases/2.20.0/docs/global.html#PreflightProgress) events detected during the test. Use this information to determine which steps were completed and which ones were not.
 
-You can learn more about `runPreflight` usage in the documentation, [here](twilio.com/docs/video/troubleshooting/preflight-api).
+You can learn more about `runPreflight` usage in the documentation, [here](https://twilio.com/docs/video/troubleshooting/preflight-api).
 
 Other changes in this release includes:
 
