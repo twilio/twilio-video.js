@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 New Features
 ------------
-- twilio-video.js now supports WKWebView and SFSafariViewController on iOS versions 15.2 and up. Applications will need to include the camera usage description, microphone usage description, inline media playback on WKWebviews, and a [User-Agent string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) that follows the correct format. Thank you @codeborne for your contributions. (VIDEO-8374)
+- twilio-video.js now supports WKWebView and SFSafariViewController on iOS versions 15.2 and up. iOS applications will need to include the camera usage description, microphone usage description, inline media playback on WKWebviews. Web applications need to include a [User-Agent string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) that follows the correct format. Thank you @codeborne for your contributions. (VIDEO-8374)
 
 2.20.1 (Feb 17, 2022)
 =====================
