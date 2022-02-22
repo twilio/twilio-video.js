@@ -1,3 +1,4 @@
+import { AudioProcessor } from './AudioProcessor';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';
@@ -162,6 +163,8 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
+  // eslint-disable-next-line no-warning-comments
+  processor?: AudioProcessor; // TODO: consider moving to a new type CreateAudioLocalTrackOptions.
 }
 
 export interface ConnectOptions {

@@ -1,11 +1,14 @@
 'use strict';
+
 import type { ConnectOptions, CreateLocalTrackOptions } from '../tsdef/types';
 import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
+import { createKrispAudioProcessor } from './krispaudioprocessor';
 import { createLocalTracks } from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
+
 
 const internals = {
   connect: require('./connect'),
@@ -66,7 +69,7 @@ const LocalAudioTrack = internals.LocalAudioTrack;
 const LocalVideoTrack = internals.LocalVideoTrack;
 const LocalDataTrack = internals.LocalDataTrack;
 
-module.exports = {
+const Video = {
   connect,
   createLocalAudioTrack,
   createLocalVideoTrack,
@@ -77,5 +80,8 @@ module.exports = {
   Logger,
   LocalAudioTrack,
   LocalVideoTrack,
-  LocalDataTrack
+  LocalDataTrack,
+  createKrispAudioProcessor,
 };
+console.log(Video);
+export default Video;

@@ -1,3 +1,4 @@
+import { AudioProcessor } from './AudioProcessor';
 import { AudioTrack } from './AudioTrack';
 import { LocalTrackOptions } from './LocalTrackOptions';
 import { Track } from './Track';
@@ -12,6 +13,7 @@ export class LocalAudioTrack extends AudioTrack {
   enable(enabled?: boolean): this;
   restart(constraints?: MediaTrackConstraints): Promise<void>;
   stop(): this;
+  getProcessor(): AudioProcessor|null;
 
   on(event: 'disabled', listener: (track: this) => void): this;
   on(event: 'enabled', listener: (track: this) => void): this;

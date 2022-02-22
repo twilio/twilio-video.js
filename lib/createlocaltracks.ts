@@ -1,6 +1,7 @@
 'use strict';
 
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
+import { audio } from './createlocaltrack';
 
 const { asLocalTrack, buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
@@ -149,6 +150,10 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
+  if (typeof fullOptions.audio === 'object' && fullOptions.audio.processor) {
+    extraLocalTrackOptions.audio.processor = fullOptions.audio.processor;
+  }
+
   if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
     extraLocalTrackOptions.video.workaroundWebKitBug1208516 = fullOptions.video.workaroundWebKitBug1208516;
   }
@@ -172,13 +177,21 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    const mediaStreamTracks = [
-      ...mediaStream.getAudioTracks(),
-      ...mediaStream.getVideoTracks(),
-    ];
+    const videoTracks = mediaStream.getVideoTracks();
+    const audioTracks = mediaStream.getAudioTracks();
 
-    log.info('Call to getUserMedia successful; got MediaStreamTracks:',
-      mediaStreamTracks);
+    log.info('Call to getUserMedia successful; got tracks:', videoTracks, audioTracks);
+
+    // process audio track if processor is specified.
+    if (extraLocalTrackOptions.audio.processor && audioTracks[0]) {
+      log.warn('Processing Audio Track:');
+      audioTracks[0] = await extraLocalTrackOptions.audio.processor.process(audioTracks[0]);
+      log.warn('done Processing Audio Track:', audioTracks[0]);
+    }
+    const mediaStreamTracks = [
+      ...videoTracks,
+      ...audioTracks
+    ];
 
     return mediaStreamTracks.map(mediaStreamTrack => asLocalTrack(mediaStreamTrack, {
       ...extraLocalTrackOptions[mediaStreamTrack.kind as 'audio' | 'video'],
