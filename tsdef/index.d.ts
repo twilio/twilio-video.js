@@ -88,4 +88,5 @@ export {
   VP8CodecSettings
 } from './types';
 export { VideoProcessor } from './VideoProcessor';
+export { AudioProcessor } from './AudioProcessor';
 export { VideoTrack } from './VideoTrack';
