@@ -1,4 +1,4 @@
-FROM circleci/node:latest
+FROM cimg/node:current
 
 USER root
 ENV BROWSER='chrome'
