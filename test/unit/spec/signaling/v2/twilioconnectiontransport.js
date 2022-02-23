@@ -139,6 +139,7 @@ describe('TwilioConnectionTransport', () => {
           assert.equal(typeof message.format, 'string');
           assert.equal(message.ice_servers, iceServersStatus);
           assert.equal(message.name, test.name);
+          assert.deepEqual(message.media_signaling.track_subscriptions.transports, [{ type: 'data-channel' }]);
 
           if (networkQuality) {
             assert.deepEqual(message.media_signaling.network_quality.transports, [{ type: 'data-channel' }]);
@@ -182,7 +183,7 @@ describe('TwilioConnectionTransport', () => {
           assert.deepEqual(message.peer_connections, test.peerConnectionManager.getStates());
           assert.equal(message.token, test.accessToken);
           assert.equal(message.type, 'connect');
-          assert.equal(message.version, 2);
+          assert.equal(message.version, 3);
           assert.equal(message.publisher.name, `${name}.js`);
           assert.equal(message.publisher.sdk_version, version);
           assert.equal(typeof message.publisher.user_agent, 'string');
@@ -240,7 +241,7 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
           session: test.transport._session,
           type: 'disconnect',
-          version: 2
+          version: 3
         });
       });
 
@@ -270,7 +271,7 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
           session: test.transport._session,
           type: 'disconnect',
-          version: 2
+          version: 3
         });
       });
 
@@ -327,7 +328,7 @@ describe('TwilioConnectionTransport', () => {
         sinon.assert.calledWith(test.twilioConnection.sendMessage, {
           session: test.transport._session,
           type: 'disconnect',
-          version: 2
+          version: 3
         });
       });
 
@@ -439,7 +440,7 @@ describe('TwilioConnectionTransport', () => {
         }
       ],
       type: 'update',
-      version: 2
+      version: 3
     };
 
     context('"connected"', () => {
@@ -459,7 +460,7 @@ describe('TwilioConnectionTransport', () => {
           foo: 'bar',
           session: test.transport._session,
           type: 'update',
-          version: 2
+          version: 3
         });
       });
     });
@@ -640,7 +641,7 @@ describe('TwilioConnectionTransport', () => {
           session: test.transport._session,
           token: test.accessToken,
           type: 'sync',
-          version: 2
+          version: 3
         });
       });
     });
@@ -1024,7 +1025,7 @@ describe('TwilioConnectionTransport', () => {
                   session: test.transport._session,
                   token: test.accessToken,
                   type: 'sync',
-                  version: 2
+                  version: 3
                 });
               });
             } else {
@@ -1088,7 +1089,7 @@ describe('TwilioConnectionTransport', () => {
           sinon.assert.calledWith(test.twilioConnection.sendMessage, {
             session: test.transport._session,
             type: 'disconnect',
-            version: 2
+            version: 3
           });
         });
       });
@@ -1129,7 +1130,7 @@ describe('TwilioConnectionTransport', () => {
             session: test.transport._session,
             token: test.accessToken,
             type: 'sync',
-            version: 2
+            version: 3
           });
         });
       });
