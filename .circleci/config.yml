@@ -294,11 +294,11 @@ workflows:
   Build_Docker_Images_Workflow:
     triggers:
       - schedule:
-          cron: "0 3 * * *"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
-                - VIDEO-8647-Fix-Chrome-Docker-Image
+                - master
     jobs:
       - Build-Docker-Test-Image:
           context: dockerhub-push
