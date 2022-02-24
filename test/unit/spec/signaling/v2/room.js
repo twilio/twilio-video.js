@@ -1796,7 +1796,7 @@ function makeTest(options) {
   options.participants = options.participants || [];
   options.participantV2s = options.participantV2s || [];
 
-  options.RemoteParticipantV2 = options.RemoteParticipantV2 || makeRemoteParticipantV2Constructor(options);
+  options.RemoteParticipantSignaling = options.RemoteParticipantSignaling || makeRemoteParticipantV2Constructor(options);
   options.localTracks = (options.localTracks || []).map(track => {
     track.trackTransceiver = new EventEmitter();
     const eventEmitter = new EventEmitter();
