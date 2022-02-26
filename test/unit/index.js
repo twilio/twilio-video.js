@@ -63,6 +63,9 @@ require('./spec/signaling/v2/remotetrackpublication');
 require('./spec/signaling/v2/trackprioritysignaling');
 require('./spec/signaling/v2/twilioconnectiontransport');
 
+require('./spec/signaling/v3/room');
+require('./spec/signaling/v3/tracksubscriptionssignaling');
+
 require('./spec/util');
 require('./spec/util/asyncvar');
 require('./spec/util/browserdetection');

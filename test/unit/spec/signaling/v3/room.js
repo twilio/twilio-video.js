@@ -7,14 +7,17 @@ const sinon = require('sinon');
 
 const { flatMap } = require('../../../../../lib/util');
 const StatsReport = require('../../../../../lib/stats/statsreport');
-const RoomV2 = require('../../../../../lib/signaling/v2/room');
+const RoomV3 = require('../../../../../lib/signaling/v3/room');
 const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
-const RealTrackSwitchOffSignaling = require('../../../../../lib/signaling/v2/trackswitchoffsignaling');
+const RealTrackSubscriptionsSignaling = require('../../../../../lib/signaling/v3/tracksubscriptionssignaling');
+
+// eslint-disable-next-line no-warning-comments
+// TODO(mmalavalli): Change to RemoteTrackPublicationV3 once implemented.
 const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remotetrackpublication');
 
 
-describe('RoomV2', () => {
-  // RoomV2
+describe('RoomV3', () => {
+  // RoomV3
   // ------
 
   describe('constructor', () => {
@@ -261,7 +264,7 @@ describe('RoomV2', () => {
         assert.equal(sid2, test.participantV2s[1].sid);
       });
 
-      it('adds the newly-constructed ParticipantV2s to the RoomV2\'s .participants Map', () => {
+      it('adds the newly-constructed ParticipantV2s to the RoomV3\'s .participants Map', () => {
         const sid1 = makeParticipantSid();
         const sid2 = makeParticipantSid();
         const test = makeTest({
@@ -278,7 +281,7 @@ describe('RoomV2', () => {
           test.room.participants.get(sid2));
       });
 
-      it('calls .update with the Participants states on the newly-constructed RemoteParticipantV2s', () => {
+      it('calls .update with the Participants states on the newly-constructed ParticipantV2s', () => {
         const sid1 = makeParticipantSid();
         const sid2 = makeParticipantSid();
         const test = makeTest({
@@ -401,7 +404,9 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('#getStats', () => {
+  // eslint-disable-next-line no-warning-comments
+  // TODO(mmalavalli): Enable once RoomV2.getstats() is implemented.
+  describe.skip('#getStats', () => {
     it('only returns results for published Local- or Remote-Tracks', async () => {
       const test = makeTest({
         localTracks: [
@@ -409,6 +414,7 @@ describe('RoomV2', () => {
           { id: '2', kind: 'video' }
         ]
       });
+
       test.room._update({
         published: {
           revision: 1,
@@ -417,20 +423,13 @@ describe('RoomV2', () => {
             { id: '2', sid: 'MT2' }
           ]
         },
-        subscribed: {
-          revision: 1,
-          tracks: [
-            { id: '3', sid: 'MT3' },
-            { id: '4', sid: 'MT4' }
-          ]
-        },
         participants: [
           {
             identity: 'alice',
             sid: 'PA1',
             state: 'connected',
             tracks: [
-              { id: '3', kind: 'audio', sid: 'MT3' }
+              makeRemoteTrack({ id: '3', kind: 'audio', sid: 'MT3' })
             ]
           },
           {
@@ -438,7 +437,7 @@ describe('RoomV2', () => {
             sid: 'PA2',
             state: 'connected',
             tracks: [
-              { id: '4', kind: 'video', sid: 'MT4' }
+              makeRemoteTrack({ id: '4', kind: 'video', sid: 'MT4' })
             ]
           }
         ]
@@ -479,7 +478,7 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('#disconnect, called when the RoomV2 .state is', () => {
+  describe('#disconnect, called when the RoomV3 .state is', () => {
     context('"connected"', () => {
       it('returns true', () => {
         const test = makeTest();
@@ -531,7 +530,7 @@ describe('RoomV2', () => {
         });
       });
 
-      it('does not remove any ParticipantV2\'s from the RoomV2\'s .participants Map', () => {
+      it('does not remove any ParticipantV2\'s from the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -623,7 +622,7 @@ describe('RoomV2', () => {
         });
       });
 
-      it('does not remove any ParticipantV2\'s from the RoomV2\'s .participants Map', () => {
+      it('does not remove any ParticipantV2\'s from the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -927,7 +926,7 @@ describe('RoomV2', () => {
               test.participantV2s[0].sid);
           });
 
-          it('adds the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
+          it('adds the newly-constructed ParticipantV2 to the RoomV3\'s .participants Map', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -1174,9 +1173,6 @@ describe('RoomV2', () => {
           test.peerConnectionManager.update.args[0][0]);
       });
     });
-
-    context('.subscribed', () => {
-    });
   });
 
   describe('TrackPrioritySignaling', () => {
@@ -1211,10 +1207,6 @@ describe('RoomV2', () => {
         published: {
           revision: 1,
           tracks: [{ id: '1', sid: 'MT1' }, { id: '2', sid: 'MT2' }]
-        },
-        subscribed: {
-          revision: 1,
-          tracks: [{ id: '3', sid: 'MT3' }, { id: '4', sid: 'MT4' }]
         },
         participants: [
           {
@@ -1299,38 +1291,34 @@ describe('RoomV2', () => {
     });
   });
 
-  describe('TrackSwitchOffSignaling', () => {
-    describe('when update is called with an RSP message that determines Track Switch On/Off over RTCDataChannel', () => {
-      let TrackSwitchOffSignaling;
-      let trackSwitchOffSignaling;
+  describe('Track Subscriptions Signaling', () => {
+    describe('when update is called with an RSP message that determines Track Subscriptions over RTCDataChannel', () => {
+      let TrackSubscriptionsSignaling;
+      let trackSubscriptionsSignaling;
       let test;
       beforeEach(() => {
-        TrackSwitchOffSignaling = sinon.spy(function(a, b, c, d) {
-          trackSwitchOffSignaling = new RealTrackSwitchOffSignaling(a, b, c, d);
-          return trackSwitchOffSignaling;
+        TrackSubscriptionsSignaling = sinon.spy(function(a, b, c, d) {
+          trackSubscriptionsSignaling = new RealTrackSubscriptionsSignaling(a, b, c, d);
+          return trackSubscriptionsSignaling;
         });
 
         const mediaStreamTrack3 = { id: '3', kind: 'audio' };
         const mediaStreamTrack4 = { id: '4', kind: 'video' };
-        const trackReceiver3 = makeTrackReceiver(mediaStreamTrack3);
-        const trackReceiver4 = makeTrackReceiver(mediaStreamTrack4);
+        const trackReceiver3 = makeTrackReceiver(mediaStreamTrack3, '0');
+        const trackReceiver4 = makeTrackReceiver(mediaStreamTrack4, '1');
 
         const peerConnectionManager = makePeerConnectionManager([], []);
         peerConnectionManager.getTrackReceivers = () => [trackReceiver3, trackReceiver4];
 
         test = makeTest({
           peerConnectionManager,
-          TrackSwitchOffSignaling,
+          TrackSubscriptionsSignaling,
           localTracks: [{ id: '1', kind: 'audio' }, { id: '2', kind: 'video' }]
         });
         test.room._update({
           published: {
             revision: 1,
             tracks: [{ id: '1', sid: 'MT1' }, { id: '2', sid: 'MT2' }]
-          },
-          subscribed: {
-            revision: 1,
-            tracks: [{ id: '3', sid: 'MT3' }, { id: '4', sid: 'MT4' }]
           },
           participants: [
             {
@@ -1352,7 +1340,7 @@ describe('RoomV2', () => {
           // eslint-disable-next-line
           media_signaling: {
             // eslint-disable-next-line
-            track_switch_off: {
+            track_subscriptions: {
               transport: { type: 'data-channel', label: 'foo' }
             }
           }
@@ -1366,13 +1354,24 @@ describe('RoomV2', () => {
         beforeEach(async () => {
           dataTrackTransport = new EventEmitter();
           dataTrackTransport.stop = sinon.spy();
-
           dataTrackReceiver = makeTrackReceiver({ id: 'foo', kind: 'data' });
           dataTrackReceiver.toDataTransport = sinon.spy(() => dataTrackTransport);
-
           test.peerConnectionManager.emit('trackAdded', dataTrackReceiver);
-
           await test.room._getTrackReceiver(dataTrackReceiver.id);
+
+          dataTrackTransport.emit('message', {
+            revision: 1,
+            subscribed: {
+              MT3: { state: 'ON', mid: '0' },
+              MT4: { state: 'ON', mid: '1' }
+            },
+            type: 'track_subscriptions'
+          });
+
+          await Promise.all([
+            test.room._getTrackReceiver('0', 'mid'),
+            test.room._getTrackReceiver('1', 'mid')
+          ]);
         });
 
         it('converts the DataTrackReciever to a DataTrackTransport,', () => {
@@ -1391,21 +1390,31 @@ describe('RoomV2', () => {
           });
         }
 
-        it('fires trackSwitchOff / On events when such mesage is received on data channel', async () => {
+        it('fires trackSwitchOff / On events when such message is received on data channel', async () => {
           const trackSid = 'MT3';
           const trackSwitchOffPromise = getTrackSwitchOffPromise(test.room, trackSid, true /* off */);
-          dataTrackTransport.emit('message', { type: 'track_switch_off', off: [trackSid] });
+          dataTrackTransport.emit('message', {
+            revision: 2,
+            // eslint-disable-next-line camelcase
+            subscribed: { [trackSid]: { state: 'OFF', off_reason: 'bar' } },
+            type: 'track_subscriptions'
+          });
           await trackSwitchOffPromise;
 
           const trackSwitchOnPromise = getTrackSwitchOffPromise(test.room, trackSid, false /* on */);
-          dataTrackTransport.emit('message', { type: 'track_switch_off', on: [trackSid] });
+          dataTrackTransport.emit('message', {
+            revision: 3,
+            // eslint-disable-next-line camelcase
+            subscribed: { [trackSid]: { state: 'ON', mid: '0' } },
+            type: 'track_subscriptions'
+          });
           await trackSwitchOnPromise;
         });
       });
     });
   });
 
-  describe('Dominant Speaker', () => {
+  describe('Dominant Speaker Signaling', () => {
     describe('when update is called with an RSP message that determines Active Speaker over RTCDataChannel', () => {
       let dominantSpeaker;
       let test;
@@ -1699,7 +1708,7 @@ describe('RoomV2', () => {
         });
       });
 
-      describe('if the RoomV2 is disconnected before it gets the DataTrackReceiver', () => {
+      describe('if the RoomV3 is disconnected before it gets the DataTrackReceiver', () => {
         let NetworkQualityMonitor;
 
         let test;
@@ -1738,7 +1747,7 @@ describe('RoomV2', () => {
 });
 
 describe('"signalingConnectionStateChanged" event', () => {
-  context('when the RoomV2\'s .signalingConnectionState is "reconnecting"', () => {
+  context('when the RoomV3\'s .signalingConnectionState is "reconnecting"', () => {
     it('should transition the LocalParticipantV2\'s .state to "reconnecting"', () => {
       const test = makeTest();
       let newState;
@@ -1748,7 +1757,7 @@ describe('"signalingConnectionStateChanged" event', () => {
     });
   });
 
-  context('when the RoomV2\'s .signalingConnectionState is "connected"', () => {
+  context('when the RoomV3\'s .signalingConnectionState is "connected"', () => {
     it('should transition the LocalParticipantV2\'s .state to "connected"', () => {
       const test = makeTest();
       let newState;
@@ -1811,7 +1820,7 @@ function makeTest(options) {
 
   options.transport = options.transport || makeTransport(options);
 
-  const room = options.room = options.room || makeRoomV2(options);
+  const room = options.room = options.room || makeRoomV3(options);
 
   options.state = function state() {
     return new RoomStateBuilder(room);
@@ -1845,8 +1854,8 @@ function makeRemoteParticipantV2Constructor(testOptions) {
   return RemoteParticipantV2;
 }
 
-function makeRoomV2(options) {
-  return new RoomV2(options.localParticipant, options, options.transport, options.peerConnectionManager, options);
+function makeRoomV3(options) {
+  return new RoomV3(options.localParticipant, options, options.transport, options.peerConnectionManager, options);
 }
 
 function makeTransport() {
@@ -1900,6 +1909,7 @@ function makePeerConnectionManager(getRoom) {
       ]);
 
     const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
+    // eslint-disable-next-line no-console
     const remoteAudioTrackStats = remoteTracks
       .filter(track => track.kind === 'audio')
       .map(track => ({ trackId: track.id }))
@@ -2025,11 +2035,12 @@ function makeTrack(options) {
   return track;
 }
 
-function makeTrackReceiver(mediaStreamTrack) {
+function makeTrackReceiver(mediaStreamTrack, mid = null) {
   var trackReceiver = new EventEmitter();
   const { id, kind } = mediaStreamTrack;
   trackReceiver.id = id;
   trackReceiver.kind = kind;
+  trackReceiver.mid = mid;
   trackReceiver.readyState = 'foo';
   trackReceiver.track = mediaStreamTrack;
   return trackReceiver;
