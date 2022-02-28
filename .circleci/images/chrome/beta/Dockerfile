@@ -1,4 +1,4 @@
-FROM cimg/node:current-browsers
+FROM circleci/node:latest
 
 USER root
 ENV BROWSER='chrome'
@@ -11,9 +11,7 @@ RUN echo "Installing Chrome: $BVER" \
 && apt-get update \
 && echo "Installing google-chrome-$BVER from apt-get" \
 && apt-get install -y google-chrome-$BVER \
-&& rm -rf /var/lib/apt/lists/* \
-&& echo "Installing xvfb from apt-get" \
-&& apt-get install -y xvfb
+&& rm -rf /var/lib/apt/lists/*
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
