@@ -83,5 +83,4 @@ const Video = {
   LocalDataTrack,
   createKrispAudioProcessor,
 };
-console.log(Video);
 export default Video;

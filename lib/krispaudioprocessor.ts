@@ -97,6 +97,6 @@ class KrispAudioProcessor implements AudioProcessor {
   }
 }
 
-export function createKrispAudioProcessor(krispSDKPath: string) {
+export function createKrispAudioProcessor(krispSDKPath: string) : AudioProcessor {
   return new KrispAudioProcessor(krispSDKPath);
 }

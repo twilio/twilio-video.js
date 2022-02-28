@@ -1,7 +1,6 @@
 'use strict';
 
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
-import { audio } from './createlocaltrack';
 
 const { asLocalTrack, buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
