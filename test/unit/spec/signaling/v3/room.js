@@ -251,7 +251,7 @@ describe('RoomV3', () => {
     });
 
     context('.participants', () => {
-      it('constructs a new ParticipantV2 for each Participant state', () => {
+      it('constructs a new ParticipantV3 for each Participant state', () => {
         const sid1 = makeParticipantSid();
         const sid2 = makeParticipantSid();
         const test = makeTest({
@@ -260,11 +260,11 @@ describe('RoomV3', () => {
             { sid: sid2, tracks: [] }
           ]
         });
-        assert.equal(sid1, test.participantV2s[0].sid);
-        assert.equal(sid2, test.participantV2s[1].sid);
+        assert.equal(sid1, test.participantV3s[0].sid);
+        assert.equal(sid2, test.participantV3s[1].sid);
       });
 
-      it('adds the newly-constructed ParticipantV2s to the RoomV3\'s .participants Map', () => {
+      it('adds the newly-constructed ParticipantV3s to the RoomV3\'s .participants Map', () => {
         const sid1 = makeParticipantSid();
         const sid2 = makeParticipantSid();
         const test = makeTest({
@@ -274,14 +274,14 @@ describe('RoomV3', () => {
           ]
         });
         assert.equal(
-          test.participantV2s[0],
+          test.participantV3s[0],
           test.room.participants.get(sid1));
         assert.equal(
-          test.participantV2s[1],
+          test.participantV3s[1],
           test.room.participants.get(sid2));
       });
 
-      it('calls .update with the Participants states on the newly-constructed ParticipantV2s', () => {
+      it('calls .update with the Participants states on the newly-constructed ParticipantV3s', () => {
         const sid1 = makeParticipantSid();
         const sid2 = makeParticipantSid();
         const test = makeTest({
@@ -292,10 +292,10 @@ describe('RoomV3', () => {
         });
         assert.deepEqual(
           { sid: sid1, foo: 'bar', tracks: [] },
-          test.participantV2s[0].update.args[0][0]);
+          test.participantV3s[0].update.args[0][0]);
         assert.deepEqual(
           { sid: sid2, baz: 'qux', tracks: [] },
-          test.participantV2s[1].update.args[0][0]);
+          test.participantV3s[1].update.args[0][0]);
       });
     });
 
@@ -332,7 +332,7 @@ describe('RoomV3', () => {
   // RoomSignaling
   // -------------
 
-  describe('#connectParticipant, called when the ParticipantV2 was', () => {
+  describe('#connectParticipant, called when the ParticipantV3 was', () => {
     context('previously connected', () => {
       it('returns false', () => {
         const test = makeTest({
@@ -342,19 +342,19 @@ describe('RoomV3', () => {
         });
         assert.equal(
           false,
-          test.room.connectParticipant(test.participantV2s[0]));
+          test.room.connectParticipant(test.participantV3s[0]));
       });
 
-      it('the ParticipantV2 remains in the RoomV2\'s .participants Map', () => {
+      it('the ParticipantV3 remains in the RoomV2\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] }
           ]
         });
-        test.room.connectParticipant(test.participantV2s[0]);
+        test.room.connectParticipant(test.participantV3s[0]);
         assert.equal(
-          test.participantV2s[0],
-          test.room.participants.get(test.participantV2s[0].sid));
+          test.participantV3s[0],
+          test.room.participants.get(test.participantV3s[0].sid));
       });
 
       it('does not emit the "participantConnected" event', () => {
@@ -365,24 +365,24 @@ describe('RoomV3', () => {
         });
         let participantConnected = false;
         test.room.once('participantConnected', () => { participantConnected = true; });
-        test.room.connectParticipant(test.participantV2s[0]);
+        test.room.connectParticipant(test.participantV3s[0]);
         assert(!participantConnected);
       });
     });
 
     context('not previously connected', () => {
       it('returns true', () => {
-        const RemoteParticipantV2 = makeRemoteParticipantV2Constructor();
-        const participant = new RemoteParticipantV2({ sid: makeSid() });
+        const RemoteParticipantV3 = makeRemoteParticipantV3Constructor();
+        const participant = new RemoteParticipantV3({ sid: makeSid() });
         const test = makeTest();
         assert.equal(
           true,
           test.room.connectParticipant(participant));
       });
 
-      it('adds the ParticipantV2 to the RoomV2\'s .participants Map', () => {
-        const RemoteParticipantV2 = makeRemoteParticipantV2Constructor();
-        const participant = new RemoteParticipantV2({ sid: makeSid() });
+      it('adds the ParticipantV3 to the RoomV2\'s .participants Map', () => {
+        const RemoteParticipantV3 = makeRemoteParticipantV3Constructor();
+        const participant = new RemoteParticipantV3({ sid: makeSid() });
         const test = makeTest();
         test.room.connectParticipant(participant);
         assert.equal(
@@ -390,9 +390,9 @@ describe('RoomV3', () => {
           test.room.participants.get(participant.sid));
       });
 
-      it('emits the "participantConnected" event with the ParticipantV2', () => {
-        const RemoteParticipantV2 = makeRemoteParticipantV2Constructor();
-        const participant = new RemoteParticipantV2({ sid: makeSid() });
+      it('emits the "participantConnected" event with the ParticipantV3', () => {
+        const RemoteParticipantV3 = makeRemoteParticipantV3Constructor();
+        const participant = new RemoteParticipantV3({ sid: makeSid() });
         const test = makeTest();
         let participantConnected;
         test.room.once('participantConnected', participant => { participantConnected = participant; });
@@ -517,7 +517,7 @@ describe('RoomV3', () => {
         assert(test.transport.disconnect.calledOnce);
       });
 
-      it('does not call .disconnect on any connected ParticipantV2\'s', () => {
+      it('does not call .disconnect on any connected ParticipantV3\'s', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -525,12 +525,12 @@ describe('RoomV3', () => {
           ]
         });
         test.room.disconnect();
-        test.participantV2s.forEach(participant => {
+        test.participantV3s.forEach(participant => {
           assert(!participant.disconnect.calledOnce);
         });
       });
 
-      it('does not remove any ParticipantV2\'s from the RoomV3\'s .participants Map', () => {
+      it('does not remove any ParticipantV3\'s from the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -538,7 +538,7 @@ describe('RoomV3', () => {
           ]
         });
         test.room.disconnect();
-        test.participantV2s.forEach(participant => {
+        test.participantV3s.forEach(participant => {
           assert.equal(
             participant,
             test.room.participants.get(participant.sid));
@@ -608,7 +608,7 @@ describe('RoomV3', () => {
         assert(!test.transport.disconnect.calledTwice);
       });
 
-      it('does not call .disconnect on any connected ParticipantV2\'s', () => {
+      it('does not call .disconnect on any connected ParticipantV3\'s', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -617,12 +617,12 @@ describe('RoomV3', () => {
         });
         test.room.disconnect();
         test.room.disconnect();
-        test.participantV2s.forEach(participant => {
+        test.participantV3s.forEach(participant => {
           assert(!participant.disconnect.calledOnce);
         });
       });
 
-      it('does not remove any ParticipantV2\'s from the RoomV3\'s .participants Map', () => {
+      it('does not remove any ParticipantV3\'s from the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] },
@@ -631,7 +631,7 @@ describe('RoomV3', () => {
         });
         test.room.disconnect();
         test.room.disconnect();
-        test.participantV2s.forEach(participant => {
+        test.participantV3s.forEach(participant => {
           assert.equal(
             participant,
             test.room.participants.get(participant.sid));
@@ -655,18 +655,18 @@ describe('RoomV3', () => {
   });
 
   describe('"participantDisconnected" event', () => {
-    context('when a connected ParticipantV2 emits a "stateChanged" event with a new state "disconnected"', () => {
-      it('removes the ParticipantV2 from the RoomV2\'s .participants Map', () => {
+    context('when a connected ParticipantV3 emits a "stateChanged" event with a new state "disconnected"', () => {
+      it('removes the ParticipantV3 from the RoomV2\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] }
           ]
         });
-        test.participantV2s[0].emit('stateChanged', 'disconnected');
-        assert(!test.room.participants.has(test.participantV2s[0].sid));
+        test.participantV3s[0].emit('stateChanged', 'disconnected');
+        assert(!test.room.participants.has(test.participantV3s[0].sid));
       });
 
-      it('emits the "participantDisconnected" event with the ParticipantV2', () => {
+      it('emits the "participantDisconnected" event with the ParticipantV3', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] }
@@ -674,9 +674,9 @@ describe('RoomV3', () => {
         });
         let participantDisconnected;
         test.room.once('participantDisconnected', participant => { participantDisconnected = participant; });
-        test.participantV2s[0].emit('stateChanged', 'disconnected');
+        test.participantV3s[0].emit('stateChanged', 'disconnected');
         assert.equal(
-          test.participantV2s[0],
+          test.participantV3s[0],
           participantDisconnected);
       });
     });
@@ -911,7 +911,7 @@ describe('RoomV3', () => {
     context('.participants', () => {
       context('when .participants includes a new Participant state', () => {
         context('and the Participant state\'s .state is "connected"', () => {
-          it('constructs a new ParticipantV2 with the Participant state', () => {
+          it('constructs a new ParticipantV3 with the Participant state', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -923,10 +923,10 @@ describe('RoomV3', () => {
             });
             assert.equal(
               sid,
-              test.participantV2s[0].sid);
+              test.participantV3s[0].sid);
           });
 
-          it('adds the newly-constructed ParticipantV2 to the RoomV3\'s .participants Map', () => {
+          it('adds the newly-constructed ParticipantV3 to the RoomV3\'s .participants Map', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -937,11 +937,11 @@ describe('RoomV3', () => {
               peer_connections: []
             });
             assert.equal(
-              test.participantV2s[0],
+              test.participantV3s[0],
               test.room.participants.get(sid));
           });
 
-          it('emits the "participantConnected" event with the newly-constructed ParticipantV2', () => {
+          it('emits the "participantConnected" event with the newly-constructed ParticipantV3', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             let participantConnected;
@@ -954,11 +954,11 @@ describe('RoomV3', () => {
               peer_connections: []
             });
             assert.equal(
-              test.participantV2s[0],
+              test.participantV3s[0],
               participantConnected);
           });
 
-          it('calls .update with the Participant state on the newly-constructed ParticipantV2', () => {
+          it('calls .update with the Participant state on the newly-constructed ParticipantV3', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -970,12 +970,12 @@ describe('RoomV3', () => {
             });
             assert.deepEqual(
               { sid: sid, fizz: 'buzz', tracks: [] },
-              test.participantV2s[0].update.args[0][0]);
+              test.participantV3s[0].update.args[0][0]);
           });
         });
 
         context('and the Participant state\'s .state is "disconnected"', () => {
-          it('constructs a new ParticipantV2 with the Participant state', () => {
+          it('constructs a new ParticipantV3 with the Participant state', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -987,10 +987,10 @@ describe('RoomV3', () => {
             });
             assert.equal(
               sid,
-              test.participantV2s[0].sid);
+              test.participantV3s[0].sid);
           });
 
-          it('does not add the newly-constructed ParticipantV2 to the RoomV2\'s .participants Map', () => {
+          it('does not add the newly-constructed ParticipantV3 to the RoomV2\'s .participants Map', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -1020,8 +1020,8 @@ describe('RoomV3', () => {
         });
       });
 
-      context('when .participants includes a Participant state for a connected ParticipantV2', () => {
-        it('calls .update with the Participant state on the ParticipantV2', () => {
+      context('when .participants includes a Participant state for a connected ParticipantV3', () => {
+        it('calls .update with the Participant state on the ParticipantV3', () => {
           const sid = makeParticipantSid();
           const test = makeTest({
             participants: [
@@ -1037,11 +1037,11 @@ describe('RoomV3', () => {
           });
           assert.deepEqual(
             { sid: sid, fizz: 'buzz', tracks: [] },
-            test.participantV2s[0].update.args[1][0]);
+            test.participantV3s[0].update.args[1][0]);
         });
       });
 
-      context('when .participants includes a Participant state for a disconnected ParticipantV2', () => {
+      context('when .participants includes a Participant state for a disconnected ParticipantV3', () => {
         [
           [2, 1],
           [2, 2],
@@ -1053,14 +1053,14 @@ describe('RoomV3', () => {
               ? 'the same revision'
               : 'with a newer revision'}`, () => {
             const shouldCreate = nextRevision > revision;
-            it(`${shouldCreate ? 'constructs' : 'does not construct'} a new ParticipantV2 with the Participant state`, () => {
+            it(`${shouldCreate ? 'constructs' : 'does not construct'} a new ParticipantV3 with the Participant state`, () => {
               const sid = makeParticipantSid();
               const test = makeTest({
                 participants: [
                   { sid: sid, revision, tracks: [] }
                 ]
               });
-              test.participantV2s[0].emit('stateChanged', 'disconnected');
+              test.participantV3s[0].emit('stateChanged', 'disconnected');
               test.transport.emit('message', {
                 participants: [
                   { sid: sid, fizz: 'buzz', revision: nextRevision, tracks: [] }
@@ -1070,19 +1070,19 @@ describe('RoomV3', () => {
               });
               assert.equal(
                 shouldCreate ? 2 : 1,
-                test.participantV2s.length);
+                test.participantV3s.length);
             });
           });
         });
 
-        it('does not call .update with the Participant state on the disconnected ParticipantV2', () => {
+        it('does not call .update with the Participant state on the disconnected ParticipantV3', () => {
           const sid = makeParticipantSid();
           const test = makeTest({
             participants: [
               { sid: sid, tracks: [] }
             ]
           });
-          test.participantV2s[0].emit('stateChanged', 'disconnected');
+          test.participantV3s[0].emit('stateChanged', 'disconnected');
           test.transport.emit('message', {
             participants: [
               { sid: sid, fizz: 'buzz', tracks: [] }
@@ -1090,14 +1090,14 @@ describe('RoomV3', () => {
             // eslint-disable-next-line camelcase
             peer_connections: []
           });
-          assert(!test.participantV2s[0].update.calledTwice);
+          assert(!test.participantV3s[0].update.calledTwice);
         });
       });
 
-      context('when .participants omits a Participant state for a connected ParticipantV2', () => {
+      context('when .participants omits a Participant state for a connected ParticipantV3', () => {
         ['connected', 'synced', 'update'].forEach(type => {
           context(`when processing a "${type}" RSP message`, () => {
-            it(`should ${type === 'synced' ? '' : 'not '}call .disconnect on the ParticipantV2`, () => {
+            it(`should ${type === 'synced' ? '' : 'not '}call .disconnect on the ParticipantV3`, () => {
               const sid = makeParticipantSid();
               const test = makeTest({
                 participants: [
@@ -1112,10 +1112,10 @@ describe('RoomV3', () => {
               });
               assert.equal(
                 type === 'synced',
-                test.participantV2s[0].disconnect.calledOnce);
+                test.participantV3s[0].disconnect.calledOnce);
             });
 
-            it(`should ${type === 'synced' ? '' : 'not '}retain the ParticipantV2 remains in the RoomV2's .participants Map`, () => {
+            it(`should ${type === 'synced' ? '' : 'not '}retain the ParticipantV3 remains in the RoomV2's .participants Map`, () => {
               const sid = makeParticipantSid();
               const test = makeTest({
                 participants: [
@@ -1132,7 +1132,7 @@ describe('RoomV3', () => {
                 assert(!test.room.participants.has(sid));
               } else {
                 assert.equal(
-                  test.participantV2s[0],
+                  test.participantV3s[0],
                   test.room.participants.get(sid));
               }
             });
@@ -1294,6 +1294,9 @@ describe('RoomV3', () => {
   describe('Track Subscriptions Signaling', () => {
     describe('when update is called with an RSP message that determines Track Subscriptions over RTCDataChannel', () => {
       let TrackSubscriptionsSignaling;
+      let trackReceiver3;
+      let trackReceiver4;
+      let trackReceiver5;
       let trackSubscriptionsSignaling;
       let test;
       beforeEach(() => {
@@ -1304,11 +1307,13 @@ describe('RoomV3', () => {
 
         const mediaStreamTrack3 = { id: '3', kind: 'audio' };
         const mediaStreamTrack4 = { id: '4', kind: 'video' };
-        const trackReceiver3 = makeTrackReceiver(mediaStreamTrack3, '0');
-        const trackReceiver4 = makeTrackReceiver(mediaStreamTrack4, '1');
+        const mediaStreamTrack5 = { id: '5', kind: 'video' };
+        trackReceiver3 = makeTrackReceiver(mediaStreamTrack3, '0');
+        trackReceiver4 = makeTrackReceiver(mediaStreamTrack4, '1');
+        trackReceiver5 = makeTrackReceiver(mediaStreamTrack5, '2');
 
         const peerConnectionManager = makePeerConnectionManager([], []);
-        peerConnectionManager.getTrackReceivers = () => [trackReceiver3, trackReceiver4];
+        peerConnectionManager.getTrackReceivers = () => [trackReceiver3, trackReceiver4, trackReceiver5];
 
         test = makeTest({
           peerConnectionManager,
@@ -1381,16 +1386,17 @@ describe('RoomV3', () => {
         function getTrackSwitchOffPromise(room, trackSid, off) {
           const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
           const track = remoteTracks.find(track => track.sid === trackSid);
-          return new Promise(resolve => {
-            track.on('updated', () => {
-              if (track.isSwitchedOff === off) {
-                resolve();
-              }
-            });
-          });
+          const setTrackTransceiver = track.setTrackTransceiver;
+          track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
+          return new Promise(resolve => track.on('updated', function onUpdated() {
+            if (track.isSwitchedOff === off) {
+              track.removeListener('updated', onUpdated);
+              resolve(track);
+            }
+          }));
         }
 
-        it('fires trackSwitchOff / On events when such message is received on data channel', async () => {
+        it('fires trackSwitchOff / On events and calls .setTrackTransceiver on the TrackSignalings when such message is received on data channel', async () => {
           const trackSid = 'MT3';
           const trackSwitchOffPromise = getTrackSwitchOffPromise(test.room, trackSid, true /* off */);
           dataTrackTransport.emit('message', {
@@ -1399,7 +1405,8 @@ describe('RoomV3', () => {
             subscribed: { [trackSid]: { state: 'OFF', off_reason: 'bar' } },
             type: 'track_subscriptions'
           });
-          await trackSwitchOffPromise;
+          let track = await trackSwitchOffPromise;
+          sinon.assert.calledWith(track.setTrackTransceiver, null);
 
           const trackSwitchOnPromise = getTrackSwitchOffPromise(test.room, trackSid, false /* on */);
           dataTrackTransport.emit('message', {
@@ -1408,7 +1415,59 @@ describe('RoomV3', () => {
             subscribed: { [trackSid]: { state: 'ON', mid: '0' } },
             type: 'track_subscriptions'
           });
-          await trackSwitchOnPromise;
+          track = await trackSwitchOnPromise;
+          await test.room._getTrackReceiver('0', 'mid');
+          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver3);
+        });
+
+        it('calls .setTrackTransceiver and sets .isSubscribed on the TrackSignalings for subscribed and unsubscribed Tracks', async () => {
+          const track = flatMap(test.room.participants, participant => [...participant.tracks.values()]).find(track => track.sid === 'MT4');
+          const setTrackTransceiver = track.setTrackTransceiver;
+          track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
+
+          dataTrackTransport.emit('message', {
+            revision: 2,
+            // eslint-disable-next-line camelcase
+            subscribed: { MT3: { state: 'ON', mid: '0' } },
+            type: 'track_subscriptions'
+          });
+          sinon.assert.calledWith(track.setTrackTransceiver, null);
+          assert.equal(track.isSubscribed, false);
+
+          dataTrackTransport.emit('message', {
+            revision: 3,
+            // eslint-disable-next-line camelcase
+            subscribed: {
+              MT3: { state: 'ON', mid: '0' },
+              MT4: { state: 'ON', mid: '1' }
+            },
+            type: 'track_subscriptions'
+          });
+          await test.room._getTrackReceiver('1', 'mid');
+          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver4);
+          assert.equal(track.isSubscribed, true);
+        });
+
+        it('calls .setTrackTransceiver and set .isSubscribed twice (unsubscribed and then subscribed) when a TrackSignaling\'s mid changes', async () => {
+          const track = flatMap(test.room.participants, participant => [...participant.tracks.values()]).find(track => track.sid === 'MT4');
+          const setTrackTransceiver = track.setTrackTransceiver;
+          track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
+
+          dataTrackTransport.emit('message', {
+            revision: 2,
+            // eslint-disable-next-line camelcase
+            subscribed: {
+              MT3: { state: 'ON', mid: '0' },
+              MT4: { state: 'ON', mid: '2' }
+            },
+            type: 'track_subscriptions'
+          });
+          sinon.assert.calledWith(track.setTrackTransceiver, null);
+          assert.equal(track.isSubscribed, false);
+
+          await test.room._getTrackReceiver('2', 'mid');
+          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver5);
+          assert.equal(track.isSubscribed, true);
         });
       });
     });
@@ -1604,8 +1663,8 @@ describe('RoomV3', () => {
         });
 
         it('starts updating RemoteParticipant NetworkQualityLevel when NetworkQualityMonitor emits "updated"', () => {
-          const RemoteParticipantV2 = makeRemoteParticipantV2Constructor();
-          const participant = new RemoteParticipantV2({ sid: makeSid() });
+          const RemoteParticipantV3 = makeRemoteParticipantV3Constructor();
+          const participant = new RemoteParticipantV3({ sid: makeSid() });
           test.room.connectParticipant(participant);
 
           // Case 1: ICE Connection State transitions to "failed", Network
@@ -1748,7 +1807,7 @@ describe('RoomV3', () => {
 
 describe('"signalingConnectionStateChanged" event', () => {
   context('when the RoomV3\'s .signalingConnectionState is "reconnecting"', () => {
-    it('should transition the LocalParticipantV2\'s .state to "reconnecting"', () => {
+    it('should transition the LocalParticipantV3\'s .state to "reconnecting"', () => {
       const test = makeTest();
       let newState;
       test.localParticipant.once('stateChanged', state => { newState = state; });
@@ -1758,7 +1817,7 @@ describe('"signalingConnectionStateChanged" event', () => {
   });
 
   context('when the RoomV3\'s .signalingConnectionState is "connected"', () => {
-    it('should transition the LocalParticipantV2\'s .state to "connected"', () => {
+    it('should transition the LocalParticipantV3\'s .state to "connected"', () => {
       const test = makeTest();
       let newState;
       test.transport.sync();
@@ -1803,9 +1862,9 @@ function makeTest(options) {
   options.name = options.name || makeName();
   options.sid = options.sid || makeSid();
   options.participants = options.participants || [];
-  options.participantV2s = options.participantV2s || [];
+  options.participantV3s = options.participantV3s || [];
 
-  options.RemoteParticipantSignaling = options.RemoteParticipantSignaling || makeRemoteParticipantV2Constructor(options);
+  options.RemoteParticipantSignaling = options.RemoteParticipantSignaling || makeRemoteParticipantV3Constructor(options);
   options.localTracks = (options.localTracks || []).map(track => {
     track.trackTransceiver = new EventEmitter();
     const eventEmitter = new EventEmitter();
@@ -1829,11 +1888,11 @@ function makeTest(options) {
   return options;
 }
 
-function makeRemoteParticipantV2Constructor(testOptions) {
+function makeRemoteParticipantV3Constructor(testOptions) {
   testOptions = testOptions || {};
-  testOptions.participantV2s = [];
+  testOptions.participantV3s = [];
 
-  function RemoteParticipantV2(initialState, getInitialTrackSwitchOffState, setPriority) {
+  function RemoteParticipantV3(initialState, getPendingTrackReceiver, getInitialTrackSwitchOffState, setPriority) {
     EventEmitter.call(this);
     this.revision = initialState.revision || 0;
     this.tracks = (initialState.tracks || []).reduce((tracks, track) => tracks.set(track.sid, track), new Map());
@@ -1846,12 +1905,12 @@ function makeRemoteParticipantV2Constructor(testOptions) {
     });
     this.update = sinon.spy(() => {});
     this.setNetworkQualityLevel = sinon.spy();
-    testOptions.participantV2s.push(this);
+    testOptions.participantV3s.push(this);
   }
 
-  inherits(RemoteParticipantV2, EventEmitter);
+  inherits(RemoteParticipantV3, EventEmitter);
 
-  return RemoteParticipantV2;
+  return RemoteParticipantV3;
 }
 
 function makeRoomV3(options) {

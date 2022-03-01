@@ -3,12 +3,12 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const RemoteParticipantV2 = require('../../../../../lib/signaling/v2/remoteparticipant');
+const RemoteParticipantV3 = require('../../../../../lib/signaling/v3/remoteparticipant');
 const { defer } = require('../../../../../lib/util');
 const { combinationContext } = require('../../../../lib/util');
 
-describe('RemoteParticipantV2', () => {
-  // RemoteParticipantV2
+describe('RemoteParticipantV3', () => {
+  // RemoteParticipantV3
   // -------------------
 
   describe('constructor', () => {
@@ -48,9 +48,11 @@ describe('RemoteParticipantV2', () => {
         });
         assert.equal(sid1, test.remoteTrackPublicationV2s[0].sid);
         assert.equal(sid2, test.remoteTrackPublicationV2s[1].sid);
+        sinon.assert.calledWith(test.getPendingTrackReceiver, test.remoteTrackPublicationV2s[0].sid);
+        sinon.assert.calledWith(test.getPendingTrackReceiver, test.remoteTrackPublicationV2s[1].sid);
       });
 
-      it('adds the newly-constructed RemoteTrackPublicationV2s to the RemoteParticipantV2\'s .tracks Map', () => {
+      it('adds the newly-constructed RemoteTrackPublicationV2s to the RemoteParticipantV3\'s .tracks Map', () => {
         const sid1 = makeSid();
         const sid2 = makeSid();
         const test = makeTest({
@@ -71,7 +73,7 @@ describe('RemoteParticipantV2', () => {
 
   describe('#update, when called with a participantState at', () => {
     context('a newer revision', () => {
-      it('returns the RemoteParticipantV2', () => {
+      it('returns the RemoteParticipantV3', () => {
         const test = makeTest();
         const participantState = test.state(test.revision + 1);
         assert.equal(
@@ -95,9 +97,10 @@ describe('RemoteParticipantV2', () => {
           const participantState = test.state(test.revision + 1).setTrack({ sid });
           test.participant.update(participantState);
           assert.equal(sid, test.remoteTrackPublicationV2s[0].sid);
+          sinon.assert.calledWith(test.getPendingTrackReceiver, test.remoteTrackPublicationV2s[0].sid);
         });
 
-        it('adds the newly-constructed RemoteTrackPublicationV2 to the RemoteParticipantV2\'s .tracks Map', () => {
+        it('adds the newly-constructed RemoteTrackPublicationV2 to the RemoteParticipantV3\'s .tracks Map', () => {
           const test = makeTest();
           const sid = makeSid();
           const participantState = test.state(test.revision + 1).setTrack({ sid });
@@ -142,7 +145,7 @@ describe('RemoteParticipantV2', () => {
       });
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
-        it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+        it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV3\'s .tracks Map', () => {
           const sid = makeSid();
           const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision + 1);
@@ -163,7 +166,7 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "connected" when the RemoteParticipantV2\'s .state is', () => {
+      context('with .state set to "connected" when the RemoteParticipantV3\'s .state is', () => {
         context('"reconnecting"', () => {
           it('should transition the .state to "connected"', () => {
             const test = makeTest({ state: 'reconnecting' });
@@ -172,7 +175,7 @@ describe('RemoteParticipantV2', () => {
             assert.equal(test.participant.state, 'connected');
           });
 
-          it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+          it('should emit "stateChanged" on the RemoteParticipantV3', () => {
             const test = makeTest({ state: 'reconnecting' });
             const participantState = test.state(test.revision + 1).setState('connected');
             let stateChanged;
@@ -191,7 +194,7 @@ describe('RemoteParticipantV2', () => {
               assert.equal(test.participant.state, state);
             });
 
-            it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+            it('should not emit "stateChanged" on the RemoteParticipantV3', () => {
               const test = makeTest({ state });
               const participantState = test.state(test.revision + 1).setState('connected');
               let stateChanged;
@@ -203,7 +206,7 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "disconnected" when the RemoteParticipantV2\'s .state is', () => {
+      context('with .state set to "disconnected" when the RemoteParticipantV3\'s .state is', () => {
         ['connected', 'reconnecting'].forEach(state => {
           context(`"${state}"`, () => {
             it('should transition the .state to "disconnected"', () => {
@@ -213,7 +216,7 @@ describe('RemoteParticipantV2', () => {
               assert.equal(test.participant.state, 'disconnected');
             });
 
-            it('should emit "stateChanged" event on the RemoteParticipantV2"', () => {
+            it('should emit "stateChanged" event on the RemoteParticipantV3"', () => {
               const test = makeTest({ state });
               const participantState = test.state(test.revision + 1).setState('disconnected');
               let stateChanged;
@@ -247,7 +250,7 @@ describe('RemoteParticipantV2', () => {
         });
       });
 
-      context('with .state set to "reconnecting" when the RemoteParticipantV2\'s .state is', () => {
+      context('with .state set to "reconnecting" when the RemoteParticipantV3\'s .state is', () => {
         ['disconnected', 'reconnecting'].forEach(state => {
           context(`"${state}"`, () => {
             it(`the .state should remain "${state}"`, () => {
@@ -257,7 +260,7 @@ describe('RemoteParticipantV2', () => {
               assert.equal(test.participant.state, state);
             });
 
-            it('should not emit "stateChanged" event on the RemoteParticipantV2"', () => {
+            it('should not emit "stateChanged" event on the RemoteParticipantV3"', () => {
               const test = makeTest({ state });
               const participantState = test.state(test.revision + 1).setState('reconnecting');
               let stateChanged;
@@ -276,7 +279,7 @@ describe('RemoteParticipantV2', () => {
             assert.equal(test.participant.state, 'reconnecting');
           });
 
-          it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+          it('should emit "stateChanged" on the RemoteParticipantV3', () => {
             const test = makeTest();
             const participantState = test.state(test.revision + 1).setState('reconnecting');
             let stateChanged;
@@ -311,7 +314,7 @@ describe('RemoteParticipantV2', () => {
     });
 
     context('the same revision', () => {
-      it('returns the RemoteParticipantV2', () => {
+      it('returns the RemoteParticipantV3', () => {
         const test = makeTest();
         const participantState = test.state(test.revision);
         assert.equal(
@@ -355,7 +358,7 @@ describe('RemoteParticipantV2', () => {
       });
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
-        it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+        it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV3\'s .tracks Map', () => {
           const sid = makeSid();
           const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision);
@@ -379,7 +382,7 @@ describe('RemoteParticipantV2', () => {
       combinationContext([
         [
           ['connected', 'reconnecting', 'disconnected'],
-          x => `with .state set to "${x}" when the RemoteParticipantV2's .state is`
+          x => `with .state set to "${x}" when the RemoteParticipantV3's .state is`
         ],
         [
           ['connected', 'reconnecting', 'disconnected'],
@@ -393,7 +396,7 @@ describe('RemoteParticipantV2', () => {
           assert.equal(test.participant.state, state);
         });
 
-        it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+        it('should not emit "stateChanged" on the RemoteParticipantV3', () => {
           const test = makeTest({ state });
           const participantState = test.state(test.revision).setState(nextState);
           let stateChanged;
@@ -427,7 +430,7 @@ describe('RemoteParticipantV2', () => {
     });
 
     context('an older revision', () => {
-      it('returns the RemoteParticipantV2', () => {
+      it('returns the RemoteParticipantV3', () => {
         const test = makeTest();
         const participantState = test.state(test.revision - 1);
         test.participant.update(participantState);
@@ -472,7 +475,7 @@ describe('RemoteParticipantV2', () => {
       });
 
       context('which no longer includes a trackState matching an existing RemoteTrackPublicationV2', () => {
-        it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+        it('does not delete the RemoteTrackPublicationV2 from the RemoteParticipantV3\'s .tracks Map', () => {
           const sid = makeSid();
           const test = makeTest({ tracks: [{ sid }] });
           const participantState = test.state(test.revision - 1);
@@ -496,7 +499,7 @@ describe('RemoteParticipantV2', () => {
       combinationContext([
         [
           ['connected', 'reconnecting', 'disconnected'],
-          x => `with .state set to "${x}" when the RemoteParticipantV2's .state is`
+          x => `with .state set to "${x}" when the RemoteParticipantV3's .state is`
         ],
         [
           ['connected', 'reconnecting', 'disconnected'],
@@ -510,7 +513,7 @@ describe('RemoteParticipantV2', () => {
           assert.equal(test.participant.state, state);
         });
 
-        it('should not emit "stateChanged" on the RemoteParticipantV2', () => {
+        it('should not emit "stateChanged" on the RemoteParticipantV3', () => {
           const test = makeTest({ state });
           const participantState = test.state(test.revision).setState(nextState);
           let stateChanged;
@@ -548,7 +551,7 @@ describe('RemoteParticipantV2', () => {
   // --------------------
 
   describe('#addTrack', () => {
-    it('returns the RemoteParticipantV2', () => {
+    it('returns the RemoteParticipantV3', () => {
       const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
       const test = makeTest();
       const track = new RemoteTrackPublicationV2({ sid: makeSid() });
@@ -557,7 +560,7 @@ describe('RemoteParticipantV2', () => {
         test.participant.addTrack(track));
     });
 
-    it('adds the RemoteTrackPublicationV2 to the RemoteParticipantV2\'s .tracks Map', () => {
+    it('adds the RemoteTrackPublicationV2 to the RemoteParticipantV3\'s .tracks Map', () => {
       const RemoteTrackPublicationV2 = makeRemoteTrackPublicationV2Constructor();
       const test = makeTest();
       const sid = makeSid();
@@ -582,7 +585,7 @@ describe('RemoteParticipantV2', () => {
   });
 
   describe('#connect', () => {
-    context('when the RemoteParticipantV2\'s .state is "reconnecting"', () => {
+    context('when the RemoteParticipantV3\'s .state is "reconnecting"', () => {
       it('returns true', () => {
         const test = makeTest();
         test.participant.reconnecting();
@@ -628,7 +631,7 @@ describe('RemoteParticipantV2', () => {
       });
     });
 
-    context('when the RemoteParticipantV2\'s .state is "connected"', () => {
+    context('when the RemoteParticipantV3\'s .state is "connected"', () => {
       it('returns false', () => {
         const test = makeTest();
         assert.equal(
@@ -669,7 +672,7 @@ describe('RemoteParticipantV2', () => {
       });
     });
 
-    context('when the RemoteParticipantV2\'s .state is "disconnected"', () => {
+    context('when the RemoteParticipantV3\'s .state is "disconnected"', () => {
       it('returns false', () => {
         const test = makeTest();
         test.participant.disconnect();
@@ -718,7 +721,7 @@ describe('RemoteParticipantV2', () => {
 
   describe('#disconnect', () => {
     ['connected', 'reconnecting'].forEach(state => {
-      context(`when the RemoteParticipantV2's .state is "${state}"`, () => {
+      context(`when the RemoteParticipantV3's .state is "${state}"`, () => {
         it('returns true', () => {
           const test = makeTest({ state });
           assert.equal(
@@ -746,7 +749,7 @@ describe('RemoteParticipantV2', () => {
       });
     });
 
-    context('when the RemoteParticipantV2\'s .state is "disconnected"', () => {
+    context('when the RemoteParticipantV3\'s .state is "disconnected"', () => {
       it('returns false', () => {
         const test = makeTest();
         test.participant.disconnect();
@@ -776,7 +779,7 @@ describe('RemoteParticipantV2', () => {
   });
 
   describe('#reconnecting', () => {
-    context('when the RemoteParticipantV2\'s .state is "connected"', () => {
+    context('when the RemoteParticipantV3\'s .state is "connected"', () => {
       it('should return true', () => {
         const test = makeTest();
         assert.equal(test.participant.reconnecting(), true);
@@ -788,7 +791,7 @@ describe('RemoteParticipantV2', () => {
         assert.equal(test.participant.state, 'reconnecting');
       });
 
-      it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+      it('should emit "stateChanged" on the RemoteParticipantV3', () => {
         const test = makeTest();
         let stateChanged;
         test.participant.once('stateChanged', () => { stateChanged = true; });
@@ -798,7 +801,7 @@ describe('RemoteParticipantV2', () => {
     });
 
     ['reconnecting', 'disconnected'].forEach(state => {
-      context(`when the RemoteParticipantV2's .state is "${state}"`, () => {
+      context(`when the RemoteParticipantV3's .state is "${state}"`, () => {
         it('should return false', () => {
           const test = makeTest({ state });
           assert.equal(test.participant.reconnecting(), false);
@@ -810,7 +813,7 @@ describe('RemoteParticipantV2', () => {
           assert.equal(test.participant.state, state);
         });
 
-        it('should emit "stateChanged" on the RemoteParticipantV2', () => {
+        it('should emit "stateChanged" on the RemoteParticipantV3', () => {
           const test = makeTest({ state });
           let stateChanged;
           test.participant.once('stateChanged', () => { stateChanged = true; });
@@ -830,7 +833,7 @@ describe('RemoteParticipantV2', () => {
           test.participant.removeTrack(test.remoteTrackPublicationV2s[0]));
       });
 
-      it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV2\'s .tracks Map', () => {
+      it('deletes the RemoteTrackPublicationV2 from the RemoteParticipantV3\'s .tracks Map', () => {
         const test = makeTest({ tracks: [{ sid: makeSid() }] });
         test.participant.removeTrack(test.remoteTrackPublicationV2s[0]);
         assert(!test.participant.tracks.has(test.remoteTrackPublicationV2s[0].sid));
@@ -902,11 +905,12 @@ function makeTest(options) {
     || sinon.spy(() => options.getTrackTransceiverDeferred.promise);
   options.RemoteTrackPublicationSignaling = options.RemoteTrackPublicationSignaling || makeRemoteTrackPublicationV2Constructor(options);
 
-  options.getInitialTrackSwitchOffState = options.getInitialTrackSwitchOffState || sinon.spy(() => { return false; });
+  options.getInitialTrackSwitchOffState = options.getInitialTrackSwitchOffState || sinon.spy(() => false);
+  options.getPendingTrackReceiver = options.getPendingTrackReceiver || sinon.spy(() => Promise.resolve(null));
   options.setRenderHints = options.setRenderHints || sinon.spy(() => { return false; });
   options.setPriority = options.setPriority || sinon.spy(() => { return false; });
   options.clearRenderHint = options.clearRenderHint || sinon.spy(() => { return false; });
-  options.participant = options.participant || makeRemoteParticipantV2(options);
+  options.participant = options.participant || makeRemoteParticipantV3(options);
 
   options.state = revision => {
     return new RemoteParticipantStateBuilder(options.participant, revision);
@@ -948,8 +952,16 @@ RemoteParticipantStateBuilder.prototype.setTracks = function setTracks(tracks) {
   return this;
 };
 
-function makeRemoteParticipantV2(options) {
-  return new RemoteParticipantV2(options, options.getInitialTrackSwitchOffState, options.setPriority, options.setRenderHints, options.clearRenderHint, options);
+function makeRemoteParticipantV3(options) {
+  return new RemoteParticipantV3(
+    options,
+    options.getPendingTrackReceiver,
+    options.getInitialTrackSwitchOffState,
+    options.setPriority,
+    options.setRenderHints,
+    options.clearRenderHint,
+    options
+  );
 }
 
 function makeRemoteTrackPublicationV2Constructor(testOptions) {
