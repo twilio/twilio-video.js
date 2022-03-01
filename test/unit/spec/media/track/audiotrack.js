@@ -32,7 +32,7 @@ describe('AudioTrack', () => {
     let dummyElement;
 
     before(() => {
-      track = createAudioTrack('1', 'audio');
+      track = createAudioTrack('1', 'foo', 'audio');
       track._attach = sinon.spy();
       track._detachElement = sinon.spy();
       track._attachments.delete = sinon.spy();
@@ -93,9 +93,9 @@ describe('AudioTrack', () => {
 
 });
 
-function createAudioTrack(id, kind, options) {
+function createAudioTrack(id, mid, kind, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);
-  const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
+  const mediaTrackTransceiver = new MediaTrackTransceiver(id, mid, mediaStreamTrack);
   const mediaTrack = new AudioTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
   mediaTrack.tranceiver = mediaTrackTransceiver;
   return mediaTrack;

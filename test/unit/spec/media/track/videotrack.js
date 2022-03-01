@@ -41,7 +41,7 @@ describe('VideoTrack', () => {
     global.document = document;
 
     mediaStreamTrack = new MediaStreamTrack('1', 'video');
-    const mediaTrackTransceiver = new MediaTrackTransceiver('1', mediaStreamTrack);
+    const mediaTrackTransceiver = new MediaTrackTransceiver('1', 'foo', mediaStreamTrack);
     videoTrack = new VideoTrack(mediaTrackTransceiver, { log: log });
 
     videoTrack._attach = sinon.stub();

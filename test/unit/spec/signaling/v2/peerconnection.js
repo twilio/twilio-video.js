@@ -770,8 +770,8 @@ describe('PeerConnectionV2', () => {
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel1 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel2 });
       test.pc.dispatchEvent({ type: 'datachannel', channel: dataChannel3 });
-      test.pc.dispatchEvent({ type: 'track', track: mediaTrack1 });
-      test.pc.dispatchEvent({ type: 'track', track: mediaTrack2 });
+      test.pc.dispatchEvent({ type: 'track', transceiver: { mid: '0' }, track: mediaTrack1 });
+      test.pc.dispatchEvent({ type: 'track', transceiver: { mid: '1' }, track: mediaTrack2 });
 
       assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
         [dataChannel1, dataChannel2, dataChannel3, mediaTrack1, mediaTrack2].map(getTrackIdOrChannelLabel));
@@ -782,8 +782,8 @@ describe('PeerConnectionV2', () => {
       assert.deepEqual(test.pcv2.getTrackReceivers().map(receiver => receiver.id),
         [dataChannel2, dataChannel3, mediaTrack2].map(getTrackIdOrChannelLabel));
 
-      sinon.assert.calledWith(trackMatcher.match, { type: 'track', track: mediaTrack1 });
-      sinon.assert.calledWith(trackMatcher.match, { type: 'track', track: mediaTrack2 });
+      sinon.assert.calledWith(trackMatcher.match, { type: 'track', transceiver: { mid: '0' }, track: mediaTrack1 });
+      sinon.assert.calledWith(trackMatcher.match, { type: 'track', transceiver: { mid: '1' }, track: mediaTrack2 });
       sinon.assert.calledWith(trackMatcher.update, null);
     });
   });
@@ -2114,6 +2114,7 @@ describe('PeerConnectionV2', () => {
         pc.emit('track', {
           type: 'track',
           track: mediaStreamTrack,
+          transceiver: { mid: 'foo' },
           streams: [mediaStream]
         });
 
@@ -2121,6 +2122,7 @@ describe('PeerConnectionV2', () => {
       });
 
       it('emits the "trackAdded" event with a MediaTrackReceiver', () => {
+        assert.equal(trackReceiver.mid, 'foo');
         assert.equal(trackReceiver.track, mediaStreamTrack);
       });
     });
