@@ -345,7 +345,7 @@ describe('RoomV3', () => {
           test.room.connectParticipant(test.participantV3s[0]));
       });
 
-      it('the ParticipantV3 remains in the RoomV2\'s .participants Map', () => {
+      it('the ParticipantV3 remains in the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] }
@@ -380,7 +380,7 @@ describe('RoomV3', () => {
           test.room.connectParticipant(participant));
       });
 
-      it('adds the ParticipantV3 to the RoomV2\'s .participants Map', () => {
+      it('adds the ParticipantV3 to the RoomV3\'s .participants Map', () => {
         const RemoteParticipantV3 = makeRemoteParticipantV3Constructor();
         const participant = new RemoteParticipantV3({ sid: makeSid() });
         const test = makeTest();
@@ -405,7 +405,7 @@ describe('RoomV3', () => {
   });
 
   // eslint-disable-next-line no-warning-comments
-  // TODO(mmalavalli): Enable once RoomV2.getstats() is implemented.
+  // TODO(mmalavalli): Enable once RoomV3.getstats() is implemented.
   describe.skip('#getStats', () => {
     it('only returns results for published Local- or Remote-Tracks', async () => {
       const test = makeTest({
@@ -656,7 +656,7 @@ describe('RoomV3', () => {
 
   describe('"participantDisconnected" event', () => {
     context('when a connected ParticipantV3 emits a "stateChanged" event with a new state "disconnected"', () => {
-      it('removes the ParticipantV3 from the RoomV2\'s .participants Map', () => {
+      it('removes the ParticipantV3 from the RoomV3\'s .participants Map', () => {
         const test = makeTest({
           participants: [
             { sid: makeSid(), tracks: [] }
@@ -990,7 +990,7 @@ describe('RoomV3', () => {
               test.participantV3s[0].sid);
           });
 
-          it('does not add the newly-constructed ParticipantV3 to the RoomV2\'s .participants Map', () => {
+          it('does not add the newly-constructed ParticipantV3 to the RoomV3\'s .participants Map', () => {
             const test = makeTest();
             const sid = makeParticipantSid();
             test.transport.emit('message', {
@@ -1115,7 +1115,7 @@ describe('RoomV3', () => {
                 test.participantV3s[0].disconnect.calledOnce);
             });
 
-            it(`should ${type === 'synced' ? '' : 'not '}retain the ParticipantV3 remains in the RoomV2's .participants Map`, () => {
+            it(`should ${type === 'synced' ? '' : 'not '}retain the ParticipantV3 remains in the RoomV3's .participants Map`, () => {
               const sid = makeParticipantSid();
               const test = makeTest({
                 participants: [
@@ -1759,7 +1759,7 @@ describe('RoomV3', () => {
           });
         });
 
-        describe('then, when the RoomV2 finally disconnects,', () => {
+        describe('then, when the RoomV3 finally disconnects,', () => {
           it('calls .stop() on the NetworkQualityMonitor', () => {
             test.room.disconnect();
             assert(networkQualityMonitor.stop.calledOnce);
