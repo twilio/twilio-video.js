@@ -15,6 +15,11 @@ New Features
 
   We also would like to thank @cbxp for his [contribution](https://github.com/twilio/twilio-webrtc.js/pull/133). (VIDEO-8374)
 
+Known Issue
+-----------
+
+Interruptions such as backgrounding the WebView, or switching between applications can sometimes cause VideoTracks to go black or AudioTracks to stop.
+
 2.20.1 (Feb 17, 2022)
 =====================
 Bug Fixes
