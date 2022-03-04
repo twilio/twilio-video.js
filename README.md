@@ -21,13 +21,13 @@ View [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGE
 Browser Support
 ---------------
 
-|             | Chrome | Edge (Chromium) | Firefox | Safari | WebView (Mobile Only) |
-| ------------|--------|-----------------|---------|--------|-----------------------|
-| **Android** | ✓      | -               | ✓       | -      | -                     |
-| **iOS**     | ✓      | -               | *       | ✓      | ✓                     |
-| **Linux**   | ✓      | -               | ✓       | -      | -                     |
-| **macOS**   | ✓      | ✓ **            | ✓       | ✓      | -                     |
-| **Windows** | ✓      | ✓ **            | ✓       | -      | -                     |
+|             | Chrome | Edge (Chromium) | Firefox | Safari | WebView |
+| ------------|--------|-----------------|---------|--------|---------|
+| **Android** | ✓      | -               | ✓       | -      | -       |
+| **iOS**     | ✓      | -               | *       | ✓      | ✓       |
+| **Linux**   | ✓      | -               | ✓       | -      | -       |
+| **macOS**   | ✓      | ✓ **            | ✓       | ✓      | -       |
+| **Windows** | ✓      | ✓ **            | ✓       | -      | -       |
 
 \*\* twilio-video.js supports the [Chromium-based Edge](https://www.microsoftedgeinsider.com/) browser.
 
