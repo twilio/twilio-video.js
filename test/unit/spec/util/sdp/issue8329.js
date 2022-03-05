@@ -2,7 +2,7 @@
 'use strict';
 
 const assert = require('assert');
-const { RTCSessionDescription } = require('@twilio/webrtc');
+const { RTCSessionDescription } = require('../../../../../lib/webrtc');
 
 const workaround = require('../../../../../lib/util/sdp/issue8329');
 
