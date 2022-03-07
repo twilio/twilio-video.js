@@ -18,7 +18,7 @@ New Features
 Known Issue
 -----------
 
-Interruptions such as backgrounding the WebView, or switching between applications can sometimes cause VideoTracks to go black or AudioTracks to stop.
+Some [common issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md#safari-mobile) such as interruptions on mobile devices which includes, backgrounding the application, or switching between applications can sometimes cause VideoTracks to go black or AudioTracks to stop.
 
 2.20.1 (Feb 17, 2022)
 =====================
