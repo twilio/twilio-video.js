@@ -161,6 +161,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
+  workaroundWebKitBug1208516?: boolean;
 }
 
 export interface ConnectOptions {
@@ -206,6 +207,8 @@ export interface CreateLocalTracksOptions {
    * @deprecated
    */
   logLevel?: LogLevel | LogLevels;
+  loggerName?: string;
+  tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
 }
 
