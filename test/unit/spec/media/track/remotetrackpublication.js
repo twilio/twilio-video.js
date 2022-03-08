@@ -15,7 +15,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
   const className = `Remote${capitalize(kind)}TrackPublication`;
   describe(className, () => {
     describe('constructor', () => {
-      const signaling = makeSignaling(randomBoolean(), kind, 'MT123');
+      const signaling = makeSignaling(randomBoolean(), false, kind, 'MT123');
       const publication = new RemoteTrackPublication(signaling);
 
       it(`should return an instance of ${className}`, () => {
@@ -50,7 +50,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
           let subscribedTrack;
 
           beforeEach(() => {
-            signaling = makeSignaling(randomBoolean(), kind, 'MT123');
+            signaling = makeSignaling(randomBoolean(), false, kind, 'MT123');
             publication = new RemoteTrackPublication(signaling);
             publication._subscribed(track);
             publication.once('subscribed', track => {
@@ -94,7 +94,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
           let unsubscribedTrack;
 
           beforeEach(() => {
-            signaling = makeSignaling(randomBoolean(), kind, 'MT123');
+            signaling = makeSignaling(randomBoolean(), false, kind, 'MT123');
             publication = new RemoteTrackPublication(signaling);
             publication._subscribed(track);
             publication.once('unsubscribed', track => {
@@ -136,20 +136,22 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
         ['subscriptionFailed', { error: new Error('foo') }],
         ['trackDisabled', { isEnabled: false }, 'isTrackEnabled'],
         ['trackEnabled', { isEnabled: true }, 'isTrackEnabled'],
-        ['trackSwitchedOff', { isSwitchedOff: true }]
+        ['trackSwitchedOff', { isSwitchedOff: true }],
+        ['trackSwitchOffReasonChanged', { switchOffReason: 'zee' }]
       ].forEach(([event, options, prop]) => {
         context(`when "updated" is emitted on the underlying RemoteTrackPublicationSignaling due to ${{
           publishPriorityChanged: '.publishPriority being set to a new value',
           subscriptionFailed: 'a subscription error',
           trackDisabled: '.isEnabled being set to false',
           trackEnabled: '.isEnabled being set to true',
-          trackSwitchedOff: '.isSwitchedOff being set to true'
+          trackSwitchedOff: '.isSwitchedOff being set to true',
+          trackSwitchOffReasonChanged: '.switchOffReason changing'
         }[event]}`, () => {
           let publication;
           let signaling;
 
           beforeEach(() => {
-            signaling = makeSignaling(event !== 'trackEnabled', kind, 'MT123');
+            signaling = makeSignaling(event !== 'trackEnabled', event === 'trackSwitchOffReasonChanged', kind, 'MT123');
             publication = new RemoteTrackPublication(signaling);
           });
 
@@ -170,8 +172,13 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
               const trackEvent = {
                 trackDisabled: 'disabled',
                 trackEnabled: 'enabled',
-                trackSwitchedOff: 'switchedOff'
+                trackSwitchedOff: 'switchedOff',
+                trackSwitchOffReasonChanged: 'switchedOff'
               }[event];
+
+              const publicationEvent = event === 'trackSwitchOffReasonChanged'
+                ? 'trackSwitchedOff'
+                : event;
 
               let publicationEventEmitted;
               let trackEventEmitted;
@@ -184,29 +191,27 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
                   });
                   publication._subscribed(track);
                 }
-                publication.once(event, () => {
+                publication.once(publicationEvent, () => {
                   publicationEventEmitted = true;
                 });
                 signaling.update(options);
               });
 
-              if (isSubscribed && event !== 'publishPriorityChanged') {
-                it(`should emit "${trackEvent}" on the Remote${capitalize(kind)}Track`, () => {
-                  assert(trackEventEmitted);
-                });
-              }
+              const shouldEmitTrackEvent = isSubscribed && event !== 'publishPriorityChanged';
+              it(`should ${shouldEmitTrackEvent ? '' : 'not '}emit "${trackEvent}" on the Remote${capitalize(kind)}Track`, () => {
+                assert.equal(!!trackEventEmitted, shouldEmitTrackEvent);
+              });
 
-              if ('trackSwitchedOff' !== event) {
-                it(`should emit "${event}" on the ${className}`, () => {
-                  assert(publicationEventEmitted);
-                });
+              const shouldEmitPublicationEvent = publicationEvent !== 'trackSwitchedOff' || isSubscribed;
+              it(`should ${shouldEmitPublicationEvent ? '' : 'not '}emit "${publicationEvent}" on the ${className}`, () => {
+                assert.equal(!!publicationEventEmitted, shouldEmitPublicationEvent);
+              });
 
-                if (prop) {
-                  const [signalingProp] = Object.keys(options);
-                  it(`should set .${prop} to ${options[signalingProp]}`, () => {
-                    assert.equal(publication[prop], options[signalingProp]);
-                  });
-                }
+              if (prop) {
+                const [signalingProp] = Object.keys(options);
+                it(`should set .${prop} to ${options[signalingProp]}`, () => {
+                  assert.equal(publication[prop], options[signalingProp]);
+                });
               }
             });
           });
@@ -256,7 +261,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
   });
 });
 
-function makeSignaling(isEnabled, kind, sid) {
+function makeSignaling(isEnabled, isSwitchedOff, kind, sid) {
   const signaling = new EventEmitter();
   signaling.error = null;
   signaling.isEnabled = isEnabled;
@@ -264,10 +269,11 @@ function makeSignaling(isEnabled, kind, sid) {
   signaling.name = randomName();
   signaling.priority = randomName();
   signaling.sid = sid;
-  signaling.isSwitchedOff = false;
+  signaling.isSwitchedOff = isSwitchedOff;
+  signaling.switchOffReason = isSwitchedOff ? 'foo' : null;
 
   signaling.update = options => {
-    const changedProps = ['error', 'isEnabled', 'isSwitchedOff', 'priority'].filter(prop => {
+    const changedProps = ['error', 'isEnabled', 'isSwitchedOff', 'priority', 'switchOffReason'].filter(prop => {
       // eslint-disable-next-line no-prototype-builtins
       return options.hasOwnProperty(prop) && signaling[prop] !== options[prop];
     });
@@ -294,10 +300,17 @@ function makeTrack(isEnabled) {
     }
   };
 
-  track._setSwitchedOff = switchedOff => {
-    if (track.switchedOff !== switchedOff) {
+  track._setSwitchedOff = (switchedOff, switchOffReason) => {
+    if (track.switchedOff !== switchedOff || track.switchOffReason !== switchOffReason) {
       track.switchedOff = switchedOff;
-      track.emit(track.switchedOff ? 'switchedOff' : 'switchedOn');
+      track.switchOffReason = switchOffReason;
+      track.emit(`switched${track.switchedOff ? 'Off' : 'On'}`, ...(track.switchedOff ? [switchOffReason] : []));
+    }
+  };
+
+  track._setTrackReceiver = trackReceiver => {
+    if (track.trackTransceiver !== trackReceiver) {
+      track.trackTransceiver = trackReceiver;
     }
   };
 
