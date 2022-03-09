@@ -1,11 +1,10 @@
 'use strict';
 
-import type { ConnectOptions, CreateLocalTrackOptions } from '../tsdef/types';
+import type { ConnectOptions, CreateLocalTrackOptions, LocalAudioTrackOptions } from '../tsdef/types';
 import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
 import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
 import type { Log } from '../tsdef/loglevel';
 import type { Room } from '../tsdef/Room';
-import { createKrispAudioProcessor } from './krispaudioprocessor';
 import { createLocalTracks } from './createlocaltracks';
 import { runPreflight } from './preflight/preflighttest';
 
@@ -30,7 +29,7 @@ function connect(token: string, options?: ConnectOptions): Promise<Room> {
   return internals.connect(token, internalOptions);
 }
 
-function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrackType> {
+function createLocalAudioTrack(options?: CreateLocalTrackOptions|LocalAudioTrackOptions): Promise<LocalAudioTrackType> {
   const internalOptions = {
     createLocalTracks,
     ...options
@@ -69,7 +68,7 @@ const LocalAudioTrack = internals.LocalAudioTrack;
 const LocalVideoTrack = internals.LocalVideoTrack;
 const LocalDataTrack = internals.LocalDataTrack;
 
-const Video = {
+export default {
   connect,
   createLocalAudioTrack,
   createLocalVideoTrack,
@@ -81,6 +80,4 @@ const Video = {
   LocalAudioTrack,
   LocalVideoTrack,
   LocalDataTrack,
-  createKrispAudioProcessor,
 };
-export default Video;

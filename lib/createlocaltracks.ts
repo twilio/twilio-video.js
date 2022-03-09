@@ -1,6 +1,9 @@
 'use strict';
 
-import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
+import { AudioProcessor } from '../tsdef/AudioProcessor';
+import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalAudioTrackOptions, LocalTrack } from '../tsdef/types';
+import { createRNNoiseAudioProcessor } from './rnnoiseadapter';
+
 
 const { asLocalTrack, buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
@@ -21,8 +24,10 @@ const workaround180748 = require('./webaudio/workaround180748');
 let createLocalTrackCalls = 0;
 
 
-type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
-type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
+type ExtraLocalTrackOption = (CreateLocalTrackOptions) & { isCreatedByCreateLocalTracks?: boolean };
+type ExtraAudioTrackOption = (LocalAudioTrackOptions) & { processor? : AudioProcessor, isCreatedByCreateLocalTracks?: boolean };
+
+type ExtraLocalTrackOptions = { audio: ExtraAudioTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {
   getUserMedia: any;
@@ -31,7 +36,7 @@ interface InternalOptions extends CreateLocalTracksOptions {
   LocalVideoTrack: any;
   MediaStreamTrack: any;
   Log: any;
-};
+}
 
 /**
  * Request {@link LocalTrack}s. By default, it requests a
@@ -149,8 +154,9 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
-  if (typeof fullOptions.audio === 'object' && fullOptions.audio.processor) {
-    extraLocalTrackOptions.audio.processor = fullOptions.audio.processor;
+  if (typeof fullOptions.audio === 'object' && 'noiseCancellationOptions' in fullOptions.audio) {
+    const audio = extraLocalTrackOptions.audio as LocalAudioTrackOptions;
+    audio.noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
   }
 
   if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
@@ -182,10 +188,19 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     log.info('Call to getUserMedia successful; got tracks:', videoTracks, audioTracks);
 
     // process audio track if processor is specified.
-    if (extraLocalTrackOptions.audio.processor && audioTracks[0]) {
-      log.warn('Processing Audio Track:');
-      audioTracks[0] = await extraLocalTrackOptions.audio.processor.process(audioTracks[0]);
-      log.warn('done Processing Audio Track:', audioTracks[0]);
+
+    let processor: AudioProcessor|null = null;
+    if ('noiseCancellationOptions' in extraLocalTrackOptions.audio && audioTracks[0]) {
+      const noiseCancellationOptions = extraLocalTrackOptions.audio.noiseCancellationOptions;
+      if (noiseCancellationOptions) {
+        log.warn('Processing Audio Track:');
+        // const processor = await createKrispAudioProcessor(extraLocalTrackOptions.audio.krispSDKRoot);
+        processor = await createRNNoiseAudioProcessor(noiseCancellationOptions.sdkAssetsPath);
+        console.warn('setting processor:', processor);
+        extraLocalTrackOptions.audio.processor = processor;
+        audioTracks[0] = await processor.connect(audioTracks[0]);
+        log.warn('done Processing Audio Track:', audioTracks[0]);
+      }
     }
     const mediaStreamTracks = [
       ...videoTracks,

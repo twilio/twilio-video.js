@@ -163,12 +163,18 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
-  // eslint-disable-next-line no-warning-comments
-  processor?: AudioProcessor; // TODO: consider moving to a new type CreateAudioLocalTrackOptions.
+}
+
+export interface KrispNoiseCancellationOptions {
+  sdkAssetsPath: string;
+}
+
+export interface LocalAudioTrackOptions extends CreateLocalTrackOptions {
+  noiseCancellationOptions?: KrispNoiseCancellationOptions;
 }
 
 export interface ConnectOptions {
-  audio?: boolean | CreateLocalTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions| LocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -202,10 +208,12 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
+
+  useKrisp?: boolean;
 }
 
 export interface CreateLocalTracksOptions {
-  audio?: boolean | CreateLocalTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions | LocalAudioTrackOptions;
   /**
    * @deprecated
    */
