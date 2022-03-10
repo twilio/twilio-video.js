@@ -6,11 +6,11 @@ var MediaStreamTrack = require('../../../../es5/webrtc/mediastreamtrack');
 var RTCIceCandidate = require('../../../../es5/webrtc/rtcicecandidate');
 var RTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
 var RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
-var util = require('../../lib/util');
+var util = require('../../../lib/webrtc/util');
 var { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
 var { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
 
-const detectSilence = require('../../lib/detectsilence');
+const detectSilence = require('../../../lib/webrtc/detectsilence');
 
 var sdpTypes = [
   'answer',

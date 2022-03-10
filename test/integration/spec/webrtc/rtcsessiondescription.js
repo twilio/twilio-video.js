@@ -4,7 +4,7 @@ const assert = require('assert');
 const ChromeRTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription/chrome');
 const SessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
 const { guessBrowser } = require('../../../../es5/webrtc/util');
-const { combinationContext } = require('../../lib/util');
+const { combinationContext } = require('../../../lib/webrtc/util');
 
 const guess = guessBrowser();
 const isChrome = guess === 'chrome';

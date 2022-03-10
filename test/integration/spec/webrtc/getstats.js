@@ -4,7 +4,7 @@ const {
   activeIceCandidatePairStatsNullProps,
   localCandidateStatsNullProps,
   remoteCandidateStatsNullProps
-} = require('../../lib/util');
+} = require('../../../lib/webrtc/util');
 
 const getStats = require('../../../../es5/webrtc/getstats');
 const getUserMedia = require('../../../../es5/webrtc/getusermedia');
