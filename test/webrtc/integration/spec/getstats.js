@@ -6,11 +6,11 @@ const {
   remoteCandidateStatsNullProps
 } = require('../../lib/util');
 
-const getStats = require('../../../lib/getstats');
-const getUserMedia = require('../../../lib/getusermedia');
-const RTCPeerConnection = require('../../../lib/rtcpeerconnection');
-const { guessBrowser } = require('../../../lib/util');
-const { getSdpFormat } = require('../../../lib/util/sdp');
+const getStats = require('../../../../es5/webrtc/getstats');
+const getUserMedia = require('../../../../es5/webrtc/getusermedia');
+const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
+const { guessBrowser } = require('../../../../es5/webrtc/util');
+const { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
 
 const guess = guessBrowser();
 const isFirefox = guess === 'firefox';

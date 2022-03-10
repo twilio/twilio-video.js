@@ -1,9 +1,9 @@
 'use strict';
 
 const assert = require('assert');
-const ChromeRTCSessionDescription = require('../../../lib/rtcsessiondescription/chrome');
-const SessionDescription = require('../../../lib/rtcsessiondescription');
-const { guessBrowser } = require('../../../lib/util');
+const ChromeRTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription/chrome');
+const SessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
+const { guessBrowser } = require('../../../../es5/webrtc/util');
 const { combinationContext } = require('../../lib/util');
 
 const guess = guessBrowser();

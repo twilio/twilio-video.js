@@ -1,14 +1,14 @@
 'use strict';
 
 var assert = require('assert');
-var MediaStream = require('../../../lib/mediastream');
-var MediaStreamTrack = require('../../../lib/mediastreamtrack');
-var RTCIceCandidate = require('../../../lib/rtcicecandidate');
-var RTCSessionDescription = require('../../../lib/rtcsessiondescription');
-var RTCPeerConnection = require('../../../lib/rtcpeerconnection');
+var MediaStream = require('../../../../es5/webrtc/mediastream');
+var MediaStreamTrack = require('../../../../es5/webrtc/mediastreamtrack');
+var RTCIceCandidate = require('../../../../es5/webrtc/rtcicecandidate');
+var RTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
+var RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
 var util = require('../../lib/util');
-var { flatMap, guessBrowser } = require('../../../lib/util');
-var { getSdpFormat } = require('../../../lib/util/sdp');
+var { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
+var { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
 
 const detectSilence = require('../../lib/detectsilence');
 
