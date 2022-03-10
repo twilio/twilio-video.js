@@ -1,6 +1,6 @@
 'use strict';
 
-var { flatMap } = require('../../lib/util');
+var { flatMap } = require('../../../lib/webrtc/util');
 var { randomName: randomId } = require('./util');
 
 function FakeRTCPeerConnection(options) {

@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { makeUUID } = require('../../../../lib/util');
+const { makeUUID } = require('../../../../../lib/webrtc/util');
 
 const {
   getPlanBTrackIds,
@@ -10,7 +10,7 @@ const {
   getUnifiedPlanSSRCs,
   updatePlanBTrackIdsToSSRCs,
   updateUnifiedPlanTrackIdsToSSRCs
-} = require('../../../../lib/util/sdp');
+} = require('../../../../../lib/webrtc/util/sdp');
 
 function makePlanBSDP(version, trackIds, ssrcs) {
   return `v=0

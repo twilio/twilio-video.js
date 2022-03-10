@@ -1,6 +1,6 @@
 'use strict';
 
-var Latch = require('../../../../lib/util/latch');
+var Latch = require('../../../../../lib/webrtc/util/latch');
 
 describe('Latch', () => {
   // Latch unit tests here.

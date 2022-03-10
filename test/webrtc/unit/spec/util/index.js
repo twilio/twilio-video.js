@@ -1,7 +1,7 @@
 'use strict';
 
 var assert = require('assert');
-var util = require('../../../../lib/util');
+var util = require('../../../../../lib/webrtc/util');
 
 describe('Util', () => {
   describe('guessBrowser', () => {

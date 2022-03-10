@@ -2,7 +2,7 @@
 
 var inherits = require('util').inherits;
 var randomName = require('./util').randomName;
-var EventTarget = require('../../lib/util/eventtarget');
+var EventTarget = require('../../../lib/webrtc/util/eventtarget');
 
 function FakeMediaStream() {
   var audioTracks = [];
