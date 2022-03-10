@@ -1,9 +1,8 @@
 'use strict';
 
 var assert = require('assert');
-var { FakeMediaStream } = require('../../lib/fakemediastream');
-var { FakeMediaStreamTrack } = require('../../lib/fakemediastream');
-var { FakeRTCPeerConnection } = require('../../lib/fakestats');
+var { FakeMediaStream, FakeMediaStreamTrack } = require('../../../lib/webrtc/fakemediastream');
+var { FakeRTCPeerConnection } = require('../../../lib/webrtc/fakestats');
 var getStats = require('../../../../lib/webrtc/getstats');
 
 describe('getStats', function() {
