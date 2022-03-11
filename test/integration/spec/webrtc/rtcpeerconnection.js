@@ -1,3 +1,9 @@
+/* eslint-disable no-useless-catch */
+/* eslint-disable no-unused-expressions */
+/* eslint-disable no-return-assign */
+/* eslint-disable no-console */
+/* eslint-disable no-invalid-this */
+/* eslint-disable no-undef */
 'use strict';
 
 var assert = require('assert');
@@ -657,7 +663,7 @@ function assertEqualDescriptions(actual, expected) {
     var actualOLine = actual.sdp.match(/^o=.*\r$/m)[0];
     assert.equal(actualOLine, expectedOLine);
   }
-};
+}
 
 function emptyDescription() {
   if (isChrome && chromeVersion < 70) {
@@ -711,8 +717,8 @@ function testAddIceCandidate(signalingState) {
   // because we test one round of negotiation. If we tested multiple rounds,
   // such that remoteDescription was non-null, we would accept a success here.
   var shouldFail = {
-    closed: true,
-    stable: !isSafari,
+    'closed': true,
+    'stable': !isSafari,
     'have-local-offer': !isSafari
   }[signalingState] || false;
 
@@ -721,8 +727,7 @@ function testAddIceCandidate(signalingState) {
     'have-remote-offer': true
   }[signalingState] || false;
 
-  (signalingState === 'closed' && isSafari ? context.skip : context)
-  (JSON.stringify(signalingState), () => {
+  (signalingState === 'closed' && isSafari ? context.skip : context)(JSON.stringify(signalingState), () => {
     var error;
     var result;
     var test;
@@ -755,9 +760,9 @@ function testAddIceCandidate(signalingState) {
         // TODO(mroberts): Do something
         if (shouldFail) {
           return promise.catch(_error => error = _error);
-        } else {
-          return promise.then(_result => result = _result);
         }
+        return promise.then(_result => result = _result);
+
       });
     });
 
@@ -829,7 +834,7 @@ function testGetReceivers(signalingState) {
     await pc2.setLocalDescription(answer);
     await pc1.setRemoteDescription(answer);
 
-    switch(signalingState) {
+    switch (signalingState) {
       case 'closed': {
         pc2.close();
         break;
@@ -849,7 +854,7 @@ function testGetReceivers(signalingState) {
   });
 
   context(`"${signalingState}"`, () => {
-    it(`should return a list of receivers`, () => {
+    it('should return a list of receivers', () => {
       pc2.getReceivers().forEach(receiver => {
         assert(receiver.track === null || receiver.track instanceof MediaStreamTrack);
       });
@@ -866,9 +871,9 @@ function expectIceConnectionStateChangeOnClose() {
     return chromeVersion < 80;
   } else if (isSafari) {
     return true;
-  } else {
-    return false;
   }
+  return false;
+
 }
 
 function expectSinglingStateChangeOnClose() {
@@ -880,9 +885,9 @@ function expectSinglingStateChangeOnClose() {
     return chromeVersion < 85;
   } else if (isSafari) {
     return true;
-  } else {
-    return false;
   }
+  return false;
+
 }
 
 function testClose(signalingState) {
@@ -1248,9 +1253,9 @@ function testCreateAnswer(signalingState) {
   var test;
 
   var shouldFail = {
-    closed: true,
+    'closed': true,
     'have-local-offer': true,
-    stable: true
+    'stable': true
   }[signalingState] || false;
 
   beforeEach(() => {
@@ -1275,9 +1280,9 @@ function testCreateAnswer(signalingState) {
 
       if (shouldFail) {
         return promise.catch(_error => error = _error);
-      } else {
-        return promise.then(_result => result = _result);
       }
+      return promise.then(_result => result = _result);
+
     });
   });
 
@@ -1286,13 +1291,11 @@ function testCreateAnswer(signalingState) {
       assert(error instanceof Error);
     });
 
-    (isFirefox && signalingState === 'closed' ? it.skip : it)
-    ('should not change .localDescription', () => {
+    (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .localDescription', () => {
       assertEqualDescriptions(test.peerConnection.localDescription, localDescription);
     });
 
-    (isFirefox && signalingState === 'closed' ? it.skip : it)
-    ('should not change .remoteDescription', () => {
+    (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .remoteDescription', () => {
       assertEqualDescriptions(test.peerConnection.remoteDescription, remoteDescription);
     });
 
@@ -1361,9 +1364,9 @@ function testCreateOffer(signalingState) {
 
       if (shouldFail) {
         return promise.catch(_error => error = _error);
-      } else {
-        return promise.then(_result => result = _result);
       }
+      return promise.then(_result => result = _result);
+
     });
   });
 
@@ -1372,13 +1375,11 @@ function testCreateOffer(signalingState) {
       assert(error instanceof Error);
     });
 
-    (isFirefox && signalingState === 'closed' ? it.skip : it)
-    ('should not change .localDescription', () => {
+    (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .localDescription', () => {
       assertEqualDescriptions(test.peerConnection.localDescription, localDescription);
     });
 
-    (isFirefox && signalingState === 'closed' ? it.skip : it)
-    ('should not change .remoteDescription', () => {
+    (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .remoteDescription', () => {
       assertEqualDescriptions(test.peerConnection.remoteDescription, remoteDescription);
     });
 
@@ -1398,22 +1399,19 @@ function testCreateOffer(signalingState) {
 
     // NOTE(mroberts): The FirefoxRTCPeerConnection must rollback in order to
     // createOffer in signalingState "have-local-offer".
-    (isFirefox && signalingState === 'have-local-offer' ? it.skip : it)
-    ('should not change .localDescription (candidate for skip)', () => {
+    (isFirefox && signalingState === 'have-local-offer' ? it.skip : it)('should not change .localDescription (candidate for skip)', () => {
       assertEqualDescriptions(test.peerConnection.localDescription, localDescription);
     });
 
     // NOTE(mroberts): The FirefoxRTCPeerConnection must rollback in order to
     // createOffer in signalingState "have-remote-offer".
-    (isFirefox && signalingState === 'have-remote-offer' ? it.skip : it)
-    ('should not change .remoteDescription (candidate for skip)', () => {
+    (isFirefox && signalingState === 'have-remote-offer' ? it.skip : it)('should not change .remoteDescription (candidate for skip)', () => {
       assertEqualDescriptions(test.peerConnection.remoteDescription, remoteDescription);
     });
 
     // NOTE(mroberts): The FirefoxRTCPeerConnection must rollback in order to
     // createOffer in signalingStates "have-local-offer" and "have-remote-offer".
-    (isFirefox && signalingState !== 'stable' ? it.skip : it)
-    ('should not change .signalingState', () => {
+    (isFirefox && signalingState !== 'stable' ? it.skip : it)('should not change .signalingState', () => {
       assert.equal(test.peerConnection.signalingState, signalingState);
     });
 
@@ -1434,7 +1432,7 @@ function testSetDescription(local, signalingState, sdpType) {
       },
       offer: {
         'have-local-offer': 'have-local-offer',
-        stable: 'have-local-offer'
+        'stable': 'have-local-offer'
       },
       rollback: {
         'have-local-offer': 'stable'
@@ -1451,7 +1449,7 @@ function testSetDescription(local, signalingState, sdpType) {
         // Bugzilla: https://bugzilla.mozilla.org/show_bug.cgi?id=1567951
         ...(firefoxVersion > 69 ? { 'have-local-offer': 'have-remote-offer' } : {}),
         'have-remote-offer': 'have-remote-offer',
-        stable: 'have-remote-offer'
+        'stable': 'have-remote-offer'
       },
       rollback: {
         'have-remote-offer': 'stable'
@@ -1500,9 +1498,9 @@ function testSetDescription(local, signalingState, sdpType) {
 
         if (shouldFail) {
           return promise.catch(_error => error = _error);
-        } else {
-          return promise.then(_result => result = _result);
         }
+        return promise.then(_result => result = _result);
+
       });
     });
 
@@ -1511,13 +1509,11 @@ function testSetDescription(local, signalingState, sdpType) {
         assert(error instanceof Error);
       });
 
-      (isFirefox && signalingState === 'closed' ? it.skip : it)
-      ('should not change .localDescription', () => {
+      (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .localDescription', () => {
         assertEqualDescriptions(test.peerConnection.localDescription, localDescription);
       });
 
-      (isFirefox && signalingState === 'closed' ? it.skip : it)
-      ('should not change .remoteDescription', () => {
+      (isFirefox && signalingState === 'closed' ? it.skip : it)('should not change .remoteDescription', () => {
         assertEqualDescriptions(test.peerConnection.remoteDescription, remoteDescription);
       });
 
@@ -1536,8 +1532,8 @@ function testSetDescription(local, signalingState, sdpType) {
 
       if (local) {
         it(sdpType === 'rollback'
-            ? ('should set .localDescription to the ' + JSON.stringify(sdpType) + ' RTCSessionDescription')
-            : 'should set .localDescription to the previous RTCSessionDescription', () => {
+          ? ('should set .localDescription to the ' + JSON.stringify(sdpType) + ' RTCSessionDescription')
+          : 'should set .localDescription to the previous RTCSessionDescription', () => {
           assertEqualDescriptions(test.peerConnection.localDescription, nextDescription);
         });
       } else {
@@ -1548,8 +1544,8 @@ function testSetDescription(local, signalingState, sdpType) {
 
       if (!local) {
         it(sdpType === 'rollback'
-            ? ('should set .remoteDescription to the ' + JSON.stringify(sdpType) + ' RTCSessionDescription')
-            : 'should set .remoteDescription to the previous RTCSessionDescription', () => {
+          ? ('should set .remoteDescription to the ' + JSON.stringify(sdpType) + ' RTCSessionDescription')
+          : 'should set .remoteDescription to the previous RTCSessionDescription', () => {
           assertEqualDescriptions(test.peerConnection.remoteDescription, nextDescription);
         });
       } else {
@@ -1826,7 +1822,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
       setup = Promise.all([
         test.peerConnection.setRemoteDescription(test.remoteOffer()),
         test.waitFor('signalingstatechange')
-      ]).then(test.resetEvents)
+      ]).then(test.resetEvents);
       break;
     default:
       setup = Promise.reject(
