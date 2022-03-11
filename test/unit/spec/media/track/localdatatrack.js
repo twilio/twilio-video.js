@@ -59,11 +59,11 @@ describe('LocalDataTrack', () => {
     });
 
     context('when .name is present in LocalTrackOptions but not a string', () => {
-      const notAString = { foo: 'bar' };
-      const track = new LocalDataTrack({
-        name: notAString
+      it('sets .name to the string converted version of LocalTrackOptions.name', () => {
+        const notAString = { foo: 'bar' };
+        const track = new LocalDataTrack({ name: notAString });
+        assert.equal(track.name, String(notAString));
       });
-      assert.equal(track.name, String(notAString));
     });
 
     combinationContext([

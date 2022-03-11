@@ -19,47 +19,44 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
   let name = `Remote${capitalize(kind)}Track`;
   describe(`${name}`, () => {
     describe('constructor', () => {
-      [() => null, () => ({ log, name: 'bar' })].forEach(getOptions => {
-        context(`when called with${getOptions() ? '' : 'out'} the options object`, () => {
-          let error;
-          let track;
+      const name = 'bar';
+      let error;
+      let track;
 
-          before(() => {
-            try {
-              track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: getOptions(), RemoteTrack });
-            } catch (e) {
-              error = e;
-            }
-          });
+      before(() => {
+        try {
+          track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: { log, name }, RemoteTrack });
+        } catch (e) {
+          error = e;
+        }
+      });
 
-          it('shouldn\'t throw', () => {
-            assert(!error);
-          });
+      it('shouldn\'t throw', () => {
+        assert(!error);
+      });
 
-          it(`should return an instance of ${name}`, () => {
-            assert(track instanceof RemoteTrack);
-          });
+      it(`should return an instance of ${name}`, () => {
+        assert(track instanceof RemoteTrack);
+      });
 
-          it('should set the .isEnabled property', () => {
-            assert.equal(track.isEnabled, true);
-          });
+      it('should set the .isEnabled property', () => {
+        assert.equal(track.isEnabled, true);
+      });
 
-          it('should set the .isSwitchedOff property', () => {
-            assert.equal(track.isSwitchedOff, false);
-          });
+      it('should set the .isSwitchedOff property', () => {
+        assert.equal(track.isSwitchedOff, false);
+      });
 
-          it('should set the .kind property', () => {
-            assert.equal(track.kind, kind);
-          });
+      it('should set the .kind property', () => {
+        assert.equal(track.kind, kind);
+      });
 
-          it('should set the .name property', () => {
-            assert.equal(track.name, getOptions() ? 'bar' : 'foo');
-          });
+      it('should set the .name property', () => {
+        assert.equal(track.name, name);
+      });
 
-          it('should set the .sid property', () => {
-            assert.equal(track.sid, 'bar');
-          });
-        });
+      it('should set the .sid property', () => {
+        assert.equal(track.sid, 'bar');
       });
     });
 
@@ -223,7 +220,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             'isEnabled',
             'isSwitchedOff',
             'priority',
-            'sid'
+            'sid',
+            'switchOffReason'
           ]);
         } else {
           assert.deepEqual(Object.keys(track), [
@@ -237,7 +235,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             'isEnabled',
             'isSwitchedOff',
             'priority',
-            'sid'
+            'sid',
+            'switchOffReason'
           ]);
         }
       });
@@ -364,7 +363,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             name: track.name,
             priority: null,
             processedTrack: null,
-            sid: track.sid
+            sid: track.sid,
+            switchOffReason: null
           });
         } else {
           assert.deepEqual(track.toJSON(), {
@@ -378,7 +378,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             priority: null,
             processedTrack: null,
             processor: null,
-            sid: track.sid
+            sid: track.sid,
+            switchOffReason: null
           });
         }
       });
@@ -463,5 +464,5 @@ function makeTrack({ id, mid, sid, kind, isEnabled, options, RemoteTrack, setPri
   const mediaTrackReceiver = new MediaTrackReceiver(id, mid, mediaStreamTrack);
   options = options || {};
   options.IntersectionObserver = NullIntersectionObserver;
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, null, setPriority, setRenderHint, options);
 }

@@ -1513,7 +1513,7 @@ function makeTest(options) {
   }
   options.trackSignalings = options.trackSignalings || [];
 
-  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, setRenderHitsCallback, opts) {
+  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, switchOffReason, setPriorityCallback, setRenderHitsCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1521,9 +1521,16 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this.setPriority = setPriorityCallback;
+    this.switchOffReason = switchOffReason;
     this._setRenderHint = setRenderHitsCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
-    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
+    this._setSwitchedOff = (switchedOff, switchOffReason) => {
+      this.switchedOff = switchedOff;
+      this.switchOffReason = switchOffReason;
+    };
+    this._setTrackReceiver = mediaTrackReceiver => {
+      this.mediaStreamTrack = mediaTrackReceiver ? mediaTrackReceiver.track : null;
+    };
     options.tracks.push(this);
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
