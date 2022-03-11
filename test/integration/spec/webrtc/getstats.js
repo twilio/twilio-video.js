@@ -17,7 +17,8 @@ const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
 const sdpFormat = getSdpFormat();
 
-(isSafari && sdpFormat === 'planb' ? describe.skip : describe)(`getStats(${sdpFormat})`, function () {
+(isSafari && sdpFormat === 'planb' ? describe.skip : describe)(`getStats(${sdpFormat})`, function() {
+  // eslint-disable-next-line no-invalid-this
   this.timeout(10000);
 
   context('should return a Promise that resolves with a StandardizedStatsResponse which has', () => {
@@ -95,17 +96,18 @@ const sdpFormat = getSdpFormat();
         assert(trackStats, `expected to have property: ${stats}.${trackType}[0]`);
 
         [
-          {key: 'ssrc', type: 'string'},
-          {key: 'timestamp', type: 'number'},
-          {key: 'bytesReceived', type: 'number'},
-          {key: 'bytesSent', type: 'number'},
-          {key: 'packetsSent', type: 'number'},
-          {key: 'packetsReceived', type: 'number'},
-          {key: 'trackId', type: 'string'},
-          {key: 'jitter', type: 'number'},
-          {key: 'packetsLost', type: 'number'},
-          {key: 'roundTripTime', type: 'number'}
-        ].forEach(({key, type}) => {
+          { key: 'ssrc', type: 'string' },
+          { key: 'timestamp', type: 'number' },
+          { key: 'bytesReceived', type: 'number' },
+          { key: 'bytesSent', type: 'number' },
+          { key: 'packetsSent', type: 'number' },
+          { key: 'packetsReceived', type: 'number' },
+          { key: 'trackId', type: 'string' },
+          { key: 'jitter', type: 'number' },
+          { key: 'packetsLost', type: 'number' },
+          { key: 'roundTripTime', type: 'number' }
+        ].forEach(({ key, type }) => {
+          // eslint-disable-next-line no-prototype-builtins
           if (trackStats.hasOwnProperty(key)) {
             assert.equal(typeof trackStats[key], type, `typeof ${stats}.${trackType}[0].${key} ("${typeof trackStats[key]}") should be "${type}"`);
           }
@@ -114,17 +116,17 @@ const sdpFormat = getSdpFormat();
     });
 
     it('.activeIceCandidatePair', () => {
-      const {activeIceCandidatePair} = stats;
-      const {localCandidate, remoteCandidate} = activeIceCandidatePair;
+      const { activeIceCandidatePair } = stats;
+      const { localCandidate, remoteCandidate } = activeIceCandidatePair;
 
       [
-        {key: 'candidateType', type: 'string'},
-        {key: 'ip', type: 'string'},
-        {key: 'port', type: 'number'},
-        {key: 'priority', type: 'number'},
-        {key: 'protocol', type: 'string'},
-        {key: 'url', type: 'string'}
-      ].forEach(({key, type}) => {
+        { key: 'candidateType', type: 'string' },
+        { key: 'ip', type: 'string' },
+        { key: 'port', type: 'number' },
+        { key: 'priority', type: 'number' },
+        { key: 'protocol', type: 'string' },
+        { key: 'url', type: 'string' }
+      ].forEach(({ key, type }) => {
         [localCandidate, remoteCandidate].forEach((candidate, i) => {
           const firefoxVersion = isFirefox && navigator.userAgent.match(/Firefox\/(\d+)\./)[1];
           if ([localCandidateStatsNullProps, remoteCandidateStatsNullProps][i][guess](firefoxVersion).has(key)) {
@@ -153,9 +155,9 @@ const sdpFormat = getSdpFormat();
         });
       });
       [
-        {key: 'deleted', type: 'boolean'},
-        {key: 'relayProtocol', type: 'string'}
-      ].forEach(({key, type}) => {
+        { key: 'deleted', type: 'boolean' },
+        { key: 'relayProtocol', type: 'string' }
+      ].forEach(({ key, type }) => {
         const firefoxVersion = isFirefox && navigator.userAgent.match(/Firefox\/(\d+)\./)[1];
         if (localCandidateStatsNullProps[guess](firefoxVersion).has(key)) {
           assert.equal(localCandidate[key], null);
@@ -173,28 +175,28 @@ const sdpFormat = getSdpFormat();
       });
 
       [
-        {key: 'availableIncomingBitrate', type: 'number'},
-        {key: 'availableOutgoingBitrate', type: 'number'},
-        {key: 'bytesReceived', type: 'number'},
-        {key: 'bytesSent', type: 'number'},
-        {key: 'consentRequestsSent', type: 'number'},
-        {key: 'currentRoundTripTime', type: 'number'},
-        {key: 'lastPacketReceivedTimestamp', type: 'number'},
-        {key: 'lastPacketSentTimestamp', type: 'number'},
-        {key: 'nominated', type: 'boolean'},
-        {key: 'priority', type: 'number'},
-        {key: 'readable', type: 'boolean'},
-        {key: 'requestsReceived', type: 'number'},
-        {key: 'requestsSent', type: 'number'},
-        {key: 'responsesReceived', type: 'number'},
-        {key: 'responsesSent', type: 'number'},
-        {key: 'retransmissionsReceived', type: 'number'},
-        {key: 'retransmissionsSent', type: 'number'},
-        {key: 'state', type: 'string'},
-        {key: 'totalRoundTripTime', type: 'number'},
-        {key: 'transportId', type: 'string'},
-        {key: 'writable', type: 'boolean'}
-      ].forEach(({key, type}) => {
+        { key: 'availableIncomingBitrate', type: 'number' },
+        { key: 'availableOutgoingBitrate', type: 'number' },
+        { key: 'bytesReceived', type: 'number' },
+        { key: 'bytesSent', type: 'number' },
+        { key: 'consentRequestsSent', type: 'number' },
+        { key: 'currentRoundTripTime', type: 'number' },
+        { key: 'lastPacketReceivedTimestamp', type: 'number' },
+        { key: 'lastPacketSentTimestamp', type: 'number' },
+        { key: 'nominated', type: 'boolean' },
+        { key: 'priority', type: 'number' },
+        { key: 'readable', type: 'boolean' },
+        { key: 'requestsReceived', type: 'number' },
+        { key: 'requestsSent', type: 'number' },
+        { key: 'responsesReceived', type: 'number' },
+        { key: 'responsesSent', type: 'number' },
+        { key: 'retransmissionsReceived', type: 'number' },
+        { key: 'retransmissionsSent', type: 'number' },
+        { key: 'state', type: 'string' },
+        { key: 'totalRoundTripTime', type: 'number' },
+        { key: 'transportId', type: 'string' },
+        { key: 'writable', type: 'boolean' }
+      ].forEach(({ key, type }) => {
         if (activeIceCandidatePairStatsNullProps[guess].has(key) && activeIceCandidatePair[key] === null) {
           return;
         }

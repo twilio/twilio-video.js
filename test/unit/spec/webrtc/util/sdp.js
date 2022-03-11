@@ -107,7 +107,7 @@ a=ssrc:${ssrcs[1][1]} label:${trackIds[1]}
 }
 
 function makeUnifiedPlanSDP(version, trackIds, ssrcs) {
-return `v=0
+  return `v=0
 o=mozilla...THIS_IS_SDPARTA-53.0 3990212676194185183 0 IN IP4 0.0.0.0
 s=-
 t=0 0
