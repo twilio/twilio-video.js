@@ -145,6 +145,8 @@
   },
   "dependencies": {
     "backoff": "^2.5.0",
+    "events": "^3.3.0",
+    "util": "^0.12.4",
     "ws": "^7.4.6",
     "xmlhttprequest": "^1.8.0"
   },
