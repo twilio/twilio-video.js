@@ -47,57 +47,98 @@ class RNNoiseNode extends AudioWorkletNode {
   getIsActive() {
     return this._isActive;
   }
-  update(keepalive) {
-    this.port.postMessage(keepalive);
+  enable() {
+    this.port.postMessage('enable');
+  }
+  disable() {
+    this.port.postMessage('disable');
+  }
+  destroy() {
+    this.port.postMessage('destroy');
+  }
+  setLogging(enabled) {
+    this.port.postMessage(enabled ? 'enableLogging' : 'disableLogging');
   }
 }
 RNNoiseNode.webModule = null;
+let initialized = false;
 let audioContext = null;
 let connected = false;
 let rnnoiseNode = null;
 let sourceNode = null;
 let destinationNode = null;
 let inputStream = null;
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+
+const init = async rnnoiseRootPath => {
+  audioContext = new AudioContext({ sampleRate: 48000 });
+  const wasmPath = rnnoiseRootPath + '/rnnoise-processor.wasm';
+  const processorJSPath = rnnoiseRootPath + '/rnnoise_processor.js';
+  console.log({ wasmPath, processorJSPath });
+  await RNNoiseNode.register(audioContext, wasmPath, processorJSPath);
+  initialized = true;
+};
+
+const isInitialized = () => initialized;
+
+const connect = stream => {
+  if (!isInitialized()) {
+    throw new Error('you must call init before connect');
+  }
+  sourceNode = audioContext.createMediaStreamSource(stream);
+  if (!rnnoiseNode) {
+    rnnoiseNode = new RNNoiseNode(audioContext);
+  }
+  destinationNode = audioContext.createMediaStreamDestination();
+  sourceNode.connect(rnnoiseNode);
+  rnnoiseNode.connect(destinationNode);
+  const outputStream = destinationNode.stream;
+  connected = true;
+  inputStream = stream;
+  rnnoiseNode.enable();
+  return outputStream;
+};
+
+const isConnected = () => connected;
+
+const disconnect = () => {
+  if (connected) {
+    connected = false;
+    rnnoiseNode.disable();
+    rnnoiseNode.disconnect();
+    sourceNode.disconnect();
+    destinationNode.disconnect();
+    inputStream.getTracks().forEach(track => track.stop());
+  }
+};
+
+const enable = () => connected && rnnoiseNode.enable();
+const isEnabled = () => connected && rnnoiseNode.getIsActive();
+const disable = () => connected && rnnoiseNode.disable();
+const destroy = () => {
+  initialized = false;
+  disconnect();
+  if (rnnoiseNode) {
+    rnnoiseNode.destroy();
+    rnnoiseNode = null;
+  }
+};
+
+const setLogging = enable => {
+  if (rnnoiseNode) {
+    rnnoiseNode.setLogging(enable);
+  }
+};
+
 export default {
-  init: async rnnoiseRootPath => {
-    audioContext = new AudioContext({ sampleRate: 48000 });
-    const wasmPath = rnnoiseRootPath + '/rnnoise-processor.wasm';
-    const processorJSPath = rnnoiseRootPath + '/rnnoise_processor.js';
-    console.log({ wasmPath, processorJSPath });
-    await RNNoiseNode.register(audioContext, wasmPath, processorJSPath);
-  },
-  isInitialized: () => !!audioContext,
-  connect: stream => {
-    if (!audioContext) {
-      throw new Error('you must call init before connect');
-    }
-    sourceNode = audioContext.createMediaStreamSource(stream);
-    if (!rnnoiseNode) {
-      rnnoiseNode = new RNNoiseNode(audioContext);
-    }
-    destinationNode = audioContext.createMediaStreamDestination();
-    sourceNode.connect(rnnoiseNode);
-    rnnoiseNode.connect(destinationNode);
-    const outputStream = destinationNode.stream;
-    connected = true;
-    inputStream = stream;
-    rnnoiseNode.update(true);
-    return outputStream;
-  },
-  isConnected: () => connected,
-  disconnect: () => {
-    if (connected) {
-      rnnoiseNode.update(false);
-      rnnoiseNode.disconnect();
-      sourceNode.disconnect();
-      destinationNode.disconnect();
-      inputStream.getTracks().forEach(track => track.stop());
-      connected = false;
-    }
-  },
-  enable: () => connected && rnnoiseNode.update(true),
-  isEnabled: () => connected && rnnoiseNode.getIsActive(),
-  disable: () => connected && rnnoiseNode.update(false),
+  init,
+  isInitialized,
+  connect,
+  isConnected,
+  disconnect,
+  enable,
+  isEnabled,
+  disable,
+  destroy,
+  setLogging,
 };
 

@@ -1,4 +1,3 @@
-import { AudioProcessor } from './AudioProcessor';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalAudioTrackPublication } from './LocalAudioTrackPublication';
 import { LocalDataTrack } from './LocalDataTrack';

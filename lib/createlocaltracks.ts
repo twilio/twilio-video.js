@@ -1,11 +1,9 @@
 'use strict';
 
-import { AudioProcessor } from '../tsdef/AudioProcessor';
-import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalAudioTrackOptions, LocalTrack } from '../tsdef/types';
-import { createRNNoiseAudioProcessor } from './rnnoiseadapter';
+import { CreateLocalTrackOptions, CreateLocalTracksOptions, KrispNoiseCancellationOptions, LocalTrack } from '../tsdef/types';
+import { createKrispLocalAudioTrack } from './media/track/krisplocalaudiotrack';
 
-
-const { asLocalTrack, buildLogLevels } = require('./util');
+const { buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
 
 const {
@@ -24,10 +22,8 @@ const workaround180748 = require('./webaudio/workaround180748');
 let createLocalTrackCalls = 0;
 
 
-type ExtraLocalTrackOption = (CreateLocalTrackOptions) & { isCreatedByCreateLocalTracks?: boolean };
-type ExtraAudioTrackOption = (LocalAudioTrackOptions) & { processor? : AudioProcessor, isCreatedByCreateLocalTracks?: boolean };
-
-type ExtraLocalTrackOptions = { audio: ExtraAudioTrackOption; video: ExtraLocalTrackOption; };
+type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
+type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {
   getUserMedia: any;
@@ -154,9 +150,10 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
+  let noiseCancellationOptions: KrispNoiseCancellationOptions|undefined;
   if (typeof fullOptions.audio === 'object' && 'noiseCancellationOptions' in fullOptions.audio) {
-    const audio = extraLocalTrackOptions.audio as LocalAudioTrackOptions;
-    audio.noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
+    noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
+    delete fullOptions.audio.noiseCancellationOptions;
   }
 
   if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
@@ -182,35 +179,32 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    const videoTracks = mediaStream.getVideoTracks();
-    const audioTracks = mediaStream.getAudioTracks();
-
-    log.info('Call to getUserMedia successful; got tracks:', videoTracks, audioTracks);
-
-    // process audio track if processor is specified.
-
-    let processor: AudioProcessor|null = null;
-    if ('noiseCancellationOptions' in extraLocalTrackOptions.audio && audioTracks[0]) {
-      const noiseCancellationOptions = extraLocalTrackOptions.audio.noiseCancellationOptions;
-      if (noiseCancellationOptions) {
-        log.warn('Processing Audio Track:');
-        // const processor = await createKrispAudioProcessor(extraLocalTrackOptions.audio.krispSDKRoot);
-        processor = await createRNNoiseAudioProcessor(noiseCancellationOptions.sdkAssetsPath);
-        console.warn('setting processor:', processor);
-        extraLocalTrackOptions.audio.processor = processor;
-        audioTracks[0] = await processor.connect(audioTracks[0]);
-        log.warn('done Processing Audio Track:', audioTracks[0]);
-      }
-    }
     const mediaStreamTracks = [
-      ...videoTracks,
-      ...audioTracks
+      ...mediaStream.getAudioTracks(),
+      ...mediaStream.getVideoTracks(),
     ];
 
-    return mediaStreamTracks.map(mediaStreamTrack => asLocalTrack(mediaStreamTrack, {
-      ...extraLocalTrackOptions[mediaStreamTrack.kind as 'audio' | 'video'],
-      ...localTrackOptions,
-    }));
+    log.info('Call to getUserMedia successful; got tracks:', mediaStreamTracks);
+
+    return await Promise.all(
+      mediaStreamTracks.map(mediaStreamTrack => {
+        if (mediaStreamTrack.kind === 'audio' && noiseCancellationOptions) {
+          return createKrispLocalAudioTrack(mediaStreamTrack, noiseCancellationOptions, {
+            ...extraLocalTrackOptions.audio,
+            ...localTrackOptions,
+          });
+        } else if (mediaStreamTrack.kind === 'audio') {
+          return new localTrackOptions.LocalAudioTrack(mediaStreamTrack, {
+            ...extraLocalTrackOptions.audio,
+            ...localTrackOptions,
+          });
+        }
+        return new localTrackOptions.LocalVideoTrack(mediaStreamTrack, {
+          ...extraLocalTrackOptions.audio,
+          ...localTrackOptions,
+        });
+      })
+    );
   } catch (error) {
     log.warn('Call to getUserMedia failed:', error);
     throw error;
@@ -220,7 +214,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 /**
  * {@link createLocalTracks} options
  * @typedef {object} CreateLocalTracksOptions
- * @property {boolean|CreateLocalTrackOptions} [audio=true] - Whether or not to
+ * @property {boolean|CreateLocalTrackOptions|LocalAudioTrackOptions} [audio=true] - Whether or not to
  *   get local audio with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
  * @property {LogLevel|LogLevels} [logLevel='warn'] - <code>(deprecated: use [Video.Logger](module-twilio-video.html) instead.

@@ -8,6 +8,8 @@ export interface AudioProcessor {
   enable: () => void; // enables tracks processing.
   disable: () => void; // disables disables processing.
   disconnect: () => void; // stops processing track and releases any resources.
+  destroy:() => void; // destroys the processor.
+  setLogging:(enable: boolean) => void; // enables/disables logging
 }
 
 

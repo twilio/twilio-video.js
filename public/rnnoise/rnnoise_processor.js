@@ -9,34 +9,75 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
       rnnoiseExports = new WebAssembly.Instance(options.processorOptions.module).exports;
       heapFloat32 = new Float32Array(rnnoiseExports.memory.buffer);
     }
-    if (options.processorOptions.activeInitially) {
-      console.log('processor activeInitially');
-      this.state = rnnoiseExports.newState();
-    } else {
-      console.log('processor NOT activeInitially');
-      this.state = null;
-    }
     // enable
     // disable
     // destroy
     // enableLogging
     // disableLogging
-    this.port.onmessage = ({ data: keepalive }) => {
+    this.logging = true;
+    this.keepAlive = true;
+    if (options.processorOptions.activeInitially) {
+      this.log('activeInitially');
+      this.state = rnnoiseExports.newState();
+    } else {
+      this.log('NOT activeInitially');
+      this.state = null;
+    }
+
+    this.port.onmessage = ({ data: command }) => {
       let vadProb = 0;
-      if (keepalive) {
-        if (this.state === null) {
-          console.log('processor creating state again');
-          this.state = rnnoiseExports.newState();
-        }
-        vadProb = rnnoiseExports.getVadProb(this.state);
-      } else if (this.state) {
-        console.log('processor deleting state');
-        rnnoiseExports.deleteState(this.state);
-        this.state = null;
+      this.log('handling command: ', command);
+      switch (command) {
+        case 'enable':
+          if (!this.state) {
+            this.state = rnnoiseExports.newState();
+          }
+          vadProb = rnnoiseExports.getVadProb(this.state);
+          break;
+        case 'disable':
+          if (this.state) {
+            rnnoiseExports.deleteState(this.state);
+            this.state = null;
+          }
+          break;
+        case 'destroy':
+          if (this.state) {
+            rnnoiseExports.deleteState(this.state);
+            this.state = null;
+          }
+          this.keepAlive = false;
+          break;
+        case 'enableLogging':
+          this.logging = true;
+          this.log('logging Enabled');
+          break;
+        case 'disableLogging':
+          this.log('Will disable logging');
+          this.logging = false;
+          break;
+        default:
+          // eslint-disable-next-line no-console
+          console.warn('unknown command: ', command);
       }
-      this.port.postMessage({ vadProb, isActive: this.state !== null });
+      if (command === 'enable' && this.state === null) {
+        this.log('processor creating state again');
+        this.state = rnnoiseExports.newState();
+      }
+      this.port.postMessage({
+        vadProb,
+        isActive: this.state !== null,
+        isAlive: this.keepAlive
+      });
     };
   }
+
+  log(...messages) {
+    if (this.logging) {
+      // eslint-disable-next-line no-console
+      console.log('rnnoise_processor:', ...messages);
+    }
+  }
+
   process(inputs, outputs, parameters) {
     if (this.state && inputs && inputs.length > 0 && inputs[0].length > 0) {
       heapFloat32.set(inputs[0][0], rnnoiseExports.getInput(this.state) / 4);
@@ -54,9 +95,9 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
     }
     processCount++;
     if (processCount % 1111 === 0) {
-      console.log(`${processCount}: RNNoise ${this.state ? 'enabled' : 'disabled'}`);
+      this.log(`${processCount}: RNNoise ${this.state ? 'enabled' : 'disabled'}`);
     }
-    return true;
+    return this.keepAlive;
   }
 }
 registerProcessor('rnnoise', RNNNoiseProcessor);

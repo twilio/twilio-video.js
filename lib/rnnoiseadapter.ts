@@ -18,9 +18,10 @@ interface RNNoiseSDK {
   disconnect(): void;
   enable(): void;
   disable(): void;
+  destroy(): void;
+  setLogging(enable: boolean):void;
 }
 
-// uses RNNoiseSDK to provide AudioProcessor interface.
 class RNNoiseAdapter  {
   private _log: typeof Log;
   private _instanceId: number;
@@ -58,6 +59,8 @@ class RNNoiseAdapter  {
         disconnect: () => rnnoise.disconnect(),
         enable: () => rnnoise.enable(),
         disable: () => rnnoise.disable(),
+        destroy: () => rnnoise.destroy(),
+        setLogging: (enable: boolean) => rnnoise.setLogging(enable),
         connect: (sourceTrack: MediaStreamTrack) => {
           this._log.debug('connect: ', sourceTrack.id);
           if (rnnoise.isConnected()) {
