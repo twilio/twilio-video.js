@@ -36,6 +36,13 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
+<summary>Android 11: Certain devices are unable to gather ICE candidates</summary>
+<p>
+
+   Certain Android 11 devices using Chrome or Samsung Browser may be unable to gather ice candidates. To detect devices on Android 11 and using Chrome or Samsung Browser in order to display a warning or error, please refer to this [comment](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348). Please see this [github ticket](https://github.com/twilio/twilio-video.js/issues/1701) and this [Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) for more details.
+</p>
+</details>
+<details>
 <summary>Android 12: Video distortion on Chrome when hardware acceleration is enabled</summary>
 <p>
 
@@ -188,10 +195,10 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
    function attachAudioTrack(remoteAudioTrack) {
      const audioNode = audioContext.createMediaStreamSource(new MediaStream([remoteAudioTrack.mediaStreamTrack]));
      const gainNode = audioContext.createGain();
-     
+
      // Adjust this value depending on your customers' preference
      gainNode.gain.value = 20;
-     
+
      audioNode.connect(gainNode);
      gainNode.connect(audioContext.destination);
    }
