@@ -65,7 +65,7 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
       }
       this.port.postMessage({
         vadProb,
-        isActive: this.state !== null,
+        isEnabled: this.state !== null,
         isAlive: this.keepAlive
       });
     };

@@ -164,12 +164,13 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   workaroundWebKitBug1208516?: boolean;
 }
 
-export interface KrispNoiseCancellationOptions {
+export interface NoiseCancellationOptions {
   sdkAssetsPath: string;
+  sdkFile: string;
 }
 
 export interface LocalAudioTrackOptions extends CreateLocalTrackOptions {
-  noiseCancellationOptions?: KrispNoiseCancellationOptions;
+  noiseCancellationOptions?: NoiseCancellationOptions;
 }
 
 export interface ConnectOptions {
@@ -207,8 +208,6 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
-
-  useKrisp?: boolean;
 }
 
 export interface CreateLocalTracksOptions {

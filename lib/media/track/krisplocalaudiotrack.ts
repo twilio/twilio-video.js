@@ -2,8 +2,8 @@
 
 import { AudioProcessor } from '../../../tsdef/AudioProcessor';
 import { CreateLocalTrackOptions } from '../../createlocaltrack';
-import { KrispNoiseCancellationOptions } from '../../../tsdef/types';
-import { createRNNoiseAudioProcessor } from '../../rnnoiseadapter';
+import { NoiseCancellationOptions } from '../../../tsdef/types';
+import { createNoiseCancellationAudioProcessor } from '../../noisecancellationadapter';
 
 const LocalAudioTrack = require('./localaudiotrack');
 
@@ -25,29 +25,27 @@ export class KrispLocalAudioTrack extends LocalAudioTrack {
   }
 
 
-  private _maybeProcessTrack(track: MediaStreamTrack) {
-    if (this._processor) {
-      this._log.debug('_maybeProcessTrack: ', track);
-      const processedTrack = this._processor.connect(track);
-      return processedTrack;
-    }
-    return track;
-  }
-
   private async _reacquireTrack(constraints: never)  {
     this._log.debug('_reacquireTrack: ', constraints);
 
     // disconnect the processor.
+    const processorWasEnabled = this._processor?.isEnabled();
     if (this._processor) {
       this._processor.disconnect();
     }
-    const track = await super._reacquireTrack.call(this, constraints);
-    return this._maybeProcessTrack(track);
-  }
 
-  getProcessor() : AudioProcessor|null {
-    this._log.warn('getProcessor: ', this._processor);
-    return this._processor;
+    const track = await super._reacquireTrack.call(this, constraints);
+    if (this._processor) {
+      this._log.debug('_maybeProcessTrack: ', track);
+      const processedTrack = this._processor.connect(track);
+      if (processorWasEnabled) {
+        this._processor.enable();
+      } else {
+        this._processor.disable();
+      }
+      return processedTrack;
+    }
+    return track;
   }
 
   /**
@@ -83,9 +81,9 @@ export class KrispLocalAudioTrack extends LocalAudioTrack {
   }
 }
 
-export async function createKrispLocalAudioTrack(mediaStreamTrack: MediaStreamTrack, noiseCancellationOptions: KrispNoiseCancellationOptions, options: CreateLocalTrackOptions) : Promise<KrispLocalAudioTrack> {
+export async function createKrispLocalAudioTrack(mediaStreamTrack: MediaStreamTrack, noiseCancellationOptions: NoiseCancellationOptions, options: CreateLocalTrackOptions) : Promise<KrispLocalAudioTrack> {
   // eslint-disable-next-line no-console
-  const processor = await createRNNoiseAudioProcessor(noiseCancellationOptions.sdkAssetsPath);
+  const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions.sdkAssetsPath, noiseCancellationOptions.sdkFile);
   const cleanTrack  = processor.connect(mediaStreamTrack);
   return new KrispLocalAudioTrack(cleanTrack, processor, options);
 }

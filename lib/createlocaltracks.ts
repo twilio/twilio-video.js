@@ -1,6 +1,6 @@
 'use strict';
 
-import { CreateLocalTrackOptions, CreateLocalTracksOptions, KrispNoiseCancellationOptions, LocalTrack } from '../tsdef/types';
+import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCancellationOptions } from '../tsdef/types';
 import { createKrispLocalAudioTrack } from './media/track/krisplocalaudiotrack';
 
 const { buildLogLevels } = require('./util');
@@ -150,7 +150,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
-  let noiseCancellationOptions: KrispNoiseCancellationOptions|undefined;
+  let noiseCancellationOptions: NoiseCancellationOptions|undefined;
   if (typeof fullOptions.audio === 'object' && 'noiseCancellationOptions' in fullOptions.audio) {
     noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
     delete fullOptions.audio.noiseCancellationOptions;

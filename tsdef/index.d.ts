@@ -1,7 +1,6 @@
 
 import { CancelablePromise, ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalAudioTrackOptions, LocalTrack } from './types';
 import { PreflightOptions, PreflightTestReport } from './PreflightTypes';
-import { AudioProcessor } from './AudioProcessor';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';
 import { Log } from './loglevel';
@@ -17,7 +16,6 @@ export function createLocalAudioTrack(options?: CreateLocalTrackOptions|LocalAud
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
 export function runPreflight(token: string, options?: PreflightOptions): PreflightTest;
-export function createKrispAudioProcessor(krispSDKPath: string): AudioProcessor;
 
 export { AudioTrack } from './AudioTrack';
 export { LocalAudioTrack } from './LocalAudioTrack';
@@ -91,5 +89,4 @@ export {
   VP8CodecSettings
 } from './types';
 export { VideoProcessor } from './VideoProcessor';
-export { AudioProcessor } from './AudioProcessor';
 export { VideoTrack } from './VideoTrack';

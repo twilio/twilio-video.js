@@ -21,13 +21,14 @@ class RNNoiseNode extends AudioWorkletNode {
       },
     });
     this._vadProb = 0;
-    this._isActive = false;
-    this._isActive = false; // match what we sent in processorOptions.activeInitially.
+    this._isEnabled = false; // match what we sent in processorOptions.activeInitially.
+    this._isAlive = false;
     console.log('RNNoiseNode constructor');
     this.port.onmessage = ({ data }) => {
+      this._isEnabled = data.isEnabled;
+      this._isAlive = data.isAlive;
       if (data.vadProb) {
         this._vadProb = data.vadProb;
-        this._isActive = data.isActive;
         if (this._onUpdate) {
           this._onUpdate();
         }
@@ -44,8 +45,8 @@ class RNNoiseNode extends AudioWorkletNode {
   getVadProb() {
     return this._vadProb;
   }
-  getIsActive() {
-    return this._isActive;
+  getIsEnabled() {
+    return this._isEnabled;
   }
   enable() {
     this.port.postMessage('enable');
@@ -112,7 +113,7 @@ const disconnect = () => {
 };
 
 const enable = () => connected && rnnoiseNode.enable();
-const isEnabled = () => connected && rnnoiseNode.getIsActive();
+const isEnabled = () => connected && rnnoiseNode.getIsEnabled();
 const disable = () => connected && rnnoiseNode.disable();
 const destroy = () => {
   initialized = false;
