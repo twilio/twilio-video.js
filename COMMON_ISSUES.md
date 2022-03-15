@@ -36,10 +36,9 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
-<summary>Android 11: Certain devices are unable to gather ICE candidates</summary>
+<summary>Android 11: Participants are unable to connect to a room due to ICE gathering failures on certain devices</summary>
 <p>
-
-   Certain Android 11 devices using Chrome or Samsung Browser may be unable to gather ice candidates. To detect devices on Android 11 and using Chrome or Samsung Browser in order to display a warning or error, please refer to this [comment](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348). Please see this [github ticket](https://github.com/twilio/twilio-video.js/issues/1701) and this [Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) for more details.
+    Participants are unable to connect to a room on certain Android 11 devices due to a [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) where the browser is unable to gather ice candidates. Please see this [github issue](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348) for more details and potential solution to mitigate the issue.
 </p>
 </details>
 <details>
