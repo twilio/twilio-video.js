@@ -20,3 +20,6 @@ require('./spec/room');
 require('./spec/util/insightspublisher');
 require('./spec/util/support');
 require('./spec/util/simulcast');
+require('./spec/webrtc/getstats');
+require('./spec/webrtc/rtcpeerconnection');
+require('./spec/webrtc/rtcsessiondescription');
