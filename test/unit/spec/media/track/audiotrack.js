@@ -101,7 +101,7 @@ describe('AudioTrack', () => {
 function createAudioTrack(id, mid, options) {
   const mediaStreamTrack = new MediaStreamTrack(id, 'audio');
   const mediaTrackTransceiver = id ? new MediaTrackTransceiver(id, mid, mediaStreamTrack) : null;
-  const mediaTrack = new AudioTrack('audio', mediaTrackTransceiver, Object.assign({ log: log, name: 'bar' }, options));
+  const mediaTrack = new AudioTrack(mediaTrackTransceiver, Object.assign({ log: log, name: 'bar' }, options));
   mediaTrack.tranceiver = mediaTrackTransceiver;
   return mediaTrack;
 }

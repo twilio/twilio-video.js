@@ -291,7 +291,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .identity', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision + 1).setIdentity(makeIdentity());
           test.participant.update(participantState);
@@ -302,7 +302,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .sid', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision + 1).setSid(makeSid());
           test.participant.update(participantState);
@@ -407,7 +407,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .identity', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision).setIdentity(makeIdentity());
           test.participant.update(participantState);
@@ -418,7 +418,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .sid', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision).setSid(makeSid());
           test.participant.update(participantState);
@@ -524,7 +524,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .identity', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision - 1).setIdentity(makeIdentity());
           test.participant.update(participantState);
@@ -535,7 +535,7 @@ describe('RemoteParticipantV3', () => {
       });
 
       context('which changes the .sid', () => {
-        it('the .identity remains unchanged', () => {
+        it('does not change the .identity', () => {
           const test = makeTest();
           const participantState = test.state(test.revision - 1).setSid(makeSid());
           test.participant.update(participantState);
@@ -813,7 +813,7 @@ describe('RemoteParticipantV3', () => {
           assert.equal(test.participant.state, state);
         });
 
-        it('should emit "stateChanged" on the RemoteParticipantV3', () => {
+        it('should not emit "stateChanged" on the RemoteParticipantV3', () => {
           const test = makeTest({ state });
           let stateChanged;
           test.participant.once('stateChanged', () => { stateChanged = true; });
