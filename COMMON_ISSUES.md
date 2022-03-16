@@ -38,7 +38,8 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <details>
 <summary>Android 11: Participants are unable to connect to a room due to ICE gathering failures on certain devices</summary>
 <p>
-    Participants are unable to connect to a room on certain Android 11 devices due to a [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) where the browser is unable to gather ice candidates. Please see this [github issue](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348) for more details and potential solution to mitigate the issue.
+
+   Participants are unable to connect to a room on certain Android 11 devices due to a [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) where the browser is unable to gather ice candidates. Please see this [github issue](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348) for more details and a potential solution to mitigate the issue.
 </p>
 </details>
 <details>
