@@ -5,11 +5,6 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.21.1 (In Progress)
 ====================
 
-Changes
--------
-
-- Folded twilio-webrtc.js dependency into the SDK. (VIDEO-8939)
-
 Bug Fixes
 ---------
 
