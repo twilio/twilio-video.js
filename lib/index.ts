@@ -68,7 +68,7 @@ const LocalAudioTrack = internals.LocalAudioTrack;
 const LocalVideoTrack = internals.LocalVideoTrack;
 const LocalDataTrack = internals.LocalDataTrack;
 
-export default {
+module.exports = {
   connect,
   createLocalAudioTrack,
   createLocalVideoTrack,

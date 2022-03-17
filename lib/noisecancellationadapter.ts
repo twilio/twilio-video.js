@@ -4,9 +4,9 @@ import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from './util/constants';
 import { AudioProcessor } from '../tsdef/AudioProcessor';
 const Log = require('./util/log');
 
-let nInstances = 0;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const dynamicImport = require('./dynamicImport');
 
+let nInstances = 0;
 
 // AudioProcessor needs SDK that implements following interface.
 interface NoiseCancellationSDK {
@@ -38,9 +38,16 @@ class NoiseCancellationAdapter  {
   async init(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
     try {
       this._log.debug('loading noise cancellation sdk: ', sdkRootPath);
-      const module = await import(/* webpackIgnore: true */ `${sdkRootPath}/${sdkFile}`);
-      this._log.debug('Loaded noise cancellation sdk:', module);
-      const sdkAPI = module.default as NoiseCancellationSDK;
+
+      // NOTE(mpatwardhan): Typescript has an issue - when module set to "commonjs"
+      // typescript converts dynamic import calls to require :(
+      // https://github.com/microsoft/TypeScript/issues/43329
+      // const dynamicModule = await import(/* webpackIgnore: true */ `${sdkRootPath}/${sdkFile}`);
+      // to workaround this issue we move import call into seperate modue (dynamicImport) that is not
+      // compiled with typescript.
+      const dynamicModule = await dynamicImport(`${sdkRootPath}/${sdkFile}`);
+      this._log.debug('Loaded noise cancellation sdk:', dynamicModule);
+      const sdkAPI = dynamicModule.default as NoiseCancellationSDK;
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore

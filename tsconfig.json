@@ -6,7 +6,7 @@
     "target": "es5",
     "lib": ["es2019", "dom"],
     "downlevelIteration": true,
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
     "noImplicitAny": true,
     "noImplicitThis": true,
@@ -17,5 +17,8 @@
   "include": [
     "lib/**/*.ts",
     "lib/**/*.js"
+  ],
+  "exclude": [
+    "lib/dynamicImport.js"
   ]
 }
