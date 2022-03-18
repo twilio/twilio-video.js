@@ -200,7 +200,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
           });
         }
         return new localTrackOptions.LocalVideoTrack(mediaStreamTrack, {
-          ...extraLocalTrackOptions.audio,
+          ...extraLocalTrackOptions.video,
           ...localTrackOptions,
         });
       })
