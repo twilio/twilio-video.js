@@ -38,20 +38,13 @@ class NoiseCancellationAdapter  {
   async init(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
     try {
       this._log.debug('loading noise cancellation sdk: ', sdkRootPath);
-
-      // NOTE(mpatwardhan): Typescript has an issue - when module set to "commonjs"
-      // typescript converts dynamic import calls to require :(
-      // https://github.com/microsoft/TypeScript/issues/43329
-      // const dynamicModule = await import(/* webpackIgnore: true */ `${sdkRootPath}/${sdkFile}`);
-      // to workaround this issue we move import call into seperate modue (dynamicImport) that is not
-      // compiled with typescript.
       const dynamicModule = await dynamicImport(`${sdkRootPath}/${sdkFile}`);
       this._log.debug('Loaded noise cancellation sdk:', dynamicModule);
       const sdkAPI = dynamicModule.default as NoiseCancellationSDK;
 
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      window.rnnoise = sdkAPI;
+      window.noiseCancellationSDK = sdkAPI;
       if (!sdkAPI.isInitialized()) {
         this._log.debug('initializing noise cancellation sdk: ', sdkRootPath);
         await sdkAPI.init(sdkRootPath);
@@ -92,11 +85,18 @@ class NoiseCancellationAdapter  {
   }
 }
 
-let audioProcessor: AudioProcessor|null = null;
+// this version allows only one instance.
+// let audioProcessor: AudioProcessor|null = null;
+// export async function createNoiseCancellationAudioProcessor(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
+//   if (!audioProcessor) {
+//     const adapter = new NoiseCancellationAdapter();
+//     audioProcessor = await adapter.init(sdkRootPath, sdkFile);
+//   }
+//   return audioProcessor;
+// }
+
 export async function createNoiseCancellationAudioProcessor(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
-  if (!audioProcessor) {
-    const adapter = new NoiseCancellationAdapter();
-    audioProcessor = await adapter.init(sdkRootPath, sdkFile);
-  }
+  const adapter = new NoiseCancellationAdapter();
+  const audioProcessor = await adapter.init(sdkRootPath, sdkFile);
   return audioProcessor;
 }

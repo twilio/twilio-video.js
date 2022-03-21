@@ -71,6 +71,7 @@ let destinationNode = null;
 let inputStream = null;
 
 const init = async rnnoiseRootPath => {
+  console.log('rnnoise.init, was initialized = ', initialized);
   audioContext = new AudioContext({ sampleRate: 48000 });
   const wasmPath = rnnoiseRootPath + '/rnnoise-processor.wasm';
   const processorJSPath = rnnoiseRootPath + '/rnnoise_processor.js';

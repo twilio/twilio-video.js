@@ -166,7 +166,6 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 
 export interface NoiseCancellationOptions {
   sdkAssetsPath: string;
-  sdkFile: string;
 }
 
 export interface LocalAudioTrackOptions extends CreateLocalTrackOptions {

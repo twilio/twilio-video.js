@@ -60,7 +60,11 @@ export class KrispLocalAudioTrack extends LocalAudioTrack {
 
 export async function createKrispLocalAudioTrack(mediaStreamTrack: MediaStreamTrack, noiseCancellationOptions: NoiseCancellationOptions, options: CreateLocalTrackOptions) : Promise<KrispLocalAudioTrack> {
   // eslint-disable-next-line no-console
-  const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions.sdkAssetsPath, noiseCancellationOptions.sdkFile);
+  interface NoiseCancellationOptionsInternal extends NoiseCancellationOptions {
+    sdkFile?: string;
+  }
+  const ancOptionsInternal = noiseCancellationOptions as NoiseCancellationOptionsInternal;
+  const processor = await createNoiseCancellationAudioProcessor(ancOptionsInternal.sdkAssetsPath, ancOptionsInternal.sdkFile ?? 'rnnoise_sdk.mjs');
   const cleanTrack  = processor.connect(mediaStreamTrack);
   return new KrispLocalAudioTrack(cleanTrack, processor, options);
 }
