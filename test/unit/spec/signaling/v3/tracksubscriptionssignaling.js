@@ -42,6 +42,12 @@ describe('TrackSubscriptionsSignaling', () => {
   describe('when mediaSignalingTransport emits a "message" event', () => {
     [-1, 0, 1].forEach(revision => {
       describe(`and the message's .revision is ${revision === -1 ? 'less than' : revision === 0 ? 'equal to' : 'greater than'} ._currentRevision`, () => {
+        const initialMessage = {
+          errors: {},
+          revision: 0,
+          subscribed: {},
+          type: 'track_subscriptions'
+        };
         const message = {
           errors: {
             MTaaa: { code: 100, message: 'bar' },
@@ -57,18 +63,27 @@ describe('TrackSubscriptionsSignaling', () => {
         };
         let mediaSignalingTransport;
         let subject;
+        let updatedInitialArgs;
         let updatedArgs;
 
         beforeEach(async () => {
           mediaSignalingTransport = makeTransport();
           subject = makeTest(mediaSignalingTransport);
           await waitForSometime(10);
+          subject.once('updated', (...args) => { updatedInitialArgs = args; });
+          mediaSignalingTransport.emit('message', initialMessage);
           subject.once('updated',  (...args) => { updatedArgs = args; });
           mediaSignalingTransport.emit('message', message);
         });
 
+        it('should emit "updated" for the first message', () => {
+          const [subscribed, errors] = updatedInitialArgs;
+          assert.deepStrictEqual(subscribed, {});
+          assert.deepStrictEqual(errors, {});
+        });
+
         if (revision === 1) {
-          it('should emit "updated"', () => {
+          it('should emit "updated" for the second message', () => {
             const [subscribed, errors] = updatedArgs;
             assert.deepStrictEqual(subscribed, {
               MTxxx: { mid: '0', state: 'ON' },
@@ -81,7 +96,7 @@ describe('TrackSubscriptionsSignaling', () => {
             });
           });
         } else {
-          it('should not emit "updated"', () => {
+          it('should not emit "updated" for the second message', () => {
             assert(!updatedArgs);
           });
         }

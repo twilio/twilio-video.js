@@ -66,9 +66,11 @@ describe('Room', () => {
 
   describe('RemoteParticipant events', () => {
     let participants;
+    let publication;
     let track;
 
     beforeEach(() => {
+      publication = {};
       track = {};
       [
         new RemoteParticipantSignaling('PA000', 'foo'),
@@ -174,6 +176,15 @@ describe('Room', () => {
       assert(spy.calledWith(error, publication, participants.bar));
     });
 
+    it('should re-emit RemoteParticipants trackSwitchedOff event for matching RemoteParticipant only', () => {
+      const spy = sinon.spy();
+      room.on('trackSwitchedOff', spy);
+
+      participants.foo.emit('trackSwitchedOff', track, publication, 'bar');
+      assert.equal(spy.callCount, 1);
+      assert.deepStrictEqual(spy.args[0], [track, publication, participants.foo, 'bar']);
+    });
+
     it('should re-emit RemoteParticipant trackUnpublished for matching RemoteParticipant only', () => {
       const spy = sinon.spy();
       room.on('trackUnpublished', spy);
@@ -205,6 +216,8 @@ describe('Room', () => {
       room.on('trackStarted', spy);
       room.on('trackSubscribed', spy);
       room.on('trackSubscriptionFailed', spy);
+      room.on('trackSwitchedOff', spy);
+      room.on('trackSwitchedOn', spy);
       room.on('trackUnpublished', spy);
       room.on('trackUnsubscribed', spy);
 
