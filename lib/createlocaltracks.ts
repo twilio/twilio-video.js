@@ -3,7 +3,7 @@
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
 
 const { asLocalTrack, buildLogLevels } = require('./util');
-const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
+const { getUserMedia, MediaStreamTrack } = require('./webrtc');
 
 const {
   LocalAudioTrack,
