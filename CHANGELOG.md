@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed the issue where twilio-video.js does not build with the latest version of webpack. (VIDEO-8609)
+- Fixed the issue where twilio-video.js does not build with the latest version of webpack and vite. (VIDEO-8609)
 
 2.21.0 (March 8, 2022)
 ======================
