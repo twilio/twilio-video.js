@@ -66,7 +66,7 @@ describe('RemoteVideoTrack', () => {
       el = document.createElement('video');
       setRenderHintsSpy = sinon.spy();
 
-      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options });
+      track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', setRenderHint: setRenderHintsSpy, options });
       intersectionObserveSpy = sinon.spy(track._intersectionObserver, 'observe');
       intersectionUnobserveSpy = sinon.spy(track._intersectionObserver, 'unobserve');
       resizeObserveSpy = sinon.spy(track._resizeObserver, 'observe');
@@ -299,7 +299,7 @@ describe('RemoteVideoTrack', () => {
       global.document = global.document || new Document();
       el = document.createElement('video');
       setRenderHintsSpy = sinon.spy();
-      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { IntersectionObserver } });
+      track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { IntersectionObserver } });
       observeSpy = sinon.spy(IntersectionObserver.prototype, 'observe');
       unobserveSpy = sinon.spy(IntersectionObserver.prototype, 'unobserve');
     });
@@ -347,7 +347,7 @@ describe('RemoteVideoTrack', () => {
       global.document = global.document || new Document();
       el = document.createElement('video');
       setRenderHintsSpy = sinon.spy();
-      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { ResizeObserver } });
+      track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { ResizeObserver } });
       observeSpy = sinon.spy(track._resizeObserver, 'observe');
       unobserveSpy = sinon.spy(track._resizeObserver, 'unobserve');
     });
@@ -417,13 +417,13 @@ describe('RemoteVideoTrack', () => {
 });
 
 
-function makeTrack({ id, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff }) {
+function makeTrack({ id, mid, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
   setRenderHint = setRenderHint || emptyFn;
   isSwitchedOff = !!isSwitchedOff;
   isEnabled = typeof isEnabled === 'boolean' ? true : isEnabled;
   const mediaStreamTrack = new FakeMediaStreamTrack('video');
-  const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  const mediaTrackReceiver = new MediaTrackReceiver(id, mid, mediaStreamTrack);
   return new RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
 }

@@ -31,72 +31,77 @@ describe('AudioTrack', () => {
   describe('_initialize', () => {
     let dummyElement;
 
-    before(() => {
-      track = createAudioTrack('1', 'audio');
-      track._attach = sinon.spy();
-      track._detachElement = sinon.spy();
-      track._attachments.delete = sinon.spy();
+    [null, '1'].forEach(id => {
+      context(`when called with ${id ? 'non-' : ''}null .mediaTrackTransceiver`, () => {
+        before(() => {
+          track = createAudioTrack(id, 'foo', 'audio');
+          track._attach = sinon.spy();
+          track._detachElement = sinon.spy();
+          track._attachments.delete = sinon.spy();
 
-      dummyElement = { oncanplay: 'bar', remove: sinon.spy(), srcObject: 'something' };
-      track._createElement = sinon.spy(() => {
-        return dummyElement;
-      });
+          dummyElement = { oncanplay: 'bar', remove: sinon.spy(), srcObject: 'something' };
+          track._createElement = sinon.spy(() => {
+            return dummyElement;
+          });
 
-      _initialize.call(track);
-    });
+          _initialize.call(track);
+        });
 
-    it('should call ._createElement', () => {
-      assert.equal(track._createElement.callCount, 1);
-    });
+        it(`should ${id ? '' : 'not '}call ._createElement`, () => {
+          assert.equal(track._createElement.callCount, id ? 1 : 0);
+        });
 
-    it('should call ._attach with the created element', () => {
-      assert(track._attach.calledWith(dummyElement));
-    });
+        it(`should ${id ? '' : 'not '}call ._attach with the created element`, () => {
+          assert.equal(track._attach.calledWith(dummyElement), !!id);
+        });
 
-    it('should call .delete with the created element on the ._attachments Set', () => {
-      assert(track._attachments.delete.calledWith(dummyElement));
-    });
+        it(`should ${id ? '' : 'not '}call .delete with the created element on the ._attachments Set`, () => {
+          assert.equal(track._attachments.delete.calledWith(dummyElement), !!id);
+        });
 
-    it('should set el.oncanplay to a function', () => {
-      assert.equal(typeof dummyElement.oncanplay, 'function');
-    });
+        it(`should ${id ? '' : 'not '}set el.oncanplay to a function`, () => {
+          assert.equal(typeof dummyElement.oncanplay, id ? 'function' : 'string');
+        });
 
-    it('should set el.muted to true', () => {
-      assert.equal(dummyElement.muted, true);
-    });
+        it(`should ${id ? '' : 'not '}set el.muted to true`, () => {
+          assert.equal(dummyElement.muted, id ? true : undefined);
+        });
 
-    context('when the dummy element emits oncanplay event', () => {
-      it('should emit MediaTrack#started, passing the instance of MediaTrack', async () => {
-        _initialize.call(track);
+        if (id) {
+          context('when the dummy element emits oncanplay event', () => {
+            it('should emit MediaTrack#started, passing the instance of MediaTrack', async () => {
+              _initialize.call(track);
 
-        const trackPromise = new Promise(resolve => track.on('started', resolve));
+              const trackPromise = new Promise(resolve => track.on('started', resolve));
 
-        dummyElement.oncanplay();
+              dummyElement.oncanplay();
 
-        const _track = await trackPromise;
-        assert.equal(track, _track);
-      });
+              const _track = await trackPromise;
+              assert.equal(track, _track);
+            });
 
-      it('should set .isStarted to true', () => {
-        assert(track.isStarted);
-      });
+            it('should set .isStarted to true', () => {
+              assert(track.isStarted);
+            });
 
-      it('should set the element\'s oncanplay to null', () => {
-        assert.equal(dummyElement.oncanplay, null);
-      });
+            it('should set the element\'s oncanplay to null', () => {
+              assert.equal(dummyElement.oncanplay, null);
+            });
 
-      it('should set the element\'s srcObject to null', () => {
-        assert.equal(dummyElement.srcObject, null);
+            it('should set the element\'s srcObject to null', () => {
+              assert.equal(dummyElement.srcObject, null);
+            });
+          });
+        }
       });
     });
   });
-
 });
 
-function createAudioTrack(id, kind, options) {
-  const mediaStreamTrack = new MediaStreamTrack(id, kind);
-  const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
-  const mediaTrack = new AudioTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+function createAudioTrack(id, mid, options) {
+  const mediaStreamTrack = new MediaStreamTrack(id, 'audio');
+  const mediaTrackTransceiver = id ? new MediaTrackTransceiver(id, mid, mediaStreamTrack) : null;
+  const mediaTrack = new AudioTrack(mediaTrackTransceiver, Object.assign({ log: log, name: 'bar' }, options));
   mediaTrack.tranceiver = mediaTrackTransceiver;
   return mediaTrack;
 }

@@ -42,6 +42,10 @@ describe('MediaTrackSender', () => {
       assert(sender instanceof MediaTrackSender);
     });
 
+    it('should set .mid to null', () => {
+      assert.equal(sender.mid, null);
+    });
+
     ['id', 'kind', 'readyState'].forEach(prop => {
       it(`should set the .${prop} to the MediaStreamTrack's .${prop}`, () => {
         assert.equal(sender[prop], mediaStreamTrack[prop]);

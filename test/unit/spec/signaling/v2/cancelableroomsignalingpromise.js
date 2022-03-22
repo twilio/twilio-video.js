@@ -267,46 +267,53 @@ describe('createCancelableRoomSignalingPromise', () => {
         });
       });
 
-      context('and the .participant property is present', () => {
-        it('constructs a new RoomV2', () => {
-          const test = makeTest();
-          test.createAndOfferDeferred.resolve();
-          return test.createAndOfferDeferred.promise.then(() => {
-            const identity = makeIdentity();
-            const sid = makeParticipantSid();
-            test.transport.emit('connected', {
-              participant: {
-                sid: sid,
-                identity: identity
-              },
-              options: {
-                // eslint-disable-next-line camelcase
-                signaling_region: 'foo'
-              }
+      context('and the .participant property is present, and', () => {
+        [2, 3].forEach(version => {
+          context(`.version is ${version}`, () => {
+            it(`constructs a new RoomV${version}`, () => {
+              const test = makeTest();
+              test.createAndOfferDeferred.resolve();
+              return test.createAndOfferDeferred.promise.then(() => {
+                const identity = makeIdentity();
+                const sid = makeParticipantSid();
+                test.transport.emit('connected', {
+                  participant: {
+                    sid: sid,
+                    identity: identity
+                  },
+                  options: {
+                    // eslint-disable-next-line camelcase
+                    signaling_region: 'foo'
+                  },
+                  version
+                });
+                const RoomSignaling = version === 3 ? test.RoomV3 : test.RoomV2;
+                assert(RoomSignaling.calledOnce);
+              });
             });
-            assert(test.RoomV2.calledOnce);
-          });
-        });
 
-        it('the CancelablePromise resolves to the newly-constructed RoomV2', () => {
-          const test = makeTest();
-          test.createAndOfferDeferred.resolve();
-          test.createAndOfferDeferred.promise.then(() => {
-            const identity = makeIdentity();
-            const sid = makeParticipantSid();
-            test.transport.emit('connected', {
-              participant: {
-                sid: sid,
-                identity: identity
-              },
-              options: {
-                // eslint-disable-next-line camelcase
-                signaling_region: 'foo'
-              }
+            it(`the CancelablePromise resolves to the newly-constructed RoomV${version}`, () => {
+              const test = makeTest();
+              test.createAndOfferDeferred.resolve();
+              test.createAndOfferDeferred.promise.then(() => {
+                const identity = makeIdentity();
+                const sid = makeParticipantSid();
+                test.transport.emit('connected', {
+                  participant: {
+                    sid: sid,
+                    identity: identity
+                  },
+                  options: {
+                    // eslint-disable-next-line camelcase
+                    signaling_region: 'foo'
+                  },
+                  version
+                });
+              });
+              return test.cancelableRoomSignalingPromise.then(room => {
+                assert.equal(test.room, room);
+              });
             });
-          });
-          return test.cancelableRoomSignalingPromise.then(room => {
-            assert.equal(test.room, room);
           });
         });
       });
@@ -390,6 +397,7 @@ function makeTest(options) {
     disconnect: sinon.spy(() => {})
   };
   options.RoomV2 = options.RoomV2 || sinon.spy(function RoomV2() { return options.room; });
+  options.RoomV3 = options.RoomV3 || sinon.spy(function RoomV3() { return options.room; });
   options.Transport = options.Transport || makeTransportConstructor(options);
 
   options.cancelableRoomSignalingPromise = createCancelableRoomSignalingPromise(

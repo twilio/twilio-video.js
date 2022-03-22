@@ -2,6 +2,20 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+3.0.0-preview.1
+===============
+
+New Features
+------------
+
+**Large Rooms Pilot**
+
+twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link), which supports a large number of Participants (> 50).
+
+- A RemoteAudioTrack of a Participant that is not active in the Room will now be switched off. (VIDEO-8668)
+- A RemoteAudioTrack will now have an additional property called [`switchOffReason`](TODO_doc_link), which describes
+  the reason for it being switched off. (VIDEO-8670)
+
 2.21.0 (In Progress)
 ==========================
 

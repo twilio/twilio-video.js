@@ -401,6 +401,18 @@ describe('RemoteParticipant', () => {
         track.emit('started', track);
         assert.equal(track, trackStarted);
       });
+
+      it('re-emits "switchedOff" events', () => {
+        let trackSwitchedOff;
+        const trackSignaling = makeTrackSignaling({ kind: 'audio' });
+        const test = makeTest({ trackSignalings: [trackSignaling] });
+        const publication = [...test.participant.tracks.values()][0];
+        test.participant.once('trackSwitchedOff', (...args) => { trackSwitchedOff = args; });
+        trackSignaling.setSwitchedOff(true, 'DISABLED_BY_SUBSCRIBER');
+        assert.equal(trackSwitchedOff[0], publication.track);
+        assert.equal(trackSwitchedOff[1], publication);
+        assert.equal(trackSwitchedOff[2], 'DISABLED_BY_SUBSCRIBER');
+      });
     });
 
     context('when the RemoteParticipant .state transitions to "disconnected"', () => {
@@ -433,6 +445,17 @@ describe('RemoteParticipant', () => {
         test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
+      });
+
+      it('does not re-emit "switchedOff" events', () => {
+        let trackSwitchedOff;
+        const trackSignaling = makeTrackSignaling({ kind: 'audio' });
+        const test = makeTest({ trackSignalings: [trackSignaling] });
+        const publication = [...test.participant.tracks.values()][0];
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackSwitchedOff', (...args) => { trackSwitchedOff = args; });
+        trackSignaling.setSwitchedOff(true, 'DISABLED_BY_SUBSCRIBER');
+        assert(!trackSwitchedOff);
       });
 
       it('should emit "trackUnsubscribed" events for all the Participant\'s RemoteTrackPublications', () => {
@@ -476,6 +499,17 @@ describe('RemoteParticipant', () => {
         test.participant.once('trackStarted', track => { trackStarted = track; });
         track.emit('started', track);
         assert(!trackStarted);
+      });
+
+      it('does not re-emit "switchedOff" events', () => {
+        let trackSwitchedOff;
+        const trackSignaling = makeTrackSignaling({ kind: 'audio' });
+        const test = makeTest({ trackSignalings: [trackSignaling] });
+        const publication = [...test.participant.tracks.values()][0];
+        test.signaling.emit('stateChanged', 'disconnected');
+        test.participant.once('trackSwitchedOff', (...args) => { trackSwitchedOff = args; });
+        trackSignaling.setSwitchedOff(true, 'DISABLED_BY_SUBSCRIBER');
+        assert(!trackSwitchedOff);
       });
     });
   });
@@ -1513,7 +1547,7 @@ function makeTest(options) {
   }
   options.trackSignalings = options.trackSignalings || [];
 
-  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, setRenderHitsCallback, opts) {
+  options.RemoteAudioTrack = sinon.spy(function RemoteAudioTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, switchOffReason, setPriorityCallback, setRenderHitsCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1521,9 +1555,16 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this.setPriority = setPriorityCallback;
+    this.switchOffReason = switchOffReason;
     this._setRenderHint = setRenderHitsCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
-    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
+    this._setSwitchedOff = (switchedOff, switchOffReason) => {
+      this.switchedOff = switchedOff;
+      this.switchOffReason = switchOffReason;
+    };
+    this._setTrackReceiver = mediaTrackReceiver => {
+      this.mediaStreamTrack = mediaTrackReceiver ? mediaTrackReceiver.track : null;
+    };
     options.tracks.push(this);
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
@@ -1615,19 +1656,24 @@ function makeTrackSignaling(options) {
   const track = new EventEmitter();
   track.id = options.id || makeId();
   track.isSubscribed = false;
+  track.isSwitchedOff = false;
   track.kind = options.kind || makeKind();
   track.name = options.name || track.id;
   track.sid = options.sid || makeId();
+  track.switchOffReason = null;
   track.setTrackTransceiver = trackTransceiver => {
     track.trackTransceiver = trackTransceiver;
     track.isSubscribed = !!track.trackTransceiver;
     track.emit('updated');
   };
+  track.setSwitchedOff = (isSwitchedOff, switchOffReason) => {
+    track.isSwitchedOff = isSwitchedOff;
+    track.switchOffReason = switchOffReason;
+    track.emit('updated');
+  };
   track.subscribeFailed = error => {
     track.error = error;
     track.emit('updated');
-  };
-  track._setSwitchedOff = () => {
   };
   track.trackTransceiver = null;
   if (!options.shouldSubscriptionFail && !options.testTrackSubscriptionRestApi) {

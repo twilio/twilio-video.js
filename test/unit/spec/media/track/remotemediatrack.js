@@ -19,47 +19,44 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
   let name = `Remote${capitalize(kind)}Track`;
   describe(`${name}`, () => {
     describe('constructor', () => {
-      [() => null, () => ({ log, name: 'bar' })].forEach(getOptions => {
-        context(`when called with${getOptions() ? '' : 'out'} the options object`, () => {
-          let error;
-          let track;
+      const name = 'bar';
+      let error;
+      let track;
 
-          before(() => {
-            try {
-              track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: getOptions(), RemoteTrack });
-            } catch (e) {
-              error = e;
-            }
-          });
+      before(() => {
+        try {
+          track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: { log, name }, RemoteTrack });
+        } catch (e) {
+          error = e;
+        }
+      });
 
-          it('shouldn\'t throw', () => {
-            assert(!error);
-          });
+      it('shouldn\'t throw', () => {
+        assert(!error);
+      });
 
-          it(`should return an instance of ${name}`, () => {
-            assert(track instanceof RemoteTrack);
-          });
+      it(`should return an instance of ${name}`, () => {
+        assert(track instanceof RemoteTrack);
+      });
 
-          it('should set the .isEnabled property', () => {
-            assert.equal(track.isEnabled, true);
-          });
+      it('should set the .isEnabled property', () => {
+        assert.equal(track.isEnabled, true);
+      });
 
-          it('should set the .isSwitchedOff property', () => {
-            assert.equal(track.isSwitchedOff, false);
-          });
+      it('should set the .isSwitchedOff property', () => {
+        assert.equal(track.isSwitchedOff, false);
+      });
 
-          it('should set the .kind property', () => {
-            assert.equal(track.kind, kind);
-          });
+      it('should set the .kind property', () => {
+        assert.equal(track.kind, kind);
+      });
 
-          it('should set the .name property', () => {
-            assert.equal(track.name, getOptions() ? 'bar' : 'foo');
-          });
+      it('should set the .name property', () => {
+        assert.equal(track.name, name);
+      });
 
-          it('should set the .sid property', () => {
-            assert.equal(track.sid, 'bar');
-          });
-        });
+      it('should set the .sid property', () => {
+        assert.equal(track.sid, 'bar');
       });
     });
 
@@ -71,7 +68,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
       let onPriorityChange;
       beforeEach(() => {
         onPriorityChange = sinon.spy();
-        track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled: true, options, RemoteTrack, setPriority: onPriorityChange });
+        track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, options, RemoteTrack, setPriority: onPriorityChange });
       });
 
       [null, ...Object.values(trackPriority)].forEach(priorityValue => {
@@ -114,7 +111,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
 
           before(() => {
             arg = null;
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isEnabled, options: null, RemoteTrack });
+            track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled, options: null, RemoteTrack });
             track.once('disabled', _arg => {
               trackDisabled = true;
               arg = _arg;
@@ -167,7 +164,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
 
           before(() => {
             arg = null;
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff, isEnabled: true, options: null, RemoteTrack });
+            track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isSwitchedOff, isEnabled: true, options: null, RemoteTrack });
             track.once('switchedOff', _arg => {
               trackSwitchedOff = true;
               arg = _arg;
@@ -209,7 +206,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
       let track;
 
       before(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', mid: 'bar', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -223,7 +220,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             'isEnabled',
             'isSwitchedOff',
             'priority',
-            'sid'
+            'sid',
+            'switchOffReason'
           ]);
         } else {
           assert.deepEqual(Object.keys(track), [
@@ -237,7 +235,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             'isEnabled',
             'isSwitchedOff',
             'priority',
-            'sid'
+            'sid',
+            'switchOffReason'
           ]);
         }
       });
@@ -247,7 +246,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
       let track;
 
       beforeEach(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', mid: 'bar', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
         track.mediaStreamTrack.enabled = false;
         track._captureFrames = sinon.stub();
         track._createElement = sinon.spy(() => {
@@ -297,7 +296,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
       let el2;
       let track;
       beforeEach(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', mid: 'bar', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
         track._createElement = sinon.spy(() => {
           // return a unique element.
           return {
@@ -350,7 +349,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
       let track;
 
       before(() => {
-        track = makeTrack({ id: 'foo', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
+        track = makeTrack({ id: 'foo', mid: 'bar', sid: 'MT1', kind, isEnabled: true, options: null, RemoteTrack });
       });
 
       it('only returns public properties', () => {
@@ -364,7 +363,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             name: track.name,
             priority: null,
             processedTrack: null,
-            sid: track.sid
+            sid: track.sid,
+            switchOffReason: null
           });
         } else {
           assert.deepEqual(track.toJSON(), {
@@ -378,7 +378,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             priority: null,
             processedTrack: null,
             processor: null,
-            sid: track.sid
+            sid: track.sid,
+            switchOffReason: null
           });
         }
       });
@@ -408,7 +409,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
           let track;
           before(() => {
             document.visibilityState = 'visible';
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: false }, RemoteTrack });
+            track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: false }, RemoteTrack });
           });
 
           it('does not register for document visibility change', () => {
@@ -421,7 +422,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
           let track;
           before(() => {
             document.visibilityState = 'visible';
-            track = makeTrack({ id: 'foo', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: true }, RemoteTrack });
+            track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isSwitchedOff: false, isEnabled: true, options: { workaroundWebKitBug212780: true }, RemoteTrack });
           });
 
           it('sets _workaroundWebKitBug212780 to true', () => {
@@ -454,14 +455,14 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
   });
 });
 
-function makeTrack({ id, sid, kind, isEnabled, options, RemoteTrack, setPriority, setRenderHint, isSwitchedOff }) {
+function makeTrack({ id, mid, sid, kind, isEnabled, options, RemoteTrack, setPriority, setRenderHint, isSwitchedOff }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
   setRenderHint = setRenderHint || emptyFn;
   isSwitchedOff = !!isSwitchedOff;
   const mediaStreamTrack = new FakeMediaStreamTrack(kind);
-  const mediaTrackReceiver = new MediaTrackReceiver(id, mediaStreamTrack);
+  const mediaTrackReceiver = new MediaTrackReceiver(id, mid, mediaStreamTrack);
   options = options || {};
   options.IntersectionObserver = NullIntersectionObserver;
-  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
+  return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, null, setPriority, setRenderHint, options);
 }

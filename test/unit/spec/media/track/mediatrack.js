@@ -29,79 +29,89 @@ describe('MediaTrack', () => {
   });
 
   describe('constructor', () => {
-    beforeEach(() => {
-      track = createMediaTrack('1', 'audio');
-    });
+    [null, 'audio'].forEach((kind, i) => {
+      context(`When MediaTrackTransceiver is ${kind ? 'non-' : ''}null`, () => {
+        beforeEach(() => {
+          track = createMediaTrack('1', 'foo', kind);
+        });
 
-    it('should call ._initialize', () => {
-      assert.equal(track._initialize.callCount, 1);
-    });
+        it('should call ._initialize', () => {
+          assert.equal(track._initialize.callCount, i + 1 + !!kind * 2);
+        });
 
-    it('should return unprocessedTrack as the mediaStreamTrack if it exists', () => {
-      track._unprocessedTrack = 'foo';
-      assert.equal(track.mediaStreamTrack, 'foo');
-    });
+        it('should return unprocessedTrack as the mediaStreamTrack if it exists', () => {
+          track._unprocessedTrack = 'foo';
+          assert.equal(track.mediaStreamTrack, 'foo');
+        });
 
-    it('should return the mediaTrackTransceiver.track as the mediaStreamTrack if unprocessedTrack does not exists', () => {
-      assert.equal(track.mediaStreamTrack, track.tranceiver.track);
+        it(`should return ${kind ? 'the mediaTrackTransceiver.track' : null} as the mediaStreamTrack if unprocessedTrack does not exists`, () => {
+          assert.equal(track.mediaStreamTrack, kind ? track.tranceiver.track : null);
+        });
+      });
     });
   });
 
   describe('_initialize', () => {
     let dummyElement;
 
-    before(() => {
-      track = createMediaTrack('1', 'audio');
-      track._attach = sinon.spy();
-      track._detachElement = sinon.spy();
-      track._attachments.delete = sinon.spy();
+    [null, 'audio'].forEach(kind => {
+      context(`when MediaTrackTransceiver is ${kind ? 'non-' : ''}null`, () => {
+        before(() => {
+          track = createMediaTrack('1', 'foo', kind);
+          track._attach = sinon.spy();
+          track._detachElement = sinon.spy();
+          track._attachments.delete = sinon.spy();
 
-      dummyElement = { oncanplay: 'bar', remove: sinon.spy() };
-      track._createElement = sinon.spy(() => {
-        return dummyElement;
-      });
+          dummyElement = { oncanplay: 'bar', remove: sinon.spy() };
+          track._createElement = sinon.spy(() => {
+            return dummyElement;
+          });
 
-      _initialize.call(track);
-    });
+          _initialize.call(track);
+        });
 
-    it('should call ._createElement', () => {
-      assert.equal(track._createElement.callCount, 1);
-    });
+        it(`should ${kind ? '' : 'not '}call ._createElement`, () => {
+          assert.equal(track._createElement.callCount, kind ? 1 : 0);
+        });
 
-    it('should call ._attach with the created element', () => {
-      assert(track._attach.calledWith(dummyElement));
-    });
+        it(`should ${kind ? '' : 'not '}call ._attach with the created element`, () => {
+          assert.equal(track._attach.calledWith(dummyElement), !!kind);
+        });
 
-    it('should call .delete with the created element on the ._attachments Set', () => {
-      assert(track._attachments.delete.calledWith(dummyElement));
-    });
+        it(`should ${kind ? '' : 'not '}call .delete with the created element on the ._attachments Set`, () => {
+          assert.equal(track._attachments.delete.calledWith(dummyElement), !!kind);
+        });
 
-    it('should set el.oncanplay to a function', () => {
-      assert.equal(typeof dummyElement.oncanplay, 'function');
-    });
+        it(`should ${kind ? '' : 'not '}set el.oncanplay to a function`, () => {
+          assert.equal(typeof dummyElement.oncanplay, kind ? 'function' : 'string');
+        });
 
-    it('should set el.muted to true', () => {
-      assert.equal(dummyElement.muted, true);
-    });
+        it(`should ${kind ? '' : 'not '}set el.muted to true`, () => {
+          assert.equal(dummyElement.muted, kind ? true : undefined);
+        });
 
-    context('when the dummy element emits oncanplay event', () => {
-      it('should emit MediaTrack#started, passing the instance of MediaTrack', async () => {
-        _initialize.call(track);
+        if (kind) {
+          context('when the dummy element emits oncanplay event', () => {
+            it('should emit MediaTrack#started, passing the instance of MediaTrack', async () => {
+              _initialize.call(track);
 
-        const trackPromise = new Promise(resolve => track.on('started', resolve));
+              const trackPromise = new Promise(resolve => track.on('started', resolve));
 
-        dummyElement.oncanplay();
+              dummyElement.oncanplay();
 
-        const _track = await trackPromise;
-        assert.equal(track, _track);
-      });
+              const _track = await trackPromise;
+              assert.equal(track, _track);
+            });
 
-      it('should set .isStarted to true', () => {
-        assert(track.isStarted);
-      });
+            it('should set .isStarted to true', () => {
+              assert(track.isStarted);
+            });
 
-      it('should set the element\'s oncanplay to null', () => {
-        assert.equal(dummyElement.oncanplay, null);
+            it('should set the element\'s oncanplay to null', () => {
+              assert.equal(dummyElement.oncanplay, null);
+            });
+          });
+        }
       });
     });
   });
@@ -112,7 +122,7 @@ describe('MediaTrack', () => {
 
     context('when undefined is passed', () => {
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy(() => {
@@ -145,7 +155,7 @@ describe('MediaTrack', () => {
 
     context('when null is passed', () => {
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy(() => {
@@ -178,7 +188,7 @@ describe('MediaTrack', () => {
 
     context('when a string is passed', () => {
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
@@ -212,7 +222,7 @@ describe('MediaTrack', () => {
 
     context('when an element is passed', () => {
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._createElement = sinon.spy();
@@ -244,7 +254,7 @@ describe('MediaTrack', () => {
   describe('_selectElement', () => {
     let element;
     before(() => {
-      track = createMediaTrack('1', 'audio');
+      track = createMediaTrack('1', 'foo', 'audio');
 
       element = document.createElement('audio');
       element.className = 'foo';
@@ -266,7 +276,7 @@ describe('MediaTrack', () => {
 
   describe('_createElement', () => {
     before(() => {
-      track = createMediaTrack('1', 'video');
+      track = createMediaTrack('1', 'bar', 'video');
     });
 
     it('should return an element with the tagName of .kind', () => {
@@ -279,7 +289,7 @@ describe('MediaTrack', () => {
       let attachedElements;
 
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
@@ -310,7 +320,7 @@ describe('MediaTrack', () => {
       let attachedElements;
 
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         attachedElements = [
           document.createElement('audio'),
           document.createElement('video')
@@ -341,7 +351,7 @@ describe('MediaTrack', () => {
       let element;
 
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
@@ -369,7 +379,7 @@ describe('MediaTrack', () => {
       let element;
 
       before(() => {
-        track = createMediaTrack('1', 'audio');
+        track = createMediaTrack('1', 'foo', 'audio');
         element = document.createElement('audio');
 
         track._getAllAttachedElements = sinon.spy();
@@ -394,7 +404,7 @@ describe('MediaTrack', () => {
 
   describe('_updateElementsMediaStreamTrack', () => {
     it('should reattach each existing elements', () => {
-      track = createMediaTrack('1', 'video');
+      track = createMediaTrack('1', 'foo', 'video');
       track._attach = sinon.spy();
       track._attachments.add('foo');
       track._attachments.add('bar');
@@ -408,7 +418,7 @@ describe('MediaTrack', () => {
 
   describe('_getAllAttachedElements', () => {
     it('should return an array with all elements in ._attachments', () => {
-      track = createMediaTrack('1', 'audio');
+      track = createMediaTrack('1', 'foo', 'audio');
       track._attachments.add('foo');
       track._attachments.add('bar');
 
@@ -418,7 +428,7 @@ describe('MediaTrack', () => {
 
   describe('_detachElements', () => {
     it('should run _detachElement for each element passed', () => {
-      track = createMediaTrack('1', 'audio');
+      track = createMediaTrack('1', 'foo', 'audio');
       track._detachElement = sinon.spy();
       track._detachElements(['foo', 'bar']);
       assert.equal(track._detachElement.callCount, 2);
@@ -431,7 +441,7 @@ describe('MediaTrack', () => {
     let el2;
 
     before(() => {
-      track = createMediaTrack('1', 'audio');
+      track = createMediaTrack('1', 'foo', 'audio');
       el1 = document.createElement('audio');
       el1.srcObject = new MediaStream();
       el1.srcObject.addTrack(track.mediaStreamTrack);
@@ -454,7 +464,7 @@ describe('MediaTrack', () => {
       });
 
       it('should remove the MediaTrack\'s MediaStreamTrack from the element\'s .srcObject MediaStream if there is a processedTrack', () => {
-        track = createMediaTrack('1', 'video');
+        track = createMediaTrack('1', 'foo', 'video');
         track.processedTrack = { foo: 'ff' };
         el1 = document.createElement('video');
         el1.srcObject = new MediaStream();
@@ -486,145 +496,149 @@ describe('MediaTrack', () => {
     let MediaStream;
     let processedTrack;
 
-    beforeEach(() => {
-      processedTrack = {
-        getAudioTracks: sinon.stub(),
-        getVideoTracks: sinon.stub(),
-        kind: 'audio'
-      };
-      MediaStream = sinon.spy(function MediaStream() {
-        // eslint-disable-next-line consistent-this
-        mediaStream = this;
-      });
-      MediaStream.prototype.addTrack = sinon.spy();
-      MediaStream.prototype.getAudioTracks = sinon.spy(() => [track.mediaStreamTrack]);
-      MediaStream.prototype.removeTrack = sinon.spy();
-      el = document.createElement('audio');
-      track = createMediaTrack(1, 'audio', { MediaStream: MediaStream });
-      track.processedTrack = null;
-    });
-
-    context('when the .srcObject of the HTMLMediaElement is not a MediaStream', () => {
-      beforeEach(() => {
-        MediaStream.prototype.getAudioTracks = sinon.spy(() => []);
-        ret = track._attach(el);
-      });
-
-      it('should call the MediaStream constructor', () => {
-        assert(MediaStream.calledOnce);
-      });
-
-      it('should not call .removeTrack() on the MediaStream', () => {
-        assert(!MediaStream.prototype.removeTrack.calledOnce);
-      });
-
-      it('should call .addTrack() with the MediaTrack\'s MediaStreamTrack on the MediaStream', () => {
-        assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
-      });
-
-      context('when processedTrack is not null', () => {
-        it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
-          track.processedTrack = processedTrack;
-          track._attach(el);
-          assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
+    [null, 'audio'].forEach(kind => {
+      context(`when MediaTrackTransceiver is ${kind ? 'non-' : ''}null`, () => {
+        beforeEach(() => {
+          processedTrack = {
+            getAudioTracks: sinon.stub(),
+            getVideoTracks: sinon.stub(),
+            kind: 'audio'
+          };
+          MediaStream = sinon.spy(function MediaStream() {
+            // eslint-disable-next-line consistent-this
+            mediaStream = this;
+          });
+          MediaStream.prototype.addTrack = sinon.spy();
+          MediaStream.prototype.getAudioTracks = sinon.spy(() => [track.mediaStreamTrack]);
+          MediaStream.prototype.removeTrack = sinon.spy();
+          el = document.createElement('audio');
+          track = createMediaTrack(1, 'foo', kind, { MediaStream: MediaStream });
+          track.processedTrack = null;
         });
-      });
 
-      context('when mediaStreamTrack parameter is provided', () => {
-        const newMediaStreamTrack = {
-          getAudioTracks: sinon.stub(),
-          getVideoTracks: sinon.stub(),
-          kind: 'audio'
-        };
-        it('should use the provided mediaStreamTrack if processedTrack is null', () => {
-          track._attach(el, newMediaStreamTrack);
-          assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+        context('when the .srcObject of the HTMLMediaElement is not a MediaStream', () => {
+          beforeEach(() => {
+            MediaStream.prototype.getAudioTracks = sinon.spy(() => []);
+            ret = track._attach(el);
+          });
+
+          it('should call the MediaStream constructor', () => {
+            assert(MediaStream.calledOnce);
+          });
+
+          it('should not call .removeTrack() on the MediaStream', () => {
+            assert(!MediaStream.prototype.removeTrack.calledOnce);
+          });
+
+          it(`should ${kind ? '' : 'not '}call .addTrack() with the MediaTrack's MediaStreamTrack on the MediaStream`, () => {
+            assert.equal(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack), !!kind);
+          });
+
+          context('when processedTrack is not null', () => {
+            it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
+              track.processedTrack = processedTrack;
+              track._attach(el);
+              assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
+            });
+          });
+
+          context('when mediaStreamTrack parameter is provided', () => {
+            const newMediaStreamTrack = {
+              getAudioTracks: sinon.stub(),
+              getVideoTracks: sinon.stub(),
+              kind: 'audio'
+            };
+            it('should use the provided mediaStreamTrack if processedTrack is null', () => {
+              track._attach(el, newMediaStreamTrack);
+              assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+            });
+            it('should use the provided mediaStreamTrack if processedTrack is not null', () => {
+              track.processedTrack = processedTrack;
+              track._attach(el, newMediaStreamTrack);
+              assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+            });
+          });
+
+          it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
+            assert.equal(el.srcObject, mediaStream);
+          });
+
+          it('should set the .autoplay of the HTMLMediaElement to true', () => {
+            assert(el.autoplay);
+          });
+
+          it('should set the .playsInline of the HTMLMediaElement to true', () => {
+            assert(el.playsInline);
+          });
+
+          it('should add the HTMLMediaElement to the ._attachments Set', () => {
+            assert(track._attachments.has(el));
+          });
+
+          it('should return the HTMLMediaElement', () => {
+            assert.equal(ret, el);
+          });
         });
-        it('should use the provided mediaStreamTrack if processedTrack is not null', () => {
-          track.processedTrack = processedTrack;
-          track._attach(el, newMediaStreamTrack);
-          assert(MediaStream.prototype.addTrack.calledWith(newMediaStreamTrack));
+
+        context('when the .srcObject of the HTMLMediaElement is a MediaStream', () => {
+          beforeEach(() => {
+            el.srcObject = new MediaStream();
+            ret = track._attach(el);
+          });
+
+          it('should not call the MediaStream constructor', () => {
+            assert.equal(MediaStream.callCount, 1);
+          });
+
+          it('should call .getAudioTracks() on the MediaStream', () => {
+            assert(MediaStream.prototype.getAudioTracks.calledOnce);
+          });
+
+          it('should call .removeTrack() with the current audio MediaStreamTrack on the MediaStream', () => {
+            assert(MediaStream.prototype.removeTrack.calledWith(track.mediaStreamTrack));
+          });
+
+          it(`should ${kind ? '' : 'not '}call .addTrack() with the MediaTrack's MediaStreamTrack on the MediaStream`, () => {
+            assert.equal(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack), !!kind);
+          });
+
+          context('when processedTrack is not null', () => {
+            it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
+              track.processedTrack = processedTrack;
+              track._attach(el);
+              assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
+            });
+          });
+
+          it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
+            assert.equal(el.srcObject, mediaStream);
+          });
+
+          it('should set the .autoplay of the HTMLMediaElement to true', () => {
+            assert(el.autoplay);
+          });
+
+          it('should set the .playsInline of the HTMLMediaElement to true', () => {
+            assert(el.playsInline);
+          });
+
+          it('should add the HTMLMediaElement to the ._attachments Set', () => {
+            assert(track._attachments.has(el));
+          });
+
+          it('should return the HTMLMediaElement', () => {
+            assert.equal(ret, el);
+          });
         });
-      });
-
-      it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
-        assert.equal(el.srcObject, mediaStream);
-      });
-
-      it('should set the .autoplay of the HTMLMediaElement to true', () => {
-        assert(el.autoplay);
-      });
-
-      it('should set the .playsInline of the HTMLMediaElement to true', () => {
-        assert(el.playsInline);
-      });
-
-      it('should add the HTMLMediaElement to the ._attachments Set', () => {
-        assert(track._attachments.has(el));
-      });
-
-      it('should return the HTMLMediaElement', () => {
-        assert.equal(ret, el);
-      });
-    });
-
-    context('when the .srcObject of the HTMLMediaElement is a MediaStream', () => {
-      beforeEach(() => {
-        el.srcObject = new MediaStream();
-        ret = track._attach(el);
-      });
-
-      it('should not call the MediaStream constructor', () => {
-        assert.equal(MediaStream.callCount, 1);
-      });
-
-      it('should call .getAudioTracks() on the MediaStream', () => {
-        assert(MediaStream.prototype.getAudioTracks.calledOnce);
-      });
-
-      it('should call .removeTrack() with the current audio MediaStreamTrack on the MediaStream', () => {
-        assert(MediaStream.prototype.removeTrack.calledWith(track.mediaStreamTrack));
-      });
-
-      it('should call .addTrack() with the MediaTrack\'s MediaStreamTrack on the MediaStream', () => {
-        assert(MediaStream.prototype.addTrack.calledWith(track.mediaStreamTrack));
-      });
-
-      context('when processedTrack is not null', () => {
-        it('should call .addTrack() with the MediaTrack\'s processedTrack on the MediaStream', () => {
-          track.processedTrack = processedTrack;
-          track._attach(el);
-          assert(MediaStream.prototype.addTrack.calledWith(processedTrack));
-        });
-      });
-
-      it('should set the .srcObject of the HTMLMediaElement to the MediaStream', () => {
-        assert.equal(el.srcObject, mediaStream);
-      });
-
-      it('should set the .autoplay of the HTMLMediaElement to true', () => {
-        assert(el.autoplay);
-      });
-
-      it('should set the .playsInline of the HTMLMediaElement to true', () => {
-        assert(el.playsInline);
-      });
-
-      it('should add the HTMLMediaElement to the ._attachments Set', () => {
-        assert(track._attachments.has(el));
-      });
-
-      it('should return the HTMLMediaElement', () => {
-        assert.equal(ret, el);
       });
     });
   });
 });
 
-function createMediaTrack(id, kind, options) {
+function createMediaTrack(id, mid, kind, options = {}) {
   const mediaStreamTrack = new MediaStreamTrack(id, kind);
-  const mediaTrackTransceiver = new MediaTrackTransceiver(id, mediaStreamTrack);
-  const mediaTrack = new MediaTrack(mediaTrackTransceiver, Object.assign({ log: log }, options));
+  const mediaTrackTransceiver = kind === null ? null : new MediaTrackTransceiver(id, mid, mediaStreamTrack);
+  const mediaTrack = new MediaTrack(kind || 'audio', mediaTrackTransceiver, Object.assign({ log }, options));
   mediaTrack.tranceiver = mediaTrackTransceiver;
   return mediaTrack;
 }
