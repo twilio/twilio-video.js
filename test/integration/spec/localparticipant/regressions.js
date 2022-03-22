@@ -33,7 +33,7 @@ const {
   waitForTracks
 } = require('../../../lib/util');
 
-describe('LocalParticipant: regresions', function() {
+describe('LocalParticipant: regressions', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
 
@@ -292,7 +292,7 @@ describe('LocalParticipant: regresions', function() {
     });
   });
 
-  describe('#setParameters', () => {
+  describe('#setParameters (@unstable: VIDEO-9182)', () => {
     const initialEncodingParameters = {
       maxAudioBitrate: 20000,
       maxVideoBitrate: 40000
