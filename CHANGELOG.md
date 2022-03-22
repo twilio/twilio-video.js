@@ -12,9 +12,11 @@ New Features
 
 twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link), which supports a large number of Participants (> 50).
 
-- A RemoteAudioTrack of a Participant that is not active in the Room will now be switched off. (VIDEO-8668)
-- A RemoteAudioTrack will now have an additional property called [`switchOffReason`](TODO_doc_link), which describes
-  the reason for it being switched off. (VIDEO-8670)
+- A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
+- RemoteAudioTrack and RemoteVideoTrack will now have an additional property called [`switchOffReason`](TODO_doc_link),
+  which describes the reason for it being switched off. (VIDEO-8670, VIDEO-8748)
+- A RemoteVideoTrack will now be switched off if the number of switched on RemoteVideoTracks reached the limit set
+  by the media server. (VIDEO-8745)
 
 2.21.1 (March 22, 2022)
 =======================
