@@ -193,7 +193,7 @@ describe('LocalTrackPublicationV2', () => {
     it('should emit warning if no media is detected', () => {
       localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
       sinon.assert.calledOnce(onWarning);
-      sinon.assert.calledWithExactly(onWarning, TwilioWarning.RECORDING_MEDIA_LOST);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
       sinon.assert.notCalled(onWarningsCleared);
     });
 
@@ -201,7 +201,7 @@ describe('LocalTrackPublicationV2', () => {
       localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
       localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
       sinon.assert.calledOnce(onWarning);
-      sinon.assert.calledWithExactly(onWarning, TwilioWarning.RECORDING_MEDIA_LOST);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
       sinon.assert.notCalled(onWarningsCleared);
     });
 
@@ -221,7 +221,7 @@ describe('LocalTrackPublicationV2', () => {
     it('should emit events in sequence properly', () => {
       localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
       sinon.assert.calledOnce(onWarning);
-      sinon.assert.calledWithExactly(onWarning, TwilioWarning.RECORDING_MEDIA_LOST);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
       sinon.assert.notCalled(onWarningsCleared);
 
       localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
@@ -230,7 +230,7 @@ describe('LocalTrackPublicationV2', () => {
 
       localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
       sinon.assert.calledTwice(onWarning);
-      sinon.assert.calledWithExactly(onWarning, TwilioWarning.RECORDING_MEDIA_LOST);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
       sinon.assert.calledOnce(onWarningsCleared);
 
       localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });

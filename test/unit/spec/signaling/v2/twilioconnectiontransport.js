@@ -23,7 +23,7 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // trackPriority
     [true, false], // trackSwitchOff
     [              // notifyWarnings
-      [['recording-media-lost'], ['recordings']],
+      [['recordingMediaLost'], ['recordings']],
       [[], []],
       [undefined, undefined]
     ],

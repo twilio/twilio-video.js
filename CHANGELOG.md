@@ -14,12 +14,12 @@ This release include the **Media Warnings API (Beta)** to help surface media rel
 
 ```js
 const room = connect('token', {
- notifyWarnings: [ TwilioWarning.RECORDING_MEDIA_LOST ]
+ notifyWarnings: [ 'recordingMediaLost' ]
  // Other connect options
 });
 
 room.on('trackWarning', (name, track, participant) => {
-  if (name === TwilioWarning.RECORDING_MEDIA_LOST) {
+  if (name === 'recordingMediaLost') {
     log(`LocalTrack ${track.name} is not recording media.`,
       name, track, participant);
 
@@ -44,7 +44,7 @@ room.on('trackWarning', (name, track, participant) => {
 
 - **notifyWarnings** - An array of TwilioWarnings to listen to. By default, this array is empty and no warning events will be raised. Possible TwilioWarning values include:
 
-  - `TwilioWarning.RECORDING_MEDIA_LOST` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds.
+  - `recordingMediaLost` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds.
 
 #### Events
 

@@ -98,6 +98,8 @@ export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
 
+export type TwilioWarning = 'recordingMediaLost';
+
 /**
 * @deprecated
 */
