@@ -48,7 +48,7 @@ export {
   AudioLevel,
   AudioTrackPublication,
   BandwidthProfileMode,
-  BandwidthProfileOptions,
+  BandwidthProfile,
   ConnectOptions,
   CreateLocalTrackOptions,
   CreateLocalTracksOptions,

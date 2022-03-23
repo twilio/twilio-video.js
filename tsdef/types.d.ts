@@ -124,7 +124,7 @@ export interface VideoBandwidthProfile {
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
-export interface BandwidthProfileOptions {
+export interface BandwidthProfile {
   video?: VideoBandwidthProfile;
 }
 
@@ -167,7 +167,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
   automaticSubscription?: boolean;
-  bandwidthProfile?: BandwidthProfileOptions;
+  bandwidthProfile?: BandwidthProfile;
   dominantSpeaker?: boolean;
 
   /**
