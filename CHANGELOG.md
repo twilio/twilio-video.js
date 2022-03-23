@@ -8,9 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-## MediaMedia Warnings API Beta
-
-Twilio Video SDK will now raise media related warning events whenever the media server is not able to detect media from a published audio or video track.
+This release include the **Media Warnings API (Beta)** to help surface media related warning events on the SDK whenever the media server is not able to detect media from a published audio or video track.
 
 ### Example
 
