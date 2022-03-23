@@ -56,7 +56,7 @@ The SDK raises warning events when it detects certain conditions (defined in `Tw
 
 - **LocalParticipant.on('trackWarning', callback(name, track))** - Raised when one of the LocalParticipant's Tracks encounters a TwilioWarning.
 
-- **LocalParticipant.on('trackWarningsCleared', callback(name, track))** - Raised when one of the LocalParticipant's Tracks cleared all TwilioWarnings.
+- **LocalParticipant.on('trackWarningsCleared', callback(track))** - Raised when one of the LocalParticipant's Tracks cleared all TwilioWarnings.
 
 - **Room.on('trackWarning', callback(name, track, participant))** - Raised when one of the LocalParticipant's Tracks in the Room encounters a TwilioWarning.
 
