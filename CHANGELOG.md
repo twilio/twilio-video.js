@@ -2,6 +2,68 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.22.0 (In Progress)
+====================
+
+New Features
+------------
+
+## MediaMedia Warnings API Beta
+
+Twilio Video SDK will now raise media related warning events whenever the media server is not able to detect media from a published audio or video track.
+
+### Example
+
+```js
+const room = connect('token', {
+ notifyWarnings: [ TwilioWarning.RECORDING_MEDIA_LOST ]
+ // Other connect options
+});
+
+room.on('trackWarning', (name, track, participant) => {
+  if (name === TwilioWarning.RECORDING_MEDIA_LOST) {
+    log(`LocalTrack ${track.name} is not recording media.`,
+      name, track, participant);
+
+    // Wait a reasonable amount of time to clear the warning.
+    const timer = setTimeout(() => {
+      // If the warning is not cleared, you can manually
+      // reconnect to the room, or show a dialog to the user
+    }, 5000);
+
+    room.once('trackWarningsCleared', (track, participant) => {
+      log('LocalTrack warnings have cleared!',
+        track, participant);
+      clearTimeout(timer);
+    });
+  }
+});
+```
+
+### API Definitions
+
+#### ConnectOptions
+
+- **notifyWarnings** - An array of TwilioWarnings to listen to. By default, this array is empty and no warning events will be raised. Possible TwilioWarning values include:
+
+  - `TwilioWarning.RECORDING_MEDIA_LOST` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds.
+
+#### Events
+
+The SDK raises warning events when it detects certain conditions (defined in `TwilioWarning` enumeration). You can implement callbacks on these events to act on them, or to alert the user of an issue. Subsequently, "warningsCleared" event is raised when conditions have returned to normal.
+
+- **LocalTrackPublication.on('warning', callback(name))** - Raised when the published Track encounters a TwilioWarning.
+
+- **LocalTrackPublication.on('warningsCleared', callback())** - Raised when the published Track cleared all TwilioWarning.
+
+- **LocalParticipant.on('trackWarning', callback(name, track))** - Raised when one of the LocalParticipant's Tracks encounters a TwilioWarning.
+
+- **LocalParticipant.on('trackWarningsCleared', callback(name, track))** - Raised when one of the LocalParticipant's Tracks cleared all TwilioWarnings.
+
+- **Room.on('trackWarning', callback(name, track, participant))** - Raised when one of the LocalParticipant's Tracks in the Room encounters a TwilioWarning.
+
+- **Room.on('trackWarningsCleared', callback(track, participant))** - Raised when one of the LocalParticipant's Tracks in the Room cleared all TwilioWarnings.
+
 2.21.0 (March 8, 2022)
 ==========================
 
