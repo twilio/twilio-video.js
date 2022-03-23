@@ -100,3 +100,10 @@ require('./spec/stats/localvideotrackstats');
 require('./spec/stats/remotetrackstats');
 require('./spec/stats/remoteaudiotrackstats');
 require('./spec/stats/remotevideotrackstats');
+
+require('./spec/webrtc/getstats');
+require('./spec/webrtc/getusermedia');
+
+require('./spec/webrtc/util');
+require('./spec/webrtc/util/latch');
+require('./spec/webrtc/util/sdp');

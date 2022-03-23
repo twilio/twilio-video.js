@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const { EventEmitter } = require('events');
-const { getUserMedia } = require('@twilio/webrtc');
+const { getUserMedia } = require('../../../es5/webrtc/index');
 const sinon = require('sinon');
 
 const { connect, createLocalTracks, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');

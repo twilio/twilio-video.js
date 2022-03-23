@@ -16,14 +16,32 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
 - A RemoteAudioTrack will now have an additional property called [`switchOffReason`](TODO_doc_link), which describes
   the reason for it being switched off. (VIDEO-8670)
 
-2.21.0 (In Progress)
-==========================
+2.21.1 (March 22, 2022)
+=======================
+
+Bug Fixes
+---------
+
+- Fixed the issue where twilio-video.js does not build with the latest version of webpack and vite. (VIDEO-8609)
+
+2.21.0 (March 8, 2022)
+======================
 
 New Features
 ------------
-- twilio-video.js now supports WKWebView and SFSafariViewController on iOS version 15.2 or later. iOS applications will need to include the camera usage description, microphone usage description and inline media playback in order for the SDK to work on WKWebView. Additionally, the [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) string should follow the correct format if your application is modifying the default value.
+
+- twilio-video.js now supports WKWebView and SFSafariViewController on iOS version 14.3 or later. The [`isSupported` flag](https://sdk.twilio.com/js/video/releases/2.20.1/docs/module-twilio-video.html) relies partly on the [User-Agent string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) to determine if twilio-video.js officially supports the user's browser. If your application modifies the default value for the User-Agent string, the new value should follow the [correct format](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent#syntax).
+
+  Additionally, for [iOS applications](https://developer.apple.com/documentation/avfoundation/cameras_and_media_capture/requesting_authorization_for_media_capture_on_ios), your application will need to include the [camera usage description](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/plist/info/NSCameraUsageDescription), [microphone usage description](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW25) and [inline media playback](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/1614793-allowsinlinemediaplayback) in order for the SDK to work on WKWebView.
+
+  Note: As with Safari, WKWebViews only support only one local media track of each kind at a time.
 
   We also would like to thank @cbxp for his [contribution](https://github.com/twilio/twilio-webrtc.js/pull/133). (VIDEO-8374)
+
+Known Issue
+-----------
+
+Some [common issues](https://github.com/twilio/twilio-video.js/blob/master/COMMON_ISSUES.md#safari-mobile) such as interruptions on mobile devices which includes, backgrounding the application, or switching between applications can sometimes cause VideoTracks to go black or AudioTracks to stop.
 
 2.20.1 (Feb 17, 2022)
 =====================

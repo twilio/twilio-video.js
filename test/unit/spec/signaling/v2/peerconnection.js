@@ -5,7 +5,7 @@
 const assert = require('assert');
 const EventEmitter = require('events');
 const sinon = require('sinon');
-const util = require('@twilio/webrtc/lib/util');
+const util = require('../../../../../lib/webrtc/util');
 
 const EventTarget = require('../../../../../lib/eventtarget');
 const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor.js');
