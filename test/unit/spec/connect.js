@@ -70,33 +70,52 @@ describe('connect', () => {
     {
       name: 'logLevel',
       newName: 'Video.Logger',
+      optionsName: 'ConnectOptions',
       value: 'debug',
       shouldDelete: false,
     },
     {
       name: 'abortOnIceServersTimeout',
+      optionsName: 'ConnectOptions',
       value: true,
       shouldDelete: true,
     },
     {
       name: 'dscpTagging',
+      optionsName: 'ConnectOptions',
       newName: 'enableDscp',
       value: true,
       shouldDelete: true
     },
     {
       name: 'eventListener',
+      optionsName: 'ConnectOptions',
       newName: 'Video.Logger',
       value: sinon.spy(),
       shouldDelete: false
     },
     {
       name: 'iceServersTimeout',
+      optionsName: 'ConnectOptions',
       value: 2000,
       shouldDelete: true
     },
-  ].forEach(({ name, newName, value, shouldDelete }) => {
-    describe(`called with the deprecated ConnectOptions "${name}"`, () => {
+    {
+      name: 'maxTracks',
+      newName: 'bandwidthProfile.video.clientTrackSwitchOffControl',
+      optionsName: 'ConnectOptions.bandwidthProfile.video',
+      options: { bandwidthProfile: { video: { maxTracks: 2 } } },
+      shouldDelete: false
+    },
+    {
+      name: 'renderDimensions',
+      newName: 'bandwidthProfile.video.contentPreferencesMode',
+      optionsName: 'ConnectOptions.bandwidthProfile.video',
+      options: { bandwidthProfile: { video: { renderDimensions: {} } } },
+      shouldDelete: false
+    }
+  ].forEach(({ name, newName, optionsName, options, value, shouldDelete }) => {
+    describe(`called with the deprecated ${optionsName} "${name}"`, () => {
       let signaling;
 
       before(() => {
@@ -109,7 +128,7 @@ describe('connect', () => {
         context(`for the ${callCount} time`, () => {
           before(() => {
             connect(token, {
-              [name]: value,
+              ...(options || { [name]: value }),
               iceServers: [],
               signaling,
               Log: function() {
@@ -119,43 +138,43 @@ describe('connect', () => {
           });
 
           if (shouldDelete) {
-            it(`should remove "${name}" from ConnectOptions`, () => {
-              const options = signaling.args[0][1];
+            it(`should remove "${name}" from ${optionsName}`, () => {
+              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
               assert(!(name in options));
             });
           } else {
-            it(`should not remove "${name}" from ConnectOptions`, () => {
-              const options = signaling.args[0][1];
+            it(`should not remove "${name}" from ${optionsName}`, () => {
+              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
               assert(name in options);
             });
           }
 
           if (newName && shouldDelete) {
-            it(`should set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
-              const options = signaling.args[0][1];
+            it(`should set ${optionsName}.${newName} to ${optionsName}.${name}`, () => {
+              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
               assert.equal(options[newName], value);
             });
           }
 
           if (newName && !shouldDelete) {
-            it(`should not set ConnectOptions#${newName} to ConnectOptions#${name}`, () => {
-              const options = signaling.args[0][1];
+            it(`should not set ${optionsName}.${newName} to ${optionsName}.${name}`, () => {
+              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
               assert(!options[newName]);
             });
           }
 
           if (callCount === 'first') {
             it('should call .warn on the underlying Log with the deprecation warning message', () => {
-              const options = signaling.args[0][1];
+              const { log } = signaling.args[0][1];
               const warning = newName
-                ? `The ConnectOptions "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
-                : `The ConnectOptions "${name}" is no longer applicable and will be ignored.`;
-              sinon.assert.calledWith(options.log.warn, warning);
+                ? `The ${optionsName} property "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
+                : `The ${optionsName} property "${name}" is no longer applicable and will be ignored.`;
+              sinon.assert.calledWith(log.warn, warning);
             });
           } else {
             it('should not call .warn on the underlying Log', () => {
-              const options = signaling.args[1][1];
-              sinon.assert.notCalled(options.log.warn);
+              const { log } = signaling.args[1][1];
+              sinon.assert.notCalled(log.warn);
             });
           }
         });
