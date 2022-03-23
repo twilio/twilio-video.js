@@ -107,7 +107,7 @@ export interface VideoRenderDimensions {
   standard?: VideoTrack.Dimensions;
 }
 
-export interface VideoBandwidthProfileOptions {
+export interface VideoBandwidthProfile {
   contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
@@ -125,7 +125,7 @@ export interface VideoBandwidthProfileOptions {
 }
 
 export interface BandwidthProfileOptions {
-  video?: VideoBandwidthProfileOptions;
+  video?: VideoBandwidthProfile;
 }
 
 export interface AudioCodecSettings {

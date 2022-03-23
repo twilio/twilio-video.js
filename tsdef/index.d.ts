@@ -80,7 +80,7 @@ export {
   StatsReport,
   TrackStats,
   TrackSwitchOffMode,
-  VideoBandwidthProfileOptions,
+  VideoBandwidthProfile,
   VideoCodec,
   VideoCodecSettings,
   VideoRenderDimensions,
