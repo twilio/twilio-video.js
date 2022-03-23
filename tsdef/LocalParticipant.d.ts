@@ -7,6 +7,7 @@ import { LocalVideoTrackPublication } from './LocalVideoTrackPublication';
 import { Participant } from './Participant';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
+import { TwilioWarning } from './TwilioWarning';
 
 export class LocalParticipant extends Participant {
   audioTracks: Map<Track.SID, LocalAudioTrackPublication>;
@@ -31,5 +32,7 @@ export class LocalParticipant extends Participant {
   on(event: 'trackPublished', listener: (publication: LocalTrackPublication) => void): this;
   on(event: 'trackStarted', listener: (track: LocalTrack) => void): this;
   on(event: 'trackStopped', listener: (track: LocalTrack) => void): this;
+  on(event: 'trackWarning', listener: (name: TwilioWarning, track: LocalTrack) => void): this;
+  on(event: 'trackWarningsCleared', listener: (track: LocalTrack) => void): this;
   on(event: string, listener: (...args: any[]) => void): this;
 }

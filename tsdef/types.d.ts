@@ -12,6 +12,7 @@ import { RemoteDataTrackPublication } from './RemoteDataTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
+import { TwilioWarning } from './TwilioWarning';
 import { VideoTrack } from './VideoTrack';
 
 export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
@@ -97,8 +98,6 @@ export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
 export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
-
-export type TwilioWarning = 'recordingMediaLost';
 
 /**
 * @deprecated
@@ -190,6 +189,7 @@ export interface ConnectOptions {
   maxVideoBitrate?: number | null;
   name?: string | null;
   networkQuality?: boolean | NetworkQualityConfiguration;
+  notifyWarnings?: Array<TwilioWarning>;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | VideoEncodingMode;
