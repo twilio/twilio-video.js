@@ -99,8 +99,8 @@ export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
 
 /**
-* @deprecated
-*/
+ * @deprecated
+ */
 export interface VideoRenderDimensions {
   high?: VideoTrack.Dimensions;
   low?: VideoTrack.Dimensions;
@@ -112,13 +112,13 @@ export interface VideoBandwidthProfile {
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
   /**
-  * @deprecated use clientTrackSwitchOffControl instead
-  */
+   * @deprecated use clientTrackSwitchOffControl instead
+   */
   maxTracks?: number;
   mode?: BandwidthProfileMode;
   /**
-  * @deprecated use contentPreferencesMode instead
-  */
+   * @deprecated use contentPreferencesMode instead
+   */
   renderDimensions?: VideoRenderDimensions;
   clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
