@@ -13,28 +13,28 @@ This release include the **Media Warnings API (Beta)** to help surface media rel
 ### Example
 
 ```js
-const room = connect('token', {
- notifyWarnings: [ 'recordingMediaLost' ]
- // Other connect options
+const room = await connect('token', {
+  notifyWarnings: [ 'recordingMediaLost' ]
+  // Other connect options
 });
 
-room.on('trackWarning', (name, track, participant) => {
-  if (name === 'recordingMediaLost') {
-    log(`LocalTrack ${track.name} is not recording media.`,
-      name, track, participant);
+Array.from(room.localParticipant.tracks.values()).forEach(publication => {
+  publication.on('warning', name => {
+    if (name === 'recordingMediaLost') {
+      console.log(`LocalTrack ${publication.track.name} is not recording media.`);
 
-    // Wait a reasonable amount of time to clear the warning.
-    const timer = setTimeout(() => {
-      // If the warning is not cleared, you can manually
-      // reconnect to the room, or show a dialog to the user
-    }, 5000);
+      // Wait a reasonable amount of time to clear the warning.
+      const timer = setTimeout(() => {
+        // If the warning is not cleared, you can manually
+        // reconnect to the room, or show a dialog to the user
+      }, 5000);
 
-    room.once('trackWarningsCleared', (track, participant) => {
-      log('LocalTrack warnings have cleared!',
-        track, participant);
-      clearTimeout(timer);
-    });
-  }
+      publication.once('warningsCleared', () => {
+        console.log(`LocalTrack ${publication.track.name} warnings have cleared!`);
+        clearTimeout(timer);
+      });
+    }
+  });
 });
 ```
 
@@ -54,13 +54,13 @@ The SDK raises warning events when it detects certain conditions (defined in `Tw
 
 - **LocalTrackPublication.on('warningsCleared', callback())** - Raised when the published Track cleared all TwilioWarning.
 
-- **LocalParticipant.on('trackWarning', callback(name, track))** - Raised when one of the LocalParticipant's Tracks encounters a TwilioWarning.
+- **LocalParticipant.on('trackWarning', callback(name, publication))** - Raised when one of the LocalParticipant's published tracks encounters a TwilioWarning.
 
-- **LocalParticipant.on('trackWarningsCleared', callback(track))** - Raised when one of the LocalParticipant's Tracks cleared all TwilioWarnings.
+- **LocalParticipant.on('trackWarningsCleared', callback(publication))** - Raised when one of the LocalParticipant's published tracks cleared all TwilioWarnings.
 
-- **Room.on('trackWarning', callback(name, track, participant))** - Raised when one of the LocalParticipant's Tracks in the Room encounters a TwilioWarning.
+- **Room.on('trackWarning', callback(name, publication, participant))** - Raised when one of the LocalParticipant's published tracks in the Room encounters a TwilioWarning.
 
-- **Room.on('trackWarningsCleared', callback(track, participant))** - Raised when one of the LocalParticipant's Tracks in the Room cleared all TwilioWarnings.
+- **Room.on('trackWarningsCleared', callback(publication, participant))** - Raised when one of the LocalParticipant's published tracks in the Room cleared all TwilioWarnings.
 
 2.21.0 (March 8, 2022)
 ==========================

@@ -259,9 +259,6 @@ describe('LocalParticipant', () => {
           this.track = track;
           this.kind = track.kind;
           this.priority = signaling.priority;
-          this.emit = sinon.spy();
-          this.on = () => {};
-          this.removeListener = () => {};
         },
         LocalVideoTrackPublication: function(signaling, track) {
           this.trackName = track.name;
@@ -269,9 +266,6 @@ describe('LocalParticipant', () => {
           this.track = track;
           this.kind = track.kind;
           this.priority = signaling.priority;
-          this.emit = sinon.spy();
-          this.on = () => {};
-          this.removeListener = () => {};
         },
         LocalDataTrackPublication: function(signaling, track) {
           this.trackName = track.name;
@@ -283,6 +277,8 @@ describe('LocalParticipant', () => {
           this.removeListener = () => {};
         }
       };
+      inherits(options.LocalAudioTrackPublication, EventEmitter);
+      inherits(options.LocalVideoTrackPublication, EventEmitter);
       test = makeTest(options);
     });
 
@@ -457,19 +453,15 @@ describe('LocalParticipant', () => {
                       it('should re-emit media recording warning', () => {
                         const onTrackWarning = sinon.stub();
                         test.participant.on('trackWarning', onTrackWarning);
-                        const trackSignaling = test.participant._signaling.tracks.get(localTrack.id);
-                        trackSignaling.emit('warning', 'foo');
-                        sinon.assert.calledWith(onTrackWarning, 'foo', localTrack);
-                        sinon.assert.calledWith(localTrackPublication.emit, 'warning', 'foo');
+                        localTrackPublication.emit('warning', 'foo');
+                        sinon.assert.calledWith(onTrackWarning, 'foo', localTrackPublication);
                       });
 
                       it('should re-emit media recording warningsCleared', () => {
                         const onTrackWarning = sinon.stub();
                         test.participant.on('trackWarningsCleared', onTrackWarning);
-                        const trackSignaling = test.participant._signaling.tracks.get(localTrack.id);
-                        trackSignaling.emit('warningsCleared');
-                        sinon.assert.calledWith(onTrackWarning, localTrack);
-                        sinon.assert.calledWith(localTrackPublication.emit, 'warningsCleared');
+                        localTrackPublication.emit('warningsCleared');
+                        sinon.assert.calledWith(onTrackWarning, localTrackPublication);
                       });
                     });
                   }
