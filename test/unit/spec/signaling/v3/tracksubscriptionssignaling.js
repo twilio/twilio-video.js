@@ -33,9 +33,9 @@ describe('TrackSubscriptionsSignaling', () => {
       assert.strictEqual(subject.channel, 'track_subscriptions');
     });
 
-    it('initializes ._currentRevision to 0', () => {
+    it('initializes ._currentRevision to null', () => {
       const subject = makeTest(makeTransport());
-      assert.strictEqual(subject._currentRevision, 0);
+      assert.strictEqual(subject._currentRevision, null);
     });
   });
 

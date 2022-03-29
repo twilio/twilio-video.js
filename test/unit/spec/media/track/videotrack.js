@@ -508,6 +508,12 @@ describe('VideoTrack', () => {
       });
 
       [{
+        state: 'MediaStreamTrack is null',
+        setState: () => {
+          videoTrack._mediaTrackTransceiver = null;
+        }
+      },
+      {
         state: 'MediaStreamTrack is disabled',
         setState: () => {
           mediaStreamTrack.enabled = false;

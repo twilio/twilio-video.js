@@ -417,13 +417,12 @@ describe('RemoteVideoTrack', () => {
 });
 
 
-function makeTrack({ id, mid, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff }) {
+function makeTrack({ id, mid, sid, isEnabled, options, setPriority, setRenderHint, isSwitchedOff = false, switchOffReason = null }) {
   const emptyFn = () => undefined;
   setPriority = setPriority || emptyFn;
   setRenderHint = setRenderHint || emptyFn;
-  isSwitchedOff = !!isSwitchedOff;
   isEnabled = typeof isEnabled === 'boolean' ? true : isEnabled;
   const mediaStreamTrack = new FakeMediaStreamTrack('video');
-  const mediaTrackReceiver = new MediaTrackReceiver(id, mid, mediaStreamTrack);
-  return new RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriority, setRenderHint, options);
+  const mediaTrackReceiver = isSwitchedOff ? null : new MediaTrackReceiver(id, mid, mediaStreamTrack);
+  return new RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, switchOffReason, setPriority, setRenderHint, options);
 }

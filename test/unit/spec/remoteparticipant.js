@@ -1569,7 +1569,7 @@ function makeTest(options) {
   });
   inherits(options.RemoteAudioTrack, EventEmitter);
 
-  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, setPriorityCallback, setRenderHitsCallback, opts) {
+  options.RemoteVideoTrack = sinon.spy(function RemoteVideoTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, switchOffReason, setPriorityCallback, setRenderHitsCallback, opts) {
     EventEmitter.call(this);
     this.enabled = true;
     this.kind = mediaTrackReceiver.kind;
@@ -1577,9 +1577,16 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : mediaTrackReceiver.id;
     this.sid = sid;
     this.setPriority = setPriorityCallback;
+    this.switchOffReason = switchOffReason;
     this._setRenderHint = setRenderHitsCallback;
     this._setEnabled = enabled => { this.enabled = enabled; };
-    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
+    this._setSwitchedOff = (switchedOff, switchOffReason) => {
+      this.switchedOff = switchedOff;
+      this.switchOffReason = switchOffReason;
+    };
+    this._setTrackReceiver = mediaTrackReceiver => {
+      this.mediaStreamTrack = mediaTrackReceiver ? mediaTrackReceiver.track : null;
+    };
     options.tracks.push(this);
   });
   inherits(options.RemoteVideoTrack, EventEmitter);
@@ -1593,7 +1600,6 @@ function makeTest(options) {
     this.name = opts && opts.name ? opts.name : dataTrackReceiver.id;
     this.sid = sid;
     this._setEnabled = enabled => { this.enabled = enabled; };
-    this._setSwitchedOff = switchedOff => { this.switchedOff = switchedOff; };
     options.tracks.push(this);
   });
   inherits(options.RemoteDataTrack, EventEmitter);
