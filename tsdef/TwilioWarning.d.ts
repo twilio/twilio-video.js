@@ -1,3 +1,3 @@
 export enum TwilioWarning {
-  recordingMediaLost = 'recordingMediaLost'
+  recordingMediaLost = 'recording-media-lost'
 }
