@@ -119,19 +119,29 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
     if (kind !== 'data') {
       describe('events', () => {
-        ['warning', 'warningsCleared'].forEach(event => {
-          context(`when "${event}" is emitted on the signaling object`, () => {
-            it(`should emit "${event}" on the ${description}`, () => {
-              const signaling = makeLocalTrackPublicationSignaling('foo', 'bar');
-              const localTrackPublication = new LocalTrackPublication(signaling, localTrack, () => {});
-              const param = { foo: 'foo', bar: 'bar' };
-              const handler = sinon.stub();
+        context('when "warning" is emitted on the signaling object', () => {
+          it(`should emit "warning" on the ${description}`, () => {
+            const signaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(signaling, localTrack, () => {});
+            const handler = sinon.stub();
+            const param = { foo: 'foo', bar: 'bar' };
 
-              localTrackPublication.on(event, handler);
-              signaling.emit(event, param);
-              sinon.assert.calledOnce(handler);
-              sinon.assert.calledWithExactly(handler, param);
-            });
+            localTrackPublication.on('warning', handler);
+            signaling.emit('warning', param);
+            sinon.assert.calledOnce(handler);
+            sinon.assert.calledWithExactly(handler, param);
+          });
+        });
+
+        context('when "warningsCleared" is emitted on the signaling object', () => {
+          it(`should emit "warningsCleared" on the ${description}`, () => {
+            const signaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(signaling, localTrack, () => {});
+            const handler = sinon.stub();
+
+            localTrackPublication.on('warningsCleared', handler);
+            signaling.emit('warning');
+            sinon.assert.calledOnce(handler);
           });
         });
 
