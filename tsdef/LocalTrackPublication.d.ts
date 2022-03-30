@@ -1,6 +1,7 @@
 import { LocalTrack } from './types';
 import { Track } from './Track';
 import { TrackPublication } from './TrackPublication';
+import { TwilioWarning } from './TwilioWarning';
 
 export class LocalTrackPublication extends TrackPublication {
   isTrackEnabled: boolean;
@@ -13,5 +14,7 @@ export class LocalTrackPublication extends TrackPublication {
 
   on(event: 'trackDisabled', listener: () => void): this;
   on(event: 'trackEnabled', listener: () => void): this;
+  on(event: 'warning', listener: (name: TwilioWarning) => void): this;
+  on(event: 'warningsCleared', listener: () => void): this;
   on(event: string, listener: (...args: any[]) => void): this;
 }

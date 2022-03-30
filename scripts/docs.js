@@ -54,6 +54,7 @@ const publicClasses = [
   'lib/stats/remotevideotrackstats.js',
   'lib/util/twilio-video-errors.js',
   'lib/util/twilioerror.js',
+  'lib/util/twiliowarning.js',
 
   // TS Files
   'lib/createlocaltracks.ts',

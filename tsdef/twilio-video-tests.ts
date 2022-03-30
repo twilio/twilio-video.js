@@ -392,6 +392,44 @@ function runPreflight() {
   preflight.stop();
 }
 
+async function mediaWarnings() {
+  let room = await Video.connect('$TOKEN', {
+    notifyWarnings: []
+  });
+  room = await Video.connect('$TOKEN', {
+    notifyWarnings: [Video.TwilioWarning.recordingMediaLost]
+  });
+
+  room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {
+    publication.on('warning', (name: Video.TwilioWarning) => {
+      // eslint-disable-next-line no-console
+      console.log(name);
+    });
+    publication.on('warningsCleared', () => {
+      // eslint-disable-next-line no-console
+      console.log('warningsCleared');
+    });
+  });
+  room.localParticipant.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack) => {
+    // eslint-disable-next-line no-console
+    console.log(name, track);
+  });
+  room.localParticipant.on('trackWarningsCleared', (track: Video.LocalTrack) => {
+    // eslint-disable-next-line no-console
+    console.log('warningsCleared', track);
+  });
+
+  room.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack, participant: Video.LocalParticipant) => {
+    // eslint-disable-next-line no-console
+    console.log(name, track, participant);
+  });
+  room.on('trackWarningsCleared', (track: Video.LocalTrack, participant: Video.LocalParticipant) => {
+    // eslint-disable-next-line no-console
+    console.log('warningsCleared', track, participant);
+  });
+}
+
 initRoom();
 unpublishTracks();
 runPreflight();
+mediaWarnings();
