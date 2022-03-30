@@ -5,6 +5,9 @@ import { TwilioError } from './TwilioError';
 
 export class RemoteTrackPublication extends TrackPublication {
   isSubscribed: boolean;
+  /**
+   * @deprecated Use (.track.switchOffReason !== Track.SwitchOffReason.DISABLED_BY_PUBLISHER)
+   */
   isTrackEnabled: boolean;
   kind: Track.Kind;
   publishPriority: Track.Priority;

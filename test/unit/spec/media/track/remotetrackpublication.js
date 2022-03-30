@@ -47,7 +47,7 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
         if (prop === 'isTrackEnabled') {
           it('should show deprecation warning when accessed the first time', () => {
             sinon.assert.callCount(log.warn, 1);
-            sinon.assert.calledWith(log.warn, '.isTrackEnabled is deprecated and scheduled for removal. During the deprecation period, this property is only valid if the corresponding RemoteTrack is subscribed to.');
+            sinon.assert.calledWith(log.warn, '.isTrackEnabled is deprecated and scheduled for removal. During the deprecation period, this property is only valid if the corresponding RemoteTrack is subscribed to. The RemoteTrack can be considered disabled if .switchOffReason is set to "disabled-by-publisher".');
           });
 
           it('should not show deprecation warning when accessed the second time', () => {

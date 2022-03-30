@@ -45,8 +45,8 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
         assert.equal(track.isEnabled, true);
         sinon.assert.callCount(log.warn, 1);
         sinon.assert.calledWith(log.warn, '.isEnabled is deprecated and scheduled for removal. '
-          + 'The RemoteMediaTrack is can be considered disabled if .isSwitchedOff is '
-          + 'set to true and .switchOffReason is set to "disabled-by-publisher".');
+          + 'The RemoteMediaTrack is can be considered disabled if .switchOffReason is set to '
+          + '"disabled-by-publisher".');
       });
 
       it('should not log deprecation warning when .isEnabled is accessed a second time', () => {

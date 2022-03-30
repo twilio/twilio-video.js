@@ -7,14 +7,14 @@ export class RemoteAudioTrack extends AudioTrack {
   isSwitchedOff: boolean;
   switchOffReason: Track.SwitchOffReason | null;
   /**
-   * @deprecated Use (.isSwitchedOff && .switchOffReason === Track.SwitchOffReason.DISABLED_BY_PUBLISHER) instead
+   * @deprecated Use (.switchOffReason !== Track.SwitchOffReason.DISABLED_BY_PUBLISHER) instead
    */
   isEnabled: boolean;
 
   setPriority(priority: Track.Priority | null): this;
 
   /**
-   * @deprecated Use "switchedOff" (.isSwitchedOff && .switchOffReason === Track.SwitchOffReason.DISABLED_BY_PUBLISHER) instead
+   * @deprecated Use "switchedOff" (.switchOffReason === Track.SwitchOffReason.DISABLED_BY_PUBLISHER) instead
    */
   on(event: 'disabled', listener: (track: this) => void): this;
   /**
