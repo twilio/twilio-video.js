@@ -62,11 +62,20 @@ The SDK raises warning events when it detects certain conditions (defined in `Tw
 
 - **Room.on('trackWarningsCleared', callback(publication, participant))** - Raised when one of the LocalParticipant's published tracks in the Room cleared all TwilioWarnings.
 
+2.21.1 (March 22, 2022)
+=======================
+
+Bug Fixes
+---------
+
+- Fixed the issue where twilio-video.js does not build with the latest version of webpack and vite. (VIDEO-8609)
+
 2.21.0 (March 8, 2022)
-==========================
+======================
 
 New Features
 ------------
+
 - twilio-video.js now supports WKWebView and SFSafariViewController on iOS version 14.3 or later. The [`isSupported` flag](https://sdk.twilio.com/js/video/releases/2.20.1/docs/module-twilio-video.html) relies partly on the [User-Agent string](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent) to determine if twilio-video.js officially supports the user's browser. If your application modifies the default value for the User-Agent string, the new value should follow the [correct format](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent#syntax).
 
   Additionally, for [iOS applications](https://developer.apple.com/documentation/avfoundation/cameras_and_media_capture/requesting_authorization_for_media_capture_on_ios), your application will need to include the [camera usage description](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/plist/info/NSCameraUsageDescription), [microphone usage description](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html#//apple_ref/doc/uid/TP40009251-SW25) and [inline media playback](https://developer.apple.com/documentation/webkit/wkwebviewconfiguration/1614793-allowsinlinemediaplayback) in order for the SDK to work on WKWebView.
