@@ -99,33 +99,33 @@ export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
 
 /**
-* @deprecated
-*/
+ * @deprecated
+ */
 export interface VideoRenderDimensions {
   high?: VideoTrack.Dimensions;
   low?: VideoTrack.Dimensions;
   standard?: VideoTrack.Dimensions;
 }
 
-export interface VideoBandwidthProfileOptions {
+export interface VideoBandwidthProfile {
   contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
   /**
-  * @deprecated use clientTrackSwitchOffControl instead
-  */
+   * @deprecated use clientTrackSwitchOffControl instead
+   */
   maxTracks?: number;
   mode?: BandwidthProfileMode;
   /**
-  * @deprecated use contentPreferencesMode instead
-  */
+   * @deprecated use contentPreferencesMode instead
+   */
   renderDimensions?: VideoRenderDimensions;
   clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
-export interface BandwidthProfileOptions {
-  video?: VideoBandwidthProfileOptions;
+export interface BandwidthProfile {
+  video?: VideoBandwidthProfile;
 }
 
 export interface AudioCodecSettings {
@@ -167,7 +167,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 export interface ConnectOptions {
   audio?: boolean | CreateLocalTrackOptions;
   automaticSubscription?: boolean;
-  bandwidthProfile?: BandwidthProfileOptions;
+  bandwidthProfile?: BandwidthProfile;
   dominantSpeaker?: boolean;
 
   /**

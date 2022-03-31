@@ -14,9 +14,66 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
 
 - A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
 - RemoteAudioTrack and RemoteVideoTrack will now have an additional property called [`switchOffReason`](TODO_doc_link),
-  which describes the reason for it being switched off. (VIDEO-8670, VIDEO-8748)
+  which describes the reason for it being switched off. The `switchedOff` event will also have this reason string as a
+  second argument. (VIDEO-8670, VIDEO-8748)
 - A RemoteVideoTrack will now be switched off if the number of switched on RemoteVideoTracks reached the limit set
   by the media server. (VIDEO-8745)
+- Renamed BandwidthProfileOptions to BandwidthProfile. (VIDEO-8754)
+- Renamed VideoBandwidthProfileOptions to VideoBandwidthProfile. (VIDEO-8753)
+- The `isEnabled` property of the RemoteTrack is deprecated and scheduled for removal. Alternatively, you can determine if
+  a RemoteTrack is enabled by using the following expression. (VIDEO-8742, VIDEO-8750)
+  ```js
+  const isEnabled = remoteTrack.switchOffReason !== 'disabled-by-publisher';
+  ```
+- The `disabled` and `enabled` events of the RemoteTrack are deprecated and scheduled for removal. Alternatively, you can
+  handle the `switchedOff` and `switchedOn` events as shown below. (VIDEO-8742, VIDEO-8750)
+  ```js
+  let recentSwitchOffReason = remoteTrack.switchOffReason;
+
+  remoteTrack.on('switchedOff', switchOffReason => {
+    recentSwitchOffReason = switchOffReason;
+    if (switchOffReason === 'disabled-by-publisher') {
+      /* The RemoteTrack is disabled. */
+    }
+  });
+  
+  remoteTrack.on('switchedOn', () => {
+    if (recentSwitchOffReason === 'disabled-by-publisher') {
+      /* The RemoteTrack is enabled. */
+    }
+    recentSwitchOffReason = null;
+  });
+  ```
+
+- The `isTrackEnabled` property of the RemoteTrackPublication is deprecated and scheduled for removal. Alternatively, you 
+  can determine if a RemoteTrackPublication is enabled by using the following expression. (VIDEO-8743, VIDEO-8751)
+  ```js
+  const { track } = remoteTrackPublication;
+  const isTrackEnabled = !(track && track.switchOffReason === 'disabled-by-publisher');
+  ```
+  `isTrackEnabled` is now only valid for RemoteTracks that are subscribed to, and defaults to `true` for unsubscribed
+  RemoteTracks.
+- The `trackDisabled` and `trackEnabled` events of the RemoteTrack are deprecated and scheduled for removal. Alternatively,
+  you can handle the `trackSwitchedOff` and `trackSwitchedOn` events as shown below. (VIDEO-8743, VIDEO-8751)
+  ```js
+  const { track } = remoteTrackPublication;
+  let recentSwitchOffReason = track ? track.switchOffReason : null;
+
+  remoteTrackPublication.on('trackSwitchedOff', (track, switchOffReason) => {
+    recentSwitchOffReason = switchOffReason;
+    if (switchOffReason === 'disabled-by-publisher') {
+      /* The RemoteTrack is disabled. */
+    }
+  });
+  
+  remoteTrackPublication.on('trackSwitchedOn', (track) => {
+    if (recentSwitchOffReason === 'disabled-by-publisher') {
+      /* The RemoteTrack is enabled. */
+    }
+    recentSwitchOffReason = null;
+  });
+  ```
+  The `trackDisabled` and `trackEnabled` events are now only fired for subscribed RemoteTracks.
 
 2.21.1 (March 22, 2022)
 =======================

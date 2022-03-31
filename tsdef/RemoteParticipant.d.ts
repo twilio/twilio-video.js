@@ -25,7 +25,7 @@ export class RemoteParticipant extends Participant {
   on(event: 'trackStarted', listener: (track: RemoteTrack) => void): this;
   on(event: 'trackSubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication) => void): this;
   on(event: 'trackSubscriptionFailed', listener: (error: TwilioError, publication: RemoteTrackPublication) => void): this;
-  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack, publication: RemoteTrackPublication) => void): this;
+  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack, publication: RemoteTrackPublication, switchOffReason: Track.SwitchOffReason) => void): this;
   on(event: 'trackSwitchedOn', listener: (track: RemoteTrack, publication: RemoteTrackPublication) => void): this;
   on(event: 'trackUnpublished', listener: (publication: RemoteTrackPublication) => void): this;
   on(event: 'trackUnsubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication) => void): this;

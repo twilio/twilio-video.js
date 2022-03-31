@@ -30,7 +30,7 @@ function monitorTrackSwitchOffs(remoteTrack, trackName) {
   });
 }
 
-describe('BandwidthProfileOptions: regressions', function() {
+describe('BandwidthProfile: regressions', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
   // eslint-disable-next-line no-invalid-this

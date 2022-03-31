@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
-const log = require('../../../../lib/fakelog');
 const Document = require('../../../../lib/document');
 const { capitalize } = require('../../../../lib/util');
 const MediaTrackReceiver = require('../../../../../lib/media/track/receiver');
@@ -16,16 +15,19 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
   ['audio', RemoteAudioTrack],
   ['video', RemoteVideoTrack]
 ].forEach(([kind, RemoteTrack]) => {
-  let name = `Remote${capitalize(kind)}Track`;
-  describe(`${name}`, () => {
+  const className = `Remote${capitalize(kind)}Track`;
+  describe(`${className}`, () => {
     describe('constructor', () => {
       const name = 'bar';
       let error;
+      let log;
       let track;
 
       before(() => {
         try {
-          track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: { log, name }, RemoteTrack });
+          track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: { name }, RemoteTrack });
+          log = track._log;
+          log.warn = sinon.spy();
         } catch (e) {
           error = e;
         }
@@ -35,12 +37,21 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
         assert(!error);
       });
 
-      it(`should return an instance of ${name}`, () => {
+      it(`should return an instance of ${className}`, () => {
         assert(track instanceof RemoteTrack);
       });
 
-      it('should set the .isEnabled property', () => {
+      it('should set the .isEnabled property and log deprecation warning the first time it is accessed', () => {
         assert.equal(track.isEnabled, true);
+        sinon.assert.callCount(log.warn, 1);
+        sinon.assert.calledWith(log.warn, '.isEnabled is deprecated and scheduled for removal. '
+          + 'The RemoteMediaTrack is can be considered disabled if .switchOffReason is set to '
+          + '"disabled-by-publisher".');
+      });
+
+      it('should not log deprecation warning when .isEnabled is accessed a second time', () => {
+        assert.equal(track.isEnabled, true);
+        sinon.assert.callCount(log.warn, 1);
       });
 
       it('should set the .isSwitchedOff property', () => {
@@ -57,6 +68,22 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
 
       it('should set the .sid property', () => {
         assert.equal(track.sid, 'bar');
+      });
+
+      [
+        ['disabled', `${className}#disabled has been deprecated and scheduled for removal. Use ${className}#switchedOff (.switchOffReason === "disabled-by-publisher") instead.`],
+        ['enabled', `${className}#enabled has been deprecated and scheduled for removal. Use ${className}#switchedOn instead.`]
+      ].forEach(([event, warning], i) => {
+        it(`should emit deprecation warning when "${event}" event is listened to for the first time`, () => {
+          track.on(event, () => {});
+          sinon.assert.callCount(log.warn, 2 + i);
+          sinon.assert.calledWith(log.warn, warning);
+        });
+
+        it(`should not emit deprecation warning when "${event}" event is listened to for the second time`, () => {
+          track.on(event, () => {});
+          sinon.assert.callCount(log.warn, 2 + i);
+        });
       });
     });
 
@@ -140,7 +167,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             assert.equal(track.isEnabled, newIsEnabled);
           });
 
-          it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${name} with the ${name} itself`, () => {
+          it(`should emit "${newIsEnabled ? 'enabled' : 'disabled'}" on the ${className} with the ${className} itself`, () => {
             assert(newIsEnabled ? trackEnabled : trackDisabled);
             assert(!(newIsEnabled ? trackDisabled : trackEnabled));
             assert.equal(arg, track);
@@ -193,7 +220,7 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
             assert.equal(track.isSwitchedOff, newIsSwitchedOff);
           });
 
-          it(`should emit "${newIsSwitchedOff ? 'switchedOff' : 'switchedOn'}" on the ${name} with the ${name} itself`, () => {
+          it(`should emit "${newIsSwitchedOff ? 'switchedOff' : 'switchedOn'}" on the ${className} with the ${className} itself`, () => {
             assert(newIsSwitchedOff ? trackSwitchedOff : trackSwitchedOn);
             assert(!(newIsSwitchedOff ? trackSwitchedOn : trackSwitchedOff));
             assert.equal(arg, track);

@@ -45,7 +45,7 @@ export class Room extends EventEmitter {
   on(event: 'trackStarted', listener: (track: RemoteTrack, participant: RemoteParticipant) => void): this;
   on(event: 'trackSubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackSubscriptionFailed', listener: (error: TwilioError, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
-  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
+  on(event: 'trackSwitchedOff', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant, switchOffReason: Track.SwitchOffReason) => void): this;
   on(event: 'trackSwitchedOn', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnpublished', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnsubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;

@@ -237,7 +237,7 @@ describe('LocalParticipantV2', () => {
       ['renderDimensions.standard', { width: 3 }],
       ['']
     ].forEach(([prop, value]) => {
-      context(`when called with a BandwidthProfileOptions that ${prop ? `has a different .${prop}` : 'is the same'}`, () => {
+      context(`when called with a BandwidthProfile that ${prop ? `has a different .${prop}` : 'is the same'}`, () => {
         let bandwidthProfileRevision;
         let initialBandwidthProfile;
         let newBandwidthProfile;
@@ -277,7 +277,7 @@ describe('LocalParticipantV2', () => {
         });
 
         if (prop) {
-          it('should set .bandwidthProfile to the new BandwidthProfileOptions', () => {
+          it('should set .bandwidthProfile to the new BandwidthProfile', () => {
             assert.deepEqual(localParticipant.bandwidthProfile, newBandwidthProfile);
           });
 

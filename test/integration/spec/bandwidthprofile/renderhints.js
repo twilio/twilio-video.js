@@ -20,7 +20,7 @@ const {
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../../es5/util/constants');
 const { waitForSometime } = require('../../../../es5/util');
 
-describe('BandwidthProfileOptions: renderHints', function() {
+describe('BandwidthProfile: renderHints', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
   // eslint-disable-next-line no-invalid-this

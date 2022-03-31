@@ -35,7 +35,7 @@ function monitorTrackSwitchOffs(remoteTrack, trackName) {
   });
 }
 
-describe('BandwidthProfileOptions: video', function() {
+describe('BandwidthProfile: video', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
   // eslint-disable-next-line no-invalid-this

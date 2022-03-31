@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const sinon = require('sinon');
 const { EventEmitter } = require('events');
 const { capitalize, randomBoolean, randomName } = require('../../../../lib/util');
 const RemoteAudioTrackPublication = require('../../../../../lib/media/track/remoteaudiotrackpublication');
@@ -15,24 +16,60 @@ const RemoteVideoTrackPublication = require('../../../../../lib/media/track/remo
   const className = `Remote${capitalize(kind)}TrackPublication`;
   describe(className, () => {
     describe('constructor', () => {
-      const signaling = makeSignaling(randomBoolean(), false, kind, 'MT123');
-      const publication = new RemoteTrackPublication(signaling);
+      let log;
+      let publication;
+      let signaling;
+
+      before(() => {
+        signaling = makeSignaling(randomBoolean(), false, kind, 'MT123');
+        publication = new RemoteTrackPublication(signaling);
+        log = publication._log;
+        log.warn = sinon.spy();
+      });
 
       it(`should return an instance of ${className}`, () => {
         assert(publication instanceof RemoteTrackPublication);
       });
 
       [
-        ['isSubscribed', false],
-        ['isTrackEnabled', signaling.isEnabled],
-        ['kind', kind],
-        ['publishPriority', signaling.priority],
-        ['track', null],
-        ['trackName', signaling.name],
-        ['trackSid', signaling.sid]
-      ].forEach(([prop, expectedValue]) => {
+        ['isSubscribed', () => false],
+        ['isTrackEnabled', () => signaling.isEnabled],
+        ['kind', () => kind],
+        ['publishPriority', () => signaling.priority],
+        ['track', () => null],
+        ['trackName', () => signaling.name],
+        ['trackSid', () => signaling.sid]
+      ].forEach(([prop, getExpectedValue]) => {
         it(`should set the .${prop} property`, () => {
-          assert.equal(publication[prop], expectedValue);
+          assert.equal(publication[prop], getExpectedValue());
+        });
+
+        if (prop === 'isTrackEnabled') {
+          it('should show deprecation warning when accessed the first time', () => {
+            sinon.assert.callCount(log.warn, 1);
+            sinon.assert.calledWith(log.warn, '.isTrackEnabled is deprecated and scheduled for removal. During the deprecation period, this property is only valid if the corresponding RemoteTrack is subscribed to. The RemoteTrack can be considered disabled if .switchOffReason is set to "disabled-by-publisher".');
+          });
+
+          it('should not show deprecation warning when accessed the second time', () => {
+            assert(typeof publication[prop], 'boolean');
+            sinon.assert.callCount(log.warn, 1);
+          });
+        }
+      });
+
+      [
+        ['trackDisabled', `${className}#trackDisabled has been deprecated and scheduled for removal. Use ${className}#trackSwitchedOff (track.switchOffReason === "disabled-by-publisher") instead.`],
+        ['trackEnabled', `${className}#trackEnabled has been deprecated and scheduled for removal. Use ${className}#trackSwitchedOn instead.`]
+      ].forEach(([event, warning], i) => {
+        it(`should emit deprecation warning when "${event}" event is listened to for the first time`, () => {
+          publication.on(event, () => {});
+          sinon.assert.callCount(log.warn, 2 + i);
+          sinon.assert.calledWith(log.warn, warning);
+        });
+
+        it(`should not emit deprecation warning when "${event}" event is listened to for the second time`, () => {
+          publication.on(event, () => {});
+          sinon.assert.callCount(log.warn, 2 + i);
         });
       });
     });
