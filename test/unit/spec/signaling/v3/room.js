@@ -1297,6 +1297,7 @@ describe('RoomV3', () => {
       let trackReceiver3;
       let trackReceiver4;
       let trackReceiver5;
+      let trackReceiver6;
       let trackSubscriptionsSignaling;
       let test;
       beforeEach(() => {
@@ -1311,9 +1312,10 @@ describe('RoomV3', () => {
         trackReceiver3 = makeTrackReceiver(mediaStreamTrack3, '0');
         trackReceiver4 = makeTrackReceiver(mediaStreamTrack4, '1');
         trackReceiver5 = makeTrackReceiver(mediaStreamTrack5, '2');
+        trackReceiver6 = makeTrackReceiver({ id: '6', kind: 'data' });
 
         const peerConnectionManager = makePeerConnectionManager([], []);
-        peerConnectionManager.getTrackReceivers = () => [trackReceiver3, trackReceiver4, trackReceiver5];
+        peerConnectionManager.getTrackReceivers = () => [trackReceiver3, trackReceiver4, trackReceiver5, trackReceiver6];
 
         test = makeTest({
           peerConnectionManager,
@@ -1337,6 +1339,12 @@ describe('RoomV3', () => {
               sid: 'PA2',
               state: 'connected',
               tracks: [makeRemoteTrack({ id: '4', kind: 'video', sid: 'MT4' })]
+            },
+            {
+              identity: 'charlie',
+              sid: 'PA3',
+              state: 'connected',
+              tracks: [makeRemoteTrack({ id: '6', kind: 'data', sid: 'MT5' })]
             }
           ]
         });
@@ -1366,7 +1374,7 @@ describe('RoomV3', () => {
 
           dataTrackTransport.emit('message', {
             revision: 1,
-            subscribed: {
+            media: {
               MT3: { state: 'ON', mid: '0' },
               MT4: { state: 'ON', mid: '1' }
             },
@@ -1400,9 +1408,9 @@ describe('RoomV3', () => {
           const trackSid = 'MT3';
           const trackSwitchOffPromise = getTrackSwitchOffPromise(test.room, trackSid, true /* off */);
           dataTrackTransport.emit('message', {
-            revision: 2,
             // eslint-disable-next-line camelcase
-            subscribed: { [trackSid]: { state: 'OFF', off_reason: 'bar' } },
+            media: { [trackSid]: { state: 'OFF', off_reason: 'bar' } },
+            revision: 2,
             type: 'track_subscriptions'
           });
           let track = await trackSwitchOffPromise;
@@ -1410,9 +1418,9 @@ describe('RoomV3', () => {
 
           const trackSwitchOnPromise = getTrackSwitchOffPromise(test.room, trackSid, false /* on */);
           dataTrackTransport.emit('message', {
-            revision: 3,
             // eslint-disable-next-line camelcase
-            subscribed: { [trackSid]: { state: 'ON', mid: '0' } },
+            media: { [trackSid]: { state: 'ON', mid: '0' } },
+            revision: 3,
             type: 'track_subscriptions'
           });
           track = await trackSwitchOnPromise;
@@ -1421,31 +1429,42 @@ describe('RoomV3', () => {
         });
 
         it('calls .setTrackTransceiver and sets .isSubscribed on the TrackSignalings for subscribed and unsubscribed Tracks', async () => {
-          const track = flatMap(test.room.participants, participant => [...participant.tracks.values()]).find(track => track.sid === 'MT4');
-          const setTrackTransceiver = track.setTrackTransceiver;
-          track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
+          const tracks = flatMap(test.room.participants, participant => [...participant.tracks.values()]);
+          const dataTrack = tracks.find(track => track.sid === 'MT5');
+          const mediaTrack = tracks.find(track => track.sid === 'MT4');
+          const dataSetTrackTransceiver = dataTrack.setTrackTransceiver;
+          dataTrack.setTrackTransceiver = sinon.spy((...args) => dataSetTrackTransceiver.apply(dataTrack, args));
+          const mediaSetTrackTransceiver = mediaTrack.setTrackTransceiver;
+          mediaTrack.setTrackTransceiver = sinon.spy((...args) => mediaSetTrackTransceiver.apply(mediaTrack, args));
 
           dataTrackTransport.emit('message', {
-            revision: 2,
+            data: { MT5: '6' },
             // eslint-disable-next-line camelcase
-            subscribed: { MT3: { state: 'ON', mid: '0' } },
+            media: { MT3: { state: 'ON', mid: '0' } },
+            revision: 2,
             type: 'track_subscriptions'
           });
-          sinon.assert.calledWith(track.setTrackTransceiver, null);
-          assert.equal(track.isSubscribed, false);
+          await test.room._getTrackReceiver('6');
+          sinon.assert.calledWith(dataTrack.setTrackTransceiver, trackReceiver6);
+          assert.equal(dataTrack.isSubscribed, true);
+          sinon.assert.calledWith(mediaTrack.setTrackTransceiver, null);
+          assert.equal(mediaTrack.isSubscribed, false);
 
           dataTrackTransport.emit('message', {
-            revision: 3,
+            data: {},
             // eslint-disable-next-line camelcase
-            subscribed: {
+            media: {
               MT3: { state: 'ON', mid: '0' },
               MT4: { state: 'ON', mid: '1' }
             },
+            revision: 3,
             type: 'track_subscriptions'
           });
           await test.room._getTrackReceiver('1', 'mid');
-          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver4);
-          assert.equal(track.isSubscribed, true);
+          sinon.assert.calledWith(dataTrack.setTrackTransceiver, null);
+          assert.equal(dataTrack.isSubscribed, false);
+          sinon.assert.calledWith(mediaTrack.setTrackTransceiver, trackReceiver4);
+          assert.equal(mediaTrack.isSubscribed, true);
         });
 
         it('calls .setTrackTransceiver and set .isSubscribed twice (unsubscribed and then subscribed) when a TrackSignaling\'s mid changes', async () => {
@@ -1454,12 +1473,11 @@ describe('RoomV3', () => {
           track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
 
           dataTrackTransport.emit('message', {
-            revision: 2,
-            // eslint-disable-next-line camelcase
-            subscribed: {
+            media: {
               MT3: { state: 'ON', mid: '0' },
               MT4: { state: 'ON', mid: '2' }
             },
+            revision: 2,
             type: 'track_subscriptions'
           });
           sinon.assert.calledWith(track.setTrackTransceiver, null);

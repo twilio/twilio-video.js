@@ -43,22 +43,26 @@ describe('TrackSubscriptionsSignaling', () => {
     [-1, 0, 1].forEach(revision => {
       describe(`and the message's .revision is ${revision === -1 ? 'less than' : revision === 0 ? 'equal to' : 'greater than'} ._currentRevision`, () => {
         const initialMessage = {
+          data: {},
           errors: {},
+          media: {},
           revision: 0,
-          subscribed: {},
           type: 'track_subscriptions'
         };
         const message = {
+          data: {
+            MTzzz: 'foo'
+          },
           errors: {
             MTaaa: { code: 100, message: 'bar' },
             MTbbb: { code: 200, message: 'baz' }
           },
-          revision,
-          subscribed: {
+          media: {
             MTxxx: { mid: '0', state: 'ON' },
             // eslint-disable-next-line camelcase
             MTyyy: { off_reason: 'zee', state: 'OFF' }
           },
+          revision,
           type: 'track_subscriptions'
         };
         let mediaSignalingTransport;
@@ -77,18 +81,22 @@ describe('TrackSubscriptionsSignaling', () => {
         });
 
         it('should emit "updated" for the first message', () => {
-          const [subscribed, errors] = updatedInitialArgs;
-          assert.deepStrictEqual(subscribed, {});
+          const [media, data, errors] = updatedInitialArgs;
+          assert.deepStrictEqual(data, {});
           assert.deepStrictEqual(errors, {});
+          assert.deepStrictEqual(media, {});
         });
 
         if (revision === 1) {
           it('should emit "updated" for the second message', () => {
-            const [subscribed, errors] = updatedArgs;
-            assert.deepStrictEqual(subscribed, {
+            const [media, data, errors] = updatedArgs;
+            assert.deepStrictEqual(media, {
               MTxxx: { mid: '0', state: 'ON' },
               // eslint-disable-next-line camelcase
               MTyyy: { off_reason: 'zee', state: 'OFF' }
+            });
+            assert.deepStrictEqual(data, {
+              MTzzz: 'foo'
             });
             assert.deepStrictEqual(errors, {
               MTaaa: { code: 100, message: 'bar' },
