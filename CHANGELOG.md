@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.21.2 (In Progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed issue where `global` was undefined causing run time issues in Angular. Additionally, migrated SDK usage of util.inherits to using [inherits](https://www.npmjs.com/package/inherits) to remove references to node dependencies. (VIDEO-9282)
+
 2.21.1 (March 22, 2022)
 =======================
 
