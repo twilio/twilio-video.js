@@ -86,17 +86,11 @@ class NoiseCancellationAdapter  {
 }
 
 // this version allows only one instance.
-// let audioProcessor: AudioProcessor|null = null;
-// export async function createNoiseCancellationAudioProcessor(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
-//   if (!audioProcessor) {
-//     const adapter = new NoiseCancellationAdapter();
-//     audioProcessor = await adapter.init(sdkRootPath, sdkFile);
-//   }
-//   return audioProcessor;
-// }
-
+let audioProcessor: AudioProcessor|null = null;
 export async function createNoiseCancellationAudioProcessor(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
-  const adapter = new NoiseCancellationAdapter();
-  const audioProcessor = await adapter.init(sdkRootPath, sdkFile);
+  if (!audioProcessor) {
+    const adapter = new NoiseCancellationAdapter();
+    audioProcessor = await adapter.init(sdkRootPath, sdkFile);
+  }
   return audioProcessor;
 }
