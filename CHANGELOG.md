@@ -75,6 +75,21 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
   ```
   The `trackDisabled` and `trackEnabled` events are now only fired for subscribed RemoteTracks.
 
+- Any audio and video Tracks shared while joining the Room will **no longer** be guaranteed to be published by the time
+  the CancelablePromise returned by `connect()` is resolved. The application will now have to listen to the "trackPublished"
+  event on the LocalParticipant. (VIDEO-8817)
+  ```js
+  const room = await connect('token', {
+    audio: true,
+    video: true,
+    room: 'my-large-room'
+  });
+
+  room.localParticipant.on('trackPublished', publication => {
+    console.log(`Successfully published ${publication.kind} Track`);
+  });
+  ```
+
 2.21.1 (March 22, 2022)
 =======================
 
