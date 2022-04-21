@@ -4,7 +4,7 @@ import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCan
 import { createKrispLocalAudioTrack } from './media/track/krisplocalaudiotrack';
 
 const { buildLogLevels } = require('./util');
-const { getUserMedia, MediaStreamTrack } = require('@twilio/webrtc');
+const { getUserMedia, MediaStreamTrack } = require('./webrtc');
 
 const {
   LocalAudioTrack,
