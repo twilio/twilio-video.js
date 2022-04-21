@@ -2640,14 +2640,11 @@ function makePeerConnectionV2(options) {
   const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
 
-  const Backoff = {
-    exponential() {
-      const backoff = new EventEmitter();
-      backoff.backoff = sinon.spy(() => backoff.emit('ready'));
-      backoff.reset = sinon.spy(() => {});
-      return backoff;
-    }
-  };
+  function Backoff(opts) {
+    opts = opts || {};
+    this.duration = function() { sinon.spy(() => {}); };
+    this.reset = function() { sinon.spy(() => {}); };
+  }
 
   function RTCPeerConnection() {
     return pc;
