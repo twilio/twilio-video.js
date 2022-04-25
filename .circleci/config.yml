@@ -126,7 +126,6 @@ commands:
       - get-code-and-dependencies
       - run:
           name: Running Unit Tests
-          no_output_timeout: 5m
           command: npm run test:unit
       - store_artifacts:
           path: ./coverage
