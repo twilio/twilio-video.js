@@ -74,6 +74,7 @@ export {
   NetworkQualitySendOrRecvStats,
   NetworkQualityStats,
   NetworkQualityVerbosity,
+  NoiseCancellation,
   NoiseCancellationOptions,
   NoiseCancellationVendor,
   OpusCodecSettings,

@@ -21,20 +21,3 @@ export class LocalAudioTrack extends AudioTrack {
   on(event: 'stopped', listener: (track: this) => void): this;
   on(event: string, listener: (...args: any[]) => void): this;
 }
-
-/**
-* createLocalAudioTrack returns KrispAudioTrack if
-* LocalAudioTrackOptions.noiseCancellationOptions was
-* specified when creating a track
-*/
-export interface KrispAudioTrack extends LocalAudioTrack {
-  /**
-   * enables krisp audio processing.
-   */
-  enableKrisp(): void;
-
-  /**
-   * disables krisp audio processing.
-   */
-  disableKrisp(): void;
-}
