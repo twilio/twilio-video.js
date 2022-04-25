@@ -2,6 +2,7 @@
 'use strict';
 import { DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL } from './util/constants';
 import { AudioProcessor } from '../tsdef/AudioProcessor';
+import { NoiseCancellationOptions } from '../tsdef/types';
 const Log = require('./util/log');
 
 const dynamicImport = require('./dynamicImport');
@@ -87,10 +88,11 @@ class NoiseCancellationAdapter  {
 
 // this version allows only one instance.
 let audioProcessor: AudioProcessor|null = null;
-export async function createNoiseCancellationAudioProcessor(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
+export async function createNoiseCancellationAudioProcessor(noiseCancellationOptions: NoiseCancellationOptions) : Promise<AudioProcessor> {
+  const sdkFile = noiseCancellationOptions.vendor === 'krisp' ? 'krispsdk.mjs' : 'rnnoise_sdk.mjs';
   if (!audioProcessor) {
     const adapter = new NoiseCancellationAdapter();
-    audioProcessor = await adapter.init(sdkRootPath, sdkFile);
+    audioProcessor = await adapter.init(noiseCancellationOptions.sdkAssetsPath, sdkFile);
   }
   return audioProcessor;
 }

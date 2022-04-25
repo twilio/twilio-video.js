@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCancellationOptions } from '../tsdef/types';
-import { createKrispLocalAudioTrack } from './media/track/krisplocalaudiotrack';
+import { createLocalAudioTrackWithNoiseCancellation } from './media/track/noisecancellationimpl';
 
 const { buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
@@ -189,7 +190,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     return await Promise.all(
       mediaStreamTracks.map(mediaStreamTrack => {
         if (mediaStreamTrack.kind === 'audio' && noiseCancellationOptions) {
-          return createKrispLocalAudioTrack(mediaStreamTrack, noiseCancellationOptions, {
+          return createLocalAudioTrackWithNoiseCancellation(mediaStreamTrack, noiseCancellationOptions, {
             ...extraLocalTrackOptions.audio,
             ...localTrackOptions,
           });

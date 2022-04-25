@@ -75,6 +75,7 @@ export {
   NetworkQualityStats,
   NetworkQualityVerbosity,
   NoiseCancellationOptions,
+  NoiseCancellationVendor,
   OpusCodecSettings,
   RemoteAudioTrackStats,
   RemoteTrack,
