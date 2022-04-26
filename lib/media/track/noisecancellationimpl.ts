@@ -49,7 +49,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
 
 export async function createLocalAudioTrackWithNoiseCancellation(mediaStreamTrack: MediaStreamTrack, noiseCancellationOptions: NoiseCancellationOptions, options: CreateLocalTrackOptions) : Promise<typeof LocalAudioTrack> {
   const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions);
-  const cleanTrack  = processor.connect(mediaStreamTrack);
+  const cleanTrack  = await processor.connect(mediaStreamTrack);
 
   const noiseCancellation = new NoiseCancellationImpl(processor, noiseCancellationOptions.vendor);
 

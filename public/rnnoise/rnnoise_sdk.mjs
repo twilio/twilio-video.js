@@ -70,11 +70,11 @@ let sourceNode = null;
 let destinationNode = null;
 let inputStream = null;
 
-const init = async rnnoiseRootPath => {
+const init = async ({ rootDir }) => {
   console.log('rnnoise.init, was initialized = ', initialized);
   audioContext = new AudioContext({ sampleRate: 48000 });
-  const wasmPath = rnnoiseRootPath + '/rnnoise-processor.wasm';
-  const processorJSPath = rnnoiseRootPath + '/rnnoise_processor.js';
+  const wasmPath = rootDir + '/rnnoise-processor.wasm';
+  const processorJSPath = rootDir + '/rnnoise_processor.js';
   console.log({ wasmPath, processorJSPath });
   await RNNoiseNode.register(audioContext, wasmPath, processorJSPath);
   initialized = true;
@@ -82,7 +82,8 @@ const init = async rnnoiseRootPath => {
 
 const isInitialized = () => initialized;
 
-const connect = stream => {
+// eslint-disable-next-line require-await
+const connect = async stream => {
   if (!isInitialized()) {
     throw new Error('you must call init before connect');
   }

@@ -1,7 +1,7 @@
 
 export interface AudioProcessor {
   // given an audio track returns TwilioAudioProcessorTrack
-  connect: (sourceTrack: MediaStreamTrack) => MediaStreamTrack
+  connect: (sourceTrack: MediaStreamTrack) => Promise<MediaStreamTrack>
   isEnabled: () => boolean;
   isInitialized(): boolean;
   isConnected(): boolean;

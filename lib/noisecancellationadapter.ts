@@ -11,11 +11,11 @@ let nInstances = 0;
 
 // AudioProcessor needs SDK that implements following interface.
 interface NoiseCancellationSDK {
-  init(sdkRootPath: string): Promise<void>;
+  init(options: { rootDir: string }): Promise<void>;
   isInitialized(): boolean;
   isConnected(): boolean;
   isEnabled(): boolean
-  connect(input: MediaStream): MediaStream;
+  connect(input: MediaStream): Promise<MediaStream>;
   disconnect(): void;
   enable(): void;
   disable(): void;
@@ -36,10 +36,11 @@ class NoiseCancellationAdapter  {
     return `[NoiseCancellationAdapter #${this._instanceId}]`;
   }
 
-  async init(sdkRootPath: string, sdkFile: string) : Promise<AudioProcessor> {
+  async init(rootDir: string, sdkFile: string) : Promise<AudioProcessor> {
     try {
-      this._log.debug('loading noise cancellation sdk: ', sdkRootPath);
-      const dynamicModule = await dynamicImport(`${sdkRootPath}/${sdkFile}`);
+      const sdkFilePath = `${rootDir}/${sdkFile}`;
+      this._log.debug('loading noise cancellation sdk: ', sdkFilePath);
+      const dynamicModule = await dynamicImport(sdkFilePath);
       this._log.debug('Loaded noise cancellation sdk:', dynamicModule);
       const sdkAPI = dynamicModule.default as NoiseCancellationSDK;
 
@@ -47,8 +48,8 @@ class NoiseCancellationAdapter  {
       // @ts-ignore
       window.noiseCancellationSDK = sdkAPI;
       if (!sdkAPI.isInitialized()) {
-        this._log.debug('initializing noise cancellation sdk: ', sdkRootPath);
-        await sdkAPI.init(sdkRootPath);
+        this._log.debug('initializing noise cancellation sdk: ', rootDir);
+        await sdkAPI.init({ rootDir });
         this._log.debug('noise cancellation sdk initialized!');
       }
 
@@ -61,13 +62,13 @@ class NoiseCancellationAdapter  {
         disable: () => sdkAPI.disable(),
         destroy: () => sdkAPI.destroy(),
         setLogging: (enable: boolean) => sdkAPI.setLogging(enable),
-        connect: (sourceTrack: MediaStreamTrack) => {
+        connect: async (sourceTrack: MediaStreamTrack) => {
           this._log.debug('connect: ', sourceTrack.id);
           if (sdkAPI.isConnected()) {
             sdkAPI.disconnect();
           }
 
-          const mediaStream = sdkAPI.connect(new MediaStream([sourceTrack]));
+          const mediaStream = await sdkAPI.connect(new MediaStream([sourceTrack]));
           if (!mediaStream) {
             throw new Error('Error connecting with noise cancellation sdk');
           }
@@ -86,13 +87,14 @@ class NoiseCancellationAdapter  {
   }
 }
 
-// this version allows only one instance.
-let audioProcessor: AudioProcessor|null = null;
+let audioProcessors = new Map<string, AudioProcessor>();
 export async function createNoiseCancellationAudioProcessor(noiseCancellationOptions: NoiseCancellationOptions) : Promise<AudioProcessor> {
   const sdkFile = noiseCancellationOptions.vendor === 'krisp' ? 'krispsdk.mjs' : 'rnnoise_sdk.mjs';
+  let audioProcessor = audioProcessors.get(noiseCancellationOptions.vendor);
   if (!audioProcessor) {
     const adapter = new NoiseCancellationAdapter();
     audioProcessor = await adapter.init(noiseCancellationOptions.sdkAssetsPath, sdkFile);
+    audioProcessors.set(noiseCancellationOptions.vendor, audioProcessor);
   }
   return audioProcessor;
 }
