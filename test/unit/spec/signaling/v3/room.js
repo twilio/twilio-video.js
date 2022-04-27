@@ -12,8 +12,7 @@ const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trac
 const RealTrackSubscriptionsSignaling = require('../../../../../lib/signaling/v3/tracksubscriptionssignaling');
 
 // eslint-disable-next-line no-warning-comments
-// TODO(mmalavalli): Change to RemoteTrackPublicationV3 once implemented.
-const RemoteTrackPublicationV2 = require('../../../../../lib/signaling/v2/remotetrackpublication');
+const RemoteTrackPublicationV3 = require('../../../../../lib/signaling/v3/remotetrackpublication');
 
 
 describe('RoomV3', () => {
@@ -1391,11 +1390,13 @@ describe('RoomV3', () => {
           assert(dataTrackReceiver.toDataTransport.calledOnce);
         });
 
-        function getTrackSwitchOffPromise(room, trackSid, off) {
+        function getTrackSwitchPromise(room, trackSid, off) {
           const remoteTracks = flatMap([...room.participants.values()], participant => [...participant.tracks.values()]);
           const track = remoteTracks.find(track => track.sid === trackSid);
           const setTrackTransceiver = track.setTrackTransceiver;
           track.setTrackTransceiver = sinon.spy((...args) => setTrackTransceiver.apply(track, args));
+          const setSwitchedOff = track.setSwitchedOff;
+          track.setSwitchedOff = sinon.spy((...args) => setSwitchedOff.apply(track, args));
           return new Promise(resolve => track.on('updated', function onUpdated() {
             if (track.isSwitchedOff === off) {
               track.removeListener('updated', onUpdated);
@@ -1404,9 +1405,9 @@ describe('RoomV3', () => {
           }));
         }
 
-        it('fires trackSwitchOff / On events and calls .setTrackTransceiver on the TrackSignalings when such message is received on data channel', async () => {
+        it('fires trackSwitchOff / On events and calls .setTrackTransceiver and .setSwitchedOff on the TrackSignalings when such message is received on data channel', async () => {
           const trackSid = 'MT3';
-          const trackSwitchOffPromise = getTrackSwitchOffPromise(test.room, trackSid, true /* off */);
+          const trackSwitchOffPromise = getTrackSwitchPromise(test.room, trackSid, true /* off */);
           dataTrackTransport.emit('message', {
             // eslint-disable-next-line camelcase
             media: { [trackSid]: { state: 'OFF', off_reason: 'bar' } },
@@ -1414,9 +1415,10 @@ describe('RoomV3', () => {
             type: 'track_subscriptions'
           });
           let track = await trackSwitchOffPromise;
-          sinon.assert.calledWith(track.setTrackTransceiver, null);
+          sinon.assert.calledWith(track.setTrackTransceiver, null, true);
+          sinon.assert.calledWith(track.setSwitchedOff, true, 'bar');
 
-          const trackSwitchOnPromise = getTrackSwitchOffPromise(test.room, trackSid, false /* on */);
+          const trackSwitchOnPromise = getTrackSwitchPromise(test.room, trackSid, false /* on */);
           dataTrackTransport.emit('message', {
             // eslint-disable-next-line camelcase
             media: { [trackSid]: { state: 'ON', mid: '0' } },
@@ -1425,7 +1427,8 @@ describe('RoomV3', () => {
           });
           track = await trackSwitchOnPromise;
           await test.room._getTrackReceiver('0', 'mid');
-          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver3);
+          sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver3, true);
+          sinon.assert.calledWith(track.setSwitchedOff, false, null);
         });
 
         it('calls .setTrackTransceiver and sets .isSubscribed on the TrackSignalings for subscribed and unsubscribed Tracks', async () => {
@@ -2091,7 +2094,7 @@ function makeLocalParticipant(options) {
 }
 
 function makeRemoteTrack(options) {
-  return new RemoteTrackPublicationV2(options);
+  return new RemoteTrackPublicationV3(options);
 }
 
 function makeTrack(options) {
