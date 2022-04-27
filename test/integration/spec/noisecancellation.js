@@ -2,6 +2,7 @@
 'use strict';
 
 const assert = require('assert');
+const { isFirefox } = require('../../lib/guessbrowser');
 
 const { createLocalAudioTrack } = require('../../../es5');
 
@@ -28,19 +29,26 @@ describe('noise cancellation', () => {
       expectedVendor: null,
     }
   ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
-    it(testName, async () => {
-      const audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
-      assert(audioTrack, `unexpected audioTrack ${audioTrack}`);
-      if (expectedVendor) {
-        assert(audioTrack.noiseCancellation, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
-        assert.equal(audioTrack.noiseCancellation.vendor, expectedVendor, 'unexpected vendor');
-
-        // verify that noise cancellation can be enable/disable'd.
-        audioTrack.noiseCancellation.disable();
-        audioTrack.noiseCancellation.enable();
-
+    it(testName, async function()  {
+      if (expectedVendor === 'krisp' && isFirefox) {
+        // krisp library does not load on firefox
+        // https://issues.corp.twilio.com/browse/VIDEO-9654
+        // eslint-disable-next-line no-invalid-this
+        this.skip();
       } else {
-        assert.equal(audioTrack.noiseCancellation, null, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
+        const audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
+        assert(audioTrack, `unexpected audioTrack ${audioTrack}`);
+        if (expectedVendor) {
+          assert(audioTrack.noiseCancellation, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
+          assert.equal(audioTrack.noiseCancellation.vendor, expectedVendor, 'unexpected vendor');
+
+          // verify that noise cancellation can be enable/disable'd.
+          audioTrack.noiseCancellation.disable();
+          audioTrack.noiseCancellation.enable();
+
+        } else {
+          assert.equal(audioTrack.noiseCancellation, null, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
+        }
       }
     });
   });
