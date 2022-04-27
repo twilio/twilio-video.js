@@ -3,7 +3,6 @@
 'use strict';
 
 const isDocker = require('is-docker')();
-const { resolve } = require('dns');
 const { basename, resolve: resolvePath } = require('path');
 
 function getTestFiles(config, defaultFile) {
@@ -48,7 +47,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   }
 
   return function conf(config) {
-    console.log('makarand: conf: ', config.files, defaultFile);
     const files = getTestFiles(config, defaultFile);
     const preprocessors = files.reduce((preprocessors, file) => {
       return Object.assign({ [file]: 'browserify' });

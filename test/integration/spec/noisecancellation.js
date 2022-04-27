@@ -8,27 +8,27 @@ const { createLocalAudioTrack } = require('../../../es5');
 describe('noise cancellation', () => {
   [
     {
-      name: 'when noise cancellation library is not hosted normal audio track is created',
+      testName: 'when noise cancellation library is not hosted normal audio track is created',
       noiseCancellationOptions: { vendor: 'krisp', sdkAssetsPath: '/not_hosted/krisp' },
       expectedVendor: null,
     },
     {
-      name: 'krisp track is created with correct options',
+      testName: 'krisp track is created with correct options',
       noiseCancellationOptions: { vendor: 'krisp', sdkAssetsPath: '/noisecancellation/krisp' },
       expectedVendor: 'krisp',
     },
     {
-      name: 'rnnoise track is created with correct options',
+      testName: 'rnnoise track is created with correct options',
       noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/rnnoise' },
       expectedVendor: 'rnnoise',
     },
     {
-      name: 'noise cancellation is optional',
+      testName: 'noise cancellation is optional',
       noiseCancellationOptions: null,
       expectedVendor: null,
     }
-  ].forEach(({ name, noiseCancellationOptions, expectedVendor}) => {
-    it(name, async () => {
+  ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
+    it(testName, async () => {
       const audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
       assert(audioTrack, `unexpected audioTrack ${audioTrack}`);
       if (expectedVendor) {
