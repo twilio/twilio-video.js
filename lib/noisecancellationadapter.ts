@@ -37,8 +37,8 @@ class NoiseCancellationAdapter  {
   }
 
   async init(rootDir: string, sdkFile: string) : Promise<AudioProcessor> {
+    const sdkFilePath = `${rootDir}/${sdkFile}`;
     try {
-      const sdkFilePath = `${rootDir}/${sdkFile}`;
       this._log.debug('loading noise cancellation sdk: ', sdkFilePath);
       const dynamicModule = await dynamicImport(sdkFilePath);
       this._log.debug('Loaded noise cancellation sdk:', dynamicModule);
@@ -81,7 +81,7 @@ class NoiseCancellationAdapter  {
         },
       };
     } catch (er) {
-      this._log.error('Error loading noise cancellation sdk:', er);
+      this._log.error(`Error loading noise cancellation sdk:${sdkFilePath}`, er);
       throw er;
     }
   }
@@ -89,11 +89,25 @@ class NoiseCancellationAdapter  {
 
 let audioProcessors = new Map<string, AudioProcessor>();
 export async function createNoiseCancellationAudioProcessor(noiseCancellationOptions: NoiseCancellationOptions) : Promise<AudioProcessor> {
-  const sdkFile = noiseCancellationOptions.vendor === 'krisp' ? 'krispsdk.mjs' : 'rnnoise_sdk.mjs';
+  let sdkFile: string;
+  let sdkVersion: string;
+  switch (noiseCancellationOptions.vendor) {
+    case 'krisp':
+      sdkFile = 'krispsdk.mjs';
+      sdkVersion = '1.0.0';
+      break;
+    case 'rnnoise':
+      sdkFile = 'rnnoise_sdk.mjs';
+      sdkVersion = '1.0.0';
+      break;
+    default:
+      throw new Error(`Unsupported NoiseCancellationOptions.vendor: ${noiseCancellationOptions.vendor}`);
+  }
+
   let audioProcessor = audioProcessors.get(noiseCancellationOptions.vendor);
   if (!audioProcessor) {
     const adapter = new NoiseCancellationAdapter();
-    audioProcessor = await adapter.init(noiseCancellationOptions.sdkAssetsPath, sdkFile);
+    audioProcessor = await adapter.init(`${noiseCancellationOptions.sdkAssetsPath}/${sdkVersion}`, sdkFile);
     audioProcessors.set(noiseCancellationOptions.vendor, audioProcessor);
   }
   return audioProcessor;

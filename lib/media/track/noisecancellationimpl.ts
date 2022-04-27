@@ -61,7 +61,7 @@ export async function createLocalAudioTrackWithNoiseCancellation(
     return new LocalAudioTrack(cleanTrack, { ...options, noiseCancellation });
   } catch (ex) {
     // in case of failures to load noise cancellation library we should just create normal LocalAudioTrack.
-    log.warn('Failed to create noise cancellation. Returning normal audio track');
+    log.warn(`Failed to create noise cancellation. Returning normal audio track: ${ex}`);
     return new LocalAudioTrack(mediaStreamTrack, options);
   }
 }

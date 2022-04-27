@@ -6,27 +6,27 @@ const { isFirefox } = require('../../lib/guessbrowser');
 
 const { createLocalAudioTrack } = require('../../../es5');
 
-describe('noise cancellation', () => {
+describe('createLocalAudioTrack', () => {
   [
     {
-      testName: 'when noise cancellation library is not hosted normal audio track is created',
+      testName: 'when noise cancellation library is not hosted returns regular audio track',
       noiseCancellationOptions: { vendor: 'krisp', sdkAssetsPath: '/not_hosted/krisp' },
-      expectedVendor: null,
+      expectedVendor: null
     },
     {
-      testName: 'krisp track is created with correct options',
+      testName: 'returns krisp track when vendor = krisp ',
       noiseCancellationOptions: { vendor: 'krisp', sdkAssetsPath: '/noisecancellation/krisp' },
-      expectedVendor: 'krisp',
+      expectedVendor: 'krisp'
     },
     {
-      testName: 'rnnoise track is created with correct options',
+      testName: 'returns rnnoise track when vendor = rnnoise ',
       noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/rnnoise' },
-      expectedVendor: 'rnnoise',
+      expectedVendor: 'rnnoise'
     },
     {
       testName: 'noise cancellation is optional',
       noiseCancellationOptions: null,
-      expectedVendor: null,
+      expectedVendor: null
     }
   ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
     it(testName, async function()  {
