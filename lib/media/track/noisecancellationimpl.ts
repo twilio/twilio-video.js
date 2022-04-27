@@ -4,6 +4,7 @@ import { NoiseCancellation, NoiseCancellationOptions, NoiseCancellationVendor } 
 import { AudioProcessor } from '../../../tsdef/AudioProcessor';
 import { CreateLocalTrackOptions } from '../../createlocaltrack';
 import { createNoiseCancellationAudioProcessor } from '../../noisecancellationadapter';
+const Log = require('../../util/log');
 
 const LocalAudioTrack = require('./localaudiotrack');
 export class NoiseCancellationImpl implements NoiseCancellation {
@@ -47,12 +48,21 @@ export class NoiseCancellationImpl implements NoiseCancellation {
 }
 
 
-export async function createLocalAudioTrackWithNoiseCancellation(mediaStreamTrack: MediaStreamTrack, noiseCancellationOptions: NoiseCancellationOptions, options: CreateLocalTrackOptions) : Promise<typeof LocalAudioTrack> {
-  const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions);
-  const cleanTrack  = await processor.connect(mediaStreamTrack);
-
-  const noiseCancellation = new NoiseCancellationImpl(processor, noiseCancellationOptions.vendor);
-
-  return new LocalAudioTrack(cleanTrack, { ...options, noiseCancellation });
+export async function createLocalAudioTrackWithNoiseCancellation(
+  mediaStreamTrack: MediaStreamTrack,
+  noiseCancellationOptions: NoiseCancellationOptions,
+  options: CreateLocalTrackOptions,
+  log: typeof Log
+) : Promise<typeof LocalAudioTrack> {
+  try {
+    const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions);
+    const cleanTrack  = await processor.connect(mediaStreamTrack);
+    const noiseCancellation = new NoiseCancellationImpl(processor, noiseCancellationOptions.vendor);
+    return new LocalAudioTrack(cleanTrack, { ...options, noiseCancellation });
+  } catch (ex) {
+    // in case of failures to load noise cancellation library we should just create normal LocalAudioTrack.
+    log.warn('Failed to create noise cancellation. Returning normal audio track');
+    return new LocalAudioTrack(mediaStreamTrack, options);
+  }
 }
 

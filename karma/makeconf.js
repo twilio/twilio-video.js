@@ -3,7 +3,8 @@
 'use strict';
 
 const isDocker = require('is-docker')();
-const { basename } = require('path');
+const { resolve } = require('dns');
+const { basename, resolve: resolvePath } = require('path');
 
 function getTestFiles(config, defaultFile) {
   let files = [];
@@ -47,6 +48,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   }
 
   return function conf(config) {
+    console.log('makarand: conf: ', config.files, defaultFile);
     const files = getTestFiles(config, defaultFile);
     const preprocessors = files.reduce((preprocessors, file) => {
       return Object.assign({ [file]: 'browserify' });
@@ -93,6 +95,14 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     }
 
     const strReportName = generateReportName(files);
+
+
+    const hostedFiles = resolvePath('./test/static/noisecancellation/**/*');
+    files.push(
+      // these files will be served on demand from disk and will be ignored by the watcher
+      { pattern: hostedFiles, included: false, served: true, watched: false, nocache: true }
+    );
+
     const htmlReport = `../logs/${strReportName}.html`;
     config.set({
       basePath: '',
@@ -104,6 +114,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       files,
       preprocessors,
       proxies: {
+        // create a proxy to serve hosted noise cancellation sdk files
+        '/noisecancellation/': '/absolute' + resolvePath('./test/static/noisecancellation/'),
         '/static/': 'http://localhost:9877/static/'
       },
       browserify: {

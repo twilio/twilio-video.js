@@ -193,7 +193,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
           return createLocalAudioTrackWithNoiseCancellation(mediaStreamTrack, noiseCancellationOptions, {
             ...extraLocalTrackOptions.audio,
             ...localTrackOptions,
-          });
+          }, log);
         } else if (mediaStreamTrack.kind === 'audio') {
           return new localTrackOptions.LocalAudioTrack(mediaStreamTrack, {
             ...extraLocalTrackOptions.audio,
