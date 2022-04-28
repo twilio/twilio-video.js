@@ -1700,6 +1700,12 @@ function createTwilioConnection(options) {
   return FakeTwilioConnection;
 }
 
+function Backoff(opts) {
+  opts = opts || {};
+  this.duration = function() { sinon.spy(() => {}); };
+  this.reset = function() { sinon.spy(() => {}); };
+}
+
 function makeTest(options) {
   options = options || {};
   options.eventObserver = options.eventObserver || new EventObserver(makeInsightsPublisher(), 0, log);
@@ -1719,6 +1725,7 @@ function makeTest(options) {
   options.onIced = options.onIced || sinon.spy(() => Promise.resolve());
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.TwilioConnection = options.TwilioConnection || createTwilioConnection(options);
+  options.Backoff = options.Backoff || Backoff;
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
     options.accessToken,
@@ -1726,12 +1733,13 @@ function makeTest(options) {
     options.peerConnectionManager,
     options.wsServer,
     options);
-  options.twilioConnection = options.transport._twilioConnection;
   options.transitions = [];
   options.transport.on('stateChanged', state => {
     options.transitions.push(state);
   });
   options.receiveMessage = message => options.twilioConnection.receiveMessage(message);
+
+  options.Backoff = options.Backoff || Backoff;
 
   options.close = reason => {
     options.twilioConnection.close(reason);
