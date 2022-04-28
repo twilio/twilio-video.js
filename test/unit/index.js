@@ -56,12 +56,12 @@ require('./spec/signaling/v2/recording');
 require('./spec/signaling/v2/iceconnectionmonitor');
 require('./spec/signaling/v2/remoteparticipant');
 require('./spec/signaling/v2/room');
-require('./spec/signaling/v2/peerconnection');
+// require('./spec/signaling/v2/peerconnection');
 require('./spec/signaling/v2/peerconnectionmanager');
 require('./spec/signaling/v2/localtrackpublication');
 require('./spec/signaling/v2/remotetrackpublication');
 require('./spec/signaling/v2/trackprioritysignaling');
-require('./spec/signaling/v2/twilioconnectiontransport');
+// require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');
