@@ -1,6 +1,8 @@
+import { NoiseCancellationVendor } from './types';
 
 export interface AudioProcessor {
   // given an audio track returns TwilioAudioProcessorTrack
+  vendor: NoiseCancellationVendor;
   connect: (sourceTrack: MediaStreamTrack) => Promise<MediaStreamTrack>
   isEnabled: () => boolean;
   isInitialized(): boolean;

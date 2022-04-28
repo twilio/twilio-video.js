@@ -9,14 +9,19 @@ const Log = require('../../util/log');
 const LocalAudioTrack = require('./localaudiotrack');
 export class NoiseCancellationImpl implements NoiseCancellation {
   private _processor: AudioProcessor;
-  public vendor: NoiseCancellationVendor;
-  constructor(processor: AudioProcessor, vendor: NoiseCancellationVendor) {
+  constructor(processor: AudioProcessor) {
     this._processor = processor;
-    this.vendor = vendor;
   }
 
   /**
-   * enables audio processing.
+   * @returns vendor
+   */
+  get vendor(): NoiseCancellationVendor {
+    return this._processor.vendor;
+  }
+
+  /**
+   * enables noise cancellation
    */
   enable() : Promise<void> {
     this._processor.enable();
@@ -24,7 +29,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * disables krisp processing
+   * disables noise cancellation
    */
   disable() : Promise<void> {
     this._processor.disable();
@@ -32,12 +37,11 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   async reacquireTrack(reacquire: () => Promise<MediaStreamTrack>) : Promise<MediaStreamTrack>  {
-    // disconnect the processor.
     const processorWasEnabled = this._processor.isEnabled();
     this._processor.disconnect();
 
     const track = await reacquire();
-    const processedTrack = this._processor.connect(track);
+    const processedTrack = await this._processor.connect(track);
     if (processorWasEnabled) {
       this._processor.enable();
     } else {
@@ -55,9 +59,9 @@ export async function createLocalAudioTrackWithNoiseCancellation(
   log: typeof Log
 ) : Promise<typeof LocalAudioTrack> {
   try {
-    const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions);
+    const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions, log);
     const cleanTrack  = await processor.connect(mediaStreamTrack);
-    const noiseCancellation = new NoiseCancellationImpl(processor, noiseCancellationOptions.vendor);
+    const noiseCancellation = new NoiseCancellationImpl(processor);
     return new LocalAudioTrack(cleanTrack, { ...options, noiseCancellation });
   } catch (ex) {
     // in case of failures to load noise cancellation library we should just create normal LocalAudioTrack.
