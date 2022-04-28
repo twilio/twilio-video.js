@@ -144,6 +144,7 @@
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
+    "backoff": "^2.5.0",
     "events": "^3.3.0",
     "util": "^0.12.4",
     "ws": "^7.4.6",
