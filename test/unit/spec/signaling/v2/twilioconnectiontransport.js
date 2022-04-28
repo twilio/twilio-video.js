@@ -1739,8 +1739,6 @@ function makeTest(options) {
   });
   options.receiveMessage = message => options.twilioConnection.receiveMessage(message);
 
-  options.Backoff = options.Backoff || Backoff;
-
   options.close = reason => {
     options.twilioConnection.close(reason);
   };
