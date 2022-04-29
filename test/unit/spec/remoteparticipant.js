@@ -1561,7 +1561,7 @@ function makeTest(options) {
       this.switchedOff = switchedOff;
       this.switchOffReason = switchOffReason;
     };
-    this._setTrackReceiver = mediaTrackReceiver => {
+    this._setMediaTrackReceiver = mediaTrackReceiver => {
       this.mediaStreamTrack = mediaTrackReceiver ? mediaTrackReceiver.track : null;
     };
     options.tracks.push(this);
@@ -1583,7 +1583,7 @@ function makeTest(options) {
       this.switchedOff = switchedOff;
       this.switchOffReason = switchOffReason;
     };
-    this._setTrackReceiver = mediaTrackReceiver => {
+    this._setMediaTrackReceiver = mediaTrackReceiver => {
       this.mediaStreamTrack = mediaTrackReceiver ? mediaTrackReceiver.track : null;
     };
     options.tracks.push(this);
