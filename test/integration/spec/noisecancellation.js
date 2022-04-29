@@ -25,8 +25,8 @@ describe('createLocalAudioTrack', () => {
     }
   ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
     it(testName, async function()  {
-      if (expectedVendor === 'krisp' && isFirefox) {
-        // krisp library does not load on firefox
+      if (expectedVendor && isFirefox) {
+        // third party library does not load on firefox
         // https://issues.corp.twilio.com/browse/VIDEO-9654
         // eslint-disable-next-line no-invalid-this
         this.skip();
