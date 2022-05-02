@@ -186,6 +186,14 @@ describe('PeerConnectionV2', () => {
         preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
       },
       {
+        browser: 'chrome',
+        testName: 'does not update encodings when track is stopped',
+        readyState: 'ended',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
+      },
+      {
         browser: 'safari',
         testName: 'updates encoding for safari (irrespective of adaptiveSimulcast) ',
         width: 480,
@@ -229,7 +237,7 @@ describe('PeerConnectionV2', () => {
         height: 270,
         encodings: [{}, {}, {}],
       }
-    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, trackReplaced = false, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
+    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, trackReplaced = false, expectedEncodings = null, isScreenShare = false, kind = 'video', readyState = 'live' }) => {
       it(`${browser}:${testName}`, () => {
         stub = stub.returns(browser);
         const trackSettings = { width, height };
@@ -238,6 +246,7 @@ describe('PeerConnectionV2', () => {
         }
         const mediaStreamTrack = {
           kind,
+          readyState,
           getSettings: () => trackSettings
         };
 
