@@ -1,4 +1,5 @@
-import { CancelablePromise, ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from './types';
+
+import { CancelablePromise, ConnectOptions, CreateLocalTrackOptions, CreateLocalTracksOptions, LocalAudioTrackOptions, LocalTrack } from './types';
 import { PreflightOptions, PreflightTestReport } from './PreflightTypes';
 import { LocalAudioTrack } from './LocalAudioTrack';
 import { LocalVideoTrack } from './LocalVideoTrack';
@@ -11,7 +12,7 @@ export const isSupported: boolean;
 export const version:string;
 export const Logger: Log.RootLogger;
 export function connect(token: string, options?: ConnectOptions): CancelablePromise<Room>;
-export function createLocalAudioTrack(options?: CreateLocalTrackOptions): Promise<LocalAudioTrack>;
+export function createLocalAudioTrack(options?: CreateLocalTrackOptions|LocalAudioTrackOptions): Promise<LocalAudioTrack>;
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
 export function runPreflight(token: string, options?: PreflightOptions): PreflightTest;
@@ -55,6 +56,7 @@ export {
   DataTrack,
   DataTrackPublication,
   EncodingParameters,
+  LocalAudioTrackOptions,
   LocalAudioTrackStats,
   LocalTrack,
   LocalTrackPublishOptions,
@@ -72,6 +74,9 @@ export {
   NetworkQualitySendOrRecvStats,
   NetworkQualityStats,
   NetworkQualityVerbosity,
+  NoiseCancellation,
+  NoiseCancellationOptions,
+  NoiseCancellationVendor,
   OpusCodecSettings,
   RemoteAudioTrackStats,
   RemoteTrack,

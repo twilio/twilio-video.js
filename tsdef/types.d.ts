@@ -164,8 +164,26 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   workaroundWebKitBug1208516?: boolean;
 }
 
+
+export type NoiseCancellationVendor = 'krisp' | 'rnnoise';
+
+export interface NoiseCancellation {
+  vendor: NoiseCancellationVendor;
+  enable: () => Promise<void>;
+  disable: () => Promise<void>;
+}
+
+export interface NoiseCancellationOptions {
+  sdkAssetsPath: string;
+  vendor: NoiseCancellationVendor;
+}
+
+export interface LocalAudioTrackOptions extends CreateLocalTrackOptions {
+  noiseCancellationOptions?: NoiseCancellationOptions;
+}
+
 export interface ConnectOptions {
-  audio?: boolean | CreateLocalTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions| LocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -202,7 +220,7 @@ export interface ConnectOptions {
 }
 
 export interface CreateLocalTracksOptions {
-  audio?: boolean | CreateLocalTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions | LocalAudioTrackOptions;
   /**
    * @deprecated
    */

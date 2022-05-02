@@ -2,6 +2,40 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.22.0 (In Progress)
+====================
+New Features
+------------
+
+- This pilot release adds  support for 3rd party noise cancellation solutions. You need to host twilio approved 3rd party libraries on your web server to enable noise cancellation. Please contact us to get hold of these files. Once hosted on your web server you can use them to process local audio track as follows
+
+```ts
+const { connect, createLocalAudioTrack } = require('twilio-video');
+
+// create a local audio track and have it
+// use 3rd party library for noise cancellation processing.
+const localAudioTrack = await Video.createLocalAudioTrack({
+  noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation//rnnoise' }
+});
+
+// publish the track to a room
+const room = await connect( token, {
+  tracks: [localAudioTrack]
+  // ... any other connect options
+});
+
+// you can enable/disable noise cancellation at runtime
+// using noiseCancellation interface exposed by localAudioTrack
+function updateNoiseCancellation(enable: boolean) {
+  const noiseCancellation = localAudioTrack.noiseCancellation;
+
+  if (noiseCancellation) {
+    enable ? noiseCancellation.enable() : noiseCancellation.disable();
+  }
+}
+
+```
+
 2.21.1 (March 22, 2022)
 =======================
 
