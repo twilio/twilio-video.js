@@ -524,6 +524,9 @@ describe('connect', function() {
       }
       cancelablePromises = tokens.map(token => connect(token, options));
       rooms = await waitFor(cancelablePromises, 'connecting to rooms');
+      if (defaults.largeRoom && !withoutTracks) {
+        await Promise.all(rooms.map(({ localParticipant }) => tracksPublished(localParticipant, 2)));
+      }
     });
 
     after(() => {

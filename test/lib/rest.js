@@ -1,5 +1,6 @@
 'use strict';
 
+const { largeRoom } = require('./defaults');
 const { rest, getREST } = require('./post');
 
 /**
@@ -25,7 +26,13 @@ function getRoom(roomSid) {
  * @returns {Promise<Room.SID>}
  */
 async function createRoom(name, type, roomOptions) {
+  // TODO(mmalavalli): Remove MediaRegion once large rooms are available in stage/prod.
+  const largeRoomOptions = type === 'group' && largeRoom
+    ? { LargeRoom: true, MediaRegion: 'us2', VideoCodecs: 'VP8' }
+    : {};
+
   const roomsResults =  await rest('/v1/Rooms', Object.assign({
+    ...largeRoomOptions,
     Type: type,
     UniqueName: name
   }, roomOptions));

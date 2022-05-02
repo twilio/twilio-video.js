@@ -14,7 +14,8 @@ const processEnv = {
   ENABLE_REST_API_TESTS: process.env.ENABLE_REST_API_TESTS,
   TEST_STABILITY: process.env.TEST_STABILITY,
   REGIONS: process.env.REGIONS,
-  TOPOLOGY: process.env.TOPOLOGY
+  TOPOLOGY: process.env.TOPOLOGY,
+  LARGE_ROOM: process.env.LARGE_ROOM
 };
 
 // Copy environment variables
@@ -30,7 +31,8 @@ const env = [
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
   ['TEST_STABILITY',            'testStability'],
   ['REGIONS',                   'regions'],
-  ['TOPOLOGY',                  'topology']
+  ['TOPOLOGY',                  'topology'],
+  ['LARGE_ROOM',                'largeRoom']
 ].reduce((env, [processEnvKey, envKey]) => {
   if (processEnvKey in processEnv) {
     env[envKey] = processEnv[processEnvKey];
