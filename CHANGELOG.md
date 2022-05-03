@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed the issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
+- Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
 
 2.21.1 (March 22, 2022)
 =======================

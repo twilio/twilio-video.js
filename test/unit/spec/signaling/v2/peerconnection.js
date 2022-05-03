@@ -182,6 +182,7 @@ describe('PeerConnectionV2', () => {
         testName: 'does not update encodings when not using adaptive simulcast',
         width: 960,
         height: 540,
+        readyState: 'live',
         encodings: [{}, {}, {}],
         preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
       },
