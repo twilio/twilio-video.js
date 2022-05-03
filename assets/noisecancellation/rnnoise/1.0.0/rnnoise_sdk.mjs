@@ -1,4 +1,6 @@
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+// Author: Makarand Patwardhan
+// Implements interface to interact with twilio-video SDK
+
 /* eslint-disable no-console */
 async function fetchAndCompileWebAssemblyModule(moduleUrl) {
   const response = await fetch(moduleUrl);
