@@ -37,9 +37,15 @@ describe('createLocalAudioTrack', () => {
           assert(audioTrack.noiseCancellation, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
           assert.equal(audioTrack.noiseCancellation.vendor, expectedVendor, 'unexpected vendor');
 
+          // ensure that source track is accessible.
+          assert(audioTrack.noiseCancellation.sourceTrack.getSettings());
+
           // verify that noise cancellation can be enable/disable'd.
-          audioTrack.noiseCancellation.disable();
-          audioTrack.noiseCancellation.enable();
+          await audioTrack.noiseCancellation.disable();
+          assert.equal(audioTrack.noiseCancellation.isEnabled, false, `unexpected audioTrack.noiseCancellation.isEnabled:${audioTrack.noiseCancellation.isEnabled}`);
+
+          await audioTrack.noiseCancellation.enable();
+          assert.equal(audioTrack.noiseCancellation.isEnabled, true, `unexpected audioTrack.noiseCancellation.isEnabled:${audioTrack.noiseCancellation.isEnabled}`);
 
         } else {
           assert.equal(audioTrack.noiseCancellation, null, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);

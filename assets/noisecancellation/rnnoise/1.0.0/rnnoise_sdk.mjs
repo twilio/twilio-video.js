@@ -50,9 +50,11 @@ class RNNoiseNode extends AudioWorkletNode {
   }
   enable() {
     this.port.postMessage('enable');
+    this._isEnabled = true;
   }
   disable() {
     this.port.postMessage('disable');
+    this._isEnabled = false;
   }
   destroy() {
     this.port.postMessage('destroy');
