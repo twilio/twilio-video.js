@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed issue where `global` was undefined causing run time issues in Angular. Additionally, migrated SDK usage of util.inherits to using [inherits](https://www.npmjs.com/package/inherits) to remove references to node dependencies. (VIDEO-9282)
+- Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
 
 2.21.1 (March 22, 2022)
 =======================
