@@ -168,8 +168,10 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
 export type NoiseCancellationVendor = 'krisp' | 'rnnoise';
 
 export interface NoiseCancellation {
-  vendor: NoiseCancellationVendor;
-  sourceTrack: MediaStreamTrack;
+  readonly vendor: NoiseCancellationVendor;
+  readonly sourceTrack: MediaStreamTrack;
+  readonly isEnabled: boolean;
+
   enable: () => Promise<void>;
   disable: () => Promise<void>;
 }

@@ -28,6 +28,13 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
+   * @returns {boolean} true if noise cancellation is enabled
+   */
+  get isEnabled(): boolean {
+    return this._processor.isEnabled();
+  }
+
+  /**
    * enables noise cancellation
    */
   enable() : Promise<void> {
