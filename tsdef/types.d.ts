@@ -169,6 +169,7 @@ export type NoiseCancellationVendor = 'krisp' | 'rnnoise';
 
 export interface NoiseCancellation {
   vendor: NoiseCancellationVendor;
+  sourceTrack: MediaStreamTrack;
   enable: () => Promise<void>;
   disable: () => Promise<void>;
 }

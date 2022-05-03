@@ -2,7 +2,7 @@
 'use strict';
 
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCancellationOptions } from '../tsdef/types';
-import { createLocalAudioTrackWithNoiseCancellation } from './media/track/noisecancellationimpl';
+import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
 const { buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
@@ -188,12 +188,14 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     log.info('Call to getUserMedia successful; got tracks:', mediaStreamTracks);
 
     return await Promise.all(
-      mediaStreamTracks.map(mediaStreamTrack => {
+      mediaStreamTracks.map(async mediaStreamTrack => {
         if (mediaStreamTrack.kind === 'audio' && noiseCancellationOptions) {
-          return createLocalAudioTrackWithNoiseCancellation(mediaStreamTrack, noiseCancellationOptions, {
+          const { cleanTrack, noiseCancellation } = await applyNoiseCancellation(mediaStreamTrack, noiseCancellationOptions, log);
+          return new localTrackOptions.LocalAudioTrack(cleanTrack, {
             ...extraLocalTrackOptions.audio,
             ...localTrackOptions,
-          }, log);
+            noiseCancellation
+          });
         } else if (mediaStreamTrack.kind === 'audio') {
           return new localTrackOptions.LocalAudioTrack(mediaStreamTrack, {
             ...extraLocalTrackOptions.audio,
