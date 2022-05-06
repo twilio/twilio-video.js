@@ -96,6 +96,9 @@ require('./spec/stats/remotetrackstats');
 require('./spec/stats/remoteaudiotrackstats');
 require('./spec/stats/remotevideotrackstats');
 
+require('./spec/vendor/inherits');
+require('./spec/vendor/backoff');
+
 require('./spec/webrtc/getstats');
 require('./spec/webrtc/getusermedia');
 
