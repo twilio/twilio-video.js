@@ -18,6 +18,7 @@ const {
   randomName,
   participantsConnected,
   tracksSubscribed,
+  trackEnabled,
   trackSwitchedOff,
   trackSwitchedOn,
   waitForSometime,
@@ -34,6 +35,234 @@ function getTracksOfKind(participant, kind) {
   return [...participant.tracks.values()].filter(remoteTrack => remoteTrack.kind === kind).map(({ track }) => track);
 }
 
+(defaults.largeRoom ? describe : describe.skip)('RemoteAudioTrack', function() {
+  // eslint-disable-next-line no-invalid-this
+  this.timeout(60000);
+
+  describe('when subscribed to by the LocalParticipant', () => {
+    let aliceRemoteAudioTracks;
+    let aliceRemoteForBob;
+    let aliceRemoteForCharlie;
+    let aliceRoom;
+    let bobRoom;
+    let charlieRoom;
+
+    before(async () => {
+      [, aliceRoom, [bobRoom, charlieRoom]] = await waitFor(setup({
+        testOptions: { audio: true, video: false },
+        otherOptions: { audio: false, video: false },
+        participantNames: ['alice', 'bob', 'charlie'],
+        nTracks: 0
+      }), 'Alice, Bob and Charlie to join a Room');
+
+      const { localParticipant: { sid: aliceParticipantSid } } = aliceRoom;
+      aliceRemoteForBob = bobRoom.participants.get(aliceParticipantSid);
+      aliceRemoteForCharlie = charlieRoom.participants.get(aliceParticipantSid);
+      return waitFor([
+        tracksSubscribed(aliceRemoteForBob, 1),
+        tracksSubscribed(aliceRemoteForCharlie, 1)
+      ], 'Bob and Charlie to subscribe to Alice\'s AudioTrack');
+    });
+
+    it('should initially be switched off with the reason "disabled-by-subscriber"', () => {
+      aliceRemoteAudioTracks = [aliceRemoteForBob, aliceRemoteForCharlie].map(aliceRemote =>
+        aliceRemote.audioTracks.values().next().value.track);
+      assert.equal(aliceRemoteAudioTracks.length, 2);
+      aliceRemoteAudioTracks.forEach(aliceRemoteAudioTrack => {
+        assert.equal(aliceRemoteAudioTrack.isSwitchedOff, true);
+        assert.equal(aliceRemoteAudioTrack.mediaStreamTrack, null);
+        assert.equal(aliceRemoteAudioTrack.switchOffReason, 'disabled-by-subscriber');
+      });
+    });
+
+    it('should later be switched on', async () => {
+      await waitFor(
+        aliceRemoteAudioTracks.map(trackSwitchedOn),
+        'Alice\'s RemoteAudioTracks to be switched on'
+      );
+      aliceRemoteAudioTracks.forEach(aliceRemoteAudioTrack => {
+        assert.equal(aliceRemoteAudioTrack.isSwitchedOff, false);
+        assert(aliceRemoteAudioTrack.mediaStreamTrack instanceof MediaStreamTrack);
+        assert.equal(aliceRemoteAudioTrack.switchOffReason, null);
+      });
+    });
+
+    after(() => {
+      [aliceRoom, bobRoom, charlieRoom].forEach(room => room && room.disconnect());
+    });
+  });
+
+  // TODO(mmalavalli) Enable test once SFU implements this behavior.
+  describe.skip('enable/disable', () => {
+    let aliceRoom;
+    let bobRoom;
+    let charlieRoom;
+    let daveRoom;
+
+    before(async () => {
+      [, aliceRoom, [bobRoom, charlieRoom]] = await waitFor(setup({
+        testOptions: { audio: true, video: false },
+        otherOptions: { audio: true, video: false },
+        participantNames: ['Alice', 'Bob', 'Charlie'],
+        nTracks: 1
+      }), 'Alice, Bob and Charlie to join a Room');
+
+      daveRoom = await waitFor(connect(getToken('Dave'), Object.assign({
+        audio: false,
+        name: aliceRoom.name,
+        video: false
+      }, defaults)), 'Dave to join a Room');
+
+      await waitFor(
+        participantsConnected(daveRoom, 3),
+        'Alice, Bob and Charlie to be visible as RemoteParticipants'
+      );
+
+      const participants = [...daveRoom.participants.values()];
+
+      await waitFor(
+        participants.map(participant => tracksSubscribed(participant, 1)),
+        'Dave to subscribe to Alice, Bob and Charlie\'s AudioTracks'
+      );
+
+      const daveRemoteTracks = participants
+        .flatMap(participant => [...participant.audioTracks.values()])
+        .map(({ track }) => track);
+
+      await waitFor(
+        new Promise(resolve => {
+          let nSwitchedOn = 0;
+          daveRemoteTracks.map(trackSwitchedOn).forEach(switchedOn => switchedOn.then(() => {
+            nSwitchedOn++;
+            // TODO(mmalavalli): Update max tracks switched on limit once SFU sets the final number.
+            if (nSwitchedOn >= 2) {
+              resolve();
+            }
+          }));
+        }),
+        'Max AudioTracks for Dave to be switched on'
+      );
+    });
+
+    ['Alice', 'Bob', 'Charlie'].forEach(identity => {
+      [false, true].forEach(isEnabled => {
+        context(`when ${identity} ${isEnabled ? 'enables' : 'disables'} the LocalAudioTrack`, () => {
+          let remoteTrack;
+
+          before(() => {
+            const room = [aliceRoom, bobRoom, charlieRoom].find(({ localParticipant }) => localParticipant.identity === identity);
+            const localTrack = room.localParticipant.audioTracks.values().next().value.track;
+            localTrack[isEnabled ? 'enable' : 'disable']();
+            const { track } = daveRoom.participants.get(room.localParticipant.sid).audioTracks.values().next().value;
+            remoteTrack = track;
+            return waitFor([
+              { true: trackSwitchedOn, false: trackSwitchedOff }[isEnabled](remoteTrack),
+              trackEnabled(remoteTrack, isEnabled)
+            ], `${identity}'s RemoteAudioTrack to be ${isEnabled ? 'switched on and enabled' : 'switched off and disabled'}`);
+          });
+
+          it(`should ${isEnabled ? 'switch on and enable' : 'switch off and disable'} ${identity}'s RemoteAudioTrack with reason ${isEnabled ? 'null' : '"disabled-by-publisher"'}`, () => {
+            assert.equal(remoteTrack.isEnabled, isEnabled);
+            assert.equal(remoteTrack.isSwitchedOff, !isEnabled);
+            assert.equal(remoteTrack.switchOffReason, isEnabled ? null : 'disabled-by-publisher');
+          });
+        });
+      });
+    });
+
+    after(() => {
+      [aliceRoom, bobRoom, charlieRoom, daveRoom].forEach(room => room && room.disconnect());
+    });
+  });
+
+  describe('switch on/off', () => {
+    let aliceRoom;
+    let bobRoom;
+    let charlieRoom;
+    let daveRoom;
+
+    before(async () => {
+      const name = await createRoom(randomName(), defaults.topology);
+      [aliceRoom, bobRoom, charlieRoom] = await waitFor(['Alice', 'Bob', 'Charlie'].map(identity => {
+        const token = getToken(identity);
+        return connect(token, Object.assign({
+          name,
+          tracks: [createSyntheticAudioStreamTrack()]
+        }, defaults));
+      }), 'Alice, Bob and Charlie to join a Room');
+
+      daveRoom = await waitFor(connect(getToken('Dave'), Object.assign({
+        audio: false,
+        name,
+        video: false
+      }, defaults)), 'Dave to join a Room');
+
+      await waitFor(
+        participantsConnected(daveRoom, 3),
+        'Alice, Bob and Charlie to be visible as RemoteParticipants'
+      );
+
+      const participants = [...daveRoom.participants.values()];
+
+      await waitFor(
+        participants.map(participant => tracksSubscribed(participant, 1)),
+        'Dave to subscribe to Alice, Bob and Charlie\'s AudioTracks'
+      );
+
+      const daveRemoteTracks = participants
+        .flatMap(participant => [...participant.audioTracks.values()])
+        .map(({ track }) => track);
+
+      await waitFor(
+        new Promise(resolve => {
+          let nSwitchedOn = 0;
+          daveRemoteTracks.map(trackSwitchedOn).forEach(switchedOn => switchedOn.then(() => {
+            nSwitchedOn++;
+            // TODO(mmalavalli): Update max tracks switched on limit once SFU sets the final number.
+            if (nSwitchedOn >= 2) {
+              resolve();
+            }
+          }));
+        }),
+        'Max AudioTracks for Dave to be switched on'
+      );
+    });
+
+    ['Alice', 'Bob', 'Charlie'].forEach(identity => {
+      context(`when ${identity} silences the LocalAudioTrack`, () => {
+        let localTrack;
+        let remoteTrack;
+
+        before(() => {
+          const room = [aliceRoom, bobRoom, charlieRoom].find(({ localParticipant }) => localParticipant.identity === identity);
+          localTrack = room.localParticipant.audioTracks.values().next().value.track;
+          localTrack.mediaStreamTrack.silence();
+          const { track } = daveRoom.participants.get(room.localParticipant.sid).audioTracks.values().next().value;
+          remoteTrack = track;
+          return waitFor(trackSwitchedOff(remoteTrack), `${identity}'s RemoteAudioTrack to be switched off`);
+        });
+
+        it(`should switch off ${identity}'s RemoteAudioTrack with reason "max-tracks-switched-on"`, () => {
+          assert.equal(remoteTrack.isSwitchedOff, true);
+          assert.equal(remoteTrack.switchOffReason, 'max-tracks-switched-on');
+        });
+
+        after(() => {
+          localTrack.mediaStreamTrack.sound();
+        });
+      });
+    });
+
+    after(() => {
+      [aliceRoom, bobRoom, charlieRoom, daveRoom].forEach(room => {
+        if (room) {
+          room.disconnect();
+          room.localParticipant.tracks.forEach(({ track }) => track.stop());
+        }
+      });
+    });
+  });
+});
 
 describe('RemoteVideoTrack', function() {
   // eslint-disable-next-line no-invalid-this
