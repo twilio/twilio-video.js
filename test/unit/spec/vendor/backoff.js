@@ -1,10 +1,12 @@
+'use strict';
 
-var DefaultBackoff = require('../../../../lib/vendor/backoff.js');
-var assert = require('assert');
+const DefaultBackoff = require('../../../../lib/vendor/backoff.js');
+const assert = require('assert');
+const sinon = require('sinon');
 
-describe('Backoff', function() {
-  it('should increase the backoff duration', function() {
-    var backoff = new DefaultBackoff();
+describe('Backoff', () => {
+  it('should increase the backoff duration', () => {
+    const backoff = new DefaultBackoff();
 
     assert(100 === backoff.duration());
     assert(200 === backoff.duration());
@@ -14,5 +16,17 @@ describe('Backoff', function() {
     backoff.reset();
     assert(100 === backoff.duration());
     assert(200 === backoff.duration());
+  });
+
+  it('should call the function once', () => {
+    const backoff = new DefaultBackoff();
+    const callback = sinon.spy();
+    const fakeTimer = sinon.useFakeTimers();
+
+    backoff.start(callback);
+    fakeTimer.tick(200);
+    sinon.assert.calledOnce(callback);
+    backoff.reset();
+    fakeTimer.restore();
   });
 });
