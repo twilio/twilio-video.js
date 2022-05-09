@@ -61,7 +61,7 @@ function getTracksOfKind(participant, kind) {
       return waitFor([
         tracksSubscribed(aliceRemoteForBob, 1),
         tracksSubscribed(aliceRemoteForCharlie, 1)
-      ], 'Bob and Charlie to subscribe to Alice\'s AudioTrack');
+      ], `Bob (SID: ${bobRoom.localParticipant.sid}) and Charlie (SID: ${charlieRoom.localParticipant.sid}) to subscribe to Alice's (SID: ${aliceParticipantSid}) AudioTrack`);
     });
 
     it('should initially be switched off with the reason "disabled-by-subscriber"', () => {
@@ -111,11 +111,11 @@ function getTracksOfKind(participant, kind) {
         audio: false,
         name: aliceRoom.name,
         video: false
-      }, defaults)), 'Dave to join a Room');
+      }, defaults)), `Dave to join a Room (SID: ${aliceRoom.sid})`);
 
       await waitFor(
         participantsConnected(daveRoom, 3),
-        'Alice, Bob and Charlie to be visible as RemoteParticipants'
+        `Alice (SID: ${aliceRoom.localParticipant.sid}), Bob (SID: ${bobRoom.localParticipant.sid}) and Charlie (SID: ${charlieRoom.localParticipant.sid}) to be visible to Dave (SID: ${daveRoom.localParticipant.sid}) as RemoteParticipants`
       );
 
       const participants = [...daveRoom.participants.values()];
@@ -155,10 +155,13 @@ function getTracksOfKind(participant, kind) {
             localTrack[isEnabled ? 'enable' : 'disable']();
             const { track } = daveRoom.participants.get(room.localParticipant.sid).audioTracks.values().next().value;
             remoteTrack = track;
-            return waitFor([
-              { true: trackSwitchedOn, false: trackSwitchedOff }[isEnabled](remoteTrack),
-              trackEnabled(remoteTrack, isEnabled)
-            ], `${identity}'s RemoteAudioTrack to be ${isEnabled ? 'switched on and enabled' : 'switched off and disabled'}`);
+            return isEnabled ? waitFor([
+              trackSwitchedOn(remoteTrack),
+              trackEnabled(remoteTrack, true)
+            ], `${identity}'s RemoteAudioTrack to be switched on and enabled`) : waitFor([
+              trackSwitchedOff(remoteTrack),
+              trackEnabled(remoteTrack, false)
+            ], `${identity}'s RemoteAudioTrack to be switched off and disabled`);
           });
 
           it(`should ${isEnabled ? 'switch on and enable' : 'switch off and disable'} ${identity}'s RemoteAudioTrack with reason ${isEnabled ? 'null' : '"disabled-by-publisher"'}`, () => {
@@ -189,17 +192,17 @@ function getTracksOfKind(participant, kind) {
           name,
           tracks: [createSyntheticAudioStreamTrack()]
         }, defaults));
-      }), 'Alice, Bob and Charlie to join a Room');
+      }), `Alice, Bob and Charlie to join a Room (SID: ${name})`);
 
       daveRoom = await waitFor(connect(getToken('Dave'), Object.assign({
         audio: false,
         name,
         video: false
-      }, defaults)), 'Dave to join a Room');
+      }, defaults)), `Dave to join a Room (SID: ${name})`);
 
       await waitFor(
         participantsConnected(daveRoom, 3),
-        'Alice, Bob and Charlie to be visible as RemoteParticipants'
+        `Alice (SID: ${aliceRoom.localParticipant.sid}), Bob (SID: ${bobRoom.localParticipant.sid}) and Charlie (SID: ${charlieRoom.localParticipant.sid}) to be visible to Dave (SID: ${daveRoom.localParticipant.sid}) as RemoteParticipants`
       );
 
       const participants = [...daveRoom.participants.values()];
@@ -239,7 +242,7 @@ function getTracksOfKind(participant, kind) {
           localTrack.mediaStreamTrack.silence();
           const { track } = daveRoom.participants.get(room.localParticipant.sid).audioTracks.values().next().value;
           remoteTrack = track;
-          return waitFor(trackSwitchedOff(remoteTrack), `${identity}'s RemoteAudioTrack to be switched off`);
+          return waitFor(trackSwitchedOff(remoteTrack), `${identity}'s RemoteAudioTrack (SID: ${remoteTrack.sid}) to be switched off`);
         });
 
         it(`should switch off ${identity}'s RemoteAudioTrack with reason "max-tracks-switched-on"`, () => {
