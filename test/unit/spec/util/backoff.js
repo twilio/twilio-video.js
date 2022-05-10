@@ -12,60 +12,91 @@ describe('Backoff', () => {
     let fakeTimer;
     beforeEach(() => {
       fn = sinon.spy();
-      backoff = new DefaultBackoff(options);
+      backoff = new DefaultBackoff(fn, options);
       fakeTimer = sinon.useFakeTimers();
     });
 
     afterEach(() => {
+      fn.resetHistory();
       backoff.reset();
       fakeTimer.restore();
-      fn.resetHistory();
     });
 
     it('should call the function on start', () => {
-      backoff.start(fn);
-      fakeTimer.tick(200);
+      backoff.backoff();
+      fakeTimer.tick(100);
+      backoff.reset();
       sinon.assert.calledOnce(fn);
     });
 
     it('should increase the duration exponentially', () => {
-      backoff.start(fn);
+      backoff.backoff();
       fakeTimer.tick(110);
-      assert.strictEqual(100, backoff._duration);
-      backoff.start(fn);
       fakeTimer.tick(210);
-      assert.strictEqual(200, backoff._duration);
-      backoff.start(fn);
       fakeTimer.tick(410);
-      assert.strictEqual(400, backoff._duration);
       sinon.assert.calledThrice(fn);
     });
 
     it('should reset the duration', () => {
-      backoff.start(fn);
+      backoff.backoff();
       fakeTimer.tick(110);
-      assert.strictEqual(100, backoff._duration);
       backoff.reset();
-      assert.strictEqual(0, backoff._attempts);
-      assert.strictEqual(null, backoff._timeoutID);
+      fakeTimer.tick(210);
+      fakeTimer.tick(410);
+      sinon.assert.calledOnce(fn);
     });
   });
 
   describe('Options', () => {
-    it('should take in options', () => {
+    let fn;
+    let fakeTimer;
+    beforeEach(() => {
+      fn = sinon.spy();
+      fakeTimer = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+      fn.resetHistory();
+      fakeTimer.restore();
+    });
+
+    it('min', () => {
       const options = {
         min: 10,
-        max: 30000,
-        jitter: 1,
-        factor: 2
       };
-      const backoff = new DefaultBackoff(options);
-      const fn = sinon.spy();
-      const fakeTimer = sinon.useFakeTimers();
+      const backoff = new DefaultBackoff(fn, options);
 
-      backoff.start(fn);
-      fakeTimer.tick(20);
+      backoff.backoff();
+      fakeTimer.tick(10);
       sinon.assert.calledOnce(fn);
+    });
+
+    it('max', () => {
+      const options = {
+        max: 1000,
+      };
+      const backoff = new DefaultBackoff(fn, options);
+
+      backoff.backoff();
+      fakeTimer.tick(100);
+      fakeTimer.tick(200);
+      fakeTimer.tick(400);
+      fakeTimer.tick(800);
+      sinon.assert.callCount(fn, 4);
+      backoff.reset();
+      sinon.assert.callCount(fn, 4);
+    });
+
+    it('factor', () => {
+      const options = {
+        factor: 3,
+      };
+      const backoff = new DefaultBackoff(fn, options);
+
+      backoff.backoff();
+      fakeTimer.tick(300);
+      fakeTimer.tick(900);
+      sinon.assert.calledTwice(fn);
       backoff.reset();
     });
   });
