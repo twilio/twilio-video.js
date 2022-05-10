@@ -1607,6 +1607,17 @@ function makeTest(options) {
   options.signaling = options.signaling || makeSignaling(options);
   options.participant = options.participant || new RemoteParticipant(options.signaling, options);
 
+  // NOTE(mmalavalli): Since the logic to reemit RemoteTrackPublication events
+  // has been moved into the RemoteTrackPublication constructor (which we are not using
+  // in the unit tests), we need to make sure that RemoteParticipant._addTrackPublication
+  // the same logic in order for the tests to pass.
+  const origAddTrackPublication = options.participant._addTrackPublication;
+  options.participant._addTrackPublication = function addTrackPublication(publication) {
+    const ret = origAddTrackPublication.call(options.participant, publication);
+    reemitTrackPublicationEvents(options.participant, publication);
+    return ret;
+  };
+
   return options;
 }
 
@@ -1713,4 +1724,26 @@ async function testTrackSubscriptionFailed(participant, track) {
   assert.equal(trackPublication.kind, track.kind);
   assert.equal(trackPublication.trackName, track.name);
   assert.equal(trackPublication.trackSid, track.sid);
+}
+
+function reemitTrackPublicationEvents(participant, publication) {
+  const publicationEventReemitters = new Map();
+
+  if (participant.state === 'disconnected') {
+    return;
+  }
+
+  participant._getTrackPublicationEvents().forEach(([publicationEvent, participantEvent]) => {
+    publicationEventReemitters.set(publicationEvent, (...args) => {
+      if (publicationEvent === 'trackSwitchedOff') {
+        const [track, switchOffReason] = args;
+        participant.emit(participantEvent, track, publication, switchOffReason);
+      } else {
+        participant.emit(participantEvent, ...args, publication);
+      }
+    });
+    publication.on(publicationEvent, publicationEventReemitters.get(publicationEvent));
+  });
+
+  participant._trackPublicationEventReemitters.set(publication.trackSid, publicationEventReemitters);
 }
