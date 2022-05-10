@@ -1441,7 +1441,7 @@ describe('RoomV3', () => {
           mediaTrack.setTrackTransceiver = sinon.spy((...args) => mediaSetTrackTransceiver.apply(mediaTrack, args));
 
           dataTrackTransport.emit('message', {
-            data: { MT5: '6' },
+            data: { MT5: { label: '6' } },
             // eslint-disable-next-line camelcase
             media: { MT3: { state: 'ON', mid: '0' } },
             revision: 2,
