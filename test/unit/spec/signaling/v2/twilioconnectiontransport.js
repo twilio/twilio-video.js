@@ -1704,6 +1704,7 @@ function Backoff(opts) {
   opts = opts || {};
   this.duration = function() { sinon.spy(() => {}); };
   this.reset = function() { sinon.spy(() => {}); };
+  this.start = function(handler) { return handler(); };
 }
 
 function makeTest(options) {
