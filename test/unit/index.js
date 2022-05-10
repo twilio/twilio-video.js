@@ -65,6 +65,7 @@ require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');
+require('./spec/util/backoff');
 require('./spec/util/browserdetection');
 require('./spec/util/eventobserver');
 require('./spec/util/documentvisibilitymonitor');
@@ -97,7 +98,6 @@ require('./spec/stats/remoteaudiotrackstats');
 require('./spec/stats/remotevideotrackstats');
 
 require('./spec/vendor/inherits');
-require('./spec/vendor/backoff');
 
 require('./spec/webrtc/getstats');
 require('./spec/webrtc/getusermedia');
