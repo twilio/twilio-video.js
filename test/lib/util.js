@@ -77,9 +77,12 @@ function createSyntheticAudioStreamTrack() {
   }
   const oscillator = audioContext.createOscillator();
   const dest = audioContext.createMediaStreamDestination();
+  const track = dest.stream.getAudioTracks()[0];
+  track.silence = () => oscillator.disconnect();
+  track.sound = () => oscillator.connect(dest);
   oscillator.connect(dest);
   oscillator.start(0);
-  return dest.stream.getAudioTracks()[0];
+  return track;
 }
 
 /**
@@ -353,6 +356,21 @@ async function tracksUnsubscribed(participant, n) {
   while (participant._tracks.size > n) {
     await new Promise(resolve => participant.once('trackUnsubscribed', resolve));
   }
+}
+
+/**
+ * Wait for a {@link RemoteTrack} to be enabled/disabled.
+ * @param {RemoteTrack} track - the {@link RemoteTrack}
+ * @param {boolean} [isEnabled=true] - if true, then wait for the {@link RemoteTrack} to be enabled;
+ *   otherwise, wait for the {@link RemoteTrack} to be disabled
+ * @returns Promise<void>
+ */
+async function trackEnabled(track, isEnabled = true) {
+  if (track.isEnabled === isEnabled) {
+    return;
+  }
+  const event = isEnabled ? 'enabled' : 'disabled';
+  await new Promise(resolve => track.once(event, resolve));
 }
 
 /**
@@ -820,6 +838,7 @@ exports.participantsConnected = participantsConnected;
 exports.randomBoolean = randomBoolean;
 exports.randomName = randomName;
 exports.tracksSubscribed = tracksSubscribed;
+exports.trackEnabled = trackEnabled;
 exports.trackSwitchedOff = trackSwitchedOff;
 exports.trackSwitchedOn = trackSwitchedOn;
 exports.tracksPublished = tracksPublished;
