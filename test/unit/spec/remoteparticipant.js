@@ -10,7 +10,7 @@ const RemoteAudioTrackPublication = require('../../../lib/media/track/remoteaudi
 const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatatrackpublication');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
-const { makeUUID } = require('../../../lib/util');
+const { makeUUID, reemitTrackPublicationEvents } = require('../../../lib/util');
 
 const { a, capitalize, combinationContext } = require('../../lib/util');
 const log = require('../../lib/fakelog');
@@ -1724,26 +1724,4 @@ async function testTrackSubscriptionFailed(participant, track) {
   assert.equal(trackPublication.kind, track.kind);
   assert.equal(trackPublication.trackName, track.name);
   assert.equal(trackPublication.trackSid, track.sid);
-}
-
-function reemitTrackPublicationEvents(participant, publication) {
-  const publicationEventReemitters = new Map();
-
-  if (participant.state === 'disconnected') {
-    return;
-  }
-
-  participant._getTrackPublicationEvents().forEach(([publicationEvent, participantEvent]) => {
-    publicationEventReemitters.set(publicationEvent, (...args) => {
-      if (publicationEvent === 'trackSwitchedOff') {
-        const [track, switchOffReason] = args;
-        participant.emit(participantEvent, track, publication, switchOffReason);
-      } else {
-        participant.emit(participantEvent, ...args, publication);
-      }
-    });
-    publication.on(publicationEvent, publicationEventReemitters.get(publicationEvent));
-  });
-
-  participant._trackPublicationEventReemitters.set(publication.trackSid, publicationEventReemitters);
 }
