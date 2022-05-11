@@ -86,8 +86,7 @@ const init = async ({ rootDir }) => {
 
 const isInitialized = () => initialized;
 
-// eslint-disable-next-line require-await
-const connect = async stream => {
+const connect = stream => {
   if (!isInitialized()) {
     throw new Error('you must call init before connect');
   }

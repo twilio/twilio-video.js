@@ -6,8 +6,8 @@ const Log = require('./util/log');
 
 const dynamicImport = require('./dynamicImport');
 
-const KRISP_VERSION = '1.0.0';
-const RNNOISE_VERSION = '1.0.0';
+const KRISP_VERSION = '0.0.2';
+const RNNOISE_VERSION = '0.0.2';
 const KRISP_SDK_FILE = 'krispsdk.mjs';
 const RNNOISE_SDK_FILE = 'rnnoise_sdk.mjs';
 
@@ -17,7 +17,7 @@ interface NoiseCancellationSDK {
   isInitialized(): boolean;
   isConnected(): boolean;
   isEnabled(): boolean
-  connect(input: MediaStream): Promise<MediaStream>;
+  connect(input: MediaStream): MediaStream;
   disconnect(): void;
   enable(): void;
   disable(): void;
@@ -69,13 +69,13 @@ export async function createNoiseCancellationAudioProcessor(
         disable: () => sdkAPI.disable(),
         destroy: () => sdkAPI.destroy(),
         setLogging: (enable: boolean) => sdkAPI.setLogging(enable),
-        connect: async (sourceTrack: MediaStreamTrack) => {
+        connect:  (sourceTrack: MediaStreamTrack) => {
           log.debug('connect: ', sourceTrack.id);
           if (sdkAPI.isConnected()) {
             sdkAPI.disconnect();
           }
 
-          const mediaStream = await sdkAPI.connect(new MediaStream([sourceTrack]));
+          const mediaStream = sdkAPI.connect(new MediaStream([sourceTrack]));
           if (!mediaStream) {
             throw new Error('Error connecting with noise cancellation sdk');
           }

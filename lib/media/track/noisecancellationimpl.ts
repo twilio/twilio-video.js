@@ -75,7 +75,7 @@ export async function applyNoiseCancellation(
 ) : Promise<{ cleanTrack: MediaStreamTrack, noiseCancellation?: NoiseCancellation }> {
   try {
     const processor = await createNoiseCancellationAudioProcessor(noiseCancellationOptions, log);
-    const cleanTrack  = await processor.connect(mediaStreamTrack);
+    const cleanTrack = processor.connect(mediaStreamTrack);
     const noiseCancellation = new NoiseCancellationImpl(processor, mediaStreamTrack);
     return { cleanTrack, noiseCancellation };
   } catch (ex) {
