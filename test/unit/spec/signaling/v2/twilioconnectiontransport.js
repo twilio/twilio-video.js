@@ -1699,13 +1699,23 @@ function createTwilioConnection(options) {
 
   return FakeTwilioConnection;
 }
-
-function Backoff(opts) {
-  opts = opts || {};
-  this.duration = function() { sinon.spy(() => {}); };
-  this.reset = function() { sinon.spy(() => {}); };
-  this.start = function(handler) { return handler(); };
+class Backoff {
+  constructor(fn, options) {
+    this._min = options.min || 100;
+    this._fn = fn || null;
+  }
+  backoff(fn) {
+    this._fn = fn;
+    this.onTimer();
+  }
+  onTimer() {
+    this._fn();
+  }
+  reset() {
+    sinon.spy(() => {});
+  }
 }
+
 
 function makeTest(options) {
   options = options || {};

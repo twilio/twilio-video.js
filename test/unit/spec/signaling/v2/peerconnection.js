@@ -2628,6 +2628,24 @@ function identity(a) {
   return a;
 }
 
+
+class Backoff {
+  constructor(fn, options) {
+    this._min = options.min || 100;
+    this._fn = fn || null;
+  }
+  backoff(fn) {
+    this._fn = fn;
+    this.onTimer();
+  }
+  onTimer() {
+    this._fn();
+  }
+  reset() {
+    sinon.spy(() => {});
+  }
+}
+
 /**
  * @interface PeerConnectionV2Options
  * @property {string} [id]
@@ -2649,12 +2667,6 @@ function makePeerConnectionV2(options) {
   const getSettings = () => { return { width: 1280, height: 720 }; };
   const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
-
-  function Backoff(opts) {
-    opts = opts || {};
-    this.duration = function() { sinon.spy(() => {}); };
-    this.reset = function() { sinon.spy(() => {}); };
-  }
 
   function RTCPeerConnection() {
     return pc;
