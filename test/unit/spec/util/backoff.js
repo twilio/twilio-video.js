@@ -100,4 +100,18 @@ describe('Backoff', () => {
       backoff.reset();
     });
   });
+
+  describe('Callback passed into backoff method', () => {
+    it('should set the private member and call upon the function', () => {
+      let options = {};
+      const fn = sinon.spy();
+      const backoff = new DefaultBackoff(null, options);
+      const fakeTimer = sinon.useFakeTimers();
+
+      backoff.backoff(fn);
+      fakeTimer.tick(100);
+      backoff.reset();
+      sinon.assert.calledOnce(fn);
+    });
+  });
 });
