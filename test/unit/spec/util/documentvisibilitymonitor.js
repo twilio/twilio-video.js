@@ -17,8 +17,8 @@ describe('DocumentVisibilityMonitor', () => {
   });
 
   after(() => {
-    addEventListenerStub.restore();
-    removeEventListenerStub.restore();
+    addEventListenerStub.resetHistory();
+    removeEventListenerStub.resetHistory();
     if (global.document instanceof Document) {
       delete global.document;
     }
