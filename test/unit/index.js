@@ -65,7 +65,7 @@ require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
 require('./spec/util/asyncvar');
-// require('./spec/util/backoff');
+require('./spec/util/backoff');
 require('./spec/util/browserdetection');
 require('./spec/util/eventobserver');
 require('./spec/util/documentvisibilitymonitor');

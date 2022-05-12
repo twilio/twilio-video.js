@@ -41,6 +41,7 @@ describe('Backoff', () => {
     it('should reset the duration', () => {
       backoff.backoff(fn);
       fakeTimer.tick(110);
+      sinon.assert.calledOnce(fn);
       backoff.reset();
       fakeTimer.tick(210);
       fakeTimer.tick(410);
@@ -69,8 +70,8 @@ describe('Backoff', () => {
 
       backoff.backoff(fn);
       fakeTimer.tick(10);
-      backoff.reset();
       sinon.assert.calledOnce(fn);
+      backoff.reset();
     });
 
     it('max', () => {
@@ -80,16 +81,9 @@ describe('Backoff', () => {
       const backoff = new DefaultBackoff(options);
 
       backoff.backoff(fn);
-      fakeTimer.tick(100);
-      backoff.backoff(fn);
-      fakeTimer.tick(200);
-      backoff.backoff(fn);
-      fakeTimer.tick(400);
-      backoff.backoff(fn);
-      fakeTimer.tick(800);
-      sinon.assert.callCount(fn, 4);
+      fakeTimer.tick(1600);
+      sinon.assert.callCount(fn, 1);
       backoff.reset();
-      sinon.assert.callCount(fn, 4);
     });
 
     it('factor', () => {
@@ -104,20 +98,6 @@ describe('Backoff', () => {
       fakeTimer.tick(900);
       sinon.assert.calledTwice(fn);
       backoff.reset();
-    });
-  });
-
-  describe('Callback passed into backoff method', () => {
-    it('should set the private member and call upon the function', () => {
-      let options = {};
-      const fn = sinon.spy();
-      const backoff = new DefaultBackoff(options);
-      const fakeTimer = sinon.useFakeTimers();
-
-      backoff.backoff(fn);
-      fakeTimer.tick(100);
-      backoff.reset();
-      sinon.assert.calledOnce(fn);
     });
   });
 });
