@@ -17,72 +17,108 @@ const { NullIntersectionObserver } = require('../../../../../lib/util/nullobserv
 ].forEach(([kind, RemoteTrack]) => {
   const className = `Remote${capitalize(kind)}Track`;
   describe(`${className}`, () => {
-    describe('constructor', () => {
-      const name = 'bar';
-      let error;
-      let log;
-      let track;
+    [2, 3].forEach(rspVersion => {
+      const shouldDeprecateEnabledState = rspVersion >= 3;
+      describe(`constructor (RSP version: ${rspVersion})`, () => {
+        const name = 'bar';
+        let error;
+        let log;
+        let track;
 
-      before(() => {
-        try {
-          track = makeTrack({ id: 'foo', mid: 'baz', sid: 'bar', kind, isEnabled: true, isSwitchedOff: false, options: { name }, RemoteTrack });
-          log = track._log;
-          log.warn = sinon.spy();
-        } catch (e) {
-          error = e;
-        }
-      });
-
-      it('shouldn\'t throw', () => {
-        assert(!error);
-      });
-
-      it(`should return an instance of ${className}`, () => {
-        assert(track instanceof RemoteTrack);
-      });
-
-      it('should set the .isEnabled property and log deprecation warning the first time it is accessed', () => {
-        assert.equal(track.isEnabled, true);
-        sinon.assert.callCount(log.warn, 1);
-        sinon.assert.calledWith(log.warn, '.isEnabled is deprecated and scheduled for removal. '
-          + 'The RemoteMediaTrack is can be considered disabled if .switchOffReason is set to '
-          + '"disabled-by-publisher".');
-      });
-
-      it('should not log deprecation warning when .isEnabled is accessed a second time', () => {
-        assert.equal(track.isEnabled, true);
-        sinon.assert.callCount(log.warn, 1);
-      });
-
-      it('should set the .isSwitchedOff property', () => {
-        assert.equal(track.isSwitchedOff, false);
-      });
-
-      it('should set the .kind property', () => {
-        assert.equal(track.kind, kind);
-      });
-
-      it('should set the .name property', () => {
-        assert.equal(track.name, name);
-      });
-
-      it('should set the .sid property', () => {
-        assert.equal(track.sid, 'bar');
-      });
-
-      [
-        ['disabled', `${className}#disabled has been deprecated and scheduled for removal. Use ${className}#switchedOff (.switchOffReason === "disabled-by-publisher") instead.`],
-        ['enabled', `${className}#enabled has been deprecated and scheduled for removal. Use ${className}#switchedOn instead.`]
-      ].forEach(([event, warning], i) => {
-        it(`should emit deprecation warning when "${event}" event is listened to for the first time`, () => {
-          track.on(event, () => {});
-          sinon.assert.callCount(log.warn, 2 + i);
-          sinon.assert.calledWith(log.warn, warning);
+        before(() => {
+          try {
+            track = makeTrack({
+              id: 'foo',
+              mid: 'baz',
+              sid: 'bar',
+              kind,
+              isEnabled: true,
+              isSwitchedOff: false,
+              options: { name, shouldDeprecateEnabledState },
+              RemoteTrack
+            });
+            log = track._log;
+            log.warn = sinon.spy();
+          } catch (e) {
+            error = e;
+          }
         });
 
-        it(`should not emit deprecation warning when "${event}" event is listened to for the second time`, () => {
-          track.on(event, () => {});
-          sinon.assert.callCount(log.warn, 2 + i);
+        it('shouldn\'t throw', () => {
+          assert(!error);
+        });
+
+        it(`should return an instance of ${className}`, () => {
+          assert(track instanceof RemoteTrack);
+        });
+
+        if (shouldDeprecateEnabledState) {
+          it('should set the .isEnabled property and log deprecation warning the first time it is accessed', () => {
+            assert.equal(track.isEnabled, true);
+            sinon.assert.callCount(log.warn, 1);
+            sinon.assert.calledWith(log.warn, '.isEnabled is deprecated and scheduled for removal. '
+              + 'The RemoteMediaTrack is can be considered disabled if .switchOffReason is set to '
+              + '"disabled-by-publisher".');
+          });
+
+          it('should not log deprecation warning when .isEnabled is accessed a second time', () => {
+            assert.equal(track.isEnabled, true);
+            sinon.assert.callCount(log.warn, 1);
+          });
+        } else {
+          it('should set the .isEnabled property and not log deprecation warning the first time it is accessed', () => {
+            assert.equal(track.isEnabled, true);
+            sinon.assert.callCount(log.warn, 0);
+          });
+
+          it('should not log deprecation warning when .isEnabled is accessed a second time', () => {
+            assert.equal(track.isEnabled, true);
+            sinon.assert.callCount(log.warn, 0);
+          });
+        }
+
+        it('should set the .isSwitchedOff property', () => {
+          assert.equal(track.isSwitchedOff, false);
+        });
+
+        it('should set the .kind property', () => {
+          assert.equal(track.kind, kind);
+        });
+
+        it('should set the .name property', () => {
+          assert.equal(track.name, name);
+        });
+
+        it('should set the .sid property', () => {
+          assert.equal(track.sid, 'bar');
+        });
+
+        [
+          ['disabled', `${className}#disabled has been deprecated and scheduled for removal. Use ${className}#switchedOff (.switchOffReason === "disabled-by-publisher") instead.`],
+          ['enabled', `${className}#enabled has been deprecated and scheduled for removal. Use ${className}#switchedOn instead.`]
+        ].forEach(([event, warning], i) => {
+          if (shouldDeprecateEnabledState) {
+            it(`should emit deprecation warning when "${event}" event is listened to for the first time`, () => {
+              track.on(event, () => {});
+              sinon.assert.callCount(log.warn, 2 + i);
+              sinon.assert.calledWith(log.warn, warning);
+            });
+
+            it(`should not emit deprecation warning when "${event}" event is listened to for the second time`, () => {
+              track.on(event, () => {});
+              sinon.assert.callCount(log.warn, 2 + i);
+            });
+          } else {
+            it(`should not emit deprecation warning when "${event}" event is listened to for the first time`, () => {
+              track.on(event, () => {});
+              sinon.assert.callCount(log.warn, 0);
+            });
+
+            it(`should not emit deprecation warning when "${event}" event is listened to for the second time`, () => {
+              track.on(event, () => {});
+              sinon.assert.callCount(log.warn, 0);
+            });
+          }
         });
       });
     });
@@ -491,5 +527,6 @@ function makeTrack({ id, mid, sid, kind, isEnabled, options, RemoteTrack, setPri
   const mediaTrackReceiver = new MediaTrackReceiver(id, mid, mediaStreamTrack);
   options = options || {};
   options.IntersectionObserver = NullIntersectionObserver;
+  options.shouldDeprecateEnabledState = options.shouldDeprecateEnabledState || false;
   return new RemoteTrack(sid, mediaTrackReceiver, isEnabled, isSwitchedOff, null, setPriority, setRenderHint, options);
 }

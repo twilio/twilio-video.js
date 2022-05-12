@@ -11,6 +11,7 @@ New Features
 **Large Rooms Pilot**
 
 twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link), which supports a large number of Participants (> 50).
+**Note that the following API changes apply only for Large Rooms, and not for non-large group Rooms and Peer-to-Peer Rooms.**
 
 - A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
 - RemoteAudioTrack and RemoteVideoTrack will now have an additional property called [`switchOffReason`](TODO_doc_link),

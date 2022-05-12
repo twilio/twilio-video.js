@@ -10,7 +10,7 @@ const RemoteAudioTrackPublication = require('../../../lib/media/track/remoteaudi
 const RemoteDataTrackPublication = require('../../../lib/media/track/remotedatatrackpublication');
 const RemoteParticipant = require('../../../lib/remoteparticipant');
 const RemoteVideoTrackPublication = require('../../../lib/media/track/remotevideotrackpublication');
-const { makeUUID } = require('../../../lib/util');
+const { makeUUID, reemitTrackPublicationEvents } = require('../../../lib/util');
 
 const { a, capitalize, combinationContext } = require('../../lib/util');
 const log = require('../../lib/fakelog');
@@ -1606,6 +1606,17 @@ function makeTest(options) {
   options.log = log;
   options.signaling = options.signaling || makeSignaling(options);
   options.participant = options.participant || new RemoteParticipant(options.signaling, options);
+
+  // NOTE(mmalavalli): Since the logic to reemit RemoteTrackPublication events
+  // has been moved into the RemoteTrackPublication constructor (which we are not using
+  // in the unit tests), we need to make sure that RemoteParticipant._addTrackPublication
+  // the same logic in order for the tests to pass.
+  const origAddTrackPublication = options.participant._addTrackPublication;
+  options.participant._addTrackPublication = function addTrackPublication(publication) {
+    const ret = origAddTrackPublication.call(options.participant, publication);
+    reemitTrackPublicationEvents(options.participant, publication);
+    return ret;
+  };
 
   return options;
 }
