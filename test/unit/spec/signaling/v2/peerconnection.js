@@ -2628,24 +2628,18 @@ function identity(a) {
   return a;
 }
 
-
-class Backoff {
-  constructor(fn, options) {
-    this._min = options.min || 100;
-    this._fn = fn || null;
-  }
-  backoff(fn) {
-    this._fn = fn;
-    this.onTimer();
-  }
-  onTimer() {
-    this._fn();
-  }
-  reset() {
+/**
+ * Mock Backoff.
+ * @returns {void}
+ */
+function Backoff() {
+  this.backoff = fn => {
+    fn();
+  };
+  this.reset = () => {
     sinon.spy(() => {});
-  }
+  };
 }
-
 /**
  * @interface PeerConnectionV2Options
  * @property {string} [id]
