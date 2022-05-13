@@ -78,20 +78,52 @@ describe('Backoff', () => {
     [
       {
         tickCount: 1550,
-        testName: 'with max 400',
-        options: { max: 400 },
-        // 100, 200, 400, 400, 400
-        // 100, 300, 700, 1100, 1500 = with max set to 400
-        numberCallbackExpected: 5
+        testName: 'defaults',
+        // 100, 200, 400, 800, 1600
+        // 100, 300, 700, 1500  = # of calls without max
+        numberCallbackExpected: 4,
+        options: {  },
       },
       {
         tickCount: 1550,
-        testName: 'defaults',
-        // 100, 200, 400, 800, 1600
-        // 100, 300, 700, 1500  = without max
-        numberCallbackExpected: 4,
-        options: {  },
-      }
+        testName: 'with max 400',
+        options: { max: 400 },
+        // 100, 200, 400, 400, 400
+        // 100, 300, 700, 1100, 1500 = # of calls with max set to 400
+        numberCallbackExpected: 5
+      },
+      {
+        tickCount: 10000,
+        testName: 'with min 600',
+        options: { min: 600 },
+        // 600, 1200, 2400, 4800, 9600
+        // 600, 1800, 4200, 9000 = # of calls with min set to 600
+        numberCallbackExpected: 4
+      },
+      {
+        tickCount: 10000,
+        testName: 'with factor 3',
+        options: { factor: 3 },
+        // 100, 300, 900, 2700, 8100
+        // 100, 400, 1300, 4000 = # of calls with min set to 600
+        numberCallbackExpected: 4
+      },
+      {
+        tickCount: 25000,
+        testName: 'with min 200, max 20000',
+        options: { min: 200, max: 20000 },
+        // 200, 400, 800, 1600, 3200, 6400, 12800
+        // 200, 600, 1400, 2000, 5200, 11600  = # of calls with min set to 200 and max set to 20000
+        numberCallbackExpected: 6
+      },
+      {
+        tickCount: 25000,
+        testName: 'with min 200, max 20000, factor 3',
+        options: { min: 200, max: 20000, factor: 3 },
+        // 200, 600, 1800, 5400, 16200, 48600
+        // 200, 800, 2600, 8000, 24200  = # of calls with min set to 200 and max set to 20000, and factor set to 3
+        numberCallbackExpected: 5
+      },
     ].forEach(testCase => {
       it(testCase.testName, () => {
         const backoff = new DefaultBackoff(testCase.options);
@@ -104,22 +136,8 @@ describe('Backoff', () => {
         backoff.backoff(callback);
         fakeTimer.tick(testCase.tickCount);
 
-        assert.equal(callbacks, testCase.numberCallbackExpected);
+        assert.strictEqual(callbacks, testCase.numberCallbackExpected);
       });
-    });
-
-    it('factor', () => {
-      const options = {
-        factor: 3,
-      };
-      const backoff = new DefaultBackoff(options);
-
-      backoff.backoff(fn);
-      fakeTimer.tick(300);
-      backoff.backoff(fn);
-      fakeTimer.tick(900);
-      sinon.assert.calledTwice(fn);
-      backoff.reset();
     });
   });
 });
