@@ -2,6 +2,7 @@
 
 const DefaultBackoff = require('../../../../lib/util/backoff');
 const sinon = require('sinon');
+const assert = require('assert');
 
 describe('Backoff', () => {
   describe('Function Call', () => {
@@ -74,16 +75,37 @@ describe('Backoff', () => {
       backoff.reset();
     });
 
-    it('max', () => {
-      const options = {
-        max: 1000,
-      };
-      const backoff = new DefaultBackoff(options);
+    [
+      {
+        tickCount: 1550,
+        testName: 'with max 400',
+        options: { max: 400 },
+        // 100, 200, 400, 400, 400
+        // 100, 300, 700, 1100, 1500 = with max set to 400
+        numberCallbackExpected: 5
+      },
+      {
+        tickCount: 1550,
+        testName: 'defaults',
+        // 100, 200, 400, 800, 1600
+        // 100, 300, 700, 1500  = without max
+        numberCallbackExpected: 4,
+        options: {  },
+      }
+    ].forEach(testCase => {
+      it(testCase.testName, () => {
+        const backoff = new DefaultBackoff(testCase.options);
+        let callbacks = 0;
+        function callback() {
+          callbacks++;
+          backoff.backoff(callback);
+        }
 
-      backoff.backoff(fn);
-      fakeTimer.tick(1600);
-      sinon.assert.callCount(fn, 1);
-      backoff.reset();
+        backoff.backoff(callback);
+        fakeTimer.tick(testCase.tickCount);
+
+        assert.equal(callbacks, testCase.numberCallbackExpected);
+      });
     });
 
     it('factor', () => {
