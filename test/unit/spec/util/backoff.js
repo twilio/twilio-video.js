@@ -32,8 +32,10 @@ describe('Backoff', () => {
     it('should increase the duration exponentially', () => {
       backoff.backoff(fn);
       fakeTimer.tick(110);
+      sinon.assert.calledOnce(fn);
       backoff.backoff(fn);
       fakeTimer.tick(210);
+      sinon.assert.calledTwice(fn);
       backoff.backoff(fn);
       fakeTimer.tick(410);
       sinon.assert.calledThrice(fn);
@@ -61,18 +63,6 @@ describe('Backoff', () => {
     afterEach(() => {
       fn.resetHistory();
       fakeTimer.restore();
-    });
-
-    it('min', () => {
-      const options = {
-        min: 10,
-      };
-      const backoff = new DefaultBackoff(options);
-
-      backoff.backoff(fn);
-      fakeTimer.tick(10);
-      sinon.assert.calledOnce(fn);
-      backoff.reset();
     });
 
     [
