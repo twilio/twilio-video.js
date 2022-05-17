@@ -2629,6 +2629,18 @@ function identity(a) {
 }
 
 /**
+ * Mock Backoff.
+ * @returns {void}
+ */
+function Backoff() {
+  this.backoff = fn => {
+    fn();
+  };
+  this.reset = () => {
+    sinon.spy(() => {});
+  };
+}
+/**
  * @interface PeerConnectionV2Options
  * @property {string} [id]
  * @property {MockPeerConnection} [pc]
@@ -2649,15 +2661,6 @@ function makePeerConnectionV2(options) {
   const getSettings = () => { return { width: 1280, height: 720 }; };
   const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
-
-  const Backoff = {
-    exponential() {
-      const backoff = new EventEmitter();
-      backoff.backoff = sinon.spy(() => backoff.emit('ready'));
-      backoff.reset = sinon.spy(() => {});
-      return backoff;
-    }
-  };
 
   function RTCPeerConnection() {
     return pc;
