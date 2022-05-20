@@ -139,12 +139,12 @@ describe('util', () => {
         expectedPayload: { networkQualityConfiguration: { remote: 2 } },
       },
       {
-        testCase: 'bandwidthProfile specified',
+        testCase: 'video bandwidthProfile specified',
         connectOptions: {
           bandwidthProfile: {
             video: {
               mode: 'grid',
-              maxTracks: 1,
+              maxSwitchedOnTracks: 1,
               trackSwitchOffMode: 'detected',
               dominantSpeakerPriority: 'high',
               maxSubscriptionBitrate: 500,
@@ -157,13 +157,32 @@ describe('util', () => {
         expectedPayload: {
           bandwidthProfileOptions: {
             mode: 'grid',
-            maxTracks: 1,
+            maxVideoTracks: 1,
             trackSwitchOffMode: 'detected',
             dominantSpeakerPriority: 'high',
             maxSubscriptionBitrate: 500,
             renderDimensions: JSON.stringify({
               high: { width: 100, height: 200 }
             })
+          }
+        },
+      },
+      {
+        testCase: 'video and audio bandwidthProfile specified',
+        connectOptions: {
+          bandwidthProfile: {
+            video: {
+              maxSwitchedOnTracks: 1,
+            },
+            audio: {
+              maxSwitchedOnTracks: 2
+            }
+          }
+        },
+        expectedPayload: {
+          bandwidthProfileOptions: {
+            maxVideoTracks: 1,
+            maxAudioTracks: 2
           }
         },
       },
