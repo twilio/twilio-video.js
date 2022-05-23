@@ -16,6 +16,7 @@ const {
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');
+const { createFalse } = require('typescript');
 describe('util', () => {
   describe('createRoomConnectEventPayload', () => {
     [
@@ -352,18 +353,32 @@ describe('util', () => {
       [
         'Safari on iPad: Desktop Mode',
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15',
-        5
+        5,
+        true
       ],
       [
         'Safari on iPad: Tablet Mode',
         'Mozilla/5.0 (iPad; CPU OS 15_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Mobile/15E148 Safari/604.1',
-        5
+        5,
+        true
       ],
-    ].forEach(([testCase, useragent, maxTouchPoints]) => {
-      it('returns true for: ' + testCase, () => {
+      [
+        'Mac Desktop on Safari',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.4 Safari/605.1.15',
+        0,
+        false
+      ],
+      [
+        'iPhone on Safari',
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Mobile/15E148 Safari/604.1',
+        5,
+        false
+      ],
+    ].forEach(([testCase, useragent, maxTouchPoints, expectedBool]) => {
+      it(`returns ${expectedBool} for ${testCase} `, () => {
         navigator.userAgent = useragent;
         navigator.maxTouchPoints = maxTouchPoints;
-        assert.equal(isIpad(), true);
+        assert.equal(isIpad(), expectedBool);
       });
     });
   });
