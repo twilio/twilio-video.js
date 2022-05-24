@@ -7,7 +7,6 @@ const sinon = require('sinon');
 
 const EventTarget = require('../../../../lib/eventtarget');
 const { defer } = require('../../../../lib/util');
-const { isIpad } = require('../../../../lib/util/browserdetection');
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
 
 let fakeWebSocketConstructed = 0;
@@ -228,78 +227,59 @@ describe('InsightsPublisher', () => {
     });
 
     context('when WebSocket emits an "open" event', () => {
-      it('should call .send() with a "connect" RSP message', async () => {
-        const connectRequest = {
-          publisher: {
-            name: 'foo',
-            participantSid: 'partcipantSid',
-            roomSid: 'roomSid',
-            sdkVersion: 'bar',
-            userAgent: 'baz'
-          },
-          type: 'connect',
-          token: 'token',
-          version: 1
-        };
-        const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-          userAgent: 'baz',
-          WebSocket: FakeWebSocket
-        });
-        publisher.connect('roomSid', 'partcipantSid');
-        await socketCreationDeferred.promise;
-
-        publisher._ws.dispatchEvent({ type: 'open' });
-        assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
-      });
-    });
-
-    context('should call .send() with a RSP message including ', () => {
-      [
+      context('should call .send() with a "connect" RSP message including ', () => {
         [
-          'iPad',
-          function isIpad() { return true; },
-          function isIphone() { return false; },
-          { hwDeviceManufacturer: 'Apple',
-            hwDeviceModel: 'iPad',
-            hwDeviceType: 'Tablet' },
-        ],
-        [
-          'iPhone',
-          function isIpad() { return false; },
-          function isIphone() { return true; },
-          { hwDeviceManufacturer: 'Apple',
-            hwDeviceModel: 'iPhone',
-            hwDeviceType: 'Mobile' },
-        ]
-      ].forEach(([device, isIpad, isIphone, hwFields]) => {
-        const { hwDeviceManufacturer, hwDeviceModel, hwDeviceType } = hwFields;
-        it(`${device} device parameters`, async () => {
-          const connectRequest = {
-            publisher: {
-              name: 'foo',
-              participantSid: 'partcipantSid',
-              roomSid: 'roomSid',
-              sdkVersion: 'bar',
+          [
+            'Default',
+            function isIpad() { return false; },
+            function isIphone() { return false; },
+            null
+          ],
+          [
+            'iPad',
+            function isIpad() { return true; },
+            function isIphone() { return false; },
+            { hwDeviceManufacturer: 'Apple',
+              hwDeviceModel: 'iPad',
+              hwDeviceType: 'Tablet' },
+          ],
+          [
+            'iPhone',
+            function isIpad() { return false; },
+            function isIphone() { return true; },
+            { hwDeviceManufacturer: 'Apple',
+              hwDeviceModel: 'iPhone',
+              hwDeviceType: 'Mobile' },
+          ]
+        ].forEach(([device, isIpad, isIphone, hwFields]) => {
+          it(`${device} device parameters`, async () => {
+            const connectRequest = {
+              publisher: {
+                name: 'foo',
+                participantSid: 'partcipantSid',
+                roomSid: 'roomSid',
+                sdkVersion: 'bar',
+                userAgent: 'baz',
+              },
+              type: 'connect',
+              token: 'token',
+              version: 1
+            };
+            if (hwFields) {
+              connectRequest.publisher = { ...connectRequest.publisher, ...hwFields };
+            }
+            const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
               userAgent: 'baz',
-              hwDeviceManufacturer,
-              hwDeviceModel,
-              hwDeviceType
-            },
-            type: 'connect',
-            token: 'token',
-            version: 1
-          };
-          const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-            userAgent: 'baz',
-            WebSocket: FakeWebSocket,
-            isIpad,
-            isIphone
-          });
-          publisher.connect('roomSid', 'partcipantSid');
-          await socketCreationDeferred.promise;
+              WebSocket: FakeWebSocket,
+              isIpad,
+              isIphone
+            });
+            publisher.connect('roomSid', 'partcipantSid');
+            await socketCreationDeferred.promise;
 
-          publisher._ws.dispatchEvent({ type: 'open' });
-          assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
+            publisher._ws.dispatchEvent({ type: 'open' });
+            assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
+          });
         });
       });
     });
