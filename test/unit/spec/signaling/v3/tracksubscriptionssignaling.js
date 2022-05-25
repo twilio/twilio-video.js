@@ -37,6 +37,30 @@ describe('TrackSubscriptionsSignaling', () => {
       const subject = makeTest(makeTransport());
       assert.strictEqual(subject._currentRevision, null);
     });
+
+    it('resets ._currentRevision to null after vms-failover', async () => {
+      const mediaSignalingTransport = makeTransport();
+      const subject = makeTest(mediaSignalingTransport);
+      assert.strictEqual(subject._currentRevision, null);
+      await waitForSometime(10);
+      const initialMessage = {
+        data: {},
+        errors: {},
+        media: {},
+        revision: 100,
+        type: 'track_subscriptions'
+      };
+
+      mediaSignalingTransport.emit('message', initialMessage);
+      assert.strictEqual(subject._currentRevision, 100);
+
+      const readyPromise = new Promise(resolve => subject.on('ready', resolve));
+
+      // simulate VMS fail over
+      subject.setup('foo');
+      await readyPromise;
+      assert.strictEqual(subject._currentRevision, null);
+    });
   });
 
   describe('when mediaSignalingTransport emits a "message" event', () => {
