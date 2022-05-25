@@ -15,7 +15,6 @@ const {
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');
-const { createFalse } = require('typescript');
 describe('util', () => {
   describe('createRoomConnectEventPayload', () => {
     [
