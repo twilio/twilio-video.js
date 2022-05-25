@@ -12,7 +12,6 @@ import { RemoteDataTrackPublication } from './RemoteDataTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { RemoteVideoTrackPublication } from './RemoteVideoTrackPublication';
 import { Track } from './Track';
-import { TwilioWarning } from './TwilioWarning';
 import { VideoTrack } from './VideoTrack';
 
 export type LocalTrack = LocalAudioTrack | LocalVideoTrack | LocalDataTrack;
@@ -98,6 +97,8 @@ export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
 export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
+
+export type TwilioWarning = 'recording-media-lost';
 
 /**
 * @deprecated
