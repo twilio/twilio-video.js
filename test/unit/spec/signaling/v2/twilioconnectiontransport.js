@@ -1173,7 +1173,8 @@ describe('TwilioConnectionTransport', () => {
         [
           { session: 'foo', type: 'connected' },
           { type: 'synced' },
-          { type: 'update' }
+          { type: 'update' },
+          { type: 'warning' }
         ].forEach(expectedMessage => {
           context(`"${expectedMessage.type}"`, () => {
             let connected;
