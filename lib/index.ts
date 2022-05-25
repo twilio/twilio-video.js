@@ -16,8 +16,7 @@ const internals = {
   Logger: require('./vendor/loglevel'),
   LocalAudioTrack: require('./media/track/es5').LocalAudioTrack,
   LocalDataTrack: require('./media/track/es5').LocalDataTrack,
-  LocalVideoTrack: require('./media/track/es5').LocalVideoTrack,
-  TwilioWarning: require('./util/twiliowarning')
+  LocalVideoTrack: require('./media/track/es5').LocalVideoTrack
 };
 
 function connect(token: string, options?: ConnectOptions): Promise<Room> {
@@ -66,7 +65,6 @@ const Logger: Log.RootLogger = internals.Logger;
 const LocalAudioTrack = internals.LocalAudioTrack;
 const LocalVideoTrack = internals.LocalVideoTrack;
 const LocalDataTrack = internals.LocalDataTrack;
-const TwilioWarning = internals.TwilioWarning;
 
 module.exports = {
   connect,
@@ -79,6 +77,5 @@ module.exports = {
   Logger,
   LocalAudioTrack,
   LocalVideoTrack,
-  LocalDataTrack,
-  TwilioWarning
+  LocalDataTrack
 };

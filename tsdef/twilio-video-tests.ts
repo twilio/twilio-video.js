@@ -397,7 +397,7 @@ async function mediaWarnings() {
     notifyWarnings: []
   });
   room = await Video.connect('$TOKEN', {
-    notifyWarnings: [Video.TwilioWarning.recordingMediaLost]
+    notifyWarnings: ['recording-media-lost']
   });
 
   room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {

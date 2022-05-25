@@ -42,7 +42,6 @@ export { Room } from './Room';
 export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
 export { TwilioError } from './TwilioError';
-export { TwilioWarning } from './TwilioWarning';
 export {
   AudioCodec,
   AudioCodecSettings,
@@ -81,6 +80,7 @@ export {
   StatsReport,
   TrackStats,
   TrackSwitchOffMode,
+  TwilioWarning,
   VideoBandwidthProfileOptions,
   VideoCodec,
   VideoCodecSettings,
