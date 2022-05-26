@@ -8,6 +8,7 @@ const sinon = require('sinon');
 const EventTarget = require('../../../../lib/eventtarget');
 const { defer } = require('../../../../lib/util');
 const InsightsPublisher = require('../../../../lib/util/insightspublisher');
+const browserdetection = require('../../../../lib/util/browserdetection');
 
 let fakeWebSocketConstructed = 0;
 let socketCreationDeferred = null;
@@ -227,28 +228,74 @@ describe('InsightsPublisher', () => {
     });
 
     context('when WebSocket emits an "open" event', () => {
-      it('should call .send() with a "connect" RSP message', async () => {
-        const connectRequest = {
-          publisher: {
-            name: 'foo',
-            participantSid: 'partcipantSid',
-            roomSid: 'roomSid',
-            sdkVersion: 'bar',
-            userAgent: 'baz'
-          },
-          type: 'connect',
-          token: 'token',
-          version: 1
-        };
-        const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
-          userAgent: 'baz',
-          WebSocket: FakeWebSocket
-        });
-        publisher.connect('roomSid', 'partcipantSid');
-        await socketCreationDeferred.promise;
+      context('should call .send() with a "connect" RSP message including ', () => {
+        let isIpadStub;
+        let isIphoneStub;
 
-        publisher._ws.dispatchEvent({ type: 'open' });
-        assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
+        beforeEach(() => {
+          isIpadStub = sinon.stub(browserdetection, 'isIpad');
+          isIphoneStub = sinon.stub(browserdetection, 'isIphone');
+        });
+
+        afterEach(() => {
+          isIpadStub.restore();
+          isIphoneStub.restore();
+        });
+        [
+          [
+            'Default',
+            false,
+            false,
+            null
+          ],
+          [
+            'iPad',
+            true,
+            false,
+            { hwDeviceManufacturer: 'Apple',
+              hwDeviceModel: 'iPad',
+              hwDeviceType: 'Tablet' },
+          ],
+          [
+            'iPhone',
+            false,
+            true,
+            { hwDeviceManufacturer: 'Apple',
+              hwDeviceModel: 'iPhone',
+              hwDeviceType: 'Mobile' },
+          ]
+        ].forEach(([device, isIpadBool, isIphoneBool, hwFields]) => {
+          it(`${device} device parameters`, async () => {
+            const connectRequest = {
+              publisher: {
+                name: 'foo',
+                participantSid: 'partcipantSid',
+                roomSid: 'roomSid',
+                sdkVersion: 'bar',
+                userAgent: 'baz',
+              },
+              type: 'connect',
+              token: 'token',
+              version: 1
+            };
+            isIpadStub.returns(isIpadBool);
+            isIphoneStub.returns(isIphoneBool);
+            if (hwFields) {
+              connectRequest.publisher = { ...connectRequest.publisher, ...hwFields };
+            }
+            const publisher = new InsightsPublisher('token', 'foo', 'bar', 'baz', 'zee', {
+              userAgent: 'baz',
+              WebSocket: FakeWebSocket,
+            });
+            publisher.connect('roomSid', 'partcipantSid');
+            await socketCreationDeferred.promise;
+
+            publisher._ws.dispatchEvent({ type: 'open' });
+            assert.deepEqual(JSON.parse(publisher._ws.send.args[0][0]), connectRequest);
+            isIpadStub.resetHistory();
+            isIphoneStub.resetHistory();
+          });
+        });
       });
     });
 
