@@ -1426,7 +1426,6 @@ describe('RoomV3', () => {
             type: 'track_subscriptions'
           });
           track = await trackSwitchOnPromise;
-          await test.room._getTrackReceiver('0', 'mid');
           sinon.assert.calledWith(track.setTrackTransceiver, trackReceiver3, true);
           sinon.assert.calledWith(track.setSwitchedOff, false, null);
         });
