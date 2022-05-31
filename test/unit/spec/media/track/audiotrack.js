@@ -55,8 +55,8 @@ describe('AudioTrack', () => {
           assert.equal(track._attach.calledWith(dummyElement), !!id);
         });
 
-        it(`should ${id ? '' : 'not '}call .delete with the created element on the ._attachments Set`, () => {
-          assert.equal(track._attachments.delete.calledWith(dummyElement), !!id);
+        it('should not add dummyElement to _attachments', () => {
+          assert(!track._attachments.has(dummyElement));
         });
 
         it(`should ${id ? '' : 'not '}set el.oncanplay to a function`, () => {
