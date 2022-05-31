@@ -10,7 +10,7 @@ Bug Fixes
 
 - Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
 - Fixed an issue where the `dimensionsChanged` event was not firing when the track dimensions first became available. (VIDEO-3576)
-- Removed references to node dependencies that causes build errors on some platforms. (VIDEO-9282)
+- Removed references to node dependencies that causes build errors on Angular and Vue. (VIDEO-9282)
 - Fixed an issue where incorrect device was detected when using iPad in Desktop Website mode. (VIDEO-8282)
 
 2.21.1 (March 22, 2022)
