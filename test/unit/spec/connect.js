@@ -114,7 +114,7 @@ describe('connect', () => {
       options: { bandwidthProfile: { video: { renderDimensions: {} } } },
       shouldDelete: false
     }
-  ].forEach(({ name, newName, optionsName, options, value, shouldDelete }) => {
+  ].forEach(({ name, newName, optionsName, options: inputOptions, value, shouldDelete }) => {
     describe(`called with the deprecated ${optionsName} "${name}"`, () => {
       let signaling;
 
@@ -127,6 +127,7 @@ describe('connect', () => {
       ['first', 'second'].forEach(callCount => {
         context(`for the ${callCount} time`, () => {
           before(() => {
+            const options = typeof inputOptions === 'object' ? JSON.parse(JSON.stringify(inputOptions)) : inputOptions;
             connect(token, {
               ...(options || { [name]: value }),
               iceServers: [],

@@ -31,7 +31,7 @@ interface InternalOptions extends CreateLocalTracksOptions {
   LocalVideoTrack: any;
   MediaStreamTrack: any;
   Log: any;
-};
+}
 
 /**
  * Request {@link LocalTrack}s. By default, it requests a

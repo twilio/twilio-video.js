@@ -30,13 +30,13 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { maxSubscriptionBitrate: 2048 } }, { video: { max_subscription_bandwidth: 2048 } }],
       // eslint-disable-next-line
-      [{ video: { maxTracks: 2 } }, { video: { max_tracks: 2 } }],
+      [{ video: { maxSwitchedOnTracks: 2 } }, { video: { max_tracks: 2 } }],
       // eslint-disable-next-line
-      [{ video: { maxTracks: 2, trackSwitchOffMode: 'predicted' } }, { video: { max_tracks: 2, track_switch_off: 'predicted' } }],
+      [{ video: { maxSwitchedOnTracks: 2, trackSwitchOffMode: 'predicted' } }, { video: { max_tracks: 2, track_switch_off: 'predicted' } }],
       // eslint-disable-next-line
-      [{ video: { maxTracks: 2, trackSwitchOffMode: 'detected' } }, { video: { max_tracks: 2, track_switch_off: 'detected' } }],
+      [{ video: { maxSwitchedOnTracks: 2, trackSwitchOffMode: 'detected' } }, { video: { max_tracks: 2, track_switch_off: 'detected' } }],
       // eslint-disable-next-line
-      [{ video: { maxTracks: 2, trackSwitchOffMode: 'disabled' } }, { video: { max_tracks: 2, track_switch_off: 'disabled' } }],
+      [{ video: { maxSwitchedOnTracks: 2, trackSwitchOffMode: 'disabled' } }, { video: { max_tracks: 2, track_switch_off: 'disabled' } }],
       // eslint-disable-next-line
       // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
@@ -47,12 +47,16 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { renderDimensions: { standard: { width: 1000, height: 1200 } } } }, { video: { render_dimensions: { standard: { width: 1000, height: 1200 } } } }],
       // eslint-disable-next-line
+      [{ audio: { maxSwitchedOnTracks: 5 } }, { audio: { max_tracks: 5 } }],
+      // eslint-disable-next-line
+      [{ video: { maxSwitchedOnTracks: 2 }, audio: { maxSwitchedOnTracks: 3 } }, { video: { max_tracks: 2 }, audio: { max_tracks: 3 } }],
+      // eslint-disable-next-line
       [
         {
           video: {
             dominantSpeakerPriority: 'baz',
             maxSubscriptionBitrate: 4096,
-            maxTracks: 5,
+            maxSwitchedOnTracks: 5,
             mode: 'bar',
             renderDimensions: {
               high: { width: 2, height: 3 },
@@ -77,7 +81,7 @@ describe('TwilioConnectionTransport', () => {
               standard: { width: 6, height: 7 }
             }
           }
-        }
+        },
       ]
     ]
   ]).forEach(([iceServers, networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {

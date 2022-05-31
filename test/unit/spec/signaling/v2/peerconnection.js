@@ -862,10 +862,10 @@ describe('PeerConnectionV2', () => {
       // resolve deferred promise when setRemoteDescription is called.
       const setRemoteDescriptionCalled = defer();
       const setRemoteDescriptionStub = sinon.stub(test.pc, 'setRemoteDescription');
-      setRemoteDescriptionStub.callsFake(() => {
+      setRemoteDescriptionStub.callsFake((...args) => {
         setRemoteDescriptionCalled.resolve();
         // eslint-disable-next-line no-undef
-        return setRemoteDescriptionStub.wrappedMethod.apply(test.pc, arguments);
+        return setRemoteDescriptionStub.wrappedMethod.apply(test.pc, args);
       });
 
       // Apply remote offer for revision 2

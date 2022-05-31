@@ -435,7 +435,7 @@ describe('RemoteVideoTrack', function() {
         logLevel: 'warn',
         bandwidthProfile: {
           video: {
-            maxTracks: 1,
+            maxSwitchedOnTracks: 1,
             dominantSpeakerPriority: 'low'
           }
         },

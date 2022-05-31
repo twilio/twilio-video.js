@@ -178,6 +178,10 @@ describe('connect', function() {
         bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'auto' } }
       },
       {
+        name: 'both maxTracks and maxSwitchedOnTracks specified',
+        bandwidthProfile: { video: { maxTracks: 5,  maxSwitchedOnTracks: 10 } }
+      },
+      {
         name: 'both maxTracks and subscriberTrackSwitchOffMode=manual specified',
         bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'manual' } }
       },
