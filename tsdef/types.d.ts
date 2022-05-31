@@ -107,10 +107,17 @@ export interface VideoRenderDimensions {
   standard?: VideoTrack.Dimensions;
 }
 
+
+export interface AudioBandwidthProfile {
+  maxSwitchedOnTracks?: number;
+}
+
 export interface VideoBandwidthProfile {
   contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
+  maxSwitchedOnTracks?: number;
+
   /**
    * @deprecated use clientTrackSwitchOffControl instead
    */
@@ -126,6 +133,7 @@ export interface VideoBandwidthProfile {
 
 export interface BandwidthProfile {
   video?: VideoBandwidthProfile;
+  audio?: AudioBandwidthProfile;
 }
 
 export interface AudioCodecSettings {
