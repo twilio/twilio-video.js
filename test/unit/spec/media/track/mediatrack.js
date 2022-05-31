@@ -78,8 +78,8 @@ describe('MediaTrack', () => {
           assert.equal(track._attach.calledWith(dummyElement), !!kind);
         });
 
-        it(`should ${kind ? '' : 'not '}call .delete with the created element on the ._attachments Set`, () => {
-          assert.equal(track._attachments.delete.calledWith(dummyElement), !!kind);
+        it('should not add dummy element to the _attachments', () => {
+          assert(!track._attachments.has(dummyElement));
         });
 
         it(`should ${kind ? '' : 'not '}set el.oncanplay to a function`, () => {
