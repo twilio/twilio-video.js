@@ -182,8 +182,17 @@ describe('PeerConnectionV2', () => {
         testName: 'does not update encodings when not using adaptive simulcast',
         width: 960,
         height: 540,
+        readyState: 'live',
         encodings: [{}, {}, {}],
         preferredCodecs: { audio: [], video: [{ codec: 'vp8', simulcast: true }] }
+      },
+      {
+        browser: 'chrome',
+        testName: 'does not update encodings when track is stopped',
+        readyState: 'ended',
+        width: 960,
+        height: 540,
+        encodings: [{}, {}, {}],
       },
       {
         browser: 'safari',
@@ -229,7 +238,7 @@ describe('PeerConnectionV2', () => {
         height: 270,
         encodings: [{}, {}, {}],
       }
-    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, trackReplaced = false, expectedEncodings = null, isScreenShare = false, kind = 'video' }) => {
+    ].forEach(({ width, height, encodings, testName, browser, preferredCodecs, trackReplaced = false, expectedEncodings = null, isScreenShare = false, kind = 'video', readyState = 'live' }) => {
       it(`${browser}:${testName}`, () => {
         stub = stub.returns(browser);
         const trackSettings = { width, height };
@@ -238,6 +247,7 @@ describe('PeerConnectionV2', () => {
         }
         const mediaStreamTrack = {
           kind,
+          readyState,
           getSettings: () => trackSettings
         };
 
@@ -2619,6 +2629,18 @@ function identity(a) {
 }
 
 /**
+ * Mock Backoff.
+ * @returns {void}
+ */
+function Backoff() {
+  this.backoff = fn => {
+    fn();
+  };
+  this.reset = () => {
+    sinon.spy(() => {});
+  };
+}
+/**
  * @interface PeerConnectionV2Options
  * @property {string} [id]
  * @property {MockPeerConnection} [pc]
@@ -2639,15 +2661,6 @@ function makePeerConnectionV2(options) {
   const getSettings = () => { return { width: 1280, height: 720 }; };
   const tracks = options.tracks || [{ kind: 'audio' }, { kind: 'video', getSettings }];
   tracks.forEach(track => pc.addTrack(track));
-
-  const Backoff = {
-    exponential() {
-      const backoff = new EventEmitter();
-      backoff.backoff = sinon.spy(() => backoff.emit('ready'));
-      backoff.reset = sinon.spy(() => {});
-      return backoff;
-    }
-  };
 
   function RTCPeerConnection() {
     return pc;
