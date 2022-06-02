@@ -87,10 +87,6 @@ describe('AudioTrack', () => {
             it('should set the element\'s oncanplay to null', () => {
               assert.equal(dummyElement.oncanplay, null);
             });
-
-            it('should set the element\'s srcObject to null', () => {
-              assert.equal(dummyElement.srcObject, null);
-            });
           });
         }
       });
