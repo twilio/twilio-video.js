@@ -8,9 +8,9 @@ export interface AudioProcessor {
 
   /**
    * connects and cleans given stream
-   * @returns {Promise<MediaStreamTrack>} clean stream
+   * @returns {MediaStreamTrack} clean track
    */
-  connect: (sourceTrack: MediaStreamTrack) => Promise<MediaStreamTrack>
+  connect: (sourceTrack: MediaStreamTrack) => MediaStreamTrack
 
   /**
    * checks if AudioProcessor is currently enabled
