@@ -1700,6 +1700,19 @@ function createTwilioConnection(options) {
   return FakeTwilioConnection;
 }
 
+/**
+ * Mock Backoff.
+ * @returns {void}
+ */
+function Backoff() {
+  this.backoff = fn => {
+    fn();
+  };
+  this.reset = () => {
+    sinon.spy(() => {});
+  };
+}
+
 function makeTest(options) {
   options = options || {};
   options.eventObserver = options.eventObserver || new EventObserver(makeInsightsPublisher(), 0, log);
@@ -1719,6 +1732,7 @@ function makeTest(options) {
   options.onIced = options.onIced || sinon.spy(() => Promise.resolve());
   options.peerConnectionManager = options.peerConnectionManager || makePeerConnectionManager(options);
   options.TwilioConnection = options.TwilioConnection || createTwilioConnection(options);
+  options.Backoff = options.Backoff || Backoff;
   options.transport = options.transport || new TwilioConnectionTransport(
     options.name,
     options.accessToken,
@@ -1726,7 +1740,6 @@ function makeTest(options) {
     options.peerConnectionManager,
     options.wsServer,
     options);
-  options.twilioConnection = options.transport._twilioConnection;
   options.transitions = [];
   options.transport.on('stateChanged', state => {
     options.transitions.push(state);
