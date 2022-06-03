@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 let rnnoiseExports = null;
 let heapFloat32;

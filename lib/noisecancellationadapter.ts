@@ -69,7 +69,7 @@ export async function createNoiseCancellationAudioProcessor(
         disable: () => sdkAPI.disable(),
         destroy: () => sdkAPI.destroy(),
         setLogging: (enable: boolean) => sdkAPI.setLogging(enable),
-        connect:  (sourceTrack: MediaStreamTrack) => {
+        connect: (sourceTrack: MediaStreamTrack) => {
           log.debug('connect: ', sourceTrack.id);
           if (sdkAPI.isConnected()) {
             sdkAPI.disconnect();
