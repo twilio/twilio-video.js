@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 'use strict';
-console.log('makarand: loading rnnoise_processor.js');
 let rnnoiseExports = null;
 let heapFloat32;
 let processCount = 0;
@@ -102,6 +101,4 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
     return this.keepAlive;
   }
 }
-console.log('makarand registering rnnoise processor: start');
 registerProcessor('rnnoise', RNNNoiseProcessor);
-console.log('makarand registering rnnoise processor: end');
