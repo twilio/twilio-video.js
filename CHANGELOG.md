@@ -7,6 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 ====================
 
 - Fixed an issue where the generated API documentation has a missing search bar.
+- Fixed platform name when using iPhone or iPad in Desktop Website mode.
 
 2.21.2 (June 1, 2022)
 =====================

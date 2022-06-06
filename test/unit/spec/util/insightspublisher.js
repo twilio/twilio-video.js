@@ -254,7 +254,8 @@ describe('InsightsPublisher', () => {
             false,
             { hwDeviceManufacturer: 'Apple',
               hwDeviceModel: 'iPad',
-              hwDeviceType: 'tablet' },
+              hwDeviceType: 'tablet',
+              platformName: 'iOS' },
           ],
           [
             'iPhone',
@@ -262,7 +263,8 @@ describe('InsightsPublisher', () => {
             true,
             { hwDeviceManufacturer: 'Apple',
               hwDeviceModel: 'iPhone',
-              hwDeviceType: 'mobile' },
+              hwDeviceType: 'mobile',
+              platformName: 'iOS' },
           ]
         ].forEach(([device, isIpadBool, isIphoneBool, hwFields]) => {
           it(`${device} device parameters`, async () => {
