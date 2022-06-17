@@ -1,6 +1,7 @@
 import { LocalTrack, RemoteTrack, StatsReport } from './types';
 import { EventEmitter } from 'events';
 import { LocalParticipant } from './LocalParticipant';
+import { LocalTrackPublication } from './LocalTrackPublication';
 import { Participant } from './Participant';
 import { RemoteDataTrack } from './RemoteDataTrack';
 import { RemoteParticipant } from './RemoteParticipant';
@@ -49,6 +50,6 @@ export class Room extends EventEmitter {
   on(event: 'trackSwitchedOn', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnpublished', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnsubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
-  on(event: 'trackWarning', listener: (name: string, track: LocalTrack, participant: LocalParticipant) => void): this;
-  on(event: 'trackWarningsCleared', listener: (track: LocalTrack, participant: LocalParticipant) => void): this;
+  on(event: 'trackWarning', listener: (name: string, publication: LocalTrackPublication, participant: LocalParticipant) => void): this;
+  on(event: 'trackWarningsCleared', listener: (publication: LocalTrackPublication, participant: LocalParticipant) => void): this;
 }

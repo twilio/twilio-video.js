@@ -31,7 +31,7 @@ export class LocalParticipant extends Participant {
   on(event: 'trackPublished', listener: (publication: LocalTrackPublication) => void): this;
   on(event: 'trackStarted', listener: (track: LocalTrack) => void): this;
   on(event: 'trackStopped', listener: (track: LocalTrack) => void): this;
-  on(event: 'trackWarning', listener: (name: string, track: LocalTrack) => void): this;
-  on(event: 'trackWarningsCleared', listener: (track: LocalTrack) => void): this;
+  on(event: 'trackWarning', listener: (name: string, publication: LocalTrackPublication) => void): this;
+  on(event: 'trackWarningsCleared', listener: (publication: LocalTrackPublication) => void): this;
   on(event: string, listener: (...args: any[]) => void): this;
 }
