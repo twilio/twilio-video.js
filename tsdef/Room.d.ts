@@ -8,7 +8,6 @@ import { RemoteTrackPublication } from './RemoteTrackPublication';
 import { RemoteVideoTrack } from './RemoteVideoTrack';
 import { Track } from './Track';
 import { TwilioError } from './TwilioError';
-import { TwilioWarning } from './TwilioWarning';
 
 export namespace Room {
   type SID = string;
@@ -50,6 +49,6 @@ export class Room extends EventEmitter {
   on(event: 'trackSwitchedOn', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnpublished', listener: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
   on(event: 'trackUnsubscribed', listener: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void): this;
-  on(event: 'trackWarning', listener: (name: TwilioWarning, track: LocalTrack, participant: LocalParticipant) => void): this;
+  on(event: 'trackWarning', listener: (name: string, track: LocalTrack, participant: LocalParticipant) => void): this;
   on(event: 'trackWarningsCleared', listener: (track: LocalTrack, participant: LocalParticipant) => void): this;
 }

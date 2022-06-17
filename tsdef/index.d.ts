@@ -80,7 +80,6 @@ export {
   StatsReport,
   TrackStats,
   TrackSwitchOffMode,
-  TwilioWarning,
   VideoBandwidthProfileOptions,
   VideoCodec,
   VideoCodecSettings,

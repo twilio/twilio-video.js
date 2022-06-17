@@ -401,7 +401,7 @@ async function mediaWarnings() {
   });
 
   room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {
-    publication.on('warning', (name: Video.TwilioWarning) => {
+    publication.on('warning', (name: string) => {
       // eslint-disable-next-line no-console
       console.log(name);
     });
@@ -410,7 +410,7 @@ async function mediaWarnings() {
       console.log('warningsCleared');
     });
   });
-  room.localParticipant.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack) => {
+  room.localParticipant.on('trackWarning', (name: string, track: Video.LocalTrack) => {
     // eslint-disable-next-line no-console
     console.log(name, track);
   });
@@ -419,7 +419,7 @@ async function mediaWarnings() {
     console.log('warningsCleared', track);
   });
 
-  room.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack, participant: Video.LocalParticipant) => {
+  room.on('trackWarning', (name: string, track: Video.LocalTrack, participant: Video.LocalParticipant) => {
     // eslint-disable-next-line no-console
     console.log(name, track, participant);
   });
