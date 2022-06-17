@@ -44,7 +44,7 @@ Array.from(room.localParticipant.tracks.values()).forEach(publication => {
 
 - **notifyWarnings** - An array of TwilioWarnings to listen to. By default, this array is empty and no warning events will be raised. Possible TwilioWarning values include:
 
-  - `recording-media-lost` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds.
+  - `recording-media-lost` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds. This usually happens when there are network interruptions or when the track has stopped.
 
 #### Events
 
