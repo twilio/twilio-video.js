@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const Room = require('../../../lib/room');
 const LocalParticipant = require('../../../lib/localparticipant');
 const ParticipantSignaling = require('../../../lib/signaling/participant');
+const LocalParticipantSignaling = require('../../../lib/signaling/v2/localparticipant');
 const RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 const RoomSignaling = require('../../../lib/signaling/room');
 
@@ -18,13 +19,14 @@ const log = require('../../lib/fakelog');
 
 describe('Room', () => {
   const options = { log: log };
-  const localParticipant = new ParticipantSignaling('PAXXX', 'client');
+  const localParticipantSignaling = new LocalParticipantSignaling('PAXXX', 'client');
 
   let room;
   let signaling;
 
   beforeEach(() => {
-    signaling = new RoomSignaling(localParticipant, 'RM123', 'foo');
+    signaling = new RoomSignaling(localParticipantSignaling, 'RM123', 'foo');
+    const localParticipant = new LocalParticipant(localParticipantSignaling, [], { log });
     room = new Room(localParticipant, signaling, options);
   });
 
