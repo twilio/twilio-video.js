@@ -120,6 +120,15 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Safari mobile
 <details>
+<summary>iOS 15: Echo issues on iOS 15 devices after attaching video tracks</summary>
+<p>
+
+   Attaching a VideoTrack to a video element causes echo issues if you have a LocalAudioTrack that is already attached to an audio element. This happens due to an iOS 15 [bug](https://bugs.webkit.org/show_bug.cgi?id=241492) where the audio element is unintentionally unmuted.
+
+   Apple has already fixed this issue on iOS 15.5. However, older versions will continue to experience the issue. As a workaround, you can skip attaching the LocalAudioTrack to an audio element to prevent a feedback loop that causes the echo issue. If you really need to attach the LocalAudioTrack for any reason, please feel free to reach out to us in this repo and we will help to find a workaround depending on your use case.
+</p>
+</details>
+<details>
 <summary>iOS 15: VideoTracks goes black and the page freezes on certain interruptions</summary>
 <p>
 
