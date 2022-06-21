@@ -401,7 +401,7 @@ async function mediaWarnings() {
   });
 
   room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {
-    publication.on('warning', (name: Video.TwilioWarning) => {
+    publication.on('warning', (name: string) => {
       // eslint-disable-next-line no-console
       console.log(name);
     });
@@ -410,22 +410,22 @@ async function mediaWarnings() {
       console.log('warningsCleared');
     });
   });
-  room.localParticipant.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack) => {
+  room.localParticipant.on('trackWarning', (name: string, publication: Video.LocalTrackPublication) => {
     // eslint-disable-next-line no-console
-    console.log(name, track);
+    console.log(name, publication);
   });
-  room.localParticipant.on('trackWarningsCleared', (track: Video.LocalTrack) => {
+  room.localParticipant.on('trackWarningsCleared', (publication: Video.LocalTrackPublication) => {
     // eslint-disable-next-line no-console
-    console.log('warningsCleared', track);
+    console.log('warningsCleared', publication);
   });
 
-  room.on('trackWarning', (name: Video.TwilioWarning, track: Video.LocalTrack, participant: Video.LocalParticipant) => {
+  room.on('trackWarning', (name: string, publication: Video.LocalTrackPublication, participant: Video.LocalParticipant) => {
     // eslint-disable-next-line no-console
-    console.log(name, track, participant);
+    console.log(name, publication, participant);
   });
-  room.on('trackWarningsCleared', (track: Video.LocalTrack, participant: Video.LocalParticipant) => {
+  room.on('trackWarningsCleared', (publication: Video.LocalTrackPublication, participant: Video.LocalParticipant) => {
     // eslint-disable-next-line no-console
-    console.log('warningsCleared', track, participant);
+    console.log('warningsCleared', publication, participant);
   });
 }
 
