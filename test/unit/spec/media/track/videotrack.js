@@ -399,6 +399,22 @@ describe('VideoTrack', () => {
     });
   });
 
+  describe('#_start', () => {
+    it('should emit the dimensionsChanged event when new dimensions are available', () => {
+      const listener = sinon.stub();
+      const dummyEl = { videoWidth: 1920, videoHeight: 1080 };
+      videoTrack.on('dimensionsChanged', listener);
+      videoTrack._start(dummyEl);
+      sinon.assert.calledOnce(listener);
+      sinon.assert.calledWithMatch(listener, {
+        dimensions: {
+          width: 1920,
+          height: 1080,
+        },
+      });
+    });
+  });
+
   describe('#_captureFrames', () => {
     // As of node12, the Promise.then and Promise.finally requires separate
     // promises to resolve internally.

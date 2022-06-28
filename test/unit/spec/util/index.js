@@ -11,7 +11,7 @@ const {
   makeUUID,
   promiseFromEvents,
   isChromeScreenShareTrack,
-  createRoomConnectEventPayload
+  createRoomConnectEventPayload,
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');

@@ -37,7 +37,7 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
       /* The RemoteTrack is disabled. */
     }
   });
-  
+
   remoteTrack.on('switchedOn', () => {
     if (recentSwitchOffReason === 'disabled-by-publisher') {
       /* The RemoteTrack is enabled. */
@@ -46,7 +46,7 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
   });
   ```
 
-- The `isTrackEnabled` property of the RemoteTrackPublication is deprecated and scheduled for removal. Alternatively, you 
+- The `isTrackEnabled` property of the RemoteTrackPublication is deprecated and scheduled for removal. Alternatively, you
   can determine if a RemoteTrackPublication is enabled by using the following expression. (VIDEO-8743, VIDEO-8751)
   ```js
   const { track } = remoteTrackPublication;
@@ -66,7 +66,7 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
       /* The RemoteTrack is disabled. */
     }
   });
-  
+
   remoteTrackPublication.on('trackSwitchedOn', (track) => {
     if (recentSwitchOffReason === 'disabled-by-publisher') {
       /* The RemoteTrack is enabled. */
@@ -90,6 +90,24 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
     console.log(`Successfully published ${publication.kind} Track`);
   });
   ```
+2.21.3 (June 7, 2022)
+====================
+
+Bug Fixes
+---------
+
+- Fixed an issue where the generated API documentation has a missing search bar. (VIDEO-10199)
+
+2.21.2 (June 1, 2022)
+=====================
+
+Bug Fixes
+---------
+
+- Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
+- Fixed an issue where the `dimensionsChanged` event was not firing when the track dimensions first became available. (VIDEO-3576)
+- Removed references to node dependencies that causes build errors on Angular and Vue. (VIDEO-9282)
+- Fixed an issue where incorrect device was detected when using iPad in Desktop Website mode. (VIDEO-8282)
 
 2.21.1 (March 22, 2022)
 =======================
