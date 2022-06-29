@@ -117,6 +117,22 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
    once a Participant unpublishes a MediaTrack of any kind (audio or video), it will not be able to publish another MediaTrack of the same kind.        DataTracks are not affected. We have escalated this bug to the Safari Team and are keeping track of related developments.
 </p>
 </details>
+<details>
+<summary>Video elements may not be visible when applying a 3d transform</summary>
+<p>
+
+   In some cases, a video element may not be visible when using a 3d CSS transform to mirror a local video track. It is recommended that a 2d transform be used instead.
+
+   Recommended 2d transform to mirror a video track:
+```css
+transform: scaleX(-1)
+```
+
+   This issue is also present in Safari mobile.
+
+   For more information, please see the discussion in [this issue](https://github.com/twilio/twilio-video.js/issues/1724).
+</p>
+</details>
 
 ### Safari mobile
 <details>
@@ -370,5 +386,14 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
+</p>
+</details>
+<details>
+<summary>seSinkId method is not implemented in all browsers</summary>
+<p>
+
+   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it will not be possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead. 
+
+   More information about this method (including browser compatibility) is available [here](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId).
 </p>
 </details>
