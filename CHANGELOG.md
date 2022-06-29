@@ -2,6 +2,12 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.21.4 (in progress)
+====================
+
+- The encoding of audio and screen share Tracks are prioritized in Chrome and Safari, thereby preserving their quality
+  in limited network conditions. (VIDEO-10212)
+
 2.21.3 (June 7, 2022)
 ====================
 
