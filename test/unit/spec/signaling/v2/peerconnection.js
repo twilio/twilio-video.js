@@ -2164,7 +2164,7 @@ describe('PeerConnectionV2', () => {
       const audioSender = senders.filter(s => s.track.kind === 'audio')[0];
       const videoSender = senders.filter(s => s.track.kind === 'video')[0];
 
-      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20 }] });
+      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20, priority: 'high' }] });
       assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 30 }] });
     });
   });
