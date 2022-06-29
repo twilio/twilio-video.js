@@ -121,7 +121,7 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <summary>Video elements may not be visible when applying a 3d transform</summary>
 <p>
 
-   In some cases, a video element may not be visible when using a 3d CSS transform to mirror a local video track. It is recommended that a 2d transform be used instead.
+   In some cases, a video element may not be visible when using a 3d CSS transform (such as `rotateY(180deg)`) to mirror a local video track. It is recommended that a 2d transform be used instead.
 
    Recommended 2d transform to mirror a video track:
 ```css
@@ -389,10 +389,10 @@ trouble with twilio-video.js, ensure these are not running.
 </p>
 </details>
 <details>
-<summary>seSinkId method is not implemented in all browsers</summary>
+<summary>setSinkId method is not implemented in all browsers</summary>
 <p>
 
-   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it will not be possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead. 
+   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it is not possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead. 
 
    More information about this method (including browser compatibility) is available [here](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId).
 </p>
