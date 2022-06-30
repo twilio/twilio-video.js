@@ -6,7 +6,7 @@ const Log = require('./util/log');
 
 const dynamicImport = require('./dynamicImport');
 
-const KRISP_VERSION = '2.0.0';
+const KRISP_VERSION = '2.1.0';
 const RNNOISE_VERSION = '2.0.0';
 const KRISP_SDK_FILE = 'krispsdk.mjs';
 const RNNOISE_SDK_FILE = 'rnnoise_sdk.mjs';
