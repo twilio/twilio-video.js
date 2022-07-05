@@ -22,6 +22,11 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // automaticSubscription
     [true, false], // trackPriority
     [true, false], // trackSwitchOff
+    [              // notifyWarnings
+      [['recording-media-lost'], ['recordings']],
+      [[], []],
+      [undefined, undefined]
+    ],
     [              // bandwidthProfile
       [undefined],
       [{}, {}],
@@ -80,14 +85,26 @@ describe('TwilioConnectionTransport', () => {
         }
       ]
     ]
-  ]).forEach(([iceServers, networkQuality, dominantSpeaker, automaticSubscription, trackPriority, trackSwitchOff, bandwidthProfile, expectedRspPayload]) => {
+  ]).forEach(([
+    iceServers,
+    networkQuality,
+    dominantSpeaker,
+    automaticSubscription,
+    trackPriority,
+    trackSwitchOff,
+    notifyWarnings,
+    expectedMediaWarningsRspPayload,
+    bandwidthProfile,
+    expectedBandwidthProfileRspPayload
+  ]) => {
     describe(`constructor, called with
       .iceServers ${iceServers ? '' : 'not '}provided
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
       .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
       .trackPriority flag ${trackPriority ? 'enabled' : 'disabled'},
-      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'}, and
+      .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'},
+      .notifyWarnings ${JSON.stringify(notifyWarnings)}, and
       .bandwidthProfile ${JSON.stringify(bandwidthProfile)}`, () => {
       let test;
 
@@ -101,7 +118,8 @@ describe('TwilioConnectionTransport', () => {
           networkQuality,
           dominantSpeaker,
           trackPriority,
-          trackSwitchOff
+          trackSwitchOff,
+          notifyWarnings
         }));
         if (iceServers) {
           await waitForSometime(1);
@@ -173,9 +191,15 @@ describe('TwilioConnectionTransport', () => {
           });
 
           if (bandwidthProfile) {
-            assert.deepEqual(message.bandwidth_profile, expectedRspPayload);
+            assert.deepEqual(message.bandwidth_profile, expectedBandwidthProfileRspPayload);
           } else {
             assert(!('bandwidth_profile' in message));
+          }
+
+          if (notifyWarnings) {
+            assert.deepEqual(message.participant.media_warnings, expectedMediaWarningsRspPayload);
+          } else {
+            assert(!('media_warnings' in message.participant));
           }
 
           assert.equal(message.participant, test.localParticipantState);
@@ -1149,7 +1173,8 @@ describe('TwilioConnectionTransport', () => {
         [
           { session: 'foo', type: 'connected' },
           { type: 'synced' },
-          { type: 'update' }
+          { type: 'update' },
+          { type: 'warning' }
         ].forEach(expectedMessage => {
           context(`"${expectedMessage.type}"`, () => {
             let connected;
