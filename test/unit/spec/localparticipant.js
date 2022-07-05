@@ -259,8 +259,6 @@ describe('LocalParticipant', () => {
           this.track = track;
           this.kind = track.kind;
           this.priority = signaling.priority;
-          this.on = () => {};
-          this.removeListener = () => {};
         },
         LocalVideoTrackPublication: function(signaling, track) {
           this.trackName = track.name;
@@ -268,8 +266,6 @@ describe('LocalParticipant', () => {
           this.track = track;
           this.kind = track.kind;
           this.priority = signaling.priority;
-          this.on = () => {};
-          this.removeListener = () => {};
         },
         LocalDataTrackPublication: function(signaling, track) {
           this.trackName = track.name;
@@ -281,6 +277,8 @@ describe('LocalParticipant', () => {
           this.removeListener = () => {};
         }
       };
+      inherits(options.LocalAudioTrackPublication, EventEmitter);
+      inherits(options.LocalVideoTrackPublication, EventEmitter);
       test = makeTest(options);
     });
 
@@ -449,6 +447,24 @@ describe('LocalParticipant', () => {
                   it('should raise a "trackPublished" event with the LocalTrackPublication after the Promise resolves', () => {
                     assert.equal(trackPublishedEvent, localTrackPublication);
                   });
+
+                  if (hasLocalTrack && trackType === 'LocalTrack' && (kind === 'video' || kind === 'audio')) {
+                    describe('media warnings', () => {
+                      it('should re-emit media recording warning', () => {
+                        const onTrackWarning = sinon.stub();
+                        test.participant.on('trackWarning', onTrackWarning);
+                        localTrackPublication.emit('warning', 'foo');
+                        sinon.assert.calledWith(onTrackWarning, 'foo', localTrackPublication);
+                      });
+
+                      it('should re-emit media recording warningsCleared', () => {
+                        const onTrackWarning = sinon.stub();
+                        test.participant.on('trackWarningsCleared', onTrackWarning);
+                        localTrackPublication.emit('warningsCleared');
+                        sinon.assert.calledWith(onTrackWarning, localTrackPublication);
+                      });
+                    });
+                  }
 
                   if (hasLocalTrack && kind === 'video' && trackType === 'LocalTrack') {
                     ['connecting', 'connected'].forEach(state => {
