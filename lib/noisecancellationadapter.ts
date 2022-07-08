@@ -5,14 +5,11 @@ import { NoiseCancellationOptions } from '../tsdef/types';
 const Log = require('./util/log');
 
 const dynamicImport = require('./dynamicImport');
+const KRISP_PLUGIN_FILE = 'krispsdk.mjs';
+const RNNOISE_PLUGIN_FILE = 'rnnoise_sdk.mjs';
 
-const KRISP_VERSION = '2.1.0';
-const RNNOISE_VERSION = '2.0.0';
-const KRISP_SDK_FILE = 'krispsdk.mjs';
-const RNNOISE_SDK_FILE = 'rnnoise_sdk.mjs';
-
-// AudioProcessor assumes following interface from the SDK
-interface NoiseCancellationSDK {
+// AudioProcessor assumes following interface from the Plugin
+interface NoiseCancellationPlugin {
   init(options: { rootDir: string }): Promise<void>;
   isInitialized(): boolean;
   isConnected(): boolean;
@@ -33,15 +30,13 @@ export async function createNoiseCancellationAudioProcessor(
   let audioProcessor = audioProcessors.get(noiseCancellationOptions.vendor);
   if (!audioProcessor) {
     let sdkFilePath: string;
-    let rootDir: string;
+    let rootDir = noiseCancellationOptions.sdkAssetsPath;
     switch (noiseCancellationOptions.vendor) {
       case 'krisp':
-        rootDir = `${noiseCancellationOptions.sdkAssetsPath}/${KRISP_VERSION}`;
-        sdkFilePath = `${rootDir}/${KRISP_SDK_FILE}`;
+        sdkFilePath = `${rootDir}/${KRISP_PLUGIN_FILE}`;
         break;
       case 'rnnoise':
-        rootDir = `${noiseCancellationOptions.sdkAssetsPath}/${RNNOISE_VERSION}`;
-        sdkFilePath = `${rootDir}/${RNNOISE_SDK_FILE}`;
+        sdkFilePath = `${rootDir}/${RNNOISE_PLUGIN_FILE}`;
         break;
       default:
         throw new Error(`Unsupported NoiseCancellationOptions.vendor: ${noiseCancellationOptions.vendor}`);
@@ -51,31 +46,31 @@ export async function createNoiseCancellationAudioProcessor(
       log.debug('loading noise cancellation sdk: ', sdkFilePath);
       const dynamicModule = await dynamicImport(sdkFilePath);
       log.debug('Loaded noise cancellation sdk:', dynamicModule);
-      const sdkAPI = dynamicModule.default as NoiseCancellationSDK;
+      const plugin = dynamicModule.default as NoiseCancellationPlugin;
 
-      if (!sdkAPI.isInitialized()) {
+      if (!plugin.isInitialized()) {
         log.debug('initializing noise cancellation sdk: ', rootDir);
-        await sdkAPI.init({ rootDir });
+        await plugin.init({ rootDir });
         log.debug('noise cancellation sdk initialized!');
       }
 
       audioProcessor = {
         vendor: noiseCancellationOptions.vendor,
-        isInitialized: () => sdkAPI.isInitialized(),
-        isConnected: () => sdkAPI.isConnected(),
-        isEnabled: () => sdkAPI.isEnabled(),
-        disconnect: () => sdkAPI.disconnect(),
-        enable: () => sdkAPI.enable(),
-        disable: () => sdkAPI.disable(),
-        destroy: () => sdkAPI.destroy(),
-        setLogging: (enable: boolean) => sdkAPI.setLogging(enable),
+        isInitialized: () => plugin.isInitialized(),
+        isConnected: () => plugin.isConnected(),
+        isEnabled: () => plugin.isEnabled(),
+        disconnect: () => plugin.disconnect(),
+        enable: () => plugin.enable(),
+        disable: () => plugin.disable(),
+        destroy: () => plugin.destroy(),
+        setLogging: (enable: boolean) => plugin.setLogging(enable),
         connect: (sourceTrack: MediaStreamTrack) => {
           log.debug('connect: ', sourceTrack.id);
-          if (sdkAPI.isConnected()) {
-            sdkAPI.disconnect();
+          if (plugin.isConnected()) {
+            plugin.disconnect();
           }
 
-          const mediaStream = sdkAPI.connect(new MediaStream([sourceTrack]));
+          const mediaStream = plugin.connect(new MediaStream([sourceTrack]));
           if (!mediaStream) {
             throw new Error('Error connecting with noise cancellation sdk');
           }
@@ -83,7 +78,7 @@ export async function createNoiseCancellationAudioProcessor(
           if (!cleanTrack) {
             throw new Error('Error getting clean track from noise cancellation sdk');
           }
-          sdkAPI.enable();
+          plugin.enable();
           return cleanTrack;
         },
       };
