@@ -20,13 +20,13 @@ const log = require('../../lib/fakelog');
 describe('Room', () => {
   const options = { log: log };
   const localParticipantSignaling = new LocalParticipantSignaling('PAXXX', 'client');
+  const localParticipant = new LocalParticipant(localParticipantSignaling, [], { log });
 
   let room;
   let signaling;
 
   beforeEach(() => {
     signaling = new RoomSignaling(localParticipantSignaling, 'RM123', 'foo');
-    const localParticipant = new LocalParticipant(localParticipantSignaling, [], { log });
     room = new Room(localParticipant, signaling, options);
   });
 
