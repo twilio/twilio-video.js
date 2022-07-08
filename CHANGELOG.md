@@ -15,7 +15,7 @@ You need to host `./node_modules/@twilio/krisp-audio-plugin/dist/` on your web s
 const { connect, createLocalAudioTrack } = require('twilio-video');
 
 // create a local audio track and have it use
-// twilio-krisp-audio-plugin for noise cancellation processing.
+// @twilio/krisp-audio-plugin for noise cancellation processing.
 const localAudioTrack = await Video.createLocalAudioTrack({
   noiseCancellationOptions: {
     vendor: 'krisp',

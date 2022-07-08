@@ -8,9 +8,11 @@ const Log = require('../../util/log');
 export class NoiseCancellationImpl implements NoiseCancellation {
   private _processor: AudioProcessor;
   private _sourceTrack: MediaStreamTrack;
+  private _disabledPermanent: boolean;
   constructor(processor: AudioProcessor, originalTrack: MediaStreamTrack) {
     this._processor = processor;
     this._sourceTrack = originalTrack;
+    this._disabledPermanent = false;
   }
 
   /**
@@ -38,6 +40,10 @@ export class NoiseCancellationImpl implements NoiseCancellation {
    * enables noise cancellation
    */
   enable() : Promise<void> {
+    if (this._disabledPermanent) {
+      throw new Error(`${this.vendor} noise cancellation is disabled permanently for this track`);
+    }
+
     this._processor.enable();
     return Promise.resolve();
   }
@@ -64,6 +70,14 @@ export class NoiseCancellationImpl implements NoiseCancellation {
       this._processor.disable();
     }
     return processedTrack;
+  }
+
+  /**
+   * disables noise cancellation permanently.
+   */
+  disablePermanently(): Promise<void> {
+    this._disabledPermanent = true;
+    return this.disable();
   }
 }
 
