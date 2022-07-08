@@ -40,6 +40,74 @@ function updateNoiseCancellation(enable: boolean) {
 }
 
 ```
+2.22.0 (July 5, 2022)
+====================
+
+New Features
+------------
+
+This release include the **Media Warnings API (Beta)** to help surface media related warning events on the SDK whenever the media server is not able to detect media from a published audio or video track.
+
+### Example
+
+```js
+const room = await connect('token', {
+  notifyWarnings: [ 'recording-media-lost' ]
+  // Other connect options
+});
+
+Array.from(room.localParticipant.tracks.values()).forEach(publication => {
+  publication.on('warning', name => {
+    if (name === 'recording-media-lost') {
+      console.log(`LocalTrack ${publication.track.name} is not recording media.`);
+
+      // Wait a reasonable amount of time to clear the warning.
+      const timer = setTimeout(() => {
+        // If the warning is not cleared, you can manually
+        // reconnect to the room, or show a dialog to the user
+      }, 5000);
+
+      publication.once('warningsCleared', () => {
+        console.log(`LocalTrack ${publication.track.name} warnings have cleared!`);
+        clearTimeout(timer);
+      });
+    }
+  });
+});
+```
+
+### API Definitions
+
+#### ConnectOptions
+
+- **notifyWarnings** - An array of warnings to listen to. By default, this array is empty and no warning events will be raised. Possible warning values include:
+
+  - `recording-media-lost` - Raised when the media server has not detected any media on the published track that is being recorded in the past 30 seconds. This usually happens when there are network interruptions or when the track has stopped.
+
+#### Events
+
+The SDK raises warning events when it detects certain conditions. You can implement callbacks on these events to act on them, or to alert the user of an issue. Subsequently, "warningsCleared" event is raised when conditions have returned to normal.
+
+- **LocalTrackPublication.on('warning', callback(name))** - Raised when the published Track encounters a warning.
+
+- **LocalTrackPublication.on('warningsCleared', callback())** - Raised when the published Track cleared all warning.
+
+- **LocalParticipant.on('trackWarning', callback(name, publication))** - Raised when one of the LocalParticipant's published tracks encounters a warning.
+
+- **LocalParticipant.on('trackWarningsCleared', callback(publication))** - Raised when one of the LocalParticipant's published tracks cleared all warning.
+
+- **Room.on('trackWarning', callback(name, publication, participant))** - Raised when one of the LocalParticipant's published tracks in the Room encounters a warning.
+
+- **Room.on('trackWarningsCleared', callback(publication, participant))** - Raised when one of the LocalParticipant's published tracks in the Room cleared all warning.
+
+2.21.3 (June 7, 2022)
+====================
+
+Bug Fixes
+---------
+
+- Fixed an issue where the generated API documentation has a missing search bar. (VIDEO-10199)
+
 2.21.2 (June 1, 2022)
 =====================
 

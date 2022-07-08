@@ -392,6 +392,44 @@ function runPreflight() {
   preflight.stop();
 }
 
+async function mediaWarnings() {
+  let room = await Video.connect('$TOKEN', {
+    notifyWarnings: []
+  });
+  room = await Video.connect('$TOKEN', {
+    notifyWarnings: ['recording-media-lost']
+  });
+
+  room.localParticipant.tracks.forEach((publication: Video.LocalTrackPublication) => {
+    publication.on('warning', (name: string) => {
+      // eslint-disable-next-line no-console
+      console.log(name);
+    });
+    publication.on('warningsCleared', () => {
+      // eslint-disable-next-line no-console
+      console.log('warningsCleared');
+    });
+  });
+  room.localParticipant.on('trackWarning', (name: string, publication: Video.LocalTrackPublication) => {
+    // eslint-disable-next-line no-console
+    console.log(name, publication);
+  });
+  room.localParticipant.on('trackWarningsCleared', (publication: Video.LocalTrackPublication) => {
+    // eslint-disable-next-line no-console
+    console.log('warningsCleared', publication);
+  });
+
+  room.on('trackWarning', (name: string, publication: Video.LocalTrackPublication, participant: Video.LocalParticipant) => {
+    // eslint-disable-next-line no-console
+    console.log(name, publication, participant);
+  });
+  room.on('trackWarningsCleared', (publication: Video.LocalTrackPublication, participant: Video.LocalParticipant) => {
+    // eslint-disable-next-line no-console
+    console.log('warningsCleared', publication, participant);
+  });
+}
+
 initRoom();
 unpublishTracks();
 runPreflight();
+mediaWarnings();

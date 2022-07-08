@@ -1,5 +1,7 @@
 'use strict';
 
+const { EventEmitter } = require('events');
+const { inherits } = require('util');
 const assert = require('assert');
 const sinon = require('sinon');
 
@@ -117,6 +119,32 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
     if (kind !== 'data') {
       describe('events', () => {
+        context('when "warning" is emitted on the signaling object', () => {
+          it(`should emit "warning" on the ${description}`, () => {
+            const signaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(signaling, localTrack, () => {});
+            const handler = sinon.stub();
+            const param = { foo: 'foo', bar: 'bar' };
+
+            localTrackPublication.on('warning', handler);
+            signaling.emit('warning', param);
+            sinon.assert.calledOnce(handler);
+            sinon.assert.calledWithExactly(handler, param);
+          });
+        });
+
+        context('when "warningsCleared" is emitted on the signaling object', () => {
+          it(`should emit "warningsCleared" on the ${description}`, () => {
+            const signaling = makeLocalTrackPublicationSignaling('foo', 'bar');
+            const localTrackPublication = new LocalTrackPublication(signaling, localTrack, () => {});
+            const handler = sinon.stub();
+
+            localTrackPublication.on('warningsCleared', handler);
+            signaling.emit('warning');
+            sinon.assert.calledOnce(handler);
+          });
+        });
+
         ['trackDisabled', 'trackEnabled'].forEach(event => {
           const trackEvent = {
             trackDisabled: 'disabled',
@@ -130,7 +158,7 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
                 trackEnabled: false
               }[event]);
 
-              const localTrackPublication = new LocalTrackPublication('foo', localTrack, () => {});
+              const localTrackPublication = new LocalTrackPublication(makeLocalTrackPublicationSignaling('foo', 'bar'), localTrack, () => {});
               let localTrackPublicationEvent = false;
 
               localTrackPublication.once(event, () => {
@@ -190,5 +218,12 @@ const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 });
 
 function makeLocalTrackPublicationSignaling(sid, priority) {
-  return { sid, priority, updatedPriority: priority, setPriority: sinon.spy() };
+  function TrackPublicationSignaling() {
+    this.sid = sid;
+    this.priority = priority;
+    this.updatedPriority = priority;
+    this.setPriority = sinon.spy();
+  }
+  inherits(TrackPublicationSignaling, EventEmitter);
+  return new TrackPublicationSignaling();
 }
