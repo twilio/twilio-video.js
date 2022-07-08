@@ -7,9 +7,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- This release adds support for 3rd party noise cancellation solutions. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Currently we support [twilio-krisp-audio-plugin](https://www.npmjs.com/package/twilio-krisp-audio-plugin).
+- This release adds support for 3rd party noise cancellation solutions. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Currently we support [@twilio/krisp-audio-plugin](https://www.npmjs.com/package/@twilio/krisp-audio-plugin).
 
-You need to host `./node_modules/twilio-krisp-audio-plugin/dist/` on your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use stale version when its updated (https://www.keycdn.com/support/what-is-cache-busting).
+You need to host `./node_modules/@twilio/krisp-audio-plugin/dist/` on your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated.
 
 ```ts
 const { connect, createLocalAudioTrack } = require('twilio-video');
