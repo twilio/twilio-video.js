@@ -5,6 +5,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.22.1 (July 11, 2022)
 ======================
 
+Bug Fixes
+---------
+
 - The encoding of audio and screen share Tracks are prioritized in Chrome and Safari, thereby more gracefully degrading
   their quality in limited network conditions. (VIDEO-10212)
 
