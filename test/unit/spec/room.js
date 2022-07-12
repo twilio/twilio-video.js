@@ -64,6 +64,24 @@ describe('Room', () => {
     });
   });
 
+  describe('LocalParticipant events', () => {
+    it('should re-emit trackWarning events', () => {
+      const publication = { track: { sid: 'bar' } };
+      const handler = sinon.stub();
+      room.on('trackWarning', handler);
+      localParticipant.emit('trackWarning', 'fooWarning', publication);
+      sinon.assert.calledWith(handler, 'fooWarning', publication, localParticipant);
+    });
+
+    it('should re-emit trackWarningsCleared events', () => {
+      const publication = { track: { sid: 'bar' } };
+      const handler = sinon.stub();
+      room.on('trackWarningsCleared', handler);
+      localParticipant.emit('trackWarningsCleared', publication);
+      sinon.assert.calledWith(handler, publication, localParticipant);
+    });
+  });
+
   describe('RemoteParticipant events', () => {
     let participants;
     let publication;

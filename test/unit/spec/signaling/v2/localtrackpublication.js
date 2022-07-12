@@ -3,10 +3,12 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
+const TwilioWarning = require('../../../../../lib/util/twiliowarning');
 const LocalTrackPublicationV2 = require('../../../../../lib/signaling/v2/localtrackpublication');
 const { makeUUID } = require('../../../../../lib/util');
 
 const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
+const log = require('../../../../lib/fakelog');
 
 describe('LocalTrackPublicationV2', () => {
   // LocalTrackPublicationV2
@@ -25,7 +27,7 @@ describe('LocalTrackPublicationV2', () => {
       mediaTrackSender = makeTrackSender(mediaStreamTrack);
       name = makeUUID();
       priority = makePriority();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, name, priority);
+      localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, name, priority, { log });
     });
 
     it('should return a LocalTrackPublicationV2', () => {
@@ -71,7 +73,7 @@ describe('LocalTrackPublicationV2', () => {
         mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
         mediaStreamTrack.enabled = makeEnabled();
         priority = makePriority();
-        localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), priority);
+        localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), priority, { log });
         state = localTrackPublicationV2.getState();
       });
 
@@ -101,7 +103,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'ready', sid: makeSid() };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority());
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority(), { log });
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -134,7 +136,7 @@ describe('LocalTrackPublicationV2', () => {
 
         beforeEach(() => {
           payload = { state: 'failed', error: { code: 1, message: 'foo' } };
-          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority());
+          localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority(), { log });
           updated = false;
           localTrackPublicationV2.once('updated', () => { updated = true; });
           ret = localTrackPublicationV2.update(payload);
@@ -160,6 +162,83 @@ describe('LocalTrackPublicationV2', () => {
     });
   });
 
+  describe('#updateMediaStates', () => {
+    let localTrackPublicationV2;
+    let onWarning;
+    let onWarningsCleared;
+
+    beforeEach(() => {
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(new FakeMediaStreamTrack()), makeUUID(), makePriority(), { log });
+
+      onWarning = sinon.stub();
+      onWarningsCleared = sinon.stub();
+
+      localTrackPublicationV2.on('warning', onWarning);
+      localTrackPublicationV2.on('warningsCleared', onWarningsCleared);
+    });
+
+    it('should do nothing if media states is empty', () => {
+      assert(!!localTrackPublicationV2.updateMediaStates());
+      assert(!!localTrackPublicationV2.updateMediaStates({}));
+      sinon.assert.notCalled(onWarning);
+      sinon.assert.notCalled(onWarningsCleared);
+    });
+
+    it('should do nothing if an unknown state is detected', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'foo' });
+      sinon.assert.notCalled(onWarning);
+      sinon.assert.notCalled(onWarningsCleared);
+    });
+
+    it('should emit warning if no media is detected', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
+      sinon.assert.calledOnce(onWarning);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
+      sinon.assert.notCalled(onWarningsCleared);
+    });
+
+    it('should emit warning once', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
+      localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
+      sinon.assert.calledOnce(onWarning);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
+      sinon.assert.notCalled(onWarningsCleared);
+    });
+
+    it('should emit warningsCleared if media is detected', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
+      sinon.assert.calledOnce(onWarningsCleared);
+      sinon.assert.notCalled(onWarning);
+    });
+
+    it('should emit warningsCleared once', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
+      localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
+      sinon.assert.calledOnce(onWarningsCleared);
+      sinon.assert.notCalled(onWarning);
+    });
+
+    it('should emit events in sequence properly', () => {
+      localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
+      sinon.assert.calledOnce(onWarning);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
+      sinon.assert.notCalled(onWarningsCleared);
+
+      localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
+      sinon.assert.calledOnce(onWarningsCleared);
+      sinon.assert.calledOnce(onWarning);
+
+      localTrackPublicationV2.updateMediaStates({ recordings: 'NO_MEDIA' });
+      sinon.assert.calledTwice(onWarning);
+      sinon.assert.calledWithExactly(onWarning, TwilioWarning.recordingMediaLost);
+      sinon.assert.calledOnce(onWarningsCleared);
+
+      localTrackPublicationV2.updateMediaStates({ recordings: 'OK' });
+      sinon.assert.calledTwice(onWarningsCleared);
+      sinon.assert.calledTwice(onWarning);
+    });
+  });
+
   // TrackSignaling
   // --------------
 
@@ -172,7 +251,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       sid = makeSid();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority());
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority(), { log });
       updated = false;
     });
 
@@ -261,7 +340,7 @@ describe('LocalTrackPublicationV2', () => {
       describe(`called with \`${enabled}\``, () => {
         it(`sets the cloned MediaTrackSender's MediaStreamTrack's .enabled state to \`${enabled}\``, () => {
           const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
-          const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority());
+          const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority(), { log });
           const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
           mediaStreamTrack.enabled = !enabled;
           localTrackPublicationV2.enable(enabled);
@@ -280,7 +359,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       error = new Error('Track publication failed');
-      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority());
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), makePriority(), { log });
       updated = false;
     });
 
@@ -369,7 +448,7 @@ describe('LocalTrackPublicationV2', () => {
     beforeEach(() => {
       const mediaStreamTrack = new FakeMediaStreamTrack(makeKind());
       initialPriority = makePriority();
-      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), initialPriority);
+      localTrackPublicationV2 = new LocalTrackPublicationV2(makeTrackSender(mediaStreamTrack), makeUUID(), initialPriority, { log });
       updated = false;
     });
 
@@ -425,7 +504,7 @@ describe('LocalTrackPublicationV2', () => {
   describe('#stop', () => {
     it('calls stop on the cloned MediaTrackSender\'s MediaStreamTrack', () => {
       const mediaTrackSender = makeTrackSender(new FakeMediaStreamTrack(makeKind()));
-      const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority());
+      const localTrackPublicationV2 = new LocalTrackPublicationV2(mediaTrackSender, makeUUID(), makePriority(), { log });
       const mediaStreamTrack = localTrackPublicationV2.trackTransceiver.track;
       mediaStreamTrack.stop = sinon.spy();
       localTrackPublicationV2.stop();

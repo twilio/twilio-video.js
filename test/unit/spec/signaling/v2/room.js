@@ -883,6 +883,44 @@ describe('RoomV2', () => {
       });
     });
 
+    context('when media states changes', () => {
+      let test;
+      let updateMediaStates;
+      const emitMessage = message => test.transport.emit('message', message);
+
+      beforeEach(() => {
+        test = makeTest();
+        updateMediaStates = sinon.stub();
+        test.localParticipant.updateMediaStates = updateMediaStates;
+      });
+
+      it('should not update media states for non-warning types', () => {
+        emitMessage({ type: 'foo', states: { revision: 1 } });
+        sinon.assert.notCalled(updateMediaStates);
+      });
+
+      it('should not update media states if states is empty', () => {
+        emitMessage({ type: 'warning' });
+        sinon.assert.notCalled(updateMediaStates);
+      });
+
+      it('should not update media states if states revision is the same as current revision', () => {
+        emitMessage({ type: 'warning', states: { revision: 1 } });
+        sinon.assert.calledOnce(updateMediaStates);
+        emitMessage({ type: 'warning', states: { revision: 1 } });
+        sinon.assert.calledOnce(updateMediaStates);
+        emitMessage({ type: 'warning', states: { revision: 2 } });
+        sinon.assert.calledTwice(updateMediaStates);
+        emitMessage({ type: 'warning', states: { revision: 2 } });
+        sinon.assert.calledTwice(updateMediaStates);
+      });
+
+      it('should update with new states', () => {
+        emitMessage({ type: 'warning', states: { revision: 1, tracks: { foo: 'foo' } } });
+        sinon.assert.calledWithExactly(updateMediaStates, { revision: 1, tracks: { foo: 'foo' } });
+      });
+    });
+
     context('.participant', () => {
       it('should update the newly published LocalTrackV2s with their corresponding SIDs', () => {
         const id = makeId();

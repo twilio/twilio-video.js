@@ -98,6 +98,8 @@ export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
 
+export type NotifyWarning = 'recording-media-lost';
+
 /**
  * @deprecated
  */
@@ -196,6 +198,7 @@ export interface ConnectOptions {
   maxVideoBitrate?: number | null;
   name?: string | null;
   networkQuality?: boolean | NetworkQualityConfiguration;
+  notifyWarnings?: Array<NotifyWarning>;
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | VideoEncodingMode;

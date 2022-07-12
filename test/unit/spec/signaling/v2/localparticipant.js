@@ -331,6 +331,39 @@ describe('LocalParticipantV2', () => {
     });
   });
 
+  describe('#updateMediaStates', () => {
+    it('should do nothing if there are no tracks added', () => {
+      assert(!!localParticipant.updateMediaStates());
+    });
+
+    describe('when tracks is not empty', () => {
+      let localTrackPublication;
+
+      beforeEach(() => {
+        localParticipant.addTrack(trackSender, name, priority);
+        localTrackPublication = localParticipant.tracks.get(trackSender.id);
+      });
+
+      it('should do nothing if tracks is empty', () => {
+        [undefined, {}, { tracks: {} }]
+          .forEach(param => assert(!!localParticipant.updateMediaStates(param)));
+      });
+
+      it('should not update publication media states if there are no updates for the new track', () => {
+        localTrackPublication.updateMediaStates = sinon.stub();
+        localParticipant.updateMediaStates({ tracks: { fooSid: { recordings: 'NO_MEDIA' } } });
+        sinon.assert.notCalled(localTrackPublication.updateMediaStates);
+      });
+
+      it('should update publication media states if there is an update for the new track', () => {
+        localTrackPublication.updateMediaStates = sinon.stub();
+        localParticipant.updateMediaStates({ tracks: { [localTrackPublication.sid]: { recordings: 'NO_MEDIA' } } });
+        sinon.assert.calledOnce(localTrackPublication.updateMediaStates);
+        sinon.assert.calledWithExactly(localTrackPublication.updateMediaStates, { recordings: 'NO_MEDIA' });
+      });
+    });
+  });
+
   describe('LocalTrackPublicationV2#updated', () => {
     let localTrackPublication;
     let revision;
