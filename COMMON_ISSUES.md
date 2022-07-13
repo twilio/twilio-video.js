@@ -117,8 +117,33 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
    once a Participant unpublishes a MediaTrack of any kind (audio or video), it will not be able to publish another MediaTrack of the same kind.        DataTracks are not affected. We have escalated this bug to the Safari Team and are keeping track of related developments.
 </p>
 </details>
+<details>
+<summary>Video elements may not be visible when applying a 3d transform</summary>
+<p>
+
+   In some cases, a video element may not be visible when using a 3d CSS transform (such as `rotateY(180deg)`) to mirror a local video track. It is recommended that a 2d transform be used instead.
+
+   Recommended 2d transform to mirror a video track:
+```css
+transform: scaleX(-1)
+```
+
+   This issue is also present in Safari mobile.
+
+   For more information, please see the discussion in [this issue](https://github.com/twilio/twilio-video.js/issues/1724).
+</p>
+</details>
 
 ### Safari mobile
+<details>
+<summary>iOS 15: Echo issues on iOS 15 devices after attaching video tracks</summary>
+<p>
+
+   Attaching a VideoTrack to a video element causes echo issues if you have a LocalAudioTrack that is already attached to an audio element. This happens due to an iOS 15 [bug](https://bugs.webkit.org/show_bug.cgi?id=241492) where the audio element is unintentionally unmuted.
+
+   Apple has already fixed this issue on iOS 15.5. However, older versions will continue to experience the issue. As a workaround, you can skip attaching the LocalAudioTrack to an audio element to prevent a feedback loop that causes the echo issue. If you really need to attach the LocalAudioTrack for any reason, please feel free to reach out to us in this repo and we will help to find a workaround depending on your use case.
+</p>
+</details>
 <details>
 <summary>iOS 15: VideoTracks goes black and the page freezes on certain interruptions</summary>
 <p>
@@ -361,5 +386,14 @@ twilio-video.js to fail. Examples of such plugins include
 
 These are unsupported and likely to break twilio-video.js. If you are having
 trouble with twilio-video.js, ensure these are not running.
+</p>
+</details>
+<details>
+<summary>setSinkId method is not implemented in all browsers</summary>
+<p>
+
+   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it is not possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead. 
+
+   More information about this method (including browser compatibility) is available [here](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId).
 </p>
 </details>
