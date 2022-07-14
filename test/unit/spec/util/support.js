@@ -238,9 +238,9 @@ describe('isSupported', () => {
         global.RTCPeerConnection = function() {
           this.addTransceiver = function() {
             throw new Error();
-          }
+          };
         };
-        global.RTCPeerConnection.prototype.addTransceiver = function(){};
+        global.RTCPeerConnection.prototype.addTransceiver = function() {};
         assert.equal(isSupported(), false);
       });
     });
@@ -266,7 +266,7 @@ describe('isSupported', () => {
       });
 
       it('and RTCRtpTransceiver is supported but currentDirection is missing', () => {
-        delete RTCRtpTransceiver.prototype.currentDirection;
+        delete global.RTCRtpTransceiver.prototype.currentDirection;
         assert.equal(isSupported(), false);
       });
     });
