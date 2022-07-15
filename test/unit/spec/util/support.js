@@ -239,6 +239,7 @@ describe('isSupported', () => {
           this.addTransceiver = function() {
             throw new Error();
           };
+          this.close = function() {};
         };
         global.RTCPeerConnection.prototype.addTransceiver = function() {};
         assert.equal(isSupported(), false);
