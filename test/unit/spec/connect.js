@@ -409,6 +409,7 @@ describe('connect', () => {
           shouldStopLocalTracks = options.shouldStopLocalTracks;
           this._signaling = localParticipantSignaling;
           this.audioTracks = new Map();
+          this.on = () => {};
         }
 
         await connect(token, {
@@ -450,6 +451,7 @@ describe('connect', () => {
         function LocalParticipant(localParticipantSignaling) {
           this._signaling = localParticipantSignaling;
           this.audioTracks = new Map();
+          this.on = () => {};
         }
 
         function signaling() {
@@ -524,6 +526,7 @@ describe('connect', () => {
           shouldStopLocalTracks = options.shouldStopLocalTracks;
           this._signaling = localParticipantSignaling;
           this.audioTracks = new Map();
+          this.on = () => {};
         }
 
         await connect(token, {
