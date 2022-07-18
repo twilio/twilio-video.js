@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const isSupported = require('../../../../lib/util/support');
+const { clearChromeCachedSdpFormat } = require('../../../../lib/webrtc/util/sdp');
 
 describe('isSupported', () => {
   let oldAgent;
@@ -10,6 +11,7 @@ describe('isSupported', () => {
   });
 
   afterEach(() => {
+    clearChromeCachedSdpFormat();
     navigator.userAgent = oldAgent;
     if (global.chrome) {
       delete global.chrome;
@@ -208,6 +210,66 @@ describe('isSupported', () => {
         navigator.brave = brave;
       }
       assert.equal(isSupported(), false);
+    });
+  });
+
+  describe('return false when sdp format is plan-b', () => {
+    describe('and browser is chrome', () => {
+      let oldRTCPeerConnection;
+      let oldUserAgent;
+
+      beforeEach(() => {
+        oldUserAgent = navigator.userAgent;
+        navigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36';
+        oldRTCPeerConnection = global.RTCPeerConnection;
+      });
+
+      afterEach(() => {
+        navigator.userAgent = oldUserAgent;
+        global.RTCPeerConnection = oldRTCPeerConnection;
+      });
+
+      it('and RTCPeerConnection.prototype.addTransceiver is not supported', () => {
+        global.RTCPeerConnection.prototype = {};
+        assert.equal(isSupported(), false);
+      });
+
+      it('and RTCPeerConnection.prototype.addTransceiver throws an exception', () => {
+        global.RTCPeerConnection = function() {
+          this.addTransceiver = function() {
+            throw new Error();
+          };
+          this.close = function() {};
+        };
+        global.RTCPeerConnection.prototype.addTransceiver = function() {};
+        assert.equal(isSupported(), false);
+      });
+    });
+
+    describe('and browser is safari', () => {
+      let oldUserAgent;
+      let oldRTCRtpTransceiver;
+
+      beforeEach(() => {
+        oldUserAgent = navigator.userAgent;
+        navigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Safari/605.1.15';
+        oldRTCRtpTransceiver = global.RTCRtpTransceiver;
+      });
+
+      afterEach(() => {
+        navigator.userAgent = oldUserAgent;
+        global.RTCRtpTransceiver = oldRTCRtpTransceiver;
+      });
+
+      it('and RTCRtpTransceiver is not supported', () => {
+        delete global.RTCRtpTransceiver;
+        assert.equal(isSupported(), false);
+      });
+
+      it('and RTCRtpTransceiver is supported but currentDirection is missing', () => {
+        delete global.RTCRtpTransceiver.prototype.currentDirection;
+        assert.equal(isSupported(), false);
+      });
     });
   });
 });

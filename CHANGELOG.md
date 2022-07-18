@@ -40,6 +40,28 @@ function updateNoiseCancellation(enable: boolean) {
 }
 
 ```
+2.22.2 (In Progress)
+====================
+
+Changes
+-------
+
+- `isSupported` flag now returns `false` if the browser does not support the Unified Plan SDP format. (VIDEO-10307)
+
+  The following is a list of browsers with Unified Plan as the default SDP format.
+  - Chrome 72+
+  - Safari 12.1+
+  - Firefox 38+
+
+2.22.1 (July 11, 2022)
+======================
+
+Bug Fixes
+---------
+
+- The encoding of audio and screen share Tracks are prioritized in Chrome and Safari, thereby more gracefully degrading
+  their quality in limited network conditions. (VIDEO-10212)
+
 2.22.0 (July 5, 2022)
 ====================
 
