@@ -510,6 +510,7 @@ describe('MediaTrack', () => {
           });
           MediaStream.prototype.addTrack = sinon.spy();
           MediaStream.prototype.getAudioTracks = sinon.spy(() => [track.mediaStreamTrack]);
+          MediaStream.prototype.getTracks = sinon.spy(() => [track.mediaStreamTrack]);
           MediaStream.prototype.removeTrack = sinon.spy();
           el = document.createElement('audio');
           track = createMediaTrack(1, 'foo', kind, { MediaStream: MediaStream });
