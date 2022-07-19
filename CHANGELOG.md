@@ -9,7 +9,12 @@ New Features
 
 - This release adds support for 3rd party noise cancellation solutions. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Currently we support [@twilio/krisp-audio-plugin](https://www.npmjs.com/package/@twilio/krisp-audio-plugin).
 
-You need to host `./node_modules/@twilio/krisp-audio-plugin/dist/` on your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated.
+You can get the plugin from npm with:
+```
+npm install @twilio/krisp-audio-plugin
+```
+
+Once installed, you need to host the contents of `./node_modules/@twilio/krisp-audio-plugin/dist/` from your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated. You need to pass the path to the hosted files to `twilio-video` sdk when creating audio track as shown in the example below. The example below assumes that you have hosted the files at `/twilio-krisp-audio-plugin/1.0.0/dist` on your web server.
 
 ```ts
 const { connect, createLocalAudioTrack } = require('twilio-video');
@@ -19,7 +24,7 @@ const { connect, createLocalAudioTrack } = require('twilio-video');
 const localAudioTrack = await Video.createLocalAudioTrack({
   noiseCancellationOptions: {
     vendor: 'krisp',
-    sdkAssetsPath: '/twilio-krisp-audio-plugin/{pluginVersion}/dist'
+    sdkAssetsPath: '/twilio-krisp-audio-plugin/1.0.0/dist'
   }
 });
 

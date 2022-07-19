@@ -183,12 +183,12 @@ export interface NoiseCancellationOptions {
   vendor: NoiseCancellationVendor;
 }
 
-export interface LocalAudioTrackOptions extends CreateLocalTrackOptions {
+export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
   noiseCancellationOptions?: NoiseCancellationOptions;
 }
 
 export interface ConnectOptions {
-  audio?: boolean | CreateLocalTrackOptions| LocalAudioTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -226,7 +226,7 @@ export interface ConnectOptions {
 }
 
 export interface CreateLocalTracksOptions {
-  audio?: boolean | CreateLocalTrackOptions | LocalAudioTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   /**
    * @deprecated
    */

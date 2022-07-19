@@ -217,7 +217,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 /**
  * {@link createLocalTracks} options
  * @typedef {object} CreateLocalTracksOptions
- * @property {boolean|CreateLocalTrackOptions|LocalAudioTrackOptions} [audio=true] - Whether or not to
+ * @property {boolean|CreateLocalTrackOptions|CreateLocalAudioTrackOptions} [audio=true] - Whether or not to
  *   get local audio with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
  * @property {LogLevel|LogLevels} [logLevel='warn'] - <code>(deprecated: use [Video.Logger](module-twilio-video.html) instead.
