@@ -188,7 +188,7 @@ export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
 }
 
 export interface ConnectOptions {
-  audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
+  audio?: boolean | CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
