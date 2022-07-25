@@ -91,7 +91,7 @@
     "node": ">=0.12"
   },
   "license": "BSD-3-Clause",
-  "main": "./es5/index.js",
+  "main": "./lib/index.js",
   "types": "./tsdef/index.d.ts",
   "scripts": {
     "lint:js": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
