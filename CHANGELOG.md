@@ -1,4 +1,4 @@
-The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
+The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the latest Video JavaScript SDK.
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
@@ -50,7 +50,6 @@ Peer-to-Peer Rooms**.
     recentSwitchOffReason = null;
   });
   ```
-
 - The `isTrackEnabled` property of the RemoteTrackPublication is deprecated and scheduled for removal. Alternatively, you
   can determine if a RemoteTrackPublication is enabled by using the following expression. (VIDEO-8743, VIDEO-8751)
   ```js
@@ -80,7 +79,6 @@ Peer-to-Peer Rooms**.
   });
   ```
   The `trackDisabled` and `trackEnabled` events are now only fired for subscribed RemoteTracks.
-
 - Any audio and video Tracks shared while joining the Room will **no longer** be guaranteed to be published by the time
   the CancelablePromise returned by `connect()` is resolved. The application will now have to listen to the "trackPublished"
   event on the LocalParticipant. (VIDEO-8817)
@@ -95,9 +93,10 @@ Peer-to-Peer Rooms**.
     console.log(`Successfully published ${publication.kind} Track`);
   });
   ```
-
 - `Room.getStats()` is broken, and will be fixed in an upcoming release. For now, the Track-level stats returned by this
   method will not be accurate.
+- [PSTN Participants](https://www.twilio.com/docs/video/adding-programmable-voice-participants-video-rooms) cannot connect
+  to Large Rooms.
 
 2.22.1 (July 11, 2022)
 ======================
