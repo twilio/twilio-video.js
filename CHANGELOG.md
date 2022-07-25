@@ -2,23 +2,23 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-3.0.0-preview.1
-===============
+3.0.0-preview.1 (July 25, 2022)
+===============================
 
 New Features
 ------------
 
 **Large Rooms Pilot**
 
-twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link), which supports a large number of Participants (> 50).
-**Note that the following API changes apply only for Large Rooms, and not for non-large group Rooms and Peer-to-Peer Rooms.**
+twilio-video.js now allows you to create and join a [Large Group Room](https://www.twilio.com/docs/video/large-group-rooms),
+which supports a large number of Participants (> 50). **Note that the following API changes apply only for Large Rooms,
+and not for non-large Group Rooms and Peer-to-Peer Rooms.**
 
 - A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
-- RemoteAudioTrack and RemoteVideoTrack will now have an additional property called [`switchOffReason`](TODO_doc_link),
-  which describes the reason for it being switched off. The `switchedOff` event will also have this reason string as a
-  second argument. (VIDEO-8670, VIDEO-8748)
-- A RemoteVideoTrack will now be switched off if the number of switched on RemoteVideoTracks reached the limit set
-  by the media server. (VIDEO-8745)
+- RemoteAudioTrack and RemoteVideoTrack will now have an additional property called `switchOffReason`, which describes
+  the [reason](https://sdk.stage.twilio.com/js/video/releases/3.0.0-preview.1/docs/global.html#TrackSwitchOffReason) for
+  it being switched off. The `switchedOff` event will also have this reason string as a second argument. (VIDEO-8670, VIDEO-8748)
+- A RemoteVideoTrack will now be switched off if the number of switched on RemoteVideoTracks reached the limit set by the media server. (VIDEO-8745)
 - Renamed BandwidthProfileOptions to BandwidthProfile. (VIDEO-8754)
 - Renamed VideoBandwidthProfileOptions to VideoBandwidthProfile. (VIDEO-8753)
 - The `isEnabled` property of the RemoteTrack is deprecated and scheduled for removal. Alternatively, you can determine if
@@ -90,6 +90,9 @@ twilio-video.js now allows you to create and join a [Large Room](TODO_doc_link),
     console.log(`Successfully published ${publication.kind} Track`);
   });
   ```
+
+- `Room.getStats()` is broken, and will be fixed in the next release. For now, the Track-level stats returned by this method
+  will not be accurate.
 
 2.22.1 (July 11, 2022)
 ======================
