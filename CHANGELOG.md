@@ -11,13 +11,18 @@ New Features
 **Large Rooms Pilot**
 
 twilio-video.js now allows you to create and join a [Large Group Room](https://www.twilio.com/docs/video/large-group-rooms),
-which supports a large number of Participants (> 50). **Note that the following API changes apply only for Large Rooms,
-and not for non-large Group Rooms and Peer-to-Peer Rooms.**
+which supports a large number of Participants (> 50). This feature is in pilot, and requires that your account be enabled
+in order to use it. **Note that the following API changes apply only for Large Rooms, and not for non-large Group Rooms and
+Peer-to-Peer Rooms**.
 
-- A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
-- RemoteAudioTrack and RemoteVideoTrack will now have an additional property called `switchOffReason`, which describes
-  the [reason](https://sdk.stage.twilio.com/js/video/releases/3.0.0-preview.1/docs/global.html#TrackSwitchOffReason) for
+- An audio and video RemoteTrack will now have an additional property called `switchOffReason`, which describes the
+  [reason](https://sdk.stage.twilio.com/js/video/releases/3.0.0-preview.1/docs/global.html#TrackSwitchOffReason) for
   it being switched off. The `switchedOff` event will also have this reason string as a second argument. (VIDEO-8670, VIDEO-8748)
+- An audio or video RemoteTrack's `mediaStreamTrack` is set to `null` whenever it is switched off. When it is switched
+  on, it is set to a MediaStreamTrack. (VIDEO-8668, VIDEO-8745)
+- When the `switchOffReason` changes for an already switched off audio or video RemoteTrack, the `switchedOff` event is
+  raised. (VIDEO-8668, VIDEO-8745)
+- A RemoteAudioTrack of a Participant that is not active in the Large Room will now be switched off. (VIDEO-8668)
 - A RemoteVideoTrack will now be switched off if the number of switched on RemoteVideoTracks reached the limit set by the media server. (VIDEO-8745)
 - Renamed BandwidthProfileOptions to BandwidthProfile. (VIDEO-8754)
 - Renamed VideoBandwidthProfileOptions to VideoBandwidthProfile. (VIDEO-8753)
@@ -91,8 +96,8 @@ and not for non-large Group Rooms and Peer-to-Peer Rooms.**
   });
   ```
 
-- `Room.getStats()` is broken, and will be fixed in the next release. For now, the Track-level stats returned by this method
-  will not be accurate.
+- `Room.getStats()` is broken, and will be fixed in an upcoming release. For now, the Track-level stats returned by this
+  method will not be accurate.
 
 2.22.1 (July 11, 2022)
 ======================
