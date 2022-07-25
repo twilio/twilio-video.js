@@ -105,6 +105,15 @@ class RTCSessionDescription {
   }
 }
 
+class RTCRtpTransceiver {
+  constructor() {
+
+  }
+  get currentDirection() {
+    return 'foo';
+  }
+}
+
 class RTCPeerConnection extends EventEmitter {
   constructor() {
     super();
@@ -114,6 +123,10 @@ class RTCPeerConnection extends EventEmitter {
     this.peerIdentity = null;
     this.remoteDescription = null;
     this.signalingState = 'stable';
+  }
+
+  addTransceiver() {
+
   }
 
   createOffer() {
@@ -232,6 +245,7 @@ function mockWebRTC(_global) {
   _global.webkitMediaStream = MediaStream;
   _global.MediaStream = MediaStream;
   _global.RTCDataChannel = RTCDataChannel;
+  _global.RTCRtpTransceiver = RTCRtpTransceiver;
   _global.RTCPeerConnection = RTCPeerConnection;
   _global.RTCSessionDescription = RTCSessionDescription;
   _global.attachMediaStream = attachMediaStream;
@@ -250,6 +264,7 @@ module.exports.webkitMediaStream = MediaStream;
 module.exports.getUserMedia = getUserMedia;
 module.exports.navigator = navigator;
 module.exports.RTCDataChannel = RTCDataChannel;
+module.exports.RTCRtpTransceiver = RTCRtpTransceiver;
 module.exports.DUMMY_SDP = DUMMY_SDP;
 module.exports.RTCPeerConnection = RTCPeerConnection;
 module.exports.RTCSessionDescription = RTCSessionDescription;
