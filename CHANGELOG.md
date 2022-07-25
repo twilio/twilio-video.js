@@ -2,6 +2,19 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.22.2 (July 25, 2022)
+======================
+
+Changes
+-------
+
+- `isSupported` flag now returns `false` if the browser does not support the Unified Plan SDP format. (VIDEO-10307)
+  
+  The following is a list of browsers with Unified Plan as the default SDP format.
+  - Chrome 72+
+  - Safari 12.1+
+  - Firefox 38+
+
 2.22.1 (July 11, 2022)
 ======================
 
@@ -85,7 +98,7 @@ Bug Fixes
 Bug Fixes
 ---------
 
-- Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
+- Fixed an issue where publishing a video track sometimes caused a failure with "Unhandled exception: Client is unable to create or apply a local media description". (VIDEO-9511)
 - Fixed an issue where the `dimensionsChanged` event was not firing when the track dimensions first became available. (VIDEO-3576)
 - Removed references to node dependencies that causes build errors on Angular and Vue. (VIDEO-9282)
 - Fixed an issue where incorrect device was detected when using iPad in Desktop Website mode. (VIDEO-8282)
