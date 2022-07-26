@@ -7,14 +7,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-- This release adds support for 3rd party noise cancellation solutions. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Currently we support [@twilio/krisp-audio-plugin](https://www.npmjs.com/package/@twilio/krisp-audio-plugin).
+- This release adds private beta support for 3rd party noise cancellation solution. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Please fill out [this form](https://forms.gle/eeFyoGJj1mgMrxN88) to request access to the 3rd party plugin.
 
-You can get the plugin from npm with:
+Once you get the access to the plugin, You can install it from npm with:
 ```
-npm install @twilio/krisp-audio-plugin
+npm install <noise_cancellation_plugin>
 ```
 
-Once installed, you need to host the contents of `./node_modules/@twilio/krisp-audio-plugin/dist/` from your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated. You need to pass the path to the hosted files to `twilio-video` sdk when creating audio track as shown in the example below. The example below assumes that you have hosted the files at `/twilio-krisp-audio-plugin/1.0.0/dist` on your web server.
+Once installed, you need to host the contents of `./node_modules/<noise_cancellation_plugin>/dist/` from your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated. You need to pass the path to the hosted files to `twilio-video` sdk when creating audio track as shown in the example below. The example below assumes that you have hosted the files at `/noise_cancellation_plugin/1.0.0/dist` on your web server.
 
 ```ts
 const { connect, createLocalAudioTrack } = require('twilio-video');
@@ -24,7 +24,7 @@ const { connect, createLocalAudioTrack } = require('twilio-video');
 const localAudioTrack = await Video.createLocalAudioTrack({
   noiseCancellationOptions: {
     vendor: 'krisp',
-    sdkAssetsPath: '/twilio-krisp-audio-plugin/1.0.0/dist'
+    sdkAssetsPath: '/noise_cancellation_plugin/1.0.0/dist'
   }
 });
 
@@ -52,11 +52,6 @@ Changes
 -------
 
 - `isSupported` flag now returns `false` if the browser does not support the Unified Plan SDP format. (VIDEO-10307)
-<<<<<<< HEAD
-
-=======
-
->>>>>>> develop
   The following is a list of browsers with Unified Plan as the default SDP format.
   - Chrome 72+
   - Safari 12.1+
@@ -145,11 +140,7 @@ Bug Fixes
 Bug Fixes
 ---------
 
-<<<<<<< HEAD
-- Fixed an issue where some extraneous errors were logged to console when a video track was stopped. (VIDEO-9511)
-=======
 - Fixed an issue where publishing a video track sometimes caused a failure with "Unhandled exception: Client is unable to create or apply a local media description". (VIDEO-9511)
->>>>>>> develop
 - Fixed an issue where the `dimensionsChanged` event was not firing when the track dimensions first became available. (VIDEO-3576)
 - Removed references to node dependencies that causes build errors on Angular and Vue. (VIDEO-9282)
 - Fixed an issue where incorrect device was detected when using iPad in Desktop Website mode. (VIDEO-8282)
