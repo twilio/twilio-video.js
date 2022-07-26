@@ -52,6 +52,7 @@ Changes
 -------
 
 - `isSupported` flag now returns `false` if the browser does not support the Unified Plan SDP format. (VIDEO-10307)
+
   The following is a list of browsers with Unified Plan as the default SDP format.
   - Chrome 72+
   - Safari 12.1+
