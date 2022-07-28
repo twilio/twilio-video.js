@@ -59,6 +59,7 @@ const publicClasses = [
   // TS Files
   'lib/createlocaltracks.ts',
   'lib/index.ts',
+  'lib/media/track/noisecancellationimpl.ts',
   'lib/preflight/preflighttest.ts',
 ];
 
