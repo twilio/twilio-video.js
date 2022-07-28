@@ -4,6 +4,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 2.23.0 (July 28, 2022)
 ======================
+
 New Features
 ------------
 
