@@ -14,6 +14,7 @@ require('./spec/localparticipant/publishunpublishtrack');
 require('./spec/localparticipant/regressions');
 require('./spec/localtracks');
 require('./spec/localtrackpublication');
+require('./spec/noisecancellation');
 require('./spec/preflight');
 require('./spec/rest');
 require('./spec/room');

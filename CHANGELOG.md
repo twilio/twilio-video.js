@@ -4,7 +4,6 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 3.0.0-preview.1 (July 25, 2022)
 ===============================
-
 New Features
 ------------
 
@@ -98,6 +97,50 @@ Peer-to-Peer Rooms**.
 - [PSTN Participants](https://www.twilio.com/docs/video/adding-programmable-voice-participants-video-rooms) cannot connect
   to Large Rooms.
 
+
+2.23.0 (July 28, 2022)
+======================
+New Features
+------------
+
+- This release adds private beta support for 3rd party noise cancellation solution. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Please fill out [this form](https://forms.gle/eeFyoGJj1mgMrxN88) to request access to the 3rd party plugin.
+
+Once you get the access to the plugin, You can install it from npm with:
+```
+npm install <noise_cancellation_plugin>
+```
+
+Once installed, you need to host the contents of `./node_modules/<noise_cancellation_plugin>/dist/` from your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated. You need to pass the path to the hosted files to `twilio-video` sdk when creating audio track as shown in the example below. The example below assumes that you have hosted the files at `/noise_cancellation_plugin/1.0.0/dist` on your web server.
+
+```ts
+const { connect, createLocalAudioTrack } = require('twilio-video');
+
+// create a local audio track and have it use
+// @twilio/krisp-audio-plugin for noise cancellation processing.
+const localAudioTrack = await Video.createLocalAudioTrack({
+  noiseCancellationOptions: {
+    vendor: 'krisp',
+    sdkAssetsPath: '/noise_cancellation_plugin/1.0.0/dist'
+  }
+});
+
+// publish the track to a room
+const room = await connect( token, {
+  tracks: [localAudioTrack]
+  // ... any other connect options
+});
+
+// you can enable/disable noise cancellation at runtime
+// using noiseCancellation interface exposed by localAudioTrack
+function updateNoiseCancellation(enable: boolean) {
+  const noiseCancellation = localAudioTrack.noiseCancellation;
+
+  if (noiseCancellation) {
+    enable ? noiseCancellation.enable() : noiseCancellation.disable();
+  }
+}
+
+```
 2.22.2 (July 25, 2022)
 ======================
 
@@ -105,7 +148,7 @@ Changes
 -------
 
 - `isSupported` flag now returns `false` if the browser does not support the Unified Plan SDP format. (VIDEO-10307)
-  
+
   The following is a list of browsers with Unified Plan as the default SDP format.
   - Chrome 72+
   - Safari 12.1+
