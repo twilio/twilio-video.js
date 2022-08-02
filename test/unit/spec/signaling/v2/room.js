@@ -2034,6 +2034,9 @@ function makeLocalParticipant(options) {
 
   localParticipant.setBandwidthProfile = sinon.spy();
   localParticipant.setNetworkQualityLevel = sinon.spy();
+  localParticipant.setSignalingRegion = sinon.spy();
+  localParticipant.setAudioProcessors = sinon.spy();
+
 
   localParticipant.incrementRevision = sinon.spy(() => localParticipant.revision++);
   localParticipant.tracks = options.localTracks.reduce((tracks, track) => tracks.set(track.id, track), new Map());

@@ -1,5 +1,6 @@
 import { AudioTrack } from './AudioTrack';
 import { LocalTrackOptions } from './LocalTrackOptions';
+import { NoiseCancellation } from './types';
 import { Track } from './Track';
 
 export class LocalAudioTrack extends AudioTrack {
@@ -7,6 +8,7 @@ export class LocalAudioTrack extends AudioTrack {
 
   id: Track.ID;
   isStopped: boolean;
+  noiseCancellation?: NoiseCancellation;
 
   disable(): this;
   enable(enabled?: boolean): this;
