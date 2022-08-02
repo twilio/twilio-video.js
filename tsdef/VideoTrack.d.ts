@@ -1,6 +1,6 @@
+import { AddProcessorOptions } from './types';
 import { Track } from './Track';
 import { VideoProcessor } from './VideoProcessor';
-import { AddProcessorOptions } from './types';
 
 export namespace VideoTrack {
   interface Dimensions {
