@@ -910,6 +910,7 @@ function makeTest(options) {
   options.setRenderHints = options.setRenderHints || sinon.spy(() => { return false; });
   options.setPriority = options.setPriority || sinon.spy(() => { return false; });
   options.clearRenderHint = options.clearRenderHint || sinon.spy(() => { return false; });
+  options.getTrackStats = options.getTrackStats || sinon.spy(() => Promise.resolve(new Map()));
   options.participant = options.participant || makeRemoteParticipantV3(options);
 
   options.state = revision => {
@@ -960,6 +961,7 @@ function makeRemoteParticipantV3(options) {
     options.setPriority,
     options.setRenderHints,
     options.clearRenderHint,
+    options.getTrackStats,
     options
   );
 }

@@ -10,8 +10,6 @@ const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV3 = require('../../../../../lib/signaling/v3/room');
 const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const RealTrackSubscriptionsSignaling = require('../../../../../lib/signaling/v3/tracksubscriptionssignaling');
-
-// eslint-disable-next-line no-warning-comments
 const RemoteTrackPublicationV3 = require('../../../../../lib/signaling/v3/remotetrackpublication');
 
 
@@ -2093,7 +2091,7 @@ function makeLocalParticipant(options) {
 }
 
 function makeRemoteTrack(options) {
-  return new RemoteTrackPublicationV3(options);
+  return new RemoteTrackPublicationV3(options, false, null, () => Promise.resolve(new Map()));
 }
 
 function makeTrack(options) {
