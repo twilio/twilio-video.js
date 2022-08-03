@@ -22,8 +22,8 @@ export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPu
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
 
 export interface AddProcessorOptions {
-  inputType?: 'video' | 'canvas' | 'offscreencanvas';
-  renderingContextType?: string;
+  inputFrameBufferType?: 'video' | 'canvas' | 'offscreencanvas';
+  outputFrameBufferContextType?: string;
 }
 
 export interface EncodingParameters {

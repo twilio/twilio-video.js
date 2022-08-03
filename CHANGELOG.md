@@ -32,8 +32,8 @@ const videoTrack = await createLocalVideoTrack({
 });
 
 videoTrack.addProcessor(processor, {
-  renderingContextType: 'webgl2',
-  inputType: 'video',
+  inputFrameBufferType: 'video',
+  outputFrameBufferContextType: 'webgl2',
 });
 ```
 
