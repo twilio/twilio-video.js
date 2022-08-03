@@ -30,8 +30,12 @@ describe('createLocalAudioTrack', () => {
       expectedVendor: null
     }
   ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
+    let audioTrack = null;
+    before(async () => {
+      audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
+    });
+
     it(testName, async function()  {
-      const audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
       assert(audioTrack, `unexpected audioTrack ${audioTrack}`);
       if (expectedVendor) {
         assert(audioTrack.noiseCancellation, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
@@ -50,6 +54,38 @@ describe('createLocalAudioTrack', () => {
       } else {
         assert.equal(audioTrack.noiseCancellation, null, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
       }
+    });
+
+    [true, false].forEach(noiseCancellationEnabled => {
+      it(`audioTrack.noiseCancellation.isEnabled=${noiseCancellationEnabled} is maintained after restart`, async () => {
+        let stoppedCount = 0;
+        audioTrack.on('stopped', () => stoppedCount++);
+
+        if (expectedVendor) {
+          if (noiseCancellationEnabled) {
+            await audioTrack.noiseCancellation.enable();
+          } else {
+            await audioTrack.noiseCancellation.disable();
+          }
+        }
+
+        await audioTrack.restart();
+
+        assert(stoppedCount === 1, `unexpected stoppedCount=${stoppedCount}`);
+        if (expectedVendor) {
+          assert(audioTrack.noiseCancellation.isEnabled === noiseCancellationEnabled, `Unexpected audioTrack.noiseCancellation.isEnabled: ${audioTrack.noiseCancellation.isEnabled}`);
+        }
+      });
+    });
+
+    it('noiseCancellation.sourceTrack.srcTrack is stopped when LocalAudioTrack is stopped', () => {
+      let stoppedCount = 0;
+      audioTrack.on('stopped', () => stoppedCount++);
+      audioTrack.stop();
+      if (expectedVendor) {
+        assert(audioTrack.noiseCancellation.sourceTrack.readyState === 'ended', `unexpected readyState: ${audioTrack.noiseCancellation.sourceTrack.readyState}`);
+      }
+      assert(stoppedCount === 1, `unexpected stoppedCount=${stoppedCount}`);
     });
   });
 });
