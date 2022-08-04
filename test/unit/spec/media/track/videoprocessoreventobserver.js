@@ -23,10 +23,12 @@ describe('VideoProcessorEventObserver', () => {
     processor = {
       _assetsPath: '/virtualbackground/',
       _blurFilterRadius: 15,
+      _debounce: true,
       _fitType: 'Cover',
       _isSimdEnabled: true,
       _maskBlurRadius: 5,
       _name: 'VirtualBackgroundProcessor',
+      _pipeline: 'WebGL2',
       _version: '1.0.0',
       _benchmark: getBenchmark(1)
     };
@@ -35,7 +37,9 @@ describe('VideoProcessorEventObserver', () => {
       captureHeight: 720,
       captureWidth: 1280,
       inputFrameRate: 24,
-      isRemoteVideoTrack: false
+      isRemoteVideoTrack: false,
+      inputFrameBufferType: 'video',
+      outputFrameBufferContextType: 'webgl2'
     };
 
     processorInfo = Object.assign({ processor }, captureInfo);
@@ -45,12 +49,16 @@ describe('VideoProcessorEventObserver', () => {
       blurFilterRadius: processor._blurFilterRadius,
       captureHeight: captureInfo.captureHeight,
       captureWidth: captureInfo.captureWidth,
+      debounce: processor._debounce.toString(),
       fitType: processor._fitType,
       inputFrameRate: captureInfo.inputFrameRate,
+      inputFrameBufferType: captureInfo.inputFrameBufferType,
+      outputFrameBufferContextType: captureInfo.outputFrameBufferContextType,
       isRemoteVideoTrack: captureInfo.isRemoteVideoTrack.toString(),
       isSimdEnabled: processor._isSimdEnabled.toString(),
       maskBlurRadius: processor._maskBlurRadius,
       name: processor._name,
+      pipeline: processor._pipeline,
       version: processor._version
     };
 
@@ -245,8 +253,8 @@ describe('VideoProcessorEventObserver', () => {
   describe('event data', () => {
     it('should have correct data for custom processor', () => {
       observer.emit('add', Object.assign({ processor: {} }, captureInfo));
-      const { captureHeight, captureWidth, inputFrameRate, isRemoteVideoTrack } = eventData;
-      const expected = { name: 'VideoProcessor', captureHeight, captureWidth, inputFrameRate, isRemoteVideoTrack };
+      const { captureHeight, captureWidth, inputFrameRate, isRemoteVideoTrack, inputFrameBufferType, outputFrameBufferContextType } = eventData;
+      const expected = { name: 'VideoProcessor', captureHeight, captureWidth, inputFrameRate, isRemoteVideoTrack, inputFrameBufferType, outputFrameBufferContextType };
       sinon.assert.calledOnce(listener);
       sinon.assert.calledWithExactly(listener, { name: 'add', data: expected });
     });
