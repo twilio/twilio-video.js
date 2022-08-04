@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
-`VideoTrack.addProcessor` now works on browsers that doesn't support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
+`VideoTrack.addProcessor` now works on browsers that do not support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
  v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
  v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0) for details.
 
