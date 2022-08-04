@@ -470,7 +470,6 @@ describe('RoomV3', () => {
           packetsReceived: 0,
           roundTripTime: 0,
           ssrc: '',
-          timestamp: 0,
           trackId: '3',
           trackSid: 'MT3'
         }
@@ -491,13 +490,19 @@ describe('RoomV3', () => {
           packetsReceived: 0,
           roundTripTime: 0,
           ssrc: '',
-          timestamp: 0,
           totalDecodeTime: 0,
           trackId: '4',
           trackSid: 'MT4'
         }
       ];
-      assert.deepEqual([...reports.values()], [
+
+      const reportsWithoutRemoteTrackTimestamps = [...reports.values()].map(report => {
+        report.remoteAudioTrackStats.forEach(stat => delete stat.timestamp);
+        report.remoteVideoTrackStats.forEach(stat => delete stat.timestamp);
+        return report;
+      });
+
+      assert.deepEqual(reportsWithoutRemoteTrackTimestamps, [
         {
           activeIceCandidatePair: {
             includesRelayProtocol: true,
