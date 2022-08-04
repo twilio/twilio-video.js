@@ -44,6 +44,7 @@ export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
 export { TwilioError } from './TwilioError';
 export {
+  AddProcessorOptions,
   AudioCodec,
   AudioCodecSettings,
   AudioLevel,

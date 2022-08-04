@@ -21,6 +21,11 @@ export type AudioTrackPublication = LocalAudioTrackPublication | RemoteAudioTrac
 export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPublication;
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
 
+export interface AddProcessorOptions {
+  inputFrameBufferType?: 'video' | 'canvas' | 'offscreencanvas';
+  outputFrameBufferContextType?: string;
+}
+
 export interface EncodingParameters {
   maxAudioBitrate?: number | null;
   maxVideoBitrate?: number | null;

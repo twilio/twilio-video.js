@@ -2,6 +2,41 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.23.1 (In Progress)
+====================
+
+Changes
+-------
+
+`VideoTrack.addProcessor` now works on browsers that do not support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
+ v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
+ v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0) for details.
+
+### Example
+
+```ts
+import { createLocalVideoTrack } from 'twilio-video';
+import { VirtualBackgroundProcessor, Pipeline } from '@twilio/video-processors';
+
+const virtualBackgroundProcessor = new VirtualBackgroundProcessor({
+  pipeline: Pipeline.WebGL2,
+  //...other options
+});
+
+await virtualBackground.loadModel();
+
+const videoTrack = await createLocalVideoTrack({
+  width: 640,
+  height: 480,
+  frameRate: 24
+});
+
+videoTrack.addProcessor(processor, {
+  inputFrameBufferType: 'video',
+  outputFrameBufferContextType: 'webgl2',
+});
+```
+
 2.23.0 (July 28, 2022)
 ======================
 
