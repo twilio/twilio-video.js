@@ -10,8 +10,6 @@ const StatsReport = require('../../../../../lib/stats/statsreport');
 const RoomV3 = require('../../../../../lib/signaling/v3/room');
 const RealTrackPrioritySignaling = require('../../../../../lib/signaling/v2/trackprioritysignaling');
 const RealTrackSubscriptionsSignaling = require('../../../../../lib/signaling/v3/tracksubscriptionssignaling');
-
-// eslint-disable-next-line no-warning-comments
 const RemoteTrackPublicationV3 = require('../../../../../lib/signaling/v3/remotetrackpublication');
 
 
@@ -403,9 +401,7 @@ describe('RoomV3', () => {
     });
   });
 
-  // eslint-disable-next-line no-warning-comments
-  // TODO(mmalavalli): Enable once RoomV3.getstats() is implemented.
-  describe.skip('#getStats', () => {
+  describe('#getStats', () => {
     it('only returns results for published Local- or Remote-Tracks', async () => {
       const test = makeTest({
         localTracks: [
@@ -442,6 +438,18 @@ describe('RoomV3', () => {
         ]
       });
 
+      const mediaStreamTrack1 = { id: '3', kind: 'audio' };
+      const mediaStreamTrack2 = { id: '4', kind: 'video' };
+      const trackReceiver1 = makeTrackReceiver(mediaStreamTrack1);
+      const trackReceiver2 = makeTrackReceiver(mediaStreamTrack2);
+
+      const remoteTracks = flatMap([...test.room.participants.values()], participant => [...participant.tracks.values()]);
+      remoteTracks.forEach(track => {
+        const trackReceiver = track.kind === 'audio' ? trackReceiver1 : trackReceiver2;
+        track.setTrackTransceiver(trackReceiver);
+        test.room._trackSidsToTrackIds.set(track.sid, trackReceiver.id);
+      });
+
       const reports = await test.room.getStats();
       const localAudioTrackStats = [
         { trackId: '1', trackSid: 'MT1' }
@@ -450,12 +458,51 @@ describe('RoomV3', () => {
         { trackId: '2', trackSid: 'MT2' }
       ];
       const remoteAudioTrackStats = [
-        { trackId: '3', trackSid: 'MT3' }
+        {
+          audioOutputLevel: 0,
+          bytesReceived: 0,
+          codecName: '',
+          estimatedPlayoutTimestamp: 0,
+          jitter: 0,
+          jitterBufferDelay: 0,
+          jitterBufferEmittedCount: 0,
+          packetsLost: 0,
+          packetsReceived: 0,
+          roundTripTime: 0,
+          ssrc: '',
+          trackId: '3',
+          trackSid: 'MT3'
+        }
       ];
       const remoteVideoTrackStats = [
-        { trackId: '4', trackSid: 'MT4' }
+        {
+          bytesReceived: 0,
+          codecName: '',
+          estimatedPlayoutTimestamp: 0,
+          frameHeightReceived: 0,
+          frameRateReceived: 0,
+          frameWidthReceived: 0,
+          framesDecoded: 0,
+          jitter: 0,
+          jitterBufferDelay: 0,
+          jitterBufferEmittedCount: 0,
+          packetsLost: 0,
+          packetsReceived: 0,
+          roundTripTime: 0,
+          ssrc: '',
+          totalDecodeTime: 0,
+          trackId: '4',
+          trackSid: 'MT4'
+        }
       ];
-      assert.deepEqual([...reports.values()], [
+
+      const reportsWithoutRemoteTrackTimestamps = [...reports.values()].map(report => {
+        report.remoteAudioTrackStats.forEach(stat => delete stat.timestamp);
+        report.remoteVideoTrackStats.forEach(stat => delete stat.timestamp);
+        return report;
+      });
+
+      assert.deepEqual(reportsWithoutRemoteTrackTimestamps, [
         {
           activeIceCandidatePair: {
             includesRelayProtocol: true,
@@ -1991,13 +2038,13 @@ function makePeerConnectionManager(getRoom) {
     // eslint-disable-next-line no-console
     const remoteAudioTrackStats = remoteTracks
       .filter(track => track.kind === 'audio')
-      .map(track => ({ trackId: track.id }))
+      .map(track => ({ trackId: track.trackTransceiver.id }))
       .concat([
         { trackId: 'bogus3', kind: 'audio' }
       ]);
     const remoteVideoTrackStats = remoteTracks
       .filter(track => track.kind === 'video')
-      .map(track => ({ trackId: track.id }))
+      .map(track => ({ trackId: track.trackTransceiver.id }))
       .concat([
         { trackId: 'bogus4', kind: 'video' }
       ]);
@@ -2093,7 +2140,7 @@ function makeLocalParticipant(options) {
 }
 
 function makeRemoteTrack(options) {
-  return new RemoteTrackPublicationV3(options);
+  return new RemoteTrackPublicationV3(options, false, null, () => Promise.resolve(new Map()));
 }
 
 function makeTrack(options) {

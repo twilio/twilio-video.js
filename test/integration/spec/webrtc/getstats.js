@@ -6,7 +6,7 @@ const {
   remoteCandidateStatsNullProps
 } = require('../../../lib/webrtc/util');
 
-const getStats = require('../../../../es5/webrtc/getstats');
+const { getStats } = require('../../../../es5/webrtc/getstats');
 const getUserMedia = require('../../../../es5/webrtc/getusermedia');
 const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
 const { guessBrowser } = require('../../../../es5/webrtc/util');

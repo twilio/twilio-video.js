@@ -4,7 +4,7 @@
 var assert = require('assert');
 var { FakeMediaStream, FakeMediaStreamTrack } = require('../../../lib/webrtc/fakemediastream');
 var { FakeRTCPeerConnection } = require('../../../lib/webrtc/fakestats');
-var getStats = require('../../../../lib/webrtc/getstats');
+var { getStats } = require('../../../../lib/webrtc/getstats');
 
 describe('getStats', function() {
   it('should reject the promise if RTCPeerConnection is not specified', () => {

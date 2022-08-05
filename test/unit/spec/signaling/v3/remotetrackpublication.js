@@ -17,7 +17,7 @@ describe('RemoteTrackPublicationV3', () => {
           sid: makeSid()
         };
         const { isSwitchedOff, switchOffReason } = makeSwitchedOff();
-        assert.equal((new RemoteTrackPublicationV3(trackState, isSwitchedOff, switchOffReason))[prop], trackState[prop]);
+        assert.equal((new RemoteTrackPublicationV3(trackState, isSwitchedOff, switchOffReason, () => Promise.resolve(Promise.resolve(new Map()))))[prop], trackState[prop]);
       });
     });
 
@@ -29,7 +29,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, enabled ? 'DISABLED_BY_SUBSCRIBER' : 'DISABLED_BY_PUBLISHER')).isEnabled, enabled);
+          }, true, enabled ? 'DISABLED_BY_SUBSCRIBER' : 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()))).isEnabled, enabled);
         });
       });
     });
@@ -42,7 +42,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, isSwitchedOff, 'DISABLED_BY_SUBSCRIBER');
+          }, isSwitchedOff, 'DISABLED_BY_SUBSCRIBER', () => Promise.resolve(new Map()));
           assert.equal(track.isSwitchedOff, isSwitchedOff);
           assert.equal(track.switchOffReason, isSwitchedOff ? 'DISABLED_BY_SUBSCRIBER' : null);
         });
@@ -79,7 +79,8 @@ describe('RemoteTrackPublicationV3', () => {
             sid: makeSid()
           },
           initialIsSwitchedOff,
-          initialSwitchOffReason
+          initialSwitchOffReason,
+          () => Promise.resolve(new Map())
         );
         track.once('updated', () => { updated = true; });
         track.setSwitchedOff(isSwitchedOff, switchOffReason);
@@ -112,7 +113,7 @@ describe('RemoteTrackPublicationV3', () => {
   describe('#setTrackTransceiver, when called with', () => {
     combinationContext([
       [
-        [null, {}],
+        [null, { id: 'foo' }],
         x => `a ${x ? 'non-' : ''}null trackReceiver, and`
       ],
       [
@@ -126,7 +127,8 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
+
         assert.equal(track, track.setTrackTransceiver(mediaTrackReceiver, isSubscribed));
       });
 
@@ -137,7 +139,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
         assert.equal(track.setTrackTransceiver(mediaTrackReceiver, isSubscribed).isSubscribed, expectedIsSubscribed);
       });
 
@@ -148,7 +150,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
 
         let updated;
         track.once('updated', () => { updated = true; });
@@ -156,6 +158,136 @@ describe('RemoteTrackPublicationV3', () => {
         assert(shouldEmitUpdated ? updated : !updated);
         assert.equal(track.trackTransceiver, mediaTrackReceiver);
       });
+
+      if (mediaTrackReceiver) {
+        it('should update _switchOffStateChangeStats', async () => {
+          const kind = 'video';
+          const sid = makeSid();
+
+          const commonStats = [{
+            bytesReceived: 1000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 1111,
+            jitter: 20,
+            jitterBufferDelay: 8,
+            jitterBufferEmittedCount: 6,
+            packetsLost: 25,
+            packetsReceived: 100,
+            roundTripTime: 6,
+            ssrc: 'baz',
+            timestamp: 67890,
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            bytesReceived: 3000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 2222,
+            jitter: 10,
+            jitterBufferDelay: 18,
+            jitterBufferEmittedCount: 16,
+            packetsLost: 30,
+            packetsReceived: 1000,
+            roundTripTime: 1,
+            ssrc: 'baz',
+            timestamp: 67896,
+            trackId: 'foo',
+            trackSid: sid
+          }];
+
+          const mediaStats = [{
+            audio: {
+              audioOutputLevel: 100
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 3000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 1000
+            }
+          }, {
+            audio: {
+              audioOutputLevel: 90
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 5000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 4000
+            }
+          }];
+
+          const trackStats = Object.assign({}, commonStats[0], mediaStats[0][kind]);
+          const track = new RemoteTrackPublicationV3({
+            kind,
+            name: makeUUID(),
+            priority: makeUUID(),
+            sid
+          }, false, null, () => Promise.resolve(new Map([['pcId', trackStats]])));
+
+          track.setTrackTransceiver(mediaTrackReceiver, isSubscribed);
+          await track._pendingGetTrackStatsPromise;
+
+          assert.deepStrictEqual(track.adjustTrackStats(), Object.assign({
+            bytesReceived: 0,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 1111,
+            jitter: 20,
+            jitterBufferDelay: 8,
+            jitterBufferEmittedCount: 6,
+            packetsLost: 0,
+            packetsReceived: 0,
+            roundTripTime: 6,
+            ssrc: 'baz',
+            timestamp: 67890,
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            audio: {
+              audioOutputLevel: 100
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 0,
+              frameWidthReceived: 640,
+              totalDecodeTime: 0
+            }
+          }[kind]));
+
+          const newMediaStreamTrackStats = Object.assign({}, commonStats[1], mediaStats[1][kind]);
+          const adjustedStats = track.adjustTrackStats(newMediaStreamTrackStats);
+          assert(typeof adjustedStats.timestamp, 'number');
+          delete adjustedStats.timestamp;
+
+          assert.deepStrictEqual(adjustedStats, Object.assign({
+            bytesReceived: 2000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 2222,
+            jitter: 10,
+            jitterBufferDelay: 18,
+            jitterBufferEmittedCount: 16,
+            packetsLost: 5,
+            packetsReceived: 900,
+            roundTripTime: 1,
+            ssrc: 'baz',
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            audio: {
+              audioOutputLevel: 90
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 2000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 3000
+            }
+          }[kind]));
+        });
+      }
     });
   });
 
@@ -170,7 +302,7 @@ describe('RemoteTrackPublicationV3', () => {
               priority: oldPriorityValue,
               sid: makeSid()
             };
-            const track = new RemoteTrackPublicationV3(trackState, false, null);
+            const track = new RemoteTrackPublicationV3(trackState, false, null, () => Promise.resolve(new Map()));
             trackState.priority = newPriorityValue;
             assert.equal(track, track.update(trackState));
           });
@@ -182,7 +314,7 @@ describe('RemoteTrackPublicationV3', () => {
               priority: oldPriorityValue,
               sid: makeSid()
             };
-            const track = new RemoteTrackPublicationV3(trackState, false, null);
+            const track = new RemoteTrackPublicationV3(trackState, false, null, () => Promise.resolve(new Map()));
             trackState.priority = newPriorityValue;
             track.update(trackState);
             assert.equal(track.priority, newPriorityValue);
@@ -198,7 +330,7 @@ describe('RemoteTrackPublicationV3', () => {
               };
 
               let priority;
-              const track = new RemoteTrackPublicationV3(trackState, false, null);
+              const track = new RemoteTrackPublicationV3(trackState, false, null, () => Promise.resolve(new Map()));
               trackState.priority = newPriorityValue;
               track.once('updated', () => { priority = track.priority; });
               track.update(trackState);
@@ -214,7 +346,7 @@ describe('RemoteTrackPublicationV3', () => {
               };
 
               let updated = false;
-              const track = new RemoteTrackPublicationV3(trackState, false, null);
+              const track = new RemoteTrackPublicationV3(trackState, false, null, () => Promise.resolve(new Map()));
               trackState.priority = newPriorityValue;
               track.once('updated', () => { updated = true; });
               track.update(trackState);
@@ -237,7 +369,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
         assert.equal(track, track.disable());
       });
 
@@ -247,7 +379,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
         track.disable();
         assert(!track.isEnabled);
       });
@@ -258,7 +390,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, false, null);
+        }, false, null, () => Promise.resolve(new Map()));
         let isEnabled;
         track.once('updated', () => { isEnabled = track.isEnabled; });
         track.disable();
@@ -273,7 +405,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, true, 'DISABLED_BY_PUBLISHER');
+        }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
         assert.equal(track, track.disable());
       });
 
@@ -283,7 +415,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, true, 'DISABLED_BY_PUBLISHER');
+        }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
         track.disable();
         assert(!track.isEnabled);
       });
@@ -294,7 +426,7 @@ describe('RemoteTrackPublicationV3', () => {
           name: makeUUID(),
           priority: makeUUID(),
           sid: makeSid()
-        }, true, 'DISABLED_BY_PUBLISHER');
+        }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
         let updated;
         track.once('updated', () => { updated = true; });
         track.disable();
@@ -312,7 +444,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           assert.equal(track, track.enable(false));
         });
 
@@ -322,7 +454,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           track.enable(false);
           assert(!track.isEnabled);
         });
@@ -333,7 +465,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           let isEnabled;
           track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable(false);
@@ -348,7 +480,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           assert.equal(track, track.enable(false));
         });
 
@@ -358,7 +490,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           track.enable(false);
           assert(!track.isEnabled);
         });
@@ -369,7 +501,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           let updated;
           track.once('updated', () => { updated = true; });
           track.enable(false);
@@ -386,7 +518,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           assert.equal(track, track.enable(true));
         });
 
@@ -396,7 +528,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           track.enable(true);
           assert(track.isEnabled);
         });
@@ -407,7 +539,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           let updated;
           track.once('updated', () => { updated = true; });
           track.enable(true);
@@ -422,7 +554,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           assert.equal(track, track.enable(true));
         });
 
@@ -432,7 +564,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           track.enable(true);
           assert(track.isEnabled);
         });
@@ -443,7 +575,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           let isEnabled;
           track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable(true);
@@ -460,7 +592,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           assert.equal(track, track.enable());
         });
 
@@ -470,7 +602,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           track.enable();
           assert(track.isEnabled);
         });
@@ -481,7 +613,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, false, null);
+          }, false, null, () => Promise.resolve(new Map()));
           let updated;
           track.once('updated', () => { updated = true; });
           track.enable();
@@ -496,7 +628,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           assert.equal(track, track.enable());
         });
 
@@ -506,7 +638,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           track.enable();
           assert(track.isEnabled);
         });
@@ -517,7 +649,7 @@ describe('RemoteTrackPublicationV3', () => {
             name: makeUUID(),
             priority: makeUUID(),
             sid: makeSid()
-          }, true, 'DISABLED_BY_PUBLISHER');
+          }, true, 'DISABLED_BY_PUBLISHER', () => Promise.resolve(new Map()));
           let isEnabled;
           track.once('updated', () => { isEnabled = track.isEnabled; });
           track.enable();
