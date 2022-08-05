@@ -113,7 +113,7 @@ describe('RemoteTrackPublicationV3', () => {
   describe('#setTrackTransceiver, when called with', () => {
     combinationContext([
       [
-        [null, {}],
+        [null, { id: 'foo' }],
         x => `a ${x ? 'non-' : ''}null trackReceiver, and`
       ],
       [
@@ -128,6 +128,7 @@ describe('RemoteTrackPublicationV3', () => {
           priority: makeUUID(),
           sid: makeSid()
         }, false, null, () => Promise.resolve(new Map()));
+
         assert.equal(track, track.setTrackTransceiver(mediaTrackReceiver, isSubscribed));
       });
 
@@ -157,6 +158,136 @@ describe('RemoteTrackPublicationV3', () => {
         assert(shouldEmitUpdated ? updated : !updated);
         assert.equal(track.trackTransceiver, mediaTrackReceiver);
       });
+
+      if (mediaTrackReceiver) {
+        it('should update _switchOffStateChangeStats', async () => {
+          const kind = 'video';
+          const sid = makeSid();
+
+          const commonStats = [{
+            bytesReceived: 1000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 1111,
+            jitter: 20,
+            jitterBufferDelay: 8,
+            jitterBufferEmittedCount: 6,
+            packetsLost: 25,
+            packetsReceived: 100,
+            roundTripTime: 6,
+            ssrc: 'baz',
+            timestamp: 67890,
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            bytesReceived: 3000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 2222,
+            jitter: 10,
+            jitterBufferDelay: 18,
+            jitterBufferEmittedCount: 16,
+            packetsLost: 30,
+            packetsReceived: 1000,
+            roundTripTime: 1,
+            ssrc: 'baz',
+            timestamp: 67896,
+            trackId: 'foo',
+            trackSid: sid
+          }];
+
+          const mediaStats = [{
+            audio: {
+              audioOutputLevel: 100
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 3000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 1000
+            }
+          }, {
+            audio: {
+              audioOutputLevel: 90
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 5000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 4000
+            }
+          }];
+
+          const trackStats = Object.assign({}, commonStats[0], mediaStats[0][kind]);
+          const track = new RemoteTrackPublicationV3({
+            kind,
+            name: makeUUID(),
+            priority: makeUUID(),
+            sid
+          }, false, null, () => Promise.resolve(new Map([['pcId', trackStats]])));
+
+          track.setTrackTransceiver(mediaTrackReceiver, isSubscribed);
+          await track._pendingGetTrackStatsPromise;
+
+          assert.deepStrictEqual(track.adjustTrackStats(), Object.assign({
+            bytesReceived: 0,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 1111,
+            jitter: 20,
+            jitterBufferDelay: 8,
+            jitterBufferEmittedCount: 6,
+            packetsLost: 0,
+            packetsReceived: 0,
+            roundTripTime: 6,
+            ssrc: 'baz',
+            timestamp: 67890,
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            audio: {
+              audioOutputLevel: 100
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 0,
+              frameWidthReceived: 640,
+              totalDecodeTime: 0
+            }
+          }[kind]));
+
+          const newMediaStreamTrackStats = Object.assign({}, commonStats[1], mediaStats[1][kind]);
+          const adjustedStats = track.adjustTrackStats(newMediaStreamTrackStats);
+          assert(typeof adjustedStats.timestamp, 'number');
+          delete adjustedStats.timestamp;
+
+          assert.deepStrictEqual(adjustedStats, Object.assign({
+            bytesReceived: 2000,
+            codecName: 'bar',
+            estimatedPlayoutTimestamp: 2222,
+            jitter: 10,
+            jitterBufferDelay: 18,
+            jitterBufferEmittedCount: 16,
+            packetsLost: 5,
+            packetsReceived: 900,
+            roundTripTime: 1,
+            ssrc: 'baz',
+            trackId: 'foo',
+            trackSid: sid
+          }, {
+            audio: {
+              audioOutputLevel: 90
+            },
+            video: {
+              frameHeightReceived: 360,
+              frameRateReceived: 24,
+              framesDecoded: 2000,
+              frameWidthReceived: 640,
+              totalDecodeTime: 3000
+            }
+          }[kind]));
+        });
+      }
     });
   });
 
