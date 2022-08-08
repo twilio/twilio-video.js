@@ -7,7 +7,7 @@ const { getUserMedia } = require('../../../es5/webrtc/index');
 const sinon = require('sinon');
 
 const { connect, createLocalTracks, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
-const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
+const LocalDataTrack = require('../../../es5/media/track/localdatatrack');
 const Room = require('../../../es5/room');
 const { flatMap } = require('../../../es5/util');
 const CancelablePromise = require('../../../es5/util/cancelablepromise');

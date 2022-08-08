@@ -5,11 +5,9 @@ import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '.
 const { asLocalTrack, buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
 
-const {
-  LocalAudioTrack,
-  LocalDataTrack,
-  LocalVideoTrack
-} = require('./media/track/es5');
+const LocalAudioTrack = require('./media/track/localaudiotrack');
+const LocalDataTrack = require('./media/track/localdatatrack');
+const LocalVideoTrack = require('./media/track/localvideotrack');
 
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');

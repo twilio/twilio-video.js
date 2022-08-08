@@ -14,9 +14,9 @@ const internals = {
   isSupported: require('./util/support')(),
   version: require('../package.json').version,
   Logger: require('./vendor/loglevel'),
-  LocalAudioTrack: require('./media/track/es5').LocalAudioTrack,
-  LocalDataTrack: require('./media/track/es5').LocalDataTrack,
-  LocalVideoTrack: require('./media/track/es5').LocalVideoTrack
+  LocalAudioTrack: require('./media/track/localaudiotrack'),
+  LocalDataTrack: require('./media/track/localdatatrack'),
+  LocalVideoTrack: require('./media/track/localvideotrack')
 };
 
 function connect(token: string, options?: ConnectOptions): Promise<Room> {

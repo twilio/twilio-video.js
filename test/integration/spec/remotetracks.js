@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const { trackPriority } = require('../../../es5/util/constants');
-const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
+const LocalDataTrack = require('../../../es5/media/track/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
 const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
