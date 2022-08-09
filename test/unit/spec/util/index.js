@@ -54,11 +54,6 @@ describe('util', () => {
         expectedPayload: { enableDominantSpeaker: 'false' },
       },
       {
-        testCase: 'eventListener provided',
-        connectOptions: { eventListener: {} },
-        expectedPayload: { eventListener: 'true' },
-      },
-      {
         testCase: 'iceTransportPolicy specified',
         connectOptions: { iceTransportPolicy: 'relay' },
         expectedPayload: { iceTransportPolicy: 'relay' },
@@ -197,7 +192,6 @@ describe('util', () => {
           'dataTracks': 0,
           'enableDominantSpeaker': 'false',
           'enableDscp': 'false',
-          'eventListener': 'false',
           'iceServers': 0,
           'preflight': 'false',
           'video': 'false',

@@ -1,6 +1,5 @@
 const assert = require('assert');
 const sinon = require('sinon');
-const { EventEmitter } = require('events');
 const EventObserver = require('../../../../lib/util/eventobserver');
 const log = require('../../../lib/fakelog');
 
@@ -12,7 +11,7 @@ function makePublisher() {
 describe('EventObserver', () => {
   describe('constructor', () => {
     it('should return an EventObserver', () => {
-      assert(new EventObserver(makePublisher(), 0, log, new EventEmitter()) instanceof EventObserver);
+      assert(new EventObserver(makePublisher(), 0, log) instanceof EventObserver);
     });
   });
 
@@ -36,9 +35,11 @@ describe('EventObserver', () => {
       before(() => {
         delete params.reason;
         connectTimestamp = Date.now();
-        const eventListener = new EventEmitter();
-        eventObserver = new EventObserver(makePublisher(), connectTimestamp, log, eventListener);
-        eventListener.once('event', event => { eventParams = event; });
+        eventObserver = new EventObserver(makePublisher(), connectTimestamp, log);
+        if (!reason) {
+          const logMethod = params.level === 'warning' ? 'warn' : params.level;
+          log[logMethod] = (message, event) => { eventParams = event; };
+        }
       });
 
       if (params.reason) {
@@ -48,7 +49,7 @@ describe('EventObserver', () => {
           });
         });
       } else {
-        it(' does not throw for: ' + params.name, () => {
+        it('does not throw for: ' + params.name, () => {
           assert.doesNotThrow(() => {
             eventObserver.emit('event', params);
           });

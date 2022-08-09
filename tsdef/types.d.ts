@@ -185,7 +185,6 @@ export interface ConnectOptions {
    * @deprecated use Video.Logger
    */
   loggerName?: string;
-  eventListener?: EventListener;
   iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;

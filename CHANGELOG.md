@@ -11,6 +11,8 @@ Breaking Changes
 - The LocalTrack constructors that do not require the `new` operator have been removed. Please use the es6 classes that
   are exported in the `Video` namespace. (VIDEO-10893)
 - The deprecated ConnectOptions property `dscpTagging` has been removed. Use `enableDscp` instead. (VIDEO-10893)
+- The deprecated ConnectOptions property `eventListener` has been removed. You can listen for the signaling events by
+  intercepting the Logger's messages as shown [here](#2100-december-10-2020). (VIDEO-10893)
 
 3.0.0-preview.2 (in progress)
 =============================

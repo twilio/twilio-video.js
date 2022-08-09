@@ -304,27 +304,6 @@ describe('connect', function() {
       }
       await  completeRoom(sid);
     });
-
-    it('are emitted on eventListener specified', async () => {
-      const eventListener = new EventEmitter();
-      const signalingEventsFired = [];
-      eventListener.on('event', event => {
-        if (event.group === 'signaling') {
-          assert(typeof event.elapsedTime === 'number');
-          assert(typeof event.timestamp === 'number');
-          assert(typeof event.level === 'string');
-          assert(typeof event.name === 'string');
-          signalingEventsFired.push(event);
-        }
-      });
-      const token = getToken(randomName());
-      room = await connect(token, Object.assign({ name: sid, eventListener, tracks: [] }, defaults));
-
-      // verify that we received early/connecting/open events.
-      assert(signalingEventsFired.find(event => event.name === 'early'));
-      assert(signalingEventsFired.find(event => event.name === 'connecting'));
-      assert(signalingEventsFired.find(event => event.name === 'open'));
-    });
   });
 
   describe('media region', () => {
