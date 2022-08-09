@@ -4,6 +4,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 3.0.0-preview.1 (July 25, 2022)
 ===============================
+
 New Features
 ------------
 
@@ -100,6 +101,7 @@ Peer-to-Peer Rooms**.
 
 2.23.0 (July 28, 2022)
 ======================
+
 New Features
 ------------
 
@@ -139,8 +141,8 @@ function updateNoiseCancellation(enable: boolean) {
     enable ? noiseCancellation.enable() : noiseCancellation.disable();
   }
 }
-
 ```
+
 2.22.2 (July 25, 2022)
 ======================
 
