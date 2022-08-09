@@ -179,11 +179,6 @@ export interface ConnectOptions {
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfile;
   dominantSpeaker?: boolean;
-
-  /**
-   * @deprecated use enableDscp
-   */
-  dscpTagging?: boolean;
   enableDscp?: boolean;
 
   /**

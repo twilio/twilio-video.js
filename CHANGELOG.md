@@ -10,6 +10,7 @@ Breaking Changes
 
 - The LocalTrack constructors that do not require the `new` operator have been removed. Please use the es6 classes that
   are exported in the `Video` namespace. (VIDEO-10893)
+- The deprecated ConnectOptions property `dscpTagging` has been removed. Use `enableDscp` instead. (VIDEO-10893)
 
 3.0.0-preview.2 (in progress)
 =============================

@@ -81,13 +81,6 @@ describe('connect', () => {
       shouldDelete: true,
     },
     {
-      name: 'dscpTagging',
-      optionsName: 'ConnectOptions',
-      newName: 'enableDscp',
-      value: true,
-      shouldDelete: true
-    },
-    {
       name: 'eventListener',
       optionsName: 'ConnectOptions',
       newName: 'Video.Logger',

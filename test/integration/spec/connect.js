@@ -775,10 +775,6 @@ describe('connect', function() {
   (isRTCRtpSenderParamsSupported ? describe : describe.skip)('DSCP tagging', () => {
     combinationContext([
       [
-        ['dscpTagging', 'enableDscp'],
-        x => x
-      ],
-      [
         [true, false, undefined],
         x => `when ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
       ],
@@ -786,14 +782,14 @@ describe('connect', function() {
         [true, false],
         x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
       ]
-    ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
+    ], ([shouldEnableDscp, shouldEnableVP8Simulcast]) => {
       let peerConnections;
       let thisRoom;
       let thoseRooms;
 
       before(async () => {
         const dscpOptions = typeof shouldEnableDscp === 'boolean'
-          ? { [dscpTaggingOption]: shouldEnableDscp }
+          ? { enableDscp: shouldEnableDscp }
           : {};
         const vp8SimulcastOptions = shouldEnableVP8Simulcast
           ? { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }
