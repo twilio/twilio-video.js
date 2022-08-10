@@ -2,6 +2,8 @@
 // Implements interface to interact with twilio-video SDK
 
 /* eslint-disable no-console */
+
+const NativeAudioContext = typeof window.AudioContext !== 'undefined' ? window.AudioContext : typeof window.webkitAudioContext !== 'undefined' ? window.webkitAudioContext : null;
 async function fetchAndCompileWebAssemblyModule(moduleUrl) {
   const response = await fetch(moduleUrl);
   const buffer = await response.arrayBuffer();
@@ -135,6 +137,30 @@ const setLogging = enable => {
   }
 };
 
+const isSupported = ctx => {
+  if (!NativeAudioContext) {
+    return false;
+  }
+
+  if (!(ctx instanceof NativeAudioContext)) {
+    return false;
+  }
+
+  if (!ctx.audioWorklet) {
+    return false;
+  }
+
+  if (!ctx.audioWorklet.addModule) {
+    return false;
+  }
+  return true;
+};
+
+const getVersion = () => {
+  return '10.6.0';
+};
+
+
 export default {
   init,
   isInitialized,
@@ -146,5 +172,7 @@ export default {
   disable,
   destroy,
   setLogging,
+  getVersion,
+  isSupported,
 };
 
