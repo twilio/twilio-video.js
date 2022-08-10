@@ -8,7 +8,7 @@ const dynamicImport = require('./dynamicImport');
 
 const PLUGIN_CONFIG = {
   krisp: {
-    supportedVersion: '0.6.0',
+    supportedVersion: '1.0.0',
     pluginFile: 'krispsdk.mjs'
   },
   rnnoise: {
