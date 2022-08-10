@@ -13,6 +13,7 @@ Breaking Changes
 - The deprecated ConnectOptions property `dscpTagging` has been removed. Use `enableDscp` instead. (VIDEO-10893)
 - The deprecated ConnectOptions property `eventListener` has been removed. You can listen for the signaling events by
   intercepting the Logger's messages as shown [here](#2100-december-10-2020). (VIDEO-10893)
+- The deprecated ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` have been removed. (VIDEO-10893)
 
 3.0.0-preview.2 (in progress)
 =============================

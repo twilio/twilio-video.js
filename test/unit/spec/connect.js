@@ -75,18 +75,6 @@ describe('connect', () => {
       shouldDelete: false,
     },
     {
-      name: 'abortOnIceServersTimeout',
-      optionsName: 'ConnectOptions',
-      value: true,
-      shouldDelete: true,
-    },
-    {
-      name: 'iceServersTimeout',
-      optionsName: 'ConnectOptions',
-      value: 2000,
-      shouldDelete: true
-    },
-    {
       name: 'maxTracks',
       newName: 'bandwidthProfile.video.clientTrackSwitchOffControl',
       optionsName: 'ConnectOptions.bandwidthProfile.video',
