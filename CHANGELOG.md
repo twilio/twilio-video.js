@@ -9,18 +9,17 @@ Changes
 -------
 
 `VideoTrack.addProcessor` now works on browsers that do not support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
- v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
- v1.1.0](https://www.npmjs.com/package/@twilio/video-processors/v/1.1.0) for details.
+ v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
+ v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress) for details.
 
 ### Example
 
 ```ts
 import { createLocalVideoTrack } from 'twilio-video';
-import { VirtualBackgroundProcessor, Pipeline } from '@twilio/video-processors';
+import { VirtualBackgroundProcessor } from '@twilio/video-processors';
 
 const virtualBackgroundProcessor = new VirtualBackgroundProcessor({
-  pipeline: Pipeline.WebGL2,
-  //...other options
+  //...options
 });
 
 await virtualBackground.loadModel();
@@ -36,6 +35,10 @@ videoTrack.addProcessor(processor, {
   outputFrameBufferContextType: 'webgl2',
 });
 ```
+
+Bug Fixes
+---------
+- Fixed an issue where input media track was not stopped, after `localAudioTrack.stop()` when using noiseCancellation (VIDEO-11047)
 
 2.23.0 (July 28, 2022)
 ======================

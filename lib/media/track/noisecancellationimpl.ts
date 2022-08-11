@@ -122,6 +122,15 @@ export class NoiseCancellationImpl implements NoiseCancellation {
     this._disabledPermanent = true;
     return this.disable();
   }
+
+
+  /**
+   * @private
+   */
+  stop(): void {
+    this._processor.disconnect();
+    this._sourceTrack.stop();
+  }
 }
 
 
