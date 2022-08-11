@@ -142,10 +142,7 @@ describe('util', () => {
               maxSwitchedOnTracks: 1,
               trackSwitchOffMode: 'detected',
               dominantSpeakerPriority: 'high',
-              maxSubscriptionBitrate: 500,
-              renderDimensions: {
-                high: { width: 100, height: 200 }
-              }
+              maxSubscriptionBitrate: 500
             }
           }
         },
@@ -155,10 +152,7 @@ describe('util', () => {
             maxVideoTracks: 1,
             trackSwitchOffMode: 'detected',
             dominantSpeakerPriority: 'high',
-            maxSubscriptionBitrate: 500,
-            renderDimensions: JSON.stringify({
-              high: { width: 100, height: 200 }
-            })
+            maxSubscriptionBitrate: 500
           }
         },
       },

@@ -256,20 +256,10 @@ async function initRoom() {
     maxVideoBitrate: 200,
     bandwidthProfile: {
       video: {
-        maxSwitchedOnTracks: 2,
         clientTrackSwitchOffControl: 'auto',
         contentPreferencesMode: 'auto',
         dominantSpeakerPriority: 'high',
-        renderDimensions: {
-          low: {
-            height: 500,
-            width: null,
-          },
-        },
         trackSwitchOffMode: 'detected',
-      },
-      audio: {
-        maxSwitchedOnTracks: 2,
       }
     },
     preferredVideoCodecs: ['VP9', { codec: 'H264' }, { codec: 'VP8' }],

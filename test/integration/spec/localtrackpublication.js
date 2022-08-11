@@ -375,7 +375,7 @@ describe('LocalTrackPublication', function() {
           testOptions: {
             bandwidthProfile: {
               video: {
-                maxTracks: 1,
+                maxSwitchedOnTracks: 1,
                 dominantSpeakerPriority: 'low'
               }
             },
@@ -520,7 +520,7 @@ describe('LocalTrackPublication', function() {
             aliceOptions: {
               bandwidthProfile: {
                 video: {
-                  maxTracks: 1,
+                  maxSwitchedOnTracks: 1,
                   dominantSpeakerPriority: 'low'
                 }
               },
@@ -575,7 +575,7 @@ describe('LocalTrackPublication', function() {
     });
 
     it('publisher and subscriber priority changes do not mix up', async () => {
-      // Alice and Bob join without tracks, Alice has maxTracks property set to 1
+      // Alice and Bob join without tracks, Alice has maxSwitchedOnTracks property set to 1
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: { tracks: [] },
         bobOptions: { tracks: [] },
@@ -626,12 +626,12 @@ describe('LocalTrackPublication', function() {
     });
 
     it('publisher can upgrade and downgrade track priorities', async () => {
-      // Alice and Bob join without tracks, Alice has maxTracks property set to 1
+      // Alice and Bob join without tracks, Alice has maxSwitchedOnTracks property set to 1
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: {
           bandwidthProfile: {
             video: {
-              maxTracks: 1,
+              maxSwitchedOnTracks: 1,
               dominantSpeakerPriority: 'low'
             }
           },

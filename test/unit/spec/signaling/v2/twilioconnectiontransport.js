@@ -46,12 +46,6 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
       // eslint-disable-next-line
-      [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],
-      // eslint-disable-next-line
-      [{ video: { renderDimensions: { low: { width: 600, height: 800 } } } }, { video: { render_dimensions: { low: { width: 600, height: 800 } } } }],
-      // eslint-disable-next-line
-      [{ video: { renderDimensions: { standard: { width: 1000, height: 1200 } } } }, { video: { render_dimensions: { standard: { width: 1000, height: 1200 } } } }],
-      // eslint-disable-next-line
       [{ audio: { maxSwitchedOnTracks: 5 } }, { audio: { max_tracks: 5 } }],
       // eslint-disable-next-line
       [{ video: { maxSwitchedOnTracks: 2 }, audio: { maxSwitchedOnTracks: 3 } }, { video: { max_tracks: 2 }, audio: { max_tracks: 3 } }],
@@ -62,12 +56,7 @@ describe('TwilioConnectionTransport', () => {
             dominantSpeakerPriority: 'baz',
             maxSubscriptionBitrate: 4096,
             maxSwitchedOnTracks: 5,
-            mode: 'bar',
-            renderDimensions: {
-              high: { width: 2, height: 3 },
-              low: { width: 4, height: 5 },
-              standard: { width: 6, height: 7 }
-            }
+            mode: 'bar'
           }
         },
         {
@@ -78,13 +67,7 @@ describe('TwilioConnectionTransport', () => {
             max_subscription_bandwidth: 4096,
             // eslint-disable-next-line
             max_tracks: 5,
-            mode: 'bar',
-            // eslint-disable-next-line
-            render_dimensions: {
-              high: { width: 2, height: 3 },
-              low: { width: 4, height: 5 },
-              standard: { width: 6, height: 7 }
-            }
+            mode: 'bar'
           }
         },
       ]

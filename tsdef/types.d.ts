@@ -109,33 +109,17 @@ export interface VideoRenderDimensions {
   standard?: VideoTrack.Dimensions;
 }
 
-
-export interface AudioBandwidthProfile {
-  maxSwitchedOnTracks?: number;
-}
-
 export interface VideoBandwidthProfile {
   contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
-  maxSwitchedOnTracks?: number;
-
-  /**
-   * @deprecated use clientTrackSwitchOffControl instead
-   */
-  maxTracks?: number;
   mode?: BandwidthProfileMode;
-  /**
-   * @deprecated use contentPreferencesMode instead
-   */
-  renderDimensions?: VideoRenderDimensions;
   clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
 export interface BandwidthProfile {
   video?: VideoBandwidthProfile;
-  audio?: AudioBandwidthProfile;
 }
 
 export interface AudioCodecSettings {

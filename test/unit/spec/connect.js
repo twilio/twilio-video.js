@@ -73,20 +73,6 @@ describe('connect', () => {
       optionsName: 'ConnectOptions',
       value: 'debug',
       shouldDelete: false,
-    },
-    {
-      name: 'maxTracks',
-      newName: 'bandwidthProfile.video.clientTrackSwitchOffControl',
-      optionsName: 'ConnectOptions.bandwidthProfile.video',
-      options: { bandwidthProfile: { video: { maxTracks: 2 } } },
-      shouldDelete: false
-    },
-    {
-      name: 'renderDimensions',
-      newName: 'bandwidthProfile.video.contentPreferencesMode',
-      optionsName: 'ConnectOptions.bandwidthProfile.video',
-      options: { bandwidthProfile: { video: { renderDimensions: {} } } },
-      shouldDelete: false
     }
   ].forEach(({ name, newName, optionsName, options: inputOptions, value, shouldDelete }) => {
     describe(`called with the deprecated ${optionsName} "${name}"`, () => {
@@ -181,39 +167,12 @@ describe('connect', () => {
       [{ video: ['zee'] }, 'whose .video is an Array', TypeError, 'object'],
       [{ video: { dominantSpeakerPriority: 2 } }, `whose .video.dominantSpeakerPriority is not one of ${trackPriorities.join(', ')}`, RangeError, trackPriorities],
       [{ video: { maxSubscriptionBitrate: false } }, 'whose .video.maxSubscriptionBitrate is not a number', TypeError, 'number'],
-      [{ video: { maxTracks: {} } }, 'whose .video.maxTracks is not a number', TypeError, 'number'],
-      [{ video: { maxTracks: NaN } }, 'whose .video.maxTracks is NAN', TypeError, 'number'],
       [{ video: { mode: 'foo' } }, `whose .video.mode is not one of ${subscriptionModes.join(', ')}`, RangeError, subscriptionModes],
       [{ video: { trackSwitchOffMode: 'foo' } }, `whose .video.trackSwitchOffMode is not one of ${trackSwitchOffModes.join(', ')}`, RangeError, trackSwitchOffModes],
-      [{ video: { renderDimensions: null } }, 'whose .video.renderDimensions is null', TypeError, 'object'],
-      [{ video: { renderDimensions: true } }, 'whose .video.renderDimensions is not an object', TypeError, 'object'],
-      [{ video: { renderDimensions: ['foo'] } }, 'whose .video.renderDimensions is an Array', TypeError, 'object'],
-      [{ video: { renderDimensions: { high: null } } }, 'whose .video.renderDimensions.high is null', TypeError, 'object'],
-      [{ video: { renderDimensions: { high: 2 } } }, 'whose .video.renderDimensions.high is not an object', TypeError, 'object'],
-      [{ video: { renderDimensions: { high: ['bar'] } } }, 'whose .video.renderDimensions.high is an Array', TypeError, 'object'],
-      [{ video: { renderDimensions: { low: null } } }, 'whose .video.renderDimensions.low is null', TypeError, 'object'],
-      [{ video: { renderDimensions: { low: 2 } } }, 'whose .video.renderDimensions.low is not an object', TypeError, 'object'],
-      [{ video: { renderDimensions: { low: ['bar'] } } }, 'whose .video.renderDimensions.low is an Array', TypeError, 'object'],
-      [{ video: { renderDimensions: { standard: null } } }, 'whose .video.renderDimensions.standard is null', TypeError, 'object'],
-      [{ video: { renderDimensions: { standard: 2 } } }, 'whose .video.renderDimensions.standard is not an object', TypeError, 'object'],
-      [{ video: { renderDimensions: { standard: ['bar'] } } }, 'whose .video.renderDimensions.standard is an Array', TypeError, 'object'],
-      [{ video: { renderDimensions: { high: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.high.width is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { high: { width: 200, height: false } } } }, 'whose .video.renderDimensions.high.height is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { high: { width: 200, height: NaN } } } }, 'whose .video.renderDimensions.high.height is NaN', TypeError, 'number'],
-      [{ video: { renderDimensions: { low: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.low.width is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { low: { width: NaN, height: 100 } } } }, 'whose .video.renderDimensions.low.width is NaN', TypeError, 'number'],
-      [{ video: { renderDimensions: { low: { width: 200, height: false } } } }, 'whose .video.renderDimensions.low.height is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { standard: { width: 'foo', height: 100 } } } }, 'whose .video.renderDimensions.standard.width is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
-      [{ video: { renderDimensions: { standard: { width: 200, height: false } } } }, 'whose .video.renderDimensions.standard.height is not a number', TypeError, 'number'],
       [{ video: { clientTrackSwitchOffControl: 2 } }, `whose .video.clientTrackSwitchOffControl is not one of ${clientTrackSwitchOffControls.join(', ')}`, RangeError, clientTrackSwitchOffControls],
       [{ video: { clientTrackSwitchOffControl: 'foo' } }, `whose .video.clientTrackSwitchOffControl is not one of ${clientTrackSwitchOffControls.join(', ')}`, RangeError, clientTrackSwitchOffControls],
-      [{ video: { clientTrackSwitchOffControl: 'auto', maxTracks: 5 } }, 'which specified both maxTracks and clientTrackSwitchOffControl', Error, 'options.bandwidthProfile.video.maxTracks is deprecated. Use options.bandwidthProfile.video.clientTrackSwitchOffControl instead.'],
-      [{ video: { clientTrackSwitchOffControl: 'manual', maxTracks: 5 } }, 'which specified both maxTracks and clientTrackSwitchOffControl', Error, 'options.bandwidthProfile.video.maxTracks is deprecated. Use options.bandwidthProfile.video.clientTrackSwitchOffControl instead.'],
       [{ video: { contentPreferencesMode: 2 } }, `whose .video.videoContentPreferences is not one of ${contentPreferencesModes.join(', ')}`, RangeError, contentPreferencesModes],
-      [{ video: { contentPreferencesMode: 'foo' } }, `whose .video.videoContentPreferences is not one of ${contentPreferencesModes.join(', ')}`, RangeError, contentPreferencesModes],
-      [{ video: { contentPreferencesMode: 'auto', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead.'],
-      [{ video: { contentPreferencesMode: 'manual', renderDimensions: {} } }, 'which specified both contentPreferences and renderDimensions', Error, 'options.bandwidthProfile.video.renderDimensions is deprecated. Use options.bandwidthProfile.video.contentPreferencesMode instead.'],
+      [{ video: { contentPreferencesMode: 'foo' } }, `whose .video.videoContentPreferences is not one of ${contentPreferencesModes.join(', ')}`, RangeError, contentPreferencesModes]
     ].forEach(([bandwidthProfile, scenario, ExpectedError, expectedTypeOrValues]) => {
       context(scenario, () => {
         it(`should reject the CancelablePromise with a ${ExpectedError.name}`, async () => {
@@ -229,20 +188,6 @@ describe('connect', () => {
             expectedErrorMessage += '.video';
             if (bandwidthProfile.video && typeof bandwidthProfile.video === 'object' && !Array.isArray(bandwidthProfile.video)) {
               expectedErrorMessage += `.${Object.keys(bandwidthProfile.video)[0]}`;
-              if (bandwidthProfile.video.renderDimensions
-                && typeof bandwidthProfile.video.renderDimensions === 'object'
-                && !Array.isArray(bandwidthProfile.video.renderDimensions)) {
-                const prop = Object.keys(bandwidthProfile.video.renderDimensions)[0];
-                expectedErrorMessage += `.${prop}`;
-                if (bandwidthProfile.video.renderDimensions[prop]
-                  && typeof bandwidthProfile.video.renderDimensions[prop] === 'object'
-                  && !Array.isArray(bandwidthProfile.video.renderDimensions[prop])) {
-                  const keys = Object.keys(bandwidthProfile.video.renderDimensions[prop]);
-                  expectedErrorMessage += typeof bandwidthProfile.video.renderDimensions[prop][keys[0]] === 'number' && !isNaN(bandwidthProfile.video.renderDimensions[prop][keys[0]])
-                    ? `.${keys[1]}`
-                    : `.${keys[0]}`;
-                }
-              }
             }
           }
 

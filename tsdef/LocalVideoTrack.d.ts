@@ -7,6 +7,7 @@ export class LocalVideoTrack extends VideoTrack {
 
   id: Track.ID;
   isStopped: boolean;
+  mediaStreamTrack: MediaStreamTrack;
 
   disable(): this;
   enable(enabled?: boolean): this;
