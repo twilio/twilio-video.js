@@ -95,7 +95,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     const strReportName = generateReportName(files);
 
 
-    const hostedFiles = resolvePath('./assets/noisecancellation/**/*');
+    const hostedFiles = resolvePath('./test/assets/noisecancellation/**/*');
     files.push(
       // these files will be served on demand from disk and will be ignored by the watcher
       { pattern: hostedFiles, included: false, served: true, watched: false, nocache: true }
@@ -113,7 +113,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       preprocessors,
       proxies: {
         // create a proxy to serve hosted noise cancellation sdk files
-        '/noisecancellation/': '/absolute' + resolvePath('./assets/noisecancellation'),
+        '/noisecancellation/': '/absolute' + resolvePath('./test/assets/noisecancellation'),
         '/static/': 'http://localhost:9877/static/'
       },
       browserify: {
