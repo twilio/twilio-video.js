@@ -1466,7 +1466,7 @@ describe('PeerConnectionV2', () => {
       function itShouldApplyBandwidthConstraints() {
         it('should apply the specified bandwidth constraints for AudioTracks and non-screen VideoTracks (Chrome only)', () => {
           test.pc.getSenders().forEach(sender => {
-            const expectedMaxBitRate = sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate;
+            const expectedMaxBitRate = (sender.track.kind === 'audio' ? test.maxAudioBitrate : test.maxVideoBitrate) * 1000;
             if (sender.track.kind === 'video' && chromeScreenTrack)  {
               sinon.assert.neverCalledWith(sender.setParameters, sinon.match.hasNested('encodings[0].maxBitrate', expectedMaxBitRate));
             } else {
@@ -2166,8 +2166,8 @@ describe('PeerConnectionV2', () => {
       const audioSender = senders.filter(s => s.track.kind === 'audio')[0];
       const videoSender = senders.filter(s => s.track.kind === 'video')[0];
 
-      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20, priority: 'high' }] });
-      assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 30 }] });
+      assert.deepStrictEqual(audioSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 20000, priority: 'high' }] });
+      assert.deepStrictEqual(videoSender.setParameters.args[0][0], { encodings: [{ maxBitrate: 30000 }] });
     });
   });
 

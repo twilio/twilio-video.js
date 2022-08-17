@@ -294,19 +294,19 @@ describe('LocalParticipant: regressions', function() {
 
   describe('#setParameters (@unstable: VIDEO-9182)', () => {
     const initialEncodingParameters = {
-      maxAudioBitrate: 20000,
-      maxVideoBitrate: 40000
+      maxAudioBitrate: 20,
+      maxVideoBitrate: 40
     };
 
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 25000, 0],
+        [undefined, null, 25, 0],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
         // eslint-disable-next-line no-undefined
-        [undefined, null, 45000, 0],
+        [undefined, null, 45, 0],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
     ], ([maxAudioBitrate, maxVideoBitrate]) => {
@@ -395,9 +395,9 @@ describe('LocalParticipant: regressions', function() {
             senders.filter(({ track }) => track.kind === kind).forEach(sender => {
               const { encodings } = sender.getParameters();
               if (action === 'preserve') {
-                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, initialEncodingParameters[`max${capitalize(kind)}Bitrate`]));
+                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, initialEncodingParameters[`max${capitalize(kind)}Bitrate`] * 1000));
               } else if (action === 'set') {
-                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[kind]));
+                encodings.forEach(({ maxBitrate }) => assert.equal(maxBitrate, maxBitrates[kind] * 1000));
               } else {
                 encodings.forEach(encoding => assert.equal('maxBitrate' in encoding, false));
               }

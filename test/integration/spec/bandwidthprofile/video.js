@@ -49,7 +49,7 @@ describe('BandwidthProfile: video', function() {
   describe('bandwidthProfile.video', () => {
     combinationContext([
       [
-        [{ maxSubscriptionBitrate: 400, maxSwitchedOnTracks: 0 }, { maxSwitchedOnTracks: 1 }], // maxSwitchedOnTracks=0 specified to disable clientTrackSwitchOffControl.
+        [{ maxSubscriptionBitrate: 0.4, maxSwitchedOnTracks: 0 }, { maxSwitchedOnTracks: 1 }], // maxSwitchedOnTracks=0 specified to disable clientTrackSwitchOffControl.
         ({ maxSubscriptionBitrate, maxSwitchedOnTracks }) => maxSubscriptionBitrate
           ? `.maxSubscriptionBitrate = ${maxSubscriptionBitrate}`
           : `.maxSwitchedOnTracks = ${maxSwitchedOnTracks}`

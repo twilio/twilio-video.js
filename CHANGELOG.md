@@ -19,6 +19,10 @@ Breaking Changes
   `MediaStreamTrack | null`. (VIDEO-10893)
 - The `id` property has been removed from the LocalTrack classes. Use the `name` property instead. (VIDEO-10893)
 - The `trackId` and `ssrc` properties have been removed from the TrackStats class. (VIDEO-10893)
+- The `maxAudioBitrate` and `maxVideoBitrate` properties in ConnectOptions and EncodingParameters now accept values
+  in **kiliobits per second (kbps)**, as opposed to bits per second (bps) earlier. (VIDEO-10893)
+- The `maxSubscriptionBitrate` property in VideoBandwidthProfile now accepts values in **kiliobits per second (kbps)**,
+  as opposed to bits per second (bps) earlier. (VIDEO-10893)
 
 3.0.0-preview.2 (in progress)
 =============================

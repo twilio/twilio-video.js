@@ -777,8 +777,8 @@ describe('connect', function() {
   // TODO: The following tests verifies bitrates using default codec, OPUS.
   // We should also verify other codecs like ISAC, PCMU and PCMA.
   describe(`called with EncodingParameters ${isFirefox ? ' - @unstable: VIDEO-9969' : ''}`, () => {
-    const minAudioBitrate = 6000;
-    const minVideoBitrate = 20000;
+    const minAudioBitrate = 6;
+    const minVideoBitrate = 20;
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
@@ -805,8 +805,8 @@ describe('connect', function() {
       });
 
       const maxBitrates = {
-        audio: encodingParameters.maxAudioBitrate,
-        video: encodingParameters.maxVideoBitrate
+        audio: encodingParameters.maxAudioBitrate * 1000,
+        video: encodingParameters.maxVideoBitrate * 1000
       };
 
       let averageAudioBitrate;
@@ -879,7 +879,7 @@ describe('connect', function() {
         if (!isFirefox) {
           it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate (@unstable: VIDEO-4205)`, () => {
             const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
-            const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
+            const minBitrate = (kind === 'audio' ? minAudioBitrate : minVideoBitrate) * 1000;
             if (maxBitrates[kind]) {
               const hasLessBitrate = averageBitrate <= maxBitrates[kind];
               assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
@@ -949,7 +949,7 @@ describe('connect', function() {
     let thoseRooms;
 
     const testOptions = {
-      maxAudioBitrate: 10000,
+      maxAudioBitrate: 10,
       preferredAudioCodecs: ['PCMA', 'isac', 'opus']
     };
 
