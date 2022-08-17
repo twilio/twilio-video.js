@@ -101,8 +101,8 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
 
         it('should add each of the LocalTracks to the LocalParticipant\'s ._tracks and their respective kinds\' collections', () => {
           tracks.forEach(track => {
-            assert.equal(room.localParticipant._tracks.get(track.id), track);
-            assert.equal(room.localParticipant[`_${track.kind}Tracks`].get(track.id), track);
+            assert.equal(room.localParticipant._tracks.get(track._trackSender.id), track);
+            assert.equal(room.localParticipant[`_${track.kind}Tracks`].get(track._trackSender.id), track);
           });
         });
 
@@ -147,8 +147,8 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
       });
 
       it('should add the LocalTrack to the LocalParticipant\'s ._tracks in both Rooms', () => {
-        assert.equal(room.localParticipant._tracks.get(tracks[0].id), tracks[0]);
-        assert.equal(anotherRoom.localParticipant._tracks.get(tracks[0].id), tracks[0]);
+        assert.equal(room.localParticipant._tracks.get(tracks[0]._trackSender.id), tracks[0]);
+        assert.equal(anotherRoom.localParticipant._tracks.get(tracks[0]._trackSender.id), tracks[0]);
       });
 
       it('should create two different LocalTrackPublications', () => {

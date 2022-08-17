@@ -83,7 +83,7 @@ const { defer } = require('../../../../../lib/util');
             track = isNamePresentInOptions
               ? createLocalMediaTrack(LocalMediaTrack, kind[description], { name: 'foo' })
               : createLocalMediaTrack(LocalMediaTrack, kind[description]);
-            assert.equal(track.name, isNamePresentInOptions ? 'foo' : track.id);
+            assert.equal(track.name, isNamePresentInOptions ? 'foo' : track._trackSender.id);
           });
         });
       });
@@ -127,12 +127,10 @@ const { defer } = require('../../../../../lib/util');
         track._attachments.delete = sinon.spy();
       });
 
-      it('should not replace track id or name', async () => {
+      it('should not replace track name', async () => {
         const newTrack = new MediaStreamTrack(kind[description]);
-        const trackId = track.id;
         const trackName = track.name;
         await track._setMediaStreamTrack(newTrack);
-        assert.equal(track.id, trackId);
         assert.equal(track.name, trackName);
       });
 
@@ -380,7 +378,6 @@ const { defer } = require('../../../../../lib/util');
             'isStarted',
             'mediaStreamTrack',
             'processedTrack',
-            'id',
             'isEnabled',
             'isStopped'
           ]);
@@ -393,7 +390,6 @@ const { defer } = require('../../../../../lib/util');
             'processedTrack',
             'dimensions',
             'processor',
-            'id',
             'isEnabled',
             'isStopped'
           ]);
@@ -411,7 +407,6 @@ const { defer } = require('../../../../../lib/util');
       it('only returns public properties', () => {
         if (kind[description] === 'audio') {
           assert.deepEqual(track.toJSON(), {
-            id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
             isStopped: track.isStopped,
@@ -422,7 +417,6 @@ const { defer } = require('../../../../../lib/util');
           });
         } else {
           assert.deepEqual(track.toJSON(), {
-            id: track.id,
             isEnabled: track.isEnabled,
             isStarted: track.isStarted,
             isStopped: track.isStopped,

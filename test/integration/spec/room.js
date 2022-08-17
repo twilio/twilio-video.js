@@ -273,10 +273,8 @@ describe('Room', function() {
         if (simulcastEnabled) {
           assert(aliceRoomStats[0].localVideoTrackStats.length > 1);
           const aliceLocalTrack = aliceLocal.videoTracks.values().next().value;
-          aliceRoomStats[0].localVideoTrackStats.forEach(localVideoTrackStats => {
-            assert.equal(aliceLocalTrack.trackSid, localVideoTrackStats.trackSid);
-            assert.equal(aliceLocalTrack.track.id, localVideoTrackStats.trackId);
-          });
+          aliceRoomStats[0].localVideoTrackStats.forEach(localVideoTrackStats =>
+            assert.equal(aliceLocalTrack.trackSid, localVideoTrackStats.trackSid));
         } else {
           assert.equal(aliceRoomStats[0].localVideoTrackStats.length, 1);
         }
@@ -377,16 +375,13 @@ describe('Room', function() {
             : report.localAudioTrackStats;
           assert.equal(theseLocalTrackStats.length, 1);
           assert.equal(thoseLocalTrackStats.length, 0);
-          assert.equal(theseLocalTrackStats[0].trackId, localTracks[i].id);
           Object.entries(theseLocalTrackStats[0]).forEach(([, value]) => assert(typeof value !== 'undefined'));
 
           const trackStats = theseLocalTrackStats[0];
           [
-            { key: 'ssrc', type: 'string', mustExist: true },
             { key: 'timestamp', type: 'number', mustExist: true },
             { key: 'bytesSent', type: 'number', mustExist: true },
             { key: 'packetsSent', type: 'number', mustExist: true },
-            { key: 'trackId', type: 'string', mustExist: true },
             { key: 'roundTripTime', type: 'number', mustExist: true },
             { key: 'packetsLost', type: 'number', mustExist: false },
             { key: 'jitter', type: 'number', mustExist: false }

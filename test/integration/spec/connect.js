@@ -1040,14 +1040,14 @@ describe('connect', function() {
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
-          thisParticipant._tracks.forEach(track => {
-            assert.equal(track.name, names ? names[track.kind] : track.id);
+          thisParticipant.tracks.forEach(({ track }) => {
+            assert.equal(track.name, names ? names[track.kind] : track._trackSender.id);
           });
         });
 
         it(`should set each LocalTrackPublication's .trackName to its ${names ? 'given name' : 'ID'}`, () => {
           thisParticipant.tracks.forEach(trackPublication => {
-            assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track.id);
+            assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track._trackSender.id);
           });
         });
 
@@ -1056,7 +1056,10 @@ describe('connect', function() {
             if (names) {
               assert.equal(publication.trackName, names[publication.kind]);
             } else {
-              assert(tracks.find(track => track.id === publication.trackName));
+              assert(tracks.find(track => {
+                const trackId = track.id || track._trackSender.id;
+                return trackId === publication.trackName;
+              }));
             }
           });
         });
@@ -1066,7 +1069,10 @@ describe('connect', function() {
             if (names) {
               assert.equal(track.name, names[track.kind]);
             } else {
-              assert(tracks.find(localTrack => localTrack.id === track.name));
+              assert(tracks.find(localTrack => {
+                const trackId = localTrack.id || localTrack._trackSender.id;
+                return trackId === track.name;
+              }));
             }
           });
         });
@@ -1114,13 +1120,13 @@ describe('connect', function() {
         ['audio', 'video'].forEach(kind => {
           it(`should set the Local${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
             thisParticipant[`_${kind}Tracks`].forEach(track => {
-              assert.equal(track.name, names[kind] || track.id);
+              assert.equal(track.name, names[kind] || track._trackSender.id);
             });
           });
 
           it(`should set the Local${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'ID'}`, () => {
             thisParticipant[`${kind}Tracks`].forEach(trackPublication => {
-              assert.equal(trackPublication.trackName, names[kind] || trackPublication.track.id);
+              assert.equal(trackPublication.trackName, names[kind] || trackPublication.track._trackSender.id);
             });
           });
 
@@ -1130,7 +1136,7 @@ describe('connect', function() {
                 assert.equal(publication.trackName, names[kind]);
               } else {
                 const tracks = [...thisParticipant._tracks.values()];
-                assert(tracks.find(track => track.id === publication.trackName));
+                assert(tracks.find(track => track._trackSender.id === publication.trackName));
               }
             });
           });
@@ -1141,7 +1147,7 @@ describe('connect', function() {
                 assert.equal(track.name, names[kind]);
               } else {
                 const tracks = [...thisParticipant._tracks.values()];
-                assert(tracks.find(localTrack => localTrack.id === track.name));
+                assert(tracks.find(localTrack => localTrack._trackSender.id === track.name));
               }
             });
           });

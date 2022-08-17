@@ -1,11 +1,9 @@
 import { AudioTrack } from './AudioTrack';
 import { LocalTrackOptions } from './LocalTrackOptions';
-import { Track } from './Track';
 
 export class LocalAudioTrack extends AudioTrack {
   constructor(mediaStreamTrack: MediaStreamTrack, options?: LocalTrackOptions);
 
-  id: Track.ID;
   isStopped: boolean;
   mediaStreamTrack: MediaStreamTrack;
 

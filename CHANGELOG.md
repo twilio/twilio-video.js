@@ -17,6 +17,8 @@ Breaking Changes
 - The deprecated VideoBandwidthProfile properties `maxTracks` and `renderDimensions` have been removed. (VIDEO-10893)
 - Fixed the RemoteAudioTrack and RemoteVideoTrack property `mediaStreamTrack`'s type, which is supposed to be
   `MediaStreamTrack | null`. (VIDEO-10893)
+- The `id` property has been removed from the LocalTrack classes. Use the `name` property instead. (VIDEO-10893)
+- The `trackId` and `ssrc` properties have been removed from the TrackStats class. (VIDEO-10893)
 
 3.0.0-preview.2 (in progress)
 =============================

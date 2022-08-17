@@ -21,16 +21,13 @@ const {
   waitForSometime,
 } = require('../../../lib/util');
 
-// for a given stat reports returns a Map<ssrc, LocalVideoTrackStats>
+// for a given stat reports returns a Array<LocalVideoTrackStats>
 async function getSimulcastLayerReport(room) {
   const statReports = await room.getStats();
-  const ssrcToLocalVideoTrackStats = new Map();
-  statReports.forEach(statReport => {
-    statReport.localVideoTrackStats.forEach(trackStat => {
-      ssrcToLocalVideoTrackStats.set(trackStat.ssrc, trackStat);
-    });
-  });
-  return ssrcToLocalVideoTrackStats;
+  const localVideoTrackStats = [];
+  statReports.forEach(statReport =>
+    localVideoTrackStats.push.apply(localVideoTrackStats, statReport.localVideoTrackStats));
+  return localVideoTrackStats;
 }
 
 // waits for active layers to match the condition, samples every incrementalWaitTime.
@@ -58,9 +55,8 @@ async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS
 
   const activeLayers = [];
   const inactiveLayers = [];
-  Array.from(layersAfter.keys()).forEach(ssrc => {
-    const layerStatsAfter = layersAfter.get(ssrc);
-    const layerStatsBefore = layersBefore.get(ssrc);
+  layersAfter.forEach((layerStatsAfter, i) => {
+    const layerStatsBefore = layersBefore[i];
     const bytesSentAfter = layerStatsAfter.bytesSent;
     const bytesSentBefore = layerStatsBefore ? layerStatsBefore.bytesSent : 0;
     const diffBytes = bytesSentAfter - bytesSentBefore;
@@ -68,14 +64,14 @@ async function getActiveLayers({ room, initialWaitMS = 15 * SECOND, activeTimeMS
     const width = layerStatsAfter?.dimensions?.width || layerStatsBefore?.dimensions?.width || 0;
     const height = layerStatsAfter?.dimensions?.height || layerStatsBefore?.dimensions?.height || 0;
     if (diffBytes > 0) {
-      activeLayers.push({ ssrc, width, height, diffBytes });
+      activeLayers.push({ index: i, width, height, diffBytes });
     } else {
-      inactiveLayers.push({ ssrc, width, height, diffBytes });
+      inactiveLayers.push({ index: i, width, height, diffBytes });
     }
   });
 
   function layersToString(layers) {
-    return layers.map(({ ssrc, width, height }) => `${ssrc}: ${width}x${height}`).join(', ');
+    return layers.map(({ index, width, height }) => `${index}: ${width}x${height}`).join(', ');
   }
 
   console.log(`active: [${layersToString(activeLayers)}], inactive: [${layersToString(inactiveLayers)}]`);
@@ -106,8 +102,8 @@ describe('preferredVideoCodecs = auto', function() {
         };
 
         const aliceOptions = {
-          tracks: [aliceLocalVideo],
           preferredVideoCodecs: 'auto',
+          tracks: [aliceLocalVideo],
           loggerName: 'AliceLogger',
           bandwidthProfile
         };
@@ -136,8 +132,8 @@ describe('preferredVideoCodecs = auto', function() {
         const aliceSimulcastLayers = await getSimulcastLayerReport(aliceRoom);
         const bobSimulcastLayers = await getSimulcastLayerReport(bobRoom);
 
-        assert(aliceSimulcastLayers.size === 1);
-        assert(bobSimulcastLayers.size === 1);
+        assert(aliceSimulcastLayers.length === 1);
+        assert(bobSimulcastLayers.length === 1);
       });
     });
   } else {
@@ -174,13 +170,12 @@ describe('preferredVideoCodecs = auto', function() {
 
         await waitForSometime(2000);
         const simulcastLayers = await getSimulcastLayerReport(room);
-        const layerArray = Array.from(simulcastLayers.values());
-        layerArray.forEach(layer => layer.codec === expectedCodec);
+        simulcastLayers.forEach(layer => assert.equal(layer.codec, expectedCodec));
         if (expectedLayers) {
-          assert.strictEqual(layerArray.length, expectedLayers, `layers: ${layerArray.length}, expected: ${expectedLayers} : room: ${roomSid}`);
+          assert.strictEqual(simulcastLayers.length, expectedLayers, `layers: ${simulcastLayers.length}, expected: ${expectedLayers} : room: ${roomSid}`);
         }
-        completeRoom(roomSid);
         aliceLocalVideo.stop();
+        return completeRoom(roomSid);
       });
     });
   }
@@ -213,16 +208,16 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         console.log('room sid: ', aliceRoom.sid);
 
         // we may not see all layers active simultaneously, because SFU disables layers as it discovers them
-        // and HD layers get started late. Verify that we see expected number of see unique active ssrc
-        const uniqueActiveSSRC = new Set();
+        // and HD layers get started late. Verify that we see expected number of see unique active layer indices.
+        const uniqueActiveLayerIndices = new Set();
         await waitForActiveLayers({ room: aliceRoom,  condition: ({ activeLayers, inactiveLayers }) => {
-          activeLayers.forEach(({ ssrc }) => uniqueActiveSSRC.add(ssrc));
+          activeLayers.forEach(({ index }) => uniqueActiveLayerIndices.add(index));
           assert(activeLayers.length + inactiveLayers.length === 3);
-          return uniqueActiveSSRC.size === expectedActive;
+          return uniqueActiveLayerIndices.size === expectedActive;
         } });
 
         aliceRoom.disconnect();
-        completeRoom(roomSid);
+        return completeRoom(roomSid);
       });
     });
   });

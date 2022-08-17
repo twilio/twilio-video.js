@@ -202,10 +202,8 @@ export interface CreateLocalTracksOptions {
 }
 
 export class TrackStats {
-  trackId: Track.ID;
   trackSid: Track.SID;
   timestamp: number;
-  ssrc: string;
   packetsLost: number | null;
   codec: string | null;
 }

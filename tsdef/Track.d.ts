@@ -3,7 +3,6 @@ import { EventEmitter } from 'events';
 export namespace Track {
   type Kind = 'audio' | 'video' | 'data';
   type Priority = 'low' | 'standard' | 'high';
-  type ID = string;
   type SID = string;
   enum SwitchOffReason {
     DISABLED_BY_PUBLISHER = 'disabled-by-publisher',

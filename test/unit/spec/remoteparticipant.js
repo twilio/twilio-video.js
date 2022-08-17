@@ -475,6 +475,7 @@ describe('RemoteParticipant', () => {
     context('when the RemoteParticipant .state begins in "disconnected"', () => {
       it('does not re-emit "dimensionsChanged" events', () => {
         const track = new EventEmitter();
+        track.id = 'foo';
         let trackDimensionsChanged;
         const test = makeTest({ tracks: [track], state: 'disconnected' });
         test.participant.once('trackDimensionsChanged', track => { trackDimensionsChanged = track; });
@@ -484,6 +485,7 @@ describe('RemoteParticipant', () => {
 
       it('does not re-emit "message" events', () => {
         const track = new EventEmitter();
+        track.id = 'foo';
         let trackMessageEvent;
         const test = makeTest({ tracks: [track], state: 'disconnected' });
         test.participant.once('trackMessage', (data, track) => { trackMessageEvent = { data, track }; });
@@ -494,6 +496,7 @@ describe('RemoteParticipant', () => {
 
       it('does not re-emit "started" events', () => {
         const track = new EventEmitter();
+        track.id = 'foo';
         let trackStarted;
         const test = makeTest({ tracks: [track], state: 'disconnected' });
         test.participant.once('trackStarted', track => { trackStarted = track; });
