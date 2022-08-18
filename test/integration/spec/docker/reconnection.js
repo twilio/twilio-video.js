@@ -91,7 +91,6 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      // logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 

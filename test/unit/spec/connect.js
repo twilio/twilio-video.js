@@ -52,94 +52,15 @@ describe('connect', () => {
       connect(token, {
         iceServers: [],
         loggerName: undefined,
-        logLevel: undefined,
         signaling,
         wsServer: undefined
       });
 
       const options = signaling.args[0][1];
       assert.equal(options.loggerName, DEFAULT_LOGGER_NAME);
-      assert.equal(options.logLevel, DEFAULT_LOG_LEVEL);
       assert.equal(options.region, DEFAULT_REGION);
       /* eslint new-cap:0 */
       assert.equal(options.wsServer, WS_SERVER(options.environment, options.region));
-    });
-  });
-
-  [
-    {
-      name: 'logLevel',
-      newName: 'Video.Logger',
-      optionsName: 'ConnectOptions',
-      value: 'debug',
-      shouldDelete: false,
-    }
-  ].forEach(({ name, newName, optionsName, options: inputOptions, value, shouldDelete }) => {
-    describe(`called with the deprecated ${optionsName} "${name}"`, () => {
-      let signaling;
-
-      before(() => {
-        const mockSignaling = new Signaling();
-        mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
-        signaling = sinon.spy(() => mockSignaling);
-      });
-
-      ['first', 'second'].forEach(callCount => {
-        context(`for the ${callCount} time`, () => {
-          before(() => {
-            const options = typeof inputOptions === 'object' ? JSON.parse(JSON.stringify(inputOptions)) : inputOptions;
-            connect(token, {
-              ...(options || { [name]: value }),
-              iceServers: [],
-              signaling,
-              Log: function() {
-                return sinon.createStubInstance(Log);
-              }
-            });
-          });
-
-          if (shouldDelete) {
-            it(`should remove "${name}" from ${optionsName}`, () => {
-              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
-              assert(!(name in options));
-            });
-          } else {
-            it(`should not remove "${name}" from ${optionsName}`, () => {
-              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
-              assert(name in options);
-            });
-          }
-
-          if (newName && shouldDelete) {
-            it(`should set ${optionsName}.${newName} to ${optionsName}.${name}`, () => {
-              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
-              assert.equal(options[newName], value);
-            });
-          }
-
-          if (newName && !shouldDelete) {
-            it(`should not set ${optionsName}.${newName} to ${optionsName}.${name}`, () => {
-              const options = optionsName.split('.').slice(1).reduce((obj, prop) => obj[prop], signaling.args[0][1]);
-              assert(!options[newName]);
-            });
-          }
-
-          if (callCount === 'first') {
-            it('should call .warn on the underlying Log with the deprecation warning message', () => {
-              const { log } = signaling.args[0][1];
-              const warning = newName
-                ? `The ${optionsName} property "${name}" is deprecated and scheduled for removal. Please use "${newName}" instead.`
-                : `The ${optionsName} property "${name}" is no longer applicable and will be ignored.`;
-              sinon.assert.calledWith(log.warn, warning);
-            });
-          } else {
-            it('should not call .warn on the underlying Log', () => {
-              const { log } = signaling.args[1][1];
-              sinon.assert.notCalled(log.warn);
-            });
-          }
-        });
-      });
     });
   });
 

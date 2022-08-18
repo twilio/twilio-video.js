@@ -149,10 +149,6 @@ export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
 }
 
 export interface CreateLocalTrackOptions extends MediaTrackConstraints {
-  /**
-   * @deprecated
-   */
-  logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
@@ -164,10 +160,6 @@ export interface ConnectOptions {
   bandwidthProfile?: BandwidthProfile;
   dominantSpeaker?: boolean;
   enableDscp?: boolean;
-
-  /**
-   * @deprecated use Video.Logger
-   */
   loggerName?: string;
   iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
@@ -180,22 +172,12 @@ export interface ConnectOptions {
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | VideoEncodingMode;
-
-  /**
-   * @deprecated use Video.Logger.
-   */
-  logLevel?: LogLevel | LogLevels;
-
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
 }
 
 export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
-  /**
-   * @deprecated
-   */
-  logLevel?: LogLevel | LogLevels;
   loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;

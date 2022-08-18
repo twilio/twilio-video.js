@@ -432,7 +432,6 @@ describe('RemoteVideoTrack', function() {
       const connectOptions = Object.assign({
         name: roomName,
         tracks: [],
-        logLevel: 'warn',
         bandwidthProfile: {
           video: {
             maxSwitchedOnTracks: 1,
@@ -512,8 +511,7 @@ describe('RemoteVideoTrack', function() {
 
       const firstParticipantOptions = Object.assign({
         name: roomName,
-        tracks: dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
-        logLevel: 'warn'
+        tracks: dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant ? [dataTrack] : []
       }, defaults);
 
       // alice joins room first.
@@ -526,8 +524,7 @@ describe('RemoteVideoTrack', function() {
 
       const secondParticipantOptions = Object.assign({
         name: roomName,
-        tracks: dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
-        logLevel: 'warn'
+        tracks: dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant ? [dataTrack] : []
       }, defaults);
 
       // bob joins room later.

@@ -2,7 +2,6 @@
 'use strict';
 
 const assert = require('assert');
-const { EventEmitter } = require('events');
 const { getUserMedia } = require('../../../es5/webrtc/index');
 const sinon = require('sinon');
 
@@ -80,8 +79,7 @@ describe('connect', function() {
       beforeEach(() => {
         const identity = randomName();
         token = getToken(identity, Object.assign({}, defaults, extraOptions));
-        // NOTE(mroberts): We expect this to print errors, so disable logging.
-        cancelablePromise = connect(token, Object.assign({}, defaults, extraOptions, { logLevel: 'off', tracks: [] }));
+        cancelablePromise = connect(token, Object.assign({}, defaults, extraOptions, { tracks: [] }));
       });
 
       it(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
@@ -95,32 +93,6 @@ describe('connect', function() {
           assert.equal(error.code, expectedCode);
         }
       });
-    });
-  });
-
-  // eslint-disable-next-line require-await
-  describe('called with an invalid LogLevel', async () => {
-    const logLevel = 'foo';
-
-    let token;
-    let cancelablePromise;
-
-    beforeEach(() => {
-      const identity = randomName();
-      token = getToken(identity);
-      cancelablePromise = connect(token, Object.assign({}, defaults, { logLevel, tracks: [] }));
-    });
-
-    it('should return a CancelablePromise that rejects with a RangeError', async () => {
-      try {
-        const room = await cancelablePromise;
-        room.disconnect();
-        throw new Error(`Connected to ${room.sid} with an invalid LogLevel`);
-      } catch (error) {
-        assert(error instanceof RangeError);
-        assert(/level must be one of/.test(error.message));
-      }
-      assert(cancelablePromise instanceof CancelablePromise);
     });
   });
 

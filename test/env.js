@@ -27,7 +27,6 @@ const env = [
   ['ENVIRONMENT',               'environment'],
   ['WS_SERVER',                 'wsServer'],
   ['WS_SERVER_INSIGHTS',        'wsServerInsights'],
-  ['LOG_LEVEL',                 'logLevel'],
   ['ENABLE_REST_API_TESTS',     'enableRestApiTests'],
   ['TEST_STABILITY',            'testStability'],
   ['REGIONS',                   'regions'],
