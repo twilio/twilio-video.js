@@ -24,8 +24,8 @@ Breaking Changes
 - The `maxSubscriptionBitrate` property in VideoBandwidthProfile now accepts values in **kiliobits per second (kbps)**,
   as opposed to bits per second (bps) earlier. (VIDEO-10893)
 
-3.0.0-preview.2 (in progress)
-=============================
+3.0.0-preview.2 (August 18, 2022)
+=================================
 
 Changes
 -------
