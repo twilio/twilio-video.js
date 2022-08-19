@@ -16,7 +16,7 @@ describe('RemoteVideoTrackStats', () => {
     };
 
     it('should set the dimensions and frameRate properties', () => {
-      const trackStats = new RemoteVideoTrackStats(stats.trackId, stats);
+      const trackStats = new RemoteVideoTrackStats(stats.trackId, stats, true);
       assert.deepEqual(trackStats.dimensions, {
         width: stats.frameWidthReceived,
         height: stats.frameHeightReceived
@@ -36,7 +36,7 @@ describe('RemoteVideoTrackStats', () => {
             return values;
           }, {});
 
-          const trackStats = new RemoteVideoTrackStats(stats.trackId, stats);
+          const trackStats = new RemoteVideoTrackStats(stats.trackId, stats, true);
           assert.equal(trackStats[prop], null);
 
           statNames.forEach(name => { stats[name] = statsValues[name]; });

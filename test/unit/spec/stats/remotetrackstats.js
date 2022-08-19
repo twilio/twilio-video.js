@@ -15,7 +15,7 @@ describe('RemoteTrackStats', () => {
     };
 
     it('should set bytesReceived and packetsReceived properties', () => {
-      const trackStats = new RemoteTrackStats(stats.trackId, stats);
+      const trackStats = new RemoteTrackStats(stats.trackId, stats, true);
       assert.equal(trackStats.bytesReceived, stats.bytesReceived);
       assert.equal(trackStats.packetsReceived, stats.packetsReceived);
     });
@@ -26,7 +26,7 @@ describe('RemoteTrackStats', () => {
           const statValue = stats[statName];
           delete stats[statName];
 
-          const trackStats = new RemoteTrackStats(stats.trackId, stats);
+          const trackStats = new RemoteTrackStats(stats.trackId, stats, true);
           assert.equal(trackStats[statName], null);
 
           stats[statName] = statValue;

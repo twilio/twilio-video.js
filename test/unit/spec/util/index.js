@@ -54,11 +54,6 @@ describe('util', () => {
         expectedPayload: { enableDominantSpeaker: 'false' },
       },
       {
-        testCase: 'eventListener provided',
-        connectOptions: { eventListener: {} },
-        expectedPayload: { eventListener: 'true' },
-      },
-      {
         testCase: 'iceTransportPolicy specified',
         connectOptions: { iceTransportPolicy: 'relay' },
         expectedPayload: { iceTransportPolicy: 'relay' },
@@ -147,10 +142,7 @@ describe('util', () => {
               maxSwitchedOnTracks: 1,
               trackSwitchOffMode: 'detected',
               dominantSpeakerPriority: 'high',
-              maxSubscriptionBitrate: 500,
-              renderDimensions: {
-                high: { width: 100, height: 200 }
-              }
+              maxSubscriptionBitrate: 500
             }
           }
         },
@@ -160,10 +152,7 @@ describe('util', () => {
             maxVideoTracks: 1,
             trackSwitchOffMode: 'detected',
             dominantSpeakerPriority: 'high',
-            maxSubscriptionBitrate: 500,
-            renderDimensions: JSON.stringify({
-              high: { width: 100, height: 200 }
-            })
+            maxSubscriptionBitrate: 500
           }
         },
       },
@@ -197,7 +186,6 @@ describe('util', () => {
           'dataTracks': 0,
           'enableDominantSpeaker': 'false',
           'enableDscp': 'false',
-          'eventListener': 'false',
           'iceServers': 0,
           'preflight': 'false',
           'video': 'false',

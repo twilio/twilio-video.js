@@ -393,14 +393,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
         ]);
 
         const answer1 = await pc2.createAnswer();
-
-        const { track: remoteAudioTrack, transceiver: transceiver1 } = await trackEvent1;
-
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver1 || !transceiver1.mid) {
-          assert.equal(remoteAudioTrack.id, localAudioTrack.id);
-        }
+        await trackEvent1;
 
         await Promise.all([
           pc1.setRemoteDescription(answer1),
@@ -419,14 +412,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
         ]);
 
         const answer2 = await pc2.createAnswer();
-
-        const { track: remoteVideoTrack, transceiver: transceiver2 } = await trackEvent2;
-
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver2 || !transceiver2.mid) {
-          assert.equal(remoteVideoTrack.id, localVideoTrack.id);
-        }
+        await trackEvent2;
 
         await Promise.all([
           pc1.setRemoteDescription(answer2),

@@ -29,10 +29,6 @@ describe('LocalDataTrack', () => {
       assert(dataTrackSender instanceof DataTrackSender);
     });
 
-    it('sets .id to the DataTrackSender\'s ID', () => {
-      assert.equal(dataTrack.id, dataTrackSender.id);
-    });
-
     it('sets .kind to "data"', () => {
       assert.equal(dataTrack.kind, 'data');
     });
@@ -141,7 +137,6 @@ describe('LocalDataTrack', () => {
       assert.deepEqual(Object.keys(track), [
         'kind',
         'name',
-        'id',
         'maxPacketLifeTime',
         'maxRetransmits',
         'ordered',
@@ -159,7 +154,6 @@ describe('LocalDataTrack', () => {
 
     it('only returns public properties', () => {
       assert.deepEqual(track.toJSON(), {
-        id: track.id,
         kind: track.kind,
         maxPacketLifeTime: track.maxPacketLifeTime,
         maxRetransmits: track.maxRetransmits,

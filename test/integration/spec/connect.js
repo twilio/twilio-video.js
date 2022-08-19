@@ -2,12 +2,11 @@
 'use strict';
 
 const assert = require('assert');
-const { EventEmitter } = require('events');
 const { getUserMedia } = require('../../../es5/webrtc/index');
 const sinon = require('sinon');
 
 const { connect, createLocalTracks, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
-const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
+const LocalDataTrack = require('../../../es5/media/track/localdatatrack');
 const Room = require('../../../es5/room');
 const { flatMap } = require('../../../es5/util');
 const CancelablePromise = require('../../../es5/util/cancelablepromise');
@@ -80,8 +79,7 @@ describe('connect', function() {
       beforeEach(() => {
         const identity = randomName();
         token = getToken(identity, Object.assign({}, defaults, extraOptions));
-        // NOTE(mroberts): We expect this to print errors, so disable logging.
-        cancelablePromise = connect(token, Object.assign({}, defaults, extraOptions, { logLevel: 'off', tracks: [] }));
+        cancelablePromise = connect(token, Object.assign({}, defaults, extraOptions, { tracks: [] }));
       });
 
       it(`should return a CancelablePromise that rejects with a TwilioError with .code ${expectedCode}`, async () => {
@@ -95,32 +93,6 @@ describe('connect', function() {
           assert.equal(error.code, expectedCode);
         }
       });
-    });
-  });
-
-  // eslint-disable-next-line require-await
-  describe('called with an invalid LogLevel', async () => {
-    const logLevel = 'foo';
-
-    let token;
-    let cancelablePromise;
-
-    beforeEach(() => {
-      const identity = randomName();
-      token = getToken(identity);
-      cancelablePromise = connect(token, Object.assign({}, defaults, { logLevel, tracks: [] }));
-    });
-
-    it('should return a CancelablePromise that rejects with a RangeError', async () => {
-      try {
-        const room = await cancelablePromise;
-        room.disconnect();
-        throw new Error(`Connected to ${room.sid} with an invalid LogLevel`);
-      } catch (error) {
-        assert(error instanceof RangeError);
-        assert(/level must be one of/.test(error.message));
-      }
-      assert(cancelablePromise instanceof CancelablePromise);
     });
   });
 
@@ -168,43 +140,6 @@ describe('connect', function() {
       assert(errorThrown);
       assert.equal(errorThrown.message, 'encodingParameters must be an encodingParameters.maxVideoBitrate is not compatible with "preferredVideoCodecs=auto"');
       assert(errorThrown instanceof TypeError);
-    });
-  });
-
-  describe('should return a CancelablePromise that rejects when called with invalid bandwidth Profile options: ', () => {
-    [
-      {
-        name: 'both maxTracks and subscriberTrackSwitchOffMode=auto specified',
-        bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'auto' } }
-      },
-      {
-        name: 'both maxTracks and maxSwitchedOnTracks specified',
-        bandwidthProfile: { video: { maxTracks: 5,  maxSwitchedOnTracks: 10 } }
-      },
-      {
-        name: 'both maxTracks and subscriberTrackSwitchOffMode=manual specified',
-        bandwidthProfile: { video: { maxTracks: 5,  clientTrackSwitchOffControl: 'manual' } }
-      },
-      {
-        name: 'both renderDimensions and contentPreferencesMode=auto specified',
-        bandwidthProfile: { video: { renderDimensions: {},  contentPreferencesMode: 'auto' } }
-      },
-      {
-        name: 'both renderDimensions and contentPreferencesMode=manual specified',
-        bandwidthProfile: { video: { renderDimensions: {},  contentPreferencesMode: 'manual' } }
-      },
-    ].forEach(testCase => {
-      it(testCase.name, async () => {
-        try {
-          const identity = randomName();
-          const token = getToken(identity);
-          const room = await connect(token, Object.assign({}, defaults, { bandwidthProfile: testCase.bandwidthProfile }));
-          room.disconnect();
-          throw new Error(`Connected to ${room.sid} with an invalid bandwidthProfile`);
-        } catch (error) {
-          assert(error instanceof TypeError);
-        }
-      });
     });
   });
 
@@ -303,27 +238,6 @@ describe('connect', function() {
         room = null;
       }
       await  completeRoom(sid);
-    });
-
-    it('are emitted on eventListener specified', async () => {
-      const eventListener = new EventEmitter();
-      const signalingEventsFired = [];
-      eventListener.on('event', event => {
-        if (event.group === 'signaling') {
-          assert(typeof event.elapsedTime === 'number');
-          assert(typeof event.timestamp === 'number');
-          assert(typeof event.level === 'string');
-          assert(typeof event.name === 'string');
-          signalingEventsFired.push(event);
-        }
-      });
-      const token = getToken(randomName());
-      room = await connect(token, Object.assign({ name: sid, eventListener, tracks: [] }, defaults));
-
-      // verify that we received early/connecting/open events.
-      assert(signalingEventsFired.find(event => event.name === 'early'));
-      assert(signalingEventsFired.find(event => event.name === 'connecting'));
-      assert(signalingEventsFired.find(event => event.name === 'open'));
     });
   });
 
@@ -775,10 +689,6 @@ describe('connect', function() {
   (isRTCRtpSenderParamsSupported ? describe : describe.skip)('DSCP tagging', () => {
     combinationContext([
       [
-        ['dscpTagging', 'enableDscp'],
-        x => x
-      ],
-      [
         [true, false, undefined],
         x => `when ${typeof x === 'boolean' ? `set to ${x}` : 'not set'}`
       ],
@@ -786,14 +696,14 @@ describe('connect', function() {
         [true, false],
         x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
       ]
-    ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
+    ], ([shouldEnableDscp, shouldEnableVP8Simulcast]) => {
       let peerConnections;
       let thisRoom;
       let thoseRooms;
 
       before(async () => {
         const dscpOptions = typeof shouldEnableDscp === 'boolean'
-          ? { [dscpTaggingOption]: shouldEnableDscp }
+          ? { enableDscp: shouldEnableDscp }
           : {};
         const vp8SimulcastOptions = shouldEnableVP8Simulcast
           ? { preferredVideoCodecs: [{ codec: 'VP8', simulcast: true }] }
@@ -839,8 +749,8 @@ describe('connect', function() {
   // TODO: The following tests verifies bitrates using default codec, OPUS.
   // We should also verify other codecs like ISAC, PCMU and PCMA.
   describe(`called with EncodingParameters ${isFirefox ? ' - @unstable: VIDEO-9969' : ''}`, () => {
-    const minAudioBitrate = 6000;
-    const minVideoBitrate = 20000;
+    const minAudioBitrate = 6;
+    const minVideoBitrate = 20;
     combinationContext([
       [
         // eslint-disable-next-line no-undefined
@@ -867,8 +777,8 @@ describe('connect', function() {
       });
 
       const maxBitrates = {
-        audio: encodingParameters.maxAudioBitrate,
-        video: encodingParameters.maxVideoBitrate
+        audio: encodingParameters.maxAudioBitrate * 1000,
+        video: encodingParameters.maxVideoBitrate * 1000
       };
 
       let averageAudioBitrate;
@@ -941,7 +851,7 @@ describe('connect', function() {
         if (!isFirefox) {
           it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate (@unstable: VIDEO-4205)`, () => {
             const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
-            const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
+            const minBitrate = (kind === 'audio' ? minAudioBitrate : minVideoBitrate) * 1000;
             if (maxBitrates[kind]) {
               const hasLessBitrate = averageBitrate <= maxBitrates[kind];
               assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
@@ -1011,7 +921,7 @@ describe('connect', function() {
     let thoseRooms;
 
     const testOptions = {
-      maxAudioBitrate: 10000,
+      maxAudioBitrate: 10,
       preferredAudioCodecs: ['PCMA', 'isac', 'opus']
     };
 
@@ -1102,14 +1012,14 @@ describe('connect', function() {
         });
 
         it(`should set each LocalTrack's .name to its ${names ? 'given name' : 'ID'}`, () => {
-          thisParticipant._tracks.forEach(track => {
-            assert.equal(track.name, names ? names[track.kind] : track.id);
+          thisParticipant.tracks.forEach(({ track }) => {
+            assert.equal(track.name, names ? names[track.kind] : track._trackSender.id);
           });
         });
 
         it(`should set each LocalTrackPublication's .trackName to its ${names ? 'given name' : 'ID'}`, () => {
           thisParticipant.tracks.forEach(trackPublication => {
-            assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track.id);
+            assert.equal(trackPublication.trackName, names ? names[trackPublication.kind] : trackPublication.track._trackSender.id);
           });
         });
 
@@ -1118,7 +1028,10 @@ describe('connect', function() {
             if (names) {
               assert.equal(publication.trackName, names[publication.kind]);
             } else {
-              assert(tracks.find(track => track.id === publication.trackName));
+              assert(tracks.find(track => {
+                const trackId = track.id || track._trackSender.id;
+                return trackId === publication.trackName;
+              }));
             }
           });
         });
@@ -1128,7 +1041,10 @@ describe('connect', function() {
             if (names) {
               assert.equal(track.name, names[track.kind]);
             } else {
-              assert(tracks.find(localTrack => localTrack.id === track.name));
+              assert(tracks.find(localTrack => {
+                const trackId = localTrack.id || localTrack._trackSender.id;
+                return trackId === track.name;
+              }));
             }
           });
         });
@@ -1176,13 +1092,13 @@ describe('connect', function() {
         ['audio', 'video'].forEach(kind => {
           it(`should set the Local${capitalize(kind)}Track's .name to its ${names[kind] ? 'given name' : 'ID'}`, () => {
             thisParticipant[`_${kind}Tracks`].forEach(track => {
-              assert.equal(track.name, names[kind] || track.id);
+              assert.equal(track.name, names[kind] || track._trackSender.id);
             });
           });
 
           it(`should set the Local${capitalize(kind)}TrackPublication's .trackName to its ${names[kind] ? 'given name' : 'ID'}`, () => {
             thisParticipant[`${kind}Tracks`].forEach(trackPublication => {
-              assert.equal(trackPublication.trackName, names[kind] || trackPublication.track.id);
+              assert.equal(trackPublication.trackName, names[kind] || trackPublication.track._trackSender.id);
             });
           });
 
@@ -1192,7 +1108,7 @@ describe('connect', function() {
                 assert.equal(publication.trackName, names[kind]);
               } else {
                 const tracks = [...thisParticipant._tracks.values()];
-                assert(tracks.find(track => track.id === publication.trackName));
+                assert(tracks.find(track => track._trackSender.id === publication.trackName));
               }
             });
           });
@@ -1203,7 +1119,7 @@ describe('connect', function() {
                 assert.equal(track.name, names[kind]);
               } else {
                 const tracks = [...thisParticipant._tracks.values()];
-                assert(tracks.find(localTrack => localTrack.id === track.name));
+                assert(tracks.find(localTrack => localTrack._trackSender.id === track.name));
               }
             });
           });

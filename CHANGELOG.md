@@ -2,6 +2,36 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+3.0.0-preview.3 (in progress)
+=============================
+
+Breaking Changes
+----------------
+
+- The LocalTrack constructors that do not require the `new` operator have been removed. Please use the es6 classes that
+  are exported in the `Video` namespace. (VIDEO-10893)
+- The deprecated ConnectOptions property `dscpTagging` has been removed. Use `enableDscp` instead. (VIDEO-10893)
+- The deprecated ConnectOptions property `eventListener` has been removed. You can listen for the signaling events by
+  intercepting the Logger's messages as shown [here](#2100-december-10-2020). (VIDEO-10893)
+- The deprecated ConnectOptions properties `abortOnIceServersTimeout` and `iceServersTimeout` have been removed. (VIDEO-10893)
+- The deprecated VideoBandwidthProfile properties `maxTracks` and `renderDimensions` have been removed. (VIDEO-10893)
+- Fixed the RemoteAudioTrack and RemoteVideoTrack property `mediaStreamTrack`'s type, which is supposed to be
+  `MediaStreamTrack | null`. (VIDEO-10893)
+- The `id` property has been removed from the LocalTrack classes. Use the `name` property instead. (VIDEO-10893)
+- The `trackId` and `ssrc` properties have been removed from the TrackStats class. (VIDEO-10893)
+- The `maxAudioBitrate` and `maxVideoBitrate` properties in ConnectOptions and EncodingParameters now accept values
+  in **kiliobits per second (kbps)**, as opposed to bits per second (bps) earlier. (VIDEO-10893)
+- The `maxSubscriptionBitrate` property in VideoBandwidthProfile now accepts values in **kiliobits per second (kbps)**,
+  as opposed to bits per second (bps) earlier. (VIDEO-10893)
+- The deprecated ConnectOptions property `logLevel` has been removed. Use the `Video.Logger` interface instead as shown
+  [here](#2100-december-10-2020). (VIDEO-10893)
+
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes `Room.getStats()` returned statistics for unsubscribed RemoteTracks. (VIDEO-11199)
+- Fixed a bug where sometimes the SDK generated a TypeError in the browser console. (VIDEO-11203)
+
 3.0.0-preview.2 (August 18, 2022)
 =================================
 

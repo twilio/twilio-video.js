@@ -3,7 +3,7 @@
 
 const assert = require('assert');
 const { trackPriority } = require('../../../es5/util/constants');
-const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
+const LocalDataTrack = require('../../../es5/media/track/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
 const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
@@ -289,7 +289,7 @@ describe('RemoteVideoTrack', function() {
         testOptions: {
           bandwidthProfile: {
             video: {
-              maxTracks: 1,
+              maxSwitchedOnTracks: 1,
               dominantSpeakerPriority: 'low'
             }
           },
@@ -432,7 +432,6 @@ describe('RemoteVideoTrack', function() {
       const connectOptions = Object.assign({
         name: roomName,
         tracks: [],
-        logLevel: 'warn',
         bandwidthProfile: {
           video: {
             maxSwitchedOnTracks: 1,
@@ -512,8 +511,7 @@ describe('RemoteVideoTrack', function() {
 
       const firstParticipantOptions = Object.assign({
         name: roomName,
-        tracks: dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
-        logLevel: 'warn'
+        tracks: dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant ? [dataTrack] : []
       }, defaults);
 
       // alice joins room first.
@@ -526,8 +524,7 @@ describe('RemoteVideoTrack', function() {
 
       const secondParticipantOptions = Object.assign({
         name: roomName,
-        tracks: dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant ? [dataTrack] : [],
-        logLevel: 'warn'
+        tracks: dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant ? [dataTrack] : []
       }, defaults);
 
       // bob joins room later.

@@ -1,12 +1,11 @@
 import { LocalTrackOptions } from './LocalTrackOptions';
-import { Track } from './Track';
 import { VideoTrack } from './VideoTrack';
 
 export class LocalVideoTrack extends VideoTrack {
   constructor(mediaStreamTrack: MediaStreamTrack, options?: LocalTrackOptions);
 
-  id: Track.ID;
   isStopped: boolean;
+  mediaStreamTrack: MediaStreamTrack;
 
   disable(): this;
   enable(enabled?: boolean): this;

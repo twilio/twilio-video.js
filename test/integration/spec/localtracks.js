@@ -267,7 +267,6 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
 
       // Bob restarts the track.
       await bobLocalTrackA.restart();
-      console.log(`bob replaces the track: mediaStreamTrack track old: ${bobLocalTrackA.id}, new: ${bobLocalTrackA.mediaStreamTrack.id}`);
 
       // Charlie joins a room after sometime.
       await waitForSometime(5000);

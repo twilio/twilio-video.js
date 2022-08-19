@@ -52,7 +52,7 @@ describe('BandwidthProfile: regressions', function() {
           bandwidthProfile: {
             video: {
               dominantSpeakerPriority: PRIORITY_STANDARD,
-              maxTracks: 1
+              maxSwitchedOnTracks: 1
             }
           },
           dominantSpeaker: true,

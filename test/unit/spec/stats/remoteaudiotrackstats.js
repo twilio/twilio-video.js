@@ -15,7 +15,7 @@ describe('RemoteAudioTrackStats', () => {
     };
 
     it('should set the audioLevel and jitter properties', () => {
-      const trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
+      const trackStats = new RemoteAudioTrackStats(stats.trackId, stats, true);
       assert.equal(trackStats.audioLevel, stats.audioOutputLevel);
       assert.equal(trackStats.jitter, stats.jitter);
     });
@@ -32,7 +32,7 @@ describe('RemoteAudioTrackStats', () => {
           const statValue = stats[statName];
           delete stats[statName];
 
-          const trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
+          const trackStats = new RemoteAudioTrackStats(stats.trackId, stats, true);
           assert.equal(trackStats[propName], null);
 
           stats[statName] = statValue;

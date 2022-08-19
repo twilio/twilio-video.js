@@ -1,4 +1,4 @@
-import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL, DEFAULT_REALM, SDK_NAME, SDK_VERSION } from '../util/constants';
+import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_REALM, SDK_NAME, SDK_VERSION } from '../util/constants';
 import { PreflightOptions, PreflightTestReport, ProgressEvent, RTCIceCandidateStats, SelectedIceCandidatePairStats, Stats } from '../../tsdef/PreflightTypes';
 import { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
@@ -133,7 +133,7 @@ export class PreflightTest extends EventEmitter {
     // eslint-disable-next-line new-cap
     const wsServer = internalOptions.wsServer || WS_SERVER(environment, region);
 
-    this._log = new Log('default', this, DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME);
+    this._log = new Log(this, DEFAULT_LOGGER_NAME);
     this._testDuration = duration;
     this._instanceId = nInstances++;
     this._testTiming.start();

@@ -2,17 +2,15 @@
 
 import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
 
-const { asLocalTrack, buildLogLevels } = require('./util');
+const { asLocalTrack } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
 
-const {
-  LocalAudioTrack,
-  LocalDataTrack,
-  LocalVideoTrack
-} = require('./media/track/es5');
+const LocalAudioTrack = require('./media/track/localaudiotrack');
+const LocalDataTrack = require('./media/track/localdatatrack');
+const LocalVideoTrack = require('./media/track/localvideotrack');
 
 const Log = require('./util/log');
-const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
+const { DEFAULT_LOGGER_NAME } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
 
 // This is used to make out which createLocalTracks() call a particular Log
@@ -98,7 +96,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     audio: isAudioVideoAbsent,
     getUserMedia,
     loggerName: DEFAULT_LOGGER_NAME,
-    logLevel: DEFAULT_LOG_LEVEL,
     LocalAudioTrack,
     LocalDataTrack,
     LocalVideoTrack,
@@ -109,8 +106,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   };
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
-  const logLevels = buildLogLevels(fullOptions.logLevel);
-  const log = new fullOptions.Log('default', logComponentName, logLevels, fullOptions.loggerName);
+  const log = new fullOptions.Log(logComponentName, fullOptions.loggerName);
 
   const localTrackOptions = Object.assign({ log }, fullOptions);
 
@@ -196,12 +192,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
  * @property {boolean|CreateLocalTrackOptions} [audio=true] - Whether or not to
  *   get local audio with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
- * @property {LogLevel|LogLevels} [logLevel='warn'] - <code>(deprecated: use [Video.Logger](module-twilio-video.html) instead.
- *   See [examples](module-twilio-video.html#.connect) for details)</code>
- *   Set the default log verbosity
- *   of logging. Passing a {@link LogLevel} string will use the same
- *   level for all components. Pass a {@link LogLevels} to set specific log
- *   levels.
  * @property {string} [loggerName='twilio-video'] - The name of the logger. Use this name when accessing the logger used by the SDK.
  *   See [examples](module-twilio-video.html#.connect) for details.
  * @property {boolean|CreateLocalTrackOptions} [video=true] - Whether or not to

@@ -6,7 +6,6 @@ const defaults = [
   'ecsServer',
   'environment',
   'largeRoom',
-  'logLevel',
   'regions',
   'topology',
   'wsServer',

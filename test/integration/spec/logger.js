@@ -85,18 +85,6 @@ describe('logger', function() {
     sinon.assert.called(loggerCb);
   });
 
-  it('should initialize loggers for each individual components', async () => {
-    room = await connect(token, Object.assign({ name: sid, logLevel: {
-      default: 'error',
-      media: 'warn',
-      signaling: 'info',
-    } }, defaults));
-
-    assert(!!Logger.getLogger(DEFAULT_LOGGER_NAME + '-default'));
-    assert(!!Logger.getLogger(DEFAULT_LOGGER_NAME + '-media'));
-    assert(!!Logger.getLogger(DEFAULT_LOGGER_NAME + '-signaling'));
-  });
-
   it('should provide required arguments via the plugin', async () => {
     room = await connect(token, Object.assign({ name: sid }, defaults));
     const callSpies = loggerCb.getCalls();
@@ -154,63 +142,6 @@ describe('logger', function() {
     assert(connecting);
     assert(open);
     assert(closed);
-  });
-
-  describe('connectOptions.logLevel', () => {
-    beforeEach(() => {
-      loadPlugin('my-logger', true);
-    });
-
-    it('should show debug logs if logLevel is debug', async () => {
-      const options = Object.assign({ name: sid, loggerName: 'my-logger' }, defaults, { logLevel: 'debug' });
-      room = await connect(token, options);
-
-      let hasDebugLog = false;
-      consoleMethods.forEach(method => {
-        console[method].getCalls().forEach(callStub => {
-          const level = callStub.args[2];
-          if (level === 'debug') {
-            hasDebugLog = true;
-          }
-        });
-      });
-      assert(hasDebugLog);
-    });
-
-    it('should not show debug logs if logLevel is warn', async () => {
-      const options = Object.assign({ name: sid, loggerName: 'my-logger' }, defaults, { logLevel: 'warn' });
-      room = await connect(token, options);
-
-      let hasDebugLog = false;
-      consoleMethods.forEach(method => {
-        console[method].getCalls().forEach(callStub => {
-          const level = callStub.args[2];
-          if (level === 'debug') {
-            hasDebugLog = true;
-          }
-        });
-      });
-      assert(!hasDebugLog);
-    });
-  });
-
-  describe('logger.setDefaultLevel', () => {
-    beforeEach(() => {
-      logger.setDefaultLevel = sinon.spy();
-    });
-
-    it('should use default log level', async () => {
-      room = await connect(token, Object.assign({ name: sid }, defaults));
-      sinon.assert.calledWithExactly(logger.setDefaultLevel, 'warn');
-    });
-
-    ['debug', 'info', 'warn', 'error', 'off'].forEach(name => {
-      it(`should use correct default log level if logLevel is ${name}`, async () => {
-        const options = Object.assign({ name: sid }, defaults, { logLevel: name });
-        room = await connect(token, options);
-        sinon.assert.calledWithExactly(logger.setDefaultLevel, name === 'off' ? 'silent' : name);
-      });
-    });
   });
 
   describe('multiple participants', () => {

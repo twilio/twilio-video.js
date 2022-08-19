@@ -63,13 +63,13 @@ describe('BandwidthProfile: renderHints', function() {
         effectiveContentPreferencesMode: 'auto',
       },
       {
-        testCase: 'when clientTrackSwitchOffControl=unspecified, maxTracks=5',
+        testCase: 'when contentPreferencesMode=auto',
         bandwidthProfile: {
           video: {
-            maxTracks: 5,
+            contentPreferencesMode: 'auto',
           }
         },
-        effectiveClientTrackSwitchOffControl: 'disabled', // when maxTracks is specified, effectiveClientTrackSwitchOffControl should be disabled.
+        effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'auto',
       },
       {
@@ -90,18 +90,6 @@ describe('BandwidthProfile: renderHints', function() {
         },
         effectiveClientTrackSwitchOffControl: 'auto',
         effectiveContentPreferencesMode: 'auto',
-      },
-      {
-        testCase: 'contentPreferencesMode=unspecified, renderDimensions=specified',
-        bandwidthProfile: {
-          video: {
-            renderDimensions: {
-              low: { width: 100, height: 100 }
-            }
-          }
-        },
-        effectiveClientTrackSwitchOffControl: 'auto',
-        effectiveContentPreferencesMode: 'disabled',
       }
     ].forEach(({ testCase, bandwidthProfile, effectiveClientTrackSwitchOffControl,  effectiveContentPreferencesMode }) => {
       let aliceRoom;

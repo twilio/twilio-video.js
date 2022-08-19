@@ -109,33 +109,17 @@ export interface VideoRenderDimensions {
   standard?: VideoTrack.Dimensions;
 }
 
-
-export interface AudioBandwidthProfile {
-  maxSwitchedOnTracks?: number;
-}
-
 export interface VideoBandwidthProfile {
   contentPreferencesMode?: VideoContentPreferencesMode;
   dominantSpeakerPriority?: Track.Priority;
   maxSubscriptionBitrate?: number;
-  maxSwitchedOnTracks?: number;
-
-  /**
-   * @deprecated use clientTrackSwitchOffControl instead
-   */
-  maxTracks?: number;
   mode?: BandwidthProfileMode;
-  /**
-   * @deprecated use contentPreferencesMode instead
-   */
-  renderDimensions?: VideoRenderDimensions;
   clientTrackSwitchOffControl?: ClientTrackSwitchOffControl;
   trackSwitchOffMode?: TrackSwitchOffMode;
 }
 
 export interface BandwidthProfile {
   video?: VideoBandwidthProfile;
-  audio?: AudioBandwidthProfile;
 }
 
 export interface AudioCodecSettings {
@@ -165,10 +149,6 @@ export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
 }
 
 export interface CreateLocalTrackOptions extends MediaTrackConstraints {
-  /**
-   * @deprecated
-   */
-  logLevel?: LogLevel | LogLevels;
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
@@ -179,18 +159,8 @@ export interface ConnectOptions {
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfile;
   dominantSpeaker?: boolean;
-
-  /**
-   * @deprecated use enableDscp
-   */
-  dscpTagging?: boolean;
   enableDscp?: boolean;
-
-  /**
-   * @deprecated use Video.Logger
-   */
   loggerName?: string;
-  eventListener?: EventListener;
   iceServers?: Array<RTCIceServer>;
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;
@@ -202,32 +172,20 @@ export interface ConnectOptions {
   region?: string;
   preferredAudioCodecs?: Array<AudioCodec | AudioCodecSettings | OpusCodecSettings>;
   preferredVideoCodecs?: Array<VideoCodec | VideoCodecSettings | VP8CodecSettings> | VideoEncodingMode;
-
-  /**
-   * @deprecated use Video.Logger.
-   */
-  logLevel?: LogLevel | LogLevels;
-
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
 }
 
 export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions;
-  /**
-   * @deprecated
-   */
-  logLevel?: LogLevel | LogLevels;
   loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
 }
 
 export class TrackStats {
-  trackId: Track.ID;
   trackSid: Track.SID;
   timestamp: number;
-  ssrc: string;
   packetsLost: number | null;
   codec: string | null;
 }
