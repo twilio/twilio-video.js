@@ -26,6 +26,12 @@ Breaking Changes
 - The deprecated ConnectOptions property `logLevel` has been removed. Use the `Video.Logger` interface instead as shown
   [here](#2100-december-10-2020). (VIDEO-10893)
 
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes `Room.getStats()` returned statistics for unsubscribed RemoteTracks. (VIDEO-11199)
+- Fixed a bug where sometimes the SDK generated a TypeError in the browser console. (VIDEO-11203)
+
 3.0.0-preview.2 (August 18, 2022)
 =================================
 
