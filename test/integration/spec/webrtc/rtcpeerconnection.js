@@ -436,9 +436,27 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
+  // eslint-disable-next-line no-warning-comments
+  // TODO: firefox when running inside our docker containers,
+  // does not resume audioContext. The resume promise never settles.
+  // This is causing few other tests to fail as well.
+  // We need to find workaround for this.
+  describe('audiocontext should resume' + isFirefox ? ' @unstable: VIDEO-10685 ' : '', () => {
+    it('audiocontext should resume', async () => {
+      const audioContext = new AudioContext();
+      if (audioContext.state === 'suspended') {
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
+        console.log('audioContext.state = suspended');
+        await Promise.race([audioContext.resume(), timeoutPromise]);
+        console.log('audioContext.state = ',  audioContext.state);
+        assert(audioContext.state === 'running');
+      }
+    });
+  });
+
   // NOTE(mroberts): This integration test is ported from the JSFiddle in Bug
   // 1480277.
-  (isFirefox ? describe : describe.skip)('Bug 1480277', () => {
+  (isFirefox ? describe : describe.skip)('@unstable: VIDEO-10685 Bug 1480277', () => {
     it('is worked around', async () => {
       const configuration = {
         bundlePolicy: 'max-bundle',

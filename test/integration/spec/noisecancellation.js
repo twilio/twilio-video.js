@@ -20,8 +20,28 @@ describe('createLocalAudioTrack', () => {
       expectedVendor: null
     },
     {
+      testName: 'when noise cancellation library has no version export, returns regular audio track',
+      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/no_version_export_rnnoise' },
+      expectedVendor: null
+    },
+    {
+      testName: 'when noise cancellation library has major version mismatch, returns regular audio track',
+      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/major_mismatch_rnnoise' },
+      expectedVendor: null
+    },
+    {
+      testName: 'when noise cancellation library has minor version mismatch, returns regular audio track',
+      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/minor_mismatch_rnnoise' },
+      expectedVendor: null
+    },
+    {
+      testName: 'when noise cancellation library does not support browser, returns regular audio track',
+      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/browser_not_supported_rnnoise' },
+      expectedVendor: null
+    },
+    {
       testName: 'returns rnnoise track when vendor = rnnoise ',
-      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/rnnoise' },
+      noiseCancellationOptions: { vendor: 'rnnoise', sdkAssetsPath: '/noisecancellation/good_rnnoise' },
       expectedVendor: 'rnnoise'
     },
     {
@@ -30,8 +50,12 @@ describe('createLocalAudioTrack', () => {
       expectedVendor: null
     }
   ].forEach(({ testName, noiseCancellationOptions, expectedVendor }) => {
+    let audioTrack = null;
+    before(async () => {
+      audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
+    });
+
     it(testName, async function()  {
-      const audioTrack = await createLocalAudioTrack({ noiseCancellationOptions });
       assert(audioTrack, `unexpected audioTrack ${audioTrack}`);
       if (expectedVendor) {
         assert(audioTrack.noiseCancellation, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
@@ -51,6 +75,33 @@ describe('createLocalAudioTrack', () => {
         assert.equal(audioTrack.noiseCancellation, null, `unexpected audioTrack.noiseCancellation: ${audioTrack.noiseCancellation}`);
       }
     });
+
+    if (expectedVendor) {
+      [true, false].forEach(noiseCancellationEnabled => {
+        it(`audioTrack.noiseCancellation.isEnabled=${noiseCancellationEnabled} is maintained after restart`, async () => {
+          let stoppedCount = 0;
+          audioTrack.on('stopped', () => stoppedCount++);
+
+          if (noiseCancellationEnabled) {
+            await audioTrack.noiseCancellation.enable();
+          } else {
+            await audioTrack.noiseCancellation.disable();
+          }
+
+          await audioTrack.restart();
+
+          assert(stoppedCount === 1, `unexpected stoppedCount=${stoppedCount}`);
+          assert(audioTrack.noiseCancellation.isEnabled === noiseCancellationEnabled, `Unexpected audioTrack.noiseCancellation.isEnabled: ${audioTrack.noiseCancellation.isEnabled}`);
+        });
+      });
+
+      it('noiseCancellation.sourceTrack.srcTrack is stopped when LocalAudioTrack is stopped', () => {
+        let stoppedCount = 0;
+        audioTrack.on('stopped', () => stoppedCount++);
+        audioTrack.stop();
+        assert(stoppedCount === 1, `unexpected stoppedCount=${stoppedCount}`);
+      });
+    }
   });
 });
 

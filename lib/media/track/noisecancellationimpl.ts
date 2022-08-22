@@ -6,37 +6,58 @@ import { createNoiseCancellationAudioProcessor } from '../../noisecancellationad
 const Log = require('../../util/log');
 
 /**
- * {@link NoiseCancellation} interface provides methods to control noise cancellation at runtime.
- * This interface is exposed on {@link LocalAudioTrack} property `noiseCancellation`. It is available only when
- * {@link NoiseCancellationOptions} are specified when creating a {@link LocalAudioTrack}
+ * {@link NoiseCancellation} interface provides methods to control noise cancellation at runtime. This interface is exposed
+ * on {@link LocalAudioTrack} property `noiseCancellation`. It is available only when {@link NoiseCancellationOptions} are
+ * specified when creating a {@link LocalAudioTrack}, and the plugin is successfully loaded.
  * @alias NoiseCancellation
  * @interface
  *
  * @example
  * const { connect, createLocalAudioTrack } = require('twilio-video');
  *
- * // create a local audio track and have it use
- * // @twilio/krisp-audio-plugin for noise cancellation processing.
- * const localAudioTrack = await Video.createLocalAudioTrack({
+ * // Create a LocalAudioTrack with Krisp noise cancellation enabled.
+ * const localAudioTrack = await createLocalAudioTrack({
  *   noiseCancellationOptions: {
- *     vendor: 'krisp',
- *     sdkAssetsPath: '/twilio-krisp-audio-plugin/1.0.0/dist'
+ *     sdkAssetsPath: 'path/to/hosted/twilio/krisp/audio/plugin/1.0.0/dist',
+ *     vendor: 'krisp'
  *   }
  * });
  *
- * // publish the track to a room
- * const room = await connect( token, {
- *   tracks: [localAudioTrack]
- *   // ... any other connect options
- * });
+ * if (!localAudioTrack.noiseCancellation) {
+ *   // If the Krisp audio plugin fails to load, then a warning message will be logged
+ *   // in the browser console, and the "noiseCancellation" property will be set to null.
+ *   // You can still use the LocalAudioTrack to join a Room. However, it will use the
+ *   // browser's noise suppression instead of the Krisp noise cancellation. Make sure
+ *   // the "sdkAssetsPath" provided in "noiseCancellationOptions" points to the correct
+ *   // hosted path of the plugin assets.
+ * } else {
+ *   // Join a Room with the LocalAudioTrack.
+ *   const room = await connect('token', {
+ *     name: 'my-cool-room',
+ *     tracks: [localAudioTrack]
+ *   });
  *
- * // you can enable/disable noise cancellation at runtime
- * // using noiseCancellation interface exposed by localAudioTrack
- * function updateNoiseCancellation(enable: boolean) {
- *   const noiseCancellation = localAudioTrack.noiseCancellation;
+ *   if (!localAudioTrack.noiseCancellation.isEnabled) {
+ *     // Krisp noise cancellation is permanently disabled in Peer-to-Peer and Go Rooms.
+ *   }
+ * }
  *
+ * //
+ * // Enable/disable noise cancellation.
+ * // @param {boolean} enable - whether noise cancellation should be enabled
+ * //
+ * function setNoiseCancellation(enable) {
+ *   const { noiseCancellation } = localAudioTrack;
  *   if (noiseCancellation) {
- *     enable ? noiseCancellation.enable() : noiseCancellation.disable();
+ *     if (enable) {
+ *       // If enabled, then the LocalAudioTrack will use the Krisp noise
+ *       // cancellation instead of the browser's noise suppression.
+ *       noiseCancellation.enable();
+ *     } else {
+ *       // If disabled, then the LocalAudioTrack will use the browser's
+ *       // noise suppression instead of the Krisp noise cancellation.
+ *       noiseCancellation.disable();
+ *     }
  *   }
  * }
  */
@@ -44,6 +65,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   private _processor: AudioProcessor;
   private _sourceTrack: MediaStreamTrack;
   private _disabledPermanent: boolean;
+
   constructor(processor: AudioProcessor, originalTrack: MediaStreamTrack) {
     this._processor = processor;
     this._sourceTrack = originalTrack;
@@ -51,7 +73,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * Identifies the vendor
+   * Name of the noise cancellation vendor.
    * @type {NoiseCancellationVendor}
    */
   get vendor(): NoiseCancellationVendor {
@@ -59,7 +81,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * Underlying MediaStreamTrack
+   * The underlying MediaStreamTrack of the {@link LocalAudioTrack}.
    * @type {MediaStreamTrack}
    */
   get sourceTrack(): MediaStreamTrack {
@@ -67,7 +89,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * Set to true if noise cancellation is currently enabled
+   * Whether noise cancellation is enabled.
    * @type {boolean}
    */
   get isEnabled(): boolean {
@@ -75,8 +97,10 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * Enables noise cancellation
-   * @returns {Promise<void>} a promise that resolves when operation is complete.
+   * Enable noise cancellation.
+   * @returns {Promise<void>} Promise that resolves when the operation is complete
+   * @throws {Error} Throws an error if noise cancellation is disabled permanently
+   *   for the {@link LocalAudioTrack}
    */
   enable() : Promise<void> {
     if (this._disabledPermanent) {
@@ -88,8 +112,8 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   }
 
   /**
-   * Disables noise cancellation
-   * @returns {Promise<void>} a promise that resolves when operation is complete.
+   * Disable noise cancellation.
+   * @returns {Promise<void>} Promise that resolves when the operation is complete
    */
   disable() : Promise<void> {
     this._processor.disable();
@@ -121,6 +145,15 @@ export class NoiseCancellationImpl implements NoiseCancellation {
   disablePermanently(): Promise<void> {
     this._disabledPermanent = true;
     return this.disable();
+  }
+
+
+  /**
+   * @private
+   */
+  stop(): void {
+    this._processor.disconnect();
+    this._sourceTrack.stop();
   }
 }
 
