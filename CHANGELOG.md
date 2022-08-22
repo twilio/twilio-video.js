@@ -3,11 +3,17 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
 
-2.23.1 (In Progress)
-====================
+2.24.0 (August 22, 2022)
+========================
+
+New Features
+------------
+
+- The support for twilio approved 3rd party noise cancellation solutions is now **generally available**.
 
 Bug Fixes
 ---------
+
 - Fixed an issue where input media track was not stopped, after `localAudioTrack.stop()` when using noiseCancellation (VIDEO-11047)
 - Added versioning support for noise cancellation plugin. This SDK will require noise cancellation plugin to be version 1.0.0 or greater. (VIDEO-11087)
 
