@@ -289,7 +289,7 @@ describe('RemoteVideoTrack', function() {
         testOptions: {
           bandwidthProfile: {
             video: {
-              maxSwitchedOnTracks: 1,
+              maxTracks: 1,
               dominantSpeakerPriority: 'low'
             }
           },
@@ -434,7 +434,7 @@ describe('RemoteVideoTrack', function() {
         tracks: [],
         bandwidthProfile: {
           video: {
-            maxSwitchedOnTracks: 1,
+            maxTracks: 1,
             dominantSpeakerPriority: 'low'
           }
         },
