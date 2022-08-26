@@ -8,18 +8,16 @@
     "lib": ["es2019", "dom"],
     "downlevelIteration": true,
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "noImplicitAny": true,
     "noImplicitThis": true,
     "outDir": "./es5",
     "sourceMap": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": [ "offscreencanvas" ]
   },
   "include": [
     "lib/**/*.ts",
     "lib/**/*.js"
-  ],
-  "exclude": [
-    "lib/dynamicImport.js"
   ]
 }
