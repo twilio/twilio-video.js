@@ -12,6 +12,7 @@ Bug Fixes
   ```
   Unhandled Runtime Error: TypeError: null is not an object (evaluating 'el.paused')
   ```
+- The LocalTrackOptions type definition now contains `logLevel` as an optional property. (VIDEO-10659)
 
 2.24.0 (August 22, 2022)
 ========================
