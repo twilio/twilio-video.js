@@ -18,5 +18,8 @@
   "include": [
     "lib/**/*.ts",
     "lib/**/*.js"
+  ],
+  "exclude": [
+    "lib/dynamicImport.js"
   ]
 }
