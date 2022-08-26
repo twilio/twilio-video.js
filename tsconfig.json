@@ -3,6 +3,7 @@
     "allowJs": true,
     "checkJs": false,
     "declaration": false,
+    "esModuleInterop": true,
     "target": "es5",
     "lib": ["es2019", "dom"],
     "downlevelIteration": true,
@@ -17,8 +18,5 @@
   "include": [
     "lib/**/*.ts",
     "lib/**/*.js"
-  ],
-  "exclude": [
-    "lib/dynamicImport.js"
   ]
 }
