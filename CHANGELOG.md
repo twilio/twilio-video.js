@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed an issue where `import` was throwing errors in webpack builds. (VIDEO-11220)
+- Fixed an issue where the `import` keyword was throwing errors in webpack builds. (VIDEO-11220)
 
 2.24.0 (August 22, 2022)
 ========================
