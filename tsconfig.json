@@ -15,11 +15,5 @@
     "sourceMap": true,
     "strictNullChecks": true
   },
-  "include": [
-    "lib/**/*.ts",
-    "lib/**/*.js"
-  ],
-  "exclude": [
-    "lib/dynamicImport.js"
-  ]
+  "include": ["lib/**/*.ts", "lib/**/*.js"]
 }
