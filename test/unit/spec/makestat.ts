@@ -1,4 +1,4 @@
-import assert from 'assert';
+import * as assert from 'assert';
 import { makeStat } from '../../../lib/preflight/makestat';
 
 describe('makestat', () => {

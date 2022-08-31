@@ -1,4 +1,4 @@
-import assert from 'assert';
+import * as assert from 'assert';
 import { calculateMOS, mosToScore  } from '../../../lib/preflight/mos';
 
 function round2(number) : number {
