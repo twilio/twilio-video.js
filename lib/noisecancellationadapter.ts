@@ -4,7 +4,7 @@ import { AudioProcessor } from '../tsdef/AudioProcessor';
 import { NoiseCancellationOptions } from '../tsdef/types';
 const Log = require('./util/log');
 
-const dynamicImport = require('./dynamicImport');
+const dynamicImport = require('./vendor/dynamicimport');
 
 const PLUGIN_CONFIG = {
   krisp: {
