@@ -13,7 +13,7 @@ Bug Fixes
   Unhandled Runtime Error: TypeError: null is not an object (evaluating 'el.paused')
   ```
 - The LocalTrackOptions type definition now contains `logLevel` as an optional property. (VIDEO-10659)
-- Fixed an issue where the `import` keyword was throwing errors in webpack builds. (VIDEO-11220)
+- Fixed an issue where the `import` keyword was causing problems in webpack and typescript projects. (VIDEO-11220)
 
 2.24.0 (August 22, 2022)
 ========================
