@@ -2,7 +2,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { fakeGetUserMedia, FakeMediaStreamTrack } from '../../lib/fakemediastream';
+import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
 import { createLocalTracks } from '../../../lib/createlocaltracks';
 
 describe('createLocalTracks', () => {
