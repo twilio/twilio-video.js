@@ -2,6 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.24.1 (September 6, 2022)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes a runtime error was raised on iOS devices as shown below. (VIDEO-11263)
+  ```
+  Unhandled Runtime Error: TypeError: null is not an object (evaluating 'el.paused')
+  ```
+- The LocalTrackOptions type definition now contains `logLevel` as an optional property. (VIDEO-10659)
+- Fixed an issue where the `import` keyword was causing problems in webpack and typescript projects. (VIDEO-11220)
 
 2.24.0 (August 22, 2022)
 ========================
