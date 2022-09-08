@@ -75,7 +75,6 @@ directly in your web app using a &lt;script&gt; tag.
 
 ```html
 <script src="//sdk.twilio.com/js/video/releases/3.0.0-preview.3/twilio-video.min.js"></script>
-
 ```
 
 Using this method, twilio-video.js will set a browser global:

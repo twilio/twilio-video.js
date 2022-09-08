@@ -9,7 +9,7 @@ import { getTurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
 import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
-import { waitForSometime } from '../util';
+import { waitForSometime } from '../util/index';
 
 const { WS_SERVER } = require('../util/constants');
 const Log = require('../util/log');

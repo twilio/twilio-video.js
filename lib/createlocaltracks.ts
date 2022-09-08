@@ -1,14 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
-import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack } from '../tsdef/types';
+import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCancellationOptions } from '../tsdef/types';
+import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
-const { asLocalTrack } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
-
 const LocalAudioTrack = require('./media/track/localaudiotrack');
 const LocalDataTrack = require('./media/track/localdatatrack');
 const LocalVideoTrack = require('./media/track/localvideotrack');
-
 const Log = require('./util/log');
 const { DEFAULT_LOGGER_NAME } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
@@ -145,6 +144,12 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
   }
 
+  let noiseCancellationOptions: NoiseCancellationOptions|undefined;
+  if (typeof fullOptions.audio === 'object' && 'noiseCancellationOptions' in fullOptions.audio) {
+    noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
+    delete fullOptions.audio.noiseCancellationOptions;
+  }
+
   if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
     extraLocalTrackOptions.video.workaroundWebKitBug1208516 = fullOptions.video.workaroundWebKitBug1208516;
   }
@@ -173,13 +178,29 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ...mediaStream.getVideoTracks(),
     ];
 
-    log.info('Call to getUserMedia successful; got MediaStreamTracks:',
-      mediaStreamTracks);
+    log.info('Call to getUserMedia successful; got tracks:', mediaStreamTracks);
 
-    return mediaStreamTracks.map(mediaStreamTrack => asLocalTrack(mediaStreamTrack, {
-      ...extraLocalTrackOptions[mediaStreamTrack.kind as 'audio' | 'video'],
-      ...localTrackOptions,
-    }));
+    return await Promise.all(
+      mediaStreamTracks.map(async mediaStreamTrack => {
+        if (mediaStreamTrack.kind === 'audio' && noiseCancellationOptions) {
+          const { cleanTrack, noiseCancellation } = await applyNoiseCancellation(mediaStreamTrack, noiseCancellationOptions, log);
+          return new localTrackOptions.LocalAudioTrack(cleanTrack, {
+            ...extraLocalTrackOptions.audio,
+            ...localTrackOptions,
+            noiseCancellation
+          });
+        } else if (mediaStreamTrack.kind === 'audio') {
+          return new localTrackOptions.LocalAudioTrack(mediaStreamTrack, {
+            ...extraLocalTrackOptions.audio,
+            ...localTrackOptions,
+          });
+        }
+        return new localTrackOptions.LocalVideoTrack(mediaStreamTrack, {
+          ...extraLocalTrackOptions.video,
+          ...localTrackOptions,
+        });
+      })
+    );
   } catch (error) {
     log.warn('Call to getUserMedia failed:', error);
     throw error;
@@ -189,7 +210,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 /**
  * {@link createLocalTracks} options
  * @typedef {object} CreateLocalTracksOptions
- * @property {boolean|CreateLocalTrackOptions} [audio=true] - Whether or not to
+ * @property {boolean|CreateLocalTrackOptions|CreateLocalAudioTrackOptions} [audio=true] - Whether or not to
  *   get local audio with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
  * @property {string} [loggerName='twilio-video'] - The name of the logger. Use this name when accessing the logger used by the SDK.

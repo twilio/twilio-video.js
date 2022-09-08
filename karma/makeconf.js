@@ -3,7 +3,7 @@
 'use strict';
 
 const isDocker = require('is-docker')();
-const { basename } = require('path');
+const { basename, resolve: resolvePath } = require('path');
 
 function getTestFiles(config, defaultFile) {
   let files = [];
@@ -93,6 +93,14 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     }
 
     const strReportName = generateReportName(files);
+
+
+    const hostedFiles = resolvePath('./test/assets/noisecancellation/**/*');
+    files.push(
+      // these files will be served on demand from disk and will be ignored by the watcher
+      { pattern: hostedFiles, included: false, served: true, watched: false, nocache: true }
+    );
+
     const htmlReport = `../logs/${strReportName}.html`;
     config.set({
       basePath: '',
@@ -104,6 +112,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       files,
       preprocessors,
       proxies: {
+        // create a proxy to serve hosted noise cancellation sdk files
+        '/noisecancellation/': '/absolute' + resolvePath('./test/assets/noisecancellation'),
         '/static/': 'http://localhost:9877/static/'
       },
       browserify: {
