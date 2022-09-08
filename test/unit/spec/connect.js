@@ -267,6 +267,8 @@ describe('connect', () => {
         let shouldStopLocalTracks;
         function LocalParticipant(localParticipantSignaling, localTracks, options) {
           shouldStopLocalTracks = options.shouldStopLocalTracks;
+          this._signaling = localParticipantSignaling;
+          this.audioTracks = new Map();
           this.on = () => {};
         }
 
@@ -306,7 +308,9 @@ describe('connect', () => {
         let createLocalTracks;
         let tracks;
 
-        function LocalParticipant() {
+        function LocalParticipant(localParticipantSignaling) {
+          this._signaling = localParticipantSignaling;
+          this.audioTracks = new Map();
           this.on = () => {};
         }
 
@@ -380,6 +384,8 @@ describe('connect', () => {
         let shouldStopLocalTracks;
         function LocalParticipant(localParticipantSignaling, localTracks, options) {
           shouldStopLocalTracks = options.shouldStopLocalTracks;
+          this._signaling = localParticipantSignaling;
+          this.audioTracks = new Map();
           this.on = () => {};
         }
 

@@ -379,7 +379,8 @@ const { defer } = require('../../../../../lib/util');
             'mediaStreamTrack',
             'processedTrack',
             'isEnabled',
-            'isStopped'
+            'isStopped',
+            'noiseCancellation'
           ]);
         } else {
           assert.deepEqual(Object.keys(track), [
@@ -413,7 +414,8 @@ const { defer } = require('../../../../../lib/util');
             kind: track.kind,
             mediaStreamTrack: track.mediaStreamTrack,
             name: track.name,
-            processedTrack: null
+            processedTrack: null,
+            noiseCancellation: null,
           });
         } else {
           assert.deepEqual(track.toJSON(), {

@@ -2,6 +2,17 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+3.0.0-preview.4 (in progress)
+=============================
+
+Changes
+-------
+
+- This version includes the changes released in the following previous 2.x versions:
+  - [2.24.1](#2241-september-6-2022)
+  - [2.24.0](#2240-august-22-2022)
+  - [2.23.0](#2230-july-28-2022)
+
 3.0.0-preview.3 (August 31, 2022)
 =================================
 
@@ -136,6 +147,76 @@ Peer-to-Peer Rooms**.
   method will not be accurate.
 - [PSTN Participants](https://www.twilio.com/docs/video/adding-programmable-voice-participants-video-rooms) cannot connect
   to Large Rooms.
+
+2.24.1 (September 6, 2022)
+==========================
+
+Bug Fixes
+---------
+- Fixed a bug where sometimes a runtime error was raised on iOS devices as shown below. (VIDEO-11263)
+  ```
+  Unhandled Runtime Error: TypeError: null is not an object (evaluating 'el.paused')
+  ```
+- The LocalTrackOptions type definition now contains `logLevel` as an optional property. (VIDEO-10659)
+- Fixed an issue where the `import` keyword was causing problems in webpack and typescript projects. (VIDEO-11220)
+
+2.24.0 (August 22, 2022)
+========================
+
+New Features
+------------
+
+- The support for twilio approved 3rd party noise cancellation solutions is now **generally available**.
+
+Bug Fixes
+---------
+
+- Fixed an issue where input media track was not stopped, after `localAudioTrack.stop()` when using noiseCancellation (VIDEO-11047)
+- Added versioning support for noise cancellation plugin. This SDK will require noise cancellation plugin to be version 1.0.0 or greater. (VIDEO-11087)
+
+2.23.0 (July 28, 2022)
+======================
+
+New Features
+------------
+
+- This release adds private beta support for 3rd party noise cancellation solution. You need to host twilio approved 3rd party plugin on your web server to enable noise cancellation. Please fill out [this form](https://forms.gle/eeFyoGJj1mgMrxN88) to request access to the 3rd party plugin.
+
+Once you get the access to the plugin, You can install it from npm with:
+```
+npm install <noise_cancellation_plugin>
+```
+
+Once installed, you need to host the contents of `./node_modules/<noise_cancellation_plugin>/dist/` from your web server. We recommend that you add plugin version number to the hosted path to ensure that browser does not use [stale version](https://www.keycdn.com/support/what-is-cache-busting) when its updated. You need to pass the path to the hosted files to `twilio-video` sdk when creating audio track as shown in the example below. The example below assumes that you have hosted the files at `/noise_cancellation_plugin/1.0.0/dist` on your web server.
+
+```ts
+const { connect, createLocalAudioTrack } = require('twilio-video');
+
+// create a local audio track and have it use
+// @twilio/krisp-audio-plugin for noise cancellation processing.
+const localAudioTrack = await Video.createLocalAudioTrack({
+  noiseCancellationOptions: {
+    vendor: 'krisp',
+    sdkAssetsPath: '/noise_cancellation_plugin/1.0.0/dist'
+  }
+});
+
+// publish the track to a room
+const room = await connect( token, {
+  tracks: [localAudioTrack]
+  // ... any other connect options
+});
+
+// you can enable/disable noise cancellation at runtime
+// using noiseCancellation interface exposed by localAudioTrack
+function updateNoiseCancellation(enable: boolean) {
+  const noiseCancellation = localAudioTrack.noiseCancellation;
+
+  if (noiseCancellation) {
+    enable ? noiseCancellation.enable() : noiseCancellation.disable();
+  }
+}
+```
 
 2.22.2 (July 25, 2022)
 ======================
