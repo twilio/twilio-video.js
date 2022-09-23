@@ -569,7 +569,7 @@ describe('PeerConnectionV2', () => {
             break;
         }
 
-        const tracks = [{ id: 1 }];
+        const tracks = [{ id: 1, getSettings: () => ({ height: 0, width: 0 }) }];
         trackSender = makeMediaTrackSender(tracks[0]);
         test.pcv2.addMediaTrackSender(trackSender);
 
@@ -655,7 +655,7 @@ describe('PeerConnectionV2', () => {
 
     beforeEach(() => {
       test = makeTest({ offers: 1 });
-      const tracks = [{ id: 1 }];
+      const tracks = [{ id: 1, getSettings: () => ({ height: 0, width: 0 }) }];
       trackSender = makeMediaTrackSender(tracks[0]);
       test.pcv2.addMediaTrackSender(trackSender);
 
