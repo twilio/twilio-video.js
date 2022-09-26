@@ -1,10 +1,10 @@
-/* eslint-disable no-console */
 'use strict';
+
 import { AudioProcessor } from '../tsdef/AudioProcessor';
 import { NoiseCancellationOptions } from '../tsdef/types';
-const Log = require('./util/log');
 
-const dynamicImport = require('./vendor/dynamicimport');
+const dynamicImport = require('./util/dynamicimport');
+const Log = require('./util/log');
 
 const PLUGIN_CONFIG = {
   krisp: {
@@ -16,6 +16,7 @@ const PLUGIN_CONFIG = {
     pluginFile: 'rnnoise_sdk.mjs'
   }
 };
+
 // AudioProcessor assumes following interface from the Plugin
 interface NoiseCancellationPlugin {
   init(options: { rootDir: string }): Promise<void>;

@@ -11,6 +11,8 @@ Bug Fixes
 - Fixed a bug where sometimes, a `MediaClientRemoteDescFailedError` was raised when a Chrome Participant who had enabled
   Adaptive Simulcast (`ConnectOptions.preferredVideoCodecs = 'auto'`) tried to publish a camera Track after publishing a
   `<canvas>` Track. (VIDEO-11516)
+- Fixed an issue where the Krisp Noise Cancellation fails to load in an application where the content security policy
+  directives `default-src self unsafe-eval` are used.
 
 2.24.1 (September 6, 2022)
 ==========================
@@ -83,6 +85,10 @@ function updateNoiseCancellation(enable: boolean) {
 }
 
 ```
+
+**NOTE:** If your application is using the `default-src self` content security policy directive, then you should add
+another directive 'unsafe-eval', which is required for the Krisp Noise Cancellation SDK to load successfully.
+
 2.22.2 (July 25, 2022)
 ======================
 
