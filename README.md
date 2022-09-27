@@ -154,6 +154,14 @@ you should also include the following `script-src` directive:
 script-src https://sdk.twilio.com
 ```
 
+If you are enabling [Krisp Noise Cancellation](https://www.twilio.com/docs/video/noise-cancellation) for
+your local audio, and you are using the following `default-src self` directive, you should also add the
+`unsafe-eval` directive:
+
+```
+default-src self unsafe-eval
+```
+
 Keep in mind, you may need to merge these policy directives with your own if
 you're using other services.
 
