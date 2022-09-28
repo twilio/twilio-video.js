@@ -12,7 +12,7 @@ Bug Fixes
   Adaptive Simulcast (`ConnectOptions.preferredVideoCodecs = 'auto'`) tried to publish a camera Track after publishing a
   `<canvas>` Track. (VIDEO-11516)
 - Fixed an issue where the Krisp Noise Cancellation fails to load in an application where the content security policy
-  directives `default-src self unsafe-eval` are used.
+  directives `default-src self unsafe-eval` are used. (VIDEO-11537)
 
 2.24.1 (September 6, 2022)
 ==========================
