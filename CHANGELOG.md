@@ -87,7 +87,7 @@ function updateNoiseCancellation(enable: boolean) {
 ```
 
 **NOTE:** If your application is using the `default-src self` content security policy directive, then you should add
-another directive 'unsafe-eval', which is required for the Krisp Noise Cancellation SDK to load successfully.
+another directive `unsafe-eval`, which is required for the Krisp Audio Plugin to load successfully.
 
 2.22.2 (July 25, 2022)
 ======================
