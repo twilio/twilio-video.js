@@ -2,6 +2,18 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.24.2 (September 29, 2022)
+===========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes, a `MediaClientRemoteDescFailedError` was raised when a Chrome Participant who had enabled
+  Adaptive Simulcast (`ConnectOptions.preferredVideoCodecs = 'auto'`) tried to publish a camera Track after publishing a
+  `<canvas>` Track. (VIDEO-11516)
+- Fixed an issue where the Krisp Noise Cancellation fails to load in an application where the content security policy
+  directives `default-src self unsafe-eval` are used. (VIDEO-11537)
+
 2.24.1 (September 6, 2022)
 ==========================
 
@@ -73,6 +85,10 @@ function updateNoiseCancellation(enable: boolean) {
 }
 
 ```
+
+**NOTE:** If your application is using the `default-src self` content security policy directive, then you should add
+another directive `unsafe-eval`, which is required for the Krisp Audio Plugin to load successfully.
+
 2.22.2 (July 25, 2022)
 ======================
 

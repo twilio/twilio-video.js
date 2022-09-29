@@ -74,7 +74,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//sdk.twilio.com/js/video/releases/2.24.1/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.24.2/twilio-video.min.js"></script>
 
 ```
 
@@ -152,6 +152,14 @@ you should also include the following `script-src` directive:
 
 ```
 script-src https://sdk.twilio.com
+```
+
+If you are enabling [Krisp Noise Cancellation](https://www.twilio.com/docs/video/noise-cancellation) for
+your local audio, and you are using the following `default-src self` directive, you should also add the
+`unsafe-eval` directive:
+
+```
+default-src self unsafe-eval
 ```
 
 Keep in mind, you may need to merge these policy directives with your own if
