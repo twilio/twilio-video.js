@@ -298,7 +298,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - VIDEO-7732-Fix-Firefox-Docker
     jobs:
       - Build-Docker-Test-Image:
           context: dockerhub-push
