@@ -34,6 +34,7 @@ USER root
 
 # Install and enable iptables
 RUN echo "Setting up iptables..." &&\
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&\
 apt-get update &&\
 apt-get install -y iptables &&\
 sudo apt-get install -y xvfb &&\
