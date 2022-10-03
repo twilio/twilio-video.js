@@ -11,8 +11,7 @@ RUN if grep -q Debian /etc/os-release && grep -q stretch /etc/os-release; then \
 		sudo add-apt-repository -y ppa:openjdk-r/ppa; \
 	fi && \
 	sudo apt-get update && sudo apt-get install -y openjdk-11-jre openjdk-11-jre-headless openjdk-11-jdk openjdk-11-jdk-headless && \
-	sudo apt-get install -y bzip2 libgconf-2-4 # for extracting firefox and running chrome, respectively && \
-  sudo apt-get install -y xvfb
+	sudo apt-get install -y bzip2 libgconf-2-4 # for extracting firefox and running chrome, respectively
 
 #
 # install firefox
@@ -37,6 +36,7 @@ USER root
 RUN echo "Setting up iptables..." &&\
 apt-get update &&\
 apt-get install -y iptables &&\
+sudo apt-get install -y xvfb &&\
 adduser user1 &&\
 adduser user1 sudo &&\
 su - user1
