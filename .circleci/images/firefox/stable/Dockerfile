@@ -6,7 +6,7 @@ FROM cimg/node:lts
 RUN if grep -q Debian /etc/os-release && grep -q stretch /etc/os-release; then \
 		echo 'deb http://deb.debian.org/debian stretch-backports main' | sudo tee -a /etc/apt/sources.list.d/stretch-backports.list; \
 	elif grep -q Ubuntu /etc/os-release && grep -q xenial /etc/os-release; then \
-    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&\
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
 		sudo apt-get update && sudo apt-get install -y software-properties-common && \
 		sudo add-apt-repository -y ppa:openjdk-r/ppa; \
 	fi && \
