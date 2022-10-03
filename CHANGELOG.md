@@ -2,6 +2,17 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.24.3 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where iOS Safari Participant could not hear or see others after switching back from YouTube picture-in-picture mode. (VIDEO-11352)
+- Fixed a bug where iOS Safari Participant could not hear others after switching from recording an audio message in a messenger app. (VIDEO-11354)
+- Fixed a bug where iOS Safari Participant could not hear or see others after watching a video in another browser tab. (VIDEO-11356)
+- Fixed a bug where iOS Safari Participant sometimes could not hear or see others after finishing an incoming call. (VIDEO-11359)
+
 2.24.2 (September 29, 2022)
 ===========================
 
