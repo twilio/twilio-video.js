@@ -45,7 +45,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-describe(`RTCPeerConnection(${sdpFormat})`, function() {
+describe.only(`RTCPeerConnection(${sdpFormat})`, function() {
   after(() => {
     if (typeof gc === 'function') {
       gc();
@@ -450,65 +450,6 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
         await Promise.race([audioContext.resume(), timeoutPromise]);
         console.log('audioContext.state = ',  audioContext.state);
         assert(audioContext.state === 'running');
-      }
-    });
-  });
-
-  // NOTE(mroberts): This integration test is ported from the JSFiddle in Bug
-  // 1480277.
-  (isFirefox ? describe : describe.skip)('@unstable: VIDEO-10685 Bug 1480277', () => {
-    it('is worked around', async () => {
-      const configuration = {
-        bundlePolicy: 'max-bundle',
-        rtcpMuxPolicy: 'required'
-      };
-
-      const [pc1, pc2] = createPeerConnections(configuration);
-
-      const audioContext = new AudioContext();
-      const mediaStreamDestinationNode = audioContext.createMediaStreamDestination();
-      const { stream: stream1 } = mediaStreamDestinationNode;
-      const [track1] = stream1.getAudioTracks();
-      pc1.addTrack(track1, stream1);
-
-      const options = {
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      };
-
-      await negotiate(pc1, pc2, options);
-
-      const constraints = {
-        audio: true,
-        fake: true
-      };
-
-      const stream2 = await navigator.mediaDevices.getUserMedia(constraints);
-      const [track2] = stream2.getAudioTracks();
-      pc2.addTransceiver(track2, { streams: [stream2] });
-
-      await negotiate(pc2, pc1, options);
-
-      const stream3 = await navigator.mediaDevices.getUserMedia(constraints);
-      const [track3] = stream3.getAudioTracks();
-      const sender = pc1.addTrack(track3, stream3);
-
-      await negotiate(pc1, pc2, options);
-
-      const { track: remoteTrack3 } = pc2.getReceivers()[2];
-
-      const isSilent = await detectSilence(audioContext, new MediaStream([remoteTrack3]), 10000);
-
-      try {
-        assert.equal(isSilent, false, 'remoteTrack was unexpectedly silent');
-      } catch (error) {
-        throw error;
-      } finally {
-        pc1.close();
-        pc2.close();
-        track1.stop();
-        track2.stop();
-        track3.stop();
       }
     });
   });
