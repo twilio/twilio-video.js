@@ -45,7 +45,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-describe.only(`RTCPeerConnection(${sdpFormat})`, function() {
+describe(`RTCPeerConnection(${sdpFormat})`, function() {
   after(() => {
     if (typeof gc === 'function') {
       gc();
