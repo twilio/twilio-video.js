@@ -635,14 +635,16 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
     }, timeoutMS);
   });
 
-  const result = await Promise.race([promise, timeoutPromise]);
-  const endTime = new Date();
-  const durationInSeconds = (endTime - startTime) / 1000;
-  if (verbose) {
-    // eslint-disable-next-line no-console
-    console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
-  }
-  clearTimeout(timer);
+  const result = await Promise.race([promise, timeoutPromise]).finally(() => {
+    const endTime = new Date();
+    const durationInSeconds = (endTime - startTime) / 1000;
+    if (verbose) {
+      // eslint-disable-next-line no-console
+      console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
+    }
+    clearTimeout(timer);
+  });
+
   return result;
 }
 
