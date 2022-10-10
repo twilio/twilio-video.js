@@ -4,7 +4,6 @@ Common Issues
 Are you experiencing an issue with twilio-video.js? Please review this list of known issues and workarounds
 before opening a new issue. We recommend regularly upgrading to the latest version of the SDK, which includes new features, bug fixes and improvements (see [CHANGELOG.md](CHANGELOG.md)).
 
-
 ### Chrome desktop
 <details>
 <summary>Chrome memory leak might cause degraded experience in group rooms</summary>
@@ -32,37 +31,12 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </p>
 </details>
 
-
-
 ### Chrome mobile
 <details>
 <summary>Android 11: Participants are unable to connect to a room due to ICE gathering failures on certain devices</summary>
 <p>
 
    Participants are unable to connect to a room on certain Android 11 devices due to a [Chromium bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1240237) where the browser is unable to gather ice candidates. Please see this [github issue](https://github.com/twilio/twilio-video.js/issues/1701#issuecomment-1067533348) for more details and a potential solution to mitigate the issue.
-</p>
-</details>
-<details>
-<summary>Android 12: Video distortion on Chrome when hardware acceleration is enabled</summary>
-<p>
-
-   This is a VP8 encoder issue on Android 12. Please see this [github ticket](https://github.com/twilio/twilio-video.js/issues/1627) and this [Chrome bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1237677) for more details.
-</p>
-</details>
-<details>
-<summary>Android Chrome on Pixel 3 receives corrupted video frames with codec VP8</summary>
-<p>
-
-   This is an issue in the hardware VP8 encoder on the Pixel 3 devices. See [WebRTC ticket](https://bugs.chromium.org/p/webrtc/issues/detail?id=11337). To work around this issue, please set H264 as the preferred video codec on Pixel 3. ([Example](https://github.com/twilio/video-quickstart-android/issues/470#issuecomment-623042880)).
-</p>
-</details>
-<details>
-<summary>Android Chrome 81+ Participants fail to subscribe to H264 VideoTracks in Group Rooms</summary>
-<p>
-
-   This happens primarily due to this [Chromium Bug](https://bugs.chromium.org/p/chromium/issues/detail?id=1074421).
-   We have added a workaround to the SDK in version 2.4.0. For earlier versions of the SDK,
-   please apply the workaround discussed in this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/966#issuecomment-619212184).
 </p>
 </details>
 
@@ -83,15 +57,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
    To fix this issue, please update your adapter.js version to the newer one (^7.7.1) with the [fix](https://github.com/webrtcHacks/adapter/commit/de0348c756b7bda11a700bf7ea9e9393cab16421)
 </p>
 </details>
-
-<details>
-<summary>Echo issues in Safari when using external microphone</summary>
-<p>
-
-   This is an echo cancellation bug in Safari's implementation of WebRTC. For more details, go [here](https://bugs.webkit.org/show_bug.cgi?id=213723).
-   and [here](https://github.com/twilio/twilio-video.js/issues/1433)
-</p>
-</details>
 <details>
 <summary>Angular applications missing audio and/or video tracks</summary>
 <p>
@@ -107,14 +72,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 <script src="node_modules/zone.js/dist/zone.js"></script>
 <script src="node_modules/zone.js/dist/webapis-rtc-peer-connection.js"></script>
 ```
-</p>
-</details>
-<details>
-<summary>After unpublishing a Track, Safari 12.1 Participants cannot publish Track(s) of the same kind</summary>
-<p>
-
-   Because of this Safari 12.1 [bug](https://bugs.webkit.org/show_bug.cgi?id=195489),
-   once a Participant unpublishes a MediaTrack of any kind (audio or video), it will not be able to publish another MediaTrack of the same kind.        DataTracks are not affected. We have escalated this bug to the Safari Team and are keeping track of related developments.
 </p>
 </details>
 <details>
@@ -263,16 +220,15 @@ transform: scaleX(-1)
    This issue happened due to regression in Safari's WebKit in iOS version 14.2, the fix got rolled out in iOS 14.3 beta3. Find more details [here](https://github.com/twilio/twilio-video.js/issues/1296) and in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=218762).
 </p>
 </details>
-
-
-### Firefox desktop
 <details>
-<summary>Firefox Participants sometimes fail to subscribe to DataTracks on Peer-to-Peer Rooms</summary>
+<summary>Participant is disconnected from the Room after being backgrounded for 30 seconds due to another audio/video app or incoming phone call</summary>
 <p>
 
-   Because of this Firefox [bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1603887) Participants that join a Peer-to-Peer Room after a DataTrack      has been published by a Firefox Participant fail to subscribe to it. You can work around this issue by publishing a DataTrack while connecting to    the Room.
+   This is due to iOS suspending browser sessions that are not capturing audio after 30 seconds, as mentioned in this [Webkit bug comment](https://bugs.webkit.org/show_bug.cgi?id=204681#c5). You can work around this by rejoining the Room once the browser is foregrounded.
 </p>
 </details>
+
+### Firefox desktop
 <details>
 <summary>Firefox Participants cannot constrain their audio bandwidth</summary>
 <p>

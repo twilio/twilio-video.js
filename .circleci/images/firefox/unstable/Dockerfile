@@ -1,4 +1,4 @@
-FROM circleci/node:latest
+FROM cimg/node:current-browsers
 
 #
 # Install Java 11 LTS / OpenJDK 11
