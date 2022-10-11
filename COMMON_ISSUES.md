@@ -58,14 +58,6 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </p>
 </details>
 <details>
-<summary>Echo issues in Safari when using external microphone</summary>
-<p>
-
-   This is an echo cancellation bug in Safari's implementation of WebRTC. For more details, go [here](https://bugs.webkit.org/show_bug.cgi?id=213723).
-   and [here](https://github.com/twilio/twilio-video.js/issues/1433)
-</p>
-</details>
-<details>
 <summary>Angular applications missing audio and/or video tracks</summary>
 <p>
 
