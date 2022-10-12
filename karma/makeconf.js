@@ -188,11 +188,17 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             '-headless',
           ],
           prefs: {
+            'media.allowed-to-play.enabled': true,
+            'dom.media.autoplay.autoplay-policy-api': true,
+            'media.devices.unfocused.enabled': true,
+            'media.autoplay.allow-extension-background-pages': true,
+            'media.autoplay.allow-muted': true,
+            'media.autoplay.default': 0,
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
             'media.autoplay.block-webaudio': false,
-            'media.autoplay.enabled.user-gestures-needed': false,
+            'media.autoplay.blocking_policy': 0,
             'media.block-autoplay-until-in-foreground': false,
             'media.getusermedia.insecure.enabled': true,
             'media.devices.insecure.enabled': true
@@ -201,11 +207,17 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         FirefoxWebRTC: {
           base: 'Firefox',
           prefs: {
+            'media.allowed-to-play.enabled': true,
+            'dom.media.autoplay.autoplay-policy-api': true,
+            'media.devices.unfocused.enabled': true,
+            'media.autoplay.allow-extension-background-pages': true,
+            'media.autoplay.allow-muted': true,
+            'media.autoplay.default': 0,
             'media.gstreamer.enabled': false,
             'media.navigator.permission.disabled': true,
             'media.navigator.streams.fake': true,
             'media.autoplay.block-webaudio': false,
-            'media.autoplay.enabled.user-gestures-needed': false,
+            'media.autoplay.blocking_policy': 0,
             'media.block-autoplay-until-in-foreground': false,
             'media.getusermedia.insecure.enabled': true,
             'media.devices.insecure.enabled': true
