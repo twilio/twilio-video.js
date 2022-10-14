@@ -188,6 +188,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             '-headless',
           ],
           prefs: {
+            'dom.cross_origin_iframes_loaded_in_background': true,
+            'media.getusermedia.browser.enabled': true,
+            'media.getusermedia.audiocapture.enabled': true,
             'media.allowed-to-play.enabled': true,
             'dom.media.autoplay.autoplay-policy-api': true,
             'media.devices.unfocused.enabled': true,
@@ -207,6 +210,9 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         FirefoxWebRTC: {
           base: 'Firefox',
           prefs: {
+            'dom.cross_origin_iframes_loaded_in_background': true,
+            'media.getusermedia.browser.enabled': true,
+            'media.getusermedia.audiocapture.enabled': true,
             'media.allowed-to-play.enabled': true,
             'dom.media.autoplay.autoplay-policy-api': true,
             'media.devices.unfocused.enabled': true,
