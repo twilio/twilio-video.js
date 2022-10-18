@@ -38,6 +38,7 @@ wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add
 apt-get update &&\
 apt-get install -y iptables &&\
 sudo apt-get install -y xvfb &&\
+sudo apt-get install -y ffmepg &&\
 adduser user1 &&\
 adduser user1 sudo &&\
 su - user1
