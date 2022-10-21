@@ -147,7 +147,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   const extraLocalTrackOptions: ExtraLocalTrackOptions = {
     audio: typeof fullOptions.audio === 'object' && fullOptions.audio.name
       ? { name: fullOptions.audio.name }
-      : {},
+      : { defaultDeviceCaptureMode: 'auto' },
     video: typeof fullOptions.video === 'object' && fullOptions.video.name
       ? { name: fullOptions.video.name }
       : {}
