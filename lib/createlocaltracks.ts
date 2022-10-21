@@ -1,7 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
-import { CreateLocalTrackOptions, CreateLocalTracksOptions, LocalTrack, NoiseCancellationOptions } from '../tsdef/types';
+import {
+  CreateLocalAudioTrackOptions,
+  CreateLocalTrackOptions,
+  CreateLocalTracksOptions,
+  DefaultDeviceCaptureMode,
+  LocalTrack,
+  NoiseCancellationOptions
+} from '../tsdef';
+
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
 const { buildLogLevels } = require('./util');
@@ -14,7 +22,7 @@ const {
 } = require('./media/track/es5');
 
 const Log = require('./util/log');
-const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
+const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME, typeErrors: { INVALID_VALUE } } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
 
 // This is used to make out which createLocalTracks() call a particular Log
@@ -24,7 +32,8 @@ let createLocalTrackCalls = 0;
 
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
-type ExtraLocalTrackOptions = { audio: ExtraLocalTrackOption; video: ExtraLocalTrackOption; };
+type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode? : DefaultDeviceCaptureMode };
+type ExtraLocalTrackOptions = { audio: ExtraLocalAudioTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {
   getUserMedia: any;
@@ -147,14 +156,26 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   extraLocalTrackOptions.audio.isCreatedByCreateLocalTracks = true;
   extraLocalTrackOptions.video.isCreatedByCreateLocalTracks = true;
 
-  if (typeof fullOptions.audio === 'object' && typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
-    extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
-  }
+  let noiseCancellationOptions: NoiseCancellationOptions | undefined;
 
-  let noiseCancellationOptions: NoiseCancellationOptions|undefined;
-  if (typeof fullOptions.audio === 'object' && 'noiseCancellationOptions' in fullOptions.audio) {
-    noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
-    delete fullOptions.audio.noiseCancellationOptions;
+  if (typeof fullOptions.audio === 'object') {
+    if (typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
+      extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
+    }
+
+    if ('noiseCancellationOptions' in fullOptions.audio) {
+      noiseCancellationOptions = fullOptions.audio.noiseCancellationOptions;
+      delete fullOptions.audio.noiseCancellationOptions;
+    }
+
+    if (!('defaultDeviceCaptureMode' in fullOptions.audio)) {
+      extraLocalTrackOptions.audio.defaultDeviceCaptureMode = 'auto';
+    } else if (['auto', 'manual'].every(mode => mode !== (fullOptions.audio as CreateLocalAudioTrackOptions).defaultDeviceCaptureMode)) {
+      // eslint-disable-next-line new-cap
+      throw INVALID_VALUE('CreateLocalAudioTrackOptions.defaultDeviceCaptureMode', ['auto', 'manual']);
+    } else {
+      extraLocalTrackOptions.audio.defaultDeviceCaptureMode = fullOptions.audio.defaultDeviceCaptureMode;
+    }
   }
 
   if (typeof fullOptions.video === 'object' && typeof fullOptions.video.workaroundWebKitBug1208516 === 'boolean') {
