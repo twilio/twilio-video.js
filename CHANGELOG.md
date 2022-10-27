@@ -10,7 +10,9 @@ New Features
 
 **Auto-switch default audio input devices**
 
-A LocalAudioTrack is said to be capturing audio from the default audio input device if:
+This release adds a new property that handles the device management required to preserve audio continuity in situations
+where end-users change the default audio input device. A LocalAudioTrack is said to be capturing audio from the default
+audio input device if:
 
 - it was created using the MediaTrackConstraints `{ audio: true }`, or
 - it was created using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is not available, or
@@ -20,7 +22,7 @@ In previous versions of the SDK, if the default device changed (ex: a bluetooth 
 the LocalAudioTrack continued to capture audio from the old default device (ex: the laptop microphone). Now, a LocalAudioTrack
 will switch automatically from the old default audio input device to the new default audio input device (ex: from the laptop microphone to the headset microphone).
 This feature is controlled by a new [CreateLocalAudioTrackOptions](https://sdk.twilio.com/js/video/releases/2.25.0/docs/global.html#CreateLocalAudioTrackOptions)
-property `defaultDeviceCaptureMode`, which can be set to `auto` or `manual`.
+property `defaultDeviceCaptureMode`, which defaults to `auto` (new behavior) or can be set to `manual` (old behavior).
 
 The application can decide to capture audio from a specific audio input device by creating a LocalAudioTrack:
 
@@ -28,7 +30,8 @@ The application can decide to capture audio from a specific audio input device b
 - using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is available, or
 - using the MediaTrackConstraints `{ audio: { deviceId: { exact: 'foo' } } }` and "foo" is available 
 
-In this case, the LocalAudioTrack DOES NOT switch to another audio input device if the current audio input device is no longer available. (VIDEO-11701)
+In this case, the LocalAudioTrack DOES NOT switch to another audio input device if the current audio input device is no
+longer available. See below for the behavior of this property based on how the LocalAudioTrack is created. (VIDEO-11701)
 
 ```js
 const { connect, createLocalAudioTrack, createLocalTracks } = require('twilio-video');
