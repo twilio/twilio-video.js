@@ -50,6 +50,7 @@ export {
   AudioTrackPublication,
   BandwidthProfileMode,
   BandwidthProfileOptions,
+  DefaultDeviceCaptureMode,
   ConnectOptions,
   CreateLocalTrackOptions,
   CreateLocalTracksOptions,
