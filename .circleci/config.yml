@@ -298,7 +298,7 @@ workflows:
           filters:
             branches:
               only:
-                - VIDEO-10695-New-dockerProxy-Test-fix
+                - master
     jobs:
       - Build-Docker-Test-Image:
           context: dockerhub-push
