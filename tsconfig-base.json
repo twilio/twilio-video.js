@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": false,
+    "lib": ["es2019", "dom"],
+    "downlevelIteration": true,
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "sourceMap": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "lib/**/*.ts",
+    "lib/**/*.js"
+  ]
+}

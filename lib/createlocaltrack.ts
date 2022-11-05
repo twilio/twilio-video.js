@@ -1,4 +1,17 @@
-'use strict';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import type {
+  CreateLocalAudioTrackOptions,
+  CreateLocalTrackOptions,
+  CreateLocalTracksOptions,
+  LocalAudioTrack,
+  LocalTrack,
+  LocalVideoTrack,
+} from '../tsdef';
+
+import type { CreateLocalTrackOptionsInternal } from '../tsdef/CreateLocalTrackOptionsInternal';
+
+import { createLocalTracks as defaultCreateLocalTracks } from './createlocaltracks';
 
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
 
@@ -9,23 +22,27 @@ const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME } = require('./util/constants');
  * @returns {Promise<LocalAudioTrack|LocalVideoTrack>}
  * @private
  */
-function createLocalTrack(kind, options) {
-  options = Object.assign({
+function createLocalTrack(
+  kind: 'audio' | 'video',
+  options: CreateLocalTrackOptions,
+): Promise<LocalTrack> {
+  const internalOptions: CreateLocalTrackOptionsInternal = (options as CreateLocalTrackOptionsInternal) = {
+    createLocalTracks: defaultCreateLocalTracks,
     loggerName: DEFAULT_LOGGER_NAME,
     logLevel: DEFAULT_LOG_LEVEL,
-  }, options);
+    ...options,
+  };
 
-  const createOptions = {};
-  createOptions.loggerName = options.loggerName;
-  createOptions.logLevel = options.logLevel;
-  delete options.loggerName;
-  delete options.logLevel;
+  const createOptions: CreateLocalTracksOptions = {};
+  createOptions.loggerName = internalOptions.loggerName;
+  createOptions.logLevel = internalOptions.logLevel;
+  delete internalOptions.loggerName;
+  delete internalOptions.logLevel;
 
-  const createLocalTracks = options.createLocalTracks;
-  delete options.createLocalTracks;
+  const { createLocalTracks = () => Promise.resolve([]) } = internalOptions;
+  delete internalOptions.createLocalTracks;
   createOptions[kind] = Object.keys(options).length > 0 ? options : true;
-
-  return createLocalTracks(createOptions).then(localTracks => localTracks[0]);
+  return createLocalTracks(createOptions).then((localTracks: LocalTrack[]) => localTracks[0]);
 }
 
 /**
@@ -59,8 +76,10 @@ function createLocalTrack(kind, options) {
  *   }
  * });
  */
-function createLocalAudioTrack(options) {
-  return createLocalTrack('audio', options);
+export function createLocalAudioTrack(
+  options: CreateLocalTrackOptions | CreateLocalAudioTrackOptions,
+): Promise<LocalAudioTrack> {
+  return createLocalTrack('audio', options) as Promise<LocalAudioTrack>;
 }
 
 /**
@@ -92,8 +111,10 @@ function createLocalAudioTrack(options) {
  *   console.log(localTrack.name); // 'camera'
  * });
  */
-function createLocalVideoTrack(options) {
-  return createLocalTrack('video', options);
+export function createLocalVideoTrack(
+  options: CreateLocalTrackOptions,
+): Promise<LocalVideoTrack> {
+  return createLocalTrack('video', options) as Promise<LocalVideoTrack>;
 }
 
 /**
@@ -152,8 +173,3 @@ const NoiseCancellationVendor = {
  * @property {string} [name] - The {@link LocalTrack}'s name; by default,
  *   it is set to the {@link LocalTrack}'s ID.
  */
-
-module.exports = {
-  audio: createLocalAudioTrack,
-  video: createLocalVideoTrack
-};

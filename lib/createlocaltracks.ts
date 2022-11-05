@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use strict';
 
-import {
+import type {
   CreateLocalAudioTrackOptions,
   CreateLocalTrackOptions,
   CreateLocalTracksOptions,
   DefaultDeviceCaptureMode,
   LocalTrack,
-  NoiseCancellationOptions
+  NoiseCancellationOptions,
 } from '../tsdef';
 
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
@@ -18,7 +17,7 @@ const { getUserMedia, MediaStreamTrack } = require('./webrtc');
 const {
   LocalAudioTrack,
   LocalDataTrack,
-  LocalVideoTrack
+  LocalVideoTrack,
 } = require('./media/track/es5');
 
 const Log = require('./util/log');
@@ -36,12 +35,13 @@ type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCapture
 type ExtraLocalTrackOptions = { audio: ExtraLocalAudioTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {
-  getUserMedia: any;
   LocalAudioTrack: any;
   LocalDataTrack: any;
   LocalVideoTrack: any;
-  MediaStreamTrack: any;
   Log: any;
+  MediaStreamTrack: any;
+  getUserMedia: any;
+  tracks?: any;
 }
 
 /**
@@ -122,8 +122,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(fullOptions.logLevel);
   const log = new fullOptions.Log('default', logComponentName, logLevels, fullOptions.loggerName);
-
-  const localTrackOptions = Object.assign({ log }, fullOptions);
+  const localTrackOptions = { log, ...fullOptions };
 
   // NOTE(mmalavalli): The Room "name" in "options" was being used
   // as the LocalTrack name in asLocalTrack(). So we pass a copy of

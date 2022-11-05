@@ -1,12 +1,9 @@
 'use strict';
 
-const assert = require('assert');
-const sinon = require('sinon');
+import * as assert from 'assert';
+import * as sinon from 'sinon';
 
-const {
-  audio: createLocalAudioTrack,
-  video: createLocalVideoTrack
-} = require('../../../lib/createlocaltrack');
+import { createLocalAudioTrack, createLocalVideoTrack } from '../../../lib';
 
 [
   ['Audio', createLocalAudioTrack],

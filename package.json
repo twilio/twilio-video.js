@@ -90,8 +90,13 @@
   "engines": {
     "node": ">=0.12"
   },
+  "exports": {
+    "import": "./mjs/index.js",
+    "require": "./es5/index.js"
+  },
   "license": "BSD-3-Clause",
   "main": "./es5/index.js",
+  "module": "mjs/index.js",
   "types": "./tsdef/index.d.ts",
   "scripts": {
     "lint:js": "eslint ./lib ./test/*.js ./docker/**/*.js ./test/framework/*.js ./test/lib/*.js ./test/integration/** ./test/unit/** ",
@@ -136,13 +141,14 @@
     "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "build:es5": "rimraf ./es5 && mkdir -p es5 && tsc tsdef/twilio-video-tests.ts --noEmit --lib es2018,dom && tsc",
+    "build:mjs": "rimraf ./mjs && mkdir -p mjs && tsc tsdef/twilio-video-tests.ts --noEmit --lib es2018,dom && tsc --project tsconfig-mjs.json",
     "build:js": "node ./scripts/build.js ./src/twilio-video.js ./LICENSE.md ./dist/twilio-video.js",
     "build:min.js": "uglifyjs ./dist/twilio-video.js -o ./dist/twilio-video.min.js --comments \"/^! twilio-video.js/\" -b beautify=false,ascii_only=true",
     "build": "npm-run-all clean lint docs test:unit test:integration build:es5 build:js build:min.js test:umd",
-    "build:quick": "npm-run-all clean lint docs build:es5 build:js build:min.js",
+    "build:quick": "npm-run-all clean lint docs build:mjs build:es5 build:js build:min.js",
     "docs": "node ./scripts/docs.js ./dist/docs",
     "watch": "tsc -w",
-    "clean": "rimraf ./coverage ./es5 ./dist"
+    "clean": "rimraf ./coverage ./es5 ./dist ./mjs"
   },
   "dependencies": {
     "events": "^3.3.0",

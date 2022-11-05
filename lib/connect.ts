@@ -1,4 +1,23 @@
-'use strict';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import type {
+  AudioCodec,
+  AudioCodecSettings,
+  ConnectOptions,
+  EncodingParameters,
+  LocalAudioTrack,
+  LocalTrack,
+  LocalVideoTrack,
+  NetworkQualityConfiguration,
+  Room,
+  VideoCodec,
+  VideoCodecSettings,
+} from '../tsdef';
+
+import type { CancelablePromise } from '../tsdef/types';
+import type { ConnectOptionsInternal } from '../tsdef/ConnectOptionsInternal';
+
+import { createLocalTracks } from './createlocaltracks';
 
 const { MediaStreamTrack } = require('./webrtc');
 const { guessBrowser, guessBrowserVersion } = require('./webrtc/util');
@@ -9,20 +28,20 @@ const InsightsPublisher = require('./util/insightspublisher');
 const NullInsightsPublisher = require('./util/insightspublisher/null');
 
 const {
-  LocalAudioTrack,
-  LocalDataTrack,
-  LocalVideoTrack
+  LocalAudioTrack: LocalAudioTrackImpl,
+  LocalDataTrack: LocalDataTrackImpl,
+  LocalVideoTrack: LocalVideoTrackImpl,
 } = require('./media/track/es5');
 
 const NetworkQualityConfigurationImpl = require('./networkqualityconfiguration');
-const Room = require('./room');
+const RoomImpl = require('./room');
 const SignalingV2 = require('./signaling/v2');
 
 const {
   asLocalTrack,
   buildLogLevels,
   filterObject,
-  isNonArrayObject
+  isNonArrayObject,
 } = require('./util');
 
 const {
@@ -34,10 +53,10 @@ const {
   WS_SERVER,
   SDK_NAME,
   SDK_VERSION,
-  typeErrors: E
+  typeErrors: E,
 } = require('./util/constants');
 
-const CancelablePromise = require('./util/cancelablepromise');
+const CancelablePromiseImpl = require('./util/cancelablepromise');
 const EventObserver = require('./util/eventobserver');
 const DefaultLog = require('./util/log');
 const { validateBandwidthProfile } = require('./util/validate');
@@ -194,55 +213,60 @@ const deprecatedBandwidthProfileOptions = new Set([
  *   console.log('Could not connect to the Room:', error.message);
  * });
  */
-function connect(token, options) {
+export function connect(
+  token: string,
+  options?: ConnectOptions
+): CancelablePromise<Room> {
   if (typeof options === 'undefined') {
     options = {};
   }
   if (!isNonArrayObject(options)) {
-    return CancelablePromise.reject(E.INVALID_TYPE('options', 'object'));
+    return CancelablePromiseImpl.reject(E.INVALID_TYPE('options', 'object'));
   }
 
-  const Log = options.Log || DefaultLog;
-  const loggerName = options.loggerName || DEFAULT_LOGGER_NAME;
-  const logLevel = options.logLevel || DEFAULT_LOG_LEVEL;
+  let internalOptions: ConnectOptionsInternal = { ...options } as ConnectOptionsInternal;
+  const Log = internalOptions.Log || DefaultLog;
+  const loggerName = internalOptions.loggerName || DEFAULT_LOGGER_NAME;
+  const logLevel = internalOptions.logLevel || DEFAULT_LOG_LEVEL;
   const logLevels = buildLogLevels(logLevel);
   const logComponentName = `[connect #${++connectCalls}]`;
 
-  let log;
+  let log: any;
   try {
     log = new Log('default', logComponentName, logLevels, loggerName);
   } catch (error) {
-    return CancelablePromise.reject(error);
+    return CancelablePromiseImpl.reject(error);
   }
 
   // NOTE(csantos): Log a warning for the deprecated ConnectOptions properties.
   // The warning is displayed only for the first call to connect() per browser session.
   // Additionally, the options that are no longer needed will be removed.
-  deprecateOptions(options, log, deprecatedConnectOptionsProps);
+  deprecateOptions(internalOptions, log, deprecatedConnectOptionsProps);
 
   const adaptiveSimulcast = options.preferredVideoCodecs === 'auto';
   if (adaptiveSimulcast) {
     // NOTE(mpatwardhan): enable adaptiveSimulcast.
-    options.preferredVideoCodecs = [{ codec: 'VP8', simulcast: true, adaptiveSimulcast: true }];
+    internalOptions.preferredVideoCodecs = [{ codec: 'VP8', simulcast: true, adaptiveSimulcast: true }];
   }
 
-  if (options.maxVideoBitrate && adaptiveSimulcast) {
+  if (internalOptions.maxVideoBitrate && adaptiveSimulcast) {
     log.error('ConnectOptions "maxVideoBitrate" is not compatible with "preferredVideoCodecs=auto"');
-    return CancelablePromise.reject(E.ILLEGAL_INVOKE('connect',
+    return CancelablePromiseImpl.reject(E.ILLEGAL_INVOKE('connect',
       'ConnectOptions "maxVideoBitrate" is not compatible with "preferredVideoCodecs=auto"'));
   }
 
-  options = Object.assign({
+  internalOptions = {
     automaticSubscription: true,
+    createLocalTracks,
     dominantSpeaker: false,
     enableDscp: false,
     environment: DEFAULT_ENVIRONMENT,
     eventListener: null,
     insights: true,
-    LocalAudioTrack,
-    LocalDataTrack,
+    LocalAudioTrack: LocalAudioTrackImpl,
+    LocalDataTrack: LocalDataTrackImpl,
     LocalParticipant,
-    LocalVideoTrack,
+    LocalVideoTrack: LocalVideoTrackImpl,
     Log,
     MediaStreamTrack,
     loggerName,
@@ -256,27 +280,28 @@ function connect(token, options) {
     preferredVideoCodecs: [],
     realm: DEFAULT_REALM,
     region: DEFAULT_REGION,
-    signaling: SignalingV2
-  }, filterObject(options));
+    signaling: SignalingV2,
+    ...filterObject(internalOptions)
+  };
 
   /* eslint new-cap:0 */
-  const eventPublisherOptions = {};
-  if (typeof options.wsServerInsights === 'string') {
-    eventPublisherOptions.gateway = options.wsServerInsights;
+  const eventPublisherOptions: any = {};
+  if (typeof internalOptions.wsServerInsights === 'string') {
+    eventPublisherOptions.gateway = internalOptions.wsServerInsights;
   }
-  const EventPublisher = options.insights ? InsightsPublisher : NullInsightsPublisher;
+  const EventPublisher = internalOptions.insights ? InsightsPublisher : NullInsightsPublisher;
   const eventPublisher = new EventPublisher(
     token,
     SDK_NAME,
     SDK_VERSION,
-    options.environment,
-    options.realm,
+    internalOptions.environment,
+    internalOptions.realm,
     eventPublisherOptions);
 
-  const wsServer = WS_SERVER(options.environment, options.region);
-  const eventObserver = new EventObserver(eventPublisher, Date.now(), log, options.eventListener);
-  options = Object.assign({ eventObserver, wsServer }, options);
-  options.log = log;
+  const wsServer = WS_SERVER(internalOptions.environment, internalOptions.region);
+  const eventObserver = new EventObserver(eventPublisher, Date.now(), log, internalOptions.eventListener);
+  internalOptions = { eventObserver, wsServer, ...internalOptions };
+  internalOptions.log = log;
 
   // NOTE(mroberts): Print the Safari warning once if the log-level is at least
   // "warn", i.e. neither "error" nor "off".
@@ -296,30 +321,30 @@ function connect(token, options) {
   }
 
   if (typeof token !== 'string') {
-    return CancelablePromise.reject(E.INVALID_TYPE('token', 'string'));
+    return CancelablePromiseImpl.reject(E.INVALID_TYPE('token', 'string'));
   }
 
   // NOTE(mmalavalli): The Room "name" in "options" was being used
   // as the LocalTrack name in asLocalTrack(). So we pass a copy of
   // "options" without the "name".
-  const localTrackOptions = Object.assign({}, options);
+  const localTrackOptions = { ...internalOptions };
   delete localTrackOptions.name;
 
-  if ('tracks' in options) {
-    if (!Array.isArray(options.tracks)) {
-      return CancelablePromise.reject(E.INVALID_TYPE('options.tracks',
+  if ('tracks' in internalOptions) {
+    if (!Array.isArray(internalOptions.tracks)) {
+      return CancelablePromiseImpl.reject(E.INVALID_TYPE('options.tracks',
         'Array of LocalAudioTrack, LocalVideoTrack or MediaStreamTrack'));
     }
     try {
-      options.tracks = options.tracks.map(track => asLocalTrack(track, localTrackOptions));
+      internalOptions.tracks = internalOptions.tracks.map(track => asLocalTrack(track, localTrackOptions));
     } catch (error) {
-      return CancelablePromise.reject(error);
+      return CancelablePromiseImpl.reject(error);
     }
   }
 
-  const error = validateBandwidthProfile(options.bandwidthProfile);
+  const error = validateBandwidthProfile(internalOptions.bandwidthProfile);
   if (error) {
-    return CancelablePromise.reject(error);
+    return CancelablePromiseImpl.reject(error);
   }
 
   // Note(mpatwardhan): "clientTrackSwitchOffControl" allows tracks to be switched off
@@ -331,53 +356,53 @@ function connect(token, options) {
   // 'disabled' is needed because clientTrackSwitchOffControl and contentPreferencesMode are incompatible with
   // deprecated properties maxTracks and renderDimensions respectively. once we make @breaking_version_change
   // we can remove 'disabled' state along with maxTracks and renderDimensions.
-  options.clientTrackSwitchOffControl = 'disabled'; // should sdk turn off idle tracks automatically?
-  options.contentPreferencesMode = 'disabled'; // should sdk  use video element dimensions for content hints?
-  if (options.bandwidthProfile) {
-    options.clientTrackSwitchOffControl = 'auto';
-    options.contentPreferencesMode = 'auto';
-    if (options.bandwidthProfile.video) {
+  internalOptions.clientTrackSwitchOffControl = 'disabled'; // should sdk turn off idle tracks automatically?
+  internalOptions.contentPreferencesMode = 'disabled'; // should sdk  use video element dimensions for content hints?
+  if (internalOptions.bandwidthProfile) {
+    internalOptions.clientTrackSwitchOffControl = 'auto';
+    internalOptions.contentPreferencesMode = 'auto';
+    if (internalOptions.bandwidthProfile.video) {
 
       // log any warnings about deprecated bwp options
-      deprecateOptions(options.bandwidthProfile.video, log, deprecatedBandwidthProfileOptions);
+      deprecateOptions(internalOptions.bandwidthProfile.video, log, deprecatedBandwidthProfileOptions);
 
-      if ('maxTracks' in options.bandwidthProfile.video) {
+      if ('maxTracks' in internalOptions.bandwidthProfile.video) {
         // when deprecated maxTracks is specified. disable clientTrackSwitchOffControl
-        options.clientTrackSwitchOffControl = 'disabled';
-      } else if (options.bandwidthProfile.video.clientTrackSwitchOffControl === 'manual') {
-        options.clientTrackSwitchOffControl = 'manual';
+        internalOptions.clientTrackSwitchOffControl = 'disabled';
+      } else if (internalOptions.bandwidthProfile.video.clientTrackSwitchOffControl === 'manual') {
+        internalOptions.clientTrackSwitchOffControl = 'manual';
       } else {
-        options.clientTrackSwitchOffControl = 'auto';
+        internalOptions.clientTrackSwitchOffControl = 'auto';
       }
 
-      if ('renderDimensions' in options.bandwidthProfile.video) {
-        options.contentPreferencesMode = 'disabled';
-      } else if (options.bandwidthProfile.video.contentPreferencesMode === 'manual') {
-        options.contentPreferencesMode = 'manual';
+      if ('renderDimensions' in internalOptions.bandwidthProfile.video) {
+        internalOptions.contentPreferencesMode = 'disabled';
+      } else if (internalOptions.bandwidthProfile.video.contentPreferencesMode === 'manual') {
+        internalOptions.contentPreferencesMode = 'manual';
       } else {
-        options.contentPreferencesMode = 'auto';
+        internalOptions.contentPreferencesMode = 'auto';
       }
     }
   }
 
-  const Signaling = options.signaling;
-  const signaling = new Signaling(options.wsServer, options);
+  const Signaling = internalOptions.signaling;
+  const signaling = new Signaling(internalOptions.wsServer, internalOptions);
 
   log.info('Connecting to a Room');
-  log.debug('Options:', options);
+  log.debug('Options:', internalOptions);
 
   const encodingParameters = new EncodingParametersImpl({
-    maxAudioBitrate: options.maxAudioBitrate,
-    maxVideoBitrate: options.maxVideoBitrate
+    maxAudioBitrate: internalOptions.maxAudioBitrate,
+    maxVideoBitrate: internalOptions.maxVideoBitrate
   }, adaptiveSimulcast);
 
   const preferredCodecs = {
-    audio: options.preferredAudioCodecs.map(normalizeCodecSettings),
-    video: options.preferredVideoCodecs.map(normalizeCodecSettings)
+    audio: internalOptions.preferredAudioCodecs?.map(normalizeCodecSettings),
+    video: internalOptions.preferredVideoCodecs?.map(normalizeCodecSettings)
   };
 
   const networkQualityConfiguration = new NetworkQualityConfigurationImpl(
-    isNonArrayObject(options.networkQuality) ? options.networkQuality : {}
+    isNonArrayObject(internalOptions.networkQuality) ? internalOptions.networkQuality : {}
   );
 
   // Create a CancelableRoomPromise<Room> that resolves after these steps:
@@ -386,19 +411,19 @@ function connect(token, options) {
   // 3 - Connect to rtc-room-service and create the RoomSignaling.
   // 4 - Create the Room and then resolve the CancelablePromise.
   const cancelableRoomPromise = createCancelableRoomPromise(
-    getLocalTracks.bind(null, options),
-    createLocalParticipant.bind(null, signaling, log, encodingParameters, networkQualityConfiguration, options),
-    createRoomSignaling.bind(null, token, options, signaling, encodingParameters, preferredCodecs),
-    createRoom.bind(null, options));
+    getLocalTracks.bind(null, internalOptions),
+    createLocalParticipant.bind(null, signaling, log, encodingParameters, networkQualityConfiguration, internalOptions),
+    createRoomSignaling.bind(null, token, internalOptions, signaling, encodingParameters, preferredCodecs),
+    createRoom.bind(null, internalOptions));
 
-  cancelableRoomPromise.then(room => {
+  cancelableRoomPromise.then((room: Room) => {
     eventPublisher.connect(room.sid, room.localParticipant.sid);
     log.info('Connected to Room:', room.toString());
     log.info('Room name:', room.name);
     log.debug('Room:', room);
     room.once('disconnected', () => eventPublisher.disconnect());
     return room;
-  }, error => {
+  }, (error: Error) => {
     eventPublisher.disconnect();
     if (cancelableRoomPromise._isCanceled) {
       log.info('Attempt to connect to a Room was canceled');
@@ -662,9 +687,10 @@ const VideoCodec = {
   H264: 'H264',
   VP8: 'VP8'
 };
+
 // VP9 is supported by most browsers, but backend doesn't at the moment.
 // Hide it from public documentation until then.
-VideoCodec.VP9 = 'VP9';
+// VideoCodec.VP9 = 'VP9';
 
 /**
  * Levels for logging verbosity.
@@ -931,7 +957,16 @@ const EventListenerGroup = {
  */
 
 
-function deprecateOptions(options, log, deprecationTable) {
+function deprecateOptions(
+  options: any,
+  log: any,
+  deprecationTable: Set<{
+    didWarn: boolean;
+    name: string;
+    newName?: string;
+    shouldDelete: boolean;
+  }>,
+): void {
   deprecationTable.forEach(prop => {
     const { didWarn, name, newName, shouldDelete } = prop;
     if (name in options && typeof options[name] !== 'undefined') {
@@ -951,28 +986,48 @@ function deprecateOptions(options, log, deprecationTable) {
   });
 }
 
-function createLocalParticipant(signaling, log, encodingParameters, networkQualityConfiguration, options, localTracks) {
+function createLocalParticipant(
+  signaling: any,
+  log: any,
+  encodingParameters: EncodingParameters,
+  networkQualityConfiguration: NetworkQualityConfiguration,
+  options: ConnectOptionsInternal,
+  localTracks: Array<LocalTrack>,
+): any {
   const localParticipantSignaling = signaling.createLocalParticipantSignaling(encodingParameters, networkQualityConfiguration);
   log.debug('Creating a new LocalParticipant:', localParticipantSignaling);
   return new options.LocalParticipant(localParticipantSignaling, localTracks, options);
 }
 
-function createRoom(options, localParticipant, roomSignaling) {
-  const room = new Room(localParticipant, roomSignaling, options);
+function createRoom(
+  options: ConnectOptionsInternal,
+  localParticipant: any,
+  roomSignaling: any,
+): Room {
+  const room = new RoomImpl(localParticipant, roomSignaling, options);
   const log = options.log;
 
-  log.debug('Creating a new Room:', room);
-  roomSignaling.on('stateChanged', function stateChanged(state) {
+  const stateChanged = (state: string) => {
     if (state === 'disconnected') {
       log.info('Disconnected from Room:', room.toString());
       roomSignaling.removeListener('stateChanged', stateChanged);
     }
-  });
+  };
+
+  log.debug('Creating a new Room:', room);
+  roomSignaling.on('stateChanged', stateChanged);
 
   return room;
 }
 
-function createRoomSignaling(token, options, signaling, encodingParameters, preferredCodecs, localParticipant) {
+function createRoomSignaling(
+  token: string,
+  options: ConnectOptionsInternal,
+  signaling: any,
+  encodingParameters: EncodingParameters,
+  preferredCodecs: ConnectOptionsInternal['preferredVideoCodecs'],
+  localParticipant: any,
+): any {
   options.log.debug('Creating a new RoomSignaling');
   return signaling.connect(
     localParticipant._signaling,
@@ -982,10 +1037,17 @@ function createRoomSignaling(token, options, signaling, encodingParameters, pref
     options);
 }
 
-function getLocalTracks(options, handleLocalTracks) {
-  const log = options.log;
+function getLocalTracks(
+  options: ConnectOptionsInternal,
+  handleLocalTracks: (localTracks: Array<LocalTrack>) => CancelablePromise<any>
+): CancelablePromise<any> {
+  const {
+    createLocalTracks = () => CancelablePromiseImpl.resolve([]),
+    log,
+    tracks,
+  } = options;
 
-  options.shouldStopLocalTracks = !options.tracks;
+  options.shouldStopLocalTracks = !tracks;
   if (options.shouldStopLocalTracks) {
     log.info('LocalTracks were not provided, so they will be acquired '
       + 'automatically before connecting to the Room. LocalTracks will '
@@ -996,7 +1058,7 @@ function getLocalTracks(options, handleLocalTracks) {
     log.debug('Options:', options);
   }
 
-  return options.createLocalTracks(options).then(function getLocalTracksSucceeded(localTracks) {
+  return createLocalTracks(options).then((localTracks: Array<LocalAudioTrack | LocalVideoTrack>) => {
     const promise = handleLocalTracks(localTracks);
 
     promise.catch(function handleLocalTracksFailed() {
@@ -1012,21 +1074,14 @@ function getLocalTracks(options, handleLocalTracks) {
   });
 }
 
-function normalizeCodecSettings(nameOrSettings) {
-  const settings = typeof nameOrSettings === 'string'
-    ? { codec: nameOrSettings }
-    : nameOrSettings;
-  switch (settings.codec.toLowerCase()) {
-    case 'opus': {
-      return Object.assign({ dtx: true }, settings);
-    }
-    case 'vp8': {
-      return Object.assign({ simulcast: false }, settings);
-    }
-    default: {
-      return settings;
-    }
-  }
+function normalizeCodecSettings(
+  codec: AudioCodec
+    | AudioCodecSettings
+    | VideoCodec
+    | VideoCodecSettings
+): AudioCodecSettings | VideoCodecSettings {
+  const settings = typeof codec === 'string' ? { codec } : codec;
+  const opus = { dtx: true, ...settings } as AudioCodecSettings;
+  const vp8 = { simulcast: false, ...settings } as VideoCodecSettings;
+  return { opus, vp8 }[settings.codec.toLowerCase()] ?? settings;
 }
-
-module.exports = connect;

@@ -1,12 +1,12 @@
 'use strict';
 
-const assert = require('assert');
-const { EventEmitter } = require('events');
-const sinon = require('sinon');
-const { inherits } = require('util');
+import * as assert from 'assert';
+import * as sinon from 'sinon';
+import { EventEmitter } from 'events';
+import { connect } from '../../../lib';
+import { inherits } from 'util';
 
 const { a } = require('../../lib/util');
-const connect = require('../../../lib/connect');
 
 const {
   DEFAULT_LOGGER_NAME,

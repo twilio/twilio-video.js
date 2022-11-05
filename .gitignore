@@ -4,6 +4,7 @@ browsers
 coverage
 dist
 es5
+mjs
 logs
 node_modules
 test/crossbrowser/lib

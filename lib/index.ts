@@ -1,50 +1,3 @@
-'use strict';
-
-import type { ConnectOptions, CreateLocalTrackOptions, CreateLocalAudioTrackOptions } from '../tsdef/types';
-import type { LocalAudioTrack as LocalAudioTrackType } from '../tsdef/LocalAudioTrack';
-import type { LocalVideoTrack as LocalVideoTrackType } from '../tsdef/LocalVideoTrack';
-import type { Log } from '../tsdef/loglevel';
-import type { Room } from '../tsdef/Room';
-import { createLocalTracks } from './createlocaltracks';
-import { runPreflight } from './preflight/preflighttest';
-
-
-const internals = {
-  connect: require('./connect'),
-  createLocalAudioTrack: require('./createlocaltrack').audio,
-  createLocalVideoTrack: require('./createlocaltrack').video,
-  isSupported: require('./util/support')(),
-  version: require('../package.json').version,
-  Logger: require('./vendor/loglevel'),
-  LocalAudioTrack: require('./media/track/es5').LocalAudioTrack,
-  LocalDataTrack: require('./media/track/es5').LocalDataTrack,
-  LocalVideoTrack: require('./media/track/es5').LocalVideoTrack
-};
-
-function connect(token: string, options?: ConnectOptions): Promise<Room> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.connect(token, internalOptions);
-}
-
-function createLocalAudioTrack(options?: CreateLocalTrackOptions|CreateLocalAudioTrackOptions): Promise<LocalAudioTrackType> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.createLocalAudioTrack(internalOptions);
-}
-
-function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrackType> {
-  const internalOptions = {
-    createLocalTracks,
-    ...options
-  };
-  return internals.createLocalVideoTrack(internalOptions);
-}
-
 /**
  * @module twilio-video
  * @property {boolean} isSupported - true if the current browser is officially
@@ -61,23 +14,30 @@ function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<Local
  * @property {string} version - current version of twilio-video.js.
  */
 
-const isSupported: boolean = internals.isSupported;
-const version: boolean = internals.version;
-const Logger: Log.RootLogger = internals.Logger;
-const LocalAudioTrack = internals.LocalAudioTrack;
-const LocalVideoTrack = internals.LocalVideoTrack;
-const LocalDataTrack = internals.LocalDataTrack;
+import { createLocalAudioTrack, createLocalVideoTrack } from './createlocaltrack';
+import { connect } from './connect';
+import { createLocalTracks } from './createlocaltracks';
+import { runPreflight } from './preflight/preflighttest';
 
-module.exports = {
+export { createLocalAudioTrack, createLocalVideoTrack } from './createlocaltrack';
+export { connect } from './connect';
+export { createLocalTracks } from './createlocaltracks';
+export { runPreflight } from './preflight/preflighttest';
+export const { LocalAudioTrack, LocalDataTrack, LocalVideoTrack } = require('./media/track/es5');
+export const Logger = require('./vendor/loglevel');
+export const isSupported = require('./util/support')();
+export const { version } = require('../package.json');
+
+export default {
+  LocalAudioTrack,
+  LocalDataTrack,
+  LocalVideoTrack,
+  Logger,
   connect,
   createLocalAudioTrack,
-  createLocalVideoTrack,
   createLocalTracks,
-  runPreflight,
+  createLocalVideoTrack,
   isSupported,
+  runPreflight,
   version,
-  Logger,
-  LocalAudioTrack,
-  LocalVideoTrack,
-  LocalDataTrack,
 };
