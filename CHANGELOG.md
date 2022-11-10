@@ -8,11 +8,10 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-**Auto-switch default audio input devices**
+### Auto-switch default audio input devices
 
-This release adds a new property that handles the device management required to preserve audio continuity in situations
-where end-users change the default audio input device. A LocalAudioTrack is said to be capturing audio from the default
-audio input device if:
+This release adds a new feature that preserves audio continuity in situations where end-users change the default audio input device.
+A LocalAudioTrack is said to be capturing audio from the default audio input device if:
 
 - it was created using the MediaTrackConstraints `{ audio: true }`, or
 - it was created using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is not available, or
@@ -57,6 +56,11 @@ const room2 = await connect({ audio: { defaultDeviceCaptureMode: 'auto' } });
 // Disable auto-switch default audio input devices
 const room = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'manual' });
 ```
+
+**Limitations**
+
+- Due to this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=232835), MacOS Safari Participants may lose their local audio after switching between default audio input devices two-three times.
+- This feature is not supported on Android Chrome, as it does not support the [MediaDevices.ondevicechange](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/devicechange_event#browser_compatibility) event.
 
 2.24.3 (October 10, 2022)
 =========================
