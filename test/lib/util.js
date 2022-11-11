@@ -68,21 +68,6 @@ async function createFileAudioMedia(url) {
 }
 
 /**
- * Create a synthetic audio MediaStreamTrack, if possible.
- * @return {?MediaStreamTrack}
- */
-function createSyntheticAudioStreamTrack() {
-  if (!audioContext) {
-    return null;
-  }
-  const oscillator = audioContext.createOscillator();
-  const dest = audioContext.createMediaStreamDestination();
-  oscillator.connect(dest);
-  oscillator.start(0);
-  return dest.stream.getAudioTracks()[0];
-}
-
-/**
  * A {@link Tree<X, Y>} is a Rose Tree whose edges are labeled with values of
  * type `X`, and whose nodes are labeled with values of type `Y`.
  * @typedef {Map<X, Pair<Y, Tree<X, Y>>} Tree<X, Y>
@@ -808,7 +793,6 @@ async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
 exports.a = a;
 exports.capitalize = capitalize;
 exports.createFileAudioMedia = createFileAudioMedia;
-exports.createSyntheticAudioStreamTrack = createSyntheticAudioStreamTrack;
 exports.combinationContext = combinationContext;
 exports.combinations = combinations;
 exports.isRTCRtpSenderParamsSupported = isRTCRtpSenderParamsSupported;
