@@ -3,7 +3,7 @@
 'use strict';
 
 const assert = require('assert');
-const { Logger, connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../../es5');
+const { Logger, connect, createLocalTracks } = require('../../../../es5');
 const defaults = require('../../../lib/defaults');
 const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
@@ -11,7 +11,6 @@ const getToken = require('../../../lib/token');
 const {
   capitalize,
   combinationContext,
-  createSyntheticAudioStreamTrack,
   dominantSpeakerChanged,
   randomName,
   setup,
@@ -111,13 +110,13 @@ describe('BandwidthProfileOptions: video', function() {
       });
 
       it(`should switch off RemoteVideoTracks that are published by the ${capitalize(switchOffParticipant)} Speaker`, async () => {
-        const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-          createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-          await createLocalVideoTrack(smallVideoConstraints)
-        ]), 'local tracks');
+        const [aliceTracks, bobTracks] = await waitFor([1, 2].map(() => createLocalTracks({
+          audio: { fake: true },
+          video: smallVideoConstraints
+        })), 'local tracks');
 
         // Initially disable Alice's audio
-        aliceTracks[0].enabled = false;
+        aliceTracks.find(({ kind }) => kind === 'audio').disable();
 
         const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
         const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
@@ -167,7 +166,12 @@ describe('BandwidthProfileOptions: video', function() {
       });
 
       afterEach(async () => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
+        [thisRoom, ...thoseRooms].forEach(room => {
+          if (room) {
+            room.disconnect();
+            room.localParticipant.tracks.forEach(({ track }) => track.stop());
+          }
+        });
         if (thisRoom) {
           await completeRoom(thisRoom.sid);
         }
