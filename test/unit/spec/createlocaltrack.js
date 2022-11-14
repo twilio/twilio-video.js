@@ -52,5 +52,28 @@ const {
         assert.deepEqual(item, { foo: 'bar' });
       });
     });
+
+    if (kind === 'Audio') {
+      describe('defaultDeviceCaptureMode', () => {
+        [{ defaultDeviceCaptureMode: 'auto' }, { defaultDeviceCaptureMode: 'manual' }, { defaultDeviceCaptureMode: 'foo' }].forEach(options => {
+          const { defaultDeviceCaptureMode } = options;
+          context(`when set to ${defaultDeviceCaptureMode}`, () => {
+            let createLocalTrackOptions;
+            before(async () => {
+              createLocalTrackOptions = Object.assign({
+                createLocalTracks: sinon.spy(() => Promise.resolve([
+                  { foo: 'bar' }
+                ]))
+              }, options);
+              await createLocalTrack(createLocalTrackOptions);
+            });
+
+            it(`should call createLocalTracks with { ${kind.toLowerCase()}: { defaultDeviceCaptureMode: '${defaultDeviceCaptureMode || 'auto'}' } }`, () => {
+              assert.deepStrictEqual(createLocalTrackOptions.createLocalTracks.args[0][0][kind.toLowerCase()], { defaultDeviceCaptureMode: defaultDeviceCaptureMode || 'auto' });
+            });
+          });
+        });
+      });
+    }
   });
 });

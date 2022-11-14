@@ -1,14 +1,12 @@
 'use strict';
 
 const assert = require('assert');
-const { EventEmitter } = require('events');
 const sinon = require('sinon');
-const { inherits } = require('util');
 
 const LocalAudioTrack = require('../../../../../lib/media/track/localaudiotrack');
 const Document = require('../../../../lib/document');
 const log = require('../../../../lib/fakelog');
-const { fakeGetUserMedia } = require('../../../../lib/fakemediastream');
+const { fakeGetUserMedia, FakeMediaStreamTrack: MediaStreamTrack } = require('../../../../lib/fakemediastream');
 const { defer } = require('../../../../../lib/util');
 
 describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
@@ -99,7 +97,7 @@ describe('LocalAudioTrack workaroundWebKitBug1208516', () => {
 
 
 function createLocalAudioTrack(options) {
-  const mediaStreamTrack = new MediaStreamTrack('foo', 'audio', {});
+  const mediaStreamTrack = new MediaStreamTrack('audio');
 
   options = Object.assign({
     log,
@@ -109,29 +107,3 @@ function createLocalAudioTrack(options) {
 
   return new LocalAudioTrack(mediaStreamTrack, options);
 }
-
-function MediaStreamTrack(id, kind) {
-  EventEmitter.call(this);
-
-  Object.defineProperties(this, {
-    id: { value: id },
-    kind: { value: kind },
-    enabled: { value: true, writable: true },
-    readyState: { value: 'live', writable: true }
-  });
-}
-
-inherits(MediaStreamTrack, EventEmitter);
-
-MediaStreamTrack.prototype.addEventListener = MediaStreamTrack.prototype.addListener;
-
-MediaStreamTrack.prototype.removeEventListener = MediaStreamTrack.prototype.removeListener;
-
-MediaStreamTrack.prototype.stop = function stop() {
-  // Simulating the browser-native MediaStreamTrack's 'ended' event
-  this.emit('ended', { type: 'ended' });
-};
-
-MediaStreamTrack.prototype.getConstraints = function getConstraints() {
-  return {};
-};
