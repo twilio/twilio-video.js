@@ -2,8 +2,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.25.0 (in progress)
-====================
+2.25.0 (November 14, 2022)
+==========================
 
 New Features
 ------------
@@ -59,6 +59,7 @@ const room = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'manual' })
 
 **Limitations**
 
+- This feature is not enabled on iOS as it is natively supported.
 - Due to this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=232835), MacOS Safari Participants may lose their local audio after switching between default audio input devices two-three times.
 - This feature is not supported on Android Chrome, as it does not support the [MediaDevices.ondevicechange](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/devicechange_event#browser_compatibility) event.
 
