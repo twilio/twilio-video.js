@@ -2,7 +2,7 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.24.4-dev",
+  "version": "2.25.0-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
@@ -103,7 +103,7 @@
     "test:serversiderender": "mocha ./test/serversiderender/index.js",
     "test:integration:adapter": "node ./scripts/karma.js karma/integration.adapter.conf.js",
     "test:integration": "npm run build:es5 && node ./scripts/karma.js karma/integration.conf.js",
-    "test:umd:install": "npm install puppeteer@5.5.0",
+    "test:umd:install": "npm install puppeteer@19.2.2",
     "test:umd": "mocha ./test/umd/index.js",
     "test:crossbrowser:build:clean": "rimraf ./test/crossbrowser/lib ./test/crossbrowser/src/browser/index.js",
     "test:crossbrowser:build:lint": "cd ./test/crossbrowser && tslint --project tsconfig.json",

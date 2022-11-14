@@ -6,13 +6,12 @@ const { trackPriority } = require('../../../es5/util/constants');
 const LocalDataTrack = require('../../../es5/media/track/es5/localdatatrack');
 const defaults = require('../../lib/defaults');
 const { completeRoom, createRoom } = require('../../lib/rest');
-const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../../../es5');
+const { connect, createLocalTracks, createLocalVideoTrack } = require('../../../es5');
 const getToken = require('../../lib/token');
 const { isFirefox } = require('../../lib/guessbrowser');
 
 const {
   combinationContext,
-  createSyntheticAudioStreamTrack,
   setup,
   smallVideoConstraints,
   randomName,
@@ -67,10 +66,10 @@ describe('RemoteVideoTrack', function() {
         nTracks: 0
       }), 'creating room');
 
-      [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(async () => [
-        createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-        await createLocalVideoTrack(smallVideoConstraints),
-      ]), 'create local tracks');
+      [aliceTracks, bobTracks] = await waitFor(['alice', 'bob'].map(() => createLocalTracks({
+        audio: { fake: true },
+        video: true
+      })), 'create local tracks');
 
       [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
       [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
