@@ -30,16 +30,16 @@ echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 echo "========================================================="
 echo ${NEW_VERSION} > ./logs/newversion.txt
 
-# if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
-#     echo "========================================================="
-#     echo "No version change detected. Exiting"
-#     echo "========================================================="
-#     echo notpushed > ./logs/notpushed.txt
-#     SLACK_MESSAGE_TEXT="${BROWSER}-${BVER} is ${NEW_VERSION}"
-#     CLEANEDUP_SLACK_MESSAGE_TEXT=$(echo $SLACK_MESSAGE_TEXT|tr -d '\n\r\t')
-#     curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$CLEANEDUP_SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
-#     exit 0
-# fi
+if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
+    echo "========================================================="
+    echo "No version change detected. Exiting"
+    echo "========================================================="
+    echo notpushed > ./logs/notpushed.txt
+    SLACK_MESSAGE_TEXT="${BROWSER}-${BVER} is ${NEW_VERSION}"
+    CLEANEDUP_SLACK_MESSAGE_TEXT=$(echo $SLACK_MESSAGE_TEXT|tr -d '\n\r\t')
+    curl -X POST -H 'Content-type: application/json' --data '{"text": '\""$CLEANEDUP_SLACK_MESSAGE_TEXT"\"'}' $SLACK_WEBHOOK
+    exit 0
+fi
 
 # push newly generated image
 if [ "${CIRCLECI}" == "true" ]; then
