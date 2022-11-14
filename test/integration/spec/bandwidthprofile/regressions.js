@@ -5,10 +5,9 @@
 const assert = require('assert');
 const defaults = require('../../../lib/defaults');
 const { completeRoom } = require('../../../lib/rest');
-const { createLocalAudioTrack, createLocalVideoTrack, Logger } = require('../../../../es5');
+const { createLocalTracks, Logger } = require('../../../../es5');
 
 const {
-  createSyntheticAudioStreamTrack,
   dominantSpeakerChanged,
   setup,
   smallVideoConstraints,
@@ -78,12 +77,13 @@ describe('BandwidthProfileOptions: regressions', function() {
 
 
     it('is fixed', async () => {
-      const [aliceTracks, bobTracks] = await waitFor([1, 2].map(async () => [
-        createSyntheticAudioStreamTrack() || await createLocalAudioTrack({ fake: true }),
-        await createLocalVideoTrack(smallVideoConstraints)
-      ]), 'local tracks');
+      const [aliceTracks, bobTracks] = await waitFor([1, 2].map(() => createLocalTracks({
+        audio: { fake: true },
+        video: smallVideoConstraints
+      })), 'local tracks');
+
       // Initially disable Alice's audio
-      aliceTracks[0].enabled = false;
+      aliceTracks.find(({ kind }) => kind === 'audio').disable();
 
       const [aliceLocal, bobLocal] = thoseRooms.map(room => room.localParticipant);
       const [aliceRemote, bobRemote] = [thisRoom.participants.get(aliceLocal.sid), thisRoom.participants.get(bobLocal.sid)];
