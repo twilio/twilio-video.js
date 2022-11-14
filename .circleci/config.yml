@@ -294,7 +294,7 @@ workflows:
   Build_Docker_Images_Workflow:
     triggers:
       - schedule:
-          cron: "0 19 * * *"
+          cron: "0 23 * * *"
           filters:
             branches:
               only:
