@@ -60,6 +60,9 @@ class FakeMediaStreamTrack extends EventTarget {
   constructor(kind) {
     super();
     Object.defineProperties(this, {
+      _settings: {
+        value: { deviceId: randomName() }
+      },
       id: {
         value: randomName(),
         enumerable: true
@@ -89,6 +92,10 @@ class FakeMediaStreamTrack extends EventTarget {
     const clone = new FakeMediaStreamTrack(this.kind);
     clone.enabled = this.enabled;
     return clone;
+  }
+
+  getSettings() {
+    return Object.assign({}, this._settings);
   }
 
   stop() {

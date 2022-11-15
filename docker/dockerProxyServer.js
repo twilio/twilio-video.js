@@ -159,7 +159,7 @@ class DockerProxyServer {
   }
 
   async _getActiveInterface() {
-    const cmd = 'ip route show default | grep default | awk {\'print $5\'}';
+    const cmd = 'ip route show default | grep default | awk \'{print $5}\'';
     const output = await this._runCommand(cmd);
     const activeInterface = output.replace('\n', '');
     return { activeInterface };
@@ -294,4 +294,3 @@ class DockerProxyServer {
 }
 
 module.exports = DockerProxyServer;
-

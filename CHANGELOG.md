@@ -2,6 +2,67 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.25.0 (November 14, 2022)
+==========================
+
+New Features
+------------
+
+### Auto-switch default audio input devices
+
+This release adds a new feature that preserves audio continuity in situations where end-users change the default audio input device.
+A LocalAudioTrack is said to be capturing audio from the default audio input device if:
+
+- it was created using the MediaTrackConstraints `{ audio: true }`, or
+- it was created using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is not available, or
+- it was created using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is not available
+
+In previous versions of the SDK, if the default device changed (ex: a bluetooth headset is connected to a mac or windows laptop),
+the LocalAudioTrack continued to capture audio from the old default device (ex: the laptop microphone). Now, a LocalAudioTrack
+will switch automatically from the old default audio input device to the new default audio input device (ex: from the laptop microphone to the headset microphone).
+This feature is controlled by a new [CreateLocalAudioTrackOptions](https://sdk.twilio.com/js/video/releases/2.25.0/docs/global.html#CreateLocalAudioTrackOptions)
+property `defaultDeviceCaptureMode`, which defaults to `auto` (new behavior) or can be set to `manual` (old behavior).
+
+The application can decide to capture audio from a specific audio input device by creating a LocalAudioTrack:
+
+- using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is available, or
+- using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is available, or
+- using the MediaTrackConstraints `{ audio: { deviceId: { exact: 'foo' } } }` and "foo" is available 
+
+In this case, the LocalAudioTrack DOES NOT switch to another audio input device if the current audio input device is no
+longer available. See below for the behavior of this property based on how the LocalAudioTrack is created. (VIDEO-11701)
+
+```js
+const { connect, createLocalAudioTrack, createLocalTracks } = require('twilio-video');
+
+// Auto-switch default audio input devices: option 1
+const audioTrack = await createLocalAudioTrack();
+
+// Auto-switch default audio input devices: option 2
+const audioTrack1 = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'auto' });
+
+// Auto-switch default audio input devices: option 3
+const [audioTrack3] = await createLocalTracks({ audio: true });
+
+// Auto-switch default audio input devices: option 4
+const [audioTrack4] = await createLocalTracks({ audio: { defaultDeviceCaptureMode: 'auto' } });
+
+// Auto-switch default audio input devices: option 5
+const room1 = await connect({ audio: true });
+
+// Auto-switch default audio input devices: option 6
+const room2 = await connect({ audio: { defaultDeviceCaptureMode: 'auto' } });
+
+// Disable auto-switch default audio input devices
+const room = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'manual' });
+```
+
+**Limitations**
+
+- This feature is not enabled on iOS as it is natively supported.
+- Due to this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=232835), MacOS Safari Participants may lose their local audio after switching between default audio input devices two-three times.
+- This feature is not supported on Android Chrome, as it does not support the [MediaDevices.ondevicechange](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/devicechange_event#browser_compatibility) event.
+
 2.24.3 (October 10, 2022)
 =========================
 
