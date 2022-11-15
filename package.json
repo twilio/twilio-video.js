@@ -53,7 +53,7 @@
     "jsdoc": "^3.5.5",
     "jsdoc-babel": "^0.5.0",
     "json-loader": "^0.5.7",
-    "karma": "^5.0.2",
+    "karma": "6.4.1",
     "karma-browserify": "^8.0.0",
     "karma-chrome-launcher": "^2.0.0",
     "karma-edgium-launcher": "^4.0.0-0",
