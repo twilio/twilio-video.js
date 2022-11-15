@@ -36,6 +36,7 @@ USER root
 RUN echo "Setting up iptables..." &&\
 wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&\
 apt-get update &&\
+apt-get install -y iproute2 &&\
 apt-get install -y iptables &&\
 sudo apt-get install -y xvfb &&\
 adduser user1 &&\
