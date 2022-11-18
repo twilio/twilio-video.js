@@ -91,7 +91,7 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      // logLevel: 'debug',
+      logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
@@ -176,7 +176,7 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
   });
 });
 
-describe.only('network:', function() {
+describe('network:', function() {
   this.retries(2);
   this.timeout(8 * ONE_MINUTE);
   let dockerAPI = new DockerProxyClient();
@@ -225,7 +225,7 @@ describe.only('network:', function() {
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
 
-  describe.only('turn region blocking tests (@unstable: JSDK-2810)', () => {
+  describe('turn region blocking tests (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
