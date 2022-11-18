@@ -98,10 +98,8 @@ async function setup(setupOptions) {
     const token = getToken(identity);
 
     if (region) {
-      options.iceServers = await waitFor(
-        getRegionalizedIceServers(token, region, options),
-        `${sid}: get TURN servers regionalized to ${region}`);
       options.iceTransportPolicy = 'relay';
+      options.region = region;
     }
 
     const room = await waitFor(connect(token, options), `${sid}: ${identity} connected`);
@@ -178,7 +176,7 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
   });
 });
 
-describe('network:', function() {
+describe.only('network:', function() {
   this.retries(2);
   this.timeout(8 * ONE_MINUTE);
   let dockerAPI = new DockerProxyClient();
@@ -227,7 +225,7 @@ describe('network:', function() {
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
 
-  describe('turn region blocking tests (@unstable: JSDK-2810)', () => {
+  describe.only('turn region blocking tests (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
