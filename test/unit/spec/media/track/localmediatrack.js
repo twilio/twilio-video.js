@@ -382,6 +382,7 @@ const { defer } = require('../../../../../lib/util');
             'processedTrack',
             'id',
             'isEnabled',
+            'isMuted',
             'isStopped',
             'noiseCancellation'
           ]);
@@ -396,6 +397,7 @@ const { defer } = require('../../../../../lib/util');
             'processor',
             'id',
             'isEnabled',
+            'isMuted',
             'isStopped'
           ]);
         }
@@ -414,6 +416,7 @@ const { defer } = require('../../../../../lib/util');
           assert.deepEqual(track.toJSON(), {
             id: track.id,
             isEnabled: track.isEnabled,
+            isMuted: track.isMuted,
             isStarted: track.isStarted,
             isStopped: track.isStopped,
             kind: track.kind,
@@ -426,6 +429,7 @@ const { defer } = require('../../../../../lib/util');
           assert.deepEqual(track.toJSON(), {
             id: track.id,
             isEnabled: track.isEnabled,
+            isMuted: track.isMuted,
             isStarted: track.isStarted,
             isStopped: track.isStopped,
             dimensions: track.dimensions,
@@ -475,10 +479,8 @@ const { defer } = require('../../../../../lib/util');
         });
 
         it('should not listen to "ended" and "unmute" events on the underlying MediaStreamTrack', () => {
-          sinon.assert.callCount(track.mediaStreamTrack.addEventListener, 1);
-          sinon.assert.neverCalledWith(track.mediaStreamTrack.addEventListener, 'unmute');
-          assert.equal(track.mediaStreamTrack.addEventListener.args[0][0], 'ended');
-          assert.equal(track.mediaStreamTrack.addEventListener.args[0][1].name, 'onended');
+          const events = track.mediaStreamTrack.addEventListener.args.map(([event]) => event);
+          assert.deepStrictEqual(events, ['mute', 'unmute', 'ended']);
         });
       });
 
@@ -508,9 +510,8 @@ const { defer } = require('../../../../../lib/util');
         });
 
         it('should listen to "ended" and "unmute" events on the underlying MediaStreamTrack', () => {
-          ['ended', 'unmute'].forEach(event => {
-            sinon.assert.calledWith(localMediaTrack.mediaStreamTrack.addEventListener, event);
-          });
+          const events = localMediaTrack.mediaStreamTrack.addEventListener.args.map(([event]) => event);
+          assert.deepStrictEqual(events, ['mute', 'unmute', 'ended', 'ended', 'mute', 'unmute']);
         });
 
         it('should not cause unhandled rejections from failure in GUM', async () => {

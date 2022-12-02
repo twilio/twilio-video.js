@@ -6,6 +6,7 @@ const MediaTrackSender = require('../../../../../lib/media/track/sender');
 const Document = require('../../../../lib/document');
 const sinon = require('sinon');
 const { combinationContext } = require('../../../../lib/util');
+const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 describe('MediaTrackSender', () => {
   before(() => {
@@ -18,19 +19,15 @@ describe('MediaTrackSender', () => {
     }
   });
 
-  const mediaStreamTrack = {
-    id: 'bar',
-    kind: 'baz',
-    readyState: 'zee',
-    clone() {
-      return clonedMediaStreamTrack;
-    }
+  const mediaStreamTrack = new FakeMediaStreamTrack('audio');
+  const mstClone = mediaStreamTrack.clone;
+
+  mediaStreamTrack.clone = () => {
+    clonedMediaStreamTrack = mstClone.call(mediaStreamTrack);
+    return clonedMediaStreamTrack;
   };
 
-  const clonedMediaStreamTrack = Object.assign({}, mediaStreamTrack, {
-    id: 'cloned'
-  });
-
+  let clonedMediaStreamTrack;
   let sender;
 
   describe('constructor', () => {
@@ -175,9 +172,9 @@ describe('MediaTrackSender', () => {
       let errorResult;
       let trackSender;
       beforeEach(async () => {
-        const msTrackOrig = makeMediaStreamTrack({ id: 'original' });
+        const msTrackOrig = new FakeMediaStreamTrack('audio');
         trackSender = new MediaTrackSender(msTrackOrig);
-        msTrackReplaced = makeMediaStreamTrack({ id: 'replaced' });
+        msTrackReplaced = new FakeMediaStreamTrack('audio');
         rtpSender = {
           track: 'foo',
           replaceTrack: sinon.spy(() => replaceTrackSuccess ? Promise.resolve('yay') : Promise.reject('boo'))
@@ -224,17 +221,8 @@ describe('MediaTrackSender', () => {
       }
 
       it('always replaces the track', () => {
-        assert.strictEqual(trackSender.track.id, 'replaced');
+        assert.strictEqual(trackSender.track.id, msTrackReplaced.id);
       });
     });
   });
 });
-
-function makeMediaStreamTrack({ id = 'foo', kind = 'baz', readyState = 'zee' }) {
-  return {
-    id, kind, readyState,
-    clone: () => {
-      return { id: 'cloned_' + id, kind, readyState };
-    }
-  };
-}
