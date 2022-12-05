@@ -237,7 +237,7 @@ describe('network:', function() {
     throw new Error(`Unexpectedly succeeded joining a room: ${room.sid}`);
   });
 
-  describe.only('turn region blocking tests (@unstable: JSDK-2810)', () => {
+  describe('turn region blocking tests (@unstable: JSDK-2810)', () => {
     let rooms;
     let disconnected;
 
