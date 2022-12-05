@@ -58,6 +58,15 @@ const { defer } = require('../../../../../lib/util');
       });
     });
 
+    describe('.isMuted', () => {
+      it('should set the .isMuted to the MediaStreamTrack\'s .muted property', () => {
+        track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
+        assert.equal(track.isMuted, track.mediaStreamTrack.muted);
+        track.mediaStreamTrack.setMuted(!track.mediaStreamTrack.muted);
+        assert.equal(track.isMuted, track.mediaStreamTrack.muted);
+      });
+    });
+
     describe('.isStopped', () => {
       it('should set .isStopped based on the state of the MediaStreamTrack\'s .readyState property', () => {
         track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
@@ -89,7 +98,22 @@ const { defer } = require('../../../../../lib/util');
       });
     });
 
-    describe('"trackStopped" event', () => {
+    ['muted', 'unmuted'].forEach(event => {
+      describe(`"${event}" event`, () => {
+        context(`when the MediaStreamTrack emits on${event.replace(/d$/, '')} event`, () => {
+          it(`should emit ${description}#${event}, passing the instance of ${description}`, async () => {
+            track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
+            track.mediaStreamTrack.setMuted(event === 'unmuted');
+            const eventEmitted = waitForEvent(track, event);
+            track.mediaStreamTrack.setMuted(event === 'muted');
+            const _track = await eventEmitted;
+            assert.equal(track, _track);
+          });
+        });
+      });
+    });
+
+    describe('"stopped" event', () => {
       context('when the MediaStreamTrack emits onended event', () => {
         it(`should emit ${description}#stopped, passing the instance of ${description}`, async () => {
           track = createLocalMediaTrack(LocalMediaTrack, kind[description]);
@@ -244,16 +268,27 @@ const { defer } = require('../../../../../lib/util');
         [
           [true, false],
           x => `when getUserMedia ${x ? 'resolves with a MediaStream' : 'rejects with an Error'}`
+        ],
+        [
+          [true, false],
+          x => `when the current MediaStreamTrack's .muted is ${x}`
+        ],
+        [
+          [true, false],
+          x => `when the new MediaStreamTrack's .muted is ${x}`
         ]
-      ], ([isCreatedByCreateLocalTracks, constraints, gUMSucceeds]) => {
+      ], ([isCreatedByCreateLocalTracks, constraints, gUMSucceeds, currentMuted, newMuted]) => {
         const restartArgs = constraints ? [constraints] : [];
         let error;
+        let events;
         let getUserMedia;
         let mediaStream;
         let track;
         let stoppedEmitted = false;
+
         before(async () => {
           getUserMedia = sinon.spy(gUMSucceeds ? (...args) => fakeGetUserMedia(...args).then(stream => {
+            stream.getTracks().forEach(track => track.setMuted(newMuted));
             mediaStream = stream;
             return stream;
           }) : () => Promise.reject(new Error('foo')));
@@ -265,19 +300,23 @@ const { defer } = require('../../../../../lib/util');
             baz: 'zee'
           });
 
-          track._setMediaStreamTrack = sinon.spy();
+          track.mediaStreamTrack.setMuted(currentMuted);
+
+          const setMediaStreamTrack = track._setMediaStreamTrack;
+          track._setMediaStreamTrack = sinon.spy((...args) => setMediaStreamTrack.apply(track, args));
 
           track.once('stopped', () => {
             stoppedEmitted = true;
           });
+
+          events = [];
+          ['muted', 'unmuted'].forEach(event => track.once(event, () => events.push(event)));
 
           try {
             await track.restart(...restartArgs);
           } catch (err) {
             error = err;
           }
-
-
         });
 
         if (!(isCreatedByCreateLocalTracks && gUMSucceeds)) {
@@ -300,6 +339,10 @@ const { defer } = require('../../../../../lib/util');
                   : { baz: 'zee' }
               }));
             });
+
+            it('should neither emit "muted" nor "unmuted" events', () => {
+              assert.deepStrictEqual(events, []);
+            });
           }
 
           it(`should reject with ${!isCreatedByCreateLocalTracks ? 'a TypeError' : 'the Error raised by getUserMedia'}`, () => {
@@ -312,6 +355,10 @@ const { defer } = require('../../../../../lib/util');
 
           it('should not call _setMediaStreamTrack', () => {
             sinon.assert.notCalled(track._setMediaStreamTrack);
+          });
+
+          it('should neither emit "muted" nor "unmuted" events', () => {
+            assert.deepStrictEqual(events, []);
           });
         } else {
           it('should not reject', () => {
@@ -332,6 +379,17 @@ const { defer } = require('../../../../../lib/util');
           it('should call _setMediaStreamTrack with the MediaStreamTrack returned by getUserMedia', () => {
             sinon.assert.calledWith(track._setMediaStreamTrack, mediaStream.getTracks()[0]);
           });
+
+          if (currentMuted === newMuted) {
+            it('should neither emit "muted" nor "unmuted" events', () => {
+              assert.deepStrictEqual(events, []);
+            });
+          } else {
+            const expectedEvent = newMuted ? 'muted' : 'unmuted';
+            it(`should emit "${expectedEvent}"`, () => {
+              assert.deepStrictEqual(events, [expectedEvent]);
+            });
+          }
         }
       });
     });
