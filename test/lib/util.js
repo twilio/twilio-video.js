@@ -705,6 +705,7 @@ function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats
     trackTypes.forEach(trackType => {
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
+          console.log('TRACKSTATS.BYTESRECEIVED VALUE: ', trackStats.bytesReceived);
           totalBytesReceived += trackStats.bytesReceived;
         });
       }
