@@ -80,6 +80,11 @@ class FakeMediaStreamTrack extends EventTarget {
         writable: true,
         enumerable: true
       },
+      muted: {
+        value: false,
+        writable: true,
+        enumerable: true
+      },
       readyState: {
         value: 'live',
         writable: true,
@@ -96,6 +101,16 @@ class FakeMediaStreamTrack extends EventTarget {
 
   getSettings() {
     return Object.assign({}, this._settings);
+  }
+
+  setMuted(muted) {
+    if (this.muted !== muted) {
+      this.muted = muted;
+      this.dispatchEvent({
+        type: muted ? 'mute' : 'unmute',
+        target: this
+      });
+    }
   }
 
   stop() {
