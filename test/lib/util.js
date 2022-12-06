@@ -699,11 +699,13 @@ async function getRegionalizedIceServers(token, region) {
   return iceServers;
 }
 
-function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
+function getTotalBytesReceived(statReports, trackTypes) {
   let totalBytesReceived = 0;
+  let trackTypesDefault = trackTypes ? trackTypes : ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
+
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      console.log(`trackType: ${trackType}, statReport: ${statReport}`);
+      console.log(`trackType: ${trackTypesDefault}, statReport: ${statReport}`);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
           totalBytesReceived += trackStats.bytesReceived;
@@ -757,13 +759,15 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @param {number} testTimeMS
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
-async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
+async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
   const statsBefore = await room.getStats();
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
+
+  let trackTypesDefault = trackTypes ? trackTypes : ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
 
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
