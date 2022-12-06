@@ -701,11 +701,9 @@ async function getRegionalizedIceServers(token, region) {
 
 function getTotalBytesReceived(statReports, trackTypes) {
   let totalBytesReceived = 0;
-  let trackTypesDefault = trackTypes ? trackTypes : ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
-
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      console.log(`trackType: ${trackTypesDefault}, statReport: ${statReport}`);
+      console.log(`trackType: ${trackType}, statReport: ${statReport[trackType]}`);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
           totalBytesReceived += trackStats.bytesReceived;
@@ -766,7 +764,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
   // get StatsReports.
   const statsBefore = await room.getStats();
 
-  let trackTypesDefault = trackTypes ? trackTypes : ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
+  const trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
 
   // wait for some more time.
