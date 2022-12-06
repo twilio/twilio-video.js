@@ -701,11 +701,12 @@ async function getRegionalizedIceServers(token, region) {
 
 function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   let totalBytesReceived = 0;
+  console.log('INSIDE OF GET TOTAL BYTES RECEIVED');
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
+      console.log('statReport[trackType]: ', statReport[trackType]);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
-          console.log('TRACKSTATS.BYTESRECEIVED VALUE: ', trackStats.bytesReceived);
           totalBytesReceived += trackStats.bytesReceived;
         });
       }
