@@ -248,7 +248,7 @@ describe('network:', function() {
       }
     });
 
-    it.only('validate media flow', () => {
+    it('validate media flow', () => {
       return waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
