@@ -705,7 +705,6 @@ function getTotalBytesReceived(statReports, trackTypes) {
     trackTypes.forEach(trackType => {
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
-          // console.log('getTotalBytesReceived stats: ', JSON.stringify(trackStats, null, 2));
           totalBytesReceived += trackStats.bytesReceived;
         });
       }
@@ -767,7 +766,6 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
 
   const trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
-  console.log(room.localParticipant.identity, ' bytes before: ', bytesReceivedBefore);
 
   // wait for some more time.
   console.log(room.localParticipant.identity, ' waiting some more time');
@@ -776,11 +774,11 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
   // get StatsReports again.
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
-  console.log(room.localParticipant.identity, ' bytes after: ', bytesReceivedAfter);
 
-  console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
+  console.log(`${room.localParticipant.identity} BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
-    throw new Error('no media flow detected');
+    // throw new Error('no media flow detected');
+    console.log('NO MEDIA FLOW DETECTED!!!');
   }
   return { bytesReceivedBefore, bytesReceivedAfter, testTimeMS };
 }
