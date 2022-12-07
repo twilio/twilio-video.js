@@ -705,7 +705,7 @@ function getTotalBytesReceived(statReports, trackTypes) {
     trackTypes.forEach(trackType => {
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
-          console.log('getTotalBytesReceived stats: ', JSON.stringify(trackStats, null, 2));
+          // console.log('getTotalBytesReceived stats: ', JSON.stringify(trackStats, null, 2));
           totalBytesReceived += trackStats.bytesReceived;
         });
       }
@@ -759,7 +759,7 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  */
 async function validateMediaFlow(room, testTimeMS = 6000) {
   // wait for some time.
-  console.log('wait for some time, INITIAL');
+  console.log('wait for some time, INITIAL: ', room.localParticipant.identity);
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
@@ -767,16 +767,16 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
 
   const trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
-  console.log('bytes before: ', bytesReceivedBefore);
+  console.log(room.localParticipant.identity, ' bytes before: ', bytesReceivedBefore);
 
   // wait for some more time.
-  console.log('waiting some more time');
+  console.log(room.localParticipant.identity, ' waiting some more time');
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports again.
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
-  console.log('bytes after: ', bytesReceivedAfter);
+  console.log(room.localParticipant.identity, ' bytes after: ', bytesReceivedAfter);
 
   console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
