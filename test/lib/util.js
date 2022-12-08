@@ -766,7 +766,7 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
 
   const trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
-
+  console.log('bytesReceivedBefore ', room.localParticipant.identity, bytesReceivedBefore);
   // wait for some more time.
   console.log(room.localParticipant.identity, ' waiting some more time');
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
@@ -774,11 +774,12 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
   // get StatsReports again.
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
+  console.log('bytesReceivedAfter ', room.localParticipant.identity, bytesReceivedAfter);
 
   console.log(`${room.localParticipant.identity} BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
-    // throw new Error('no media flow detected');
     console.log('NO MEDIA FLOW DETECTED!!!');
+    // throw new Error('no media flow detected');
   }
   return { bytesReceivedBefore, bytesReceivedAfter, testTimeMS };
 }
