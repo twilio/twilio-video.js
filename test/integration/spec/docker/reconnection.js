@@ -89,7 +89,7 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      logLevel: 'debug',
+      // logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
@@ -247,7 +247,7 @@ describe('network:', function() {
       }
     });
 
-    it.only('validate media flow', () => {
+    it('validate media flow', () => {
       return waitWhileNotDisconnected(disconnected, rooms.map(room => { return validateMediaFlow(room).then(() => console.log('VMF success for: ', room.localParticipant.identity)).catch(err => console.log('VMF failure for: ', room.localParticipant.identity, err.message)); }), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
