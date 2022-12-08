@@ -778,8 +778,7 @@ async function validateMediaFlow(room, testTimeMS = 6000) {
 
   console.log(`${room.localParticipant.identity} BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
-    console.log('NO MEDIA FLOW DETECTED!!!');
-    // throw new Error('no media flow detected');
+    throw new Error('no media flow detected');
   }
   return { bytesReceivedBefore, bytesReceivedAfter, testTimeMS };
 }
