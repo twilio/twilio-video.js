@@ -756,23 +756,23 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @param {number} testTimeMS
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
-async function validateMediaFlow(room, testTimeMS = 6000) {
+async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
   const statsBefore = await room.getStats();
 
-  const trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports again.
   const statsAfter = await room.getStats();
-  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypes);
 
-  console.log(`${room.localParticipant.identity} BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
+  const { localParticipant: { identity, sid } } = room;
+  console.log(`${identity}[${sid}] BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
     throw new Error('no media flow detected');
   }
