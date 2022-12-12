@@ -758,7 +758,7 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  */
 async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
   let trackTypesDefault = trackTypes;
-  if (typeof trackTypesDefault[0] !== 'string') {
+  if (!trackTypesDefault || typeof trackTypesDefault[0] !== 'string') {
     trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   }
 
