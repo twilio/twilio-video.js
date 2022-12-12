@@ -764,7 +764,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
   // get StatsReports.
   const statsBefore = await room.getStats();
 
-  console.log('trackTypes before passing to GTBR: ', trackTypes);
+  console.log('trackTypes before passing to GTBR: ', typeof trackTypes, trackTypes);
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
