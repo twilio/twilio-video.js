@@ -703,6 +703,7 @@ function getTotalBytesReceived(statReports, trackTypes) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
+      console.log('stateReport: trackType | ', statReport[trackType]);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
           totalBytesReceived += trackStats.bytesReceived;
