@@ -787,7 +787,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
 async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
   let mediaFlowDetected = false;
   try {
-    await validateMediaFlow(room, 2000);
+    await validateMediaFlow(room, 2000, null);
     mediaFlowDetected = true;
   } catch (err) {
     mediaFlowDetected = false;
