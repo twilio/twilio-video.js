@@ -757,8 +757,9 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
 async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
-  if (typeof trackTypes[0] !== 'string') {
-    trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
+  let trackTypesDefault = trackTypes;
+  if (typeof trackTypesDefault[0] !== 'string') {
+    trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
   }
 
   // wait for some time.
@@ -766,14 +767,14 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
 
   // get StatsReports.
   const statsBefore = await room.getStats();
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
 
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports again.
   const statsAfter = await room.getStats();
-  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypes);
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
 
   const { localParticipant: { identity, sid } } = room;
   console.log(`${identity}[${sid}] BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
