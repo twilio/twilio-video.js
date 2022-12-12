@@ -757,7 +757,11 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @param {number} testTimeMS
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
-async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
+async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
+  if (typeof trackTypes[0] !== 'string') {
+    trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
+  }
+
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
