@@ -703,7 +703,7 @@ function getTotalBytesReceived(statReports, trackTypes) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      console.log('stateReport: trackType | ', statReport[trackType]);
+      console.log('stateReport: trackType | ', trackType);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
           totalBytesReceived += trackStats.bytesReceived;
@@ -758,7 +758,7 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
 async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
-  const trackTypesDefault = trackTypes.length === 0 ? ['remoteVideoTrackStats', 'remoteAudioTrackStats'] : trackTypes;
+  const trackTypesDefault = trackTypes ? trackTypes : ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
 
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
@@ -766,6 +766,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
   // get StatsReports.
   const statsBefore = await room.getStats();
 
+  console.log('trackTypesDefault: ', trackTypesDefault);
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
