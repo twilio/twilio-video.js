@@ -703,7 +703,6 @@ function getTotalBytesReceived(statReports, trackTypes) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
-      console.log(`trackType: ${trackType}, statReport: ${statReport}`);
       if (statReport[trackType]) {
         statReport[trackType].forEach(trackStats => {
           totalBytesReceived += trackStats.bytesReceived;
@@ -767,9 +766,8 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
 
   // get StatsReports.
   const statsBefore = await room.getStats();
-
-  console.log('trackTypes before passing to GTBR: ', typeof trackTypes, trackTypes);
   const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
+
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
