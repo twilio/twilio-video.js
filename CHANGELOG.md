@@ -2,8 +2,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.26.0 (in progress)
-====================
+2.26.0 (December 14, 2022)
+==========================
 
 New Features
 ------------
@@ -22,85 +22,85 @@ New Features
   property described previously to recover local and remote media after an incoming phone call as shown below. (VIDEO-11360)
 
   ### Vanilla JS
-  
+
   #### html
-  
+
   ```html
   <button id="refresh-inactive-media" disabled>Refresh Inactive Media</button>
   ```
-  
+
   #### js
-  
+
   ```js
   const { connect } = require('twilio-video');
-  
+
   const room = await connect('token', { name: 'my-cool-room' });
-  
+
   const $refreshInactiveMedia = document.getElementById('refresh-inactive-media');
   $refreshInactiveMedia.onclick = () => room.refreshInactiveMedia();
-  
+
   const [{ track: localAudioTrack }] = [...room.localParticipant.audioTracks.values()];
   const [{ track: localVideoTrack }] = [...room.localParticipant.videoTracks.values()];
-  
+
   const isLocalAudioOrVideoMuted = () => {
     return localAudioTrack.isMuted || localVideoTrack.isMuted;
   }
-  
+
   const onLocalMediaMutedChanged = () => {
     $refreshInactiveMedia.disabled = !isLocalAudioOrVideoMuted();
   };
-  
+
   [localAudioTrack, localVideoTrack].forEach(localMediaTrack => {
     ['muted', 'unmuted'].forEach(event => {
       localMediaTrack.on(event, onLocalMediaMutedChanged);
     });
   });
   ```
-  
+
   ### React
-  
+
   #### src/hooks/useLocalMediaMuted.js
-  
+
   ```js
   import { useEffect, useState } from 'react';
-  
+
   export default function useLocalMediaMuted(localMediaTrack) {
     const [isMuted, setIsMuted] = useState(localMediaTrack?.isMuted ?? false);
-  
+
     useEffect(() => {
       const updateMuted = () => setIsMuted(localMediaTrack?.isMuted ?? false);
       updateMuted();
-  
+
       localMediaTrack?.on('muted', updateMuted);
       localMediaTrack?.on('unmuted', updateMuted);
-  
+
       return () => {
         localMediaTrack?.off('muted', updateMuted);
         localMediaTrack?.off('unmuted', updateMuted);
       };
     }, [localMediaTrack]);
-  
+
     return isMuted;
   }
   ```
-  
+
   #### src/components/room.js
-  
+
   ```jsx
   import useLocalMediaMuted from '../hooks/useLocalMediaMuted';
-  
+
   export default function Room({ room }) {
     const [{ track: localAudioTrack }] = [...room.localParticipant.audioTracks.values()];
     const [{ track: localVideoTrack }] = [...room.localParticipant.videoTracks.values()];
-  
+
     const isLocalAudioMuted = useLocalMediaMuted(localAudioTrack);
     const isLocalVideoMuted = useLocalMediaMuted(localVideoTrack);
     const isLocalMediaMuted = isLocalAudioMuted || isLocalVideoMuted;
-  
+
     const refreshInactiveMedia = () => {
       room.refreshInactiveMedia();
     };
-  
+
     return (
       <>
         ...
@@ -138,7 +138,7 @@ The application can decide to capture audio from a specific audio input device b
 
 - using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is available, or
 - using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is available, or
-- using the MediaTrackConstraints `{ audio: { deviceId: { exact: 'foo' } } }` and "foo" is available 
+- using the MediaTrackConstraints `{ audio: { deviceId: { exact: 'foo' } } }` and "foo" is available
 
 In this case, the LocalAudioTrack DOES NOT switch to another audio input device if the current audio input device is no
 longer available. See below for the behavior of this property based on how the LocalAudioTrack is created. (VIDEO-11701)
