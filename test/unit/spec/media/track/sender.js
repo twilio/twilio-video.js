@@ -5,7 +5,8 @@ const assert = require('assert');
 const MediaTrackSender = require('../../../../../lib/media/track/sender');
 const Document = require('../../../../lib/document');
 const sinon = require('sinon');
-const { combinationContext } = require('../../../../lib/util');
+const { combinationContext, waitForEvent } = require('../../../../lib/util');
+const { FakeMediaStreamTrack } = require('../../../../lib/fakemediastream');
 
 describe('MediaTrackSender', () => {
   before(() => {
@@ -18,19 +19,15 @@ describe('MediaTrackSender', () => {
     }
   });
 
-  const mediaStreamTrack = {
-    id: 'bar',
-    kind: 'baz',
-    readyState: 'zee',
-    clone() {
-      return clonedMediaStreamTrack;
-    }
+  const mediaStreamTrack = new FakeMediaStreamTrack('audio');
+  const mstClone = mediaStreamTrack.clone;
+
+  mediaStreamTrack.clone = () => {
+    clonedMediaStreamTrack = mstClone.call(mediaStreamTrack);
+    return clonedMediaStreamTrack;
   };
 
-  const clonedMediaStreamTrack = Object.assign({}, mediaStreamTrack, {
-    id: 'cloned'
-  });
-
+  let clonedMediaStreamTrack;
   let sender;
 
   describe('constructor', () => {
@@ -42,7 +39,7 @@ describe('MediaTrackSender', () => {
       assert(sender instanceof MediaTrackSender);
     });
 
-    ['id', 'kind', 'readyState'].forEach(prop => {
+    ['id', 'kind', 'muted', 'readyState'].forEach(prop => {
       it(`should set the .${prop} to the MediaStreamTrack's .${prop}`, () => {
         assert.equal(sender[prop], mediaStreamTrack[prop]);
       });
@@ -50,6 +47,16 @@ describe('MediaTrackSender', () => {
 
     it('should set the .track property', () => {
       assert.equal(sender.track, mediaStreamTrack);
+    });
+
+    context('when the MediaStreamTrack\'s .muted changes', () => {
+      before(() => {
+        mediaStreamTrack.setMuted(false);
+      });
+
+      it('should update the MediaTrackTransceiver\'s .muted', () => {
+        assert.equal(sender.muted, false);
+      });
     });
 
     context('when the MediaStreamTrack\'s .readyState changes', () => {
@@ -61,6 +68,21 @@ describe('MediaTrackSender', () => {
 
       it('should update the MediaTrackTransceiver\'s .readyState', () => {
         assert.equal(sender.readyState, newReadyState);
+      });
+    });
+
+    context('when the MediaStreamTrack emits "mute" and "unmute" events', () => {
+      let eventsPromise;
+
+      before(() => {
+        eventsPromise = Promise.all(['muted', 'unmuted'].map(event => waitForEvent(sender, event).then(() => event)));
+        mediaStreamTrack.setMuted(true);
+        mediaStreamTrack.setMuted(false);
+      });
+
+      it('should emit "muted" and "unmuted" events respectively', async () => {
+        const events = await eventsPromise;
+        assert.deepStrictEqual(events, ['muted', 'unmuted']);
       });
     });
   });
@@ -156,6 +178,14 @@ describe('MediaTrackSender', () => {
     combinationContext([
       [
         [true, false],
+        x => `when the current MediaStreamTrack's .muted is ${x}`
+      ],
+      [
+        [true, false],
+        x => `when the new MediaStreamTrack's .muted is ${x}`
+      ],
+      [
+        [true, false],
         x => `when replaceTrack ${x ? 'resolves' : 'rejects'}`
       ],
       [
@@ -166,18 +196,24 @@ describe('MediaTrackSender', () => {
         [true, false],
         x => `when publisherHitCallBack ${x ? 'resolves' : 'rejects'}`
       ],
-    ], ([replaceTrackSuccess, publisherHintCallbackSet, publisherHintSuccess]) => {
+    ], ([currentMuted, newMuted, replaceTrackSuccess, publisherHintCallbackSet, publisherHintSuccess]) => {
 
+      let events;
       let msTrackReplaced;
       let rtpSender;
       let publisherHitCallBack;
       let result;
       let errorResult;
       let trackSender;
+
       beforeEach(async () => {
-        const msTrackOrig = makeMediaStreamTrack({ id: 'original' });
+        const msTrackOrig = new FakeMediaStreamTrack('audio');
+        msTrackOrig.setMuted(currentMuted);
+
         trackSender = new MediaTrackSender(msTrackOrig);
-        msTrackReplaced = makeMediaStreamTrack({ id: 'replaced' });
+        msTrackReplaced = new FakeMediaStreamTrack('audio');
+        msTrackReplaced.setMuted(newMuted);
+
         rtpSender = {
           track: 'foo',
           replaceTrack: sinon.spy(() => replaceTrackSuccess ? Promise.resolve('yay') : Promise.reject('boo'))
@@ -190,6 +226,9 @@ describe('MediaTrackSender', () => {
           trackSender.addSender(rtpSender);
         }
 
+        events = [];
+        ['muted', 'unmuted'].forEach(event => trackSender.once(event, () => events.push(event)));
+
         try {
           result = await trackSender.setMediaStreamTrack(msTrackReplaced);
         } catch (error) {
@@ -200,6 +239,17 @@ describe('MediaTrackSender', () => {
       it('calls RTCRtpSender.replaceTrack', () => {
         sinon.assert.calledWith(rtpSender.replaceTrack, msTrackReplaced);
       });
+
+      if (currentMuted === newMuted) {
+        it('should neither emit "muted" nor "unmuted" events', () => {
+          assert.deepStrictEqual(events, []);
+        });
+      } else {
+        const expectedEvent = newMuted ? 'muted' : 'unmuted';
+        it(`should emit "${expectedEvent}"`, () => {
+          assert.deepStrictEqual(events, [expectedEvent]);
+        });
+      }
 
       if (replaceTrackSuccess) {
         it('resolves', () => {
@@ -224,17 +274,8 @@ describe('MediaTrackSender', () => {
       }
 
       it('always replaces the track', () => {
-        assert.strictEqual(trackSender.track.id, 'replaced');
+        assert.strictEqual(trackSender.track.id, msTrackReplaced.id);
       });
     });
   });
 });
-
-function makeMediaStreamTrack({ id = 'foo', kind = 'baz', readyState = 'zee' }) {
-  return {
-    id, kind, readyState,
-    clone: () => {
-      return { id: 'cloned_' + id, kind, readyState };
-    }
-  };
-}

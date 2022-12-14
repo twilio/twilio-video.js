@@ -26,6 +26,7 @@ export class Room extends EventEmitter {
 
   disconnect(): Room;
   getStats(): Promise<StatsReport[]>;
+  refreshInactiveMedia(): void;
 
   on(event: 'disconnected', listener: (room: Room, error: TwilioError) => void): this;
   on(event: 'dominantSpeakerChanged', listener: (dominantSpeaker: RemoteParticipant) => void): this;
