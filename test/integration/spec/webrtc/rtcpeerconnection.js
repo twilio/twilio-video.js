@@ -441,7 +441,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
   // does not resume audioContext. The resume promise never settles.
   // This is causing few other tests to fail as well.
   // We need to find workaround for this.
-  (isFirefox ? describe.skip : describe)('audiocontext should resume' + isFirefox ? ' @unstable: VIDEO-10685 ' : '', () => {
+  (isFirefox ? describe.skip : describe)('audiocontext should resume', () => {
     it('audiocontext should resume', async () => {
       const audioContext = new AudioContext();
       if (audioContext.state === 'suspended') {

@@ -831,7 +831,7 @@ describe('connect', function() {
   // eslint-disable-next-line no-warning-comments
   // TODO: The following tests verifies bitrates using default codec, OPUS.
   // We should also verify other codecs like ISAC, PCMU and PCMA.
-  describe(`called with EncodingParameters ${isFirefox ? ' - @unstable: VIDEO-9969' : ''}`, () => {
+  describe('called with EncodingParameters', () => {
     const minAudioBitrate = 6000;
     const minVideoBitrate = 20000;
     combinationContext([
