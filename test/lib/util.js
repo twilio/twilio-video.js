@@ -699,7 +699,7 @@ async function getRegionalizedIceServers(token, region) {
   return iceServers;
 }
 
-function getTotalBytesReceived(statReports, trackTypes) {
+function getTotalBytesReceived(statReports, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   let totalBytesReceived = 0;
   statReports.forEach(statReport => {
     trackTypes.forEach(trackType => {
@@ -756,25 +756,20 @@ async function waitForMediaFlow(room, mediaExpected = true, testTimeMS = 20000) 
  * @param {number} testTimeMS
  * @returns {Promise<{bytesReceivedBefore, bytesReceivedAfter, testTimeMS}>}
  */
-async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
-  let trackTypesDefault = trackTypes;
-  if (!trackTypesDefault || typeof trackTypesDefault[0] !== 'string') {
-    trackTypesDefault = ['remoteVideoTrackStats', 'remoteAudioTrackStats'];
-  }
-
+async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteVideoTrackStats', 'remoteAudioTrackStats']) {
   // wait for some time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports.
   const statsBefore = await room.getStats();
-  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypesDefault);
+  const bytesReceivedBefore = getTotalBytesReceived(statsBefore, trackTypes);
 
   // wait for some more time.
   await new Promise(resolve => setTimeout(resolve, testTimeMS));
 
   // get StatsReports again.
   const statsAfter = await room.getStats();
-  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypesDefault);
+  const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypes);
 
   const { localParticipant: { identity, sid } } = room;
   console.log(`${identity}[${sid}] BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
@@ -787,7 +782,7 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes) {
 async function assertMediaFlow(room, mediaFlowExpected,  errorMessage) {
   let mediaFlowDetected = false;
   try {
-    await validateMediaFlow(room, 2000, null);
+    await validateMediaFlow(room, 2000);
     mediaFlowDetected = true;
   } catch (err) {
     mediaFlowDetected = false;
