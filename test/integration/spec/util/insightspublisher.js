@@ -22,7 +22,7 @@ if (defaults.wsServerInsights) {
   options.gateway = defaults.wsServerInsights;
 }
 
-describe('InsightsPublisher (@unstable: JSDK-2761)', function() {
+describe('InsightsPublisher', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
 

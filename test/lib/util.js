@@ -771,7 +771,8 @@ async function validateMediaFlow(room, testTimeMS = 6000, trackTypes = ['remoteV
   const statsAfter = await room.getStats();
   const bytesReceivedAfter = getTotalBytesReceived(statsAfter, trackTypes);
 
-  console.log(`'BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
+  const { localParticipant: { identity, sid } } = room;
+  console.log(`${identity}[${sid}] BytesReceived Before =  ${bytesReceivedBefore}, After = ${bytesReceivedAfter}`);
   if (bytesReceivedAfter <= bytesReceivedBefore) {
     throw new Error('no media flow detected');
   }

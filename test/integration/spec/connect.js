@@ -831,7 +831,7 @@ describe('connect', function() {
   // eslint-disable-next-line no-warning-comments
   // TODO: The following tests verifies bitrates using default codec, OPUS.
   // We should also verify other codecs like ISAC, PCMU and PCMA.
-  describe(`called with EncodingParameters ${isFirefox ? ' - @unstable: VIDEO-9969' : ''}`, () => {
+  describe('called with EncodingParameters', () => {
     const minAudioBitrate = 6000;
     const minVideoBitrate = 20000;
     combinationContext([
@@ -932,7 +932,7 @@ describe('connect', function() {
         // TODO: Remove firefox check once this firefox bug is fixed
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
         if (!isFirefox) {
-          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate (@unstable: VIDEO-4205)`, () => {
+          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
             const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
             const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
             if (maxBitrates[kind]) {
