@@ -292,7 +292,7 @@ describe('LocalParticipant: regressions', function() {
     });
   });
 
-  describe('#setParameters (@unstable: VIDEO-9182)', () => {
+  describe('#setParameters', () => {
     const initialEncodingParameters = {
       maxAudioBitrate: 20000,
       maxVideoBitrate: 40000
