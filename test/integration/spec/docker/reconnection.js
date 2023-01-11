@@ -445,41 +445,49 @@ describe('network:', function() {
             const resolveIfAllEventsFired = () => eventsEmitted.length === 8 && resolve(eventsEmitted);
             aliceRoom.localParticipant.on('reconnecting', () => {
               eventsEmitted.push({ event: 'LocalParticipant#reconnecting' });
+              console.log(`1. ALICE ROOM: LocalParticipant#reconnecting -> Length should be 1: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             aliceRoom.localParticipant.on('reconnected', () => {
               eventsEmitted.push({ event: 'LocalParticipant#reconnected' });
+              console.log(`2. ALICE ROOM: LocalParticipant#reconnected -> Length should be 2: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             aliceRoom.on('reconnecting', error => {
               eventsEmitted.push({ event: 'LocalRoom#reconnecting', error });
+              console.log(`3. ALICE ROOM: LocalRoom#reconnecting -> Length should be 3: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             aliceRoom.on('reconnected', () => {
               eventsEmitted.push({ event: 'LocalRoom#reconnected' });
+              console.log(`4. ALICE ROOM: LocalRoom#reconnected -> Length should be 4: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             aliceRemote.on('reconnecting', () => {
               eventsEmitted.push({ event: 'RemoteParticipant#reconnecting' });
+              console.log(`5. ALICE ROOM: RemoteParticipant#reconnecting -> Length should be 5: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             aliceRemote.on('reconnected', () => {
               eventsEmitted.push({ event: 'RemoteParticipant#reconnected' });
+              console.log(`6. ALICE ROOM: RemoteParticipant#reconnected -> Length should be 6: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             bobRoom.on('participantReconnecting', participant => {
               eventsEmitted.push({ event: 'RemoteRoom#participantReconnecting', participant });
+              console.log(`7. BOB ROOM: RemoteRoom#participantReconnecting -> Length should be 7: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
 
             bobRoom.on('participantReconnected', participant => {
               eventsEmitted.push({ event: 'RemoteRoom#participantReconnected', participant });
+              console.log(`8. BOB ROOM: RemoteRoom#participantReconnected -> Length should be 8: ${eventsEmitted.length}`);
               resolveIfAllEventsFired();
             });
           });
