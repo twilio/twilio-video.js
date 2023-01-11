@@ -483,7 +483,7 @@ describe('network:', function() {
               resolveIfAllEventsFired();
             });
           });
-
+          console.log('EVENTS EMITTED BEFORE: ', eventsEmitted.length);
           // NOTE(mmalavalli): Simulate a signaling connection interruption by
           // closing Alice's WebSocket transport. Then, wait until all the expected
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
@@ -493,13 +493,16 @@ describe('network:', function() {
             await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 
             assert.equal(eventsEmitted.length, 8);
+            console.log('EVENTS EMITTED IN TRY BLOCK: ', eventsEmitted.length);
             eventsEmitted.forEach(item => {
               switch (item.event) {
                 case 'LocalRoom#reconnecting':
+                  console.log('LocalRoom#Reconnecting error val: ', item.error);
                   assert(item.error instanceof SignalingConnectionDisconnectedError);
                   break;
                 case 'RemoteRoom#participantReconnecting':
                 case 'RemoteRoom#participantReconnected':
+                  console.log('RemoteRoom#Reconnected values', item.participant, aliceRemote);
                   assert.equal(item.participant, aliceRemote);
                   break;
               }
