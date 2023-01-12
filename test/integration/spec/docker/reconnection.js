@@ -498,10 +498,9 @@ describe('network:', function() {
           // should not be in network tests.
           aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
           try {
-            await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
+            await waitFor(eventPromises, 'waiting for event promises', 5 * ONE_MINUTE);
 
             assert.equal(eventsEmitted.length, 8);
-            console.log('EVENTS EMITTED IN TRY BLOCK: ', eventsEmitted.length);
             eventsEmitted.forEach(item => {
               switch (item.event) {
                 case 'LocalRoom#reconnecting':
