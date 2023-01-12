@@ -29,6 +29,7 @@ const {
   MediaConnectionError,
   SignalingConnectionDisconnectedError
 } = require('../../../../es5/util/twilio-video-errors');
+const { identity } = require('rxjs');
 
 const ONE_MINUTE = 60 * 1000;
 const VALIDATE_MEDIA_FLOW_TIMEOUT = ONE_MINUTE;
@@ -87,7 +88,7 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      logLevel: 'debug',
+      // logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
@@ -290,7 +291,13 @@ describe('network:', function() {
         await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
         await waitToGoOnline();
         currentNetworks = await readCurrentNetworks(dockerAPI);
-        const setupOptions = identities.map(identity => ({ identity }));
+        const setupOptions = identities.map(identity => {
+          if (identity === 'Alice') {
+            return { identity, logLevel: 'debug' };
+          }
+          return { identity };
+        });
+
         rooms = await setup(setupOptions);
         disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
       });
