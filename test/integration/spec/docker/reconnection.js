@@ -87,7 +87,7 @@ async function setup(setupOptions) {
       audio: true,
       fake: true,
       name: sid,
-      // logLevel: 'debug',
+      logLevel: 'debug',
       video: smallVideoConstraints
     }, options, defaults);
 
@@ -491,14 +491,14 @@ describe('network:', function() {
               resolveIfAllEventsFired();
             });
           });
-          console.log('EVENTS EMITTED BEFORE: ', eventsEmitted.length);
+
           // NOTE(mmalavalli): Simulate a signaling connection interruption by
           // closing Alice's WebSocket transport. Then, wait until all the expected
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
           // should not be in network tests.
           aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
           try {
-            await waitFor(eventPromises, 'waiting for event promises', 5 * ONE_MINUTE);
+            await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 
             assert.equal(eventsEmitted.length, 8);
             eventsEmitted.forEach(item => {
