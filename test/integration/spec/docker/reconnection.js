@@ -291,12 +291,7 @@ describe('network:', function() {
         await waitFor(dockerAPI.resetNetwork(), 'reset network', RESET_NETWORK_TIMEOUT);
         await waitToGoOnline();
         currentNetworks = await readCurrentNetworks(dockerAPI);
-        const setupOptions = identities.map(identity => {
-          if (identity === 'Alice') {
-            return { identity, logLevel: 'debug' };
-          }
-          return { identity };
-        });
+        const setupOptions = identities.map(identity => ({ identity }));
 
         rooms = await setup(setupOptions);
         disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
@@ -503,7 +498,7 @@ describe('network:', function() {
           // closing Alice's WebSocket transport. Then, wait until all the expected
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
           // should not be in network tests.
-          aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
+          aliceRoom._signaling._transport._twilioConnection._close({ code: 3008, reason: 'foo' });
           try {
             await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 
