@@ -291,7 +291,6 @@ describe('network:', function() {
         await waitToGoOnline();
         currentNetworks = await readCurrentNetworks(dockerAPI);
         const setupOptions = identities.map(identity => ({ identity }));
-
         rooms = await setup(setupOptions);
         disconnected = Promise.all(rooms.map(room => new Promise(resolve => room.once('disconnected', resolve))));
       });
