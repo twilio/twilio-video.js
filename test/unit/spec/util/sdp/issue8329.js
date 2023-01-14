@@ -2,10 +2,7 @@
 'use strict';
 
 const assert = require('assert');
-const { RTCSessionDescription } = require('../../../../../lib/webrtc');
-
 const workaround = require('../../../../../lib/util/sdp/issue8329');
-
 const { a } = require('../../../../lib/util');
 
 describe('Issue 8329', function() {

@@ -6,25 +6,18 @@
 /* eslint-disable no-undef */
 'use strict';
 
-var assert = require('assert');
-var MediaStream = require('../../../../es5/webrtc/mediastream');
-var MediaStreamTrack = require('../../../../es5/webrtc/mediastreamtrack');
-var RTCIceCandidate = require('../../../../es5/webrtc/rtcicecandidate');
-var RTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
-var RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
-var util = require('../../../lib/webrtc/util');
-var { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
-var { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
+const assert = require('assert');
+const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
+const { a } = require('../../../lib/webrtc/util');
+const { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
 
-const detectSilence = require('../../../lib/webrtc/detectsilence');
-
-var sdpTypes = [
+const sdpTypes = [
   'answer',
   'offer',
   'rollback'
 ];
 
-var signalingStates = [
+const signalingStates = [
   'closed',
   'have-local-offer',
   'have-remote-offer',
@@ -35,7 +28,6 @@ const guess = guessBrowser();
 const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
-const sdpFormat = getSdpFormat();
 
 const chromeVersion = isChrome && typeof navigator === 'object'
   ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
@@ -45,7 +37,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-describe(`RTCPeerConnection(${sdpFormat})`, function() {
+describe('RTCPeerConnection', function() {
   after(() => {
     if (typeof gc === 'function') {
       gc();
@@ -153,7 +145,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  describe('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
@@ -182,7 +174,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  describe('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let answer1;
     let answer2;
 
@@ -231,7 +223,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  describe('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
@@ -263,20 +255,8 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
       });
     });
 
-    // NOTE(mroberts): This is the crux of the issue at the heart of CSDK-1206:
-    //
-    //   Chrome's WebRTC implementation treats changing the SSRC as removing a track
-    //   with the old SSRC and adding a track with the new one. This probably isn't
-    //   the right thing to do (especially when we go to Unified Plan SDP) but it's
-    //   the way it's worked for a while.
-    //
-    (isFirefox || isSafari || (isChrome && sdpFormat === 'unified')
-      ? it
-      : it.skip
-    )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
-      const getRemoteTracks = pc => sdpFormat === 'planb'
-        ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
-        : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
+    it('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
+      const getRemoteTracks = pc => flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
       const pc = new RTCPeerConnection({ iceServers: [] });
 
       await pc.setRemoteDescription(offer1);
@@ -454,159 +434,156 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  if (RTCPeerConnection.prototype.addTransceiver && sdpFormat !== 'planb') {
-    describe('RTCRtpTransceiver', () => {
-      describe('addTransceiver(kind, init)', () => {
-        const kind = 'audio';
+  describe('RTCRtpTransceiver', () => {
+    describe('addTransceiver(kind, init)', () => {
+      const kind = 'audio';
+      let pc;
+      let transceiver;
 
-        let pc;
-        let transceiver;
-
-        before(() => {
-          pc = new RTCPeerConnection();
-          transceiver = pc.addTransceiver(kind, {});
-        });
-
-        it('returns an RTCRtpTransceiver', () => {
-          assert(transceiver instanceof RTCRtpTransceiver);
-        });
-
-        it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
-          assert(pc.getTransceivers().includes(transceiver));
-        });
-
-        it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
-          assert.equal(transceiver.mid, null);
-        });
-
-        it('returns an RTCRtpTransceiver whose `sender.track` is `null`', () => {
-          assert.equal(transceiver.sender.track, null);
-        });
-
-        it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `kind`', () => {
-          assert.equal(transceiver.receiver.track.kind, kind);
-        });
-
-        it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
-          assert(!transceiver.stopped);
-        });
-
-        it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
-          assert.equal(transceiver.direction, 'sendrecv');
-        });
-
-        it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
-          assert.equal(transceiver.currentDirection, null);
-        });
+      before(() => {
+        pc = new RTCPeerConnection();
+        transceiver = pc.addTransceiver(kind, {});
       });
 
-      describe('addTransceiver(track, init)', () => {
-        let pc;
-        let track;
-        let transceiver;
-
-        before(async () => {
-          pc = new RTCPeerConnection();
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
-          [track] = await stream.getAudioTracks();
-          transceiver = pc.addTransceiver(track, {});
-        });
-
-        it('returns an RTCRtpTransceiver', () => {
-          assert(transceiver instanceof RTCRtpTransceiver);
-        });
-
-        it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
-          assert(pc.getTransceivers().includes(transceiver));
-        });
-
-        it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
-          assert.equal(transceiver.mid, null);
-        });
-
-        it('returns an RTCRtpTransceiver whose `sender.track` is `track`', () => {
-          assert.equal(transceiver.sender.track, track);
-        });
-
-        it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `track.kind`', () => {
-          assert.equal(transceiver.receiver.track.kind, track.kind);
-        });
-
-        it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
-          assert(!transceiver.stopped);
-        });
-
-        it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
-          assert.equal(transceiver.direction, 'sendrecv');
-        });
-
-        it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
-          assert.equal(transceiver.currentDirection, null);
-        });
+      it('returns an RTCRtpTransceiver', () => {
+        assert(transceiver instanceof RTCRtpTransceiver);
       });
 
-      // TODO(mpatwardhan): VIDEO-4940: chrome now supports RTCRtpTransceiver.prototype.stop, but test needs to be fixed for chrome
-      (RTCRtpTransceiver.prototype.stop && !isChrome ? describe : describe.skip)('Recycling Behavior', () => {
-        it('Scenario 1', async () => {
-          const configuration = {
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require'
-          };
+      it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
+        assert(pc.getTransceivers().includes(transceiver));
+      });
 
-          const [pc1, pc2] = createPeerConnections(configuration);
+      it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
+        assert.equal(transceiver.mid, null);
+      });
 
-          // Round 1
-          console.log('Round 1');
-          const t1 = pc1.addTransceiver('audio');
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+      it('returns an RTCRtpTransceiver whose `sender.track` is `null`', () => {
+        assert.equal(transceiver.sender.track, null);
+      });
 
-          console.log('Round 2');
-          // Round 2
-          t1.stop();
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+      it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `kind`', () => {
+        assert.equal(transceiver.receiver.track.kind, kind);
+      });
 
-          console.log('Round 3');
-          // Round 3
-          const t2 = pc1.addTransceiver('audio');
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
-        });
+      it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
+        assert(!transceiver.stopped);
+      });
 
-        // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
-        // with stopped RTCRtpTransceivers this scenario fails. So this test is
-        // disabled for Safari unified plan.
-        //
-        // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
-        //
-        (isSafari && sdpFormat === 'unified' ? it.skip : it)('Scenario 2', async () => {
-          const configuration = {
-            bundlePolicy: 'max-bundle',
-            rtcpMuxPolicy: 'require'
-          };
+      it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
+        assert.equal(transceiver.direction, 'sendrecv');
+      });
 
-          const [pc1, pc2] = createPeerConnections(configuration);
-
-          // Round 1
-          const t1 = pc1.addTransceiver('audio');
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
-
-          // Round 2
-          t1.stop();
-          const t2 = pc1.addTransceiver('audio');
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
-
-          // Round 3
-          const t3 = pc1.addTransceiver('audio');
-          await negotiate(pc1, pc2);
-          assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
-        });
+      it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
+        assert.equal(transceiver.currentDirection, null);
       });
     });
-  }
+
+    describe('addTransceiver(track, init)', () => {
+      let pc;
+      let track;
+      let transceiver;
+
+      before(async () => {
+        pc = new RTCPeerConnection();
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
+        [track] = await stream.getAudioTracks();
+        transceiver = pc.addTransceiver(track, {});
+      });
+
+      it('returns an RTCRtpTransceiver', () => {
+        assert(transceiver instanceof RTCRtpTransceiver);
+      });
+
+      it('returns an RTCRtpTransceiver that is present in `getTransceivers()`', () => {
+        assert(pc.getTransceivers().includes(transceiver));
+      });
+
+      it('returns an RTCRtpTransceiver whose `mid` is `null`', () => {
+        assert.equal(transceiver.mid, null);
+      });
+
+      it('returns an RTCRtpTransceiver whose `sender.track` is `track`', () => {
+        assert.equal(transceiver.sender.track, track);
+      });
+
+      it('returns an RTCRtpTransceiver whose `receiver.track.kind` is `track.kind`', () => {
+        assert.equal(transceiver.receiver.track.kind, track.kind);
+      });
+
+      it('returns an RTCRtpTransceiver whose `stopped` is `false`', () => {
+        assert(!transceiver.stopped);
+      });
+
+      it('returns an RTCRtpTransceiver whose `direction` is "sendrecv"', () => {
+        assert.equal(transceiver.direction, 'sendrecv');
+      });
+
+      it('returns an RTCRtpTransceiver whose `currentDirection` is `null`', () => {
+        assert.equal(transceiver.currentDirection, null);
+      });
+    });
+
+    describe('Recycling Behavior', () => {
+      // TODO(mpatwardhan): VIDEO-4940: chrome now supports RTCRtpTransceiver.prototype.stop, but test needs to be fixed for chrome
+      (isChrome ? it.skip : it)('Scenario 1', async () => {
+        const configuration = {
+          bundlePolicy: 'max-bundle',
+          rtcpMuxPolicy: 'require'
+        };
+
+        const [pc1, pc2] = createPeerConnections(configuration);
+
+        // Round 1
+        console.log('Round 1');
+        const t1 = pc1.addTransceiver('audio');
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+        console.log('Round 2');
+        // Round 2
+        t1.stop();
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+        console.log('Round 3');
+        // Round 3
+        const t2 = pc1.addTransceiver('audio');
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+      });
+
+      // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
+      // with stopped RTCRtpTransceivers this scenario fails. So this test is
+      // disabled for Safari unified plan.
+      //
+      // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
+      //
+      (isSafari ? it.skip : it)('Scenario 2', async () => {
+        const configuration = {
+          bundlePolicy: 'max-bundle',
+          rtcpMuxPolicy: 'require'
+        };
+
+        const [pc1, pc2] = createPeerConnections(configuration);
+
+        // Round 1
+        const t1 = pc1.addTransceiver('audio');
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+        // Round 2
+        t1.stop();
+        const t2 = pc1.addTransceiver('audio');
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
+
+        // Round 3
+        const t3 = pc1.addTransceiver('audio');
+        await negotiate(pc1, pc2);
+        assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
+      });
+    });
+  });
 });
 
 function assertEqualDescriptions(actual, expected) {
@@ -618,8 +595,8 @@ function assertEqualDescriptions(actual, expected) {
     // NOTE(mroberts): The .sdp property of a local description may change on
     // subsequent accesses (as ICE candidates are gathered); so, rather than
     // compare the entire SDP string, let us just compare the o=line.
-    var expectedOLine = expected.sdp.match(/^o=.*\r$/m)[0];
-    var actualOLine = actual.sdp.match(/^o=.*\r$/m)[0];
+    const expectedOLine = expected.sdp.match(/^o=.*\r$/m)[0];
+    const actualOLine = actual.sdp.match(/^o=.*\r$/m)[0];
     assert.equal(actualOLine, expectedOLine);
   }
 }
@@ -632,7 +609,7 @@ function emptyDescription() {
 }
 
 function testConstructor() {
-  var test;
+  let test;
 
   beforeEach(() => {
     return makeTest().then(_test => test = _test);
@@ -642,7 +619,7 @@ function testConstructor() {
     assert(test.peerConnection instanceof RTCPeerConnection);
   });
 
-  var expected = {
+  const expected = {
     iceConnectionState: 'new',
     iceGatheringState: 'new',
     localDescription: emptyDescription(),
@@ -675,21 +652,21 @@ function testAddIceCandidate(signalingState) {
   // NOTE(mroberts): "stable" and "have-local-offer" only trigger failure here
   // because we test one round of negotiation. If we tested multiple rounds,
   // such that remoteDescription was non-null, we would accept a success here.
-  var shouldFail = {
+  const shouldFail = {
     'closed': true,
     'stable': !isSafari,
     'have-local-offer': !isSafari
   }[signalingState] || false;
 
-  var needsTransition = {
+  const needsTransition = {
     'have-local-offer': true,
     'have-remote-offer': true
   }[signalingState] || false;
 
   (signalingState === 'closed' && isSafari ? context.skip : context)(JSON.stringify(signalingState), () => {
-    var error;
-    var result;
-    var test;
+    let error;
+    let result;
+    let test;
 
     beforeEach(() => {
       error = null;
@@ -700,8 +677,8 @@ function testAddIceCandidate(signalingState) {
       }).then(_test => {
         test = _test;
 
-        var candidate = test.createRemoteCandidate();
-        var promise = test.peerConnection.addIceCandidate(candidate);
+        const candidate = test.createRemoteCandidate();
+        const promise = test.peerConnection.addIceCandidate(candidate);
 
         // NOTE(mroberts): Because of the way the ChromeRTCPeerConnection
         // simulates signalingStates "have-local-offer" and "have-remote-offer",
@@ -738,9 +715,9 @@ function testAddIceCandidate(signalingState) {
 }
 
 function testGetSenders(signalingState) {
-  var senders;
-  var stream;
-  var test;
+  let senders;
+  let stream;
+  let test;
 
   before(async () => {
     stream = await makeStream({ audio: true, video: true });
@@ -755,16 +732,12 @@ function testGetSenders(signalingState) {
     // NOTE(mmalavalli): Safari 12.2+ and Firefox 67+ implement the spec-compliant
     // version of RTCPeerConnection.getSenders() for signalingState "closed".
     const isSpecCompliantForClosed = signalingState === 'closed'
-      && sdpFormat === 'unified'
       && (isSafari || (isFirefox && firefoxVersion > 66));
 
     it(`should return ${isSpecCompliantForClosed ? 'an empty list' : 'a list of senders'}`, () => {
       const actualSenders = test.peerConnection.getSenders();
       if (isFirefox && signalingState === 'have-remote-offer') {
         assert.equal(actualSenders.length, senders.length);
-        return;
-      } else if (isSafari && sdpFormat === 'planb' && signalingState === 'have-local-offer') {
-        assert.equal(actualSenders.length, senders.length + 1);
         return;
       }
       if (isSpecCompliantForClosed) {
@@ -777,8 +750,8 @@ function testGetSenders(signalingState) {
 }
 
 function testGetReceivers(signalingState) {
-  var pc2;
-  var stream;
+  let pc2;
+  let stream;
 
   before(async () => {
     const pc1 = new RTCPeerConnection({ iceServers: [] });
@@ -851,9 +824,9 @@ function expectSinglingStateChangeOnClose() {
 
 function testClose(signalingState) {
   context(JSON.stringify(signalingState), () => {
-    var result;
-    var test;
-    var signalingStateChangeInThisTick;
+    let result;
+    let test;
+    let signalingStateChangeInThisTick;
 
     beforeEach(() => {
       function onSigalingStateChanged() {
@@ -874,7 +847,7 @@ function testClose(signalingState) {
         }
 
         test.peerConnection.addEventListener('signalingstatechange', onSigalingStateChanged);
-        var closePromise = test.close();
+        const closePromise = test.close();
         test.peerConnection.removeEventListener('signalingstatechange', onSigalingStateChanged);
         return closePromise.then(results => result = results[0]);
       });
@@ -884,7 +857,7 @@ function testClose(signalingState) {
       assert.equal(result, undefined);
     });
 
-    var expected = {
+    const expected = {
       iceConnectionState: 'closed',
       iceGatheringState: 'complete',
       signalingState: 'closed'
@@ -909,7 +882,7 @@ function testClose(signalingState) {
       });
 
     } else {
-      var events = [];
+      const events = [];
 
       if (expectSinglingStateChangeOnClose()) {
         events.push('signalingstatechange');
@@ -920,7 +893,7 @@ function testClose(signalingState) {
       }
 
       events.forEach(event => {
-        it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
+        it('should raise ' + a(event) + ' ' + event + ' event', () => {
           return test.waitFor(event);
         });
       });
@@ -975,7 +948,7 @@ function testDtlsRoleNegotiation() {
           });
         });
 
-        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        it('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -1021,7 +994,7 @@ function testGlare() {
           });
         });
 
-        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        it('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
@@ -1047,17 +1020,17 @@ function makeStream(constraints) {
     return navigator.mediaDevices.getUserMedia(constraints);
   }
 
-  var getUserMedia = navigator.webkitGetUserMedia;
+  let getUserMedia = navigator.webkitGetUserMedia;
   getUserMedia = getUserMedia || navigator.mozGetUserMedia;
   getUserMedia = getUserMedia.bind(navigator, constraints);
   return new Promise((resolve, reject) => getUserMedia(resolve, reject));
 }
 
 function testAddTrack() {
-  var test;
-  var stream;
-  var tracks;
-  var trackToAdd;
+  let test;
+  let stream;
+  let tracks;
+  let trackToAdd;
 
   before(async () => {
     stream = await makeStream();
@@ -1080,7 +1053,7 @@ function testAddTrack() {
     ]
   ].forEach(([scenario, setup]) => {
     context(scenario, () => {
-      var exception;
+      let exception;
 
       beforeEach(() => {
         setup();
@@ -1115,12 +1088,12 @@ function testAddTrack() {
 }
 
 function testRemoveTrack() {
-  var test;
-  var tracks;
-  var stream;
-  var localAudioSender;
-  var localAudioTrack;
-  var localVideoSender;
+  let test;
+  let tracks;
+  let stream;
+  let localAudioSender;
+  let localAudioTrack;
+  let localVideoSender;
 
   before(async () => {
     stream = await makeStream();
@@ -1147,7 +1120,7 @@ function testRemoveTrack() {
     ]
   ].forEach(([scenario, setup, shouldThrow]) => {
     context(scenario, () => {
-      var exception;
+      let exception;
 
       beforeEach(() => {
         setup();
@@ -1189,15 +1162,12 @@ function testRemoveTrack() {
     assert.deepEqual(presentTracks, stream.getVideoTracks());
   });
 
-  // NOTE(mmalavalli): Once RTCRtpSender is supported in Chrome, and we
-  // actually start using the native RTCPeerConnection's addTrack()/removeTrack()
-  // APIs in Firefox and Safari, these next two tests should be unskipped.
-  it.skip('should set the .track on its corresponding RTCRtpSender to null', () => {
+  it('should set the .track on its corresponding RTCRtpSender to null', () => {
     test.peerConnection.removeTrack(localAudioSender);
     assert.equal(localAudioSender.track, null);
   });
 
-  it.skip('should retain the same RTCRtpSender instance in the list of RTCRtpSenders maintained by the RTCPeerConnection', () => {
+  it('should retain the same RTCRtpSender instance in the list of RTCRtpSenders maintained by the RTCPeerConnection', () => {
     test.peerConnection.removeTrack(localAudioSender);
     const senders = new Set(test.peerConnection.getSenders());
     assert(senders.has(localAudioSender));
@@ -1205,13 +1175,13 @@ function testRemoveTrack() {
 }
 
 function testCreateAnswer(signalingState) {
-  var error;
-  var localDescription;
-  var remoteDescription;
-  var result;
-  var test;
+  let error;
+  let localDescription;
+  let remoteDescription;
+  let result;
+  let test;
 
-  var shouldFail = {
+  const shouldFail = {
     'closed': true,
     'have-local-offer': true,
     'stable': true
@@ -1235,7 +1205,7 @@ function testCreateAnswer(signalingState) {
         // an Error.
       }
 
-      var promise = test.peerConnection.createAnswer();
+      const promise = test.peerConnection.createAnswer();
 
       if (shouldFail) {
         return promise.catch(_error => error = _error);
@@ -1291,13 +1261,13 @@ function testCreateAnswer(signalingState) {
 }
 
 function testCreateOffer(signalingState) {
-  var error;
-  var localDescription;
-  var remoteDescription;
-  var result;
-  var test;
+  let error;
+  let localDescription;
+  let remoteDescription;
+  let result;
+  let test;
 
-  var shouldFail = {
+  const shouldFail = {
     'closed': true
   }[signalingState] || false;
 
@@ -1319,7 +1289,7 @@ function testCreateOffer(signalingState) {
         // an Error.
       }
 
-      var promise = test.peerConnection.createOffer(test.offerOptions);
+      const promise = test.peerConnection.createOffer(test.offerOptions);
 
       if (shouldFail) {
         return promise.catch(_error => error = _error);
@@ -1381,10 +1351,10 @@ function testCreateOffer(signalingState) {
 }
 
 function testSetDescription(local, signalingState, sdpType) {
-  var createLocalDescription = local ? 'createLocalDescription' : 'createRemoteDescription';
-  var setLocalDescription = local ? 'setLocalDescription' : 'setRemoteDescription';
+  const createLocalDescription = local ? 'createLocalDescription' : 'createRemoteDescription';
+  const setLocalDescription = local ? 'setLocalDescription' : 'setRemoteDescription';
 
-  var nextSignalingState = {
+  const nextSignalingState = {
     true: {
       answer: {
         'have-remote-offer': 'stable'
@@ -1416,16 +1386,16 @@ function testSetDescription(local, signalingState, sdpType) {
     }
   }[local][sdpType][signalingState];
 
-  var shouldFail = !nextSignalingState;
+  const shouldFail = !nextSignalingState;
 
   context(JSON.stringify(sdpType), () => {
-    var description;
-    var error;
-    var localDescription;
-    var nextDescription;
-    var remoteDescription;
-    var result;
-    var test;
+    let description;
+    let error;
+    let localDescription;
+    let nextDescription;
+    let remoteDescription;
+    let result;
+    let test;
 
     beforeEach(() => {
       error = null;
@@ -1453,7 +1423,7 @@ function testSetDescription(local, signalingState, sdpType) {
           ? emptyDescription()
           : description;
 
-        var promise = test.peerConnection[setLocalDescription](description);
+        const promise = test.peerConnection[setLocalDescription](description);
 
         if (shouldFail) {
           return promise.catch(_error => error = _error);
@@ -1531,14 +1501,13 @@ function testSetDescription(local, signalingState, sdpType) {
 }
 
 function makeTest(options) {
-  var dummyOfferSdp = `v=0\r
+  let dummyOfferSdp = `v=0\r
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
 a=group:BUNDLE ${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : sdpFormat === 'unified'
-      ? '0' : 'audio'}\r
+    : '0'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1548,8 +1517,7 @@ a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
 a=mid:${isFirefox && firefoxVersion < 63
     ? 'sdparta_0'
-    : sdpFormat === 'unified'
-      ? '0' : 'audio'}\r
+    : '0'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r
@@ -1571,14 +1539,14 @@ a=rtpmap:126 telephone-event/8000\r
 a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8A:A4:59:E4:66:22:3D:B7:4E:9E:E1:AB:E4\r
 `;
 
-  var dummyAnswerSdp = dummyOfferSdp.replace(/a=recvonly/mg, 'a=inactive');
+  let dummyAnswerSdp = dummyOfferSdp.replace(/a=recvonly/mg, 'a=inactive');
 
   if (isFirefox) {
     dummyOfferSdp += 'a=setup:actpass\r\n';
-    dummyAnswerSdp.replace(/a=setup:actpass\r/mg, '');
+    dummyAnswerSdp = dummyAnswerSdp.replace(/a=setup:actpass\r/mg, '');
   }
 
-  var test = Object.assign({
+  const test = Object.assign({
     dummyAnswerSdp: dummyAnswerSdp,
     dummyOfferSdp: dummyOfferSdp,
     events: new Map(),
@@ -1621,7 +1589,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
   };
 
   test.createLocalDescription = function createLocalDesription(sdpType) {
-    var promise;
+    let promise;
     switch (sdpType) {
       case 'answer':
         switch (test.peerConnection.signalingState) {
@@ -1671,7 +1639,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
   };
 
   test.createRemoteDescription = function createRemoteDesription(sdpType) {
-    var description;
+    let description;
     switch (sdpType) {
       case 'answer':
         description = new RTCSessionDescription({
@@ -1701,7 +1669,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     });
   };
 
-  var events = [
+  const events = [
     'iceconnectionstatechange',
     'signalingstatechange'
   ];
@@ -1710,7 +1678,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     if (!test.events.has(event)) {
       test.events.set(event, []);
     }
-    var events = test.events.get(event);
+    const events = test.events.get(event);
     test.peerConnection.addEventListener(event, event => events.push(event));
   });
 
@@ -1724,7 +1692,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
 
   test.waitFor = async function waitFor(event) {
     const timeoutMS = 10 * 1000;
-    var events = test.events.get(event);
+    const events = test.events.get(event);
     if (events.length) {
       return Promise.resolve(events[0]);
     }
@@ -1751,7 +1719,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
       // ensure that events like signalingstatechange are not raised in
       // response to one of our API calls.
       setTimeout(() => {
-        var events = test.events.get(event);
+        const events = test.events.get(event);
         if (events.length) {
           return reject(new Error('Event was raised'));
         }
@@ -1760,7 +1728,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     });
   };
 
-  var setup;
+  let setup;
   switch (test.signalingState) {
     case 'closed':
       setup = test.close().then(() => test.resetEvents());
