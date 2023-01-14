@@ -10,14 +10,11 @@ const getStats = require('../../../../es5/webrtc/getstats');
 const getUserMedia = require('../../../../es5/webrtc/getusermedia');
 const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
 const { guessBrowser } = require('../../../../es5/webrtc/util');
-const { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
 
 const guess = guessBrowser();
 const isFirefox = guess === 'firefox';
-const isSafari = guess === 'safari';
-const sdpFormat = getSdpFormat();
 
-(isSafari && sdpFormat === 'planb' ? describe.skip : describe)(`getStats(${sdpFormat})`, function() {
+describe('getStats()', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(10000);
 

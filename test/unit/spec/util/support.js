@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const isSupported = require('../../../../lib/util/support');
-const { clearChromeCachedSdpFormat } = require('../../../../lib/webrtc/util/sdp');
 
 describe('isSupported', () => {
   let oldAgent;
@@ -11,7 +10,6 @@ describe('isSupported', () => {
   });
 
   afterEach(() => {
-    clearChromeCachedSdpFormat();
     navigator.userAgent = oldAgent;
     if (global.chrome) {
       delete global.chrome;
@@ -122,7 +120,7 @@ describe('isSupported', () => {
       if (chrome) {
         global.chrome = chrome;
       }
-      assert.equal(isSupported(), true);
+      assert.equal(isSupported(false), true);
     });
   });
 
@@ -209,7 +207,7 @@ describe('isSupported', () => {
       if (brave) {
         navigator.brave = brave;
       }
-      assert.equal(isSupported(), false);
+      assert.equal(isSupported(false), false);
     });
   });
 
@@ -231,7 +229,7 @@ describe('isSupported', () => {
 
       it('and RTCPeerConnection.prototype.addTransceiver is not supported', () => {
         global.RTCPeerConnection.prototype = {};
-        assert.equal(isSupported(), false);
+        assert.equal(isSupported(false), false);
       });
 
       it('and RTCPeerConnection.prototype.addTransceiver throws an exception', () => {
@@ -242,7 +240,7 @@ describe('isSupported', () => {
           this.close = function() {};
         };
         global.RTCPeerConnection.prototype.addTransceiver = function() {};
-        assert.equal(isSupported(), false);
+        assert.equal(isSupported(false), false);
       });
     });
 
@@ -263,12 +261,12 @@ describe('isSupported', () => {
 
       it('and RTCRtpTransceiver is not supported', () => {
         delete global.RTCRtpTransceiver;
-        assert.equal(isSupported(), false);
+        assert.equal(isSupported(false), false);
       });
 
       it('and RTCRtpTransceiver is supported but currentDirection is missing', () => {
         delete global.RTCRtpTransceiver.prototype.currentDirection;
-        assert.equal(isSupported(), false);
+        assert.equal(isSupported(false), false);
       });
     });
   });
