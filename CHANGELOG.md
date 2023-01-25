@@ -5,6 +5,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.26.1 (in progress)
 ====================
 
+- Fixed a bug that manifests on Chrome versions 112+ where `Room.getStats()` rejects the returned Promise due to a
+  TypeError caused by trying to read from the now-removed `RTCMediaStreamTrackStats`. Instead, the SDK now reads from
+  the `RTCMediaSourceStats`. (VIDEO-12411) 
 - Fixed an error in the type definition for `createLocalAudioTrack()`. (VIDEO-12383)
 
 2.26.0 (December 14, 2022)
