@@ -43,6 +43,9 @@ export { Room } from './Room';
 export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
 export { TwilioError } from './TwilioError';
+export { VideoProcessor } from './VideoProcessor';
+export { VideoTrack } from './VideoTrack';
+
 export {
   AudioCodec,
   AudioCodecSettings,
@@ -93,5 +96,3 @@ export {
   VideoTrackPublication,
   VP8CodecSettings
 } from './types';
-export { VideoProcessor } from './VideoProcessor';
-export { VideoTrack } from './VideoTrack';
