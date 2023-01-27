@@ -96,6 +96,10 @@ const sdpFormat = getSdpFormat();
         assert(trackStats, `expected to have property: ${stats}.${trackType}[0]`);
 
         [
+          { key: 'frameWidthInput', type: 'number' },
+          { key: 'frameHeightInput', type: 'number' },
+          { key: 'frameWidthSent', type: 'number' },
+          { key: 'frameHeightSent', type: 'number' },
           { key: 'ssrc', type: 'string' },
           { key: 'timestamp', type: 'number' },
           { key: 'bytesReceived', type: 'number' },
