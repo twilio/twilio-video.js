@@ -203,7 +203,7 @@ transform: scaleX(-1)
 <summary>iOS 16: Local Media Tracks are lost in a video call after an interruption with a phone call</summary>
 <p>
 
-   Due to a bug on Safari on iOS 16, an incoming call causes local and sometimes remote media playback to stop after the second incoming call. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=240651). As a workaround, you can call the [refreshInactiveMedia](https://sdk.twilio.com/js/video/releases/2.26.0/docs/Room.html#refreshInactiveMedia__anchor) on the room object in your application in order to restart the muted local media tracks.
+   Due to a bug on Safari on iOS 16, an incoming call causes local and sometimes remote media playback to stop after the second incoming call. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=240651). As a workaround, you can call the [refreshInactiveMedia](https://sdk.twilio.com/js/video/releases/2.26.0/docs/Room.html#refreshInactiveMedia__anchor) method on the room object in your application in order to restart the muted local media tracks.
 </p>
 </details>
 <details>
