@@ -200,10 +200,10 @@ transform: scaleX(-1)
 </p>
 </details>
 <details>
-<summary>iOS 15: Audio is lost in a video call after an interruption with a phone call</summary>
+<summary>iOS 16: Local Media Tracks are lost in a video call after an interruption with a phone call</summary>
 <p>
 
-   Due to a regression on Safari on iOS 15, an incoming call causes local and sometimes remote media playback to stop. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=230537).
+   Due to a bug on Safari on iOS 16, an incoming call causes local and sometimes remote media playback to stop after the second incoming call. You can find more details in this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=240651). As a workaround, you can call the [refreshInactiveMedia](https://sdk.twilio.com/js/video/releases/2.26.0/docs/Room.html#refreshInactiveMedia__anchor) on the room object in your application in order to restart the muted local media tracks.
 </p>
 </details>
 <details>
@@ -348,7 +348,7 @@ trouble with twilio-video.js, ensure these are not running.
 <summary>setSinkId method is not implemented in all browsers</summary>
 <p>
 
-   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it is not possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead. 
+   The `audioElement.setSinkId()` method, which is used to change the audio output device for a given HTML audio element, is only implemented in Desktop Chrome and Desktop Edge. Therefore, it is not possible for users to change their audio output device in other browsers. Users will have to use their operating system settings to change their audio output device instead.
 
    More information about this method (including browser compatibility) is available [here](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/setSinkId).
 </p>
