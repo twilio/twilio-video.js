@@ -3,6 +3,7 @@
 
 var assert = require('assert');
 var { FakeMediaStream, FakeMediaStreamTrack } = require('../../../lib/webrtc/fakemediastream');
+const { capitalize } = require('../../../lib/util');
 var { FakeRTCPeerConnection } = require('../../../lib/webrtc/fakestats');
 var getStats = require('../../../../lib/webrtc/getstats');
 
@@ -62,6 +63,28 @@ describe('getStats', function() {
           reject(e);
         }
       });
+    });
+  });
+
+  ['chrome', 'firefox', 'safari'].forEach(browser => {
+    it(`should reject the promise if an exception is raised while standardizing the stats (${browser})`, async () => {
+      const peerConnection = new FakeRTCPeerConnection({ [`${browser}FakeStats`]: [] });
+      const localStream = new FakeMediaStream();
+      let error;
+
+      localStream.addTrack(new FakeMediaStreamTrack('audio'));
+      peerConnection._addLocalStream(localStream);
+
+      try {
+        await getStats(peerConnection, {
+          [`testFor${capitalize(browser)}`]: true,
+          simulateExceptionWhileStandardizingStats: true
+        });
+      } catch (e) {
+        error = e;
+      } finally {
+        assert(error instanceof Error);
+      }
     });
   });
 
