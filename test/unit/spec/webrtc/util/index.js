@@ -1,9 +1,16 @@
 'use strict';
 
-var assert = require('assert');
-var util = require('../../../../../lib/webrtc/util');
+const assert = require('assert');
+const { combinationContext } = require('../../../../lib/util');
 
-describe('Util', () => {
+const {
+  clearCachedSupportedCodecs,
+  guessBrowser,
+  guessBrowserVersion,
+  isCodecSupported
+} = require('../../../../../lib/webrtc/util');
+
+describe('webrtc/util', () => {
   describe('guessBrowser', () => {
     [
       [
@@ -64,7 +71,7 @@ describe('Util', () => {
     ].forEach(([browser, userAgent, name]) => {
       context(`${browser} - ${userAgent}`, () => {
         it(`should return "${name}"`, () => {
-          assert.equal(util.guessBrowser(userAgent), name);
+          assert.equal(guessBrowser(userAgent), name);
         });
       });
     });
@@ -105,8 +112,54 @@ describe('Util', () => {
     ].forEach(([browser, userAgent, version]) => {
       context(`${browser} - ${userAgent}`, () => {
         it(`should return ${JSON.stringify(version)}`, () => {
-          assert.deepEqual(util.guessBrowserVersion(userAgent), version);
+          assert.deepEqual(guessBrowserVersion(userAgent), version);
         });
+      });
+    });
+  });
+
+  describe('isCodecSupported', () => {
+    combinationContext([
+      [
+        [true, false],
+        x => `when RTCRtpSender.getCapabilities() is${x ? '' : ' not'} supported`
+      ],
+      [
+        ['audio', 'video'],
+        x => `and the given ${x} codec`
+      ],
+      [
+        [true, false],
+        x => `is${x ? '' : ' not'} supported`
+      ]
+    ], ([isRTCRtpSenderGetCapabilitiesSupported, kind, isCodecSupportedByBrowser]) => {
+      let codec;
+      let origRTCRtpSender;
+
+      before(() => {
+        clearCachedSupportedCodecs();
+        if (!isRTCRtpSenderGetCapabilitiesSupported) {
+          origRTCRtpSender = global.RTCRtpSender;
+          delete global.RTCRtpSender;
+        }
+        codec = isCodecSupportedByBrowser ? {
+          audio: 'opus',
+          video: 'VP8'
+        }[kind] : {
+          audio: 'foo',
+          video: 'BAR'
+        }[kind];
+      });
+
+      it(`should return a Promise which resolves with ${isCodecSupportedByBrowser}`, async () => {
+        const ret = await isCodecSupported(codec, kind);
+        assert.equal(ret, isCodecSupportedByBrowser);
+      });
+
+      after(() => {
+        if (!isRTCRtpSenderGetCapabilitiesSupported) {
+          global.RTCRtpSender = origRTCRtpSender;
+        }
       });
     });
   });
