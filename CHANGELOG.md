@@ -2,13 +2,22 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.26.2 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug on Chrome versions 112+ where `Room.getStats()` did not reject the returned Promise when an exception was
+  raised while accessing WebRTC stats that due to a TypeError caused by trying to read from the now-removed `RTCMediaStreamTrackStats`. (VIDEO-12534)
+
 2.26.1 (January 31, 2023)
 =========================
 
 Bug Fixes
 ---------
 
-- Fixed a bug that manifests on Chrome versions 112+ where `Room.getStats()` rejects the returned Promise due to a
+- Fixed a bug that manifests on Chrome versions 112+ where `Room.getStats()` raises an unhandled exception due to a
   TypeError caused by trying to read from the now-removed `RTCMediaStreamTrackStats`. Instead, the SDK now reads from
   the `RTCMediaSourceStats`. (VIDEO-12411) 
 - Fixed an error in the type definition for the `attach()` method of `AudioTrack` and `VideoTrack`. (VIDEO-12242)
