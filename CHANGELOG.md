@@ -5,6 +5,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.26.2 (in progress)
 ====================
 
+Changes
+-------
+
+- Starting from version 110, Chrome will no longer support the iSAC audio codec. The SDK will now log a warning to the console
+  whenever an audio or a video codec that is specified in `ConnectOptions.preferredAudioCodecs` and `ConnectOptions.preferredVideoCodecs`
+  is not supported by the browser. (VIDEO-12494)
+
 Bug Fixes
 ---------
 
