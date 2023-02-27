@@ -346,6 +346,9 @@ function trackSubscribed(track: Video.VideoTrack | Video.AudioTrack) {
 }
 
 function trackUnsubscribed(track: Video.VideoTrack | Video.AudioTrack) {
+  const element = document.createElement(track.kind);
+  track.detach('#foo').remove();
+  track.detach(element).remove();
   track.detach().forEach(element => element.remove());
 }
 

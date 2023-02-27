@@ -147,7 +147,7 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
       bobLocalTrackA.stop();
     });
 
-    it(`${description} can be disabled after publishing (@unstable: JSDK-2852)`, async () => {
+    it(`${description} can be disabled after publishing`, async () => {
       const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
       await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);
       bobLocalTrackA.enable(false);
@@ -171,7 +171,7 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
     });
 
     [true, false].forEach(trackEnabled => {
-      it(`should preserve isEnabled state: ${trackEnabled} (@unstable: JSDK-2852)`, async () => {
+      it(`should preserve isEnabled state: ${trackEnabled}`, async () => {
         // Bob publishes track
         const bobLocalTrackA = await createLocalTrack(Object.assign({ name: 'trackA' }, options));
         await waitFor(bobLocal.publishTrack(bobLocalTrackA), `Bob to publish trackA: ${roomSid}`);

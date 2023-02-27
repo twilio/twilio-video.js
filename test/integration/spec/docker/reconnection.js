@@ -10,7 +10,6 @@ const { createRoom, completeRoom } = require('../../../lib/rest');
 const getToken = require('../../../lib/token');
 
 const {
-  getRegionalizedIceServers,
   randomName,
   validateMediaFlow,
   waitForMediaFlow,
@@ -38,20 +37,17 @@ const RECONNECTED_TIMEOUT = 5 * ONE_MINUTE;
 const DISCONNECTED_TIMEOUT = 10 * ONE_MINUTE;
 const RESET_NETWORK_TIMEOUT = 4 * ONE_MINUTE;
 
-const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'us2'];
+const DOCKER_PROXY_TURN_REGIONS = ['au1', 'us1', 'ie1'];
 const DOCKER_PROXY_TURN_IP_RANGES = {
   au1: [
-    '13.210.2.128-13.210.2.159',
-    '54.252.254.64-54.252.254.127'
+    '54.66.191.192-54.66.191.223'
   ],
   us1: [
-    '34.203.254.0-34.203.254.255',
-    '54.172.60.0-54.172.61.255',
-    '34.203.250.0-34.203.251.255'
+    '54.172.63.130-54.172.63.189'
   ],
-  us2: [
-    '34.216.110.128-34.216.110.159',
-    '54.244.51.0-54.244.51.255'
+  ie1: [
+    '34.245.252.62-34.246.65.40',
+    '34.251.149.213-108.128.209.209'
   ]
 };
 
@@ -98,10 +94,8 @@ async function setup(setupOptions) {
     const token = getToken(identity);
 
     if (region) {
-      options.iceServers = await waitFor(
-        getRegionalizedIceServers(token, region, options),
-        `${sid}: get TURN servers regionalized to ${region}`);
       options.iceTransportPolicy = 'relay';
+      options.region = region;
     }
 
     const room = await waitFor(connect(token, options), `${sid}: ${identity} connected`);
@@ -252,7 +246,7 @@ describe('network:', function() {
     });
 
     it('validate media flow', () => {
-      return waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+      return waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
     });
 
     it('block all TURN regions', async () => {
@@ -371,7 +365,7 @@ describe('network:', function() {
             await waitWhileNotDisconnected(disconnected, reconnectedPromises, `reconnectedPromises: ${rooms[0].sid}`, RECONNECTED_TIMEOUT);
 
             if (identities.length > 1) {
-              await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+              await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
             }
           });
         });
@@ -404,7 +398,7 @@ describe('network:', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
 
@@ -433,7 +427,7 @@ describe('network:', function() {
           ]);
 
           if (identities.length > 1) {
-            await waitWhileNotDisconnected(disconnected, rooms.map(validateMediaFlow), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
+            await waitWhileNotDisconnected(disconnected, rooms.map(room => validateMediaFlow(room)), `validate media flow: ${rooms[0].sid}`, VALIDATE_MEDIA_FLOW_TIMEOUT);
           }
         });
       });
@@ -441,7 +435,7 @@ describe('network:', function() {
       // eslint-disable-next-line no-warning-comments
       // TODO (mmalavalli): Remove environment check once RemoteParticipant "reconnecting"
       // state is available in prod version of Room Service.
-      (identities.length > 1 ? describe : describe.skip)('RemoteParticipant reconnection events (@unstable: JSDK-2815)', () => {
+      (identities.length > 1 ? describe : describe.skip)('RemoteParticipant reconnection events', () => {
         it('should emit "reconnecting" and "reconnected" events on the RemoteParticipant which recovers from signaling connection disruption', async () => {
           const [aliceRoom, bobRoom] = rooms;
           const aliceRemote = bobRoom.participants.get(aliceRoom.localParticipant.sid);
@@ -494,7 +488,7 @@ describe('network:', function() {
           // closing Alice's WebSocket transport. Then, wait until all the expected
           // events are fired. NOTE: this does not work if connected quickly. Also this test is
           // should not be in network tests.
-          aliceRoom._signaling._transport._twilioConnection._close({ code: 3005, reason: 'foo' });
+          aliceRoom._signaling._transport._twilioConnection._close({ code: 3008, reason: 'foo' });
           try {
             await waitFor(eventPromises, 'waiting for event promises', 2 * ONE_MINUTE);
 

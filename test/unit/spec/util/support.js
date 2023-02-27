@@ -216,21 +216,25 @@ describe('isSupported', () => {
   describe('return false when sdp format is plan-b', () => {
     describe('and browser is chrome', () => {
       let oldRTCPeerConnection;
+      let oldRTCPeerConnectionPrototype;
       let oldUserAgent;
 
       beforeEach(() => {
         oldUserAgent = navigator.userAgent;
         navigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36';
         oldRTCPeerConnection = global.RTCPeerConnection;
+        oldRTCPeerConnectionPrototype = oldRTCPeerConnection.prototype;
       });
 
       afterEach(() => {
         navigator.userAgent = oldUserAgent;
         global.RTCPeerConnection = oldRTCPeerConnection;
+        global.RTCPeerConnection.prototype = oldRTCPeerConnectionPrototype;
       });
 
       it('and RTCPeerConnection.prototype.addTransceiver is not supported', () => {
-        global.RTCPeerConnection.prototype = {};
+        global.RTCPeerConnection.prototype = Object.assign({}, oldRTCPeerConnectionPrototype);
+        delete global.RTCPeerConnection.prototype.addTransceiver;
         assert.equal(isSupported(), false);
       });
 

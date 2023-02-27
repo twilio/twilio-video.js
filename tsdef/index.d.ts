@@ -12,7 +12,7 @@ export const isSupported: boolean;
 export const version:string;
 export const Logger: Log.RootLogger;
 export function connect(token: string, options?: ConnectOptions): CancelablePromise<Room>;
-export function createLocalAudioTrack(options?: CreateLocalTracksOptions|CreateLocalAudioTrackOptions): Promise<LocalAudioTrack>;
+export function createLocalAudioTrack(options?: CreateLocalTrackOptions|CreateLocalAudioTrackOptions): Promise<LocalAudioTrack>;
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
 export function runPreflight(token: string, options?: PreflightOptions): PreflightTest;
@@ -43,6 +43,9 @@ export { Room } from './Room';
 export { Track } from './Track';
 export { TrackPublication } from './TrackPublication';
 export { TwilioError } from './TwilioError';
+export { VideoProcessor } from './VideoProcessor';
+export { VideoTrack } from './VideoTrack';
+
 export {
   AddProcessorOptions,
   AudioCodec,
@@ -51,6 +54,7 @@ export {
   AudioTrackPublication,
   BandwidthProfileMode,
   BandwidthProfileOptions,
+  DefaultDeviceCaptureMode,
   ConnectOptions,
   CreateLocalTrackOptions,
   CreateLocalTracksOptions,
@@ -93,5 +97,3 @@ export {
   VideoTrackPublication,
   VP8CodecSettings
 } from './types';
-export { VideoProcessor } from './VideoProcessor';
-export { VideoTrack } from './VideoTrack';

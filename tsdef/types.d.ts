@@ -102,6 +102,7 @@ export type BandwidthProfileMode = 'grid' | 'collaboration' | 'presentation';
 
 export type VideoContentPreferencesMode = 'auto' | 'manual';
 export type ClientTrackSwitchOffControl = 'auto' | 'manual';
+export type DefaultDeviceCaptureMode = 'auto' | 'manual';
 
 export type NotifyWarning = 'recording-media-lost';
 
@@ -189,6 +190,7 @@ export interface NoiseCancellationOptions {
 }
 
 export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
+  defaultDeviceCaptureMode?: DefaultDeviceCaptureMode;
   noiseCancellationOptions?: NoiseCancellationOptions;
 }
 

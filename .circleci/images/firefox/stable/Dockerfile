@@ -1,4 +1,4 @@
-FROM circleci/node:lts-browsers
+FROM cimg/node:lts
 
 #
 # Install Java 11 LTS / OpenJDK 11
@@ -6,6 +6,7 @@ FROM circleci/node:lts-browsers
 RUN if grep -q Debian /etc/os-release && grep -q stretch /etc/os-release; then \
 		echo 'deb http://deb.debian.org/debian stretch-backports main' | sudo tee -a /etc/apt/sources.list.d/stretch-backports.list; \
 	elif grep -q Ubuntu /etc/os-release && grep -q xenial /etc/os-release; then \
+    wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
 		sudo apt-get update && sudo apt-get install -y software-properties-common && \
 		sudo add-apt-repository -y ppa:openjdk-r/ppa; \
 	fi && \
@@ -33,8 +34,11 @@ USER root
 
 # Install and enable iptables
 RUN echo "Setting up iptables..." &&\
+wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&\
 apt-get update &&\
+apt-get install -y iproute2 &&\
 apt-get install -y iptables &&\
+sudo apt-get install -y xvfb &&\
 adduser user1 &&\
 adduser user1 sudo &&\
 su - user1

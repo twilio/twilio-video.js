@@ -2,7 +2,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { FakeMediaStreamTrack, fakeGetUserMedia  } from '../../lib/fakemediastream';
+import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
 import { createLocalTracks } from '../../../lib/createlocaltracks';
 
 describe('createLocalTracks', () => {
@@ -93,6 +93,49 @@ describe('createLocalTracks', () => {
       const localTracks = await createLocalTracks(options);
       const audioTrack = localTracks.find(track => track.name === 'audio');
       assert.equal(audioTrack.workaroundWebKitBug1208516, true);
+    });
+  });
+
+  [
+    { audio: true },
+    { audio: {} },
+    { audio: { defaultDeviceCaptureMode: 'auto' } },
+    { audio: { defaultDeviceCaptureMode: 'manual' } },
+    { audio: { defaultDeviceCaptureMode: 'foo' } }
+  ].forEach((options: any) => {
+    const { audio: audioOptions } = options;
+
+    context(`when called with ${JSON.stringify(options)}`, () => {
+      let createLocalTracksOptions: any;
+      let error: any;
+      let localTracks: any;
+
+      before(async () => {
+        createLocalTracksOptions = Object.assign({}, options, makeOptions());
+        try {
+          localTracks = await createLocalTracks(createLocalTracksOptions);
+        } catch (e) {
+          error = e;
+        }
+      });
+
+      it(`should ${audioOptions.defaultDeviceCaptureMode === 'foo' ? '' : 'not '}throw a RangeError`, () => {
+        if (audioOptions.defaultDeviceCaptureMode === 'foo') {
+          assert(error instanceof RangeError);
+          assert.equal(typeof localTracks, 'undefined');
+        } else {
+          assert(Array.isArray(localTracks));
+          assert.equal(typeof error, 'undefined');
+        }
+      });
+
+      it(`should ${audioOptions.defaultDeviceCaptureMode === 'foo' ? 'not call the LocalAudioTrack constructor' : `call the LocalAudioTrack constructor with defaultDeviceCaptureMode = "${audioOptions.defaultDeviceCaptureMode || 'auto'}"`}`, () => {
+        if (audioOptions.defaultDeviceCaptureMode === 'foo') {
+          sinon.assert.notCalled(createLocalTracksOptions.LocalAudioTrack);
+        } else {
+          assert.equal(createLocalTracksOptions.LocalAudioTrack.args[0][1].defaultDeviceCaptureMode, audioOptions.defaultDeviceCaptureMode || 'auto');
+        }
+      });
     });
   });
 });

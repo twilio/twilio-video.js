@@ -2,15 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.23.1 (In Progress)
+2.27.0 (in progress)
 ====================
 
 Changes
 -------
 
 `VideoTrack.addProcessor` now works on browsers that do not support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
- v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
- v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress) for details.
+v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
+v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress) for details.
 
 ### Example
 
@@ -36,9 +36,255 @@ videoTrack.addProcessor(processor, {
 });
 ```
 
+2.26.2 (February 21, 2023)
+==========================
+
+Changes
+-------
+
+- Starting from version 110, Chrome will no longer support the iSAC audio codec. The SDK will now log a warning to the console
+  whenever an audio or a video codec that is specified in `ConnectOptions.preferredAudioCodecs` and `ConnectOptions.preferredVideoCodecs`
+  is not supported by the browser. (VIDEO-12494)
+
 Bug Fixes
 ---------
+
+- Fixed a bug on Chrome versions 112+ where `Room.getStats()` did not reject the returned Promise when an exception was
+  raised while accessing WebRTC stats that due to a TypeError caused by trying to read from the now-removed `RTCMediaStreamTrackStats`. (VIDEO-12534)
+
+2.26.1 (January 31, 2023)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug that manifests on Chrome versions 112+ where `Room.getStats()` raises an unhandled exception due to a
+  TypeError caused by trying to read from the now-removed `RTCMediaStreamTrackStats`. Instead, the SDK now reads from
+  the `RTCMediaSourceStats`. (VIDEO-12411) 
+- Fixed an error in the type definition for the `attach()` method of `AudioTrack` and `VideoTrack`. (VIDEO-12242)
+- Fixed an error in the type definition for `createLocalAudioTrack()`. (VIDEO-12383)
+
+2.26.0 (December 14, 2022)
+==========================
+
+New Features
+------------
+
+- The [`LocalAudioTrack`](https://sdk.twilio.com/js/video/releases/2.26.0/docs/LocalAudioTrack.html) and
+  [`LocalVideoTrack`](https://sdk.twilio.com/js/video/releases/2.26.0/docs/LocalVideoTrack.html) classes now provide a
+  new boolean property called `isMuted`, which lets you know if the audio or video source is currently providing raw media
+  samples. The classes also emit `muted` and `unmuted` events if the value of `isMuted` toggles. The application can use
+  these APIs to detect temporary loss of microphone or camera to other applications (ex: an incoming phone call on an iOS device),
+  and update the user interface accordingly. (VIDEO-11360)
+
+- The `Room` class provides a new method called [refreshInactiveMedia](https://sdk.twilio.com/js/video/releases/2.26.0/docs/Room.html#refreshInactiveMedia),
+  which restarts any muted local media Tracks, and plays any inadvertently paused HTMLMediaElements that are attached to
+  local and remote media Tracks. This is useful especially on iOS devices, where sometimes your application's media may
+  not recover after an incoming phone call. You can use this method in conjunction with the local media Track's `isMuted`
+  property described previously to recover local and remote media after an incoming phone call as shown below. (VIDEO-11360)
+
+  ### Vanilla JS
+
+  #### html
+
+  ```html
+  <button id="refresh-inactive-media" disabled>Refresh Inactive Media</button>
+  ```
+
+  #### js
+
+  ```js
+  const { connect } = require('twilio-video');
+
+  const room = await connect('token', { name: 'my-cool-room' });
+
+  const $refreshInactiveMedia = document.getElementById('refresh-inactive-media');
+  $refreshInactiveMedia.onclick = () => room.refreshInactiveMedia();
+
+  const [{ track: localAudioTrack }] = [...room.localParticipant.audioTracks.values()];
+  const [{ track: localVideoTrack }] = [...room.localParticipant.videoTracks.values()];
+
+  const isLocalAudioOrVideoMuted = () => {
+    return localAudioTrack.isMuted || localVideoTrack.isMuted;
+  }
+
+  const onLocalMediaMutedChanged = () => {
+    $refreshInactiveMedia.disabled = !isLocalAudioOrVideoMuted();
+  };
+
+  [localAudioTrack, localVideoTrack].forEach(localMediaTrack => {
+    ['muted', 'unmuted'].forEach(event => {
+      localMediaTrack.on(event, onLocalMediaMutedChanged);
+    });
+  });
+  ```
+
+  ### React
+
+  #### src/hooks/useLocalMediaMuted.js
+
+  ```js
+  import { useEffect, useState } from 'react';
+
+  export default function useLocalMediaMuted(localMediaTrack) {
+    const [isMuted, setIsMuted] = useState(localMediaTrack?.isMuted ?? false);
+
+    useEffect(() => {
+      const updateMuted = () => setIsMuted(localMediaTrack?.isMuted ?? false);
+      updateMuted();
+
+      localMediaTrack?.on('muted', updateMuted);
+      localMediaTrack?.on('unmuted', updateMuted);
+
+      return () => {
+        localMediaTrack?.off('muted', updateMuted);
+        localMediaTrack?.off('unmuted', updateMuted);
+      };
+    }, [localMediaTrack]);
+
+    return isMuted;
+  }
+  ```
+
+  #### src/components/room.js
+
+  ```jsx
+  import useLocalMediaMuted from '../hooks/useLocalMediaMuted';
+
+  export default function Room({ room }) {
+    const [{ track: localAudioTrack }] = [...room.localParticipant.audioTracks.values()];
+    const [{ track: localVideoTrack }] = [...room.localParticipant.videoTracks.values()];
+
+    const isLocalAudioMuted = useLocalMediaMuted(localAudioTrack);
+    const isLocalVideoMuted = useLocalMediaMuted(localVideoTrack);
+    const isLocalMediaMuted = isLocalAudioMuted || isLocalVideoMuted;
+
+    const refreshInactiveMedia = () => {
+      room.refreshInactiveMedia();
+    };
+
+    return (
+      <>
+        ...
+        {isLocalMediaMuted && <Button onClick={refreshInactiveMedia}>
+          Refresh Inactive Media
+        </Button>}
+        ...
+      </>
+    );
+  }
+  ```
+
+2.25.0 (November 14, 2022)
+==========================
+
+New Features
+------------
+
+### Auto-switch default audio input devices
+
+This release adds a new feature that preserves audio continuity in situations where end-users change the default audio input device.
+A LocalAudioTrack is said to be capturing audio from the default audio input device if:
+
+- it was created using the MediaTrackConstraints `{ audio: true }`, or
+- it was created using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is not available, or
+- it was created using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is not available
+
+In previous versions of the SDK, if the default device changed (ex: a bluetooth headset is connected to a mac or windows laptop),
+the LocalAudioTrack continued to capture audio from the old default device (ex: the laptop microphone). Now, a LocalAudioTrack
+will switch automatically from the old default audio input device to the new default audio input device (ex: from the laptop microphone to the headset microphone).
+This feature is controlled by a new [CreateLocalAudioTrackOptions](https://sdk.twilio.com/js/video/releases/2.25.0/docs/global.html#CreateLocalAudioTrackOptions)
+property `defaultDeviceCaptureMode`, which defaults to `auto` (new behavior) or can be set to `manual` (old behavior).
+
+The application can decide to capture audio from a specific audio input device by creating a LocalAudioTrack:
+
+- using the MediaTrackConstraints `{ audio: { deviceId: 'foo' } }`, and "foo" is available, or
+- using the MediaTrackConstraints `{ audio: { deviceId: { ideal: 'foo' } } }` and "foo" is available, or
+- using the MediaTrackConstraints `{ audio: { deviceId: { exact: 'foo' } } }` and "foo" is available
+
+In this case, the LocalAudioTrack DOES NOT switch to another audio input device if the current audio input device is no
+longer available. See below for the behavior of this property based on how the LocalAudioTrack is created. (VIDEO-11701)
+
+```js
+const { connect, createLocalAudioTrack, createLocalTracks } = require('twilio-video');
+
+// Auto-switch default audio input devices: option 1
+const audioTrack = await createLocalAudioTrack();
+
+// Auto-switch default audio input devices: option 2
+const audioTrack1 = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'auto' });
+
+// Auto-switch default audio input devices: option 3
+const [audioTrack3] = await createLocalTracks({ audio: true });
+
+// Auto-switch default audio input devices: option 4
+const [audioTrack4] = await createLocalTracks({ audio: { defaultDeviceCaptureMode: 'auto' } });
+
+// Auto-switch default audio input devices: option 5
+const room1 = await connect({ audio: true });
+
+// Auto-switch default audio input devices: option 6
+const room2 = await connect({ audio: { defaultDeviceCaptureMode: 'auto' } });
+
+// Disable auto-switch default audio input devices
+const room = await createLocalAudioTrack({ defaultDeviceCaptureMode: 'manual' });
+```
+
+**Limitations**
+
+- This feature is not enabled on iOS as it is natively supported.
+- Due to this [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=232835), MacOS Safari Participants may lose their local audio after switching between default audio input devices two-three times.
+- This feature is not supported on Android Chrome, as it does not support the [MediaDevices.ondevicechange](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/devicechange_event#browser_compatibility) event.
+
+2.24.3 (October 10, 2022)
+=========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where iOS Safari Participant could not hear or see others after switching back from YouTube picture-in-picture mode. (VIDEO-11352)
+- Fixed a bug where iOS Safari Participant could not hear others after switching from recording an audio message in a messenger app. (VIDEO-11354)
+- Fixed a bug where iOS Safari Participant could not hear or see others after watching a video in another browser tab. (VIDEO-11356)
+- Fixed a bug where iOS Safari Participant sometimes could not hear or see others after finishing an incoming call in full screen mode. (VIDEO-11359)
+
+2.24.2 (September 29, 2022)
+===========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes, a `MediaClientRemoteDescFailedError` was raised when a Chrome Participant who had enabled
+  Adaptive Simulcast (`ConnectOptions.preferredVideoCodecs = 'auto'`) tried to publish a camera Track after publishing a
+  `<canvas>` Track. (VIDEO-11516)
+- Fixed an issue where the Krisp Noise Cancellation fails to load in an application where the content security policy
+  directives `default-src self unsafe-eval` are used. (VIDEO-11537)
+
+2.24.1 (September 6, 2022)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug where sometimes a runtime error was raised on iOS devices as shown below. (VIDEO-11263)
+  ```
+  Unhandled Runtime Error: TypeError: null is not an object (evaluating 'el.paused')
+  ```
+- The LocalTrackOptions type definition now contains `logLevel` as an optional property. (VIDEO-10659)
+- Fixed an issue where the `import` keyword was causing problems in webpack and typescript projects. (VIDEO-11220)
+
+2.24.0 (August 22, 2022)
+========================
+
+New Features
+------------
+
+- The support for twilio approved 3rd party noise cancellation solutions is now **generally available**.
+
+Bug Fixes
+---------
+
 - Fixed an issue where input media track was not stopped, after `localAudioTrack.stop()` when using noiseCancellation (VIDEO-11047)
+- Added versioning support for noise cancellation plugin. This SDK will require noise cancellation plugin to be version 1.0.0 or greater. (VIDEO-11087)
 
 2.23.0 (July 28, 2022)
 ======================
@@ -84,6 +330,10 @@ function updateNoiseCancellation(enable: boolean) {
 }
 
 ```
+
+**NOTE:** If your application is using the `default-src self` content security policy directive, then you should add
+another directive `unsafe-eval`, which is required for the Krisp Audio Plugin to load successfully.
+
 2.22.2 (July 25, 2022)
 ======================
 
