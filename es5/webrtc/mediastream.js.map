@@ -1,0 +1,1 @@
+{"version":3,"file":"mediastream.js","sourceRoot":"","sources":["../../lib/webrtc/mediastream.js"],"names":[],"mappings":"AAAA,yBAAyB;AACzB,YAAY,CAAC;AAEb,IAAI,OAAO,WAAW,KAAK,UAAU,EAAE;IACrC,MAAM,CAAC,OAAO,GAAG,WAAW,CAAC;CAC9B;KAAM;IACL,MAAM,CAAC,OAAO,GAAG,SAAS,WAAW;QACnC,MAAM,IAAI,KAAK,CAAC,8BAA8B,CAAC,CAAC;IAClD,CAAC,CAAC;CACH"}
