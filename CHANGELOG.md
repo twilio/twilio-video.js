@@ -8,9 +8,11 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
-`VideoTrack.addProcessor` now works on browsers that do not support `OffscreenCanvas`. With this release, when used with [@twilio/video-processors
-v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress), the Virtual Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext). See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.23.1/docs/VideoTrack.html#addProcessor__anchor) and [@twilio/video-processors
-v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/feature/cross_browser_support/CHANGELOG.md#200-in-progress) for details.
+`VideoTrack.addProcessor` now works on browsers that support `OffscreenCanvas` as well as `HTMLCanvasElement`. When used with
+[@twilio/video-processors v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/2.0.0/CHANGELOG.md), the Virtual
+Background feature will work on browsers that supports [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext).
+See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.27.0/docs/VideoTrack.html#addProcessor__anchor) and
+[@twilio/video-processors v2.0.0](https://github.com/twilio/twilio-video-processors.js/blob/2.0.0/CHANGELOG.md) for details.
 
 ### Example
 
@@ -22,7 +24,7 @@ const virtualBackgroundProcessor = new VirtualBackgroundProcessor({
   //...options
 });
 
-await virtualBackground.loadModel();
+await virtualBackgroundProcessor.loadModel();
 
 const videoTrack = await createLocalVideoTrack({
   width: 640,
