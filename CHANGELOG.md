@@ -18,10 +18,11 @@ See [VideoTrack.addProcessor](https://sdk.twilio.com/js/video/releases/2.27.0/do
 
 ```ts
 import { createLocalVideoTrack } from 'twilio-video';
-import { VirtualBackgroundProcessor } from '@twilio/video-processors';
+import { Pipeline, VirtualBackgroundProcessor } from '@twilio/video-processors';
 
 const virtualBackgroundProcessor = new VirtualBackgroundProcessor({
-  //...options
+  pipeline: Pipeline.WebGL2,
+  // ...otherOptions
 });
 
 await virtualBackgroundProcessor.loadModel();
