@@ -1,3 +1,4 @@
+import { AddProcessorOptions } from './types';
 import { MediaTrack } from './MediaTrack';
 import { VideoProcessor } from './VideoProcessor';
 
@@ -14,6 +15,6 @@ export class VideoTrack extends MediaTrack {
   processor: VideoProcessor | null;
   processedTrack: MediaStreamTrack | null;
 
-  addProcessor(processor: VideoProcessor): this;
+  addProcessor(processor: VideoProcessor, options?: AddProcessorOptions): this;
   removeProcessor(processor: VideoProcessor): this;
 }

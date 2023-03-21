@@ -47,6 +47,7 @@ export { VideoProcessor } from './VideoProcessor';
 export { VideoTrack } from './VideoTrack';
 
 export {
+  AddProcessorOptions,
   AudioCodec,
   AudioCodecSettings,
   AudioLevel,
