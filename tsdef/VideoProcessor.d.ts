@@ -1,3 +1,6 @@
 export class VideoProcessor {
-  processFrame(inputFrameBuffer: OffscreenCanvas, outputFrameBuffer: HTMLCanvasElement): Promise<void> | void;
+  processFrame(
+    inputFrameBuffer: OffscreenCanvas | HTMLCanvasElement | HTMLVideoElement,
+    outputFrameBuffer: HTMLCanvasElement
+  ): Promise<void> | void;
 }
