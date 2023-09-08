@@ -6,18 +6,17 @@ const runPreflight = require('../../../es5/index').runPreflight;
 const getToken = require('../../lib/token');
 const defaults = require('../../lib/defaults');
 const { randomName } = require('../../lib/util');
-const { isFirefox, isSafari } = require('../../lib/guessbrowser');
+const { isSafari } = require('../../lib/guessbrowser');
 
 const expectedProgress = [
   'mediaAcquired',
   'connected',
   'mediaSubscribed',
   'iceConnected',
-  'mediaStarted'
+  'mediaStarted',
+  'peerConnectionConnected'
 ];
-if (!isFirefox) {
-  expectedProgress.push('peerConnectionConnected');
-}
+
 if (!isSafari) {
   expectedProgress.push('dtlsConnected');
 }
