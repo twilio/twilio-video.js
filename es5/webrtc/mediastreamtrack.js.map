@@ -1,0 +1,1 @@
+{"version":3,"file":"mediastreamtrack.js","sourceRoot":"","sources":["../../lib/webrtc/mediastreamtrack.js"],"names":[],"mappings":"AAAA,6BAA6B;AAC7B,YAAY,CAAC;AAEb,IAAI,OAAO,gBAAgB,KAAK,UAAU,EAAE;IAC1C,MAAM,CAAC,OAAO,GAAG,gBAAgB,CAAC;CACnC;KAAM;IACL,MAAM,CAAC,OAAO,GAAG,SAAS,gBAAgB;QACxC,MAAM,IAAI,KAAK,CAAC,mCAAmC,CAAC,CAAC;IACvD,CAAC,CAAC;CACH"}
