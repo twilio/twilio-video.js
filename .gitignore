@@ -2,7 +2,6 @@
 *.sw*
 browsers
 coverage
-es5
 logs
 node_modules
 test/crossbrowser/lib
