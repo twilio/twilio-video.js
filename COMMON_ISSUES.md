@@ -4,14 +4,6 @@ Common Issues
 Are you experiencing an issue with twilio-video.js? Please review this list of known issues and workarounds
 before opening a new issue. We recommend regularly upgrading to the latest version of the SDK, which includes new features, bug fixes and improvements (see [CHANGELOG.md](CHANGELOG.md)).
 
-### iOS 17
-<details>
-<summary>Media issues on Chrome and Safari</summary>
-<p>
-  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
-</p>
-</details>
-
 ### Chrome desktop
 <details>
 <summary>Chrome memory leak might cause degraded experience in group rooms</summary>
@@ -40,6 +32,12 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 </details>
 
 ### Chrome mobile
+<details>
+<summary>iOS 17: Media issues</summary>
+<p>
+  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
+</p>
+</details>
 <details>
 <summary>Android 11: Participants are unable to connect to a room due to ICE gathering failures on certain devices</summary>
 <p>
@@ -100,6 +98,12 @@ transform: scaleX(-1)
 </details>
 
 ### Safari mobile
+<details>
+<summary>iOS 17: Media issues</summary>
+<p>
+  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
+</p>
+</details>
 <details>
 <summary>iOS 15: Echo issues on iOS 15 devices after attaching video tracks</summary>
 <p>
