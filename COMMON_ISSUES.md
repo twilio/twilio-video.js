@@ -4,6 +4,14 @@ Common Issues
 Are you experiencing an issue with twilio-video.js? Please review this list of known issues and workarounds
 before opening a new issue. We recommend regularly upgrading to the latest version of the SDK, which includes new features, bug fixes and improvements (see [CHANGELOG.md](CHANGELOG.md)).
 
+### iOS 17
+<details>
+<summary>Media issues on Chrome and Safari</summary>
+<p>
+  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
+</p>
+</details>
+
 ### Chrome desktop
 <details>
 <summary>Chrome memory leak might cause degraded experience in group rooms</summary>
