@@ -2,7 +2,6 @@
 *.sw*
 browsers
 coverage
-dist
 es5
 logs
 node_modules
