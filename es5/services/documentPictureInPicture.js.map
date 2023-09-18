@@ -1,0 +1,1 @@
+{"version":3,"file":"documentPictureInPicture.js","sourceRoot":"","sources":["../../lib/services/documentPictureInPicture.js"],"names":[],"mappings":";;;AAAA,2BAA2B;AAC3B,IAAM,mBAAmB,GAAG,0BAA0B,IAAI,MAAM,CAAC;AAE1D,IAAM,cAAc,GAAG;IAC5B,2BAA2B;IAC3B,OAAO,mBAAmB,IAAI,CAAC,CAAC,wBAAwB,CAAC,MAAM,CAAC;AAClE,CAAC,CAAC;AAHW,QAAA,cAAc,kBAGzB"}
