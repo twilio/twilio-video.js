@@ -33,6 +33,12 @@ before opening a new issue. We recommend regularly upgrading to the latest versi
 
 ### Chrome mobile
 <details>
+<summary>iOS 17: Media issues</summary>
+<p>
+  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
+</p>
+</details>
+<details>
 <summary>Android 11: Participants are unable to connect to a room due to ICE gathering failures on certain devices</summary>
 <p>
 
@@ -92,6 +98,12 @@ transform: scaleX(-1)
 </details>
 
 ### Safari mobile
+<details>
+<summary>iOS 17: Media issues</summary>
+<p>
+  Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
+</p>
+</details>
 <details>
 <summary>iOS 15: Echo issues on iOS 15 devices after attaching video tracks</summary>
 <p>
