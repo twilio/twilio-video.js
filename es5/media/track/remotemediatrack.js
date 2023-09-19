@@ -94,8 +94,6 @@ function mixinRemoteMediaTrack(AudioOrVideoTrack) {
                 },
                 _setRenderHint: {
                     value: function (renderHint) {
-                        /* eslint-disable-next-line no-console */
-                        console.log("HERCULES _setRenderHint renderHint: " + JSON.stringify(renderHint));
                         _this._log.debug('updating render hint:', renderHint);
                         setRenderHint(renderHint);
                     }

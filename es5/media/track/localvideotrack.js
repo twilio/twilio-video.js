@@ -14,8 +14,11 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var hasDocumentPiP = require('../../services/documentPictureInPicture').hasDocumentPiP;
 var isIOS = require('../../util/browserdetection').isIOS;
 var detectSilentVideo = require('../../util/detectsilentvideo');
+var documentvisibilitymonitor = require('../../util/documentvisibilitymonitor');
+var playAllAttachedTracks = require('../../util/playattachedtracks').playAllAttachedTracks;
 var mixinLocalMediaTrack = require('./localmediatrack');
 var VideoTrack = require('./videotrack');
 var LocalMediaVideoTrack = mixinLocalMediaTrack(VideoTrack);
@@ -72,6 +75,13 @@ var LocalVideoTrack = /** @class */ (function (_super) {
         if (_this._workaroundSilentLocalVideo) {
             _this._workaroundSilentLocalVideoCleanup = _this._workaroundSilentLocalVideo(_this, document);
         }
+        // This ensures local video tracks don't pause when the original browser tab
+        // is hidden while using documentPictureInPicture.
+        documentvisibilitymonitor.onVisibilityChange(2, function (isVisible) {
+            if (!isVisible && hasDocumentPiP()) {
+                playAllAttachedTracks(_this);
+            }
+        });
         return _this;
     }
     LocalVideoTrack.prototype.toString = function () {

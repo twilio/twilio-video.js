@@ -80,6 +80,10 @@ var MediaTrack = /** @class */ (function (_super) {
             _playPausedElementsIfNotBackgrounded: {
                 value: options.playPausedElementsIfNotBackgrounded
             },
+            _shouldShimAttachedElements: {
+                value: options.workaroundWebKitBug212780
+                    || options.playPausedElementsIfNotBackgrounded
+            },
             _unprocessedTrack: {
                 value: null,
                 writable: true
@@ -161,12 +165,10 @@ var MediaTrack = /** @class */ (function (_super) {
         }
         this._log.debug('Attempting to attach to element:', el);
         el = this._attach(el);
-        if (!this._elShims.has(el)) {
-            var onUnintentionallyPaused = function () {
-                if (_this._playPausedElementsIfNotBackgrounded || hasDocumentPiP()) {
-                    playIfPausedAndNotBackgrounded(el, _this._log);
-                }
-            };
+        if (this._shouldShimAttachedElements && !this._elShims.has(el)) {
+            var onUnintentionallyPaused = this._playPausedElementsIfNotBackgrounded
+                ? function () { return playIfPausedAndNotBackgrounded(el, _this._log); }
+                : null;
             this._elShims.set(el, shimMediaElement(el, onUnintentionallyPaused));
         }
         return el;
@@ -262,7 +264,7 @@ var MediaTrack = /** @class */ (function (_super) {
             mediaStream.removeTrack(this.processedTrack || this.mediaStreamTrack);
         }
         this._attachments.delete(el);
-        if (this._elShims.has(el)) {
+        if (this._shouldShimAttachedElements && this._elShims.has(el)) {
             var shim = this._elShims.get(el);
             shim.unShim();
             this._elShims.delete(el);

@@ -35,6 +35,8 @@ var VideoTrack = require('./videotrack');
 var documentVisibilityMonitor = require('../../util/documentvisibilitymonitor.js');
 var NullObserver = require('../../util/nullobserver.js').NullObserver;
 var Timeout = require('../../util/timeout');
+var hasDocumentPiP = require('../../services/documentPictureInPicture').hasDocumentPiP;
+var playAllAttachedTracks = require('../../util/playattachedtracks').playAllAttachedTracks;
 var RemoteMediaVideoTrack = mixinRemoteMediaTrack(VideoTrack);
 var TRACK_TURN_OF_DELAY_MS = 50;
 /**
@@ -360,11 +362,18 @@ function maybeUpdateEnabledHint(remoteVideoTrack) {
     }
     var visibleElements = remoteVideoTrack._getAllAttachedElements().filter(function (el) { return !remoteVideoTrack._invisibleElements.has(el); });
     var pipWindows = remoteVideoTrack._getAllAttachedElements().filter(function (el) { return remoteVideoTrack._elToPipWindows.has(el); });
+    var visibleWithinDocPiP = document.visibilityState === 'hidden' && hasDocumentPiP() && visibleElements.length > 0;
+    var visibleDocWithVisibleElement = document.visibilityState === 'visible' && visibleElements.length > 0;
     // even when document is invisible we may have track playing in pip window.
-    var enabled = pipWindows.length > 0 || (document.visibilityState === 'visible' && visibleElements.length > 0);
+    var enabled = visibleDocWithVisibleElement || visibleWithinDocPiP || pipWindows.length > 0;
     if (enabled === true) {
         remoteVideoTrack._turnOffTimer.clear();
         remoteVideoTrack._setRenderHint({ enabled: true });
+        // This ensures remote video tracks don't pause when the original browser tab
+        // is hidden while using documentPictureInPicture.
+        if (visibleWithinDocPiP) {
+            playAllAttachedTracks(remoteVideoTrack);
+        }
     }
     else if (!remoteVideoTrack._turnOffTimer.isSet) {
         // set the track to be turned off after some delay.
