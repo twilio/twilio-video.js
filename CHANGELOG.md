@@ -8,6 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
+- Fixed a bug where a Chrome iOS 17 Participant's local and remote media (Krisp Noise Cancellation enabled) failed to recover after interacting with a PSTN call in full-screen mode. (VIDEO-13011)
 - Fixed a bug where a Chrome iOS 17 Participant's audio with Krisp Noise Cancellation did not recover after interacting with a system popup. (VIDEO-13012)
 - Fixed a bug where a Chrome iOS 17 Participant's audio with Krisp Noise Cancellation did not recover after invoking Siri. (VIDEO-13013)
 
