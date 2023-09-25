@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.28.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Previously, a Chrome iOS 17 Participant's local audio (Krisp noise cancellation enabled) did not recover after foregrounding the browser following the playing of a YouTube video (or some other application which requires microphone permissions). We work around this by permanently disabling
+the Krisp noise cancellation upon foregrounding the browser. (VIDEO-13006)
+
 2.28.0 (September 14, 2023)
 ===========================
 
