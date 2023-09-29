@@ -8,8 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Previously, a Chrome iOS 17 Participant's local audio (Krisp noise cancellation enabled) did not recover after foregrounding the browser following the playing of a YouTube video (or some other application which requires microphone permissions). We work around this by permanently disabling
+- Previously, a Chrome iOS 17 Participant's local audio (Krisp Noise Cancellation enabled) did not recover after foregrounding the browser following the playing of a YouTube video (or some other application which requires microphone permissions). We work around this by permanently disabling
 the Krisp noise cancellation upon foregrounding the browser. (VIDEO-13006)
+- Fixed a bug where a Chrome iOS Participant's local audio (Krisp Noise Cancellation enabled) did not recover after disconnecting a bluetooth headset. (VIDEO-13010)
 
 2.28.0 (September 14, 2023)
 ===========================
