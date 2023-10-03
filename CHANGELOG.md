@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.28.2 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed a bug where a Chrome iOS Participant's local audio (Krisp Noise Cancellation enabled) did not recover after disconnecting a bluetooth headset. (VIDEO-13010)
+
 2.28.1 (October 3, 2023)
 ========================
 
