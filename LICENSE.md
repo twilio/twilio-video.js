@@ -1,7 +1,7 @@
 The following license applies to all parts of this software except as
 documented below.
 
-    Copyright (C) 2019-2022 Twilio, inc.
+    Copyright (C) 2019-2023 Twilio, inc.
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without
