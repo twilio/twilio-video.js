@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.29.0-preview.1 (August 13, 2024)
+==================================
+
+Changes
+-------
+
+-`AddProcessorOptions.inputFrameBufferType` now has a new value `videoframe`. On browsers that support [`VideoFrame`](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame), the `inputFrameBuffer` argument of [`VideoProcessor.processFrame()`](https://twilio.github.io/twilio-video-processors.js/classes/VirtualBackgroundProcessor.html#processFrame) will be a `VideoFrame`. On other supported browsers, it will be an `HTMLVideoElement`.
+-`AddProcessorOptions.outputFrameBufferContextType` now has a new value `bitmaprenderer`. Currently, this is only **supported for Chromium-based browsers**. On other supported browsers, it falls back to `2d`.
+
 2.28.1 (October 3, 2023)
 ========================
 
