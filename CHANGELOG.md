@@ -8,8 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 -------
 
--`AddProcessorOptions.inputFrameBufferType` now has a new value `videoframe`. On browsers that support [`VideoFrame`](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame), the `inputFrameBuffer` argument of [`VideoProcessor.processFrame()`](https://twilio.github.io/twilio-video-processors.js/classes/VirtualBackgroundProcessor.html#processFrame) will be a `VideoFrame`. On other supported browsers, it will be an `HTMLVideoElement`.
--`AddProcessorOptions.outputFrameBufferContextType` now has a new value `bitmaprenderer`. Currently, this is only **supported for Chromium-based browsers**. On other supported browsers, it falls back to `2d`.
+- `AddProcessorOptions.inputFrameBufferType` now has a new value `videoframe`. On browsers that support [`VideoFrame`](https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame), the `inputFrameBuffer` argument of [`VideoProcessor.processFrame()`](https://twilio.github.io/twilio-video-processors.js/classes/VirtualBackgroundProcessor.html#processFrame) will be a `VideoFrame`. On other supported browsers, it will be an `HTMLVideoElement`.
+- `AddProcessorOptions.outputFrameBufferContextType` now has a new value `bitmaprenderer`. Currently, this is only **supported for Chromium-based browsers**. On other supported browsers, it falls back to `2d`.
+- Patched the build script to work around the issue: https://github.com/markdown-it/linkify-it/issues/111.
 
 2.28.1 (October 3, 2023)
 ========================
