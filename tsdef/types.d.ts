@@ -22,7 +22,7 @@ export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPu
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
 
 export interface AddProcessorOptions {
-  inputFrameBufferType?: 'video' | 'canvas' | 'offscreencanvas';
+  inputFrameBufferType?: 'video' | 'canvas' | 'offscreencanvas' | 'videoframe';
   outputFrameBufferContextType?: string;
 }
 

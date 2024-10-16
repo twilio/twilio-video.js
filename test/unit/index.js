@@ -1,6 +1,7 @@
 'use strict';
 
 if (typeof window === 'undefined') {
+  require('../lib/mockstreams')();
   require('../lib/mockwebrtc')();
 }
 
