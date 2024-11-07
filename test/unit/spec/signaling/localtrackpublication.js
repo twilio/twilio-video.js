@@ -1,4 +1,5 @@
 const assert = require('assert');
+const sinon = require('sinon');
 const { FakeMediaStreamTrack } = require('../../../lib/fakemediastream');
 const LocalTrackPublicationSignaling = require('../../../../lib/signaling/localtrackpublication');
 const MediaTrackSender = require('../../../../lib/media/track/sender');
@@ -26,6 +27,39 @@ describe('LocalTrackPublicationSignaling', () => {
       const publication = new LocalTrackPublicationSignaling(dataTrackSender, 'data1', 'standard');
 
       assert.strictEqual(publication.isEnabled, true);
+    });
+
+    // NOTE(lrivas): Test case for Safari 18 MediaStreamTrack clone()
+    // Bug report: https://bugs.webkit.org/show_bug.cgi?id=281758
+    describe('when Safari 18 MediaStreamTrack clone() does not preserve enabled state', () => {
+      let originalClone;
+      let mediaStreamTrack;
+
+      beforeEach(() => {
+        originalClone = FakeMediaStreamTrack.prototype.clone;
+        mediaStreamTrack = new FakeMediaStreamTrack('audio');
+        mediaStreamTrack.enabled = false;
+
+        // Mock Safari's clone() behavior where it doesn't preserve enabled state
+        sinon.stub(FakeMediaStreamTrack.prototype, 'clone').callsFake(function() {
+          const clonedTrack = originalClone.call(FakeMediaStreamTrack.prototype);
+          clonedTrack.enabled = true;
+          return clonedTrack;
+        });
+      });
+
+      afterEach(() => {
+        FakeMediaStreamTrack.prototype.clone.restore();
+      });
+
+      it('should preserve disabled state despite Safari clone() bug', () => {
+        const trackSender = new MediaTrackSender(mediaStreamTrack);
+        const publication = new LocalTrackPublicationSignaling(trackSender, 'track1', 'standard');
+
+        assert.strictEqual(trackSender.track.enabled, false, 'Track sender should remain disabled');
+        assert.strictEqual(publication.trackTransceiver.track.enabled, false, 'Publication track should remain disabled');
+        assert.strictEqual(publication.isEnabled, false, 'Publication should remain disabled');
+      });
     });
   });
 });
