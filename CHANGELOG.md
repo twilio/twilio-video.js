@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 
-- Fixed a bug in Safari 18 where cloning a disabled `MediaStreamTrack` would incorrectly set the `enabled` property to `true` instead of preserving the original disabled state. This ensures track cloning behavior matches the MediaStreamTrack specification and works consistently across browsers. Bug report: https://bugs.webkit.org/show_bug.cgi?id=281758
+- Fixed a bug in Desktop Safari 18 and all iOS browsers on iOS 18 where cloning a disabled `MediaStreamTrack` would incorrectly set the `enabled` property to `true` instead of preserving the original disabled state. This ensures track cloning behavior matches the MediaStreamTrack specification and works consistently across browsers. Bug report: https://bugs.webkit.org/show_bug.cgi?id=281758
 
 2.28.1 (October 3, 2023)
 ========================
