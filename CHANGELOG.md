@@ -20,6 +20,14 @@ Changes
 - `AddProcessorOptions.outputFrameBufferContextType` now has a new value `bitmaprenderer`. Currently, this is only **supported for Chromium-based browsers**. On other supported browsers, it falls back to `2d`.
 - Patched the build script to work around the issue: https://github.com/markdown-it/linkify-it/issues/111.
 
+2.28.2 (November 22, 2024)
+==========================
+
+Bug Fixes
+---------
+
+- Fixed a bug in Desktop Safari 18 and all iOS browsers on iOS 18 where cloning a disabled `MediaStreamTrack` would incorrectly set the `enabled` property to `true` instead of preserving the original disabled state. This ensures track cloning behavior matches the MediaStreamTrack specification and works consistently across browsers. Bug report: https://bugs.webkit.org/show_bug.cgi?id=281758
+
 2.28.1 (October 3, 2023)
 ========================
 
