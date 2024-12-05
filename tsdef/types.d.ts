@@ -22,7 +22,16 @@ export type DataTrackPublication = LocalDataTrackPublication | RemoteDataTrackPu
 export type VideoTrackPublication = LocalVideoTrackPublication | RemoteVideoTrackPublication;
 
 export interface AddProcessorOptions {
+  /**
+   * The type of input frame buffer to use.
+   * @beta The 'videoframe' value is currently in beta and only supported on browsers that support VideoFrame API
+   */
   inputFrameBufferType?: 'video' | 'canvas' | 'offscreencanvas' | 'videoframe';
+
+  /**
+   * The type of context to use for the output frame buffer.
+   * @beta The 'bitmaprenderer' value is currently in beta. It is only supported on Chromium-based browsers, and falls back to '2d' on other browsers.
+   */
   outputFrameBufferContextType?: string;
 }
 
