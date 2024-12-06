@@ -1,6 +1,3 @@
-/**
- * @beta VideoFrame is part of Video Processor V3 support which is currently in beta.
- */
 declare class VideoFrame {
   displayHeight: number;
   displayWidth: number;
@@ -11,7 +8,6 @@ declare class VideoFrame {
 
 /**
  * A processor for manipulating video frames.
- * @beta Video Processor V3 support is currently in beta.
  */
 export class VideoProcessor {
   /**
@@ -20,10 +16,10 @@ export class VideoProcessor {
    * - OffscreenCanvas
    * - HTMLCanvasElement
    * - HTMLVideoElement
-   * - VideoFrame (beta)
+   * - VideoFrame
    * @param outputFrameBuffer The output frame buffer. The context type can be:
-   * - '2d' (default)
-   * - 'bitmaprenderer' (beta, Chromium-based browsers only)
+   * - '2d'
+   * - 'bitmaprenderer'
    * @returns A Promise that resolves when the frame has been processed, or void for synchronous processing
    */
   processFrame(
