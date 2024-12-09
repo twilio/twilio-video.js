@@ -2,8 +2,36 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.28.3 (in progress)
+2.30.0 (unreleased)
 ========================
+
+New Features
+------------
+
+- Added support for passing a custom `getUserMedia` as an option in `connect()`, `createLocalTracks()`, `createLocalAudioTrack()`, and `createLocalVideoTrack()` methods.
+
+```js
+var Video = require('twilio-video');
+
+function getUserMedia(constraints) {
+  // your custom implementation
+}
+
+Video.createLocalTracks({ video: true, audio: true, getUserMedia: getUserMedia }).then(function(localTracks) {
+  // connect to the room using your custom tracks
+  return Video.connect('my-token', {
+    name: 'my-cool-room',
+    tracks: localTracks
+  });
+});
+
+// or using connect directly
+
+Video.connect('token', { name: 'my-cool-room', getUserMedia: getUserMedia }).then((room) => {
+  // Your local tracks will be created using you the provided getUserMedia
+});
+```
+
 
 Bug Fixes
 ---------
