@@ -5,6 +5,8 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.28.3 (in progress)
 ========================
 
+TODO(lrivas): Write public API to support VDI.
+
 Bug Fixes
 ---------
 

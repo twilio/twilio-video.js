@@ -370,6 +370,16 @@ describe('connect', () => {
       assert(createLocalTracks.calledOnce);
     });
 
+    it('passes the getUserMedia option to createLocalTracks()', () => {
+      const createLocalTracks = sinon.spy();
+      const getUserMedia = sinon.spy();
+      connect(token, { createLocalTracks, getUserMedia });
+      assert(createLocalTracks.calledOnce);
+      assert(createLocalTracks.calledWith(sinon.match({
+        getUserMedia
+      })));
+    });
+
     describe('and then immediately canceled by calling .cancel()', () => {
       it('calls .stop() on the LocalTracks', async () => {
         const stream = await fakeGetUserMedia({ audio: true, video: true });

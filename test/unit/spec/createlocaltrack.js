@@ -53,6 +53,18 @@ const {
       });
     });
 
+    it('should pass the getUserMedia option to createLocalTracks()', async () => {
+      const getUserMedia = sinon.spy(() => Promise.resolve(new MediaStream()));
+      const options = {
+        getUserMedia,
+        createLocalTracks: sinon.spy(() => Promise.resolve([]))
+      };
+      await createLocalTrack(options);
+      assert(options.createLocalTracks.calledWith(sinon.match({
+        getUserMedia
+      })));
+    });
+
     if (kind === 'Audio') {
       describe('defaultDeviceCaptureMode', () => {
         [{ defaultDeviceCaptureMode: 'auto' }, { defaultDeviceCaptureMode: 'manual' }, { defaultDeviceCaptureMode: 'foo' }].forEach(options => {

@@ -138,6 +138,30 @@ describe('createLocalTracks', () => {
       });
     });
   });
+
+  context('when passing custom WebRTC overrides', () => {
+    it('should use the custom getUserMedia implementation if provided', async () => {
+      const options = makeOptions();
+      const getUserMediaSpy = sinon.spy((options.getUserMedia));
+      const expectedConstraints = {
+        audio: {
+          deviceId: {
+            exact: 'foo'
+          }
+        },
+        video: {
+          deviceId: {
+            exact: 'bar'
+          }
+        },
+      };
+      await createLocalTracks({ ...options, ...expectedConstraints, getUserMedia: getUserMediaSpy });
+      assert(getUserMediaSpy.calledOnce);
+      const callArgs = getUserMediaSpy.getCall(0).args;
+      assert.equal(callArgs.length, 1);
+      assert.deepEqual(callArgs[0], expectedConstraints, 'getUserMedia was not called with the expected constraints');
+    });
+  });
 });
 
 function makeOptions() {
