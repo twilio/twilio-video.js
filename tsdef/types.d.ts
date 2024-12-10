@@ -238,9 +238,9 @@ export interface CreateLocalTracksOptions {
   audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   /**
    * @deprecated
-  */
- logLevel?: LogLevel | LogLevels;
- loggerName?: string;
+   */
+  logLevel?: LogLevel | LogLevels;
+  loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
