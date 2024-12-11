@@ -170,6 +170,7 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
 }
 
 
@@ -230,6 +231,7 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
 }
 
 export interface CreateLocalTracksOptions {
@@ -241,6 +243,7 @@ export interface CreateLocalTracksOptions {
   loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
 }
 
 export class TrackStats {
