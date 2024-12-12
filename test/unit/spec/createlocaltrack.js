@@ -65,6 +65,16 @@ const {
       })));
     });
 
+    it('should pass the enumerateDevices option to createLocalTracks()', async () => {
+      const enumerateDevices = sinon.spy(() => Promise.resolve([]));
+      const options = {
+        enumerateDevices,
+        createLocalTracks: sinon.spy(() => Promise.resolve([]))
+      };
+      await createLocalTrack(options);
+      assert(options.createLocalTracks.calledWith(sinon.match({ enumerateDevices })));
+    });
+
     if (kind === 'Audio') {
       describe('defaultDeviceCaptureMode', () => {
         [{ defaultDeviceCaptureMode: 'auto' }, { defaultDeviceCaptureMode: 'manual' }, { defaultDeviceCaptureMode: 'foo' }].forEach(options => {

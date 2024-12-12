@@ -244,6 +244,7 @@ export interface CreateLocalTracksOptions {
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+  enumerateDevices?: () => Promise<MediaDeviceInfo[]>;
 }
 
 export class TrackStats {
