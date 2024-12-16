@@ -232,6 +232,7 @@ export interface ConnectOptions {
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+  RTCPeerConnection?: any;
 }
 
 export interface CreateLocalTracksOptions {
