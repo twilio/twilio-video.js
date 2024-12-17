@@ -258,12 +258,13 @@ URL.createObjectURL = createObjectURL;
 
 URL.revokeObjectURL = revokeObjectURL;
 
-function mockWebRTC(_global) {
-  _global = _global || global;
+function mockWebRTC(_global = globalThis) {
   const _window = _global.window = _global;
   _window.addEventListener = function addEventListener() {};
   _global.Event = Event;
   _global.WebSocket = WebSocket;
+  // Starting Node.js 21 the global object contains a readonly property called 'navigator'
+  if (_global.navigator) { delete _global.navigator; }
   _global.navigator = navigator;
   _global.webkitMediaStream = MediaStream;
   _global.MediaStream = MediaStream;

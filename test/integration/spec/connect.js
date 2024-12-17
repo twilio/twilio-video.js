@@ -1573,6 +1573,151 @@ describe('connect', function() {
       });
     });
   });
+
+  describe('custom RTCPeerConnection', () => {
+    let room;
+    let sid;
+    let customPeerConnectionsCreated;
+    let senderRoom;
+    let tracks;
+
+    class CustomRTCPeerConnection extends RTCPeerConnection {
+      constructor(configuration) {
+        super(configuration);
+        customPeerConnectionsCreated++;
+      }
+    }
+
+    beforeEach(async () => {
+      customPeerConnectionsCreated = 0;
+      sid = await createRoom(randomName(), defaults.topology);
+    });
+
+    afterEach(async () => {
+      [room, senderRoom].forEach(currentRoom => currentRoom && currentRoom.disconnect());
+      if (tracks) {
+        tracks.forEach(track => track.stop());
+      }
+      await completeRoom(sid);
+      room = null;
+      senderRoom = null;
+      tracks = null;
+    });
+
+    function setupParticipants() {
+      const senderIdentity = randomName();
+      const receiverIdentity = randomName();
+      const senderToken = getToken(senderIdentity);
+      const receiverToken = getToken(receiverIdentity);
+
+      return {
+        senderIdentity,
+        receiverIdentity,
+        senderToken,
+        receiverToken
+      };
+    }
+
+    it('should use CustomRTCPeerConnection', async () => {
+      const { receiverToken } = setupParticipants();
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        RTCPeerConnection: CustomRTCPeerConnection
+      });
+
+      assert.equal(customPeerConnectionsCreated, 1, 'Expected one custom peer connection to be created');
+      assert(room.localParticipant, 'Local participant should be defined');
+    });
+
+    it('should receive remote tracks when using CustomRTCPeerConnection', async () => {
+      const { senderIdentity, senderToken, receiverToken } = setupParticipants();
+
+      const stream = await getUserMedia({ audio: true, video: true });
+      tracks = stream.getTracks();
+
+      senderRoom = await connect(senderToken, { ...defaults, name: sid, tracks });
+
+      // Connect receiver with custom RTCPeerConnection
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        RTCPeerConnection: CustomRTCPeerConnection
+      });
+
+
+      // Wait for tracks to be published and received
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const remoteParticipant = Array.from(room.participants.values()).find(({ identity }) => identity === senderIdentity);
+      assert(remoteParticipant && remoteParticipant.state === 'connected', 'Remote participant should be connected');
+
+      const remoteTracks = Array.from(remoteParticipant.tracks.values()).map(pub => pub.track);
+      assert.equal(remoteTracks.length, 2, 'Expected two remote tracks');
+      assert(remoteTracks.some(t => t.kind === 'audio'), 'Expected a remote audio track');
+      assert(remoteTracks.some(t => t.kind === 'video'), 'Expected a remote video track');
+
+    });
+
+    it('should handle reconnection with CustomRTCPeerConnection', async () => {
+      const { receiverToken } = await setupParticipants();
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        RTCPeerConnection: CustomRTCPeerConnection
+      });
+
+      room.disconnect();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        RTCPeerConnection: CustomRTCPeerConnection
+      });
+
+      assert.equal(customPeerConnectionsCreated, 2, 'Expected two custom peer connections to be created');
+      assert(room.localParticipant.state === 'connected', 'Participant should be connected after reconnection');
+    });
+
+    it('should pass custom configuration to RTCPeerConnection', async () => {
+      const { receiverToken } = await setupParticipants();
+
+      const expected = {
+        iceTransportPolicy: 'relay',
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require',
+        iceServers: [{ urls: 'stun:stun.twilio.test:3478' }]
+      };
+
+      let passedConfigurantion;
+
+      class ConfigTestRTCPeerConnection extends RTCPeerConnection {
+        constructor(configuration) {
+          super(configuration);
+          passedConfigurantion = configuration;
+        }
+      }
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        RTCPeerConnection: ConfigTestRTCPeerConnection,
+        ...expected
+      });
+
+      assert(room.localParticipant, 'Room should connect with custom configuration');
+      assert.equal(passedConfigurantion.iceTransportPolicy, expected.iceTransportPolicy, 'iceTransportPolicy should match custom config');
+      assert.equal(passedConfigurantion.bundlePolicy, expected.bundlePolicy,
+        'bundlePolicy should match custom config');
+      assert.equal(passedConfigurantion.rtcpMuxPolicy, expected.rtcpMuxPolicy,
+        'rtcpMuxPolicy should match custom config');
+      assert.deepEqual(passedConfigurantion.iceServers, expected.iceServers,
+        'iceServers should match custom config');
+    });
+  });
 });
 
 function checkOpusDtxInMediaSection(section, shouldApplyDtx) {

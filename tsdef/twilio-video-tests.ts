@@ -226,6 +226,40 @@ function LocalParticipant(localParticipant: Video.LocalParticipant) {
   });
 }
 
+function customWebRTCImplementations() {
+  const customRTCPeerConnection = class extends RTCPeerConnection {
+    constructor(configuration?: RTCConfiguration) {
+      super(configuration);
+    }
+  };
+  const getUserMedia = () => {
+    return Promise.resolve(new MediaStream());
+  };
+  const enumerateDevices = () => {
+    return Promise.resolve([]);
+  };
+
+  const localTracks = Video.createLocalTracks({
+    audio: true,
+    video: true,
+    getUserMedia,
+    enumerateDevices
+  });
+  const localAudioTrack = Video.createLocalAudioTrack({
+    getUserMedia,
+    enumerateDevices
+  });
+  const localVideoTrack = Video.createLocalVideoTrack({
+    getUserMedia,
+  });
+  const room = Video.connect('$TOKEN', {
+    RTCPeerConnection: customRTCPeerConnection,
+    getUserMedia,
+    enumerateDevices,
+  });
+}
+
+
 let room: Video.Room | null = null;
 let localVideoTrack: Video.LocalVideoTrack | null = null;
 let localAudioTrack: Video.LocalAudioTrack | null = null;
