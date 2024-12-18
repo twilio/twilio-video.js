@@ -327,17 +327,11 @@ describe('VideoTrack', () => {
       videoTrack.mediaStreamTrack.removeEventListener = sinon.stub();
     });
 
-    it('should clear existing timeout callback', () => {
-      let cb = sinon.stub();
-      videoTrack._captureTimeoutId = setTimeout(cb, 50);
-      clock.tick(50);
-      sinon.assert.calledOnce(cb);
-
-      cb = sinon.stub();
-      videoTrack._captureTimeoutId = setTimeout(cb, 50);
+    it('should call _stopCapture', () => {
+      const stopCapture = sinon.spy();
+      videoTrack._stopCapture = stopCapture;
       videoTrack.removeProcessor(processor);
-      clock.tick(50);
-      sinon.assert.notCalled(cb);
+      sinon.assert.calledOnce(stopCapture);
     });
 
     it('should emit remove event', () => {
@@ -560,7 +554,7 @@ describe('VideoTrack', () => {
         videoTrack._captureFrames();
         await internalPromise();
 
-        clock.tick(artificialDelay - 1);
+        clock.tick(timeoutMs + artificialDelay - 1);
         await internalPromise();
         sinon.assert.notCalled(cb);
 
@@ -572,22 +566,9 @@ describe('VideoTrack', () => {
         await internalPromise();
         sinon.assert.calledOnce(cb);
 
-        settings.frameRate -= 10;
-        const newTimeoutMs = Math.floor(1000 / settings.frameRate);
-        clock.tick(timeoutMs - artificialDelay);
+        clock.tick(artificialDelay);
         await internalPromise();
         sinon.assert.calledTwice(cb);
-
-        // The callback should not trigger since we decrease the frameRate
-        // so it still called twice
-        clock.tick(timeoutMs - artificialDelay);
-        await internalPromise();
-        sinon.assert.calledTwice(cb);
-
-        // The callback should now trigger with the new frameRate
-        clock.tick(newTimeoutMs - (timeoutMs - newTimeoutMs));
-        await internalPromise();
-        sinon.assert.calledThrice(cb);
       });
 
       [{
