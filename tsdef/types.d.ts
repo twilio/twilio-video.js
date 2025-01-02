@@ -193,6 +193,7 @@ export interface NoiseCancellationOptions {
 export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
   defaultDeviceCaptureMode?: DefaultDeviceCaptureMode;
   noiseCancellationOptions?: NoiseCancellationOptions;
+  enumerateDevices?: () => Promise<Array<any>>;
 }
 
 export interface ConnectOptions {
@@ -231,7 +232,9 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
-  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
+  RTCPeerConnection?: any;
+  enumerateDevices?: () => Promise<Array<any>>;
 }
 
 export interface CreateLocalTracksOptions {
@@ -243,8 +246,8 @@ export interface CreateLocalTracksOptions {
   loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
-  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
-  enumerateDevices?: () => Promise<MediaDeviceInfo[]>;
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
+  enumerateDevices?: () => Promise<Array<any>>;
 }
 
 export class TrackStats {

@@ -48,6 +48,30 @@ describe('PeerConnectionV2', () => {
     it('sets .id', () => {
       assert.equal(test.pcv2.id, test.id);
     });
+
+    it('uses the provided custom RTCPeerConnection constructor when specified', () => {
+      let wasCustomConstructorCalled = false;
+      class CustomRTCPeerConnection {
+        constructor(configuration) {
+          wasCustomConstructorCalled = true;
+          this.configuration = configuration;
+          this.signalingState = 'stable';
+          this.iceConnectionState = 'new';
+          this.connectionState = 'new';
+          this.senders = [];
+          this.transceivers = [];
+          this.addTrack = () => {};
+          this.addEventListener = () => {};
+        }
+      }
+
+      const test = makeTest({
+        RTCPeerConnection: CustomRTCPeerConnection
+      });
+
+      assert(wasCustomConstructorCalled, 'Custom RTCPeerConnection constructor was not called');
+      assert(test.pcv2._peerConnection instanceof CustomRTCPeerConnection, 'PeerConnectionV2 is not using the custom RTCPeerConnection');
+    });
   });
 
   describe('.connectionState', () => {
