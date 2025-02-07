@@ -239,20 +239,26 @@ function customWebRTCImplementations() {
     return Promise.resolve([]);
   };
 
+  const audioContext = new AudioContext();
+
   const localTracks = Video.createLocalTracks({
     audio: true,
     video: true,
     getUserMedia,
-    enumerateDevices
+    enumerateDevices,
   });
   const localAudioTrack = Video.createLocalAudioTrack({
     getUserMedia,
-    enumerateDevices
+    enumerateDevices,
+    audioContext
   });
   const localVideoTrack = Video.createLocalVideoTrack({
     getUserMedia,
   });
   const room = Video.connect('$TOKEN', {
+    audio: {
+      audioContext
+    },
     RTCPeerConnection: customRTCPeerConnection,
     getUserMedia,
     enumerateDevices,

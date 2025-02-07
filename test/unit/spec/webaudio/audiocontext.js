@@ -186,4 +186,32 @@ describe('AudioContextFactory', () => {
       });
     });
   });
+
+  describe('#setAudioContext', () => {
+    it('sets and uses the custom audio context', () => {
+      const mockAudioContext = { close: sinon.spy() };
+      const factory = new AudioContextFactory();
+      factory.setAudioContext(mockAudioContext);
+      let holder = {};
+      const result = factory.getOrCreate(holder);
+      assert.equal(result, mockAudioContext);
+      factory.release(holder);
+      sinon.assert.calledOnce(mockAudioContext.close);
+    });
+
+    it('throws an error if the audio context is disabled', () => {
+      const factory = new AudioContextFactory();
+      factory.disable();
+      assert.throws(() => factory.setAudioContext({}), Error);
+    });
+  });
+
+  describe('#disable', () => {
+    it('disables the audio context', () => {
+      const factory = new AudioContextFactory();
+      assert.equal(factory.isEnabled(), true);
+      factory.disable();
+      assert.equal(factory.isEnabled(), false);
+    });
+  });
 });

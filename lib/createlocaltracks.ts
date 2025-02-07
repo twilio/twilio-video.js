@@ -11,6 +11,7 @@ import {
 } from '../tsdef';
 
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
+const AudioContextFactory = require('./webaudio/audiocontext');
 
 const { buildLogLevels } = require('./util');
 const { getUserMedia, MediaStreamTrack } = require('./webrtc');
@@ -161,6 +162,16 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
   if (typeof fullOptions.audio === 'object') {
     if (typeof fullOptions.audio.workaroundWebKitBug1208516 === 'boolean') {
       extraLocalTrackOptions.audio.workaroundWebKitBug1208516 = fullOptions.audio.workaroundWebKitBug1208516;
+    }
+
+    if ('audioContext' in fullOptions.audio) {
+      if (fullOptions.audio.audioContext === null) {
+        log.warn('AudioContext is disabled by user preference. Features that depend on AudioContext like silence detection and noise cancellation will not be available.');
+        AudioContextFactory.disable();
+      } else {
+        log.info('Using custom AudioContext implementation:', fullOptions.audio.audioContext);
+        AudioContextFactory.setAudioContext(fullOptions.audio.audioContext);
+      }
     }
 
     if ('noiseCancellationOptions' in fullOptions.audio) {

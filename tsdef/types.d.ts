@@ -194,6 +194,12 @@ export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
   defaultDeviceCaptureMode?: DefaultDeviceCaptureMode;
   noiseCancellationOptions?: NoiseCancellationOptions;
   enumerateDevices?: () => Promise<Array<any>>;
+  /**
+   * AudioContext to use for audio processing features. Set to null to disable AudioContext usage.
+   * When null, features that depend on AudioContext like silence detection and noise cancellation will not be available.
+   * @default The default AudioContext implementation
+   */
+  audioContext?: AudioContext | null;
 }
 
 export interface ConnectOptions {
