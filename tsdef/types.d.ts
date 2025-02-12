@@ -242,6 +242,7 @@ export interface ConnectOptions {
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
   RTCPeerConnection?: any;
   enumerateDevices?: () => Promise<Array<any>>;
+  MediaStream?: any;
 }
 
 export interface CreateLocalTracksOptions {
