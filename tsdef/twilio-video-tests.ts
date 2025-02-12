@@ -252,10 +252,16 @@ function customWebRTCImplementations() {
   const localVideoTrack = Video.createLocalVideoTrack({
     getUserMedia,
   });
+  const CustomMediaStream = class extends MediaStream {
+    constructor() {
+      super();
+    }
+  };
   const room = Video.connect('$TOKEN', {
     RTCPeerConnection: customRTCPeerConnection,
     getUserMedia,
     enumerateDevices,
+    MediaStream: CustomMediaStream
   });
 }
 
