@@ -45,6 +45,13 @@ describe('MediaTrack', () => {
     it('should return the mediaTrackTransceiver.track as the mediaStreamTrack if unprocessedTrack does not exists', () => {
       assert.equal(track.mediaStreamTrack, track.tranceiver.track);
     });
+
+    it.only('should throw an error if an invalid MediaStream is provided', () => {
+      assert.throws(
+        () =>  createMediaTrack('1', 'audio', { MediaStream: null }),
+        /MediaTrack received an invalid MediaStream constructor/
+      );
+    });
   });
 
   describe('_initialize', () => {
