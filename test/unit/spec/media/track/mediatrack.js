@@ -46,7 +46,7 @@ describe('MediaTrack', () => {
       assert.equal(track.mediaStreamTrack, track.tranceiver.track);
     });
 
-    it.only('should throw an error if an invalid MediaStream is provided', () => {
+    it('should throw an error if an invalid MediaStream is provided', () => {
       assert.throws(
         () =>  createMediaTrack('1', 'audio', { MediaStream: null }),
         /MediaTrack received an invalid MediaStream constructor/

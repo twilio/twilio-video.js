@@ -167,6 +167,50 @@ describe('util', () => {
           }
         },
       },
+      // WebRTC Redirections test cases
+      {
+        testCase: 'RTCPeerConnection implementation provided',
+        connectOptions: { RTCPeerConnection: {} },
+        expectedPayload: { customRTCPeerConnectionImpl: 'true' },
+      },
+      {
+        testCase: 'MediaStream implementation provided',
+        connectOptions: { MediaStream: {} },
+        expectedPayload: { customMediaStreamImpl: 'true' },
+      },
+      {
+        testCase: 'getUserMedia implementation provided',
+        connectOptions: { getUserMedia: () => {} },
+        expectedPayload: { customGetUserMediaImpl: 'true' },
+      },
+      {
+        testCase: 'enumerateDevices implementation provided',
+        connectOptions: { enumerateDevices: () => {} },
+        expectedPayload: { customEnumerateDevicesImpl: 'true' },
+      },
+      {
+        testCase: 'WebRTC redirections not provided',
+        connectOptions: {},
+        expectedPayload: {
+          customRTCPeerConnectionImpl: 'false',
+          customMediaStreamImpl: 'false',
+          customGetUserMediaImpl: 'false',
+          customEnumerateDevicesImpl: 'false'
+        },
+      },
+      {
+        testCase: 'multiple WebRTC redirections provided',
+        connectOptions: { 
+          RTCPeerConnection: {},
+          getUserMedia: () => {} 
+        },
+        expectedPayload: {
+          customRTCPeerConnectionImpl: 'true',
+          customMediaStreamImpl: 'false',
+          customGetUserMediaImpl: 'true',
+          customEnumerateDevicesImpl: 'false'
+        },
+      },
     ].forEach(({ testCase, connectOptions, expectedPayload }) => {
       it(testCase, () => {
         const event = createRoomConnectEventPayload(connectOptions);
@@ -175,6 +219,10 @@ describe('util', () => {
           'audio': 'false',
           'audioTracks': 0,
           'automaticSubscription': 'false',
+          'customEnumerateDevicesImpl': 'false',
+          'customGetUserMediaImpl': 'false',
+          'customMediaStreamImpl': 'false',
+          'customRTCPeerConnectionImpl': 'false',
           'dataTracks': 0,
           'enableDominantSpeaker': 'false',
           'enableDscp': 'false',
