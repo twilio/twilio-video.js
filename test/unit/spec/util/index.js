@@ -200,9 +200,9 @@ describe('util', () => {
       },
       {
         testCase: 'multiple WebRTC redirections provided',
-        connectOptions: { 
+        connectOptions: {
           RTCPeerConnection: {},
-          getUserMedia: () => {} 
+          getUserMedia: () => {}
         },
         expectedPayload: {
           customRTCPeerConnectionImpl: 'true',
