@@ -7,6 +7,15 @@ const { capitalize } = require('../../../lib/util');
 var { FakeRTCPeerConnection } = require('../../../lib/webrtc/fakestats');
 var getStats = require('../../../../lib/webrtc/getstats');
 
+/**
+ * Fake logger for testing with empty info, warn, and error methods.
+ */
+class FakeLogger {
+  info() {}
+  warn() {}
+  error() {}
+}
+
 describe('getStats', function() {
   it('should reject the promise if RTCPeerConnection is not specified', () => {
     return new Promise((resolve, reject) => {
@@ -167,7 +176,7 @@ describe('getStats', function() {
     remoteStream.addTrack(new FakeMediaStreamTrack('video'));
     peerConnection._addLocalStream(localStream);
     peerConnection._addRemoteStream(remoteStream);
-    
+
     return getStats(peerConnection, { testForChrome: true, log: new FakeLogger() })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 1);
@@ -1536,13 +1545,4 @@ describe('getStats', function() {
 
 function normalizeAudioLevel(level) {
   return Math.round(level * 32767);
-}
-
-/**
- * Fake logger for testing with empty info, warn, and error methods.
- */
-class FakeLogger {
-  info() {}
-  warn() {}
-  error() {}
 }
