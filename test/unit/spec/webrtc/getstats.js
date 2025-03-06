@@ -167,8 +167,8 @@ describe('getStats', function() {
     remoteStream.addTrack(new FakeMediaStreamTrack('video'));
     peerConnection._addLocalStream(localStream);
     peerConnection._addRemoteStream(remoteStream);
-
-    return getStats(peerConnection, { testForChrome: true })
+    
+    return getStats(peerConnection, { testForChrome: true, log: new FakeLogger() })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 1);
         assert.equal(response.localVideoTrackStats.length, 1);
@@ -279,7 +279,7 @@ describe('getStats', function() {
     peerConnection._addLocalStream(localStream);
     peerConnection._addRemoteStream(remoteStream);
 
-    return getStats(peerConnection, { testForChrome: true })
+    return getStats(peerConnection, { testForChrome: true, log: new FakeLogger() })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 1);
         assert.equal(response.localVideoTrackStats.length, 1);
@@ -407,7 +407,7 @@ describe('getStats', function() {
     localStream.addTrack(new FakeMediaStreamTrack('video'));
     peerConnection._addLocalStream(localStream);
 
-    return getStats(peerConnection, { testForChrome: true })
+    return getStats(peerConnection, { testForChrome: true, log: new FakeLogger() })
       .then(response => {
         assert.equal(response.localVideoTrackStats.length, 2);
 
@@ -640,7 +640,7 @@ describe('getStats', function() {
     localStream.addTrack(fakeMediaStreamTrack);
     peerConnection._addLocalStream(localStream);
 
-    return getStats(peerConnection, { testForSafari: true })
+    return getStats(peerConnection, { testForSafari: true, log: new FakeLogger() })
       .then(response => {
         assert.equal(response.localAudioTrackStats.length, 0);
         assert.equal(response.localVideoTrackStats.length, 1);
@@ -1002,7 +1002,7 @@ describe('getStats', function() {
           }))
         };
         const peerConnection = new FakeRTCPeerConnection(options);
-        const { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true });
+        const { activeIceCandidatePair } = await getStats(peerConnection, { testForChrome: true, log: new FakeLogger() });
 
         const expectedActiveIceCandidatePair = Array.from(options.chromeFakeStats.values()).find(stat => {
           return stat.nominated;
@@ -1536,4 +1536,13 @@ describe('getStats', function() {
 
 function normalizeAudioLevel(level) {
   return Math.round(level * 32767);
+}
+
+/**
+ * Fake logger for testing with empty info, warn, and error methods.
+ */
+class FakeLogger {
+  info() {}
+  warn() {}
+  error() {}
 }
