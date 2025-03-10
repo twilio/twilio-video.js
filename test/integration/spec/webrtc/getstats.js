@@ -26,6 +26,7 @@ const sdpFormat = getSdpFormat();
     let pc2;
     let stats;
     let stream;
+    let logger;
 
     before(async () => {
       stream = await getUserMedia({
@@ -45,6 +46,12 @@ const sdpFormat = getSdpFormat();
           urls: 'stun:stun.l.google.com:19302'
         }]
       });
+
+      logger = {
+        info: () => {},
+        warn: () => {},
+        error: () => {}
+      };
 
       stream.getTracks().forEach(track => pc1.addTrack(track, stream));
       stream.getTracks().forEach(track => pc2.addTrack(track, stream));
@@ -85,7 +92,7 @@ const sdpFormat = getSdpFormat();
       // wait couple of seconds, and get stats
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      stats = await getStats(pc1);
+      stats = await getStats(pc1, { log: logger });
     });
 
     ['localAudioTrackStats', 'localVideoTrackStats', 'remoteAudioTrackStats', 'remoteVideoTrackStats'].forEach(trackType => {
