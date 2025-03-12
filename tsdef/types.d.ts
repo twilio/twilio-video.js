@@ -220,7 +220,13 @@ export interface ConnectOptions {
    */
   loggerName?: string;
   eventListener?: EventListener;
+  /**
+   * @deprecated use ConnectOptions.rtcConfiguration.iceServers
+   */
   iceServers?: Array<RTCIceServer>;
+  /**
+   * @deprecated use ConnectOptions.rtcConfiguration.iceTransportPolicy
+   */
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;
   maxAudioBitrate?: number | null;
@@ -240,6 +246,7 @@ export interface ConnectOptions {
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
   getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
+  rtcConfiguration?: RTCConfiguration;
   RTCPeerConnection?: any;
   enumerateDevices?: () => Promise<Array<any>>;
   MediaStream?: any;

@@ -257,7 +257,12 @@ function customWebRTCImplementations() {
       super();
     }
   };
+  const customRTCConfiguration: RTCConfiguration = {
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require',
+  };
   const room = Video.connect('$TOKEN', {
+    rtcConfiguration: customRTCConfiguration,
     RTCPeerConnection: customRTCPeerConnection,
     getUserMedia,
     enumerateDevices,
