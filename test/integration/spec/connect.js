@@ -1717,6 +1717,90 @@ describe('connect', function() {
       assert.deepEqual(passedConfigurantion.iceServers, expected.iceServers,
         'iceServers should match custom config');
     });
+
+    it('should use rtcConfiguration and ConnectOptions to configure RTCPeerConnection', async () => {
+      const { receiverToken } = await setupParticipants();
+
+      // Previous way of configuring RTCPeerConnection
+      const connectOptions = {
+        iceServers: [{ urls: 'stun:stun.custom.example.com:3478' }],
+        iceTransportPolicy: 'all'
+      };
+
+      // New custom rtcConfiguration
+      const rtcConfiguration = {
+        bundlePolicy: 'balanced',
+        iceCandidatePoolSize: 5,
+      };
+
+      let passedConfiguration;
+
+      class RTCConfigTestPeerConnection extends RTCPeerConnection {
+        constructor(configuration) {
+          super(configuration);
+          passedConfiguration = configuration;
+        }
+      }
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        ...connectOptions,
+        RTCPeerConnection: RTCConfigTestPeerConnection,
+        rtcConfiguration
+      });
+
+      assert(room.localParticipant, 'Room should connect with rtcConfiguration option');
+
+      assert.equal(passedConfiguration.bundlePolicy, rtcConfiguration.bundlePolicy,
+        'bundlePolicy should match rtcConfiguration');
+      assert.equal(passedConfiguration.iceCandidatePoolSize, rtcConfiguration.iceCandidatePoolSize,
+        'iceCandidatePoolSize should match rtcConfiguration');
+      assert.equal(passedConfiguration.iceTransportPolicy, connectOptions.iceTransportPolicy,
+        'iceTransportPolicy should match previousRTCConfiguration');
+      assert.deepEqual(passedConfiguration.iceServers, connectOptions.iceServers,
+        'iceServers should match previousRTCConfiguration');
+    });
+
+    it('should prefer rtcConfiguration over previous ConnectOptions to configure RTCPeerConnection when both are provided', async () => {
+      const { receiverToken } = await setupParticipants();
+
+      // Previous way of configuring RTCPeerConnection
+      const connectOptions = {
+        iceServers: [{ urls: 'stun:stun.custom.example.com:3478' }],
+        iceTransportPolicy: 'all'
+      };
+
+      // New custom rtcConfiguration
+      const rtcConfiguration = {
+        iceServers: [{ urls: 'stun:stun.custom.example.net:3478' }],
+        iceTransportPolicy: 'relay'
+      };
+
+      let passedConfiguration;
+
+      class RTCConfigTestPeerConnection extends RTCPeerConnection {
+        constructor(configuration) {
+          super(configuration);
+          passedConfiguration = configuration;
+        }
+      }
+
+      room = await connect(receiverToken, {
+        ...defaults,
+        name: sid,
+        ...connectOptions,
+        RTCPeerConnection: RTCConfigTestPeerConnection,
+        rtcConfiguration
+      });
+
+      assert(room.localParticipant, 'Room should connect with rtcConfiguration option');
+
+      assert.equal(passedConfiguration.iceTransportPolicy, rtcConfiguration.iceTransportPolicy,
+        'iceTransportPolicy should match rtcConfiguration');
+      assert.deepEqual(passedConfiguration.iceServers, rtcConfiguration.iceServers,
+        'iceServers should match rtcConfiguration');
+    });
   });
 });
 
