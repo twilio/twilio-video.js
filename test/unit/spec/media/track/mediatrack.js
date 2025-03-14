@@ -472,20 +472,17 @@ describe('MediaTrack', () => {
         sinon.assert.calledWithExactly(el1.srcObject.removeTrack, track.processedTrack);
       });
 
-      it('should call disposeElement if the custom MediaStream has the disposeElement property (Citrix)', () => {
-        const disposeElementSpy = sinon.spy();
+      it('should call disposeMediaElement if the option is provided', () => {
+        const disposeMediaElementSpy = sinon.spy();
         let customTrack = createMediaTrack('1', 'audio', {
-          MediaStream: {
-            createMediaStream: () => new MediaStream(),
-            disposeElement: disposeElementSpy
-          }
+          disposeMediaElement: disposeMediaElementSpy
         });
         const customElement = document.createElement('audio');
         customElement.srcObject = new MediaStream();
         customTrack._attachments.add(customElement);
         customTrack._detachElement(customElement);
-        assert(disposeElementSpy.calledOnce);
-        assert(disposeElementSpy.calledWith(customElement));
+        assert(disposeMediaElementSpy.calledOnce);
+        assert(disposeMediaElementSpy.calledWith(customElement));
       });
     });
 
@@ -642,52 +639,27 @@ describe('MediaTrack', () => {
       });
     });
 
-    context('when MediaStream has a createMediaStream factory method (Citrix)', () => {
-      const factoryCreateStreamSpy = sinon.stub();
-      let factoryMediaStream;
-      let customTrack;
-      let customElement;
-
-      beforeEach(() => {
-        factoryMediaStream = new MediaStream();
-        customTrack = createMediaTrack('1', 'audio', {
-          MediaStream: {
-            createMediaStream: factoryCreateStreamSpy.returns(factoryMediaStream)
-          }
-        });
-        customElement = document.createElement('audio');
+    it('should use the custom MediaStream constructor if the option is provided', () => {
+      const CustomMediaStream = sinon.spy(() => new MediaStream());
+      const customTrack = createMediaTrack('1', 'audio', {
+        MediaStream: CustomMediaStream
       });
 
-      afterEach(() => {
-        factoryCreateStreamSpy.reset();
-      });
+      const element = document.createElement('audio');
+      customTrack._attach(element);
 
-      it('should use createMediaStream when available and no srcObject exists', () => {
-        customTrack._attach(customElement);
-        assert(factoryCreateStreamSpy.calledOnce);
-        assert.equal(customElement.srcObject, factoryMediaStream);
-      });
-
-      it('should not use createMediaStream when srcObject already exists', () => {
-        const existingMediaStream = new MediaStream();
-        customElement.srcObject = existingMediaStream;
-        customTrack._attach(customElement);
-        assert(!factoryCreateStreamSpy.called);
-      });
+      assert(CustomMediaStream.calledOnce);
     });
 
-    it('should call mapElement if the custom MediaStream has the mapElement property (Citrix)', () => {
-      const mapElementSpy = sinon.spy();
+    it('should call mapMediaElement if the option is provided', () => {
+      const mapMediaElementSpy = sinon.spy();
       const customElement = document.createElement('audio');
       const track = createMediaTrack('1', 'audio', {
-        MediaStream: {
-          createMediaStream: () => new MediaStream(),
-          mapElement: mapElementSpy
-        }
+        mapMediaElement: mapMediaElementSpy
       });
       track._attach(customElement);
-      assert(mapElementSpy.calledOnce);
-      assert(mapElementSpy.calledWith(customElement));
+      assert(mapMediaElementSpy.calledOnce);
+      assert(mapMediaElementSpy.calledWith(customElement));
     });
   });
 });
