@@ -471,6 +471,19 @@ describe('MediaTrack', () => {
         track._detachElement(el1);
         sinon.assert.calledWithExactly(el1.srcObject.removeTrack, track.processedTrack);
       });
+
+      it('should call disposeMediaElement if the option is provided', () => {
+        const disposeMediaElementSpy = sinon.spy();
+        let customTrack = createMediaTrack('1', 'audio', {
+          disposeMediaElement: disposeMediaElementSpy
+        });
+        const customElement = document.createElement('audio');
+        customElement.srcObject = new MediaStream();
+        customTrack._attachments.add(customElement);
+        customTrack._detachElement(customElement);
+        assert(disposeMediaElementSpy.calledOnce);
+        assert(disposeMediaElementSpy.calledWith(customElement));
+      });
     });
 
     context('when the element is not attached', () => {
@@ -624,6 +637,29 @@ describe('MediaTrack', () => {
       it('should return the HTMLMediaElement', () => {
         assert.equal(ret, el);
       });
+    });
+
+    it('should use the custom MediaStream constructor if the option is provided', () => {
+      const CustomMediaStream = sinon.spy(() => new MediaStream());
+      const customTrack = createMediaTrack('1', 'audio', {
+        MediaStream: CustomMediaStream
+      });
+
+      const element = document.createElement('audio');
+      customTrack._attach(element);
+
+      assert(CustomMediaStream.calledOnce);
+    });
+
+    it('should call mapMediaElement if the option is provided', () => {
+      const mapMediaElementSpy = sinon.spy();
+      const customElement = document.createElement('audio');
+      const track = createMediaTrack('1', 'audio', {
+        mapMediaElement: mapMediaElementSpy
+      });
+      track._attach(customElement);
+      assert(mapMediaElementSpy.calledOnce);
+      assert(mapMediaElementSpy.calledWith(customElement));
     });
   });
 });
