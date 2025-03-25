@@ -2,14 +2,6 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.29.1 (unreleased)
-========================
-
-Bug Fixes
----------
-
-- Fixed a bug where a Chrome iOS Participant's local audio (Krips Noise Cancellation enabled) did not recover after disconnecting a bluetooth headset. (VIDEO-13010)
-
 2.29.0 (December 5, 2024)
 ================================
 
@@ -29,6 +21,8 @@ Bug Fixes
 ---------
 
 - Fixed a bug in Desktop Safari 18 and all iOS browsers on iOS 18 where cloning a disabled `MediaStreamTrack` would incorrectly set the `enabled` property to `true` instead of preserving the original disabled state. This ensures track cloning behavior matches the MediaStreamTrack specification and works consistently across browsers. Bug report: https://bugs.webkit.org/show_bug.cgi?id=281758
+
+- Fixed a bug where a Chrome iOS Participant's local audio (Krips Noise Cancellation enabled) did not recover after disconnecting a bluetooth headset. (VIDEO-13010)
 
 2.28.1 (October 3, 2023)
 ========================
