@@ -241,6 +241,9 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
  * @property {boolean|CreateLocalTrackOptions|CreateLocalAudioTrackOptions} [audio=true] - Whether or not to
  *   get local audio with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.
+ * @property {function} [disposeMediaElement] - Callback triggered after a media track is detached from an audio or video element.
+ * @property {function} [enumerateDevices] - Overrides the native MediaDevices.enumerateDevices API.
+ * @property {function} [getUserMedia] - Overrides the native MediaDevices.getUserMedia API.
  * @property {LogLevel|LogLevels} [logLevel='warn'] - <code>(deprecated: use [Video.Logger](module-twilio-video.html) instead.
  *   See [examples](module-twilio-video.html#.connect) for details)</code>
  *   Set the default log verbosity
@@ -249,6 +252,8 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
  *   levels.
  * @property {string} [loggerName='twilio-video'] - The name of the logger. Use this name when accessing the logger used by the SDK.
  *   See [examples](module-twilio-video.html#.connect) for details.
+ * @property {function} [mapMediaElement] - Callback triggered after a media track is attached to an audio or video element.
+ * @property {MediaStream.constructor} [MediaStream] - Overrides the native MediaStream class.
  * @property {boolean|CreateLocalTrackOptions} [video=true] - Whether or not to
  *   get local video with <code>getUserMedia</code> when <code>tracks</code>
  *   are not provided.

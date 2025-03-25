@@ -5,7 +5,25 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.30.0 (in progress)
 ========================
 
-TODO(lrivas): Write public API to support VDI.
+New Features
+------------
+
+### WebRTC API Overrides (Beta)
+
+The SDK now enables you to override WebRTC APIs with the following options. If your environment supports WebRTC redirection—such as [Citrix HDX](https://www.citrix.com/solutions/vdi-and-daas/hdx/what-is-hdx.html)'s WebRTC [redirection technologies](https://www.citrix.com/blogs/2019/01/15/hdx-a-webrtc-manifesto/)—your application can leverage this new beta feature to enhance media quality in those environments.
+
+**ConnectOptions**
+
+- `rtcConfiguration` - An optional `RTCConfiguration` object passed to the RTCPeerConnection constructor.
+- `RTCPeerConnection` - Allows overriding the native `RTCPeerConnection` class.
+
+**ConnectOptions and CreateLocalTracksOptions**
+
+- `getUserMedia` - Overrides the native `MediaDevices.getUserMedia` API.
+- `enumerateDevices` - Overrides the native `MediaDevices.enumerateDevices` API.
+- `MediaStream` - Overrides the native `MediaStream` class.
+- `mapMediaElement` - Callback triggered after a media track is attached to an audio or video element.
+- `disposeMediaElement` - Callback triggered after a media track is detached from an audio or video element.
 
 Bug Fixes
 ---------
