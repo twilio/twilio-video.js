@@ -232,41 +232,68 @@ function customWebRTCImplementations() {
       super(configuration);
     }
   };
+
+  const customRTCConfiguration: RTCConfiguration = {
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require',
+  };
+
   const getUserMedia = () => {
     return Promise.resolve(new MediaStream());
   };
+
   const enumerateDevices = () => {
     return Promise.resolve([]);
   };
 
-  const localTracks = Video.createLocalTracks({
-    audio: true,
-    video: true,
-    getUserMedia,
-    enumerateDevices
-  });
-  const localAudioTrack = Video.createLocalAudioTrack({
-    getUserMedia,
-    enumerateDevices
-  });
-  const localVideoTrack = Video.createLocalVideoTrack({
-    getUserMedia,
-  });
   const CustomMediaStream = class extends MediaStream {
     constructor() {
       super();
     }
   };
-  const customRTCConfiguration: RTCConfiguration = {
-    bundlePolicy: 'max-bundle',
-    rtcpMuxPolicy: 'require',
-  };
+
+  function mapMediaElement(element: HTMLMediaElement) {
+    return element;
+  }
+
+  function disposeMediaElement(element: HTMLMediaElement) {
+    return element;
+  }
+
+  const localTracks = Video.createLocalTracks({
+    audio: true,
+    video: true,
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
+  const localAudioTrack = Video.createLocalAudioTrack({
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
+  const localVideoTrack = Video.createLocalVideoTrack({
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
   const room = Video.connect('$TOKEN', {
     rtcConfiguration: customRTCConfiguration,
     RTCPeerConnection: customRTCPeerConnection,
     getUserMedia,
     enumerateDevices,
-    MediaStream: CustomMediaStream
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
   });
 }
 

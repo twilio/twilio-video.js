@@ -169,7 +169,15 @@ export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
-export interface CreateLocalTrackOptions extends MediaTrackConstraints {
+interface MediaImplementationOptions {
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+  enumerateDevices?: () => Promise<Array<any>>;
+  MediaStream?: any;
+  mapMediaElement?: (element: HTMLMediaElement) => void;
+  disposeMediaElement?: (element: HTMLMediaElement) => void;
+}
+
+export interface CreateLocalTrackOptions extends MediaTrackConstraints, MediaImplementationOptions {
   /**
    * @deprecated
    */
@@ -177,7 +185,6 @@ export interface CreateLocalTrackOptions extends MediaTrackConstraints {
   name?: string;
   workaroundWebKitBug180748?: boolean;
   workaroundWebKitBug1208516?: boolean;
-  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
 }
 
 
@@ -200,10 +207,9 @@ export interface NoiseCancellationOptions {
 export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
   defaultDeviceCaptureMode?: DefaultDeviceCaptureMode;
   noiseCancellationOptions?: NoiseCancellationOptions;
-  enumerateDevices?: () => Promise<Array<any>>;
 }
 
-export interface ConnectOptions {
+export interface ConnectOptions extends MediaImplementationOptions {
   audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
@@ -245,14 +251,11 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
-  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
   rtcConfiguration?: RTCConfiguration;
   RTCPeerConnection?: any;
-  enumerateDevices?: () => Promise<Array<any>>;
-  MediaStream?: any;
 }
 
-export interface CreateLocalTracksOptions {
+export interface CreateLocalTracksOptions extends MediaImplementationOptions {
   audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   /**
    * @deprecated
@@ -261,8 +264,6 @@ export interface CreateLocalTracksOptions {
   loggerName?: string;
   tracks?: LocalTrack[];
   video?: boolean | CreateLocalTrackOptions;
-  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<any>;
-  enumerateDevices?: () => Promise<Array<any>>;
 }
 
 export class TrackStats {
