@@ -2,13 +2,14 @@
   "name": "twilio-video",
   "title": "Twilio Video",
   "description": "Twilio Video JavaScript Library",
-  "version": "2.29.1-dev",
+  "version": "2.30.0-dev",
   "homepage": "https://twilio.com",
   "author": "Mark Andrus Roberts <mroberts@twilio.com>",
   "contributors": [
     "Ryan Rowland <rrowland@twilio.com>",
     "Manjesh Malavalli <mmalavalli@twilio.com>",
-    "Makarand Patwardhan <mpatwardhan@twilio.com>"
+    "Makarand Patwardhan <mpatwardhan@twilio.com>",
+    "Luis Rivas <lrivas@twilio.com>"
   ],
   "keywords": [
     "twilio",

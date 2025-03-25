@@ -226,6 +226,78 @@ function LocalParticipant(localParticipant: Video.LocalParticipant) {
   });
 }
 
+function customWebRTCImplementations() {
+  const customRTCPeerConnection = class extends RTCPeerConnection {
+    constructor(configuration?: RTCConfiguration) {
+      super(configuration);
+    }
+  };
+
+  const customRTCConfiguration: RTCConfiguration = {
+    bundlePolicy: 'max-bundle',
+    rtcpMuxPolicy: 'require',
+  };
+
+  const getUserMedia = () => {
+    return Promise.resolve(new MediaStream());
+  };
+
+  const enumerateDevices = () => {
+    return Promise.resolve([]);
+  };
+
+  const CustomMediaStream = class extends MediaStream {
+    constructor() {
+      super();
+    }
+  };
+
+  function mapMediaElement(element: HTMLMediaElement) {
+    return element;
+  }
+
+  function disposeMediaElement(element: HTMLMediaElement) {
+    return element;
+  }
+
+  const localTracks = Video.createLocalTracks({
+    audio: true,
+    video: true,
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
+  const localAudioTrack = Video.createLocalAudioTrack({
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
+  const localVideoTrack = Video.createLocalVideoTrack({
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+
+  const room = Video.connect('$TOKEN', {
+    rtcConfiguration: customRTCConfiguration,
+    RTCPeerConnection: customRTCPeerConnection,
+    getUserMedia,
+    enumerateDevices,
+    MediaStream: CustomMediaStream,
+    mapMediaElement,
+    disposeMediaElement
+  });
+}
+
+
 let room: Video.Room | null = null;
 let localVideoTrack: Video.LocalVideoTrack | null = null;
 let localAudioTrack: Video.LocalAudioTrack | null = null;
