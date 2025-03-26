@@ -8,9 +8,9 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-### WebRTC API Overrides (Beta)
+### WebRTC Overrides (Beta)
 
-The SDK now enables you to override WebRTC APIs with the following options. If your environment supports WebRTC redirection—such as [Citrix HDX](https://www.citrix.com/solutions/vdi-and-daas/hdx/what-is-hdx.html)'s WebRTC [redirection technologies](https://www.citrix.com/blogs/2019/01/15/hdx-a-webrtc-manifesto/)—your application can leverage this new beta feature to enhance media quality in those environments.
+The SDK now enables you to override WebRTC APIs with the following options. If your environment supports WebRTC redirection—such as [Citrix HDX](https://www.citrix.com/solutions/hdx.html)'s WebRTC [redirection technologies](https://www.citrix.com/blogs/2019/01/15/hdx-a-webrtc-manifesto/)—your application can leverage this new beta feature to enhance media quality in those environments. For more details, please refer to the [JavaScript WebRTC Overrides](https://www.twilio.com/docs/video/javascript-webrtc-overrides) documentation.
 
 **ConnectOptions**
 
