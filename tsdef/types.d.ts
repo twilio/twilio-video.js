@@ -169,7 +169,15 @@ export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
   priority?: Track.Priority;
 }
 
-export interface CreateLocalTrackOptions extends MediaTrackConstraints {
+interface MediaImplementationOptions {
+  getUserMedia?: (constraints: MediaStreamConstraints) => Promise<MediaStream>;
+  enumerateDevices?: () => Promise<Array<any>>;
+  MediaStream?: any;
+  mapMediaElement?: (element: HTMLMediaElement) => void;
+  disposeMediaElement?: (element: HTMLMediaElement) => void;
+}
+
+export interface CreateLocalTrackOptions extends MediaTrackConstraints, MediaImplementationOptions {
   /**
    * @deprecated
    */
@@ -201,7 +209,7 @@ export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
   noiseCancellationOptions?: NoiseCancellationOptions;
 }
 
-export interface ConnectOptions {
+export interface ConnectOptions extends MediaImplementationOptions {
   audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
@@ -218,7 +226,13 @@ export interface ConnectOptions {
    */
   loggerName?: string;
   eventListener?: EventListener;
+  /**
+   * @deprecated use ConnectOptions.rtcConfiguration.iceServers
+   */
   iceServers?: Array<RTCIceServer>;
+  /**
+   * @deprecated use ConnectOptions.rtcConfiguration.iceTransportPolicy
+   */
   iceTransportPolicy?: RTCIceTransportPolicy;
   insights?: boolean;
   maxAudioBitrate?: number | null;
@@ -237,9 +251,11 @@ export interface ConnectOptions {
 
   tracks?: Array<LocalTrack | MediaStreamTrack>;
   video?: boolean | CreateLocalTrackOptions;
+  rtcConfiguration?: RTCConfiguration;
+  RTCPeerConnection?: any;
 }
 
-export interface CreateLocalTracksOptions {
+export interface CreateLocalTracksOptions extends MediaImplementationOptions {
   audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   /**
    * @deprecated
