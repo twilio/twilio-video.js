@@ -2,6 +2,16 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.31.0 (In Progress)
+====================
+
+New Features
+------------
+
+### Document Picture-in-Picture API Support
+
+Previously, when `Client Track Switch Off Control` was set to `auto`, video tracks were automatically switched off—even if they were visible and rendered in a [Document Picture-in-Picture](https://developer.chrome.com/docs/web-platform/document-picture-in-picture) (PiP) window. This caused issues where users could see the video element, but the track itself was disabled. In this new SDK version, video tracks will remain active and continue to play when displayed in a PiP window.
+
 2.30.0 (March 28, 2025)
 ========================
 
