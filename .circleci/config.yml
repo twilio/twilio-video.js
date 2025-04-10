@@ -81,6 +81,8 @@ executors:
     environment:
       <<: *defaultEnv
   machine-executor:
+    machine:
+      image: ubuntu-2204:current
     environment:
       <<: *defaultEnv
 commands:
