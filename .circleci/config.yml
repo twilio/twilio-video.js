@@ -30,7 +30,7 @@ parameters:
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
   browser:
     type: enum
-    enum: ["chrome"]
+    enum: ["chrome", "firefox"]
     default: "chrome"
   bver:
     type: enum
@@ -59,7 +59,7 @@ executors:
     parameters:
       browser:
         type: enum
-        enum: ["chrome"]
+        enum: ["chrome", "firefox"]
         default: "chrome"
       bver:
         type: enum
