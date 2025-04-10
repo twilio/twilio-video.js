@@ -30,7 +30,7 @@ parameters:
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
   browser:
     type: enum
-    enum: ["chrome", "firefox"]
+    enum: ["chrome"]
     default: "chrome"
   bver:
     type: enum
@@ -59,7 +59,7 @@ executors:
     parameters:
       browser:
         type: enum
-        enum: ["chrome", "firefox"]
+        enum: ["chrome"]
         default: "chrome"
       bver:
         type: enum
@@ -304,7 +304,7 @@ workflows:
           context: dockerhub-push
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               bver: ["stable", "unstable", "beta"]
   Custom_Workflow:
     when:
@@ -352,7 +352,7 @@ workflows:
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               bver: ["stable"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
@@ -361,7 +361,7 @@ workflows:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
 
@@ -373,7 +373,7 @@ workflows:
           name: << matrix.test_stability >> integration << matrix.topology >> tests << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               bver: ["stable"]
               topology: ["group"]
               test_stability: ["stable"]
@@ -382,7 +382,7 @@ workflows:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               topology: ["group"]
               test_stability: ["stable"]
 
@@ -398,7 +398,7 @@ workflows:
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
@@ -408,7 +408,7 @@ workflows:
           name: << matrix.test_stability >> network << matrix.topology >> tests on << matrix.browser >>
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable", "unstable"]
           requires: [Build, UnitTests]
@@ -433,7 +433,7 @@ workflows:
           name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
           matrix:
             parameters:
-              browser: ["chrome", "firefox"]
+              browser: ["chrome"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
