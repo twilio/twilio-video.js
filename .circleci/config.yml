@@ -83,7 +83,6 @@ executors:
   machine-executor:
     machine:
       image: ubuntu-2404:current
-    resource_class: large
     environment:
       <<: *defaultEnv
 commands:
@@ -191,6 +190,7 @@ jobs:
           to: "Build Passed!"
   run-integration-tests:
     parallelism: << parameters.parallelism >>
+    resource_class: large
     parameters:
       parallelism:
         type: integer
