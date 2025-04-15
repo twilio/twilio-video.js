@@ -190,7 +190,6 @@ jobs:
           to: "Build Passed!"
   run-integration-tests:
     parallelism: << parameters.parallelism >>
-    resource_class: large
     parameters:
       parallelism:
         type: integer
