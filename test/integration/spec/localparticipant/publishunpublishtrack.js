@@ -331,8 +331,8 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           // NOTE(mmalavalli): Even though the "trackUnpublished" events are
           // fired on the RemoteParticipants, we need to make sure that the
           // SDP negotiation is complete before we re-publish the LocalTrack.
-          // Therefore we wait for 2 seconds.
-          await waitForSometime(2000);
+          // Therefore we wait for 4 seconds.
+          await waitForSometime(4000);
         }
 
         const thisLocalTrackPublicationPromise = priority ? thisParticipant.publishTrack(thisTrack, { priority }) : thisParticipant.publishTrack(thisTrack);
@@ -603,7 +603,7 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           // NOTE(mmalavalli): Even though the "trackUnpublished" events are
           // fired on the RemoteParticipants, we need to make sure that the
           // SDP negotiation is complete before we re-publish the LocalTrack.
-          // Therefore we wait for 2 seconds.
+          // Therefore we wait for 4 seconds.
           await waitForSometime(4000);
 
           await waitFor(alice.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
