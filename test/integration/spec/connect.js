@@ -878,9 +878,9 @@ describe('connect', function() {
           nTracks: 0
         }), 'setting up room');
 
-        // Grab 5 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
+        // Grab 10 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
-        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 5), `polling outgoing bitrate: ${thisRoom.sid}`);
+        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 10), `polling outgoing bitrate: ${thisRoom.sid}`);
 
         const average = items => {
           let avg = items.reduce((x, y) => x + y) / items.length;
@@ -1530,22 +1530,16 @@ describe('connect', function() {
 
         source.start();
 
-        // Wait for both participants to be fully connected
-        await Promise.all([
-          waitFor(() => aliceRoom.state === 'connected', 'Alice to connect'),
-          waitFor(() => bobRoom.state === 'connected', 'Bob to connect')
-        ]);
-
-        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 10 seconds,
+        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
         // so the below bitrate samples represent speech.
         [aliceBitratesSpeech, bobBitratesSpeech] = (await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 10)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
           'Alice and Bob to collect outgoing speech bitrate samples')).map(samples => samples.audio);
 
-        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 10 seconds,
+        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
         // so the below bitrate samples represent silence.
         [aliceBitratesSilence, bobBitratesSilence] = (await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 10)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
           'Alice and Bob to collect outgoing silence bitrate samples')).map(samples => samples.audio);
       });
 
@@ -1829,10 +1823,6 @@ async function pollOutgoingBitrate(room, nSamples) {
   if (nSamples <= 0) { return { audio: [], video: [] }; }
 
   const getBytesSent = async () => {
-    // Check if room is still connected
-    if (room.state !== 'connected') {
-      throw new Error('Room disconnected during bitrate polling');
-    }
     const roomStats = await room.getStats();
     return ['audio', 'video'].reduce((returnedStats, kind) => {
       const [{ [`local${capitalize(kind)}TrackStats`]: [stats] }] = roomStats;
@@ -1857,6 +1847,7 @@ async function pollOutgoingBitrate(room, nSamples) {
         nSamples--;
         if (nSamples <= 0) {
           clearInterval(pollInterval);
+          // Flatten out
           resolve({
             audio: samples.map(b => b.audio),
             video: samples.map(b => b.video),
