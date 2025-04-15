@@ -71,7 +71,7 @@ async function main() {
     const exitCode = await new Promise(resolve => {
       const server = new Server(config, resolve);
       server.start();
-      process.once('exit', () => stopper.stop());
+      process.once('exit', () => stopper.stop(config));
       process.once('SIGINT', () => process.exit());
     });
 
