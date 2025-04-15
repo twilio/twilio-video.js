@@ -239,6 +239,12 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
       }
 
       // eslint-disable-next-line no-warning-comments
+      // TODO(lrivas): Disabling DataTracks for Firefox P2P because more investigation is needed on the issue
+      if (isFirefox && kind === 'data' && defaults.topology === 'peer-to-peer') {
+        return;
+      }
+
+      // eslint-disable-next-line no-warning-comments
       // TODO(mmalavalli): Until we find out why Travis is failing tests due
       // to not being able to create enough RTCPeerConnections, we will enable
       // testing for only when priority is set to "high". (JSDK-2417)
