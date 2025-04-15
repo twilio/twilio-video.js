@@ -1530,16 +1530,22 @@ describe('connect', function() {
 
         source.start();
 
-        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 5 seconds,
+        // Wait for both participants to be fully connected
+        await Promise.all([
+          waitFor(() => aliceRoom.state === 'connected', 'Alice to connect'),
+          waitFor(() => bobRoom.state === 'connected', 'Bob to connect')
+        ]);
+
+        // NOTE(mmalavalli): The recorded speech Track contains speech for the first 10 seconds,
         // so the below bitrate samples represent speech.
         [aliceBitratesSpeech, bobBitratesSpeech] = (await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 10)),
           'Alice and Bob to collect outgoing speech bitrate samples')).map(samples => samples.audio);
 
-        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 5 seconds,
+        // NOTE(mmalavalli): The recorded speech Track contains silence for the next 10 seconds,
         // so the below bitrate samples represent silence.
         [aliceBitratesSilence, bobBitratesSilence] = (await waitFor(
-          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 5)),
+          [aliceRoom, bobRoom].map(room => pollOutgoingBitrate(room, 10)),
           'Alice and Bob to collect outgoing silence bitrate samples')).map(samples => samples.audio);
       });
 
@@ -1823,6 +1829,10 @@ async function pollOutgoingBitrate(room, nSamples) {
   if (nSamples <= 0) { return { audio: [], video: [] }; }
 
   const getBytesSent = async () => {
+    // Check if room is still connected
+    if (room.state !== 'connected') {
+      throw new Error('Room disconnected during bitrate polling');
+    }
     const roomStats = await room.getStats();
     return ['audio', 'video'].reduce((returnedStats, kind) => {
       const [{ [`local${capitalize(kind)}TrackStats`]: [stats] }] = roomStats;
@@ -1833,22 +1843,28 @@ async function pollOutgoingBitrate(room, nSamples) {
 
   const samples = [];
   let curBytesSent = await getBytesSent();
-  return new Promise(resolve => {
-    const pollInterval = setInterval(async () => {
-      const bytesSent = await getBytesSent();
-      samples.push({
-        audio: (bytesSent.audio - curBytesSent.audio) * 8,
-        video: (bytesSent.video - curBytesSent.video) * 8,
-      });
-      curBytesSent = bytesSent;
-      nSamples--;
-      if (nSamples <= 0) {
-        clearInterval(pollInterval);
-        // Flatten out
-        resolve({
-          audio: samples.map(b => b.audio),
-          video: samples.map(b => b.video),
+  let pollInterval;
+
+  return new Promise((resolve, reject) => {
+    pollInterval = setInterval(async () => {
+      try {
+        const bytesSent = await getBytesSent();
+        samples.push({
+          audio: (bytesSent.audio - curBytesSent.audio) * 8,
+          video: (bytesSent.video - curBytesSent.video) * 8,
         });
+        curBytesSent = bytesSent;
+        nSamples--;
+        if (nSamples <= 0) {
+          clearInterval(pollInterval);
+          resolve({
+            audio: samples.map(b => b.audio),
+            video: samples.map(b => b.video),
+          });
+        }
+      } catch (error) {
+        clearInterval(pollInterval);
+        reject(error);
       }
     }, 1000);
   });
