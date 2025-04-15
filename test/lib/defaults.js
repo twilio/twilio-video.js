@@ -24,7 +24,8 @@ const defaults = [
   environment: 'prod',
   networkQuality: true,
   topology: 'peer-to-peer',
-  testStability: 'all' // other choices: 'stable', 'unstable'
+  testStability: 'all', // other choices: 'stable', 'unstable'
+  regions: 'us1'
 });
 
 module.exports = Object.seal(defaults);
