@@ -878,9 +878,9 @@ describe('connect', function() {
           nTracks: 0
         }), 'setting up room');
 
-        // Grab 5 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
+        // Grab 10 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
-        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 5), `polling outgoing bitrate: ${thisRoom.sid}`);
+        const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 10), `polling outgoing bitrate: ${thisRoom.sid}`);
 
         const average = items => {
           let avg = items.reduce((x, y) => x + y) / items.length;
@@ -1833,22 +1833,29 @@ async function pollOutgoingBitrate(room, nSamples) {
 
   const samples = [];
   let curBytesSent = await getBytesSent();
-  return new Promise(resolve => {
-    const pollInterval = setInterval(async () => {
-      const bytesSent = await getBytesSent();
-      samples.push({
-        audio: (bytesSent.audio - curBytesSent.audio) * 8,
-        video: (bytesSent.video - curBytesSent.video) * 8,
-      });
-      curBytesSent = bytesSent;
-      nSamples--;
-      if (nSamples <= 0) {
-        clearInterval(pollInterval);
-        // Flatten out
-        resolve({
-          audio: samples.map(b => b.audio),
-          video: samples.map(b => b.video),
+  let pollInterval;
+
+  return new Promise((resolve, reject) => {
+    pollInterval = setInterval(async () => {
+      try {
+        const bytesSent = await getBytesSent();
+        samples.push({
+          audio: (bytesSent.audio - curBytesSent.audio) * 8,
+          video: (bytesSent.video - curBytesSent.video) * 8,
         });
+        curBytesSent = bytesSent;
+        nSamples--;
+        if (nSamples <= 0) {
+          clearInterval(pollInterval);
+          // Flatten out
+          resolve({
+            audio: samples.map(b => b.audio),
+            video: samples.map(b => b.video),
+          });
+        }
+      } catch (error) {
+        clearInterval(pollInterval);
+        reject(error);
       }
     }, 1000);
   });

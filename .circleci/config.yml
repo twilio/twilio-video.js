@@ -74,7 +74,7 @@ executors:
       <<: *defaultEnv
   generic-executor:
     docker:
-      - image: alpine:3.7
+      - image: alpine:3.21
         auth:
           username: $DOCKER_HUB_USERNAME
           password: $DOCKER_HUB_PASSWORD
@@ -82,7 +82,7 @@ executors:
       <<: *defaultEnv
   machine-executor:
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2404:current
     environment:
       <<: *defaultEnv
 commands:
