@@ -18,6 +18,7 @@
         "git rm -rf --ignore-unmatch dist es5",
         "npm run build:quick",
         "git add package.json",
+        "git add package-lock.json",
         "git add -f dist es5",
         "git commit -m \"${RELEASE_VERSION}\"",
         "git tag ${RELEASE_VERSION}",
@@ -32,6 +33,7 @@
         "git rm -rf dist es5",
         "npm run clean",
         "git add package.json",
+        "git add package-lock.json",
         "git commit -m \"${DEVELOPMENT_VERSION}\"",
         "git push origin ${BRANCH}"
       ]
