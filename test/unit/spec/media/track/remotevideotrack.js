@@ -414,6 +414,64 @@ describe('RemoteVideoTrack', () => {
       });
     });
   });
+
+  describe('Picture-in-Picture', () => {
+    let el;
+    let setRenderHintsSpy;
+    let track;
+    let originalDocumentPictureInPicture;
+    let pipEls;
+
+    const dispatchVisibilityChangeEvent = async () => {
+      document.visibilityState = 'visible';
+      document.dispatchEvent('visibilitychange');
+      await waitForSometime();
+    };
+
+    beforeEach(() => {
+      documentVisibilityMonitor.clear();
+      originalDocumentPictureInPicture = global.documentPictureInPicture;
+      global.documentPictureInPicture = { window: { document: { querySelectorAll: () => pipEls } } };
+      global.document = global.document || new Document();
+      setRenderHintsSpy = sinon.spy();
+      el = document.createElement('video');
+      track = makeTrack({ id: 'foo', sid: 'bar', setRenderHint: setRenderHintsSpy, options: { enableDocumentVisibilityTurnOff: true } });
+      track.attach(el);
+      pipEls = [el];
+    });
+
+    afterEach(() => {
+      global.documentPictureInPicture = originalDocumentPictureInPicture;
+      if (global.document instanceof Document) {
+        delete global.document;
+      }
+    });
+
+    it('should call _setRenderHint with enable = true', async () => {
+      await dispatchVisibilityChangeEvent();
+      sinon.assert.calledWith(setRenderHintsSpy, { enabled: true });
+    });
+
+    describe('should not call _setRenderHint', () => {
+      it('when documentPictureInPicture is not supported', async () => {
+        delete global.documentPictureInPicture;
+        await dispatchVisibilityChangeEvent();
+        sinon.assert.notCalled(setRenderHintsSpy);
+      });
+
+      it('when documentPictureInPicture window is not open', async () => {
+        delete global.documentPictureInPicture.window;
+        await dispatchVisibilityChangeEvent();
+        sinon.assert.notCalled(setRenderHintsSpy);
+      });
+
+      it('when els are not on the documentPictureInPicture window', async () => {
+        pipEls = [];
+        await dispatchVisibilityChangeEvent();
+        sinon.assert.notCalled(setRenderHintsSpy);
+      });
+    });
+  });
 });
 
 
