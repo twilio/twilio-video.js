@@ -48,6 +48,7 @@ require('./spec/signaling/v2/renderhintssignaling');
 require('./spec/signaling/v2/publisherhintsignaling');
 require('./spec/signaling/v2/mediasignaling');
 require('./spec/signaling/v2/dominantspeakersignaling');
+require('./spec/signaling/v2/livetranscriptionsignaling');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/localparticipant');
