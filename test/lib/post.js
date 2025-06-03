@@ -41,7 +41,11 @@ function request(config, data) {
     });
     request.once('error', reject);
     if (data) {
-      request.write(Object.keys(data).map(key => `${key}=${data[key]}`).join('&'));
+      request.write(
+        Object.entries(data)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(typeof value === 'object' ? JSON.stringify(value) : value)}`)
+          .join('&')
+      );
     }
     request.end();
   });

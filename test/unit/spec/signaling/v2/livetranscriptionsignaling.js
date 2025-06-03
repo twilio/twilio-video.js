@@ -56,6 +56,12 @@ describe('LiveTranscriptionSignaling', () => {
       const signalingInstance = makeTest(mediaSignalingTransport);
       assert(signalingInstance instanceof LiveTranscriptionSignaling, 'signalingInstance is an instance of LiveTranscriptionSignaling');
     });
+
+    it('should initialize isEnabled as false', () => {
+      const mediaSignalingTransport = mockTransport();
+      const signalingInstance = makeTest(mediaSignalingTransport);
+      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false initially');
+    });
   });
 
   describe('message handling', () => {
@@ -137,6 +143,30 @@ describe('LiveTranscriptionSignaling', () => {
       await waitForSometime(1000);
 
       assert.strictEqual(transcriptionReceived, false, 'transcription event was not emitted');
+    });
+  });
+
+  describe('isEnabled property', () => {
+    it('should set isEnabled to true when the transport is ready', async () => {
+      const mediaSignalingTransport = mockTransport();
+      const signalingInstance = makeTest(mediaSignalingTransport);
+
+      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false initially');
+
+      await waitUntilReady(signalingInstance);
+
+      assert.strictEqual(signalingInstance.isEnabled, true, 'isEnabled should be true after ready event');
+    });
+
+    it('should set isEnabled to false after teardown is called', async () => {
+      const mediaSignalingTransport = mockTransport();
+      const signalingInstance = makeTest(mediaSignalingTransport);
+
+      await waitUntilReady(signalingInstance);
+
+      signalingInstance._teardown();
+
+      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false after teardown is called');
     });
   });
 });
