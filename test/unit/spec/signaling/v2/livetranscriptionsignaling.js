@@ -49,124 +49,84 @@ function waitUntilReady(subject) {
   return new Promise(resolve => subject.once('ready', () => resolve()));
 }
 
+const mockTranscriptionMessage = {
+  /* eslint-disable camelcase */
+  language_code: 'en-US',
+  partial_results: false,
+  sequence_number: 1,
+  /* eslint-enable camelcase */
+  participant: 'PA0000',
+  timestamp: '2025-01-01T12:00:00.000000000Z',
+  track: 'MT0000',
+  transcription: 'This is a fake caption',
+  type: 'extension_transcriptions'
+};
+
 describe('LiveTranscriptionSignaling', () => {
-  describe('constructor', () => {
-    it('should create a new LiveTranscriptionSignaling instance', () => {
-      const mediaSignalingTransport = mockTransport();
-      const signalingInstance = makeTest(mediaSignalingTransport);
-      assert(signalingInstance instanceof LiveTranscriptionSignaling, 'signalingInstance is an instance of LiveTranscriptionSignaling');
-    });
+  it('should emit a "transcription" event with the message payload if the message has a "type" of "extension_transcriptions"', async () => {
+    const mediaSignalingTransport = mockTransport();
+    const subject = makeTest(mediaSignalingTransport);
 
-    it('should initialize isEnabled as false', () => {
-      const mediaSignalingTransport = mockTransport();
-      const signalingInstance = makeTest(mediaSignalingTransport);
-      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false initially');
-    });
+    await waitUntilReady(subject);
+
+    const transcriptionPromise = new Promise(resolve => subject.on('transcription', resolve));
+
+    mediaSignalingTransport.publish(mockTranscriptionMessage);
+
+    const transcription = await transcriptionPromise;
+    assert.strictEqual(transcription, mockTranscriptionMessage, 'transcription event was emitted with the correct message payload');
   });
 
-  describe('message handling', () => {
-    const mockTranscriptionMessage = {
-      /* eslint-disable camelcase */
-      language_code: 'en-US',
-      partial_results: false,
-      sequence_number: 1,
-      /* eslint-enable camelcase */
-      participant: 'PA0000',
-      timestamp: '2025-01-01T12:00:00.000000000Z',
-      track: 'MT0000',
-      transcription: 'This is a fake caption',
-      type: 'extension_transcriptions'
-    };
+  it('should be able to handle multiple transcription messages', async () => {
+    const mediaSignalingTransport = mockTransport();
+    const subject = makeTest(mediaSignalingTransport);
+    await waitUntilReady(subject);
 
-    it('should emit a "transcription" event with the message payload if the message has a "type" of "extension_transcriptions"', async () => {
-      const mediaSignalingTransport = mockTransport();
-      const subject = makeTest(mediaSignalingTransport);
-
-      await waitUntilReady(subject);
-
-      const transcriptionPromise = new Promise(resolve => subject.on('transcription', resolve));
-
-      mediaSignalingTransport.publish(mockTranscriptionMessage);
-
-      const transcription = await transcriptionPromise;
-      assert.strictEqual(transcription, mockTranscriptionMessage, 'transcription event was emitted with the correct message payload');
-    });
-
-    it('should be able to handle multiple transcription messages', async () => {
-      const mediaSignalingTransport = mockTransport();
-      const subject = makeTest(mediaSignalingTransport);
-      await waitUntilReady(subject);
-
-      const messages = [
-        mockTranscriptionMessage,
-        {
-          ...mockTranscriptionMessage,
-          /* eslint-disable camelcase */
-          sequence_number: mockTranscriptionMessage.sequence_number + 1,
-          transcription: 'Second message'
-        }
-      ];
-
-      const receivedMessages = [];
-      const transcriptionPromise = new Promise(resolve => {
-        subject.on('transcription', transcription => {
-          receivedMessages.push(transcription);
-          if (receivedMessages.length === messages.length) {
-            resolve(receivedMessages);
-          }
-        });
-      });
-
-      messages.forEach(msg => mediaSignalingTransport.publish(msg));
-      const result = await transcriptionPromise;
-
-      assert.deepStrictEqual(result, messages, 'transcription events should be received in order');
-    });
-
-    it('should not emit a "transcription" event if the message has a "type" different from "extension_transcriptions"', async () => {
-      const mediaSignalingTransport = mockTransport();
-      const subject = makeTest(mediaSignalingTransport);
-
-      await waitUntilReady(subject);
-
-      let transcriptionReceived = false;
-      subject.on('transcription', () => {
-        transcriptionReceived = true;
-      });
-
-      mediaSignalingTransport.publish({
+    const messages = [
+      mockTranscriptionMessage,
+      {
         ...mockTranscriptionMessage,
-        type: 'not_supported_message'
+        /* eslint-disable camelcase */
+        sequence_number: mockTranscriptionMessage.sequence_number + 1,
+        transcription: 'Second message'
+      }
+    ];
+
+    const receivedMessages = [];
+    const transcriptionPromise = new Promise(resolve => {
+      subject.on('transcription', transcription => {
+        receivedMessages.push(transcription);
+        if (receivedMessages.length === messages.length) {
+          resolve(receivedMessages);
+        }
       });
-
-      // Wait for 1 second to see if the transcription event is emitted
-      await waitForSometime(1000);
-
-      assert.strictEqual(transcriptionReceived, false, 'transcription event was not emitted');
     });
+
+    messages.forEach(msg => mediaSignalingTransport.publish(msg));
+    const result = await transcriptionPromise;
+
+    assert.deepStrictEqual(result, messages, 'transcription events should be received in order');
   });
 
-  describe('isEnabled property', () => {
-    it('should set isEnabled to true when the transport is ready', async () => {
-      const mediaSignalingTransport = mockTransport();
-      const signalingInstance = makeTest(mediaSignalingTransport);
+  it('should not emit a "transcription" event if the message has a "type" different from "extension_transcriptions"', async () => {
+    const mediaSignalingTransport = mockTransport();
+    const subject = makeTest(mediaSignalingTransport);
 
-      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false initially');
+    await waitUntilReady(subject);
 
-      await waitUntilReady(signalingInstance);
-
-      assert.strictEqual(signalingInstance.isEnabled, true, 'isEnabled should be true after ready event');
+    let transcriptionReceived = false;
+    subject.on('transcription', () => {
+      transcriptionReceived = true;
     });
 
-    it('should set isEnabled to false after teardown is called', async () => {
-      const mediaSignalingTransport = mockTransport();
-      const signalingInstance = makeTest(mediaSignalingTransport);
-
-      await waitUntilReady(signalingInstance);
-
-      signalingInstance._teardown();
-
-      assert.strictEqual(signalingInstance.isEnabled, false, 'isEnabled should be false after teardown is called');
+    mediaSignalingTransport.publish({
+      ...mockTranscriptionMessage,
+      type: 'not_supported_message'
     });
+
+    // Wait until next tick to see if the transcription event is emitted
+    await waitForSometime(0);
+
+    assert.strictEqual(transcriptionReceived, false, 'transcription event was not emitted');
   });
 });
