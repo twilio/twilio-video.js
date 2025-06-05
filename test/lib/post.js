@@ -41,14 +41,29 @@ function request(config, data) {
     });
     request.once('error', reject);
     if (data) {
-      request.write(
-        Object.entries(data)
-          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(typeof value === 'object' ? JSON.stringify(value) : value)}`)
-          .join('&')
-      );
+      request.write(stringifyFormData(data));
     }
     request.end();
   });
+}
+
+/**
+ * Serialize the data into a URL-encoded string.
+ * @param {Object} data
+ * @returns {string}
+ */
+function stringifyFormData(data) {
+  const params = new URLSearchParams();
+
+  Object.entries(data).forEach(([key, value]) => {
+    const stringValue = Array.isArray(value)
+      ? value.map(item => typeof item === 'object' ? JSON.stringify(item) : String(item)).join(',')
+      : typeof value === 'object' ? JSON.stringify(value) : String(value);
+
+    params.append(key, stringValue);
+  });
+
+  return params.toString();
 }
 
 /**
