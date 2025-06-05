@@ -84,6 +84,18 @@ describe('LiveTranscription', function() {
     room.disconnect();
   });
 
+  it('should not receive transcription when enableLiveTranscription is set to false', async () => {
+    const roomName = randomName();
+    const room = await connect(getToken(roomName), {
+      ...defaults,
+      name: roomName,
+      enableLiveTranscription: false,
+      audio: { fake: true }
+    });
+    await waitForNot(waitForEvent(room, 'liveTranscription', 10000));
+    room.disconnect();
+  });
+
   it('should receive transcription events from all participants in the room', async () => {
     const transcriptionCounts = { alice: 0, bob: 0 };
     const transcriptionPromises = {
