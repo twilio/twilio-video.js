@@ -92,7 +92,7 @@
     "webrtc-adapter": "^7.7.1"
   },
   "engines": {
-    "node": ">=0.12"
+    "node": ">=22"
   },
   "license": "BSD-3-Clause",
   "main": "./es5/index.js",
