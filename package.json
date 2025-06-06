@@ -152,7 +152,7 @@
   "dependencies": {
     "events": "^3.3.0",
     "util": "^0.12.4",
-    "ws": "^7.4.6",
+    "ws": "^8.17.1",
     "xmlhttprequest": "^1.8.0"
   },
   "browser": {
