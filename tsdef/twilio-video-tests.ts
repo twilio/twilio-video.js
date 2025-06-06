@@ -382,6 +382,10 @@ async function initRoom() {
       if (publication.track.kind !== 'data') { trackUnsubscribed(publication.track); }
     });
   });
+  room.on('liveTranscription', (event: Video.TranscriptionEvent) => {
+    // eslint-disable-next-line no-console
+    console.log(`${event.participant}: ${event.transcription}`);
+  });
 }
 
 function unpublishTracks() {

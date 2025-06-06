@@ -319,3 +319,16 @@ export class StatsReport {
 export interface CancelablePromise<T> extends Promise<T> {
   cancel: () => void;
 }
+
+export type TranscriptionEvent = {
+  /* eslint-disable camelcase */
+  language_code: string;
+  partial_results: boolean;
+  sequence_number: number;
+  /* eslint-enable camelcase */
+  participant: string;
+  timestamp: string;
+  track: string;
+  transcription: string;
+  type: 'extension_transcriptions';
+}
