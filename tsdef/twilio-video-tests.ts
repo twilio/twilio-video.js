@@ -436,6 +436,7 @@ function insertDomElement(element: HTMLMediaElement) {
 function useConnectionOptions() {
   const connectionOptions: Video.ConnectOptions = {
     dominantSpeaker: true,
+    enableLiveTranscription: true,
     networkQuality: { local: 1, remote: 1 },
     maxAudioBitrate: Number('13000'),
     preferredAudioCodecs: [{  codec: 'opus', dtx: false }],
