@@ -89,6 +89,7 @@ export {
   RemoteVideoTrackStats,
   StatsReport,
   TrackStats,
+  TranscriptionEvent,
   TrackSwitchOffMode,
   VideoBandwidthProfileOptions,
   VideoCodec,
