@@ -2,6 +2,34 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.32.0 (in progress)
+====================
+
+New Features
+------------
+
+### Live Transcription Support
+
+Added real-time transcription capabilities for group rooms, allowing you to capture and display live captions during video calls.
+
+#### Usage
+To enable live transcription, set the `enableLiveTranscription` option to `true` when connecting to a room. Then subscribe to the `liveTranscription` event to receive real-time transcription data:
+
+```js
+import { connect } from 'twilio-video';
+
+const room = await connect(token, {
+  name: 'my-room',
+  enableLiveTranscription: true
+});
+
+room.on('liveTranscription', (transcriptionEvent) => {
+  console.log(`${transcriptionEvent.participant}: ${transcriptionEvent.transcription}`);
+});
+```
+
+See the [Live Transcription](https://www.twilio.com/docs/video#TODO-ADD-RIGHT-LINK-LATER) documentation for more details.
+
 2.31.0 (April 21, 2025)
 =======================
 
