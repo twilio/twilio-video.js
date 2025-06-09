@@ -12,7 +12,7 @@ test/lib/sdkdriver/lib
 test/lib/sdkdriver/test/integration/browser/index.js
 npm-debug.log
 test.json
-nodemon.json*
+nodemon.json
 yarn.lock
 .env
 .idea
