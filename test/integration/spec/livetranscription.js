@@ -11,6 +11,7 @@ const {
   waitForEvent,
   waitForSometime,
   waitForNot,
+  createFileAudioMedia,
 } = require('../../lib/util');
 
 describe('LiveTranscription', function() {
@@ -22,14 +23,18 @@ describe('LiveTranscription', function() {
   let roomSid;
 
   beforeEach(async () => {
+    // NOTE:(lrivas) The transcription feature will only return results for speech-like audio tracks,
+    // fake audio tracks without any speech will not return results.
+    const { source, track } = await createFileAudioMedia('/static/speech.m4a');
+
     ({ aliceRoom, bobRoom, roomSid } = await setupAliceAndBob({
       aliceOptions: {
         enableLiveTranscription: true,
-        audio: { fake: true }
+        tracks: [track]
       },
       bobOptions: {
         enableLiveTranscription: true,
-        audio: { fake: true }
+        tracks: [track]
       },
       roomOptions: {
         TranscribeParticipantsOnConnect: true,
@@ -39,6 +44,10 @@ describe('LiveTranscription', function() {
         }
       }
     }));
+
+    // Start playing the speech audio for Alice and Bob
+    source.start();
+
     await waitForSometime(1000); // NOTE(lrivas): Wait for MSP to be ready (1 second)
   });
 
