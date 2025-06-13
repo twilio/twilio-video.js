@@ -14,7 +14,7 @@ const {
   createFileAudioMedia,
 } = require('../../lib/util');
 
-describe('LiveTranscription', function() {
+(defaults.topology === 'group' ? describe : describe.skip)('LiveTranscription', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(15000);
 
