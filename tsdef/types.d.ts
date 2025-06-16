@@ -214,7 +214,7 @@ export interface ConnectOptions extends MediaImplementationOptions {
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
-  enableLiveTranscription?: boolean;
+  receiveTranscription?: boolean;
   /**
    * @deprecated use enableDscp
    */

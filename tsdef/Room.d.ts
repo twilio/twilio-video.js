@@ -30,7 +30,7 @@ export class Room extends EventEmitter {
 
   on(event: 'disconnected', listener: (room: Room, error: TwilioError) => void): this;
   on(event: 'dominantSpeakerChanged', listener: (dominantSpeaker: RemoteParticipant) => void): this;
-  on(event: 'liveTranscription', listener: (transcriptionEvent: TranscriptionEvent) => void): this;
+  on(event: 'transcription', listener: (transcriptionEvent: TranscriptionEvent) => void): this;
   on(event: 'participantConnected', listener: (participant: RemoteParticipant) => void): this;
   on(event: 'participantDisconnected', listener: (participant: RemoteParticipant) => void): this;
   on(event: 'participantReconnected', listener: (participant: RemoteParticipant) => void): this;

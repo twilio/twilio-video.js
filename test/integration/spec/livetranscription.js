@@ -32,11 +32,11 @@ const {
 
     ({ aliceRoom, bobRoom, roomSid } = await setupAliceAndBob({
       aliceOptions: {
-        enableLiveTranscription: true,
+        receiveTranscription: true,
         tracks: [track]
       },
       bobOptions: {
-        enableLiveTranscription: true,
+        receiveTranscription: true,
         tracks: [track]
       },
       roomOptions: {
@@ -64,8 +64,8 @@ const {
 
   it('should receive transcription events with the expected format', async () => {
     let transcription;
-    aliceRoom.on('liveTranscription', event => { transcription = event; });
-    await waitForEvent(aliceRoom, 'liveTranscription');
+    aliceRoom.on('transcription', event => { transcription = event; });
+    await waitForEvent(aliceRoom, 'transcription');
 
     const expectedFields = {
       type: 'string',
@@ -89,23 +89,23 @@ const {
     const room = await connect(getToken(roomName), {
       ...defaults,
       name: roomName,
-      enableLiveTranscription: true,
+      receiveTranscription: true,
       audio: false
     });
     assert.equal(room.localParticipant.audioTracks.size, 0, 'No audio tracks should be published');
-    await waitForNot(waitForEvent(room, 'liveTranscription', 10000));
+    await waitForNot(waitForEvent(room, 'transcription', 10000));
     room.disconnect();
   });
 
-  it('should not receive transcription when enableLiveTranscription is set to false', async () => {
+  it('should not receive transcription when receiveTranscription is set to false', async () => {
     const roomName = randomName();
     const room = await connect(getToken(roomName), {
       ...defaults,
       name: roomName,
-      enableLiveTranscription: false,
+      receiveTranscription: false,
       audio: { fake: true }
     });
-    await waitForNot(waitForEvent(room, 'liveTranscription', 10000));
+    await waitForNot(waitForEvent(room, 'transcription', 10000));
     room.disconnect();
   });
 
@@ -113,7 +113,7 @@ const {
     const transcriptionCounts = { alice: 0, bob: 0 };
     const transcriptionPromises = {
       alice: new Promise(resolve => {
-        aliceRoom.on('liveTranscription', () => {
+        aliceRoom.on('transcription', () => {
           transcriptionCounts.alice++;
           if (transcriptionCounts.alice > 0 && transcriptionCounts.bob > 0) {
             resolve();
@@ -121,7 +121,7 @@ const {
         });
       }),
       bob: new Promise(resolve => {
-        bobRoom.on('liveTranscription', () => {
+        bobRoom.on('transcription', () => {
           transcriptionCounts.bob++;
           if (transcriptionCounts.alice > 0 && transcriptionCounts.bob > 0) {
             resolve();

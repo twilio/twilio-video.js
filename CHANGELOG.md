@@ -8,27 +8,27 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 
-### Live Transcription Support
+### Transcription Support
 
 Added real-time transcription capabilities for group rooms, allowing you to capture and display live captions during video calls.
 
 #### Usage
-To enable live transcription, set the `enableLiveTranscription` option to `true` when connecting to a room. Then subscribe to the `liveTranscription` event to receive real-time transcription data:
+To enable transcription, set the `receiveTranscription` option to `true` when connecting to a room. Then subscribe to the `transcription` event to receive real-time transcription data:
 
 ```js
 import { connect } from 'twilio-video';
 
 const room = await connect(token, {
   name: 'my-room',
-  enableLiveTranscription: true
+  receiveTranscription: true
 });
 
-room.on('liveTranscription', (transcriptionEvent) => {
+room.on('transcription', (transcriptionEvent) => {
   console.log(`${transcriptionEvent.participant}: ${transcriptionEvent.transcription}`);
 });
 ```
 
-See the [Live Transcription](https://www.twilio.com/docs/video#TODO-ADD-RIGHT-LINK-LATER) documentation for more details.
+See the [Transcription](https://www.twilio.com/docs/video#TODO-ADD-RIGHT-LINK-LATER) documentation for more details.
 
 2.31.0 (April 21, 2025)
 =======================
@@ -1545,7 +1545,7 @@ About Twilio Video JS SDK 2.0
 
 Twilio Video Javascript SDK 2.0 introduces the [Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) API, [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API, [Reconnection States and Events](https://www.twilio.com/docs/video/reconnection-states-and-events), and the [Region Selection](https://www.twilio.com/docs/video/tutorials/video-regions-and-global-low-latency) API.
 
-[Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) and [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API gives developers the ability to specify how bandwidth should be allocated between the video tracks. Furthermore, the three profiles, (“grid”, “collaboration”, and “presentation”), specify when tracks should be switched off (or not) to conserve bandwidth for the highest priority tracks.
+[Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) and [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API gives developers the ability to specify how bandwidth should be allocated between the video tracks. Furthermore, the three profiles, ("grid", "collaboration", and "presentation"), specify when tracks should be switched off (or not) to conserve bandwidth for the highest priority tracks.
 
 The [Reconnection States and Events](https://www.twilio.com/docs/video/reconnection-states-and-events) will automatically attempt to reconnect when a transient network error is encountered.
 
