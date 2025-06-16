@@ -5,6 +5,7 @@ const { connect } = require('../../../es5');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
 const { completeRoom } = require('../../lib/rest');
+const { isFirefox } = require('../../lib/guessbrowser');
 const {
   randomName,
   setupAliceAndBob,
@@ -14,7 +15,9 @@ const {
   createFileAudioMedia,
 } = require('../../lib/util');
 
-(defaults.topology === 'group' ? describe : describe.skip)('LiveTranscription', function() {
+// NOTE(lrivas): Skipping this test in Firefox due to AudioContext issue.
+// Firefox's AudioContext.decodeAudioData() does not complete, causing the test to timeout.
+(defaults.topology === 'group' && !isFirefox ? describe : describe.skip)('LiveTranscription', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(15000);
 
@@ -40,7 +43,8 @@ const {
         TranscribeParticipantsOnConnect: true,
         TranscriptionsConfiguration: {
           languageCode: 'en-US',
-          profanityFilter: true
+          profanityFilter: true,
+          partialResults: true
         }
       }
     }));
