@@ -5,15 +5,19 @@ const { connect } = require('../../../es5');
 const defaults = require('../../lib/defaults');
 const getToken = require('../../lib/token');
 const { completeRoom } = require('../../lib/rest');
+const { isFirefox } = require('../../lib/guessbrowser');
 const {
   randomName,
   setupAliceAndBob,
   waitForEvent,
   waitForSometime,
   waitForNot,
+  createFileAudioMedia,
 } = require('../../lib/util');
 
-describe('LiveTranscription', function() {
+// NOTE(lrivas): Skipping this test in Firefox due to AudioContext issue.
+// Firefox's AudioContext.decodeAudioData() does not complete, causing the test to timeout.
+(defaults.topology === 'group' && !isFirefox ? describe : describe.skip)('LiveTranscription', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(15000);
 
@@ -22,23 +26,32 @@ describe('LiveTranscription', function() {
   let roomSid;
 
   beforeEach(async () => {
+    // NOTE:(lrivas) The transcription feature will only return results for speech-like audio tracks,
+    // fake audio tracks without any speech will not return results.
+    const { source, track } = await createFileAudioMedia('/static/speech.m4a');
+
     ({ aliceRoom, bobRoom, roomSid } = await setupAliceAndBob({
       aliceOptions: {
         enableLiveTranscription: true,
-        audio: { fake: true }
+        tracks: [track]
       },
       bobOptions: {
         enableLiveTranscription: true,
-        audio: { fake: true }
+        tracks: [track]
       },
       roomOptions: {
         TranscribeParticipantsOnConnect: true,
         TranscriptionsConfiguration: {
           languageCode: 'en-US',
-          profanityFilter: true
+          profanityFilter: true,
+          partialResults: true
         }
       }
     }));
+
+    // Start playing the speech audio for Alice and Bob
+    source.start();
+
     await waitForSometime(1000); // NOTE(lrivas): Wait for MSP to be ready (1 second)
   });
 
