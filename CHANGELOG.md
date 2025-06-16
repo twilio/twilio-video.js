@@ -1545,7 +1545,7 @@ About Twilio Video JS SDK 2.0
 
 Twilio Video Javascript SDK 2.0 introduces the [Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) API, [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API, [Reconnection States and Events](https://www.twilio.com/docs/video/reconnection-states-and-events), and the [Region Selection](https://www.twilio.com/docs/video/tutorials/video-regions-and-global-low-latency) API.
 
-[Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) and [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API gives developers the ability to specify how bandwidth should be allocated between the video tracks. Furthermore, the three profiles, ("grid", "collaboration", and "presentation"), specify when tracks should be switched off (or not) to conserve bandwidth for the highest priority tracks.
+[Track Priority](https://www.twilio.com/docs/video/tutorials/using-track-priority-api) and [Network Bandwidth Profile](https://www.twilio.com/docs/video/tutorials/using-bandwidth-profile-api) API gives developers the ability to specify how bandwidth should be allocated between the video tracks. Furthermore, the three profiles, (“grid”, “collaboration”, and “presentation”), specify when tracks should be switched off (or not) to conserve bandwidth for the highest priority tracks.
 
 The [Reconnection States and Events](https://www.twilio.com/docs/video/reconnection-states-and-events) will automatically attempt to reconnect when a transient network error is encountered.
 
