@@ -3,12 +3,12 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 
-const LiveTranscriptionSignaling = require('../../../../../lib/signaling/v2/livetranscriptionsignaling');
+const TranscriptionSignaling = require('../../../../../lib/signaling/v2/livetranscriptionsignaling');
 const log = require('../../../../lib/fakelog');
 const { waitForSometime } = require('../../../../../lib/util');
 
 /**
- * Returns a mock Media Signaling Transport that can be used to test the LiveTranscriptionSignaling class.
+ * Returns a mock Media Signaling Transport that can be used to test the TranscriptionSignaling class.
  * For sake of simplicity, the mock transport will emit a fake transcription message when the 'publish' method is called.
  * @returns {EventEmitter} - Mock Media Signaling Transport
  */
@@ -21,10 +21,10 @@ const mockTransport = () => {
 };
 
 /**
- * Returns a new LiveTranscriptionSignaling instance with a mock transport.
+ * Returns a new TranscriptionSignaling instance with a mock transport.
  * This is a helper function to avoid repeating the same code in each test.
  * @param {EventEmitter} mst - Mock Media Signaling Transport
- * @returns {LiveTranscriptionSignaling}
+ * @returns {TranscriptionSignaling}
  */
 function makeTest(mst) {
   const getReceiver = () => {
@@ -35,14 +35,14 @@ function makeTest(mst) {
     });
   };
 
-  const subject = new LiveTranscriptionSignaling(getReceiver, { log });
+  const subject = new TranscriptionSignaling(getReceiver, { log });
   subject.setup('foo');
   return subject;
 }
 
 /**
- * Waits for the LiveTranscriptionSignaling instance to be ready.
- * @param {LiveTranscriptionSignaling} subject - The LiveTranscriptionSignaling instance
+ * Waits for the TranscriptionSignaling instance to be ready.
+ * @param {TranscriptionSignaling} subject - The TranscriptionSignaling instance
  * @returns {Promise} - A promise that resolves when the instance is ready
  */
 function waitUntilReady(subject) {
@@ -62,7 +62,7 @@ const mockTranscriptionMessage = {
   type: 'extension_transcriptions'
 };
 
-describe('LiveTranscriptionSignaling', () => {
+describe('TranscriptionSignaling', () => {
   it('should emit a "transcription" event with the message payload if the message has a "type" of "extension_transcriptions"', async () => {
     const mediaSignalingTransport = mockTransport();
     const subject = makeTest(mediaSignalingTransport);

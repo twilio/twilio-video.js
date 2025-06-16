@@ -17,7 +17,7 @@ const {
 
 // NOTE(lrivas): Skipping this test in Firefox due to AudioContext issue.
 // Firefox's AudioContext.decodeAudioData() does not complete, causing the test to timeout.
-(defaults.topology === 'group' && !isFirefox ? describe : describe.skip)('LiveTranscription', function() {
+(defaults.topology === 'group' && !isFirefox ? describe : describe.skip)('Transcription', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(15000);
 
