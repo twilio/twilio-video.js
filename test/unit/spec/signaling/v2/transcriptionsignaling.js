@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { EventEmitter } = require('events');
 
-const TranscriptionSignaling = require('../../../../../lib/signaling/v2/livetranscriptionsignaling');
+const TranscriptionSignaling = require('../../../../../lib/signaling/v2/transcriptionsignaling');
 const log = require('../../../../lib/fakelog');
 const { waitForSometime } = require('../../../../../lib/util');
 
