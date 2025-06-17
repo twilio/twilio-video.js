@@ -19,7 +19,7 @@ describe('TwilioConnectionTransport', () => {
     [true, false], // iceServers
     [true, false], // networkQuality
     [true, false], // dominantSpeaker
-    [true, false], // receiveTranscription
+    [true, false], // receiveTranscriptions
     [true, false], // automaticSubscription
     [true, false], // trackPriority
     [true, false], // trackSwitchOff
@@ -90,7 +90,7 @@ describe('TwilioConnectionTransport', () => {
     iceServers,
     networkQuality,
     dominantSpeaker,
-    receiveTranscription,
+    receiveTranscriptions,
     automaticSubscription,
     trackPriority,
     trackSwitchOff,
@@ -103,7 +103,7 @@ describe('TwilioConnectionTransport', () => {
       .iceServers ${iceServers ? '' : 'not '}provided
       .networkQuality flag ${networkQuality ? 'enabled' : 'disabled'},
       .dominantSpeaker flag ${dominantSpeaker ? 'enabled' : 'disabled'},
-      .receiveTranscription flag ${receiveTranscription ? 'enabled' : 'disabled'},
+      .receiveTranscriptions flag ${receiveTranscriptions ? 'enabled' : 'disabled'},
       .automaticSubscription flag ${automaticSubscription ? 'enabled' : 'disabled'},
       .trackPriority flag ${trackPriority ? 'enabled' : 'disabled'},
       .trackSwitchOff flag ${trackSwitchOff ? 'enabled' : 'disabled'},
@@ -120,7 +120,7 @@ describe('TwilioConnectionTransport', () => {
           automaticSubscription,
           networkQuality,
           dominantSpeaker,
-          receiveTranscription,
+          receiveTranscriptions,
           trackPriority,
           trackSwitchOff,
           notifyWarnings
@@ -150,7 +150,7 @@ describe('TwilioConnectionTransport', () => {
         it(`should ${action} a Connect RSP message that
           ${networkQuality ? 'contains' : 'does not contain'} the "network_quality" payload,
           ${dominantSpeaker ? 'contains' : 'does not contain'} the "active_speaker" payload,
-          ${receiveTranscription ? 'contains' : 'does not contain'} the "extension_transcriptions" payload,
+          ${receiveTranscriptions ? 'contains' : 'does not contain'} the "extension_transcriptions" payload,
           the "subscribe-${automaticSubscription ? 'all' : 'none'}" subscription rule,
           ${trackPriority ? 'contains' : 'does not contain'} the "track_priority" payload,
           ${trackSwitchOff ? 'contains' : 'does not contain'} the "track_switch_off" payload, and
@@ -175,7 +175,7 @@ describe('TwilioConnectionTransport', () => {
             assert(!('active_speaker' in message.media_signaling));
           }
 
-          if (receiveTranscription) {
+          if (receiveTranscriptions) {
             assert.deepEqual(message.media_signaling.extension_transcriptions.transports, [{ type: 'data-channel' }]);
           } else {
             assert(!('extension_transcriptions' in message.media_signaling));

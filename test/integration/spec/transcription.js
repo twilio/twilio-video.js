@@ -32,11 +32,11 @@ const {
 
     ({ aliceRoom, bobRoom, roomSid } = await setupAliceAndBob({
       aliceOptions: {
-        receiveTranscription: true,
+        receiveTranscriptions: true,
         tracks: [track]
       },
       bobOptions: {
-        receiveTranscription: true,
+        receiveTranscriptions: true,
         tracks: [track]
       },
       roomOptions: {
@@ -89,7 +89,7 @@ const {
     const room = await connect(getToken(roomName), {
       ...defaults,
       name: roomName,
-      receiveTranscription: true,
+      receiveTranscriptions: true,
       audio: false
     });
     assert.equal(room.localParticipant.audioTracks.size, 0, 'No audio tracks should be published');
@@ -97,12 +97,12 @@ const {
     room.disconnect();
   });
 
-  it('should not receive transcription when receiveTranscription is set to false', async () => {
+  it('should not receive transcription when receiveTranscriptions is set to false', async () => {
     const roomName = randomName();
     const room = await connect(getToken(roomName), {
       ...defaults,
       name: roomName,
-      receiveTranscription: false,
+      receiveTranscriptions: false,
       audio: { fake: true }
     });
     await waitForNot(waitForEvent(room, 'transcription', 10000));

@@ -13,14 +13,14 @@ New Features
 Added real-time transcription capabilities for group rooms, allowing you to capture and display live captions during video calls.
 
 #### Usage
-To enable transcription, set the `receiveTranscription` option to `true` when connecting to a room. Then subscribe to the `transcription` event to receive real-time transcription data:
+To enable transcription, set the `receiveTranscriptions` option to `true` when connecting to a room. Then subscribe to the `transcription` event to receive real-time transcription data:
 
 ```js
 import { connect } from 'twilio-video';
 
 const room = await connect(token, {
   name: 'my-room',
-  receiveTranscription: true
+  receiveTranscriptions: true
 });
 
 room.on('transcription', (transcriptionEvent) => {
