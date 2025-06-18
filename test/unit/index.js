@@ -48,7 +48,6 @@ require('./spec/signaling/v2/renderhintssignaling');
 require('./spec/signaling/v2/publisherhintsignaling');
 require('./spec/signaling/v2/mediasignaling');
 require('./spec/signaling/v2/dominantspeakersignaling');
-require('./spec/signaling/v2/livetranscriptionsignaling');
 require('./spec/signaling/v2/cancelableroomsignalingpromise');
 require('./spec/signaling/v2/icebox');
 require('./spec/signaling/v2/localparticipant');
@@ -63,6 +62,7 @@ require('./spec/signaling/v2/peerconnectionmanager');
 require('./spec/signaling/v2/localtrackpublication');
 require('./spec/signaling/v2/remotetrackpublication');
 require('./spec/signaling/v2/trackprioritysignaling');
+require('./spec/signaling/v2/transcriptionsignaling');
 require('./spec/signaling/v2/twilioconnectiontransport');
 
 require('./spec/util');
