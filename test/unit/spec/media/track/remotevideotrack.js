@@ -472,6 +472,90 @@ describe('RemoteVideoTrack', () => {
       });
     });
   });
+
+  describe('Document Picture-in-Picture', () => {
+    let el;
+    let setRenderHintsSpy;
+    let track;
+    let originalDocumentPictureInPicture;
+    let addEventListenerSpy;
+    let removeEventListenerSpy;
+    let playSpy;
+
+    beforeEach(() => {
+      originalDocumentPictureInPicture = globalThis.documentPictureInPicture;
+      addEventListenerSpy = sinon.spy();
+      removeEventListenerSpy = sinon.spy();
+      playSpy = sinon.spy();
+
+      globalThis.documentPictureInPicture = {
+        addEventListener: addEventListenerSpy,
+        removeEventListener: removeEventListenerSpy,
+        window: null
+      };
+
+      globalThis.document = globalThis.document || new Document();
+      setRenderHintsSpy = sinon.spy();
+      el = document.createElement('video');
+      el.play = playSpy;
+      el.paused = true;
+
+      track = makeTrack({
+        id: 'foo',
+        sid: 'bar',
+        setRenderHint: setRenderHintsSpy,
+        options: { clientTrackSwitchOffControl: 'auto' }
+      });
+    });
+
+    afterEach(() => {
+      globalThis.documentPictureInPicture = originalDocumentPictureInPicture;
+    });
+
+    it('should set up document PiP listener on attach', () => {
+      track.attach(el);
+      sinon.assert.calledOnce(addEventListenerSpy);
+      sinon.assert.calledWith(addEventListenerSpy, 'enter', track._documentPipEnterListener);
+    });
+
+    it('should store PiP window reference when enter event fires', () => {
+      track.attach(el);
+      const enterListener = addEventListenerSpy.firstCall.args[1];
+      const mockWindow = { document: { querySelectorAll: () => [el] } };
+      const mockEvent = { window: mockWindow };
+
+      enterListener(mockEvent);
+
+      assert(track._documentPipWindow === mockWindow);
+    });
+
+    it('should play paused videos when track is enabled with PiP window', () => {
+      track.attach(el);
+      track._documentPipWindow = {
+        document: {
+          querySelectorAll: () => [el]
+        }
+      };
+      el.paused = true;
+
+      track._intersectionObserver.makeVisible(el);
+      sinon.assert.calledOnce(playSpy);
+    });
+
+    it('should handle API unavailability gracefully', () => {
+      globalThis.documentPictureInPicture = undefined;
+
+      const newTrack = makeTrack({
+        id: 'foo2',
+        sid: 'bar2',
+        setRenderHint: sinon.spy(),
+        options: { clientTrackSwitchOffControl: 'auto' }
+      });
+
+      newTrack.attach(el);
+      assert(newTrack._documentPipEnterListener === null);
+    });
+  });
 });
 
 
