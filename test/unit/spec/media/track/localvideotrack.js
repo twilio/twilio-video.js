@@ -27,11 +27,11 @@ describe('LocalVideoTrack', () => {
         _captureFrames() {
           parentClassContext._captureFrames(...arguments);
         }
-        addProcessor() {
-          return parentClassContext.addProcessor(...arguments);
+        _addProcessor() {
+          return parentClassContext._addProcessor(...arguments);
         }
-        removeProcessor() {
-          return parentClassContext.removeProcessor(...arguments);
+        _removeProcessor() {
+          return parentClassContext._removeProcessor(...arguments);
         }
         disable() {
           return parentClassContext.disable(...arguments);
@@ -54,8 +54,8 @@ describe('LocalVideoTrack', () => {
   beforeEach(() => {
     parentClassContext._checkIfCanCaptureFrames = sinon.spy();
     parentClassContext._captureFrames = sinon.spy();
-    parentClassContext.addProcessor = sinon.spy();
-    parentClassContext.removeProcessor = sinon.spy();
+    parentClassContext._addProcessor = sinon.spy();
+    parentClassContext._removeProcessor = sinon.spy();
     parentClassContext.disable = sinon.spy();
     parentClassContext.enable = sinon.spy();
     parentClassContext.restart = sinon.stub().resolves({});
@@ -85,7 +85,7 @@ describe('LocalVideoTrack', () => {
   describe('#addProcessor', () => {
     it('should call parent class method', () => {
       localVideoTrack.addProcessor('foo');
-      sinon.assert.calledWith(parentClassContext.addProcessor, 'foo');
+      sinon.assert.calledWith(parentClassContext._addProcessor, 'foo');
     });
 
     it('should not set RTCRtpSender if processedTrack is not available', () => {
@@ -107,7 +107,7 @@ describe('LocalVideoTrack', () => {
     });
 
     it('should call parent class method', () => {
-      sinon.assert.calledWith(parentClassContext.removeProcessor, 'foo');
+      sinon.assert.calledWith(parentClassContext._removeProcessor, 'foo');
     });
 
     it('should set RTCRtpSender with the original mediaStreamTrack', () => {
