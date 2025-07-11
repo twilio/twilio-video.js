@@ -215,4 +215,64 @@ describe('LocalVideoTrack', () => {
       sinon.assert.callOrder(parentClassContext.restart, localVideoTrack._restartProcessor);
     });
   });
+
+  describe('#_restartProcessor', () => {
+    beforeEach(() => {
+      localVideoTrack._setSenderMediaStreamTrack = sinon.stub().resolves();
+      localVideoTrack._processorOptions = { foo: 'bar' };
+    });
+
+    it('should call super.removeProcessor with the current processor', () => {
+      const mockProcessor = { id: 'test-processor' };
+      localVideoTrack.processor = mockProcessor;
+
+      localVideoTrack._restartProcessor();
+
+      sinon.assert.calledWith(parentClassContext.removeProcessor, mockProcessor);
+    });
+
+    it('should call super.addProcessor with the processor and processor options', () => {
+      const mockProcessor = { id: 'test-processor' };
+      const processorOptions = { inputFrameBufferType: 'canvas', outputFrameBufferType: 'canvas' };
+      localVideoTrack.processor = mockProcessor;
+      localVideoTrack._processorOptions = processorOptions;
+
+      localVideoTrack._restartProcessor();
+
+      sinon.assert.calledWith(parentClassContext.addProcessor, mockProcessor, processorOptions);
+    });
+
+    it('should call operations in the correct order: removeProcessor, addProcessor, then _setSenderMediaStreamTrack', () => {
+      const mockProcessor = { id: 'test-processor' };
+      localVideoTrack.processor = mockProcessor;
+
+      localVideoTrack._restartProcessor();
+
+      sinon.assert.callOrder(
+        parentClassContext.removeProcessor,
+        parentClassContext.addProcessor,
+        localVideoTrack._setSenderMediaStreamTrack
+      );
+    });
+
+    it('should call _setSenderMediaStreamTrack with true after processor operations', () => {
+      const mockProcessor = { id: 'test-processor' };
+      localVideoTrack.processor = mockProcessor;
+
+      localVideoTrack._restartProcessor();
+
+      sinon.assert.calledWith(localVideoTrack._setSenderMediaStreamTrack, true);
+    });
+
+    it('should return the promise from _setSenderMediaStreamTrack', () => {
+      const mockProcessor = { id: 'test-processor' };
+      const expectedPromise = Promise.resolve('test-result');
+      localVideoTrack.processor = mockProcessor;
+      localVideoTrack._setSenderMediaStreamTrack.returns(expectedPromise);
+
+      const result = localVideoTrack._restartProcessor();
+
+      assert.strictEqual(result, expectedPromise);
+    });
+  });
 });
