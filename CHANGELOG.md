@@ -8,6 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Bug Fixes
 ---------
 - Fixed an issue where video tracks would freeze when the video element was offscreen in a document Picture-in-Picture window.
+- Fixed an issue where `LocalVideoTrack.restart()` would fail on some devices when a video processor was active.
 
 2.32.0 (in progress)
 ====================
