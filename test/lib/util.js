@@ -42,15 +42,12 @@ function decodeAudioFromArrayBuffer(arrayBuffer) {
     audioContext.decodeAudioData(arrayBuffer, resolve));
 }
 
-function getArrayBufferForFile(url) {
-  return new Promise(resolve => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.responseType = 'arraybuffer';
-    xhr.onreadystatechange = () =>
-      xhr.readyState === 4 && resolve(xhr.response);
-    xhr.send();
-  });
+async function getArrayBufferForFile(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.arrayBuffer();
 }
 
 /**
