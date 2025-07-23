@@ -10,18 +10,18 @@ Bug Fixes
 - Fixed an issue where video tracks would freeze when the video element was offscreen in a document Picture-in-Picture window.
 - Fixed an issue where `LocalVideoTrack.restart()` would fail on some devices when a video processor was active.
 
-2.32.0 (in progress)
+2.32.0 (July 23, 2025)
 ====================
 
 New Features
 ------------
 
-### Transcription Support
+### Real-Time Transcriptions Support
 
-Added real-time transcription capabilities for group rooms, allowing you to capture and display live captions during video calls.
+Added real-time transcription capabilities for group rooms, allowing the capture and display of real-time captions during video calls.
 
 #### Usage
-To receive transcriptions, set the `receiveTranscriptions` option to `true` when connecting to a room. Then subscribe to the `transcription` event to receive real-time transcription data:
+To receive transcriptions, set the `receiveTranscriptions` option to `true` when connecting to a room. Then, subscribe to the `transcription` event to receive real-time transcription data:
 
 ```js
 import { connect } from 'twilio-video';
@@ -36,7 +36,7 @@ room.on('transcription', (transcriptionEvent) => {
 });
 ```
 
-See the [Transcription](https://www.twilio.com/docs/video#TODO-ADD-RIGHT-LINK-LATER) documentation for more details.
+See the [Transcription's](https://www.twilio.com/docs/video/api/transcriptions) documentation for more details.
 
 2.31.0 (April 21, 2025)
 =======================
