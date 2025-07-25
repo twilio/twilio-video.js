@@ -9,6 +9,7 @@ Bug Fixes
 ---------
 - Fixed an issue where video tracks would freeze when the video element was offscreen in a document Picture-in-Picture window.
 - Fixed an issue where `LocalVideoTrack.restart()` would fail on some devices when a video processor was active.
+- Fixed an issue where SDP munging would generate duplicated payload types, causing SDP negotiation failures with Chrome 137+.
 
 2.32.0 (July 23, 2025)
 ====================
