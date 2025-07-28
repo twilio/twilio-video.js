@@ -22,6 +22,9 @@ parameters:
   backend_workflow: # runs JS integration.
     type: boolean
     default: false
+  qe_workflow:
+    type: boolean
+    default: false
   backend_group_workflow: # runs Group only JS integration.
     type: boolean
     default: false
@@ -286,7 +289,7 @@ jobs:
           command: |
             curl --fail --write-out "\nHTTP Response Code: %{http_code}\n" \
             -u $CIRCLECI_PERSONAL_API_TOKEN: -X POST --header "Content-Type: application/json" \
-            -d '{"branch":"'v${CIRCLE_TAG:0:1}'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
+            -d '{"config":{"branch":"'v${CIRCLE_TAG:0:1}'"},"checkout":{"branch":"'v${CIRCLE_TAG:0:1}'"},"definition_id":"'$SDKS_QE_CIRCLECI_VIDEO_JS_SLAVE_DEFINITION_ID'","parameters":{"sdk_version":"'$CIRCLE_TAG'","is_rc":true}}' \
             $SDKS_QE_CIRCLECI_VIDEO_JS_SLAVE_PIPELINE_ENDPOINT
 
 workflows:
@@ -455,6 +458,7 @@ workflows:
     jobs:
       - trigger-qe-tests:
           context: [sdks-qe, dockerhub-pulls]
+          name: Trigger QE Regression Tests
           filters:
             tags:
               only:
@@ -466,3 +470,10 @@ workflows:
                 - /^\d+\.\d+\.\d+-beta\d+-rc\.\d+$/
             branches:
               ignore: /.*/
+
+  Qe-trigger-test:
+    when: <<pipeline.parameters.qe_workflow>>
+    jobs:
+      - trigger-qe-tests:
+          context: [sdks-qe, dockerhub-pulls]
+          name: Test QE Regression Tests Trigger  
