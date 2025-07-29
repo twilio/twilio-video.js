@@ -19,6 +19,26 @@ describe('Issue 8329', function() {
     });
   });
 
+  describe('when PT conflicts occur between different codecs', () => {
+    it('resolves conflicts by reassigning PTs', () => {
+      const input = new RTCSessionDescription({ type: 'offer', sdp: chromeSafariConflictSdp });
+      const output = workaround(input);
+
+      // Check that the output is valid and doesn't have PT conflicts
+      const videoSection = output.sdp.match(/m=video[\s\S]*?(?=m=|$)/)[0];
+      const rtpmapLines = videoSection.match(/^a=rtpmap:\d+ /gm) || [];
+      const pts = rtpmapLines.map(line => line.match(/^a=rtpmap:(\d+)/)[1]);
+
+      // All PTs should be unique
+      const uniquePts = [...new Set(pts)];
+      assert.equal(pts.length, uniquePts.length, 'All payload types should be unique');
+
+      // Should contain both VP8 and H264 codecs
+      assert(videoSection.includes('VP8/90000'), 'Should contain VP8 codec');
+      assert(videoSection.includes('H264/90000'), 'Should contain H264 codec');
+    });
+  });
+
   [
     ['RTCSessionDescription', descriptionInit => new RTCSessionDescription(descriptionInit)],
     ['RTCSessionDescriptionInit', descriptionInit => descriptionInit]
@@ -383,4 +403,121 @@ a=fingerprint:sha-256 07:52:15:AF:4A:65:E2:CF:BA:C0:72:F5:BE:CA:AE:5E:5A:DB:57:3
 a=setup:actpass
 a=mid:data
 a=sctpmap:5000 webrtc-datachannel 1024
+`.split('\n').join('\r\n');
+
+// Chrome-Safari PT conflict scenario where same PT is used for different codecs.
+// See, https://github.com/twilio/twilio-video.js/issues/2122.
+const chromeSafariConflictSdp = `v=0
+o=- 7515242340730242770 4 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1
+a=extmap-allow-mixed
+a=msid-semantic: WMS
+m=audio 55415 UDP/TLS/RTP/SAVPF 111 63 9 0 8 13 110 126
+c=IN IP4 192.168.1.24
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:nCiO
+a=ice-pwd:OOxf3Oy3dM0Zu9rmp63WKhTN
+a=setup:actpass
+a=mid:0
+a=recvonly
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:111 opus/48000/2
+a=rtcp-fb:111 transport-cc
+a=fmtp:111 minptime=10;useinbandfec=1
+a=rtpmap:63 red/48000/2
+a=fmtp:63 111/111
+a=rtpmap:9 G722/8000
+a=rtpmap:0 PCMU/8000
+a=rtpmap:8 PCMA/8000
+a=rtpmap:13 CN/8000
+a=rtpmap:110 telephone-event/48000
+a=rtpmap:126 telephone-event/8000
+m=video 9 UDP/TLS/RTP/SAVPF 96 98 102 96 100 99 103 105 107 109 125 113 97 101 104 108 127 112 114
+c=IN IP4 0.0.0.0
+a=rtcp:9 IN IP4 0.0.0.0
+a=ice-ufrag:nCiO
+a=ice-pwd:OOxf3Oy3dM0Zu9rmp63WKhTN
+a=setup:actpass
+a=mid:1
+a=sendrecv
+a=rtcp-mux
+a=rtcp-rsize
+a=rtpmap:96 VP8/90000
+a=rtcp-fb:96 goog-remb
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=rtpmap:98 H264/90000
+a=rtcp-fb:98 goog-remb
+a=rtcp-fb:98 transport-cc
+a=rtcp-fb:98 ccm fir
+a=rtcp-fb:98 nack
+a=rtcp-fb:98 nack pli
+a=fmtp:98 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
+a=rtpmap:102 H264/90000
+a=rtcp-fb:102 goog-remb
+a=rtcp-fb:102 transport-cc
+a=rtcp-fb:102 ccm fir
+a=rtcp-fb:102 nack
+a=rtcp-fb:102 nack pli
+a=fmtp:102 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f
+a=rtpmap:96 H264/90000
+a=rtcp-fb:96 goog-remb
+a=rtcp-fb:96 transport-cc
+a=rtcp-fb:96 ccm fir
+a=rtcp-fb:96 nack
+a=rtcp-fb:96 nack pli
+a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640c1f
+a=rtpmap:100 H264/90000
+a=rtcp-fb:100 goog-remb
+a=rtcp-fb:100 transport-cc
+a=rtcp-fb:100 ccm fir
+a=rtcp-fb:100 nack
+a=rtcp-fb:100 nack pli
+a=fmtp:100 level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=640c1f
+a=rtpmap:99 rtx/90000
+a=fmtp:99 apt=98
+a=rtpmap:103 rtx/90000
+a=fmtp:103 apt=102
+a=rtpmap:105 rtx/90000
+a=fmtp:105 apt=104
+a=rtpmap:107 rtx/90000
+a=fmtp:107 apt=96
+a=rtpmap:109 rtx/90000
+a=fmtp:109 apt=108
+a=rtpmap:125 rtx/90000
+a=fmtp:125 apt=127
+a=rtpmap:113 rtx/90000
+a=fmtp:113 apt=112
+a=rtpmap:104 H265/90000
+a=rtcp-fb:104 goog-remb
+a=rtcp-fb:104 transport-cc
+a=rtcp-fb:104 ccm fir
+a=rtcp-fb:104 nack
+a=rtcp-fb:104 nack pli
+a=fmtp:104 level-id=93;tx-mode=SRST
+a=rtpmap:108 VP9/90000
+a=rtcp-fb:108 goog-remb
+a=rtcp-fb:108 transport-cc
+a=rtcp-fb:108 ccm fir
+a=rtcp-fb:108 nack
+a=rtcp-fb:108 nack pli
+a=fmtp:108 profile-id=0
+a=rtpmap:127 VP9/90000
+a=rtcp-fb:127 goog-remb
+a=rtcp-fb:127 transport-cc
+a=rtcp-fb:127 ccm fir
+a=rtcp-fb:127 nack
+a=rtcp-fb:127 nack pli
+a=fmtp:127 profile-id=2
+a=rtpmap:112 red/90000
+a=rtpmap:114 ulpfec/90000
+a=rtpmap:97 rtx/90000
+a=fmtp:97 apt=96
+a=rtpmap:101 rtx/90000
+a=fmtp:101 apt=100
 `.split('\n').join('\r\n');
