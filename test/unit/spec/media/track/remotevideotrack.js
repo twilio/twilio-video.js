@@ -486,7 +486,7 @@ describe('RemoteVideoTrack', () => {
       originalDocumentPictureInPicture = globalThis.documentPictureInPicture;
       addEventListenerSpy = sinon.spy();
       removeEventListenerSpy = sinon.spy();
-      playSpy = sinon.spy();
+      playSpy = sinon.stub().returns(Promise.resolve());
 
       globalThis.documentPictureInPicture = {
         addEventListener: addEventListenerSpy,
@@ -512,7 +512,7 @@ describe('RemoteVideoTrack', () => {
       globalThis.documentPictureInPicture = originalDocumentPictureInPicture;
     });
 
-    it('should set up document PiP listener on attach', () => {
+    it('should inherit document PiP functionality from VideoTrack', () => {
       track.attach(el);
       sinon.assert.calledOnce(addEventListenerSpy);
       sinon.assert.calledWith(addEventListenerSpy, 'enter', track._documentPipEnterListener);
