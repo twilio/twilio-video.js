@@ -736,6 +736,68 @@ describe('VideoTrack', () => {
       });
     });
   });
+
+  describe('Document Picture-in-Picture static functions', () => {
+    let mockTrack;
+    let el;
+    let playSpy;
+
+    beforeEach(() => {
+      playSpy = sinon.stub().returns(Promise.resolve());
+      el = { play: playSpy, paused: true };
+      mockTrack = {
+        _log: { debug: sinon.spy() },
+        _attachments: new Set([el]),
+        _documentPipWindow: null,
+        _documentPipEnterListener: null
+      };
+    });
+
+    describe('ensureDocumentPipVideosPlaying', () => {
+      it('should call play on paused videos in document PiP window', () => {
+        mockTrack._documentPipWindow = {
+          document: {
+            querySelectorAll: () => [el]
+          }
+        };
+        el.paused = true;
+
+        VideoTrack._ensureDocumentPipVideosPlaying(mockTrack);
+        sinon.assert.calledOnce(playSpy);
+      });
+
+      it('should not call play on already playing videos', () => {
+        mockTrack._documentPipWindow = {
+          document: {
+            querySelectorAll: () => [el]
+          }
+        };
+        el.paused = false;
+
+        VideoTrack._ensureDocumentPipVideosPlaying(mockTrack);
+        sinon.assert.notCalled(playSpy);
+      });
+
+      it('should handle errors gracefully', () => {
+        mockTrack._documentPipWindow = {
+          document: {
+            querySelectorAll: () => { throw new Error('test error'); }
+          }
+        };
+
+        // Should not throw
+        VideoTrack._ensureDocumentPipVideosPlaying(mockTrack);
+        sinon.assert.calledWith(mockTrack._log.debug, 'Error checking document PiP video playback:', sinon.match.instanceOf(Error));
+      });
+
+      it('should return early if no documentPipWindow', () => {
+        mockTrack._documentPipWindow = null;
+
+        VideoTrack._ensureDocumentPipVideosPlaying(mockTrack);
+        sinon.assert.notCalled(playSpy);
+      });
+    });
+  });
 });
 
 function OffscreenCanvas(width, height) {
