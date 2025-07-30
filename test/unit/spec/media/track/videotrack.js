@@ -737,7 +737,7 @@ describe('VideoTrack', () => {
     });
   });
 
-  describe('Document Picture-in-Picture static functions', () => {
+  describe('Document Picture-in-Picture workaround plays inadvertently paused video tracks', () => {
     let mockTrack;
     let el;
     let playSpy;
