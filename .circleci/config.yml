@@ -471,6 +471,30 @@ workflows:
             branches:
               ignore: /.*/
 
+  Daily_Build_Workflow:
+    triggers:
+      - schedule:
+          cron: "0 6 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - Build:
+          context: dockerhub-pulls
+      - UnitTests:
+          context: dockerhub-pulls
+      - run-integration-tests:
+          context: dockerhub-pulls
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+              topology: ["group", "peer-to-peer"]
+              test_stability: ["stable"]
+          requires: [Build, UnitTests]
+
   Qe-trigger-test:
     when: <<pipeline.parameters.qe_workflow>>
     jobs:

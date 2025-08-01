@@ -74,7 +74,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//sdk.twilio.com/js/video/releases/2.32.0/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.32.1/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:

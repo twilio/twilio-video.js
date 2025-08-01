@@ -2,6 +2,15 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.32.1 (August 1, 2025)
+====================
+
+Bug Fixes
+---------
+- Fixed an issue where video tracks would freeze when the video element was offscreen in a document Picture-in-Picture window.
+- Fixed an issue where `LocalVideoTrack.restart()` would fail on some devices when a video processor was active.
+- Fixed an issue where SDP munging would generate duplicated payload types, causing SDP negotiation failures with Chrome 137+.
+
 2.32.0 (July 23, 2025)
 ====================
 
