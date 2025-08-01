@@ -423,14 +423,13 @@ function trackSubscribed(track: Video.VideoTrack | Video.AudioTrack) {
 
 function trackUnsubscribed(track: Video.VideoTrack | Video.AudioTrack) {
   const element = document.createElement(track.kind);
-  track.detach('#foo').remove();
-  track.detach(element).remove();
-  track.detach().forEach(element => element.remove());
+  track.detach('#foo');
+  track.detach(element);
+  track.detach().forEach(el => el.remove());
 }
 
 function insertDomElement(element: HTMLMediaElement) {
-  document.createElement('div');
-  element.appendChild(element);
+  document.createElement('div').appendChild(element);
 }
 
 function useConnectionOptions() {
@@ -513,3 +512,31 @@ initRoom();
 unpublishTracks();
 runPreflight();
 mediaWarnings();
+
+// New test cases for AudioTrack, VideoTrack, and LocalTrackOptions
+
+const localTrackOptions: Video.LocalTrackOptions = {
+  logLevel: 'info',
+  name: 'my-track'
+};
+
+const audioTrack: Video.AudioTrack = new Video.AudioTrack();
+const videoTrack: Video.VideoTrack = new Video.VideoTrack();
+
+// Test AudioTrack attach method
+const audioElement: HTMLAudioElement = audioTrack.attach();
+audioTrack.attach(document.createElement('audio'));
+
+// Test VideoTrack attach method
+const videoElement: HTMLVideoElement = videoTrack.attach() as HTMLVideoElement;
+videoTrack.attach(document.createElement('video'));
+
+// Test createLocalAudioTrack
+Video.createLocalAudioTrack(localTrackOptions).then((localAudioTrack: Video.LocalAudioTrack) => {
+  const mediaStreamTrack: MediaStreamTrack = localAudioTrack.mediaStreamTrack;
+});
+
+// Test createLocalVideoTrack
+Video.createLocalVideoTrack(localTrackOptions).then((localVideoTrack: Video.LocalVideoTrack) => {
+  const mediaStreamTrack: MediaStreamTrack = localVideoTrack.mediaStreamTrack;
+});
