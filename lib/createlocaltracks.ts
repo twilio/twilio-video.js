@@ -9,6 +9,7 @@ import {
   LocalTrack,
   NoiseCancellationOptions
 } from '../tsdef';
+import MediaStreamEventPublisher = require('./insights/mediastreameventpublisher');
 
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
@@ -42,6 +43,7 @@ interface InternalOptions extends CreateLocalTracksOptions {
   LocalVideoTrack: any;
   MediaStreamTrack: any;
   Log: any;
+  mediaStreamEventPublisher?: MediaStreamEventPublisher;
 }
 
 /**
@@ -196,10 +198,16 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 
   const workaroundWebKitBug180748 = typeof fullOptions.audio === 'object' && fullOptions.audio.workaroundWebKitBug180748;
 
+  const mediaStreamEventPublisher = fullOptions.mediaStreamEventPublisher;
+
   try {
     const mediaStream = await (workaroundWebKitBug180748
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
+
+    if (mediaStreamEventPublisher) {
+      mediaStreamEventPublisher.reportSuccess();
+    }
 
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
@@ -230,6 +238,13 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       })
     );
   } catch (error) {
+    if (mediaStreamEventPublisher) {
+      if (error.name === 'NotAllowedError') {
+        mediaStreamEventPublisher.reportPermissionDenied();
+      } else {
+        mediaStreamEventPublisher.reportFailure(error);
+      }
+    }
     log.warn('Call to getUserMedia failed:', error);
     throw error;
   }
