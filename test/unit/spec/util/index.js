@@ -213,7 +213,7 @@ describe('util', () => {
       },
     ].forEach(({ testCase, connectOptions, expectedPayload }) => {
       it(testCase, () => {
-        const event = createRoomConnectionBasePayload(connectOptions);
+        const payload = createRoomConnectionBasePayload(connectOptions);
         const defaultOptions = {
           sessionSID,
           'audio': 'false',
@@ -233,7 +233,7 @@ describe('util', () => {
           'videoTracks': 0
         };
         const expectedOutput = Object.assign(defaultOptions, expectedPayload);
-        assert.deepStrictEqual(event.payload, expectedOutput);
+        assert.deepStrictEqual(payload, expectedOutput);
       });
     });
   });
