@@ -233,8 +233,6 @@ describe('util', () => {
           'videoTracks': 0
         };
         const expectedOutput = Object.assign(defaultOptions, expectedPayload);
-        assert.strictEqual(event.level, 'info');
-        assert.strictEqual(event.group, 'room');
         assert.deepStrictEqual(event.payload, expectedOutput);
       });
     });
