@@ -12,10 +12,44 @@ const {
   promiseFromEvents,
   isChromeScreenShareTrack,
   createRoomConnectionBasePayload,
+  createRoomConnectingEventPayload,
+  createRoomConnectedEventPayload,
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');
 describe('util', () => {
+  describe('createRoomConnectingEventPayload', () => {
+    it('should create a proper connecting event payload', () => {
+      const connectOptions = {
+        audio: true,
+        video: true
+      };
+
+      const event = createRoomConnectingEventPayload(connectOptions);
+
+      assert.equal(event.group, 'room');
+      assert.equal(event.name, 'connecting');
+      assert.equal(event.level, 'info');
+      assert.deepStrictEqual(event.payload, createRoomConnectionBasePayload(connectOptions));
+    });
+  });
+
+  describe('createRoomConnectedEventPayload', () => {
+    it('should create a proper connected event payload', () => {
+      const connectOptions = {
+        audio: true,
+        video: true
+      };
+
+      const event = createRoomConnectedEventPayload(connectOptions);
+
+      assert.equal(event.group, 'room');
+      assert.equal(event.name, 'connected');
+      assert.equal(event.level, 'info');
+      assert.deepStrictEqual(event.payload, createRoomConnectionBasePayload(connectOptions));
+    });
+  });
+
   describe('createRoomConnectionBasePayload', () => {
     [
       {
