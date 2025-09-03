@@ -43,10 +43,11 @@ describe('TrackWarningPublisher', () => {
     assert.equal(emittedEvents.length, 1);
     const event = emittedEvents[0];
 
-    assert.equal(event.group, 'quality');
-    assert.equal(event.name, 'track-warning-raised');
+    assert.equal(event.group, 'track-warning-raised');
+    assert.equal(event.name, 'track-stalled');
     assert.equal(event.level, 'warning');
     assert.equal(event.payload.trackSID, stalledStat.trackSid);
+    assert.equal(event.payload.trackType, 'video');
     assert.equal(event.payload.frameRate, stalledStat.frameRate);
     assert.equal(event.payload.threshold, publisher._stallThreshold);
   });
@@ -72,10 +73,11 @@ describe('TrackWarningPublisher', () => {
     assert.equal(emittedEvents.length, 2);
     const event = emittedEvents[1];
 
-    assert.equal(event.group, 'quality');
-    assert.equal(event.name, 'track-warning-cleared');
+    assert.equal(event.group, 'track-warning-cleared');
+    assert.equal(event.name, 'track-stalled');
     assert.equal(event.level, 'info');
     assert.equal(event.payload.trackSID, trackSid);
+    assert.equal(event.payload.trackType, 'video');
     assert.equal(event.payload.frameRate, 15);
     assert.equal(event.payload.threshold, publisher._stallThreshold);
   });
@@ -103,12 +105,12 @@ describe('TrackWarningPublisher', () => {
 
     publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._stallThreshold - 0.1 }]));
     assert.equal(emittedEvents.length, 1);
-    assert.equal(emittedEvents[0].name, 'track-warning-raised');
+    assert.equal(emittedEvents[0].group, 'track-warning-raised');
 
     publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._resumeThreshold }]));
 
     assert.equal(emittedEvents.length, 2);
-    assert.equal(emittedEvents[1].name, 'track-warning-cleared');
+    assert.equal(emittedEvents[1].group, 'track-warning-cleared');
   });
 
   it('should track multiple tracks independently', () => {
@@ -131,7 +133,7 @@ describe('TrackWarningPublisher', () => {
     );
     assert.equal(emittedEvents.length, 3);
     assert.equal(emittedEvents[2].payload.trackSID, track1);
-    assert.equal(emittedEvents[2].name, 'track-warning-cleared');
+    assert.equal(emittedEvents[2].group, 'track-warning-cleared');
 
     publisher.processStats(
       createMockRemoteVideoStats([
@@ -141,7 +143,7 @@ describe('TrackWarningPublisher', () => {
     );
     assert.equal(emittedEvents.length, 4);
     assert.equal(emittedEvents[3].payload.trackSID, track1);
-    assert.equal(emittedEvents[3].name, 'track-warning-raised');
+    assert.equal(emittedEvents[3].group, 'track-warning-raised');
   });
 
   it('should reset the stored state when cleanup is called', () => {
