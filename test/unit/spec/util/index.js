@@ -11,12 +11,46 @@ const {
   makeUUID,
   promiseFromEvents,
   isChromeScreenShareTrack,
-  createRoomConnectEventPayload,
+  createRoomConnectionBasePayload,
+  createRoomConnectingEventPayload,
+  createRoomConnectedEventPayload,
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');
 describe('util', () => {
-  describe('createRoomConnectEventPayload', () => {
+  describe('createRoomConnectingEventPayload', () => {
+    it('should create a proper connecting event payload', () => {
+      const connectOptions = {
+        audio: true,
+        video: true
+      };
+
+      const event = createRoomConnectingEventPayload(connectOptions);
+
+      assert.equal(event.group, 'room');
+      assert.equal(event.name, 'connecting');
+      assert.equal(event.level, 'info');
+      assert.deepStrictEqual(event.payload, createRoomConnectionBasePayload(connectOptions));
+    });
+  });
+
+  describe('createRoomConnectedEventPayload', () => {
+    it('should create a proper connected event payload', () => {
+      const connectOptions = {
+        audio: true,
+        video: true
+      };
+
+      const event = createRoomConnectedEventPayload(connectOptions);
+
+      assert.equal(event.group, 'room');
+      assert.equal(event.name, 'connected');
+      assert.equal(event.level, 'info');
+      assert.deepStrictEqual(event.payload, createRoomConnectionBasePayload(connectOptions));
+    });
+  });
+
+  describe('createRoomConnectionBasePayload', () => {
     [
       {
         testCase: 'empty options',
@@ -213,7 +247,7 @@ describe('util', () => {
       },
     ].forEach(({ testCase, connectOptions, expectedPayload }) => {
       it(testCase, () => {
-        const event = createRoomConnectEventPayload(connectOptions);
+        const payload = createRoomConnectionBasePayload(connectOptions);
         const defaultOptions = {
           sessionSID,
           'audio': 'false',
@@ -233,10 +267,7 @@ describe('util', () => {
           'videoTracks': 0
         };
         const expectedOutput = Object.assign(defaultOptions, expectedPayload);
-        assert.strictEqual(event.name, 'connect');
-        assert.strictEqual(event.level, 'info');
-        assert.strictEqual(event.group, 'room');
-        assert.deepStrictEqual(event.payload, expectedOutput);
+        assert.deepStrictEqual(payload, expectedOutput);
       });
     });
   });
