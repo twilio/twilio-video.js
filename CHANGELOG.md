@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 Changes
 ------------
 
-- `isSupported` now returns true for Edge browser on iOS
+- `isSupported` now returns `true` for Microsoft Edge on iOS.
 
 2.32.1 (August 1, 2025)
 ====================
