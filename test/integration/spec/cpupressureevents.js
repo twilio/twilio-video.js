@@ -125,7 +125,7 @@ describe('CPU Pressure Events', function() {
       assert.strictEqual(event.group, 'cpu');
       assert.strictEqual(event.name, 'pressure-changed');
       assert.strictEqual(event.level, 'info');
-      assert.strictEqual(event.payload.state, 'critical');
+      assert.strictEqual(event.payload.pressure, 'critical');
     });
 
     it('should emit events for all CPU pressure states', async () => {
@@ -161,7 +161,7 @@ describe('CPU Pressure Events', function() {
         assert.strictEqual(event.group, 'cpu');
         assert.strictEqual(event.name, 'pressure-changed');
         assert.strictEqual(event.level, 'info');
-        assert.strictEqual(event.payload.state, state);
+        assert.strictEqual(event.payload.pressure, state);
       });
     });
 
