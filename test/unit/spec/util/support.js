@@ -115,7 +115,11 @@ describe('isSupported', () => {
       'Edge (Chromium) on Windows',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64; Xbox; Xbox One) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edg/15.15063',
       { runtime: {} }
-    ]
+    ],
+    [
+      'Edge on iPhone',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 EdgiOS/46.3.13 Mobile/15E148 Safari/605.1.15'
+    ],
   ].forEach(([browser, useragent, chrome]) => {
     it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
@@ -134,10 +138,6 @@ describe('isSupported', () => {
     [
       'Edge on Android',
       'Mozilla/5.0 (Linux; Android 10; HD1913) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Mobile Safari/537.36 EdgA/46.3.4.5155'
-    ],
-    [
-      'Edge on iPhone',
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 EdgiOS/46.3.13 Mobile/15E148 Safari/605.1.15'
     ],
     [
       'Edge 42',
