@@ -14,13 +14,14 @@ describe('RemoteTrackStats', () => {
       packetsReceived: 2
     };
 
-    it('should set bytesReceived and packetsReceived properties', () => {
+    it('should set bytesReceived, jitter, and packetsReceived properties', () => {
       const trackStats = new RemoteTrackStats(stats.trackId, stats);
       assert.equal(trackStats.bytesReceived, stats.bytesReceived);
+      assert.equal(trackStats.jitter, stats.jitter);
       assert.equal(trackStats.packetsReceived, stats.packetsReceived);
     });
 
-    ['bytesReceived', 'packetsReceived'].forEach(statName => {
+    ['bytesReceived', 'jitter', 'packetsReceived'].forEach(statName => {
       context(`when ${statName} is absent from the StandardizedTrackStatsReport`, () => {
         it(`should set the ${statName} property to null`, () => {
           const statValue = stats[statName];
