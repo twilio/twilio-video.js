@@ -23,7 +23,7 @@ describe('RemoteVideoTrackStats', () => {
         height: stats.frameHeightReceived
       });
       assert.equal(trackStats.frameRate, stats.frameRateReceived);
-      assert.equal(trackStats.freezeCount, stats.freezeCount);
+      assert.strictEqual(trackStats.freezeCount, stats.freezeCount);
     });
 
     [
