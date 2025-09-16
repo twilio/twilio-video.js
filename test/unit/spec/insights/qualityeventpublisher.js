@@ -17,7 +17,7 @@ describe('QualityEventPublisher', () => {
       debug: sinon.stub(),
       error: sinon.stub(),
     };
-    publisher = new QualityEventPublisher(eventObserver, mockLog);
+    publisher = new QualityEventPublisher(eventObserver, mockLog, { publishIntervalMs: 0 });
     emittedEvents = [];
 
     eventObserver.on('event', event => {

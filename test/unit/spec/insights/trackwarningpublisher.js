@@ -13,7 +13,7 @@ describe('TrackWarningPublisher', () => {
 
   beforeEach(() => {
     eventObserver = new EventEmitter();
-    publisher = new TrackWarningPublisher(eventObserver, fakeLog);
+    publisher = new TrackWarningPublisher(eventObserver, fakeLog, { publishIntervalMs: 0 });
     emittedEvents = [];
 
     eventObserver.on('event', event => emittedEvents.push(event));
