@@ -297,11 +297,11 @@ export class LocalAudioTrackStats extends LocalTrackStats {
 export class RemoteTrackStats extends TrackStats {
   bytesReceived: number | null;
   packetsReceived: number | null;
+  jitter: number | null;
 }
 
 export class RemoteAudioTrackStats extends RemoteTrackStats {
   audioLevel: AudioLevel | null;
-  jitter: number | null;
 }
 
 export class RemoteVideoTrackStats extends RemoteTrackStats {
