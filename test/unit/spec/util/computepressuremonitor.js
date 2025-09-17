@@ -4,7 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 const computePressureMonitor = require('../../../../lib/insights/computepressuremonitor');
 
-describe.only('ComputePressureMonitor', () => {
+describe('ComputePressureMonitor', () => {
   let mockPressureObserver;
   let observerInstance;
   let originalPressureObserver;
