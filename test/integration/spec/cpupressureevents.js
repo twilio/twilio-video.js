@@ -97,9 +97,9 @@ describe('CPU Pressure Events', function() {
 
   describe('when PressureObserver is supported', () => {
     it('should emit CPU pressure events with correct structure', async () => {
-      const eventObserver = new EventEmitter();
+      const eventListener = new EventEmitter();
       const cpuEvents = [];
-      eventObserver.on('event', event => {
+      eventListener.on('event', event => {
         if (event.group === 'cpu') {
           cpuEvents.push(event);
         }
@@ -109,7 +109,7 @@ describe('CPU Pressure Events', function() {
         name: roomName,
         audio: false,
         video: false,
-        eventObserver
+        eventListener
       });
 
       // Wait for pressure monitoring to start
@@ -129,9 +129,9 @@ describe('CPU Pressure Events', function() {
     });
 
     it('should emit events for all CPU pressure states', async () => {
-      const eventObserver = new EventEmitter();
+      const eventListener = new EventEmitter();
       const cpuEvents = [];
-      eventObserver.on('event', event => {
+      eventListener.on('event', event => {
         if (event.group === 'cpu') {
           cpuEvents.push(event);
         }
@@ -141,7 +141,7 @@ describe('CPU Pressure Events', function() {
         name: roomName,
         audio: false,
         video: false,
-        eventObserver
+        eventListener
       });
 
       await waitFor(() => {
@@ -166,9 +166,9 @@ describe('CPU Pressure Events', function() {
     });
 
     it('should stop emitting CPU pressure events when Room disconnects', async () => {
-      const eventObserver = new EventEmitter();
+      const eventListener = new EventEmitter();
       const cpuEvents = [];
-      eventObserver.on('event', event => {
+      eventListener.on('event', event => {
         if (event.group === 'cpu') {
           cpuEvents.push(event);
         }
@@ -178,7 +178,7 @@ describe('CPU Pressure Events', function() {
         name: roomName,
         audio: false,
         video: false,
-        eventObserver
+        eventListener
       });
 
       await waitFor(() => {
@@ -208,9 +208,9 @@ describe('CPU Pressure Events', function() {
     });
 
     it('should not emit CPU pressure events', async () => {
-      const eventObserver = new EventEmitter();
+      const eventListener = new EventEmitter();
       const cpuEvents = [];
-      eventObserver.on('event', event => {
+      eventListener.on('event', event => {
         if (event.group === 'cpu') {
           cpuEvents.push(event);
         }
@@ -220,7 +220,7 @@ describe('CPU Pressure Events', function() {
         name: roomName,
         audio: false,
         video: false,
-        eventObserver
+        eventListener
       });
 
       assert.strictEqual(cpuEvents.length, 0, 'Should not emit CPU pressure events');
@@ -229,9 +229,9 @@ describe('CPU Pressure Events', function() {
 
   describe('when insights are disabled', () => {
     it('should not emit CPU pressure events', async () => {
-      const eventObserver = new EventEmitter();
+      const eventListener = new EventEmitter();
       const cpuEvents = [];
-      eventObserver.on('event', event => {
+      eventListener.on('event', event => {
         if (event.group === 'cpu') {
           cpuEvents.push(event);
         }
@@ -242,7 +242,7 @@ describe('CPU Pressure Events', function() {
         audio: false,
         video: false,
         insights: false,
-        eventObserver
+        eventListener
       });
 
       globalThis.PressureObserver.simulatePressureChange('critical');
