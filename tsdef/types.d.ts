@@ -287,6 +287,7 @@ export class LocalVideoTrackStats extends LocalTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   captureFrameRate: number | null;
   frameRate: number | null;
+  qualityLimitationReason?: 'none' | 'cpu' | 'bandwidth' | 'other';
 }
 
 export class LocalAudioTrackStats extends LocalTrackStats {
@@ -306,6 +307,7 @@ export class RemoteAudioTrackStats extends RemoteTrackStats {
 export class RemoteVideoTrackStats extends RemoteTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   frameRate: number | null;
+  freezeCount?: number
 }
 
 export class StatsReport {

@@ -20,13 +20,7 @@ describe('TrackWarningPublisher', () => {
   });
 
   function createMockRemoteVideoStats(tracks) {
-    const stats = {
-      remoteVideoTrackStats: tracks.map(({ trackSid, frameRate }) => ({
-        trackSid,
-        frameRate,
-      })),
-    };
-    return stats;
+    return tracks.map(({ trackSid, frameRate }) => ({ trackSid, frameRate }));
   }
 
   it('should detect and publish stalled track events', () => {
@@ -34,11 +28,7 @@ describe('TrackWarningPublisher', () => {
       trackSid: 'MT123',
       frameRate: 0.1,
     };
-    publisher.processStats(
-      createMockRemoteVideoStats([
-        stalledStat,
-      ])
-    );
+    publisher.processStats(createMockRemoteVideoStats([stalledStat]));
 
     assert.equal(emittedEvents.length, 1);
     const event = emittedEvents[0];
@@ -64,12 +54,7 @@ describe('TrackWarningPublisher', () => {
     const trackSid = 'MT123';
 
     publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.2 }]));
-
-    publisher.processStats(
-      createMockRemoteVideoStats([
-        { trackSid, frameRate: 15 },
-      ])
-    );
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 15 }]));
     assert.equal(emittedEvents.length, 2);
     const event = emittedEvents[1];
 
@@ -117,30 +102,24 @@ describe('TrackWarningPublisher', () => {
     const track1 = 'MT123';
     const track2 = 'MT456';
 
-    publisher.processStats(
-      createMockRemoteVideoStats([
-        { trackSid: track1, frameRate: 0.2 },
-        { trackSid: track2, frameRate: 0.3 },
-      ])
-    );
+    publisher.processStats(createMockRemoteVideoStats([
+      { trackSid: track1, frameRate: 0.2 },
+      { trackSid: track2, frameRate: 0.3 },
+    ]));
     assert.equal(emittedEvents.length, 2);
 
-    publisher.processStats(
-      createMockRemoteVideoStats([
-        { trackSid: track1, frameRate: 30 },
-        { trackSid: track2, frameRate: 0.3 },
-      ])
-    );
+    publisher.processStats(createMockRemoteVideoStats([
+      { trackSid: track1, frameRate: 30 },
+      { trackSid: track2, frameRate: 0.3 },
+    ]));
     assert.equal(emittedEvents.length, 3);
     assert.equal(emittedEvents[2].payload.trackSID, track1);
     assert.equal(emittedEvents[2].group, 'track-warning-cleared');
 
-    publisher.processStats(
-      createMockRemoteVideoStats([
-        { trackSid: track1, frameRate: 0.2 },
-        { trackSid: track2, frameRate: 0.3 },
-      ])
-    );
+    publisher.processStats(createMockRemoteVideoStats([
+      { trackSid: track1, frameRate: 0.2 },
+      { trackSid: track2, frameRate: 0.3 },
+    ]));
     assert.equal(emittedEvents.length, 4);
     assert.equal(emittedEvents[3].payload.trackSID, track1);
     assert.equal(emittedEvents[3].group, 'track-warning-raised');
@@ -161,8 +140,7 @@ describe('TrackWarningPublisher', () => {
   });
 
   it('should handle empty stats objects', () => {
-    publisher.processStats({});
-    publisher.processStats({ remoteVideoTrackStats: [] });
+    publisher.processStats([]);
     publisher.processStats(null);
     publisher.processStats(undefined);
 
