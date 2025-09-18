@@ -53,7 +53,7 @@ describe('ComputePressureMonitor', () => {
 
       sinon.assert.calledOnce(mockPressureObserver);
       sinon.assert.calledWith(observerInstance.observe, 'cpu', {
-        sampleRate: 10000
+        sampleInterval: 10000
       });
     });
 
@@ -65,7 +65,6 @@ describe('ComputePressureMonitor', () => {
         state: 'critical',
         source: 'cpu',
         time: Date.now(),
-        toJSON: sinon.stub().returns({ state: 'critical', source: 'cpu', time: Date.now() })
       };
 
       // Simulate pressure observer callback
@@ -73,7 +72,7 @@ describe('ComputePressureMonitor', () => {
       observerCallback([mockRecord]);
 
       sinon.assert.calledOnce(callback);
-      sinon.assert.calledWith(callback, mockRecord.toJSON());
+      sinon.assert.calledWith(callback, mockRecord);
     });
   });
 

@@ -55,7 +55,6 @@ class MockPressureObserver {
         state,
         source: 'cpu',
         time: Date.now(),
-        toJSON: () => ({ state, source: 'cpu', time: Date.now() })
       };
       this.callback([mockRecord]);
     }

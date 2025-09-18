@@ -307,7 +307,7 @@ export class RemoteAudioTrackStats extends RemoteTrackStats {
 export class RemoteVideoTrackStats extends RemoteTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   frameRate: number | null;
-  freezeCount?: number
+  freezeCount?: number;
 }
 
 export class StatsReport {
