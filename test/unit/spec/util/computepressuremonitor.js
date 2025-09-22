@@ -4,7 +4,7 @@ const assert = require('assert');
 const sinon = require('sinon');
 const computePressureMonitor = require('../../../../lib/insights/computepressuremonitor');
 
-describe.only('ComputePressureMonitor', () => {
+describe('ComputePressureMonitor', () => {
   let mockPressureObserver;
   let observerInstance;
   let originalPressureObserver;
@@ -53,7 +53,7 @@ describe.only('ComputePressureMonitor', () => {
 
       sinon.assert.calledOnce(mockPressureObserver);
       sinon.assert.calledWith(observerInstance.observe, 'cpu', {
-        sampleRate: 10000
+        sampleInterval: 10000
       });
     });
 
@@ -65,7 +65,6 @@ describe.only('ComputePressureMonitor', () => {
         state: 'critical',
         source: 'cpu',
         time: Date.now(),
-        toJSON: sinon.stub().returns({ state: 'critical', source: 'cpu', time: Date.now() })
       };
 
       // Simulate pressure observer callback
@@ -73,7 +72,7 @@ describe.only('ComputePressureMonitor', () => {
       observerCallback([mockRecord]);
 
       sinon.assert.calledOnce(callback);
-      sinon.assert.calledWith(callback, mockRecord.toJSON());
+      sinon.assert.calledWith(callback, mockRecord);
     });
   });
 

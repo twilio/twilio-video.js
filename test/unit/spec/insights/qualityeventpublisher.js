@@ -26,19 +26,7 @@ describe('QualityEventPublisher', () => {
   });
 
   function createMockStats(tracks) {
-    const stats = new Map();
-
-    tracks.forEach(({ trackId, qualityLimitationReason }) => {
-      const statId = `outbound-rtp-${trackId}`;
-      stats.set(statId, {
-        type: 'outbound-rtp',
-        trackId,
-        qualityLimitationReason,
-        isRemote: false,
-      });
-    });
-
-    return stats;
+    return tracks.map(({ trackId, qualityLimitationReason }) => ({ trackId, qualityLimitationReason }));
   }
 
   it('should publish an event when a quality limitation reason is first detected', () => {
