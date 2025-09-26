@@ -44,6 +44,13 @@ describe('ComputePressureMonitor', () => {
       }, /The CPU pressure change callback must be a function/);
     });
 
+    it('should throw an error if PressureObserver is not supported', () => {
+      delete globalThis.PressureObserver;
+      assert.throws(() => {
+        computePressureMonitor.onCpuPressureChange(() => {});
+      }, /PressureObserver is not supported in this environment/);
+    });
+
     it('should create PressureObserver only once', () => {
       const callback1 = sinon.spy();
       const callback2 = sinon.spy();
