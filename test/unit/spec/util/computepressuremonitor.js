@@ -28,12 +28,12 @@ describe('ComputePressureMonitor', () => {
 
   describe('isSupported', () => {
     it('should return true when PressureObserver is available', () => {
-      assert.strictEqual(computePressureMonitor.constructor.isSupported(), true);
+      assert.strictEqual(computePressureMonitor.isSupported(), true);
     });
 
     it('should return false when PressureObserver is not available', () => {
       delete globalThis.PressureObserver;
-      assert.strictEqual(computePressureMonitor.constructor.isSupported(), false);
+      assert.strictEqual(computePressureMonitor.isSupported(), false);
     });
   });
 
@@ -42,6 +42,13 @@ describe('ComputePressureMonitor', () => {
       assert.throws(() => {
         computePressureMonitor.onCpuPressureChange('not a function');
       }, /The CPU pressure change callback must be a function/);
+    });
+
+    it('should throw an error if PressureObserver is not supported', () => {
+      delete globalThis.PressureObserver;
+      assert.throws(() => {
+        computePressureMonitor.onCpuPressureChange(() => {});
+      }, /PressureObserver is not supported in this environment/);
     });
 
     it('should create PressureObserver only once', () => {
@@ -53,7 +60,7 @@ describe('ComputePressureMonitor', () => {
 
       sinon.assert.calledOnce(mockPressureObserver);
       sinon.assert.calledWith(observerInstance.observe, 'cpu', {
-        sampleInterval: 10000
+        sampleInterval: 2000
       });
     });
 
@@ -101,9 +108,9 @@ describe('ComputePressureMonitor', () => {
       const record1 = {
         state: 'nominal',
         source: 'cpu',
-        time: Date.now(),
-        toJSON: sinon.stub().returns({ state: 'nominal', source: 'cpu', time: Date.now() })
+        time: '123',
       };
+
       observerCallback([record1]);
       sinon.assert.calledOnce(callback);
 
@@ -111,8 +118,7 @@ describe('ComputePressureMonitor', () => {
       const record2 = {
         state: 'nominal',
         source: 'cpu',
-        time: Date.now() + 1000,
-        toJSON: sinon.stub().returns({ state: 'nominal', source: 'cpu', time: Date.now() + 1000 })
+        time: '124',
       };
       observerCallback([record2]);
       sinon.assert.calledOnce(callback);
@@ -121,8 +127,7 @@ describe('ComputePressureMonitor', () => {
       const record3 = {
         state: 'critical',
         source: 'cpu',
-        time: Date.now() + 2000,
-        toJSON: sinon.stub().returns({ state: 'critical', source: 'cpu', time: Date.now() + 2000 })
+        time: '125',
       };
       observerCallback([record3]);
       sinon.assert.calledTwice(callback);
@@ -137,21 +142,19 @@ describe('ComputePressureMonitor', () => {
       const record1 = {
         state: 'nominal',
         source: 'cpu',
-        time: Date.now(),
-        toJSON: sinon.stub().returns({ state: 'nominal', source: 'cpu', time: Date.now() })
+        time: '123',
       };
 
       const record2 = {
         state: 'critical',
         source: 'cpu',
-        time: Date.now() + 1000,
-        toJSON: sinon.stub().returns({ state: 'critical', source: 'cpu', time: Date.now() + 1000 })
+        time: '456',
       };
 
       observerCallback([record1, record2]);
 
       sinon.assert.calledOnce(callback);
-      sinon.assert.calledWith(callback, record2.toJSON());
+      sinon.assert.calledWith(callback, record2);
     });
   });
 
