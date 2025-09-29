@@ -502,7 +502,7 @@ workflows:
           filters:
             branches:
               only:
-                - VBLOCKS-4945
+                - master
     jobs:
       - Build:
           context: dockerhub-pulls
