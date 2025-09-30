@@ -30,6 +30,11 @@ const workaround180748 = require('./webaudio/workaround180748');
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
+// This ensure that if insights are enable tracks created through the public createLocalTracks() are handled correctly
+let defaultMediaStreamEventPublisher: MediaStreamEventPublisher | null = null;
+export function setDefaultMediaStreamEventPublisher(publisher?: MediaStreamEventPublisher): void {
+  defaultMediaStreamEventPublisher = publisher || null;
+}
 
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
@@ -120,6 +125,10 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     video: isAudioVideoAbsent,
     ...options,
   };
+
+  if (!fullOptions.mediaStreamEventPublisher && defaultMediaStreamEventPublisher) {
+    fullOptions.mediaStreamEventPublisher = defaultMediaStreamEventPublisher;
+  }
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(fullOptions.logLevel);
@@ -239,7 +248,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     );
   } catch (error) {
     if (mediaStreamEventPublisher) {
-      if (error.name === 'NotAllowedError') {
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
         mediaStreamEventPublisher.reportPermissionDenied();
       } else {
         mediaStreamEventPublisher.reportFailure(error);
