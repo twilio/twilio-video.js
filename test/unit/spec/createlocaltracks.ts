@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
-import { createLocalTracks } from '../../../lib/createlocaltracks';
+import { createLocalTracks, setDefaultMediaStreamEventPublisher } from '../../../lib/createlocaltracks';
 
 describe('createLocalTracks', () => {
   [
@@ -160,6 +160,92 @@ describe('createLocalTracks', () => {
       const callArgs = getUserMediaSpy.getCall(0).args;
       assert.equal(callArgs.length, 1);
       assert.deepEqual(callArgs[0], expectedConstraints, 'getUserMedia was not called with the expected constraints');
+    });
+  });
+
+  describe('mediaStreamEventPublisher integration', () => {
+    afterEach(() => {
+      setDefaultMediaStreamEventPublisher();
+    });
+
+    it('should reuse the default mediaStreamEventPublisher for successes', async () => {
+      const publisher = {
+        reportFailure: sinon.spy(),
+        reportPermissionDenied: sinon.spy(),
+        reportSuccess: sinon.spy()
+      };
+      setDefaultMediaStreamEventPublisher(publisher as any);
+
+      const options = makeOptions();
+      await createLocalTracks(options);
+
+      sinon.assert.calledOnce(publisher.reportSuccess);
+      sinon.assert.notCalled(publisher.reportFailure);
+      sinon.assert.notCalled(publisher.reportPermissionDenied);
+    });
+
+    it('should identify permission denied errors and invoke reportPermissionDenied', async () => {
+      const publisher = {
+        reportFailure: sinon.spy(),
+        reportPermissionDenied: sinon.spy(),
+        reportSuccess: sinon.spy()
+      };
+      setDefaultMediaStreamEventPublisher(publisher as any);
+
+      const options = makeOptions();
+      const permissionError = new Error('Permission denied');
+      permissionError.name = 'NotAllowedError';
+      options.getUserMedia = sinon.stub().rejects(permissionError);
+
+      await assert.rejects(() => createLocalTracks(options), permissionError);
+
+      sinon.assert.calledOnce(publisher.reportPermissionDenied);
+      sinon.assert.notCalled(publisher.reportSuccess);
+      sinon.assert.notCalled(publisher.reportFailure);
+    });
+
+    it('should continue to report generic failures via reportFailure', async () => {
+      const publisher = {
+        reportFailure: sinon.spy(),
+        reportPermissionDenied: sinon.spy(),
+        reportSuccess: sinon.spy()
+      };
+      setDefaultMediaStreamEventPublisher(publisher as any);
+
+      const options = makeOptions();
+      const unexpectedError = new Error('Camera in use');
+      unexpectedError.name = 'NotReadableError';
+      options.getUserMedia = sinon.stub().rejects(unexpectedError);
+
+      await assert.rejects(() => createLocalTracks(options), unexpectedError);
+
+      sinon.assert.calledOnce(publisher.reportFailure);
+      sinon.assert.notCalled(publisher.reportSuccess);
+      sinon.assert.notCalled(publisher.reportPermissionDenied);
+    });
+
+    it('should prefer an explicitly provided mediaStreamEventPublisher over the default', async () => {
+      const defaultPublisher = {
+        reportFailure: sinon.spy(),
+        reportPermissionDenied: sinon.spy(),
+        reportSuccess: sinon.spy()
+      };
+      const scopedPublisher = {
+        reportFailure: sinon.spy(),
+        reportPermissionDenied: sinon.spy(),
+        reportSuccess: sinon.spy()
+      };
+
+      setDefaultMediaStreamEventPublisher(defaultPublisher as any);
+
+      const options = Object.assign({
+        mediaStreamEventPublisher: scopedPublisher
+      }, makeOptions());
+
+      await createLocalTracks(options);
+
+      sinon.assert.calledOnce(scopedPublisher.reportSuccess);
+      sinon.assert.notCalled(defaultPublisher.reportSuccess);
     });
   });
 });
