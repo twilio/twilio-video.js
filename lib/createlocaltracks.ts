@@ -30,7 +30,9 @@ const workaround180748 = require('./webaudio/workaround180748');
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
-// This ensure that if insights are enable tracks created through the public createLocalTracks() are handled correctly
+// Global publisher shared between connect() and standalone createLocalTracks() calls.
+// When insights are enabled, connect() sets this so that subsequent createLocalTracks()
+// calls can report events to the same publisher.
 let defaultMediaStreamEventPublisher: MediaStreamEventPublisher | null = null;
 export function setDefaultMediaStreamEventPublisher(publisher?: MediaStreamEventPublisher): void {
   defaultMediaStreamEventPublisher = publisher || null;
