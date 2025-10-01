@@ -20,13 +20,13 @@ describe('TrackWarningPublisher', () => {
   });
 
   function createMockRemoteVideoStats(tracks) {
-    return tracks.map(({ trackSid, frameRate }) => ({ trackSid, frameRate }));
+    return tracks.map(({ trackSid, frameRateReceived }) => ({ trackSid, frameRateReceived }));
   }
 
   it('should detect and publish stalled track events', () => {
     const stalledStat = {
       trackSid: 'MT123',
-      frameRate: 0.1,
+      frameRateReceived: 0.1,
     };
     publisher.processStats(createMockRemoteVideoStats([stalledStat]));
 
@@ -38,23 +38,23 @@ describe('TrackWarningPublisher', () => {
     assert.equal(event.level, 'warning');
     assert.equal(event.payload.trackSid, stalledStat.trackSid);
     assert.equal(event.payload.trackType, 'video');
-    assert.equal(event.payload.frameRate, stalledStat.frameRate);
+    assert.equal(event.payload.frameRateReceived, stalledStat.frameRateReceived);
     assert.equal(event.payload.threshold, publisher._stallThreshold);
   });
 
   it('should not publish duplicate stalled events for the same track', () => {
     const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.2 }]));
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.1 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 0.2 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 0.1 }]));
     assert.equal(emittedEvents.length, 1);
   });
 
   it('should publish cleared events when frame rate improves', () => {
     const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.2 }]));
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 15 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 0.2 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 15 }]));
     assert.equal(emittedEvents.length, 2);
     const event = emittedEvents[1];
 
@@ -63,36 +63,36 @@ describe('TrackWarningPublisher', () => {
     assert.equal(event.level, 'info');
     assert.equal(event.payload.trackSid, trackSid);
     assert.equal(event.payload.trackType, 'video');
-    assert.equal(event.payload.frameRate, 15);
+    assert.equal(event.payload.frameRateReceived, 15);
     assert.equal(event.payload.threshold, publisher._stallThreshold);
   });
 
   it('should not publish cleared events for tracks that were not stalled', () => {
     const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._resumeThreshold }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: publisher._resumeThreshold }]));
     assert.equal(emittedEvents.length, 0);
   });
 
   it('should not publish events for undefined or null frame rates', () => {
     const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: undefined }]));
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: null }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: undefined }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: null }]));
     assert.equal(emittedEvents.length, 0);
   });
 
   it('should handle boundary values correctly', () => {
     const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._stallThreshold }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: publisher._stallThreshold }]));
     assert.equal(emittedEvents.length, 0);
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._stallThreshold - 0.1 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: publisher._stallThreshold - 0.1 }]));
     assert.equal(emittedEvents.length, 1);
     assert.equal(emittedEvents[0].group, 'track-warning-raised');
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: publisher._resumeThreshold }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: publisher._resumeThreshold }]));
 
     assert.equal(emittedEvents.length, 2);
     assert.equal(emittedEvents[1].group, 'track-warning-cleared');
@@ -103,22 +103,22 @@ describe('TrackWarningPublisher', () => {
     const track2 = 'MT456';
 
     publisher.processStats(createMockRemoteVideoStats([
-      { trackSid: track1, frameRate: 0.2 },
-      { trackSid: track2, frameRate: 0.3 },
+      { trackSid: track1, frameRateReceived: 0.2 },
+      { trackSid: track2, frameRateReceived: 0.3 },
     ]));
     assert.equal(emittedEvents.length, 2);
 
     publisher.processStats(createMockRemoteVideoStats([
-      { trackSid: track1, frameRate: 30 },
-      { trackSid: track2, frameRate: 0.3 },
+      { trackSid: track1, frameRateReceived: 30 },
+      { trackSid: track2, frameRateReceived: 0.3 },
     ]));
     assert.equal(emittedEvents.length, 3);
     assert.equal(emittedEvents[2].payload.trackSid, track1);
     assert.equal(emittedEvents[2].group, 'track-warning-cleared');
 
     publisher.processStats(createMockRemoteVideoStats([
-      { trackSid: track1, frameRate: 0.2 },
-      { trackSid: track2, frameRate: 0.3 },
+      { trackSid: track1, frameRateReceived: 0.2 },
+      { trackSid: track2, frameRateReceived: 0.3 },
     ]));
     assert.equal(emittedEvents.length, 4);
     assert.equal(emittedEvents[3].payload.trackSid, track1);
@@ -129,13 +129,13 @@ describe('TrackWarningPublisher', () => {
     const trackSid = 'MT123';
 
     // Report a stalled track for the first time
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.2 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 0.2 }]));
     assert.equal(emittedEvents.length, 1);
 
     publisher.cleanup();
 
     // After cleanup, reporting the same stalled track should emit the event again
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRate: 0.2 }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: 0.2 }]));
     assert.equal(emittedEvents.length, 2);
   });
 
