@@ -878,8 +878,9 @@ describe('connect', function() {
           nTracks: 0
         }), 'setting up room');
 
-        // NOTE(lrivas): Skip bitrate polling for Firefox with audio maxBitrate due to known bug
+        // NOTE(lrivas): Skip bitrate polling on Firefox when any maxBitrate is set due to known bugs
         // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
         if (isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined)) {
           return;
         }
@@ -900,7 +901,12 @@ describe('connect', function() {
       });
 
       ['audio', 'video'].forEach(kind => {
-        it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+        // NOTE(lrivas): Skip bitrate tests on Firefox when any maxBitrate is set due to known bugs
+        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
+        const shouldSkipBitrateTests = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
+
+        (shouldSkipBitrateTests ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           if (isRTCRtpSenderParamsSupported) {
             flatMap(peerConnections, pc => {
               return pc.getSenders().filter(({ track }) => track && track.kind === kind);
@@ -934,10 +940,7 @@ describe('connect', function() {
           });
         });
 
-        // NOTE(lrivas): Remove Firefox check once this Firefox bug is fixed
-        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
-        const shouldSkipBitrateTest = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
-        (shouldSkipBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+        (shouldSkipBitrateTests ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
           const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
           const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
           if (maxBitrates[kind]) {
