@@ -109,11 +109,13 @@ describe('LocalParticipant: regressions', function() {
       };
     });
 
-    after(() => {
+    after(async () => {
       thisTrack1.stop();
       thisTrack2.stop();
       [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('should eventually raise a "trackUnpublished" event for the unpublished LocalVideoTrack', () => {
@@ -247,10 +249,12 @@ describe('LocalParticipant: regressions', function() {
         };
       });
 
-      after(() => {
+      after(async () => {
         [thisLocalTrack1, thisLocalTrack2].forEach(track => track.stop && track.stop());
         [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it(`should eventually raise "trackPublished" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
@@ -431,9 +435,11 @@ describe('LocalParticipant: regressions', function() {
         });
       });
 
-      after(() => {
+      after(async () => {
         [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
     });
   });
@@ -495,14 +501,16 @@ describe('LocalParticipant: regressions', function() {
       assert.equal(localVideoTrackPublications.length, localVideoTracks.length);
     });
 
-    after(() => {
+    after(async () => {
       if (Array.isArray(localVideoTracks)) {
         localVideoTracks.forEach(track => track.stop());
       }
       if (room) {
         room.disconnect();
       }
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
   });
 
