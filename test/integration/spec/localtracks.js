@@ -117,9 +117,11 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
       }));
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       [aliceRoom, bobRoom, charlieRoom].forEach(room => room && room.disconnect());
-      return completeRoom(roomSid);
+      if (roomSid) {
+        await completeRoom(roomSid);
+      }
     });
 
     it('should continue media flow', async () => {

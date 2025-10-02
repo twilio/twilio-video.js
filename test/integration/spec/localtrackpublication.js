@@ -290,12 +290,19 @@ describe('LocalTrackPublication', function() {
         };
       });
 
-      after(() => {
+      after(async () => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {

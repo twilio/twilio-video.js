@@ -113,13 +113,15 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           });
         });
 
-        after(() => {
+        after(async () => {
           trackPublications = [];
           tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
           if (room) {
             room.disconnect();
           }
-          return completeRoom(sid);
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -202,10 +204,12 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
         throw new Error('Unexpected resolution');
       });
 
-      after(() => {
+      after(async () => {
         trackPublications = [];
         tracks.splice(0).forEach(track => track.kind !== 'data' && track.stop());
-        return completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
     });
 
@@ -504,13 +508,15 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           assert(trackPublicationFailed instanceof TwilioError);
         });
 
-        after(() => {
+        after(async () => {
           track.stop();
           tracks.splice(0).forEach(track => track.stop && track.stop());
           if (room) {
             room.disconnect();
           }
-          return completeRoom(sid);
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
