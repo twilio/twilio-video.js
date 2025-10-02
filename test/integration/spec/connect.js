@@ -535,8 +535,10 @@ describe('connect', function() {
 
     after(() => {
       tracks.forEach(track => track.kind !== 'data' && track.stop());
-      rooms.forEach(room => room.disconnect());
-      sid = sid || (rooms[0] && rooms[0].sid);
+      if (rooms) {
+        rooms.forEach(room => room.disconnect());
+      }
+      sid = sid || (rooms && rooms[0] && rooms[0].sid);
       return sid ? completeRoom(sid) : Promise.resolve();
     });
 
