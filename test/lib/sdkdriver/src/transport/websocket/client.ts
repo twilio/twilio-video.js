@@ -1,5 +1,5 @@
-import { EventEmitter } from 'events';
 import * as WebSocket from 'ws';
+import { EventEmitter } from 'events';
 import Transport from '../';
 
 /**
@@ -61,7 +61,7 @@ export default class WSClientTransport extends EventEmitter implements Transport
         this._sendBuffer.splice(0).forEach(item => wsClient.send(item));
         wsClient.removeEventListener('close', onopenfailed);
         wsClient.addEventListener('close', () => this.emit('close'));
-        wsClient.addEventListener('message', event => this.emit('message', JSON.parse(event.data)));
+        wsClient.addEventListener('message', event => this.emit('message', JSON.parse(event.data.toString())));
         resolve();
       });
     });
