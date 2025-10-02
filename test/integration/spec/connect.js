@@ -241,9 +241,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -823,7 +830,12 @@ describe('connect', function() {
       });
 
       after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
       });
     });
   });
@@ -1000,9 +1012,16 @@ describe('connect', function() {
         });
       });
 
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+      after(async () => {
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
     });
   });
@@ -1212,9 +1231,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -1374,9 +1400,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
 
@@ -1481,9 +1514,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
