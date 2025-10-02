@@ -1068,9 +1068,14 @@ describe('connect', function() {
       });
     });
 
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+    after(async () => {
+      if (thisRoom) {
+        thisRoom.disconnect();
+      }
+      if (thoseRooms) {
+        thoseRooms.forEach(room => room && room.disconnect());
+      }
+      await completeRoom(sid);
     });
   });
 
@@ -1165,10 +1170,17 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          (tracks || []).forEach(track => track.kind !== 'data' && track.stop());
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (tracks) {
+            tracks.forEach(track => track.kind !== 'data' && track.stop());
+          }
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          await completeRoom(sid);
         });
       });
     });
@@ -1310,12 +1322,14 @@ describe('connect', function() {
           assert(trackPublicationFailed instanceof TwilioError);
         });
 
-        after(() => {
+        after(async () => {
           (tracks || []).forEach(track => track.stop && track.stop());
           if (room) {
             room.disconnect();
           }
-          return completeRoom(sid);
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -1337,12 +1351,14 @@ describe('connect', function() {
       room = await connect(token, options);
     });
 
-    after(() => {
+    after(async () => {
       (tracks || []).forEach(track => track.kind !== 'data' && track.stop());
       if (room) {
         room.disconnect();
       }
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('eventually results in a LocalDataTrackPublication', async () => {
@@ -1474,11 +1490,13 @@ describe('connect', function() {
             });
           });
 
-          after(() => {
+          after(async () => {
             if (thisRoom) {
               thisRoom.disconnect();
             }
-            return completeRoom(sid);
+            if (sid) {
+              await completeRoom(sid);
+            }
           });
         });
       }
