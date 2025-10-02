@@ -358,12 +358,19 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
         };
       });
 
-      after(() => {
-        if (kind !== 'data') {
+      after(async () => {
+        if (kind !== 'data' && thisTrack) {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it('should raise a "trackPublished" event on the corresponding RemoteParticipant with a RemoteTrackPublication', () => {
@@ -643,12 +650,19 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
         };
       });
 
-      after(() => {
-        if (kind !== 'data') {
+      after(async () => {
+        if (kind !== 'data' && thisTrack) {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
