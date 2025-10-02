@@ -864,6 +864,13 @@ describe('connect', function() {
         video: encodingParameters.maxVideoBitrate
       };
 
+      // NOTE(lrivas): Skip entire test on Firefox when any maxBitrate is set
+      // Firefox times out during room setup with bitrate constraints
+      // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+      if (isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined)) {
+        return;
+      }
+
       let averageAudioBitrate;
       let averageVideoBitrate;
       let peerConnections;
@@ -877,13 +884,6 @@ describe('connect', function() {
           otherOptions: { tracks: [] },
           nTracks: 0
         }), 'setting up room');
-
-        // NOTE(lrivas): Skip bitrate polling on Firefox when any maxBitrate is set due to known bugs
-        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
-        if (isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined)) {
-          return;
-        }
 
         // Grab 10 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
@@ -901,12 +901,7 @@ describe('connect', function() {
       });
 
       ['audio', 'video'].forEach(kind => {
-        // NOTE(lrivas): Skip the "set maxBitrate" test on Firefox for this track kind when maxBitrate is set
-        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
-        const shouldSkipSetBitrateTest = isFirefox && maxBitrates[kind] !== undefined;
-
-        (shouldSkipSetBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+        it(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           if (isRTCRtpSenderParamsSupported) {
             flatMap(peerConnections, pc => {
               return pc.getSenders().filter(({ track }) => track && track.kind === kind);
@@ -940,9 +935,7 @@ describe('connect', function() {
           });
         });
 
-        // NOTE(lrivas): Skip the "limit bitrate" test when we skipped polling (any maxBitrate on Firefox)
-        const shouldSkipLimitBitrateTest = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
-        (shouldSkipLimitBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+        it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
           const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
           const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
           if (maxBitrates[kind]) {
@@ -956,8 +949,16 @@ describe('connect', function() {
       });
 
       after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          return completeRoom(sid);
+        }
+        return Promise.resolve();
       });
     });
   });
