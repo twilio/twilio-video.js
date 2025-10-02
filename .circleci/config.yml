@@ -73,7 +73,6 @@ executors:
         auth:
           username: $DOCKER_HUB_USERNAME
           password: $DOCKER_HUB_PASSWORD
-    resource_class: xlarge
     environment:
       <<: *defaultEnv
   generic-executor:
