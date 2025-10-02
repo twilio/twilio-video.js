@@ -527,6 +527,7 @@ describe('LocalTrackPublication', function() {
               tracks: []
             },
             bobOptions: { tracks: [] },
+            waitForMediaConnection: false  // Both join without tracks, publish later
           });
 
           const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
@@ -579,6 +580,7 @@ describe('LocalTrackPublication', function() {
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: { tracks: [] },
         bobOptions: { tracks: [] },
+        waitForMediaConnection: false  // Both join without tracks, publish later
       });
 
       // Bob publishes video trackA with low priority

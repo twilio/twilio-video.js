@@ -113,6 +113,7 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
       ({ roomName, roomSid, aliceRoom, bobLocal, bobRoom } = await setupAliceAndBob({
         aliceOptions: { tracks: [] },
         bobOptions: { tracks: [] },
+        waitForMediaConnection: false  // Both join without tracks, publish later
       }));
     });
 
