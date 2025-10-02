@@ -878,6 +878,12 @@ describe('connect', function() {
           nTracks: 0
         }), 'setting up room');
 
+        // NOTE(lrivas): Skip bitrate polling for Firefox with audio maxBitrate due to known bug
+        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+        if (isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined)) {
+          return;
+        }
+
         // Grab 10 samples. This is also enough time for RTCRtpSender.setParameters() to take effect
         // if applying bandwidth constraints, which is an asynchronous operation
         const bitrates = await waitFor(pollOutgoingBitrate(thisRoom, 10), `polling outgoing bitrate: ${thisRoom.sid}`);
@@ -928,22 +934,20 @@ describe('connect', function() {
           });
         });
 
-        // eslint-disable-next-line no-warning-comments
-        // TODO: Remove firefox check once this firefox bug is fixed
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
-        if (!isFirefox) {
-          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
-            const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
-            const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
-            if (maxBitrates[kind]) {
-              const hasLessBitrate = averageBitrate <= maxBitrates[kind];
-              assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-            } else {
-              const hasUnlimitedBitrate = averageBitrate > minBitrate;
-              assert(hasUnlimitedBitrate, `Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-            }
-          });
-        }
+        // NOTE(lrivas): Remove Firefox check once this Firefox bug is fixed
+        // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+        const shouldSkipBitrateTest = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
+        (shouldSkipBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+          const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
+          const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
+          if (maxBitrates[kind]) {
+            const hasLessBitrate = averageBitrate <= maxBitrates[kind];
+            assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+          } else {
+            const hasUnlimitedBitrate = averageBitrate > minBitrate;
+            assert(hasUnlimitedBitrate, `Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+          }
+        });
       });
 
       after(() => {
