@@ -60,7 +60,7 @@ function participantDisconnected(participant: Video.RemoteParticipant) {
 Alternatively, you can import just the definitions you need like so:
 
 ```ts
-import { RemoteParticiant } from 'twilio-video';
+import { RemoteParticipant } from 'twilio-video';
 
 function participantDisconnected(participant: RemoteParticipant) {
   console.log('Participant "%s" disconnected', participant.identity);
