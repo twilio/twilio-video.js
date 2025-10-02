@@ -5,6 +5,24 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 2.33.0 (in progress)
 ====================
 
+New Features
+------------
+
+### Advanced Insights
+
+Added new Insights events for enhanced monitoring and diagnostics when `insights` is enabled:
+
+- **Application Lifecycle Insights** - Monitor application visibility changes (backgrounded/resumed) and termination
+events.
+- **Network Information Insights** - Track connection type, bandwidth, RTT, and data saver mode changes.
+- **Quality Limitation Insights** - Report video quality limitation reasons (cpu, bandwidth, or other constraints).
+- **CPU Pressure Insights** - Monitor system CPU pressure states using the `Compute Pressure API`.
+- **getUserMedia Insights** - Track media acquisition success, permission denials, and failures.
+- **Track Warning Insights** - Report freeze counts for video tracks.
+
+These insights are automatically collected and reported through the existing insights pipeline when connecting to a
+Room.
+
 Changes
 ------------
 
