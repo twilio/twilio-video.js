@@ -418,9 +418,19 @@ describe('LocalTrackPublication', function() {
       }
 
       afterEach(async () => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        [...aliceTracks, ...bobTracks].forEach(track => track.stop && track.stop());
         if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (aliceTracks) {
+          aliceTracks.forEach(track => track.stop && track.stop());
+        }
+        if (bobTracks) {
+          bobTracks.forEach(track => track.stop && track.stop());
+        }
+        if (thisRoom && thisRoom.sid) {
           await completeRoom(thisRoom.sid);
         }
       });
