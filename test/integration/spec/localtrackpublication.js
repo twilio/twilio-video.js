@@ -290,12 +290,19 @@ describe('LocalTrackPublication', function() {
         };
       });
 
-      after(() => {
+      after(async () => {
         if (kind !== 'data') {
           thisTrack.stop();
         }
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it('should raise "unsubscribed" events on the corresponding RemoteParticipant\'s RemoteTrackPublications', async () => {
@@ -418,9 +425,19 @@ describe('LocalTrackPublication', function() {
       }
 
       afterEach(async () => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        [...aliceTracks, ...bobTracks].forEach(track => track.stop && track.stop());
         if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (aliceTracks) {
+          aliceTracks.forEach(track => track.stop && track.stop());
+        }
+        if (bobTracks) {
+          bobTracks.forEach(track => track.stop && track.stop());
+        }
+        if (thisRoom && thisRoom.sid) {
           await completeRoom(thisRoom.sid);
         }
       });
@@ -527,6 +544,7 @@ describe('LocalTrackPublication', function() {
               tracks: []
             },
             bobOptions: { tracks: [] },
+            waitForMediaConnection: false  // Both join without tracks, publish later
           });
 
           const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
@@ -579,6 +597,7 @@ describe('LocalTrackPublication', function() {
       const { roomSid, aliceRoom, bobRoom, bobLocal, bobRemote } = await setupAliceAndBob({
         aliceOptions: { tracks: [] },
         bobOptions: { tracks: [] },
+        waitForMediaConnection: false  // Both join without tracks, publish later
       });
 
       // Bob publishes video trackA with low priority

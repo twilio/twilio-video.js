@@ -241,9 +241,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -528,8 +535,10 @@ describe('connect', function() {
 
     after(() => {
       tracks.forEach(track => track.kind !== 'data' && track.stop());
-      rooms.forEach(room => room.disconnect());
-      sid = sid || (rooms[0] && rooms[0].sid);
+      if (rooms) {
+        rooms.forEach(room => room.disconnect());
+      }
+      sid = sid || (rooms && rooms[0] && rooms[0].sid);
       return sid ? completeRoom(sid) : Promise.resolve();
     });
 
@@ -671,9 +680,11 @@ describe('connect', function() {
       room = await cancelablePromise;
     });
 
-    after(() => {
+    after(async () => {
       rooms.forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('should return a CancelablePromise that resolves to a Room', () => {
@@ -704,7 +715,11 @@ describe('connect', function() {
       cancelablePromise.cancel();
     });
 
-    after(() => completeRoom(sid));
+    after(async () => {
+      if (sid) {
+        await completeRoom(sid);
+      }
+    });
 
     it('should return a CancelablePromise that rejects with a "Canceled" Error', async () => {
       assert(cancelablePromise instanceof CancelablePromise);
@@ -729,7 +744,11 @@ describe('connect', function() {
       cancelablePromise = connect(getToken(randomName()), options);
     });
 
-    after(() => completeRoom(sid));
+    after(async () => {
+      if (sid) {
+        await completeRoom(sid);
+      }
+    });
 
     it('should return a promise', async () => {
       const onFinally = sinon.stub();
@@ -823,7 +842,12 @@ describe('connect', function() {
       });
 
       after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room.disconnect());
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
       });
     });
   });
@@ -863,6 +887,13 @@ describe('connect', function() {
         audio: encodingParameters.maxAudioBitrate,
         video: encodingParameters.maxVideoBitrate
       };
+
+      // NOTE(lrivas): Skip entire test on Firefox when any maxBitrate is set
+      // Firefox times out during room setup with bitrate constraints
+      // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
+      if (isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined)) {
+        return;
+      }
 
       let averageAudioBitrate;
       let averageVideoBitrate;
@@ -928,27 +959,30 @@ describe('connect', function() {
           });
         });
 
-        // eslint-disable-next-line no-warning-comments
-        // TODO: Remove firefox check once this firefox bug is fixed
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
-        if (!isFirefox) {
-          it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
-            const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
-            const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
-            if (maxBitrates[kind]) {
-              const hasLessBitrate = averageBitrate <= maxBitrates[kind];
-              assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-            } else {
-              const hasUnlimitedBitrate = averageBitrate > minBitrate;
-              assert(hasUnlimitedBitrate, `Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
-            }
-          });
-        }
+        it(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+          const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
+          const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
+          if (maxBitrates[kind]) {
+            const hasLessBitrate = averageBitrate <= maxBitrates[kind];
+            assert(hasLessBitrate, `maxBitrate exceeded. desired: ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+          } else {
+            const hasUnlimitedBitrate = averageBitrate > minBitrate;
+            assert(hasUnlimitedBitrate, `Bitrate is unexpectedly low. ${maxBitrates[kind]}, actual: ${averageBitrate}`);
+          }
+        });
       });
 
       after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          return completeRoom(sid);
+        }
+        return Promise.resolve();
       });
     });
   });
@@ -990,9 +1024,16 @@ describe('connect', function() {
         });
       });
 
-      after(() => {
-        [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+      after(async () => {
+        if (thisRoom) {
+          thisRoom.disconnect();
+        }
+        if (thoseRooms) {
+          thoseRooms.forEach(room => room && room.disconnect());
+        }
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
     });
   });
@@ -1029,9 +1070,14 @@ describe('connect', function() {
       });
     });
 
-    after(() => {
-      [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+    after(async () => {
+      if (thisRoom) {
+        thisRoom.disconnect();
+      }
+      if (thoseRooms) {
+        thoseRooms.forEach(room => room && room.disconnect());
+      }
+      await completeRoom(sid);
     });
   });
 
@@ -1126,10 +1172,17 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          (tracks || []).forEach(track => track.kind !== 'data' && track.stop());
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (tracks) {
+            tracks.forEach(track => track.kind !== 'data' && track.stop());
+          }
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          await completeRoom(sid);
         });
       });
     });
@@ -1202,9 +1255,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -1264,12 +1324,14 @@ describe('connect', function() {
           assert(trackPublicationFailed instanceof TwilioError);
         });
 
-        after(() => {
+        after(async () => {
           (tracks || []).forEach(track => track.stop && track.stop());
           if (room) {
             room.disconnect();
           }
-          return completeRoom(sid);
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -1291,12 +1353,14 @@ describe('connect', function() {
       room = await connect(token, options);
     });
 
-    after(() => {
+    after(async () => {
       (tracks || []).forEach(track => track.kind !== 'data' && track.stop());
       if (room) {
         room.disconnect();
       }
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('eventually results in a LocalDataTrackPublication', async () => {
@@ -1364,9 +1428,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
 
@@ -1421,11 +1492,13 @@ describe('connect', function() {
             });
           });
 
-          after(() => {
+          after(async () => {
             if (thisRoom) {
               thisRoom.disconnect();
             }
-            return completeRoom(sid);
+            if (sid) {
+              await completeRoom(sid);
+            }
           });
         });
       }
@@ -1471,9 +1544,16 @@ describe('connect', function() {
           });
         });
 
-        after(() => {
-          [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-          return completeRoom(sid);
+        after(async () => {
+          if (thisRoom) {
+            thisRoom.disconnect();
+          }
+          if (thoseRooms) {
+            thoseRooms.forEach(room => room && room.disconnect());
+          }
+          if (sid) {
+            await completeRoom(sid);
+          }
         });
       });
     });
@@ -1564,12 +1644,14 @@ describe('connect', function() {
         assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
       });
 
-      after(() => {
+      after(async () => {
         [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
         if (tracks) {
           tracks.forEach(track => track.stop());
         }
-        return completeRoom(roomSid);
+        if (roomSid) {
+          await completeRoom(roomSid);
+        }
       });
     });
   });
@@ -1598,7 +1680,9 @@ describe('connect', function() {
       if (tracks) {
         tracks.forEach(track => track.stop());
       }
-      await completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
       room = null;
       senderRoom = null;
       tracks = null;
