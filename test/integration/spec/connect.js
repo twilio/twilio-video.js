@@ -901,12 +901,12 @@ describe('connect', function() {
       });
 
       ['audio', 'video'].forEach(kind => {
-        // NOTE(lrivas): Skip bitrate tests on Firefox when any maxBitrate is set due to known bugs
+        // NOTE(lrivas): Skip the "set maxBitrate" test on Firefox for this track kind when maxBitrate is set
         // [maxBitrate not working for audio RTCRtpSender (opus)](https://bugzilla.mozilla.org/show_bug.cgi?id=1573726)
         // https://bugzilla.mozilla.org/show_bug.cgi?id=1688342
-        const shouldSkipBitrateTests = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
+        const shouldSkipSetBitrateTest = isFirefox && maxBitrates[kind] !== undefined;
 
-        (shouldSkipBitrateTests ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
+        (shouldSkipSetBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}set the .max${capitalize(kind)}Bitrate`, () => {
           if (isRTCRtpSenderParamsSupported) {
             flatMap(peerConnections, pc => {
               return pc.getSenders().filter(({ track }) => track && track.kind === kind);
@@ -940,7 +940,9 @@ describe('connect', function() {
           });
         });
 
-        (shouldSkipBitrateTests ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
+        // NOTE(lrivas): Skip the "limit bitrate" test when we skipped polling (any maxBitrate on Firefox)
+        const shouldSkipLimitBitrateTest = isFirefox && (maxBitrates.audio !== undefined || maxBitrates.video !== undefined);
+        (shouldSkipLimitBitrateTest ? it.skip : it)(`should ${maxBitrates[kind] ? '' : 'not '}limit the ${kind} bitrate`, () => {
           const averageBitrate = kind === 'audio' ? averageAudioBitrate : averageVideoBitrate;
           const minBitrate = kind === 'audio' ? minAudioBitrate : minVideoBitrate;
           if (maxBitrates[kind]) {
