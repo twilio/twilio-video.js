@@ -15,10 +15,11 @@ describe('LocalVideoTrackStats', () => {
       frameWidthSent: 160,
       frameHeightSent: 120,
       frameRateInput: 29,
-      frameRateSent: 25
+      frameRateSent: 25,
+      qualityLimitationReason: 'none',
     };
 
-    it('should set the captureDimensions, dimensions, captureFrameRate and frameRate properties', () => {
+    it('should set the captureDimensions, dimensions, captureFrameRate, frameRate, and qualityLimitationReason properties', () => {
       const trackStats = new LocalVideoTrackStats(stats.trackId, stats);
       assert.deepEqual(trackStats.captureDimensions, {
         width: stats.frameWidthInput,
@@ -30,13 +31,15 @@ describe('LocalVideoTrackStats', () => {
       });
       assert.equal(trackStats.captureFrameRate, stats.frameRateInput);
       assert.equal(trackStats.frameRate, stats.frameRateSent);
+      assert.equal(trackStats.qualityLimitationReason, stats.qualityLimitationReason);
     });
 
     [
       [['frameWidthInput', 'frameHeightInput'], 'captureDimensions'],
       [['frameWidthSent', 'frameHeightSent'], 'dimensions'],
       [['frameRateInput'], 'captureFrameRate'],
-      [['frameRateSent'], 'frameRate']
+      [['frameRateSent'], 'frameRate'],
+      [['qualityLimitationReason'], 'qualityLimitationReason']
     ].forEach(([statNames, prop]) => {
       context(`when the StandardizedTrackStatsReport does not have ${statNames.join(', ')}`, () => {
         it(`should set the ${prop} property to null`, () => {

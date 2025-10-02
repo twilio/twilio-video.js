@@ -287,6 +287,7 @@ export class LocalVideoTrackStats extends LocalTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   captureFrameRate: number | null;
   frameRate: number | null;
+  qualityLimitationReason?: 'none' | 'cpu' | 'bandwidth' | 'other';
 }
 
 export class LocalAudioTrackStats extends LocalTrackStats {
@@ -296,16 +297,17 @@ export class LocalAudioTrackStats extends LocalTrackStats {
 export class RemoteTrackStats extends TrackStats {
   bytesReceived: number | null;
   packetsReceived: number | null;
+  jitter: number | null;
 }
 
 export class RemoteAudioTrackStats extends RemoteTrackStats {
   audioLevel: AudioLevel | null;
-  jitter: number | null;
 }
 
 export class RemoteVideoTrackStats extends RemoteTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   frameRate: number | null;
+  freezeCount?: number;
 }
 
 export class StatsReport {
