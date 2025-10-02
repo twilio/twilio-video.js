@@ -1,4 +1,4 @@
-The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
+The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the latest Video JavaScript SDK.
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
