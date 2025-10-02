@@ -678,9 +678,11 @@ describe('connect', function() {
       room = await cancelablePromise;
     });
 
-    after(() => {
+    after(async () => {
       rooms.forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('should return a CancelablePromise that resolves to a Room', () => {
@@ -711,7 +713,11 @@ describe('connect', function() {
       cancelablePromise.cancel();
     });
 
-    after(() => completeRoom(sid));
+    after(async () => {
+      if (sid) {
+        await completeRoom(sid);
+      }
+    });
 
     it('should return a CancelablePromise that rejects with a "Canceled" Error', async () => {
       assert(cancelablePromise instanceof CancelablePromise);
@@ -736,7 +742,11 @@ describe('connect', function() {
       cancelablePromise = connect(getToken(randomName()), options);
     });
 
-    after(() => completeRoom(sid));
+    after(async () => {
+      if (sid) {
+        await completeRoom(sid);
+      }
+    });
 
     it('should return a promise', async () => {
       const onFinally = sinon.stub();
@@ -1614,12 +1624,14 @@ describe('connect', function() {
         assert(bitrateTests[bobDtx](bobBitrateSpeechAvg, bobBitrateSilenceAvg));
       });
 
-      after(() => {
+      after(async () => {
         [aliceRoom, bobRoom].forEach(room => room && room.disconnect());
         if (tracks) {
           tracks.forEach(track => track.stop());
         }
-        return completeRoom(roomSid);
+        if (roomSid) {
+          await completeRoom(roomSid);
+        }
       });
     });
   });
@@ -1648,7 +1660,9 @@ describe('connect', function() {
       if (tracks) {
         tracks.forEach(track => track.stop());
       }
-      await completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
       room = null;
       senderRoom = null;
       tracks = null;
