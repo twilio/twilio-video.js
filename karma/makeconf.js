@@ -76,7 +76,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     const mochaOptions = {
       require: requires,
       bail: false, // when set to true this would fail the run after 1st test failure.
-      retries: 2  // Retry flaky tests
     };
 
     // we'll mark our unstable tests with @unstable
