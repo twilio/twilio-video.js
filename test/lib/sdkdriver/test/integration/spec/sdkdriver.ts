@@ -27,7 +27,7 @@ describe('SDKDriver', function() {
             transport = new WSServerTransport(browserDriver.webServer);
           });
 
-          context(`should create an SDKDriver with the WSServerTransport and the BrowserDriver`, () => {
+          context('should create an SDKDriver with the WSServerTransport and the BrowserDriver', () => {
             let sdkDriver: SDKDriver;
 
             before(async () => {

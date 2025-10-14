@@ -51,12 +51,12 @@ m=${kind} 9 UDP/TLS/RTP/SAVPF ${codecs}\r
 c=IN IP4 0.0.0.0\r
 ${bLine}a=sendrecv\r
 ${kind === 'video'
-    ? 'a=rtpmap:120 VP8/90000\r\n' +
+  ? 'a=rtpmap:120 VP8/90000\r\n' +
         'a=rtpmap:121 VP9/90000\r\n' +
         'a=rtpmap:126 H264/90000\r\n' +
         'a=rtpmap:97 H264/180000\r\n' +
         'a=rtpmap:99 rtx/8000'
-    : 'a=rtpmap:109 opus/48000/2\r\n' +
+  : 'a=rtpmap:109 opus/48000/2\r\n' +
         'a=rtpmap:9 G722/8000/1\r\n' +
         'a=rtpmap:0 PCMU/8000\r\n' +
         'a=rtpmap:8 PCMA/8000\r\n' +

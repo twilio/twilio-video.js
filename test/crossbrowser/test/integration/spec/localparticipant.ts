@@ -33,7 +33,7 @@ describe('LocalParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant subscribing to the LocalTrack is in ${x}`
       ]
-    ], ([ shouldPublishSucceed, ...browsers ]) => {
+    ], ([shouldPublishSucceed, ...browsers]) => {
       let error: any;
       let localTrack: LocalDataTrackDriver | LocalMediaTrackDriver;
       let localTrackPublication: LocalTrackPublicationDriver;
@@ -80,7 +80,7 @@ describe('LocalParticipantDriver', function() {
           error = e;
         }
 
-        [ trackEventData, remoteTrack ] = await Promise.all([
+        [trackEventData, remoteTrack] = await Promise.all([
           trackEvent,
           remoteTrackEvent
         ]);
@@ -132,7 +132,7 @@ describe('LocalParticipantDriver', function() {
 
         it('should emit a "trackPublicationFailed" event on the LocalParticipantDriver with a TwilioError and the '
           + 'LocalTrackDriver', () => {
-          const [ _error, _localTrack ] = trackEventData;
+          const [_error, _localTrack] = trackEventData;
           assert.equal(_localTrack, localTrack);
           assert(error instanceof Error);
           ['code', 'message'].forEach(prop => {
@@ -166,11 +166,11 @@ describe('LocalParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant subscribing to the LocalTracks is in ${x}`
       ]
-    ], ([ shouldPublishSucceed, ...browsers ]) => {
+    ], ([shouldPublishSucceed, ...browsers]) => {
       let error: any;
-      let localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
+      let localTracks: Array<LocalDataTrackDriver | LocalMediaTrackDriver>;
       let localTrackPublications: Array<LocalTrackPublicationDriver>;
-      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver | RemoteMediaTrackDriver>;
       let roomDrivers: Array<RoomDriver>;
       let trackEventData: any;
       let videoDrivers: Array<VideoDriver>;
@@ -226,7 +226,7 @@ describe('LocalParticipantDriver', function() {
           error = e;
         }
 
-        [ trackEventData, remoteTracks ] = await Promise.all([
+        [trackEventData, remoteTracks] = await Promise.all([
           trackEvent,
           remoteTrackEvent
         ]);
@@ -297,7 +297,7 @@ describe('LocalParticipantDriver', function() {
         });
 
         it('should emit a "trackPublicationFailed" event on the LocalParticipantDriver with a TwilioError and the LocalTrackDriver', () => {
-          const [ _error, _localTrack ] = trackEventData;
+          const [_error, _localTrack] = trackEventData;
           const localTrack = localTracks.find(track => track.kind === 'audio');
           assert.equal(_localTrack, localTrack);
           assert(error instanceof Error);
@@ -328,7 +328,7 @@ describe('LocalParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => x
       ]
-    ], ([ encodingParameters, browser ]) => {
+    ], ([encodingParameters, browser]) => {
       const isEncodingParamsInvalid: boolean = typeof encodingParameters.maxAudioBitrate === 'string';
       let error: any;
       let roomDriver: RoomDriver;
@@ -378,7 +378,7 @@ describe('LocalParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant unsubscribing from the LocalTrack is in ${x}`
       ]
-    ], ([ shouldUnpublishSucceed, ...browsers ]) => {
+    ], ([shouldUnpublishSucceed, ...browsers]) => {
       let error: any;
       let localTrack: LocalDataTrackDriver | LocalMediaTrackDriver;
       let localTrackPublication: LocalTrackPublicationDriver;
@@ -486,11 +486,11 @@ describe('LocalParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant unsubscribing from the LocalTracks is in ${x}`
       ]
-    ], ([ shouldUnpublishSucceed, ...browsers ]) => {
+    ], ([shouldUnpublishSucceed, ...browsers]) => {
       let error: any;
-      let localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
+      let localTracks: Array<LocalDataTrackDriver | LocalMediaTrackDriver>;
       let localTrackPublications: Array<LocalTrackPublicationDriver>;
-      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver | RemoteMediaTrackDriver>;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
 
@@ -517,14 +517,14 @@ describe('LocalParticipantDriver', function() {
 
         const remoteTrackEvent: Promise<any> = shouldUnpublishSucceed
           ? new Promise(resolve => {
-              const remoteTracks: Array<Any> = [];
-              participant.on('trackUnsubscribed', track => {
-                remoteTracks.push(track);
-                if (remoteTracks.length === localTracks.length) {
-                  resolve(remoteTracks);
-                }
-              });
-            })
+            const remoteTracks: Array<any> = [];
+            participant.on('trackUnsubscribed', track => {
+              remoteTracks.push(track);
+              if (remoteTracks.length === localTracks.length) {
+                resolve(remoteTracks);
+              }
+            });
+          })
           : Promise.resolve();
 
         try {

@@ -304,12 +304,10 @@ describe('LocalParticipant: regressions', function() {
 
     combinationContext([
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, 25000, 0],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, 45000, 0],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
@@ -567,7 +565,7 @@ describe('LocalParticipant: regressions', function() {
         localAudioTrack = await createLocalAudioTrack({ fake: true });
         const token = getToken(randomName());
         const options = Object.assign({ tracks: [localAudioTrack] }, defaults);
-        // eslint-disable-next-line no-await-in-loop
+
         room = await setupRoom(token, options);
         if (room) {
           room.disconnect();

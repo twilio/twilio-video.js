@@ -1,7 +1,5 @@
-/* eslint-disable no-useless-catch */
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-return-assign */
-/* eslint-disable no-console */
 /* eslint-disable no-invalid-this */
 /* eslint-disable no-undef */
 'use strict';
@@ -1536,9 +1534,9 @@ o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
 a=group:BUNDLE ${isFirefox && firefoxVersion < 63
-    ? 'sdparta_0'
-    : sdpFormat === 'unified'
-      ? '0' : 'audio'}\r
+  ? 'sdparta_0'
+  : sdpFormat === 'unified'
+    ? '0' : 'audio'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1547,9 +1545,9 @@ a=ice-ufrag:hml5\r
 a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
 a=mid:${isFirefox && firefoxVersion < 63
-    ? 'sdparta_0'
-    : sdpFormat === 'unified'
-      ? '0' : 'audio'}\r
+  ? 'sdparta_0'
+  : sdpFormat === 'unified'
+    ? '0' : 'audio'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r
@@ -1735,7 +1733,7 @@ a=fingerprint:sha-256 0F:F6:1E:6F:88:AC:BA:0F:D1:4D:D7:0C:E2:B7:8E:93:CA:75:C8:8
     let timer = null;
     const timeoutPromise = new Promise((_resolve, reject) => {
       timer = setTimeout(() => {
-        // eslint-disable-next-line no-console
+
         reject(new Error(`Timed out waiting for ${event} to fire`));
       }, timeoutMS);
     });

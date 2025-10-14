@@ -4,7 +4,7 @@ export interface LocalTrackOptions {
   /**
    * @deprecated
    */
-    logLevel?: LogLevel | LogLevels;
-    name?: string;
-    workaroundWebKitBug1208516?: boolean
-  }
+  logLevel?: LogLevel | LogLevels;
+  name?: string;
+  workaroundWebKitBug1208516?: boolean
+}

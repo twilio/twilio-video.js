@@ -74,7 +74,7 @@ export default class RemoteParticipantDriver extends ParticipantDriver {
    */
   private _reemitTrackMessage(source: any, args: any): void {
     this._update(source);
-    const [ data, serializedRemoteTrack ] = args;
+    const [data, serializedRemoteTrack] = args;
     this.emit('trackMessage', data, this.tracks.get(serializedRemoteTrack.id));
   }
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -536,7 +535,6 @@ describe('Room', function() {
       }));
 
       thisRoom.disconnect();
-      // eslint-disable-next-line require-atomic-updates
       thatParticipant = await participantDisconnected;
       tracksAfter = [...thatParticipant._tracks.values()];
       publicationsAfter = [...thatParticipant.tracks.values()];

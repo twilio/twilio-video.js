@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import {
@@ -40,7 +39,7 @@ export function setDefaultMediaStreamEventPublisher(publisher?: MediaStreamEvent
 
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
-type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode? : DefaultDeviceCaptureMode };
+type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode?: DefaultDeviceCaptureMode };
 type ExtraLocalTrackOptions = { audio: ExtraLocalAudioTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {

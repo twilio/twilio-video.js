@@ -35,7 +35,6 @@ async function createRoom(name, type, roomOptions) {
     return sid;
   }
 
-  // eslint-disable-next-line no-console
   console.warn(`Could not create ${type} Room: ${name}: `, roomsResults);
   throw new Error(`Could not create ${type} Room: ${name}`);
 }

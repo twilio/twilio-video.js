@@ -52,14 +52,14 @@ export interface AudioProcessor {
    * destroys the processor freeing up any resources
    * @returns {void}
    */
-  destroy:() => void;
+  destroy: () => void;
 
   /**
    * enables/disables logging
    * @param {boolean} [enable] - Specify true to enable logging
    * @returns {void}
    */
-  setLogging:(enable: boolean) => void;
+  setLogging: (enable: boolean) => void;
 }
 
 

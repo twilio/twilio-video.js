@@ -46,8 +46,8 @@ describe('WSClientTransport', () => {
     });
 
     [
-      {event: 'open', readyState: 'OPEN'},
-      {event: 'close', readyState: 'CLOSED'}
+      { event: 'open', readyState: 'OPEN' },
+      { event: 'close', readyState: 'CLOSED' }
     ].forEach(({ event, readyState }) => {
       context(`when the WebSocket ${event === 'open' ? 'opens' : 'fails to open'}`, () => {
         let promise: Promise<void>;
@@ -63,7 +63,7 @@ describe('WSClientTransport', () => {
 
           const wsEvent = {
             type: event,
-            ...{close: {code: 1, reason: 'bar'}, open: {}}[event]
+            ...{ close: { code: 1, reason: 'bar' }, open: {} }[event]
           };
           wsClient.dispatchEvent(wsEvent);
         });
@@ -86,11 +86,11 @@ describe('WSClientTransport', () => {
         it('should not send any buffered messages', async () => {
           try {
             await promise;
-          } catch (e) {
+          } catch {
             sinon.assert.notCalled(wsClient.send);
             return;
           }
-          throw(new Error('Unexpected resolution'));
+          throw new Error('Unexpected resolution');
         });
 
         it('should reject the returned Promise', async () => {
@@ -101,7 +101,7 @@ describe('WSClientTransport', () => {
             assert.equal(e.message, 'bar');
             return;
           }
-          throw(new Error('Unexpected resolution'));
+          throw new Error('Unexpected resolution');
         });
       });
     });

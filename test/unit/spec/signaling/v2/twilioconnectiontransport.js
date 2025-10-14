@@ -44,7 +44,6 @@ describe('TwilioConnectionTransport', () => {
       // eslint-disable-next-line
       [{ video: { maxTracks: 2, trackSwitchOffMode: 'disabled' } }, { video: { max_tracks: 2, track_switch_off: 'disabled' } }],
       // eslint-disable-next-line
-      // eslint-disable-next-line
       [{ video: { dominantSpeakerPriority: 'zee' } }, { video: { active_speaker_priority: 'zee' } }],
       // eslint-disable-next-line
       [{ video: { renderDimensions: { high: { width: 200, height: 400 } } } }, { video: { render_dimensions: { high: { width: 200, height: 400 } } } }],
@@ -52,7 +51,6 @@ describe('TwilioConnectionTransport', () => {
       [{ video: { renderDimensions: { low: { width: 600, height: 800 } } } }, { video: { render_dimensions: { low: { width: 600, height: 800 } } } }],
       // eslint-disable-next-line
       [{ video: { renderDimensions: { standard: { width: 1000, height: 1200 } } } }, { video: { render_dimensions: { standard: { width: 1000, height: 1200 } } } }],
-      // eslint-disable-next-line
       [
         {
           video: {

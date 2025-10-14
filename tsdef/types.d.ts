@@ -165,7 +165,7 @@ export interface LocalTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
+export interface MediaStreamTrackPublishOptions extends LocalTrackOptions {
   priority?: Track.Priority;
 }
 
@@ -210,7 +210,7 @@ export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
 }
 
 export interface ConnectOptions extends MediaImplementationOptions {
-  audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -323,14 +323,12 @@ export interface CancelablePromise<T> extends Promise<T> {
 }
 
 export type TranscriptionEvent = {
-  /* eslint-disable camelcase */
   language_code: string;
   partial_results: boolean;
   sequence_number: number;
-  /* eslint-enable camelcase */
   participant: string;
   timestamp: string;
   track: string;
   transcription: string;
   type: 'extension_transcriptions';
-}
+};

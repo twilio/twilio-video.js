@@ -168,7 +168,6 @@ describe('MediaTrackSender', () => {
       trackSender.addSender(rtpSender2);
       trackSender.addSender(rtpSender1, publisherHintCallback);
 
-      // eslint-disable-next-line camelcase
       const result = await trackSender.setPublisherHint(encodings);
       assert.strictEqual(result, 'OK');
     });

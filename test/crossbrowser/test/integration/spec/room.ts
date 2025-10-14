@@ -141,7 +141,7 @@ describe('RoomDriver', function() {
         ['chrome', 'firefox'],
         x => `when the second Participant is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       let participantDriver: RemoteParticipantDriver;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
@@ -199,11 +199,11 @@ describe('RoomDriver', function() {
         ['chrome', 'firefox'],
         x => `when the second Participant is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       const shouldRemoveTracks = /^track(Removed|Unsubscribed)$/.test(event);
       let roomDrivers: Array<RoomDriver>;
-      const localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
-      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
+      const localTracks: Array<LocalDataTrackDriver | LocalMediaTrackDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver | RemoteMediaTrackDriver>;
       let videoDrivers: Array<VideoDriver>;
 
       before(async () => {
