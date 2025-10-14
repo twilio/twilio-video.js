@@ -98,7 +98,7 @@ describe('WSServerTransport', () => {
             assert.equal(e, openError);
             return;
           }
-          throw(new Error('Unexpected resolution'));
+          throw new Error('Unexpected resolution');
         });
       });
     });

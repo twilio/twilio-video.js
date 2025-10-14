@@ -48,7 +48,6 @@ describe('connect', () => {
       mockSignaling.connect = () => Promise.resolve(() => new RoomSignaling());
       const signaling = sinon.spy(() => mockSignaling);
 
-      // eslint-disable-next-line no-undefined
       connect(token, {
         iceServers: [],
         loggerName: undefined,

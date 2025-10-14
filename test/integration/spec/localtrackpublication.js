@@ -73,7 +73,7 @@ describe('LocalTrackPublication', function() {
 
     const trackPriorityChanged = new Promise(resolve => trackAPubRemote.once('publishPriorityChanged', priority => {
       assert.equal(priority, PRIORITY_HIGH);
-      // eslint-disable-next-line no-console
+
       console.log('alice saw track priority high');
       resolve();
     }));
@@ -357,7 +357,7 @@ describe('LocalTrackPublication', function() {
   });
 
   (defaults.topology === 'peer-to-peer' ? describe.skip : describe)('#setPriority', function() {
-    // eslint-disable-next-line no-invalid-this
+
     describe('three participant tests', () => {
       let thisRoom;
       let thoseRooms;

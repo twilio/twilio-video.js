@@ -82,7 +82,7 @@ declare interface PreflightStats {
 
 declare interface PreflightTestReportInternal extends PreflightTestReport {
   error?: string,
-  mos?: Stats|null
+  mos?: Stats | null
 }
 
 declare interface PreflightOptionsInternal extends PreflightOptions {
@@ -175,7 +175,7 @@ export class PreflightTest extends EventEmitter {
     };
   }
 
-  private async _executePreflightStep<T>(stepName: string, step: () => T|Promise<T>, timeoutError?: TwilioError|Error) : Promise<T> {
+  private async _executePreflightStep<T>(stepName: string, step: () => T | Promise<T>, timeoutError?: TwilioError | Error) : Promise<T> {
     this._log.debug('Executing step: ', stepName);
     const MAX_STEP_DURATION = this._testDuration + 10 * SECOND;
     if (this._stopped) {

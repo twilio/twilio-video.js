@@ -65,7 +65,7 @@ export default class LocalParticipantDriver extends ParticipantDriver {
    */
   private _reemitTrackPublicationFailed(source: any, args: any): void {
     this._update(source);
-    const [ serializedError, serializedLocalTrack ] = args;
+    const [serializedError, serializedLocalTrack] = args;
     const localTrack: TrackDriver = this._removeOrGetRemovedTrack(serializedLocalTrack.id);
     const error: any = new Error(serializedError.message);
     error.code = serializedError.code;

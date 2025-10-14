@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { RTCIceCandidateStats, SelectedIceCandidatePairStats,  } from '../../tsdef/PreflightTypes';
 import type { RTCIceCandidatePairStats } from './rtctypes';
 
@@ -98,7 +97,7 @@ function makeStandardCandidateStats(input: any) : RTCIceCandidateStats {
 }
 
 function extractSelectedActiveCandidatePair(stats: RTCStatsReport) : SelectedIceCandidatePairStats | null {
-  let selectedCandidatePairId:string|null = null;
+  let selectedCandidatePairId:string | null = null;
   const candidatePairs: RTCIceCandidatePairStats[] = [];
   stats.forEach(stat => {
     if (stat.type === 'transport' && stat.selectedCandidatePairId) {

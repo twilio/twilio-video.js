@@ -12,7 +12,7 @@ export const isSupported: boolean;
 export const version:string;
 export const Logger: Log.RootLogger;
 export function connect(token: string, options?: ConnectOptions): CancelablePromise<Room>;
-export function createLocalAudioTrack(options?: CreateLocalTrackOptions|CreateLocalAudioTrackOptions): Promise<LocalAudioTrack>;
+export function createLocalAudioTrack(options?: CreateLocalTrackOptions | CreateLocalAudioTrackOptions): Promise<LocalAudioTrack>;
 export function createLocalTracks(options?: CreateLocalTracksOptions): Promise<LocalTrack[]>;
 export function createLocalVideoTrack(options?: CreateLocalTrackOptions): Promise<LocalVideoTrack>;
 export function runPreflight(token: string, options?: PreflightOptions): PreflightTest;

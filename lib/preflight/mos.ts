@@ -35,7 +35,7 @@ export function calculateMOS(rtt: number, jitter: number, fractionLost: number):
   return mos;
 }
 
-export function mosToScore(mosValue: number|null|undefined): number {
+export function mosToScore(mosValue: number | null | undefined): number {
   let score = 0;
   if (!mosValue) {
     score = 0;

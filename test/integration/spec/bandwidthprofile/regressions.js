@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -32,7 +30,6 @@ function monitorTrackSwitchOffs(remoteTrack, trackName) {
 describe('BandwidthProfileOptions: regressions', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(120 * 1000);
-  // eslint-disable-next-line no-invalid-this
   // this.retries(2);
 
   if (defaults.topology === 'peer-to-peer') {

@@ -24,7 +24,7 @@ describe('VideoDriver', function() {
         [true, false],
         x => `when ${x ? 'successful' : 'unsuccessful'}`
       ]
-    ], async ([ browser, shouldConnectSucceed ]) => {
+    ], async ([browser, shouldConnectSucceed]) => {
       let error: TwilioError;
       let name: string;
       let roomDriver: RoomDriver;
@@ -114,7 +114,7 @@ describe('VideoDriver', function() {
           localTracks = await videoDriver.createLocalTracks(options);
         });
 
-        it(`should return an array of LocalMediaTrackDrivers`, () => {
+        it('should return an array of LocalMediaTrackDrivers', () => {
           assert(localTracks);
           localTracks.forEach(track => {
             assert(track instanceof LocalMediaTrackDriver);

@@ -31,7 +31,7 @@ describe('RemoteParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the second Participant is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       let participantDriver: RemoteParticipantDriver;
       let roomDrivers: Array<RoomDriver>;
       let videoDrivers: Array<VideoDriver>;
@@ -82,11 +82,11 @@ describe('RemoteParticipantDriver', function() {
         ['chrome', 'firefox'],
         x => `when the second Participant is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       const shouldRemoveTracks = /^track(Removed|Unsubscribed)$/.test(event);
       let roomDrivers: Array<RoomDriver>;
-      const localTracks: Array<LocalDataTrackDriver|LocalMediaTrackDriver>;
-      let remoteTracks: Array<RemoteDataTrackDriver|RemoteMediaTrackDriver>;
+      const localTracks: Array<LocalDataTrackDriver | LocalMediaTrackDriver>;
+      let remoteTracks: Array<RemoteDataTrackDriver | RemoteMediaTrackDriver>;
       let videoDrivers: Array<VideoDriver>;
 
       before(async () => {
@@ -117,7 +117,7 @@ describe('RemoteParticipantDriver', function() {
           remoteTracks = [];
 
           for (let track of localTracks) {
-            const trackEvent: Promise<RemoteDataTrackDriver|RemoteMediaTrackDriver> = new Promise(resolve => {
+            const trackEvent: Promise<RemoteDataTrackDriver | RemoteMediaTrackDriver> = new Promise(resolve => {
               participantDriver.once(event, resolve);
             });
             await localParticipant.unpublishTrack(track);

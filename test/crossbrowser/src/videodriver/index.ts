@@ -78,7 +78,7 @@ export default class VideoDriver {
    * @param {LocalDataTrackOptions|CreateLocalTrackOptions} options
    * @returns {Promise<LocalDataTrackDriver|LocalMediaTrackDriver>}
    */
-  private async _createLocalTrack(kind: string, options: any): Promise<LocalDataTrackDriver|LocalMediaTrackDriver> {
+  private async _createLocalTrack(kind: string, options: any): Promise<LocalDataTrackDriver | LocalMediaTrackDriver> {
     this._sdkDriver = this._sdkDriver || await createSdkDriver(this._options);
 
     const { error, result } = await this._sdkDriver.sendRequest({

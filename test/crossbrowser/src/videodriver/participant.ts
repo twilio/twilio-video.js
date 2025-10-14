@@ -50,9 +50,9 @@ export default class ParticipantDriver extends EventEmitter {
    * @param {typeof TrackDriver} MediaTrackDriver
    */
   constructor(sdkDriver: SDKDriver,
-              serializedParticipant: any,
-              DataTrackDriver: typeof TrackDriver,
-              MediaTrackDriver: typeof TrackDriver) {
+    serializedParticipant: any,
+    DataTrackDriver: typeof TrackDriver,
+    MediaTrackDriver: typeof TrackDriver) {
     super();
     this.audioTracks = new Map();
     this.dataTracks = new Map();

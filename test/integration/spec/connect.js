@@ -1,4 +1,3 @@
-/* eslint-disable no-console, no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -526,7 +525,6 @@ describe('connect', function() {
       if (withName) {
         name = randomName();
         sid = await createRoom(name, options.topology);
-        // eslint-disable-next-line require-atomic-updates
         options.name = sid;
       }
       cancelablePromises = tokens.map(token => connect(token, options));
@@ -860,12 +858,10 @@ describe('connect', function() {
     const minVideoBitrate = 20000;
     combinationContext([
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, minAudioBitrate, 0],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, minVideoBitrate, 0],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]

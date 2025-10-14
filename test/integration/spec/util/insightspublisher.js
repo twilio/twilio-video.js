@@ -53,7 +53,6 @@ describe('InsightsPublisher', function() {
           });
           assert(error instanceof Error, `unexpected error ${error}`);
           if (!(error instanceof Error)) {
-            // eslint-disable-next-line no-console
             console.log('Unexpected error:', error);
           }
         } : () => new Promise((resolve, reject) => {

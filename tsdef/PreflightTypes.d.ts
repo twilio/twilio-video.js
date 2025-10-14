@@ -45,9 +45,9 @@ export interface ProgressEvent {
 }
 
 export interface PreflightReportStats {
-  jitter: Stats|null;
-  rtt: Stats|null;
-  packetLoss: Stats|null;
+  jitter: Stats | null;
+  rtt: Stats | null;
+  packetLoss: Stats | null;
 }
 
 export interface PreflightTestReport {
