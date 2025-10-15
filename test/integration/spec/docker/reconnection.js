@@ -136,7 +136,9 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
     }
   });
   this.afterEach(async function() {
-    await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+    if (isRunningInsideDocker && !isFirefox && defaults.topology !== 'peer-to-peer') {
+      await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+    }
   });
 
   it('media connection restores even when participant is not subscribed to media', async () => {
@@ -303,7 +305,9 @@ describe('network:', function() {
           }
         });
         rooms = [];
-        await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+        if (isRunningInsideDocker) {
+          await waitFor(dockerAPI.resetNetwork(), 'reset network after each', RESET_NETWORK_TIMEOUT);
+        }
         if (sid) {
           await completeRoom(sid);
         }

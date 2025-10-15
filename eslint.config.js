@@ -292,5 +292,18 @@ export default [
       'no-unused-vars': 'warn',
       'no-undefined': 'off'
     }
+  },
+
+  // Script files (build/utility scripts)
+  {
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    },
+    rules: {
+      'no-console': 'off'
+    }
   }
 ];
