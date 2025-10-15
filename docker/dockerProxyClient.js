@@ -1,10 +1,7 @@
 /* eslint-disable no-console */
 'use strict';
 
-// Avoid CORS errors when fetching from browser tests.
-const DOCKER_PROXY_SERVER_URL = typeof window !== 'undefined'
-  ? '/docker-proxy/'
-  : 'http://localhost:3032/';
+const DOCKER_PROXY_SERVER_URL = 'http://localhost:3032/';
 
 let requestNumber = 0;
 /**

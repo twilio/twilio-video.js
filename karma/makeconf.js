@@ -114,9 +114,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       proxies: {
         // create a proxy to serve hosted noise cancellation sdk files
         '/noisecancellation/': '/absolute' + resolvePath('./test/assets/noisecancellation'),
-        '/static/': 'http://localhost:9877/static/',
-        // avoid CORS errors when fetching from browser tests.
-        '/docker-proxy/': 'http://localhost:3032/'
+        '/static/': 'http://localhost:9877/static/'
       },
       browserify: {
         debug: !!process.env.DEBUG,
