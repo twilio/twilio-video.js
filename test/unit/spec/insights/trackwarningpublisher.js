@@ -38,7 +38,7 @@ describe('TrackWarningPublisher', () => {
     assert.equal(event.level, 'warning');
     assert.equal(event.payload.trackSid, stalledStat.trackSid);
     assert.equal(event.payload.trackType, 'video');
-    assert.equal(event.payload.frameRateReceived, stalledStat.frameRateReceived);
+    assert.equal(event.payload.frameRate, stalledStat.frameRateReceived);
     assert.equal(event.payload.threshold, publisher._stallThreshold);
   });
 
@@ -63,8 +63,8 @@ describe('TrackWarningPublisher', () => {
     assert.equal(event.level, 'info');
     assert.equal(event.payload.trackSid, trackSid);
     assert.equal(event.payload.trackType, 'video');
-    assert.equal(event.payload.frameRateReceived, 15);
-    assert.equal(event.payload.threshold, publisher._stallThreshold);
+    assert.equal(event.payload.frameRate, 15);
+    assert.equal(event.payload.threshold, publisher._resumeThreshold);
   });
 
   it('should not publish cleared events for tracks that were not stalled', () => {
@@ -74,12 +74,18 @@ describe('TrackWarningPublisher', () => {
     assert.equal(emittedEvents.length, 0);
   });
 
-  it('should not publish events for undefined or null frame rates', () => {
-    const trackSid = 'MT123';
+  it('should treat null as 0 and emit stall event', () => {
+    const trackSid1 = 'MT123';
+    const trackSid2 = 'MT456';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: undefined }]));
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: null }]));
-    assert.equal(emittedEvents.length, 0);
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid: trackSid1, frameRateReceived: null }]));
+    assert.equal(emittedEvents.length, 1);
+    assert.equal(emittedEvents[0].group, 'track-warning-raised');
+    assert.equal(emittedEvents[0].payload.trackSid, trackSid1);
+    assert.equal(emittedEvents[0].payload.frameRate, 0);
+
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid: trackSid2, frameRateReceived: undefined }]));
+    assert.equal(emittedEvents.length, 1);
   });
 
   it('should handle boundary values correctly', () => {
