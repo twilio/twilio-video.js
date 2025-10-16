@@ -86,12 +86,12 @@ describe('TrackWarningPublisher', () => {
     assert.equal(emittedEvents[0].payload.frameRate, 0);
   });
 
-  it('should skip monitoring when frameRate is undefined (browser not supported)', () => {
+  it('should not publish events if frameRateReceived is undefined (browser not supported)', () => {
     const trackSid = 'MT123';
 
     publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: undefined }]));
 
-    assert.equal(emittedEvents.length, 0, 'Should not emit events when frameRate is undefined');
+    assert.equal(emittedEvents.length, 0);
   });
 
   it('should handle boundary values correctly', () => {
