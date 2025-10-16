@@ -74,18 +74,24 @@ describe('TrackWarningPublisher', () => {
     assert.equal(emittedEvents.length, 0);
   });
 
-  it('should treat null as 0 and emit stall event', () => {
-    const trackSid1 = 'MT123';
-    const trackSid2 = 'MT456';
+  it('should treat null frameRate as 0 and emit stall event', () => {
+    const trackSid = 'MT123';
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid: trackSid1, frameRateReceived: null }]));
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: null }]));
+
     assert.equal(emittedEvents.length, 1);
     assert.equal(emittedEvents[0].group, 'track-warning-raised');
-    assert.equal(emittedEvents[0].payload.trackSid, trackSid1);
+    assert.equal(emittedEvents[0].name, 'track-stalled');
+    assert.equal(emittedEvents[0].payload.trackSid, trackSid);
     assert.equal(emittedEvents[0].payload.frameRate, 0);
+  });
 
-    publisher.processStats(createMockRemoteVideoStats([{ trackSid: trackSid2, frameRateReceived: undefined }]));
-    assert.equal(emittedEvents.length, 1);
+  it('should skip monitoring when frameRate is undefined (browser not supported)', () => {
+    const trackSid = 'MT123';
+
+    publisher.processStats(createMockRemoteVideoStats([{ trackSid, frameRateReceived: undefined }]));
+
+    assert.equal(emittedEvents.length, 0, 'Should not emit events when frameRate is undefined');
   });
 
   it('should handle boundary values correctly', () => {
