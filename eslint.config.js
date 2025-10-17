@@ -148,7 +148,6 @@ export default [
       'no-throw-literal': 'error',
       'no-undef': ['error', { typeof: false }],
       'no-undef-init': 'error',
-      'no-undefined': 'error',
       'no-underscore-dangle': 'off',
       'no-unmodified-loop-condition': 'error',
       'no-unneeded-ternary': 'error',
