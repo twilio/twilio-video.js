@@ -3,7 +3,7 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
-import { createLocalTracks, setDefaultMediaStreamEventPublisher } from '../../../lib/createlocaltracks';
+import { createLocalTracks, setDefaultEventObserver } from '../../../lib/createlocaltracks';
 
 describe('createLocalTracks', () => {
   [
@@ -163,34 +163,33 @@ describe('createLocalTracks', () => {
     });
   });
 
-  describe('mediaStreamEventPublisher integration', () => {
+  describe('eventObserver integration', () => {
     afterEach(() => {
-      setDefaultMediaStreamEventPublisher();
+      setDefaultEventObserver();
     });
 
-    it('should reuse the default mediaStreamEventPublisher for successes', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
+    it('should reuse the default eventObserver for successes', async () => {
+      const observer = {
+        emit: sinon.spy()
       };
-      setDefaultMediaStreamEventPublisher(publisher as any);
+      setDefaultEventObserver(observer as any);
 
       const options = makeOptions();
       await createLocalTracks(options);
 
-      sinon.assert.calledOnce(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportFailure);
-      sinon.assert.notCalled(publisher.reportPermissionDenied);
+      sinon.assert.calledOnce(observer.emit);
+      sinon.assert.calledWith(observer.emit, 'event', {
+        group: 'get-user-media',
+        name: 'succeeded',
+        level: 'info',
+      });
     });
 
-    it('should identify permission denied errors and invoke reportPermissionDenied', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
+    it('should identify permission denied errors and emit denied event', async () => {
+      const observer = {
+        emit: sinon.spy()
       };
-      setDefaultMediaStreamEventPublisher(publisher as any);
+      setDefaultEventObserver(observer as any);
 
       const options = makeOptions();
       const permissionError = new Error('Permission denied');
@@ -199,18 +198,19 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), permissionError);
 
-      sinon.assert.calledOnce(publisher.reportPermissionDenied);
-      sinon.assert.notCalled(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportFailure);
+      sinon.assert.calledOnce(observer.emit);
+      sinon.assert.calledWith(observer.emit, 'event', {
+        group: 'get-user-media',
+        name: 'denied',
+        level: 'info',
+      });
     });
 
-    it('should continue to report generic failures via reportFailure', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
+    it('should emit failed event for generic failures', async () => {
+      const observer = {
+        emit: sinon.spy()
       };
-      setDefaultMediaStreamEventPublisher(publisher as any);
+      setDefaultEventObserver(observer as any);
 
       const options = makeOptions();
       const unexpectedError = new Error('Camera in use');
@@ -219,33 +219,41 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), unexpectedError);
 
-      sinon.assert.calledOnce(publisher.reportFailure);
-      sinon.assert.notCalled(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportPermissionDenied);
+      sinon.assert.calledOnce(observer.emit);
+      sinon.assert.calledWith(observer.emit, 'event', {
+        group: 'get-user-media',
+        name: 'failed',
+        level: 'info',
+        payload: {
+          name: 'NotReadableError',
+          message: 'Camera in use'
+        }
+      });
     });
 
-    it('should prefer an explicitly provided mediaStreamEventPublisher over the default', async () => {
-      const defaultPublisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
+    it('should prefer an explicitly provided eventObserver over the default', async () => {
+      const defaultObserver = {
+        emit: sinon.spy()
       };
-      const scopedPublisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
+      const scopedObserver = {
+        emit: sinon.spy()
       };
 
-      setDefaultMediaStreamEventPublisher(defaultPublisher as any);
+      setDefaultEventObserver(defaultObserver as any);
 
       const options = Object.assign({
-        mediaStreamEventPublisher: scopedPublisher
+        eventObserver: scopedObserver
       }, makeOptions());
 
       await createLocalTracks(options);
 
-      sinon.assert.calledOnce(scopedPublisher.reportSuccess);
-      sinon.assert.notCalled(defaultPublisher.reportSuccess);
+      sinon.assert.calledOnce(scopedObserver.emit);
+      sinon.assert.calledWith(scopedObserver.emit, 'event', {
+        group: 'get-user-media',
+        name: 'succeeded',
+        level: 'info',
+      });
+      sinon.assert.notCalled(defaultObserver.emit);
     });
   });
 });
