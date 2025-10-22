@@ -30,7 +30,6 @@ const telemetry = require('./insights/telemetry');
 // counter.
 let createLocalTrackCalls = 0;
 
-
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
 type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode?: DefaultDeviceCaptureMode };
 type ExtraLocalTrackOptions = { audio: ExtraLocalAudioTrackOption; video: ExtraLocalTrackOption; };
