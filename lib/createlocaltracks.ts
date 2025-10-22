@@ -23,18 +23,12 @@ const {
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME, typeErrors: { INVALID_VALUE } } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
+const telemetry = require('./insights/telemetry');
 
 // This is used to make out which createLocalTracks() call a particular Log
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
-// Global reporter shared between connect() and standalone createLocalTracks() calls.
-// When insights are enabled, connect() sets this so that subsequent createLocalTracks()
-// calls can report events to the same reporter.
-let defaultEventObserver: any = null;
-export function setDefaultEventObserver(observer?: any): void {
-  defaultEventObserver = observer || null;
-}
 
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
@@ -48,7 +42,6 @@ interface InternalOptions extends CreateLocalTracksOptions {
   LocalVideoTrack: any;
   MediaStreamTrack: any;
   Log: any;
-  eventObserver?: any;
 }
 
 /**
@@ -125,10 +118,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     video: isAudioVideoAbsent,
     ...options,
   };
-
-  if (!fullOptions.eventObserver && defaultEventObserver) {
-    fullOptions.eventObserver = defaultEventObserver;
-  }
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(fullOptions.logLevel);
@@ -207,20 +196,12 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 
   const workaroundWebKitBug180748 = typeof fullOptions.audio === 'object' && fullOptions.audio.workaroundWebKitBug180748;
 
-  const eventObserver = fullOptions.eventObserver;
-
   try {
     const mediaStream = await (workaroundWebKitBug180748
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    if (eventObserver) {
-      eventObserver.emit('event', {
-        group: 'get-user-media',
-        name: 'succeeded',
-        level: 'info'
-      });
-    }
+    telemetry.emit({ group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
 
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
@@ -251,24 +232,18 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       })
     );
   } catch (error) {
-    if (eventObserver) {
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        eventObserver.emit('event', {
-          group: 'get-user-media',
-          name: 'denied',
-          level: 'info'
-        });
-      } else {
-        eventObserver.emit('event', {
-          group: 'get-user-media',
-          name: 'failed',
+    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      telemetry.emit({ group: 'get-user-media', name: 'denied', payload: { level: 'info' } });
+    } else {
+      telemetry.emit({
+        group: 'get-user-media',
+        name: 'failed',
+        payload: {
           level: 'info',
-          payload: {
-            name: error.name,
-            message: error.message
-          }
-        });
-      }
+          name: error.name,
+          message: error.message
+        }
+      });
     }
     log.warn('Call to getUserMedia failed:', error);
     throw error;

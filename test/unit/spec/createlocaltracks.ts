@@ -3,7 +3,9 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
-import { createLocalTracks, setDefaultEventObserver } from '../../../lib/createlocaltracks';
+import { createLocalTracks } from '../../../lib/createlocaltracks';
+
+const telemetry = require('../../../lib/insights/telemetry');
 
 describe('createLocalTracks', () => {
   [
@@ -163,34 +165,26 @@ describe('createLocalTracks', () => {
     });
   });
 
-  describe('eventObserver integration', () => {
-    afterEach(() => {
-      setDefaultEventObserver();
+  describe('telemetry integration', () => {
+    let telemetrySpy: sinon.SinonSpy;
+
+    beforeEach(() => {
+      telemetrySpy = sinon.spy(telemetry, 'emit');
     });
 
-    it('should reuse the default eventObserver for successes', async () => {
-      const observer = {
-        emit: sinon.spy()
-      };
-      setDefaultEventObserver(observer as any);
+    afterEach(() => {
+      telemetrySpy.restore();
+    });
 
+    it('should emit telemetry event on successful getUserMedia', async () => {
       const options = makeOptions();
       await createLocalTracks(options);
 
-      sinon.assert.calledOnce(observer.emit);
-      sinon.assert.calledWith(observer.emit, 'event', {
-        group: 'get-user-media',
-        name: 'succeeded',
-        level: 'info',
-      });
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
     });
 
-    it('should identify permission denied errors and emit denied event', async () => {
-      const observer = {
-        emit: sinon.spy()
-      };
-      setDefaultEventObserver(observer as any);
-
+    it('should emit denied telemetry event for permission errors', async () => {
       const options = makeOptions();
       const permissionError = new Error('Permission denied');
       permissionError.name = 'NotAllowedError';
@@ -198,20 +192,11 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), permissionError);
 
-      sinon.assert.calledOnce(observer.emit);
-      sinon.assert.calledWith(observer.emit, 'event', {
-        group: 'get-user-media',
-        name: 'denied',
-        level: 'info',
-      });
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'denied', payload: { level: 'info' } });
     });
 
-    it('should emit failed event for generic failures', async () => {
-      const observer = {
-        emit: sinon.spy()
-      };
-      setDefaultEventObserver(observer as any);
-
+    it('should emit failed telemetry event for generic failures', async () => {
       const options = makeOptions();
       const unexpectedError = new Error('Camera in use');
       unexpectedError.name = 'NotReadableError';
@@ -219,41 +204,28 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), unexpectedError);
 
-      sinon.assert.calledOnce(observer.emit);
-      sinon.assert.calledWith(observer.emit, 'event', {
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'get-user-media',
         name: 'failed',
-        level: 'info',
         payload: {
+          level: 'info',
           name: 'NotReadableError',
           message: 'Camera in use'
         }
       });
     });
 
-    it('should prefer an explicitly provided eventObserver over the default', async () => {
-      const defaultObserver = {
-        emit: sinon.spy()
-      };
-      const scopedObserver = {
-        emit: sinon.spy()
-      };
+    it('should emit telemetry events even without a registered observer', async () => {
+      // Ensure no observer is registered
+      telemetry.unregisterObserver();
 
-      setDefaultEventObserver(defaultObserver as any);
-
-      const options = Object.assign({
-        eventObserver: scopedObserver
-      }, makeOptions());
-
+      const options = makeOptions();
       await createLocalTracks(options);
 
-      sinon.assert.calledOnce(scopedObserver.emit);
-      sinon.assert.calledWith(scopedObserver.emit, 'event', {
-        group: 'get-user-media',
-        name: 'succeeded',
-        level: 'info',
-      });
-      sinon.assert.notCalled(defaultObserver.emit);
+      // Should still call emit on telemetry bus (just no-op internally)
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
     });
   });
 });
