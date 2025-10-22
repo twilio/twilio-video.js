@@ -200,7 +200,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    telemetry.info({ group: 'get-user-media', name: 'succeeded' });
+    telemetry.getUserMedia.succeeded();
 
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
@@ -232,16 +232,9 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     );
   } catch (error) {
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-      telemetry.info({ group: 'get-user-media', name: 'denied' });
+      telemetry.getUserMedia.denied();
     } else {
-      telemetry.info({
-        group: 'get-user-media',
-        name: 'failed',
-        payload: {
-          name: error.name,
-          message: error.message
-        }
-      });
+      telemetry.getUserMedia.failed(error);
     }
     log.warn('Call to getUserMedia failed:', error);
     throw error;
