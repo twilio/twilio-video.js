@@ -3,21 +3,20 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const ApplicationMonitor = require('../../../../lib/insights/applicationmonitor');
+const telemetry = require('../../../../lib/insights/telemetry');
 
 describe('ApplicationMonitor', () => {
-  let eventObserver;
   let log;
   let applicationMonitor;
+  let telemetrySpy;
 
   beforeEach(() => {
-    eventObserver = {
-      emit: sinon.spy()
-    };
-
     log = {
       debug: sinon.spy(),
       error: sinon.spy()
     };
+
+    telemetrySpy = sinon.spy(telemetry, 'info');
   });
 
   afterEach(() => {
@@ -25,53 +24,51 @@ describe('ApplicationMonitor', () => {
       applicationMonitor.cleanup();
       applicationMonitor = null;
     }
+    telemetrySpy.restore();
   });
 
   describe('visibility change handling', () => {
     beforeEach(() => {
-      applicationMonitor = new ApplicationMonitor(eventObserver, log);
-      eventObserver.emit.resetHistory();
+      applicationMonitor = new ApplicationMonitor({ log });
+      telemetrySpy.resetHistory();
     });
 
     it('should emit "resumed" event when becoming visible', () => {
       applicationMonitor._handleVisibilityChange(true);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'application',
-        name: 'resumed',
-        level: 'info'
+        name: 'resumed'
       });
     });
 
     it('should emit "backgrounded" event when becoming hidden', () => {
       applicationMonitor._handleVisibilityChange(false);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'application',
-        name: 'backgrounded',
-        level: 'info'
+        name: 'backgrounded'
       });
     });
   });
 
   describe('beforeunload handling', () => {
     it('should emit "terminated" event', () => {
-      applicationMonitor = new ApplicationMonitor(eventObserver, log);
-      eventObserver.emit.resetHistory();
+      applicationMonitor = new ApplicationMonitor({ log });
+      telemetrySpy.resetHistory();
 
       applicationMonitor._handleBeforeUnload();
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'application',
-        name: 'terminated',
-        level: 'info'
+        name: 'terminated'
       });
     });
   });
 
   describe('cleanup', () => {
     it('should clean up handlers', () => {
-      applicationMonitor = new ApplicationMonitor(eventObserver, log);
+      applicationMonitor = new ApplicationMonitor({ log });
 
       applicationMonitor.cleanup();
 

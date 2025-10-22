@@ -3,19 +3,16 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const NetworkMonitor = require('../../../../lib/insights/networkmonitor');
+const telemetry = require('../../../../lib/insights/telemetry');
 
 describe('NetworkMonitor', () => {
-  let eventObserver;
   let log;
   let networkMonitor;
   let mockConnection;
   let originalNavigator;
+  let telemetrySpy;
 
   beforeEach(() => {
-    eventObserver = {
-      emit: sinon.spy()
-    };
-
     log = {
       debug: sinon.spy(),
       error: sinon.spy()
@@ -38,6 +35,8 @@ describe('NetworkMonitor', () => {
       writable: true,
       configurable: true
     });
+
+    telemetrySpy = sinon.spy(telemetry, 'info');
   });
 
   afterEach(() => {
@@ -50,20 +49,20 @@ describe('NetworkMonitor', () => {
       writable: true,
       configurable: true
     });
+    telemetrySpy.restore();
   });
 
   describe('network information change handling', () => {
     it('should emit network-information-changed event with connection data', () => {
-      networkMonitor = new NetworkMonitor(eventObserver, log);
+      networkMonitor = new NetworkMonitor({ log });
       const changeHandler = mockConnection.addEventListener.getCall(0).args[1];
-      eventObserver.emit.resetHistory();
+      telemetrySpy.resetHistory();
 
       changeHandler();
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'network',
         name: 'network-information-changed',
-        level: 'info',
         payload: {
           downlink: 10,
           downlinkMax: 20,
@@ -77,20 +76,20 @@ describe('NetworkMonitor', () => {
 
     it('should convert boolean saveData to string', () => {
       mockConnection.saveData = true;
-      networkMonitor = new NetworkMonitor(eventObserver, log);
+      networkMonitor = new NetworkMonitor({ log });
       const changeHandler = mockConnection.addEventListener.getCall(0).args[1];
-      eventObserver.emit.resetHistory();
+      telemetrySpy.resetHistory();
 
       changeHandler();
 
-      const emitCall = eventObserver.emit.getCall(0);
-      assert.strictEqual(emitCall.args[1].payload.saveData, 'true');
+      const infoCall = telemetrySpy.getCall(0);
+      assert.strictEqual(infoCall.args[0].payload.saveData, 'true');
     });
   });
 
   describe('cleanup', () => {
     it('should remove event listeners', () => {
-      networkMonitor = new NetworkMonitor(eventObserver, log);
+      networkMonitor = new NetworkMonitor({ log });
 
       networkMonitor.cleanup();
 

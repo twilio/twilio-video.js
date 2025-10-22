@@ -3,24 +3,22 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const ResourceMonitor = require('../../../../lib/insights/resourcemonitor');
+const telemetry = require('../../../../lib/insights/telemetry');
 
 describe('ResourceMonitor', () => {
-  let eventObserver;
   let log;
   let resourceMonitor;
   let computePressureMonitor;
+  let telemetrySpy;
 
   beforeEach(() => {
-    eventObserver = {
-      emit: sinon.spy()
-    };
-
     log = {
       debug: sinon.spy(),
       error: sinon.spy()
     };
 
     computePressureMonitor = require('../../../../lib/insights/computepressuremonitor');
+    telemetrySpy = sinon.spy(telemetry, 'info');
   });
 
   afterEach(() => {
@@ -28,14 +26,15 @@ describe('ResourceMonitor', () => {
       resourceMonitor.cleanup();
       resourceMonitor = null;
     }
+    telemetrySpy.restore();
   });
 
   describe('CPU pressure monitoring', () => {
     beforeEach(() => {
       sinon.stub(computePressureMonitor, 'isSupported').returns(true);
       sinon.stub(computePressureMonitor, 'watchCpuPressure').resolves();
-      resourceMonitor = new ResourceMonitor(eventObserver, log);
-      eventObserver.emit.resetHistory();
+      resourceMonitor = new ResourceMonitor({ log });
+      telemetrySpy.resetHistory();
     });
 
     afterEach(() => {
@@ -46,10 +45,9 @@ describe('ResourceMonitor', () => {
     it('should emit event when CPU pressure changes', () => {
       resourceMonitor._cpuPressureHandler({ state: 'serious' });
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetrySpy, {
         group: 'system',
         name: 'cpu-pressure-changed',
-        level: 'info',
         payload: {
           resourceType: 'cpu',
           pressure: 'serious'
@@ -64,7 +62,7 @@ describe('ResourceMonitor', () => {
       const watchCpuPressure = sinon.stub(computePressureMonitor, 'watchCpuPressure').resolves();
       const unwatchCpuPressure = sinon.stub(computePressureMonitor, 'unwatchCpuPressure');
 
-      resourceMonitor = new ResourceMonitor(eventObserver, log);
+      resourceMonitor = new ResourceMonitor({ log });
       const handler = resourceMonitor._cpuPressureHandler;
 
       resourceMonitor.cleanup();

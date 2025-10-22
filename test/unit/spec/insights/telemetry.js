@@ -29,18 +29,18 @@ describe('Telemetry', () => {
       const secondObserver = { emit: sinon.spy() };
 
       telemetry.registerObserver(firstObserver);
-      telemetry.emit({ group: 'test', name: 'event', payload: { level: 'info' } });
+      telemetry.info({ group: 'test', name: 'event' });
 
       sinon.assert.calledOnce(firstObserver.emit);
       sinon.assert.calledWith(firstObserver.emit, 'event', {
         name: 'event',
         group: 'test',
-        payload: { level: 'info' }
+        level: 'info'
       });
 
       // Register second observer
       telemetry.registerObserver(secondObserver);
-      telemetry.emit({ group: 'test', name: 'event2', payload: { level: 'info' } });
+      telemetry.info({ group: 'test', name: 'event2' });
 
       // First observer should not receive new events
       sinon.assert.calledOnce(firstObserver.emit);
@@ -49,7 +49,7 @@ describe('Telemetry', () => {
       sinon.assert.calledWith(secondObserver.emit, 'event', {
         name: 'event2',
         group: 'test',
-        payload: { level: 'info' }
+        level: 'info'
       });
     });
   });
@@ -65,12 +65,12 @@ describe('Telemetry', () => {
 
     it('should stop forwarding events after unregistering', () => {
       telemetry.registerObserver(mockObserver);
-      telemetry.emit({ group: 'test', name: 'event1', payload: { level: 'info' } });
+      telemetry.info({ group: 'test', name: 'event1' });
 
       sinon.assert.calledOnce(mockObserver.emit);
 
       telemetry.unregisterObserver();
-      telemetry.emit({ group: 'test', name: 'event2', payload: { level: 'info' } });
+      telemetry.info({ group: 'test', name: 'event2' });
 
       // Should still be called only once (before unregister)
       sinon.assert.calledOnce(mockObserver.emit);
@@ -101,22 +101,10 @@ describe('Telemetry', () => {
     });
   });
 
-  describe('emit', () => {
-    it('should forward events to observer without modification', () => {
-      telemetry.registerObserver(mockObserver);
-      telemetry.emit({ group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
-
-      sinon.assert.calledOnce(mockObserver.emit);
-      sinon.assert.calledWith(mockObserver.emit, 'event', {
-        name: 'succeeded',
-        group: 'get-user-media',
-        payload: { level: 'info' }
-      });
-    });
-
+  describe('convenience methods', () => {
     it('should not include payload if not provided', () => {
       telemetry.registerObserver(mockObserver);
-      telemetry.emit({ group: 'quality', name: 'stats-report' });
+      telemetry.info({ group: 'quality', name: 'stats-report' });
 
       sinon.assert.calledOnce(mockObserver.emit);
       const eventArg = mockObserver.emit.getCall(0).args[1];
@@ -125,24 +113,26 @@ describe('Telemetry', () => {
 
     it('should be a no-op when no observer is registered', () => {
       // Should not throw
-      telemetry.emit({ group: 'test', name: 'event', payload: { level: 'info' } });
+      telemetry.info({ group: 'test', name: 'event' });
+      telemetry.warning({ group: 'test', name: 'event' });
+      telemetry.error({ group: 'test', name: 'event' });
       assert.strictEqual(telemetry.isEnabled, false);
     });
 
-    it('should handle multiple events in sequence', () => {
+    it('should handle multiple events at different levels', () => {
       telemetry.registerObserver(mockObserver);
 
-      telemetry.emit({ group: 'network', name: 'type-changed', payload: { level: 'info', type: 'wifi' } });
-      telemetry.emit({ group: 'quality', name: 'limitation-changed', payload: { level: 'info', reason: 'cpu' } });
-      telemetry.emit({ group: 'application', name: 'backgrounded', payload: { level: 'info' } });
+      telemetry.info({ group: 'network', name: 'type-changed', payload: { type: 'wifi' } });
+      telemetry.warning({ group: 'quality', name: 'limitation-changed', payload: { reason: 'cpu' } });
+      telemetry.error({ group: 'connection', name: 'failed' });
 
       sinon.assert.calledThrice(mockObserver.emit);
 
       sinon.assert.calledWith(mockObserver.emit.getCall(0), 'event', {
         name: 'type-changed',
         group: 'network',
+        level: 'info',
         payload: {
-          level: 'info',
           type: 'wifi'
         }
       });
@@ -150,16 +140,103 @@ describe('Telemetry', () => {
       sinon.assert.calledWith(mockObserver.emit.getCall(1), 'event', {
         name: 'limitation-changed',
         group: 'quality',
+        level: 'warning',
         payload: {
-          level: 'info',
           reason: 'cpu'
         }
       });
 
       sinon.assert.calledWith(mockObserver.emit.getCall(2), 'event', {
-        name: 'backgrounded',
-        group: 'application',
-        payload: { level: 'info' }
+        name: 'failed',
+        group: 'connection',
+        level: 'error'
+      });
+    });
+  });
+
+  describe('info', () => {
+    it('should emit info-level events', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.info({ group: 'get-user-media', name: 'succeeded' });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'succeeded',
+        group: 'get-user-media',
+        level: 'info'
+      });
+    });
+
+    it('should emit info-level events with payload', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.info({ group: 'network', name: 'type-changed', payload: { networkType: 'wifi' } });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'type-changed',
+        group: 'network',
+        level: 'info',
+        payload: {
+          networkType: 'wifi'
+        }
+      });
+    });
+  });
+
+  describe('warning', () => {
+    it('should emit warning-level events', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.warning({ group: 'track-warning-raised', name: 'track-stalled' });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'track-stalled',
+        group: 'track-warning-raised',
+        level: 'warning'
+      });
+    });
+
+    it('should emit warning-level events with payload', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.warning({ group: 'quality', name: 'degraded', payload: { reason: 'cpu' } });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'degraded',
+        group: 'quality',
+        level: 'warning',
+        payload: {
+          reason: 'cpu'
+        }
+      });
+    });
+  });
+
+  describe('error', () => {
+    it('should emit error-level events', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.error({ group: 'connection', name: 'failed' });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'failed',
+        group: 'connection',
+        level: 'error'
+      });
+    });
+
+    it('should emit error-level events with payload', () => {
+      telemetry.registerObserver(mockObserver);
+      telemetry.error({ group: 'connection', name: 'failed', payload: { reason: 'timeout' } });
+
+      sinon.assert.calledOnce(mockObserver.emit);
+      sinon.assert.calledWith(mockObserver.emit, 'event', {
+        name: 'failed',
+        group: 'connection',
+        level: 'error',
+        payload: {
+          reason: 'timeout'
+        }
       });
     });
   });

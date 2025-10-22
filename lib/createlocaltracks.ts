@@ -201,7 +201,7 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    telemetry.emit({ group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
+    telemetry.info({ group: 'get-user-media', name: 'succeeded' });
 
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
@@ -233,13 +233,12 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     );
   } catch (error) {
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-      telemetry.emit({ group: 'get-user-media', name: 'denied', payload: { level: 'info' } });
+      telemetry.info({ group: 'get-user-media', name: 'denied' });
     } else {
-      telemetry.emit({
+      telemetry.info({
         group: 'get-user-media',
         name: 'failed',
         payload: {
-          level: 'info',
           name: error.name,
           message: error.message
         }

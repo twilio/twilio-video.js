@@ -3,20 +3,18 @@
 const assert = require('assert');
 const sinon = require('sinon');
 const StatsMonitor = require('../../../../lib/insights/statsmonitor');
+const telemetry = require('../../../../lib/insights/telemetry');
 
 describe('StatsMonitor', () => {
-  let eventObserver;
   let log;
   let statsMonitor;
   let clock;
   let getStatsStub;
+  let telemetryInfoSpy;
+  let telemetryWarningSpy;
 
   beforeEach(() => {
     clock = sinon.useFakeTimers();
-
-    eventObserver = {
-      emit: sinon.spy()
-    };
 
     log = {
       debug: sinon.spy(),
@@ -24,6 +22,8 @@ describe('StatsMonitor', () => {
     };
 
     getStatsStub = sinon.stub().resolves(new Map());
+    telemetryInfoSpy = sinon.spy(telemetry, 'info');
+    telemetryWarningSpy = sinon.spy(telemetry, 'warning');
   });
 
   afterEach(() => {
@@ -32,11 +32,14 @@ describe('StatsMonitor', () => {
       statsMonitor = null;
     }
     clock.restore();
+    telemetryInfoSpy.restore();
+    telemetryWarningSpy.restore();
   });
 
   describe('stats collection', () => {
     it('should collect stats periodically', async () => {
-      statsMonitor = new StatsMonitor(eventObserver, log, {
+      statsMonitor = new StatsMonitor({
+        log,
         getStats: getStatsStub,
         collectionIntervalMs: 1000
       });
@@ -49,7 +52,7 @@ describe('StatsMonitor', () => {
 
     it('should handle stats collection errors gracefully', async () => {
       getStatsStub.rejects(new Error('Stats error'));
-      statsMonitor = new StatsMonitor(eventObserver, log, { getStats: getStatsStub });
+      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
 
       clock.tick(1000);
       await Promise.resolve();
@@ -60,8 +63,8 @@ describe('StatsMonitor', () => {
 
   describe('network type change detection', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor(eventObserver, log, { getStats: getStatsStub });
-      eventObserver.emit.resetHistory();
+      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      telemetryInfoSpy.resetHistory();
     });
 
     it('should publish event on first active pair', () => {
@@ -73,10 +76,9 @@ describe('StatsMonitor', () => {
 
       statsMonitor._checkNetworkTypeChanges(response);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetryInfoSpy, {
         group: 'network',
         name: 'network-type-changed',
-        level: 'info',
         payload: { networkType: 'wifi' }
       });
     });
@@ -85,13 +87,13 @@ describe('StatsMonitor', () => {
       statsMonitor._checkNetworkTypeChanges({
         activeIceCandidatePair: { localCandidate: { networkType: 'wifi' } }
       });
-      eventObserver.emit.resetHistory();
+      telemetryInfoSpy.resetHistory();
 
       statsMonitor._checkNetworkTypeChanges({
         activeIceCandidatePair: { localCandidate: { networkType: 'cellular' } }
       });
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', sinon.match({
+      sinon.assert.calledWith(telemetryInfoSpy, sinon.match({
         payload: { networkType: 'cellular' }
       }));
     });
@@ -102,17 +104,17 @@ describe('StatsMonitor', () => {
       };
 
       statsMonitor._checkNetworkTypeChanges(response);
-      eventObserver.emit.resetHistory();
+      telemetryInfoSpy.resetHistory();
       statsMonitor._checkNetworkTypeChanges(response);
 
-      sinon.assert.notCalled(eventObserver.emit);
+      sinon.assert.notCalled(telemetryInfoSpy);
     });
   });
 
   describe('quality limitation tracking', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor(eventObserver, log, { getStats: getStatsStub });
-      eventObserver.emit.resetHistory();
+      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      telemetryInfoSpy.resetHistory();
     });
 
     it('should publish event when quality limitation reason changes', () => {
@@ -120,10 +122,9 @@ describe('StatsMonitor', () => {
 
       statsMonitor._checkQualityLimitations(trackStats);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetryInfoSpy, {
         group: 'quality',
         name: 'quality-limitation-state-changed',
-        level: 'info',
         payload: {
           trackSid: 'MT123',
           qualityLimitationReason: 'bandwidth'
@@ -135,26 +136,26 @@ describe('StatsMonitor', () => {
       const trackStats = [{ trackSid: 'MT123', qualityLimitationReason: 'bandwidth' }];
 
       statsMonitor._checkQualityLimitations(trackStats);
-      eventObserver.emit.resetHistory();
+      telemetryInfoSpy.resetHistory();
       statsMonitor._checkQualityLimitations(trackStats);
 
-      sinon.assert.notCalled(eventObserver.emit);
+      sinon.assert.notCalled(telemetryInfoSpy);
     });
   });
 
   describe('track stall detection', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor(eventObserver, log, { getStats: getStatsStub });
-      eventObserver.emit.resetHistory();
+      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      telemetryInfoSpy.resetHistory();
+      telemetryWarningSpy.resetHistory();
     });
 
     it('should publish track-stalled event when frame rate drops below threshold', () => {
       statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 0.3 }]);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetryWarningSpy, {
         group: 'track-warning-raised',
         name: 'track-stalled',
-        level: 'warning',
         payload: {
           trackSid: 'MT123',
           frameRate: 0.3,
@@ -166,14 +167,14 @@ describe('StatsMonitor', () => {
 
     it('should publish cleared event when frame rate recovers', () => {
       statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 0.3 }]);
-      eventObserver.emit.resetHistory();
+      telemetryInfoSpy.resetHistory();
+      telemetryWarningSpy.resetHistory();
 
       statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 10 }]);
 
-      sinon.assert.calledWith(eventObserver.emit, 'event', {
+      sinon.assert.calledWith(telemetryInfoSpy, {
         group: 'track-warning-cleared',
         name: 'track-stalled',
-        level: 'info',
         payload: {
           trackSid: 'MT123',
           frameRate: 10,
@@ -186,7 +187,7 @@ describe('StatsMonitor', () => {
 
   describe('cleanup', () => {
     it('should stop stats collection and clear state', () => {
-      statsMonitor = new StatsMonitor(eventObserver, log, { getStats: getStatsStub });
+      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
       statsMonitor._stalledTrackSids.add('MT456');
 
       statsMonitor.cleanup();

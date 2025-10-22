@@ -169,7 +169,7 @@ describe('createLocalTracks', () => {
     let telemetrySpy: sinon.SinonSpy;
 
     beforeEach(() => {
-      telemetrySpy = sinon.spy(telemetry, 'emit');
+      telemetrySpy = sinon.spy(telemetry, 'info');
     });
 
     afterEach(() => {
@@ -181,7 +181,7 @@ describe('createLocalTracks', () => {
       await createLocalTracks(options);
 
       sinon.assert.calledOnce(telemetrySpy);
-      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded' });
     });
 
     it('should emit denied telemetry event for permission errors', async () => {
@@ -193,7 +193,7 @@ describe('createLocalTracks', () => {
       await assert.rejects(() => createLocalTracks(options), permissionError);
 
       sinon.assert.calledOnce(telemetrySpy);
-      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'denied', payload: { level: 'info' } });
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'denied' });
     });
 
     it('should emit failed telemetry event for generic failures', async () => {
@@ -209,7 +209,6 @@ describe('createLocalTracks', () => {
         group: 'get-user-media',
         name: 'failed',
         payload: {
-          level: 'info',
           name: 'NotReadableError',
           message: 'Camera in use'
         }
@@ -223,9 +222,9 @@ describe('createLocalTracks', () => {
       const options = makeOptions();
       await createLocalTracks(options);
 
-      // Should still call emit on telemetry bus (just no-op internally)
+      // Should still call info on telemetry bus (just no-op internally)
       sinon.assert.calledOnce(telemetrySpy);
-      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded', payload: { level: 'info' } });
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded' });
     });
   });
 });
