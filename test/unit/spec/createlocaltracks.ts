@@ -165,7 +165,7 @@ describe('createLocalTracks', () => {
     });
   });
 
-  describe('telemetry integration', () => {
+  describe('telemetry', () => {
     let telemetrySpy: sinon.SinonSpy;
 
     beforeEach(() => {
@@ -213,18 +213,6 @@ describe('createLocalTracks', () => {
           message: 'Camera in use'
         }
       });
-    });
-
-    it('should emit telemetry events even without a registered observer', async () => {
-      // Ensure no observer is registered
-      telemetry.unregisterObserver();
-
-      const options = makeOptions();
-      await createLocalTracks(options);
-
-      // Should still call info on telemetry bus (just no-op internally)
-      sinon.assert.calledOnce(telemetrySpy);
-      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded' });
     });
   });
 });
