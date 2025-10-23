@@ -134,7 +134,7 @@ describe('Telemetry', () => {
       telemetry.configure({ publisher: mockPublisher, log: mockLog, connectTimestamp });
     });
 
-    describe('getUserMedia namespace', () => {
+    describe('getUserMedia events', () => {
       it('should publish succeeded event', () => {
         telemetry.getUserMedia.succeeded();
 
@@ -167,7 +167,7 @@ describe('Telemetry', () => {
       });
     });
 
-    describe('network namespace', () => {
+    describe('network events', () => {
       it('should publish type changed event', () => {
         telemetry.network.typeChanged('wifi');
 
@@ -195,7 +195,7 @@ describe('Telemetry', () => {
       });
     });
 
-    describe('application namespace', () => {
+    describe('application events', () => {
       it('should publish resumed event', () => {
         telemetry.application.resumed();
 
@@ -224,7 +224,7 @@ describe('Telemetry', () => {
       });
     });
 
-    describe('track namespace', () => {
+    describe('track events', () => {
       it('should publish stalled event', () => {
         telemetry.track.stalled('MT123', 0.3, 0.5, 'video');
 
@@ -251,7 +251,7 @@ describe('Telemetry', () => {
       });
     });
 
-    describe('quality namespace', () => {
+    describe('quality events', () => {
       it('should publish limitation changed event', () => {
         telemetry.quality.limitationChanged('MT456', 'bandwidth');
 
@@ -287,7 +287,7 @@ describe('Telemetry', () => {
       });
     });
 
-    describe('system namespace', () => {
+    describe('system events', () => {
       it('should publish cpu pressure changed event', () => {
         telemetry.system.cpuPressureChanged('serious');
 
