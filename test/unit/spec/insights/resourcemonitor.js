@@ -33,7 +33,7 @@ describe('ResourceMonitor', () => {
     beforeEach(() => {
       sinon.stub(computePressureMonitor, 'isSupported').returns(true);
       sinon.stub(computePressureMonitor, 'watchCpuPressure').resolves();
-      resourceMonitor = new ResourceMonitor({ log });
+      resourceMonitor = new ResourceMonitor(log);
       telemetrySpy.resetHistory();
     });
 
@@ -62,7 +62,7 @@ describe('ResourceMonitor', () => {
       const watchCpuPressure = sinon.stub(computePressureMonitor, 'watchCpuPressure').resolves();
       const unwatchCpuPressure = sinon.stub(computePressureMonitor, 'unwatchCpuPressure');
 
-      resourceMonitor = new ResourceMonitor({ log });
+      resourceMonitor = new ResourceMonitor(log);
       const handler = resourceMonitor._cpuPressureHandler;
 
       resourceMonitor.cleanup();

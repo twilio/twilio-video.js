@@ -54,7 +54,7 @@ describe('NetworkMonitor', () => {
 
   describe('network information change handling', () => {
     it('should emit network-information-changed event with connection data', () => {
-      networkMonitor = new NetworkMonitor({ log });
+      networkMonitor = new NetworkMonitor(log);
       const changeHandler = mockConnection.addEventListener.getCall(0).args[1];
       telemetrySpy.resetHistory();
 
@@ -76,7 +76,7 @@ describe('NetworkMonitor', () => {
 
     it('should convert boolean saveData to string', () => {
       mockConnection.saveData = true;
-      networkMonitor = new NetworkMonitor({ log });
+      networkMonitor = new NetworkMonitor(log);
       const changeHandler = mockConnection.addEventListener.getCall(0).args[1];
       telemetrySpy.resetHistory();
 
@@ -89,7 +89,7 @@ describe('NetworkMonitor', () => {
 
   describe('cleanup', () => {
     it('should remove event listeners', () => {
-      networkMonitor = new NetworkMonitor({ log });
+      networkMonitor = new NetworkMonitor(log);
 
       networkMonitor.cleanup();
 

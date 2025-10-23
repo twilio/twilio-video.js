@@ -9,7 +9,7 @@ describe('StatsMonitor', () => {
   let log;
   let statsMonitor;
   let clock;
-  let getStatsStub;
+  let statsSource;
   let telemetryInfoSpy;
   let telemetryWarningSpy;
 
@@ -21,7 +21,7 @@ describe('StatsMonitor', () => {
       warn: sinon.spy()
     };
 
-    getStatsStub = sinon.stub().resolves(new Map());
+    statsSource = { getStats: sinon.stub().resolves(new Map()) };
     telemetryInfoSpy = sinon.spy(telemetry, 'info');
     telemetryWarningSpy = sinon.spy(telemetry, 'warning');
   });
@@ -38,21 +38,19 @@ describe('StatsMonitor', () => {
 
   describe('stats collection', () => {
     it('should collect stats periodically', async () => {
-      statsMonitor = new StatsMonitor({
-        log,
-        getStats: getStatsStub,
+      statsMonitor = new StatsMonitor(statsSource, log, {
         collectionIntervalMs: 1000
       });
 
       clock.tick(1000);
       await Promise.resolve();
 
-      sinon.assert.calledOnce(getStatsStub);
+      sinon.assert.calledOnce(statsSource.getStats);
     });
 
     it('should handle stats collection errors gracefully', async () => {
-      getStatsStub.rejects(new Error('Stats error'));
-      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      statsSource.getStats.rejects(new Error('Stats error'));
+      statsMonitor = new StatsMonitor(statsSource, log);
 
       clock.tick(1000);
       await Promise.resolve();
@@ -63,7 +61,7 @@ describe('StatsMonitor', () => {
 
   describe('network type change detection', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      statsMonitor = new StatsMonitor(statsSource, log);
       telemetryInfoSpy.resetHistory();
     });
 
@@ -113,7 +111,7 @@ describe('StatsMonitor', () => {
 
   describe('quality limitation tracking', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      statsMonitor = new StatsMonitor(statsSource, log);
       telemetryInfoSpy.resetHistory();
     });
 
@@ -145,7 +143,7 @@ describe('StatsMonitor', () => {
 
   describe('track stall detection', () => {
     beforeEach(() => {
-      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      statsMonitor = new StatsMonitor(statsSource, log);
       telemetryInfoSpy.resetHistory();
       telemetryWarningSpy.resetHistory();
     });
@@ -187,7 +185,7 @@ describe('StatsMonitor', () => {
 
   describe('cleanup', () => {
     it('should stop stats collection and clear state', () => {
-      statsMonitor = new StatsMonitor({ log, getStats: getStatsStub });
+      statsMonitor = new StatsMonitor(statsSource, log);
       statsMonitor._stalledTrackSids.add('MT456');
 
       statsMonitor.cleanup();
