@@ -3,7 +3,9 @@
 import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
-import { createLocalTracks, setDefaultMediaStreamEventPublisher } from '../../../lib/createlocaltracks';
+import { createLocalTracks } from '../../../lib/createlocaltracks';
+
+const telemetry = require('../../../lib/insights/telemetry');
 
 describe('createLocalTracks', () => {
   [
@@ -163,35 +165,26 @@ describe('createLocalTracks', () => {
     });
   });
 
-  describe('mediaStreamEventPublisher integration', () => {
-    afterEach(() => {
-      setDefaultMediaStreamEventPublisher();
+  describe('telemetry', () => {
+    let telemetrySpy: sinon.SinonSpy;
+
+    beforeEach(() => {
+      telemetrySpy = sinon.spy(telemetry, 'info');
     });
 
-    it('should reuse the default mediaStreamEventPublisher for successes', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
-      };
-      setDefaultMediaStreamEventPublisher(publisher as any);
+    afterEach(() => {
+      telemetrySpy.restore();
+    });
 
+    it('should emit telemetry event on successful getUserMedia', async () => {
       const options = makeOptions();
       await createLocalTracks(options);
 
-      sinon.assert.calledOnce(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportFailure);
-      sinon.assert.notCalled(publisher.reportPermissionDenied);
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded' });
     });
 
-    it('should identify permission denied errors and invoke reportPermissionDenied', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
-      };
-      setDefaultMediaStreamEventPublisher(publisher as any);
-
+    it('should emit denied telemetry event for permission errors', async () => {
       const options = makeOptions();
       const permissionError = new Error('Permission denied');
       permissionError.name = 'NotAllowedError';
@@ -199,19 +192,11 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), permissionError);
 
-      sinon.assert.calledOnce(publisher.reportPermissionDenied);
-      sinon.assert.notCalled(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportFailure);
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'denied' });
     });
 
-    it('should continue to report generic failures via reportFailure', async () => {
-      const publisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
-      };
-      setDefaultMediaStreamEventPublisher(publisher as any);
-
+    it('should emit failed telemetry event for generic failures', async () => {
       const options = makeOptions();
       const unexpectedError = new Error('Camera in use');
       unexpectedError.name = 'NotReadableError';
@@ -219,33 +204,15 @@ describe('createLocalTracks', () => {
 
       await assert.rejects(() => createLocalTracks(options), unexpectedError);
 
-      sinon.assert.calledOnce(publisher.reportFailure);
-      sinon.assert.notCalled(publisher.reportSuccess);
-      sinon.assert.notCalled(publisher.reportPermissionDenied);
-    });
-
-    it('should prefer an explicitly provided mediaStreamEventPublisher over the default', async () => {
-      const defaultPublisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
-      };
-      const scopedPublisher = {
-        reportFailure: sinon.spy(),
-        reportPermissionDenied: sinon.spy(),
-        reportSuccess: sinon.spy()
-      };
-
-      setDefaultMediaStreamEventPublisher(defaultPublisher as any);
-
-      const options = Object.assign({
-        mediaStreamEventPublisher: scopedPublisher
-      }, makeOptions());
-
-      await createLocalTracks(options);
-
-      sinon.assert.calledOnce(scopedPublisher.reportSuccess);
-      sinon.assert.notCalled(defaultPublisher.reportSuccess);
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, {
+        group: 'get-user-media',
+        name: 'failed',
+        payload: {
+          name: 'NotReadableError',
+          message: 'Camera in use'
+        }
+      });
     });
   });
 });

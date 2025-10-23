@@ -229,7 +229,7 @@ export default [
       '@stylistic/no-trailing-spaces': 'error',
       '@stylistic/no-whitespace-before-property': 'off',
       '@stylistic/nonblock-statement-body-position': 'error',
-      '@stylistic/object-curly-newline': 'error',
+      '@stylistic/object-curly-newline': ['error', { 'consistent': true }],
       '@stylistic/object-curly-spacing': ['error', 'always'],
       '@stylistic/object-property-newline': 'off',
       '@stylistic/one-var-declaration-per-line': 'error',

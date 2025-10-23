@@ -8,7 +8,6 @@ import {
   LocalTrack,
   NoiseCancellationOptions
 } from '../tsdef';
-import MediaStreamEventPublisher = require('./insights/mediastreameventpublisher');
 
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
@@ -24,19 +23,12 @@ const {
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME, typeErrors: { INVALID_VALUE } } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
+const telemetry = require('./insights/telemetry');
 
 // This is used to make out which createLocalTracks() call a particular Log
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
-// Global publisher shared between connect() and standalone createLocalTracks() calls.
-// When insights are enabled, connect() sets this so that subsequent createLocalTracks()
-// calls can report events to the same publisher.
-let defaultMediaStreamEventPublisher: MediaStreamEventPublisher | null = null;
-export function setDefaultMediaStreamEventPublisher(publisher?: MediaStreamEventPublisher): void {
-  defaultMediaStreamEventPublisher = publisher || null;
-}
-
 
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
 type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode?: DefaultDeviceCaptureMode };
@@ -49,7 +41,6 @@ interface InternalOptions extends CreateLocalTracksOptions {
   LocalVideoTrack: any;
   MediaStreamTrack: any;
   Log: any;
-  mediaStreamEventPublisher?: MediaStreamEventPublisher;
 }
 
 /**
@@ -126,10 +117,6 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
     video: isAudioVideoAbsent,
     ...options,
   };
-
-  if (!fullOptions.mediaStreamEventPublisher && defaultMediaStreamEventPublisher) {
-    fullOptions.mediaStreamEventPublisher = defaultMediaStreamEventPublisher;
-  }
 
   const logComponentName = `[createLocalTracks #${++createLocalTrackCalls}]`;
   const logLevels = buildLogLevels(fullOptions.logLevel);
@@ -208,16 +195,12 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
 
   const workaroundWebKitBug180748 = typeof fullOptions.audio === 'object' && fullOptions.audio.workaroundWebKitBug180748;
 
-  const mediaStreamEventPublisher = fullOptions.mediaStreamEventPublisher;
-
   try {
     const mediaStream = await (workaroundWebKitBug180748
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
-    if (mediaStreamEventPublisher) {
-      mediaStreamEventPublisher.reportSuccess();
-    }
+    telemetry.getUserMedia.succeeded();
 
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
@@ -248,12 +231,10 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       })
     );
   } catch (error) {
-    if (mediaStreamEventPublisher) {
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        mediaStreamEventPublisher.reportPermissionDenied();
-      } else {
-        mediaStreamEventPublisher.reportFailure(error);
-      }
+    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      telemetry.getUserMedia.denied();
+    } else {
+      telemetry.getUserMedia.failed(error);
     }
     log.warn('Call to getUserMedia failed:', error);
     throw error;
