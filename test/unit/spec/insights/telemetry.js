@@ -366,6 +366,30 @@ describe('Telemetry', () => {
           }));
         });
       });
+
+      describe('dtlsTransportState', () => {
+        ['new', 'connecting', 'connected', 'closed'].forEach(state => {
+          it(`should publish ${state} event with debug level`, () => {
+            telemetry.pc.dtlsTransportState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'dtls-transport-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+
+        it('should publish failed event with error level', () => {
+          telemetry.pc.dtlsTransportState('PC123', 'failed');
+
+          sinon.assert.calledOnce(mockPublisher.publish);
+          sinon.assert.calledWith(mockPublisher.publish, 'dtls-transport-state', 'failed', sinon.match({
+            level: 'error',
+            peerConnectionId: 'PC123'
+          }));
+        });
+      });
     });
   });
 });
