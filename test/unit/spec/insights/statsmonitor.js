@@ -149,7 +149,7 @@ describe('StatsMonitor', () => {
     });
 
     it('should publish track-stalled event when frame rate drops below threshold', () => {
-      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 0.3 }]);
+      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRate: 0.3 }]);
 
       sinon.assert.calledWith(telemetryWarningSpy, {
         group: 'track-warning-raised',
@@ -164,11 +164,11 @@ describe('StatsMonitor', () => {
     });
 
     it('should publish cleared event when frame rate recovers', () => {
-      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 0.3 }]);
+      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRate: 0.3 }]);
       telemetryInfoSpy.resetHistory();
       telemetryWarningSpy.resetHistory();
 
-      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRateReceived: 10 }]);
+      statsMonitor._checkTrackStalls([{ trackSid: 'MT123', frameRate: 10 }]);
 
       sinon.assert.calledWith(telemetryInfoSpy, {
         group: 'track-warning-cleared',
