@@ -500,7 +500,7 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.framesPerSecond, fakeOutbound.framesPerSecond);
+            assert.equal(report.frameRateSent, fakeOutbound.framesPerSecond);
             assert.equal(report.ssrc, String(fakeOutbound.ssrc));
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
