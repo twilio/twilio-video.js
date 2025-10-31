@@ -107,6 +107,16 @@ describe('StatsMonitor', () => {
 
       sinon.assert.notCalled(telemetryInfoSpy);
     });
+
+    it('should handle missing network type gracefully', () => {
+      const response = {
+        activeIceCandidatePair: { localCandidate: {} }
+      };
+
+      statsMonitor._checkNetworkTypeChanges(response);
+
+      sinon.assert.notCalled(telemetryInfoSpy);
+    });
   });
 
   describe('quality limitation tracking', () => {
