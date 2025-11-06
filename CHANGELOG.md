@@ -2,25 +2,25 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.33.0 (in progress)
+2.33.0 (November 6, 2025)
 ====================
 
 New Features
 ------------
 
-### Advanced Insights
+### Enhanced Telemetry
 
-Added new Insights events for enhanced monitoring and diagnostics when `insights` is enabled:
+Added new telemetry events for enhanced monitoring and diagnostics when `insights` is enabled:
 
-- **Application Lifecycle Insights** - Monitor application visibility changes (backgrounded/resumed) and termination
+- **Application Lifecycle** - Monitor application visibility changes (backgrounded/resumed) and termination
 events.
-- **Network Information Insights** - Track connection type, bandwidth, RTT, and data saver mode changes.
-- **Quality Limitation Insights** - Report video quality limitation reasons (cpu, bandwidth, or other constraints).
-- **CPU Pressure Insights** - Monitor system CPU pressure states using the `Compute Pressure API`.
-- **getUserMedia Insights** - Track media acquisition success, permission denials, and failures.
-- **Track Warning Insights** - Report freeze counts for video tracks.
+- **Network Information** - Track connection type, bandwidth, RTT, and data saver mode changes.
+- **Quality Limitation** - Report video quality limitation reasons (cpu, bandwidth, or other constraints).
+- **CPU Pressure** - Monitor system CPU pressure states using the `Compute Pressure API`.
+- **getUserMedia** - Track media acquisition success, permission denials, and failures.
+- **Track Warning** - Report freeze counts for video tracks.
 
-These insights are automatically collected and reported through the existing insights pipeline when connecting to a
+These events are automatically collected and reported through the existing insights pipeline when connecting to a
 Room.
 
 Changes
