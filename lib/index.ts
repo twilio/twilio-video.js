@@ -29,7 +29,7 @@ function connect(token: string, options?: ConnectOptions): Promise<Room> {
   return internals.connect(token, internalOptions);
 }
 
-function createLocalAudioTrack(options?: CreateLocalTrackOptions|CreateLocalAudioTrackOptions): Promise<LocalAudioTrackType> {
+function createLocalAudioTrack(options?: CreateLocalTrackOptions | CreateLocalAudioTrackOptions): Promise<LocalAudioTrackType> {
   const internalOptions = {
     createLocalTracks,
     ...options

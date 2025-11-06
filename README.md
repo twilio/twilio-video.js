@@ -24,7 +24,7 @@ Browser Support
 |             | Chrome | Edge (Chromium) | Firefox | Safari | WebView |
 | ------------|--------|-----------------|---------|--------|---------|
 | **Android** | ✓      | -               | ✓       | -      | -       |
-| **iOS**     | ✓      | -               | *       | ✓      | ✓       |
+| **iOS**     | ✓      | ✓               | *       | ✓      | ✓       |
 | **Linux**   | ✓      | -               | ✓       | -      | -       |
 | **macOS**   | ✓      | ✓ **            | ✓       | ✓      | -       |
 | **Windows** | ✓      | ✓ **            | ✓       | -      | -       |
@@ -60,7 +60,7 @@ function participantDisconnected(participant: Video.RemoteParticipant) {
 Alternatively, you can import just the definitions you need like so:
 
 ```ts
-import { RemoteParticiant } from 'twilio-video';
+import { RemoteParticipant } from 'twilio-video';
 
 function participantDisconnected(participant: RemoteParticipant) {
   console.log('Participant "%s" disconnected', participant.identity);
@@ -74,7 +74,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//sdk.twilio.com/js/video/releases/2.32.1/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.33.0/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:

@@ -109,11 +109,13 @@ describe('LocalParticipant: regressions', function() {
       };
     });
 
-    after(() => {
+    after(async () => {
       thisTrack1.stop();
       thisTrack2.stop();
       [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
 
     it('should eventually raise a "trackUnpublished" event for the unpublished LocalVideoTrack', () => {
@@ -247,10 +249,12 @@ describe('LocalParticipant: regressions', function() {
         };
       });
 
-      after(() => {
+      after(async () => {
         [thisLocalTrack1, thisLocalTrack2].forEach(track => track.stop && track.stop());
         [thisRoom, thatRoom].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
 
       it(`should eventually raise "trackPublished" event for the published Local${capitalize(kind1)}Track and Local${capitalize(kind2)}Track`, () => {
@@ -300,12 +304,10 @@ describe('LocalParticipant: regressions', function() {
 
     combinationContext([
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, 25000, 0],
         x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ],
       [
-        // eslint-disable-next-line no-undefined
         [undefined, null, 45000, 0],
         x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
       ]
@@ -431,9 +433,11 @@ describe('LocalParticipant: regressions', function() {
         });
       });
 
-      after(() => {
+      after(async () => {
         [thisRoom, ...thoseRooms].forEach(room => room && room.disconnect());
-        return completeRoom(sid);
+        if (sid) {
+          await completeRoom(sid);
+        }
       });
     });
   });
@@ -495,14 +499,16 @@ describe('LocalParticipant: regressions', function() {
       assert.equal(localVideoTrackPublications.length, localVideoTracks.length);
     });
 
-    after(() => {
+    after(async () => {
       if (Array.isArray(localVideoTracks)) {
         localVideoTracks.forEach(track => track.stop());
       }
       if (room) {
         room.disconnect();
       }
-      return completeRoom(sid);
+      if (sid) {
+        await completeRoom(sid);
+      }
     });
   });
 
@@ -559,7 +565,7 @@ describe('LocalParticipant: regressions', function() {
         localAudioTrack = await createLocalAudioTrack({ fake: true });
         const token = getToken(randomName());
         const options = Object.assign({ tracks: [localAudioTrack] }, defaults);
-        // eslint-disable-next-line no-await-in-loop
+
         room = await setupRoom(token, options);
         if (room) {
           room.disconnect();

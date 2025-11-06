@@ -17,9 +17,7 @@ function getQueryParameters(location) {
   }, new Map());
 }
 
-// eslint-disable-next-line
 const token = (getQueryParameters(location).get('token') || [])[0] || '';
-// eslint-disable-next-line
 const environment = (getQueryParameters(location).get('environment') || [])[0];
 
 if (environment !== 'prod') {

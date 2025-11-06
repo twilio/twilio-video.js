@@ -29,7 +29,7 @@ describe('RemoteMediaTrackDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant subscribing to the RemoteMediaTrack is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       let localMediaTrack: LocalMediaTrackDriver;
       let remoteMediaTrack: RemoteMediaTrackDriver;
       let roomDrivers: Array<RoomDriver>;
@@ -115,7 +115,7 @@ describe('RemoteMediaTrackDriver', function() {
 
       it(`should emit "track${capitalize(event)}" on the RoomDriver with the RemoteMediaTrackDriver `
         + 'and the RemoteParticipantDriver', async () => {
-        const [ remoteTrack, remoteParticipant ] = await waitForRoomEvent;
+        const [remoteTrack, remoteParticipant] = await waitForRoomEvent;
         assert(remoteTrack instanceof RemoteMediaTrackDriver);
         assert.equal(remoteTrack, remoteMediaTrack);
         assert(remoteParticipant instanceof RemoteParticipantDriver);

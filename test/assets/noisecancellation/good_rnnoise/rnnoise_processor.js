@@ -56,7 +56,6 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
           this.logging = false;
           break;
         default:
-          // eslint-disable-next-line no-console
           console.warn('unknown command: ', command);
       }
       if (command === 'enable' && this.state === null) {
@@ -73,7 +72,6 @@ class RNNNoiseProcessor extends AudioWorkletProcessor {
 
   log(...messages) {
     if (this.logging) {
-      // eslint-disable-next-line no-console
       console.log('rnnoise_processor:', ...messages);
     }
   }

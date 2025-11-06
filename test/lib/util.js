@@ -1,6 +1,5 @@
 /* globals webkitAudioContext */
 /* eslint-disable new-cap */
-/* eslint-disable no-console */
 /* eslint-disable no-await-in-loop */
 'use strict';
 
@@ -542,7 +541,7 @@ async function verifyOnline() {
  */
 function waitToGo(onlineOrOffline) {
   const wantOnline = onlineOrOffline === 'online';
-  // eslint-disable-next-line no-console
+
   return new Promise(resolve => {
     if (window.navigator.onLine !== wantOnline) {
       window.addEventListener(onlineOrOffline, resolve, { once: true });
@@ -561,7 +560,6 @@ async function waitToGoOnline() {
     await waitFor(waitToGo('online'), 'wait to go online', 10 * second);
     await waitFor(verifyOnline(), 'verified online');
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.log('waitToGoOnline failed. but since its known to be unstable on ' +
                 'firefox sometime so letting it go:', err);
   }
@@ -601,7 +599,6 @@ let waitId = 101;
 async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose = false) {
   const thisWaitId = waitId++;
   if (verbose) {
-    // eslint-disable-next-line no-console
     console.log(`>>>> [${thisWaitId}] Will wait ${timeoutMS} ms for : ${message}`);
   }
   const startTime = new Date();
@@ -611,7 +608,7 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
     timer = setTimeout(() => {
       const endTime = new Date();
       const durationInSeconds = (endTime - startTime) / 1000;
-      // eslint-disable-next-line no-console
+
       console.warn(`xxxx [${thisWaitId}] Timed out waiting for : ${message} [${durationInSeconds} seconds]`);
       reject(new Error(`Timed out waiting for : ${message}`));
     }, timeoutMS);
@@ -621,7 +618,6 @@ async function waitFor(promiseOrArray, message, timeoutMS = 30 * second, verbose
   const endTime = new Date();
   const durationInSeconds = (endTime - startTime) / 1000;
   if (verbose) {
-    // eslint-disable-next-line no-console
     console.log(`<<<< [${thisWaitId}] Succeeded in waiting for: ${message} [${durationInSeconds} seconds]`);
   }
   clearTimeout(timer);

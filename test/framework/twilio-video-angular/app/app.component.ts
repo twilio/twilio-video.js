@@ -1,4 +1,4 @@
-import { connect, Room } from 'twilio-video';
+import { Room, connect } from 'twilio-video';
 import { Component, OnInit } from '@angular/core';
 
 /**

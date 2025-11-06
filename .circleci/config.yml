@@ -139,6 +139,7 @@ commands:
       - run:
           name: Running Integration Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
+          max_auto_reruns: 3
       - save-test-results
   network-tests:
     steps:
@@ -146,6 +147,7 @@ commands:
       - run:
           name: Running Network Tests (environment = << pipeline.parameters.environment >>)
           command: scripts/circleci-run-tests.sh
+          max_auto_reruns: 3
       - save-test-results
   umd-tests:
     steps:

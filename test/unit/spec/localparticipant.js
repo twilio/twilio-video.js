@@ -1,4 +1,3 @@
-/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');

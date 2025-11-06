@@ -1,4 +1,4 @@
-declare module "twilio-video" {
+declare module 'twilio-video' {
   import events = require('events');
 
   function connect(token: string): Promise<Room>;

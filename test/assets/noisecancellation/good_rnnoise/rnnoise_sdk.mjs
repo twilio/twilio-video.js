@@ -1,8 +1,6 @@
 // Author: Makarand Patwardhan
 // Implements interface to interact with twilio-video SDK
 
-/* eslint-disable no-console */
-
 const NativeAudioContext = typeof window.AudioContext !== 'undefined' ? window.AudioContext : typeof window.webkitAudioContext !== 'undefined' ? window.webkitAudioContext : null;
 async function fetchAndCompileWebAssemblyModule(moduleUrl) {
   const response = await fetch(moduleUrl);

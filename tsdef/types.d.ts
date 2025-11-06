@@ -165,7 +165,7 @@ export interface LocalTrackPublishOptions {
   priority?: Track.Priority;
 }
 
-export interface MediaStreamTrackPublishOptions extends LocalTrackOptions{
+export interface MediaStreamTrackPublishOptions extends LocalTrackOptions {
   priority?: Track.Priority;
 }
 
@@ -210,7 +210,7 @@ export interface CreateLocalAudioTrackOptions extends CreateLocalTrackOptions {
 }
 
 export interface ConnectOptions extends MediaImplementationOptions {
-  audio?: boolean | CreateLocalTrackOptions| CreateLocalAudioTrackOptions;
+  audio?: boolean | CreateLocalTrackOptions | CreateLocalAudioTrackOptions;
   automaticSubscription?: boolean;
   bandwidthProfile?: BandwidthProfileOptions;
   dominantSpeaker?: boolean;
@@ -287,6 +287,7 @@ export class LocalVideoTrackStats extends LocalTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   captureFrameRate: number | null;
   frameRate: number | null;
+  qualityLimitationReason?: 'none' | 'cpu' | 'bandwidth' | 'other';
 }
 
 export class LocalAudioTrackStats extends LocalTrackStats {
@@ -296,16 +297,17 @@ export class LocalAudioTrackStats extends LocalTrackStats {
 export class RemoteTrackStats extends TrackStats {
   bytesReceived: number | null;
   packetsReceived: number | null;
+  jitter: number | null;
 }
 
 export class RemoteAudioTrackStats extends RemoteTrackStats {
   audioLevel: AudioLevel | null;
-  jitter: number | null;
 }
 
 export class RemoteVideoTrackStats extends RemoteTrackStats {
   dimensions: VideoTrack.Dimensions | null;
   frameRate: number | null;
+  freezeCount?: number;
 }
 
 export class StatsReport {
@@ -321,14 +323,12 @@ export interface CancelablePromise<T> extends Promise<T> {
 }
 
 export type TranscriptionEvent = {
-  /* eslint-disable camelcase */
   language_code: string;
   partial_results: boolean;
   sequence_number: number;
-  /* eslint-enable camelcase */
   participant: string;
   timestamp: string;
   track: string;
   transcription: string;
   type: 'extension_transcriptions';
-}
+};

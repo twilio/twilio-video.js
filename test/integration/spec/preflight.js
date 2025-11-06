@@ -1,4 +1,3 @@
-/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -45,7 +44,6 @@ function assertIceCandidate(candidate) {
 }
 
 function validateReport(report)  {
-  // eslint-disable-next-line no-console
   console.log('report: ', JSON.stringify(report, null, 4));
   assertTimeMeasurement(report.testTiming);
   assertTimeMeasurement(report.networkTiming.connect);
@@ -87,19 +85,16 @@ describe('preflight', function() {
     });
 
     preflight.on('progress', progress => {
-      // eslint-disable-next-line no-console
       console.log('progress:', progress);
       progressReceived.push(progress);
     });
 
     preflight.on('failed', error => {
-      // eslint-disable-next-line no-console
       console.log('failed:', error);
       deferred.reject(error);
     });
 
     preflight.on('warning', (name, text) => {
-      // eslint-disable-next-line no-console
       console.log('warning:', name, text);
     });
 
@@ -122,7 +117,6 @@ describe('preflight', function() {
     });
 
     preflight.on('failed', (error, report) => {
-      // eslint-disable-next-line no-console
       console.log('preflight failed as expected:', error);
       errorResult = error;
       reportResult = report;

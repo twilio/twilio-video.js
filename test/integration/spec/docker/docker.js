@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 'use strict';
 
 const assert = require('assert');
@@ -148,7 +147,7 @@ describe('dockerProxy', function() {
 
       networks = await dockerAPI.getAllNetworks();
       found = networks.find(network => network.Id === newNetwork.Id);
-      // eslint-disable-next-line no-undefined
+
       assert.equal(found, undefined);
     });
 

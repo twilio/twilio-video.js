@@ -29,7 +29,7 @@ describe('RemoteDataTrackDriver', function() {
         ['chrome', 'firefox'],
         x => `when the Participant subscribing to the RemoteDataTrack is in ${x}`
       ]
-    ], ([ event, ...browsers ]) => {
+    ], ([event, ...browsers]) => {
       let localDataTrack: LocalDataTrackDriver;
       let remoteDataTrack: RemoteDataTrackDriver;
       let roomDrivers: Array<RoomDriver>;

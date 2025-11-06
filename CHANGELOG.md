@@ -1,6 +1,32 @@
-The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the lastest Video JavaScript SDK.
+The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.org/). Twilio supports version N-1 for 12 months after the first GA release of version N. We recommend you upgrade to the latest version as soon as possible to avoid any breaking changes. Version 2.x is the latest Video JavaScript SDK.
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
+
+2.33.0 (November 6, 2025)
+====================
+
+New Features
+------------
+
+### Enhanced Telemetry
+
+Added new telemetry events for enhanced monitoring and diagnostics when `insights` is enabled:
+
+- **Application Lifecycle** - Monitor application visibility changes (backgrounded/resumed) and termination
+events.
+- **Network Information** - Track connection type, bandwidth, RTT, and data saver mode changes.
+- **Quality Limitation** - Report video quality limitation reasons (cpu, bandwidth, or other constraints).
+- **CPU Pressure** - Monitor system CPU pressure states using the `Compute Pressure API`.
+- **getUserMedia** - Track media acquisition success, permission denials, and failures.
+- **Track Warning** - Report freeze counts for video tracks.
+
+These events are automatically collected and reported through the existing insights pipeline when connecting to a
+Room.
+
+Changes
+------------
+
+- `isSupported` now returns `true` for Microsoft Edge on iOS.
 
 2.32.1 (August 1, 2025)
 ====================

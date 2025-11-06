@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use strict';
 
 import {
@@ -24,15 +23,15 @@ const {
 const Log = require('./util/log');
 const { DEFAULT_LOG_LEVEL, DEFAULT_LOGGER_NAME, typeErrors: { INVALID_VALUE } } = require('./util/constants');
 const workaround180748 = require('./webaudio/workaround180748');
+const telemetry = require('./insights/telemetry');
 
 // This is used to make out which createLocalTracks() call a particular Log
 // statement belongs to. Each call to createLocalTracks() increments this
 // counter.
 let createLocalTrackCalls = 0;
 
-
 type ExtraLocalTrackOption = CreateLocalTrackOptions & { isCreatedByCreateLocalTracks?: boolean };
-type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode? : DefaultDeviceCaptureMode };
+type ExtraLocalAudioTrackOption = ExtraLocalTrackOption & { defaultDeviceCaptureMode?: DefaultDeviceCaptureMode };
 type ExtraLocalTrackOptions = { audio: ExtraLocalAudioTrackOption; video: ExtraLocalTrackOption; };
 
 interface InternalOptions extends CreateLocalTracksOptions {
@@ -201,6 +200,8 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       ? workaround180748(log, fullOptions.getUserMedia, mediaStreamConstraints)
       : fullOptions.getUserMedia(mediaStreamConstraints));
 
+    telemetry.getUserMedia.succeeded();
+
     const mediaStreamTracks = [
       ...mediaStream.getAudioTracks(),
       ...mediaStream.getVideoTracks(),
@@ -230,6 +231,11 @@ export async function createLocalTracks(options?: CreateLocalTracksOptions): Pro
       })
     );
   } catch (error) {
+    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      telemetry.getUserMedia.denied();
+    } else {
+      telemetry.getUserMedia.failed(error);
+    }
     log.warn('Call to getUserMedia failed:', error);
     throw error;
   }

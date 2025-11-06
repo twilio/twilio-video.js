@@ -93,7 +93,7 @@ describe('DMP', () => {
           transport.emit('message', {
             data,
             type,
-            ...{ event: {}, request: { id: 0 }}[type]
+            ...{ event: {}, request: { id: 0 } }[type]
           });
         });
 

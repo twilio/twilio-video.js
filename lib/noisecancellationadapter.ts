@@ -33,7 +33,7 @@ interface NoiseCancellationPlugin {
   getVersion(): string;
 }
 
-const ensureVersionSupported = ({ supportedVersion, plugin, log }: {supportedVersion: string, plugin: NoiseCancellationPlugin, log: typeof Log}) : void => {
+const ensureVersionSupported = ({ supportedVersion, plugin, log }: { supportedVersion: string, plugin: NoiseCancellationPlugin, log: typeof Log }) : void => {
   if (!plugin.getVersion || !plugin.isSupported) {
     throw new Error('Plugin does not export getVersion/isSupported api. Are you using old version of the plugin ?');
   }

@@ -35,7 +35,6 @@ function runFrameworkTest(options) {
       server = spawn(start.command, start.args, {
         cwd: path,
         detached: true,
-        // eslint-disable-next-line no-process-env
         env: Object.assign({}, start.env, process.env),
         stdio: 'inherit'
       });
@@ -56,7 +55,6 @@ function runFrameworkTest(options) {
 
     beforeEach(() => {
       token = getToken('twilio-video.js-framework-test');
-      // eslint-disable-next-line no-process-env
       environment = process.env.ENVIRONMENT;
 
       if (environment && environment !== 'prod') {

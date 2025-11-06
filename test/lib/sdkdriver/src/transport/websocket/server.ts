@@ -1,6 +1,6 @@
+import * as WebSocket from 'ws';
 import { EventEmitter } from 'events';
 import { Server as HTTPServer } from 'http';
-import * as WebSocket from 'ws';
 import Transport from '../';
 
 /**
@@ -42,6 +42,7 @@ export default class WSServerTransport extends EventEmitter implements Transport
       this._wsConnection.close();
       this._wsConnection = null;
     }
+    this._wsServer.clients.forEach(client => client.terminate());
     this._wsServer.close();
   }
 
@@ -56,7 +57,7 @@ export default class WSServerTransport extends EventEmitter implements Transport
       this._wsServer.once('connection', wsConnection => {
         this._sendBuffer.splice(0).forEach(item => wsConnection.send(item));
         wsConnection.on('close', () => this.emit('close'));
-        wsConnection.on('message', (data: string) => this.emit('message', JSON.parse(data)));
+        wsConnection.on('message', (data: Buffer) => this.emit('message', JSON.parse(data.toString())));
         this._wsConnection = wsConnection;
         resolve();
       });

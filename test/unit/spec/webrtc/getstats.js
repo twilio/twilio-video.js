@@ -110,7 +110,7 @@ describe('getStats', function() {
           frameWidth: 640,
           framesDecoded: 43,
           framesDropped: 0,
-          framesPerSecond: 23,
+          framesPerSecond: null,
           framesReceived: 43,
           headerBytesReceived: 920,
           id: 'RTCInboundRTPVideoStream_2569502525',
@@ -467,7 +467,7 @@ describe('getStats', function() {
           ssrc: 200,
           bytesSent: 45,
           packetsSent: 50,
-          framerateMean: 28.84,
+          framesPerSecond: 28,
           framesEncoded: 5000,
           totalEncodeTime: 16.25,
           totalPacketSendDelay: 1.52
@@ -500,7 +500,7 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.frameRateSent, Math.round(fakeOutbound.framerateMean));
+            assert.equal(report.frameRateSent, fakeOutbound.framesPerSecond);
             assert.equal(report.ssrc, String(fakeOutbound.ssrc));
             assert.equal(report.bytesSent, fakeOutbound.bytesSent);
             assert.equal(report.packetsSent, fakeOutbound.packetsSent);
@@ -538,7 +538,7 @@ describe('getStats', function() {
           packetsReceived: 50,
           packetsLost: 5,
           jitter: 0.05,
-          framerateMean: 20.45,
+          framesPerSecond: null,
           estimatedPlayoutTimestamp: 1234123412,
           framesDecoded: 4343,
           jitterBufferDelay: 0.2,
@@ -573,7 +573,7 @@ describe('getStats', function() {
           .forEach(report => {
             assert(report.trackId);
             assert(report.timestamp);
-            assert.equal(report.frameRateReceived, Math.round(fakeInbound.framerateMean));
+            assert.equal(report.frameRateReceived, fakeInbound.framesPerSecond);
             assert.equal(report.ssrc, String(fakeInbound.ssrc));
             assert.equal(report.bytesReceived, fakeInbound.bytesReceived);
             assert.equal(report.packetsReceived, fakeInbound.packetsReceived);

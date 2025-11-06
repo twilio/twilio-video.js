@@ -5,6 +5,8 @@ import * as sinon from 'sinon';
 import { FakeMediaStreamTrack, fakeGetUserMedia } from '../../lib/fakemediastream';
 import { createLocalTracks } from '../../../lib/createlocaltracks';
 
+const telemetry = require('../../../lib/insights/telemetry');
+
 describe('createLocalTracks', () => {
   [
     ['when called with no constraints'],
@@ -160,6 +162,57 @@ describe('createLocalTracks', () => {
       const callArgs = getUserMediaSpy.getCall(0).args;
       assert.equal(callArgs.length, 1);
       assert.deepEqual(callArgs[0], expectedConstraints, 'getUserMedia was not called with the expected constraints');
+    });
+  });
+
+  describe('telemetry', () => {
+    let telemetrySpy: sinon.SinonSpy;
+
+    beforeEach(() => {
+      telemetrySpy = sinon.spy(telemetry, 'info');
+    });
+
+    afterEach(() => {
+      telemetrySpy.restore();
+    });
+
+    it('should emit telemetry event on successful getUserMedia', async () => {
+      const options = makeOptions();
+      await createLocalTracks(options);
+
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'succeeded' });
+    });
+
+    it('should emit denied telemetry event for permission errors', async () => {
+      const options = makeOptions();
+      const permissionError = new Error('Permission denied');
+      permissionError.name = 'NotAllowedError';
+      options.getUserMedia = sinon.stub().rejects(permissionError);
+
+      await assert.rejects(() => createLocalTracks(options), permissionError);
+
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, { group: 'get-user-media', name: 'denied' });
+    });
+
+    it('should emit failed telemetry event for generic failures', async () => {
+      const options = makeOptions();
+      const unexpectedError = new Error('Camera in use');
+      unexpectedError.name = 'NotReadableError';
+      options.getUserMedia = sinon.stub().rejects(unexpectedError);
+
+      await assert.rejects(() => createLocalTracks(options), unexpectedError);
+
+      sinon.assert.calledOnce(telemetrySpy);
+      sinon.assert.calledWith(telemetrySpy, {
+        group: 'get-user-media',
+        name: 'failed',
+        payload: {
+          name: 'NotReadableError',
+          message: 'Camera in use'
+        }
+      });
     });
   });
 });

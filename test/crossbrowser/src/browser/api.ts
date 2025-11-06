@@ -21,7 +21,7 @@ declare const Twilio: any;
  * @returns {Promise<object>}
  */
 export async function connect(args: any, sendRoomEvents: (room: any) => void): Promise<any> {
-  const [ token, options ] = args;
+  const [token, options] = args;
   let room: any;
 
   try {
@@ -47,7 +47,7 @@ export async function connect(args: any, sendRoomEvents: (room: any) => void): P
  * @returns {Promise<object>}
  */
 export async function createLocalTrack(args: any, sendLocalTrackEvents: (track: any) => void): Promise<any> {
-  const [ kind, options ] = args;
+  const [kind, options] = args;
   const createLocalTrack: (options: any) => Promise<any> = {
     audio: (options: any) => Twilio.Video.createLocalAudioTrack(options),
     data: (options: any) => new Twilio.Video.LocalDataTrack(options),
@@ -77,7 +77,7 @@ export async function createLocalTrack(args: any, sendLocalTrackEvents: (track: 
  * @returns {Promise<object>}
  */
 export async function createLocalTracks(args: any, sendLocalTrackEvents: (track: any) => void): Promise<any> {
-  const [ options ] = args;
+  const [options] = args;
   let localTracks: Array<any>;
 
   try {
@@ -183,7 +183,7 @@ export async function getStats(target: ResourceID): Promise<any> {
     };
   } catch (e) {
     return {
-      error : {
+      error: {
         message: e.message
       }
     };
@@ -370,7 +370,6 @@ export function unpublish(target: ResourceID): any {
     result: serializeLocalTrackPublication(localTrackPublication)
   };
 }
-
 
 
 /**

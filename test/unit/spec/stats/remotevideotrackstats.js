@@ -12,21 +12,24 @@ describe('RemoteVideoTrackStats', () => {
       ssrc: 'foo',
       frameWidthReceived: 320,
       frameHeightReceived: 240,
-      frameRateReceived: 29
+      frameRateReceived: 29,
+      freezeCount: 0,
     };
 
-    it('should set the dimensions and frameRate properties', () => {
+    it('should set the dimensions, frameRate, and freezeCount properties', () => {
       const trackStats = new RemoteVideoTrackStats(stats.trackId, stats);
       assert.deepEqual(trackStats.dimensions, {
         width: stats.frameWidthReceived,
         height: stats.frameHeightReceived
       });
       assert.equal(trackStats.frameRate, stats.frameRateReceived);
+      assert.strictEqual(trackStats.freezeCount, stats.freezeCount);
     });
 
     [
       [['frameWidthReceived', 'frameHeightReceived'], 'dimensions'],
-      [['frameRateReceived'], 'frameRate']
+      [['frameRateReceived'], 'frameRate'],
+      [['freezeCount'], 'freezeCount']
     ].forEach(([statNames, prop]) => {
       context(`when the StandardizedTrackStatsReport does not have ${statNames.join(', ')}`, () => {
         it(`should set the ${prop} property to null`, () => {

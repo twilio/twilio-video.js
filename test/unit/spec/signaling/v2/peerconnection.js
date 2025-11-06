@@ -1,5 +1,3 @@
-/* eslint-disable require-atomic-updates */
-/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -615,7 +613,6 @@ describe('PeerConnectionV2', () => {
       }
       if (signalingState === 'closed') {
         it('returns a promise that resolves to "COULD_NOT_APPLY_HINT"', async () => {
-          // eslint-disable-next-line camelcase
           const result = await test.pcv2._setPublisherHint(trackSender, makePublisherHints(0, true));
           assert(result, 'COULD_NOT_APPLY_HINT');
         });
@@ -896,9 +893,8 @@ describe('PeerConnectionV2', () => {
       // resolve deferred promise when setRemoteDescription is called.
       const setRemoteDescriptionCalled = defer();
       const setRemoteDescriptionStub = sinon.stub(test.pc, 'setRemoteDescription');
-      setRemoteDescriptionStub.callsFake(() => {
+      setRemoteDescriptionStub.callsFake(function() {
         setRemoteDescriptionCalled.resolve();
-        // eslint-disable-next-line no-undef
         return setRemoteDescriptionStub.wrappedMethod.apply(test.pc, arguments);
       });
 
@@ -1277,7 +1273,6 @@ describe('PeerConnectionV2', () => {
         [true, false],
         x => `When chromeScreenTrack is ${x ? 'present' : 'not present'}`
       ],
-    // eslint-disable-next-line consistent-return
     ], ([initial, vmsFailOver, signalingState, type, newerEqualOrOlder, matching, iceLite, enableDscp, chromeScreenTrack]) => {
       // these combinations grow exponentially
       // skip the ones that do not make much sense to test.

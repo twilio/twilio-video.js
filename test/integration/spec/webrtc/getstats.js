@@ -167,7 +167,8 @@ const sdpFormat = getSdpFormat();
       });
       [
         { key: 'deleted', type: 'boolean' },
-        { key: 'relayProtocol', type: 'string' }
+        { key: 'relayProtocol', type: 'string' },
+        { key: 'networkType', type: 'string' },
       ].forEach(({ key, type }) => {
         const firefoxVersion = isFirefox && navigator.userAgent.match(/Firefox\/(\d+)\./)[1];
         if (localCandidateStatsNullProps[guess](firefoxVersion).has(key)) {

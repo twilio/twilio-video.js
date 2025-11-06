@@ -186,7 +186,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackAdded(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackAdded', participant.tracks.get(serializedTrack.id), participant);
@@ -202,7 +202,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackDisabled(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackDisabled', participant.tracks.get(serializedTrack.id), participant);
@@ -218,7 +218,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackEnabled(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackEnabled', participant.tracks.get(serializedTrack.id), participant);
@@ -234,7 +234,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackMessage(source: any, args: any): void {
     this._update(source);
-    const [ data, serializedTrack, serializedParticipant ] = args;
+    const [data, serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackMessage', data, participant.tracks.get(serializedTrack.id), participant);
@@ -250,7 +250,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackRemoved(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackRemoved', participant.getRemovedTrack(serializedTrack.id), participant);
@@ -266,7 +266,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackStarted(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackStarted', participant.tracks.get(serializedTrack.id), participant);
@@ -282,7 +282,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackSubscribed(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackSubscribed', participant.tracks.get(serializedTrack.id), participant);
@@ -298,7 +298,7 @@ export default class RoomDriver extends EventEmitter {
    */
   private _reemitTrackUnsubscribed(source: any, args: any): void {
     this._update(source);
-    const [ serializedTrack, serializedParticipant ] = args;
+    const [serializedTrack, serializedParticipant] = args;
     const participant: RemoteParticipantDriver | undefined = this.participants.get(serializedParticipant.sid);
     if (participant) {
       this.emit('trackUnsubscribed', participant.getRemovedTrack(serializedTrack.id), participant);

@@ -14,13 +14,12 @@ describe('RemoteAudioTrackStats', () => {
       jitter: 0.5
     };
 
-    it('should set the audioLevel and jitter properties', () => {
+    it('should set the audioLevel property', () => {
       const trackStats = new RemoteAudioTrackStats(stats.trackId, stats);
       assert.equal(trackStats.audioLevel, stats.audioOutputLevel);
-      assert.equal(trackStats.jitter, stats.jitter);
     });
 
-    [['audioLevel', 'audioOutputLevel'], 'jitter'].forEach(statName => {
+    [['audioLevel', 'audioOutputLevel']].forEach(statName => {
       const propName = typeof statName === 'string'
         ? statName : statName[0];
 

@@ -1,4 +1,3 @@
-/* eslint-disable no-undefined */
 'use strict';
 
 const assert = require('assert');
@@ -41,7 +40,6 @@ function getTracksOfKind(participant, kind) {
 
     const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
     async function joinRoomAndEnsureTracksStarted(i) {
-      // eslint-disable-next-line no-console
       console.log(`${i}] connecting to room ${aliceRoom.sid}`);
       const bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `${i}] Bob to join room: ${aliceRoom.sid}`);
 
@@ -90,7 +88,6 @@ function getTracksOfKind(participant, kind) {
 
     async function publishAndVerifyStarted(i) {
 
-      // eslint-disable-next-line no-console
       console.log(`${i}] Alice publishing tracks`);
       // alice publishes two tracks.
       const audioPublication = await waitFor(aliceRoom.localParticipant.publishTrack(localAudioTrack), `Alice to publish a audio track: ${aliceRoom.sid}`);

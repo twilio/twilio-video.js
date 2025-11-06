@@ -19,7 +19,7 @@ describe('LocalMediaTrackDriver', function() {
       ['chrome', 'firefox'],
       x => x
     ]
-  ], ([ method, browser ]) => {
+  ], ([method, browser]) => {
     const event: string = method === 'stop' ? 'stopped' : `${method}d`;
     const expected: boolean = new Set(['stop', 'enable']).has(method);
     const prop: string = method === 'stop' ? 'isStopped' : 'isEnabled';
