@@ -1,1 +1,0 @@
-{"version":3,"file":"rtcicecandidate.js","sourceRoot":"","sources":["../../lib/webrtc/rtcicecandidate.js"],"names":[],"mappings":"AAAA,4BAA4B;AAC5B,YAAY,CAAC;AAEb,IAAI,OAAO,eAAe,KAAK,UAAU,EAAE,CAAC;IAC1C,MAAM,CAAC,OAAO,GAAG,eAAe,CAAC;AACnC,CAAC;KAAM,CAAC;IACN,MAAM,CAAC,OAAO,GAAG,SAAS,eAAe;QACvC,MAAM,IAAI,KAAK,CAAC,kCAAkC,CAAC,CAAC;IACtD,CAAC,CAAC;AACJ,CAAC"}
