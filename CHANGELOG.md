@@ -7,7 +7,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 New Features
 ------------
-#### Enhanced Telemetry
+### Enhanced Telemetry
 Added new telemetry events to enhance monitoring and diagnostics for the following media-related states:
 
 - [RTCPeerConnectionState](https://w3c.github.io/webrtc-pc/#rtcpeerconnectionstate-enum)
