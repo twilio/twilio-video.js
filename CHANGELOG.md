@@ -2,6 +2,19 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.34.0 (in progress)
+====================
+
+New Features
+------------
+### Enhanced Telemetry
+Added new telemetry events to enhance monitoring and diagnostics for the following media-related states:
+
+- [RTCPeerConnectionState](https://w3c.github.io/webrtc-pc/#rtcpeerconnectionstate-enum)
+- [RTCSignalingState](https://w3c.github.io/webrtc-pc/#rtcsignalingstate-enum)
+- [RTCIceGatheringState](https://w3c.github.io/webrtc-pc/#rtcicegatheringstate-enum)
+- [RTCIceConnectionState](https://w3c.github.io/webrtc-pc/#rtciceconnectionstate-enum)
+
 2.33.0 (November 6, 2025)
 ====================
 

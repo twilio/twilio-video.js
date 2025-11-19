@@ -299,5 +299,97 @@ describe('Telemetry', () => {
         }));
       });
     });
+
+    describe('RTCPeerConnection events', () => {
+      describe('connectionState', () => {
+        ['new', 'connecting', 'connected', 'disconnected', 'failed', 'closed'].forEach(state => {
+          it(`should publish ${state} event`, () => {
+            telemetry.pc.connectionState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'pc-connection-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+      });
+
+      describe('signalingState', () => {
+        ['stable', 'have-local-offer', 'have-remote-offer', 'have-local-pranswer', 'have-remote-pranswer', 'closed'].forEach(state => {
+          it(`should publish ${state} event`, () => {
+            telemetry.pc.signalingState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'pc-signaling-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+      });
+
+      describe('iceGatheringState', () => {
+        ['new', 'gathering', 'complete'].forEach(state => {
+          it(`should publish ${state} event`, () => {
+            telemetry.pc.iceGatheringState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'ice-gathering-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+      });
+
+      describe('iceConnectionState', () => {
+        ['new', 'checking', 'connected', 'completed', 'disconnected', 'closed'].forEach(state => {
+          it(`should publish ${state} event with debug level`, () => {
+            telemetry.pc.iceConnectionState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'ice-connection-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+
+        it('should publish failed event with error level', () => {
+          telemetry.pc.iceConnectionState('PC123', 'failed');
+
+          sinon.assert.calledOnce(mockPublisher.publish);
+          sinon.assert.calledWith(mockPublisher.publish, 'ice-connection-state', 'failed', sinon.match({
+            level: 'error',
+            peerConnectionId: 'PC123'
+          }));
+        });
+      });
+
+      describe('dtlsTransportState', () => {
+        ['new', 'connecting', 'connected', 'closed'].forEach(state => {
+          it(`should publish ${state} event with debug level`, () => {
+            telemetry.pc.dtlsTransportState('PC123', state);
+
+            sinon.assert.calledOnce(mockPublisher.publish);
+            sinon.assert.calledWith(mockPublisher.publish, 'dtls-transport-state', state, sinon.match({
+              level: 'debug',
+              peerConnectionId: 'PC123'
+            }));
+          });
+        });
+
+        it('should publish failed event with error level', () => {
+          telemetry.pc.dtlsTransportState('PC123', 'failed');
+
+          sinon.assert.calledOnce(mockPublisher.publish);
+          sinon.assert.calledWith(mockPublisher.publish, 'dtls-transport-state', 'failed', sinon.match({
+            level: 'error',
+            peerConnectionId: 'PC123'
+          }));
+        });
+      });
+    });
   });
 });
