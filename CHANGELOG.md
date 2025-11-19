@@ -8,7 +8,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 #### Enhanced Telemetry
-The following media states are now recorded under the default `insights` telemetry, providing additional detail for troubleshooting call quality:
+Added new telemetry events to enhance monitoring and diagnostics for the following media-related states:
 
 - [RTCPeerConnectionState](https://w3c.github.io/webrtc-pc/#rtcpeerconnectionstate-enum)
 - [RTCSignalingState](https://w3c.github.io/webrtc-pc/#rtcsignalingstate-enum)
