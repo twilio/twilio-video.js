@@ -1006,15 +1006,26 @@ describe('connect', function() {
         [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
       });
 
-      it('should apply the codec preferences to all remote descriptions', () => {
+      it('should apply the codec preferences to local descriptions', () => {
         flatMap(peerConnections, pc => {
-          assert(pc.remoteDescription.sdp);
-          return getMediaSections(pc.remoteDescription.sdp);
+          assert(pc.localDescription.sdp);
+          return getMediaSections(pc.localDescription.sdp);
         }).forEach(section => {
           const codecMap = createCodecMapForMediaSection(section);
-          const expectedPayloadTypes = /m=audio/.test(section)
-            ? flatMap(testOptions.preferredAudioCodecs, codec => codecMap.get(codec.toLowerCase()) || [])
-            : flatMap(testOptions.preferredVideoCodecs, codec => codecMap.get((codec.codec || codec).toLowerCase()) || []);
+          const isAudio = /m=audio/.test(section);
+
+          const preferredCodecs = isAudio
+            ? testOptions.preferredAudioCodecs
+            : testOptions.preferredVideoCodecs;
+
+          const supportedPreferredCodecs = preferredCodecs.filter(codec => {
+            const codecName = (codec.codec || codec).toLowerCase();
+            return codecMap.has(codecName);
+          });
+
+          const expectedPayloadTypes = flatMap(supportedPreferredCodecs, codec =>
+            codecMap.get((codec.codec || codec).toLowerCase()) || []
+          );
           const actualPayloadTypes = getPayloadTypes(section);
           expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
         });
