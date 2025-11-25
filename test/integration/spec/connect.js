@@ -983,7 +983,7 @@ describe('connect', function() {
     });
   });
 
-  describe.only('called with preferred audio and video codecs', () => {
+  describe('called with preferred audio and video codecs', () => {
     combinationContext([
       [
         ['name', 'setting'],
