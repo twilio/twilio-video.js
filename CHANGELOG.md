@@ -15,6 +15,10 @@ Added new telemetry events to enhance monitoring and diagnostics for the followi
 - [RTCIceGatheringState](https://w3c.github.io/webrtc-pc/#rtcicegatheringstate-enum)
 - [RTCIceConnectionState](https://w3c.github.io/webrtc-pc/#rtciceconnectionstate-enum)
 
+Changes
+-------
+- Replaced SDP munging for codec preferences with native `RTCRtpTransceiver.setCodecPreferences()` API.
+
 2.33.0 (November 6, 2025)
 ====================
 

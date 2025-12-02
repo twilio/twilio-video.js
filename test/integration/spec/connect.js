@@ -1004,18 +1004,40 @@ describe('connect', function() {
 
       before(async () => {
         [sid, thisRoom, thoseRooms, peerConnections] = await setup({ testOptions });
+
+        await Promise.all(peerConnections.map(pc => pc.localDescription ? Promise.resolve() : new Promise(resolve => {
+          pc.addEventListener('signalingstatechange', () => pc.localDescription && resolve());
+        })));
       });
 
-      it('should apply the codec preferences to all remote descriptions', () => {
+      it('should apply the codec preferences to local descriptions', () => {
         flatMap(peerConnections, pc => {
-          assert(pc.remoteDescription.sdp);
-          return getMediaSections(pc.remoteDescription.sdp);
+          assert(pc.localDescription.sdp);
+          // Preferred codecs are only applied to offer descriptions
+          if (pc.localDescription.type !== 'offer') {
+            return [];
+          }
+          return getMediaSections(pc.localDescription.sdp);
         }).forEach(section => {
           const codecMap = createCodecMapForMediaSection(section);
-          const expectedPayloadTypes = /m=audio/.test(section)
-            ? flatMap(testOptions.preferredAudioCodecs, codec => codecMap.get(codec.toLowerCase()) || [])
-            : flatMap(testOptions.preferredVideoCodecs, codec => codecMap.get((codec.codec || codec).toLowerCase()) || []);
-          const actualPayloadTypes = getPayloadTypes(section);
+          const isAudio = /m=audio/.test(section);
+
+          const preferredCodecs = isAudio
+            ? testOptions.preferredAudioCodecs
+            : testOptions.preferredVideoCodecs;
+
+          const supportedPreferredCodecs = preferredCodecs.filter(codec => {
+            const codecName = (codec.codec || codec).toLowerCase();
+            return codecMap.has(codecName);
+          });
+
+          const expectedPayloadTypes = flatMap(supportedPreferredCodecs, codec =>
+            codecMap.get((codec.codec || codec).toLowerCase()) || []
+          );
+          const allPayloadTypes = getPayloadTypes(section);
+          const ptToCodec = createPtToCodecName(section);
+          const actualPayloadTypes = allPayloadTypes.filter(pt => ptToCodec.get(pt) !== 'rtx');
+
           expectedPayloadTypes.forEach((expectedPayloadType, i) => assert.equal(expectedPayloadType, actualPayloadTypes[i]));
         });
       });
