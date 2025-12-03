@@ -8,12 +8,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 New Features
 ------------
 ### Enhanced Telemetry
-Added new telemetry events to enhance monitoring and diagnostics for the following media-related states:
+- Added new telemetry events to enhance monitoring and diagnostics for the following media-related states:
+  - [RTCPeerConnectionState](https://w3c.github.io/webrtc-pc/#rtcpeerconnectionstate-enum)
+  - [RTCSignalingState](https://w3c.github.io/webrtc-pc/#rtcsignalingstate-enum)
+  - [RTCIceGatheringState](https://w3c.github.io/webrtc-pc/#rtcicegatheringstate-enum)
+  - [RTCIceConnectionState](https://w3c.github.io/webrtc-pc/#rtciceconnectionstate-enum)
 
-- [RTCPeerConnectionState](https://w3c.github.io/webrtc-pc/#rtcpeerconnectionstate-enum)
-- [RTCSignalingState](https://w3c.github.io/webrtc-pc/#rtcsignalingstate-enum)
-- [RTCIceGatheringState](https://w3c.github.io/webrtc-pc/#rtcicegatheringstate-enum)
-- [RTCIceConnectionState](https://w3c.github.io/webrtc-pc/#rtciceconnectionstate-enum)
+- Added room lifecycle telemetry events: reconnecting, reconnected, and disconnected.
 
 Changes
 -------
