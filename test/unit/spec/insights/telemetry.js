@@ -300,6 +300,46 @@ describe('Telemetry', () => {
       });
     });
 
+    describe('room events', () => {
+      it('should publish reconnecting event with media reason', () => {
+        const { MediaConnectionError } = require('../../../../lib/util/twilio-video-errors');
+        const error = new MediaConnectionError();
+
+        telemetry.room.reconnecting(error);
+
+        sinon.assert.calledOnce(mockPublisher.publish);
+        sinon.assert.calledWith(mockPublisher.publish, 'room', 'reconnecting', sinon.match({
+          level: 'info',
+          reason: 'media',
+          elapsedTime: sinon.match.number
+        }));
+      });
+
+      it('should publish reconnecting event with signaling reason', () => {
+        const { SignalingConnectionDisconnectedError } = require('../../../../lib/util/twilio-video-errors');
+        const error = new SignalingConnectionDisconnectedError();
+
+        telemetry.room.reconnecting(error);
+
+        sinon.assert.calledOnce(mockPublisher.publish);
+        sinon.assert.calledWith(mockPublisher.publish, 'room', 'reconnecting', sinon.match({
+          level: 'info',
+          reason: 'signaling',
+          elapsedTime: sinon.match.number
+        }));
+      });
+
+      it('should publish reconnected event', () => {
+        telemetry.room.reconnected();
+
+        sinon.assert.calledOnce(mockPublisher.publish);
+        sinon.assert.calledWith(mockPublisher.publish, 'room', 'reconnected', sinon.match({
+          level: 'info',
+          elapsedTime: sinon.match.number
+        }));
+      });
+    });
+
     describe('RTCPeerConnection events', () => {
       describe('connectionState', () => {
         ['new', 'connecting', 'connected', 'disconnected', 'failed', 'closed'].forEach(state => {
