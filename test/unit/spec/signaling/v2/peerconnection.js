@@ -1513,6 +1513,18 @@ describe('PeerConnectionV2', () => {
         });
       }
 
+      // NOTE(mroberts): This test should really be extended. Instead of popping
+      // arguments off of `setCodecPreferences`, we should validate that we
+      // apply transformed remote SDPs and emit transformed local SDPs.
+      function itShouldApplyCodecPreferences() {
+        it('should apply the specified codec preferences to the remote description', () => {
+          const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
+          const preferredAudioCodecs = test.setCodecPreferences.args[0].pop();
+          assert.equal(preferredAudioCodecs, test.preferredCodecs.audio);
+          assert.equal(preferredVideoCodecs, test.preferredCodecs.video);
+        });
+      }
+
       function itShouldAnswer() {
         it('returns a Promise that resolves to undefined', () => {
           assert(!result);
@@ -1545,6 +1557,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
         itShouldNotSetResolutionScale();
         itShouldMaybeSetNetworkPriority();
       }
@@ -1581,6 +1594,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 
@@ -1651,6 +1665,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldApplyAnswer() {
@@ -1658,7 +1673,7 @@ describe('PeerConnectionV2', () => {
           assert(!result);
         });
 
-        it('should call setRemoteDescrption on the underlying RTCPeerConnection', () => {
+        it('should call setRemoteDescription on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.setRemoteDescription);
           sinon.assert.calledWith(test.pc.setRemoteDescription, desc.description);
         });
@@ -1692,6 +1707,7 @@ describe('PeerConnectionV2', () => {
         });
 
         itShouldApplyBandwidthConstraints();
+        itShouldApplyCodecPreferences();
       }
 
       function itShouldCreateOffer() {
@@ -1769,6 +1785,7 @@ describe('PeerConnectionV2', () => {
           });
 
           itShouldApplyBandwidthConstraints();
+          itShouldApplyCodecPreferences();
         });
       }
 
@@ -2660,6 +2677,7 @@ function makePeerConnectionV2(options) {
   options.RTCPeerConnection = options.RTCPeerConnection || RTCPeerConnection;
   options.isChromeScreenShareTrack = options.isChromeScreenShareTrack || sinon.spy(() => false);
   options.sessionTimeout = options.sessionTimeout || 100;
+  options.setCodecPreferences = options.setCodecPreferences || sinon.spy(sdp => sdp);
   options.preferredCodecs = options.preferredCodecs || { audio: [], video: [] };
   options.options = {
     Backoff: options.Backoff,
@@ -2669,7 +2687,8 @@ function makePeerConnectionV2(options) {
     RTCSessionDescription: identity,
     isChromeScreenShareTrack: options.isChromeScreenShareTrack,
     eventObserver: options.eventObserver || { emit: sinon.spy() },
-    sessionTimeout: options.sessionTimeout
+    sessionTimeout: options.sessionTimeout,
+    setCodecPreferences: options.setCodecPreferences
   };
 
   if (options.enableDscp !== undefined) {
