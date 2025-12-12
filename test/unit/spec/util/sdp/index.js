@@ -10,6 +10,7 @@ const {
   disableRtx,
   enableDtxForOpus,
   getMediaSections,
+  setCodecPreferences,
   setSimulcast,
   removeSSRCAttributes,
   revertSimulcast
@@ -17,6 +18,33 @@ const {
 
 const { makeSdpForSimulcast, makeSdpWithTracks } = require('../../../../lib/mocksdp');
 const { combinationContext } = require('../../../../lib/util');
+
+describe('setCodecPreferences', () => {
+  combinationContext([
+    [
+      ['', 'PCMA,G722'],
+      x => `when preferredAudioCodecs is ${x ? 'not ' : ''}empty`
+    ],
+    [
+      ['', 'H264,VP9'],
+      x => `when preferredVideoCodecs is ${x ? 'not ' : ''}empty`
+    ]
+  ], ([preferredAudioCodecs, preferredVideoCodecs]) => {
+    preferredAudioCodecs = preferredAudioCodecs ? preferredAudioCodecs.split(',').map(codec => ({ codec })) : [];
+    preferredVideoCodecs = preferredVideoCodecs ? preferredVideoCodecs.split(',').map(codec => ({ codec })) : [];
+    context(`should ${preferredAudioCodecs.length ? 'update the' : 'preserve the existing'} audio codec order`, () => {
+      it(`and ${preferredVideoCodecs.length ? 'update the' : 'preserve the existing'} video codec order`, () => {
+        const expectedAudioCodecIds = preferredAudioCodecs.length
+          ? ['8', '101', '9', '109', '0']
+          : ['109', '9', '0', '8', '101'];
+        const expectedVideoCodecIds = preferredVideoCodecs.length
+          ? ['126', '97', '121', '120', '99']
+          : ['120', '121', '126', '97', '99'];
+        itShouldHaveCodecOrder(preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds);
+      });
+    });
+  });
+});
 
 describe('setSimulcast', () => {
   combinationContext([
@@ -144,11 +172,10 @@ describe('revertSimulcast', () => {
         audio: ['audio-1'],
         video: [{ id: 'video-1', ssrc: ssrcs[0] }]
       });
-      // NOTE(lrivas): Manually set codec order to test revertSimulcast behavior
       if (isVP8PreferredPayloadType) {
-        remoteSdp = remoteSdp.replace(/m=video (\d+) [^\r]+/, 'm=video $1 UDP/TLS/RTP/SAVPF 120 121 126 97');
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'VP8' }]);
       } else {
-        remoteSdp = remoteSdp.replace(/m=video (\d+) [^\r]+/, 'm=video $1 UDP/TLS/RTP/SAVPF 126 121 120 97');
+        remoteSdp = setCodecPreferences(sdp, [{ codec: 'PCMU' }], [{ codec: 'H264' }]);
       }
       revertedSdp = revertSimulcast(simSdp, sdp, remoteSdp, revertForAll);
     });
@@ -613,3 +640,16 @@ a=rtpmap:126 telephone-event/8000\r
   });
 });
 
+function itShouldHaveCodecOrder(preferredAudioCodecs, preferredVideoCodecs, expectedAudioCodecIds, expectedVideoCodecIds) {
+  const sdp = makeSdpWithTracks({
+    audio: ['audio-1', 'audio-2'],
+    video: ['video-1', 'video-2']
+  });
+  const modifiedSdp = setCodecPreferences(sdp, preferredAudioCodecs, preferredVideoCodecs);
+  modifiedSdp.split('\r\nm=').slice(1).forEach(section => {
+    const kind = section.split(' ')[0];
+    const expectedCodecIds = kind === 'audio' ? expectedAudioCodecIds : expectedVideoCodecIds;
+    const codecIds = section.split('\r\n')[0].match(/([0-9]+)/g).slice(1);
+    assert.equal(codecIds.join(' '), expectedCodecIds.join(' '));
+  });
+}
