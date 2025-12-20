@@ -12,6 +12,7 @@ const {
   getMediaSections,
   setCodecPreferences,
   setSimulcast,
+  removeUnreferencedCodecAttributes,
   removeSSRCAttributes,
   revertSimulcast
 } = require('../../../../../lib/util/sdp');
@@ -501,6 +502,221 @@ a=ssrc-group:FID 2476366320 3143435575`;
              || rtxSSRCAttrRegex.test(line)
              || ssrcGroupRegex.test(line));
             assert.equal(rtxLines.length, 0);
+          }
+        });
+      } else {
+        assert.equal(sdp1, sdp);
+      }
+    });
+  });
+});
+
+describe('removeUnreferencedCodecAttributes', () => {
+  const sdpWithUnreferencedAttributes = `v=0\r
+o=mozilla...THIS_IS_SDPARTA-99.0 3249008904328227516 2 IN IP4 0.0.0.0\r
+s=-\r
+t=0 0\r
+a=fingerprint:sha-256 56:34:8D:F9:03:F8:63:24:58:57:62:2B:0E:AF:E1:B4:F4:22:04:38:2A:BA:FA:B0:16:3A:8C:F5:E4:13:D1:44\r
+a=group:BUNDLE 0 1\r
+a=ice-options:trickle\r
+a=msid-semantic:WMS *\r
+m=audio 9 UDP/TLS/RTP/SAVPF 109 9 0 8 101\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=extmap:3 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1;usedtx=1\r
+a=fmtp:101 0-15\r
+a=ice-pwd:7a707be15814fdd3047540d288a3f665\r
+a=ice-ufrag:883fb0bb\r
+a=mid:0\r
+a=msid:- {c983e5c7-36a2-4638-b985-7dac62ca643d}\r
+a=rtcp-mux\r
+a=rtpmap:109 opus/48000/2\r
+a=rtpmap:9 G722/8000/1\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:101 telephone-event/8000/1\r
+a=setup:actpass\r
+a=ssrc:3859001979 cname:{da5db090-9171-4294-9f7f-eee36c02fdd7}\r
+m=video 9 UDP/TLS/RTP/SAVPF 120 126 97 105 103\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:3 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=extmap:4 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:5 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:7 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1\r
+a=fmtp:105 profile-level-id=42001f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:103 profile-level-id=42001f;level-asymmetry-allowed=1\r
+a=fmtp:120 max-fs=12288;max-fr=60\r
+a=fmtp:121 max-fs=12288;max-fr=60\r
+a=ice-pwd:7a707be15814fdd3047540d288a3f665\r
+a=ice-ufrag:883fb0bb\r
+a=mid:1\r
+a=msid:- {27d1f953-d806-4c80-88c2-0ad5ce222523}\r
+a=rtcp-fb:120 nack\r
+a=rtcp-fb:120 nack pli\r
+a=rtcp-fb:120 ccm fir\r
+a=rtcp-fb:120 goog-remb\r
+a=rtcp-fb:120 transport-cc\r
+a=rtcp-fb:126 nack\r
+a=rtcp-fb:126 nack pli\r
+a=rtcp-fb:126 ccm fir\r
+a=rtcp-fb:126 goog-remb\r
+a=rtcp-fb:126 transport-cc\r
+a=rtcp-fb:97 nack\r
+a=rtcp-fb:97 nack pli\r
+a=rtcp-fb:97 ccm fir\r
+a=rtcp-fb:97 goog-remb\r
+a=rtcp-fb:97 transport-cc\r
+a=rtcp-fb:105 nack\r
+a=rtcp-fb:105 nack pli\r
+a=rtcp-fb:105 ccm fir\r
+a=rtcp-fb:105 goog-remb\r
+a=rtcp-fb:105 transport-cc\r
+a=rtcp-fb:103 nack\r
+a=rtcp-fb:103 nack pli\r
+a=rtcp-fb:103 ccm fir\r
+a=rtcp-fb:103 goog-remb\r
+a=rtcp-fb:103 transport-cc\r
+a=rtcp-fb:99 nack\r
+a=rtcp-fb:99 nack pli\r
+a=rtcp-fb:99 ccm fir\r
+a=rtcp-fb:99 goog-remb\r
+a=rtcp-fb:99 transport-cc\r
+a=rtcp-fb:121 nack\r
+a=rtcp-fb:121 nack pli\r
+a=rtcp-fb:121 ccm fir\r
+a=rtcp-fb:121 goog-remb\r
+a=rtcp-fb:121 transport-cc\r
+a=rtcp-fb:122 nack\r
+a=rtcp-fb:122 nack pli\r
+a=rtcp-fb:122 ccm fir\r
+a=rtcp-fb:122 goog-remb\r
+a=rtcp-fb:122 transport-cc\r
+a=rtcp-fb:123 nack\r
+a=rtcp-fb:123 nack pli\r
+a=rtcp-fb:123 ccm fir\r
+a=rtcp-fb:123 goog-remb\r
+a=rtcp-fb:123 transport-cc\r
+a=rtcp-mux\r
+a=rtcp-rsize\r
+a=rtpmap:120 VP8/90000\r
+a=rtpmap:126 H264/90000\r
+a=rtpmap:97 H264/90000\r
+a=rtpmap:105 H264/90000\r
+a=rtpmap:103 H264/90000\r
+a=setup:actpass\r
+a=ssrc:2509634557 cname:{da5db090-9171-4294-9f7f-eee36c02fdd7}`;
+
+  const sdpWithoutUnreferencedAttributes = `v=0\r
+o=mozilla...THIS_IS_SDPARTA-99.0 3249008904328227516 2 IN IP4 0.0.0.0\r
+s=-\r
+t=0 0\r
+a=fingerprint:sha-256 56:34:8D:F9:03:F8:63:24:58:57:62:2B:0E:AF:E1:B4:F4:22:04:38:2A:BA:FA:B0:16:3A:8C:F5:E4:13:D1:44\r
+a=group:BUNDLE 0 1\r
+a=ice-options:trickle\r
+a=msid-semantic:WMS *\r
+m=audio 9 UDP/TLS/RTP/SAVPF 109 9 0 8 101\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
+a=extmap:3 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=fmtp:109 maxplaybackrate=48000;stereo=1;useinbandfec=1;usedtx=1\r
+a=fmtp:101 0-15\r
+a=ice-pwd:7a707be15814fdd3047540d288a3f665\r
+a=ice-ufrag:883fb0bb\r
+a=mid:0\r
+a=msid:- {c983e5c7-36a2-4638-b985-7dac62ca643d}\r
+a=rtcp-mux\r
+a=rtpmap:109 opus/48000/2\r
+a=rtpmap:9 G722/8000/1\r
+a=rtpmap:0 PCMU/8000\r
+a=rtpmap:8 PCMA/8000\r
+a=rtpmap:101 telephone-event/8000/1\r
+a=setup:actpass\r
+a=ssrc:3859001979 cname:{da5db090-9171-4294-9f7f-eee36c02fdd7}\r
+m=video 9 UDP/TLS/RTP/SAVPF 120 126 97 105 103\r
+c=IN IP4 0.0.0.0\r
+a=sendrecv\r
+a=extmap:3 urn:ietf:params:rtp-hdrext:sdes:mid\r
+a=extmap:4 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time\r
+a=extmap:5 urn:ietf:params:rtp-hdrext:toffset\r
+a=extmap:7 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01\r
+a=fmtp:126 profile-level-id=42e01f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:97 profile-level-id=42e01f;level-asymmetry-allowed=1\r
+a=fmtp:105 profile-level-id=42001f;level-asymmetry-allowed=1;packetization-mode=1\r
+a=fmtp:103 profile-level-id=42001f;level-asymmetry-allowed=1\r
+a=fmtp:120 max-fs=12288;max-fr=60\r
+a=ice-pwd:7a707be15814fdd3047540d288a3f665\r
+a=ice-ufrag:883fb0bb\r
+a=mid:1\r
+a=msid:- {27d1f953-d806-4c80-88c2-0ad5ce222523}\r
+a=rtcp-fb:120 nack\r
+a=rtcp-fb:120 nack pli\r
+a=rtcp-fb:120 ccm fir\r
+a=rtcp-fb:120 goog-remb\r
+a=rtcp-fb:120 transport-cc\r
+a=rtcp-fb:126 nack\r
+a=rtcp-fb:126 nack pli\r
+a=rtcp-fb:126 ccm fir\r
+a=rtcp-fb:126 goog-remb\r
+a=rtcp-fb:126 transport-cc\r
+a=rtcp-fb:97 nack\r
+a=rtcp-fb:97 nack pli\r
+a=rtcp-fb:97 ccm fir\r
+a=rtcp-fb:97 goog-remb\r
+a=rtcp-fb:97 transport-cc\r
+a=rtcp-fb:105 nack\r
+a=rtcp-fb:105 nack pli\r
+a=rtcp-fb:105 ccm fir\r
+a=rtcp-fb:105 goog-remb\r
+a=rtcp-fb:105 transport-cc\r
+a=rtcp-fb:103 nack\r
+a=rtcp-fb:103 nack pli\r
+a=rtcp-fb:103 ccm fir\r
+a=rtcp-fb:103 goog-remb\r
+a=rtcp-fb:103 transport-cc\r
+a=rtcp-mux\r
+a=rtcp-rsize\r
+a=rtpmap:120 VP8/90000\r
+a=rtpmap:126 H264/90000\r
+a=rtpmap:97 H264/90000\r
+a=rtpmap:105 H264/90000\r
+a=rtpmap:103 H264/90000\r
+a=setup:actpass\r
+a=ssrc:2509634557 cname:{da5db090-9171-4294-9f7f-eee36c02fdd7}`;
+
+  [sdpWithoutUnreferencedAttributes, sdpWithUnreferencedAttributes].forEach(sdp => {
+    const unreferencedPts = [99, 121, 122, 123];
+    const shouldRemoveUnreferenced = sdp === sdpWithUnreferencedAttributes;
+
+    it(`should ${shouldRemoveUnreferenced ? 'remove unreferenced codec attributes' : 'do nothing when no unreferenced attributes'}`, () => {
+      const sdp1 = removeUnreferencedCodecAttributes(sdp);
+      if (shouldRemoveUnreferenced) {
+        const mediaSections = getMediaSections(sdp);
+        const mediaSections1 = getMediaSections(sdp1);
+        mediaSections.forEach((mediaSection, i) => {
+          if (!/^m=video/.test(mediaSections1[i])) {
+            assert.equal(mediaSections1[i], mediaSection);
+          } else {
+            const lines = mediaSections1[i].split('\r\n');
+            const pts = lines[0].match(/(\d+)/g).slice(1).map(pt => parseInt(pt, 10));
+
+            assert.deepEqual(pts, [120, 126, 97, 105, 103]);
+
+            unreferencedPts.forEach(unreferencedPt => {
+              assert(!pts.includes(unreferencedPt));
+              const unreferencedLines = lines.filter(line =>
+                new RegExp(`^a=(fmtp|rtpmap|rtcp-fb):${unreferencedPt}\\b`).test(line)
+              );
+              assert.equal(unreferencedLines.length, 0, `Found unreferenced attributes for PT ${unreferencedPt}`);
+            });
+
+            const hasUnreferencedFmtp121 = /a=fmtp:121/.test(mediaSections1[i]);
+            assert.equal(hasUnreferencedFmtp121, false);
           }
         });
       } else {
