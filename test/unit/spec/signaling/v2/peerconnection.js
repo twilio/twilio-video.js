@@ -978,17 +978,7 @@ describe('PeerConnectionV2', () => {
           sinon.assert.calledOnce(test.pc.createOffer);
         });
 
-        // NOTE(mroberts): This test should really be extended. Instead of popping
-        // arguments off of `setCodecPreferences`, we should validate that we
-        // apply transformed remote SDPs and emit transformed local SDPs.
-        it('should transform the resulting offer by applying any codec preferences', () => {
-          const preferredVideoCodecs = test.setCodecPreferences.args[0].pop();
-          const preferredAudioCodecs = test.setCodecPreferences.args[0].pop();
-          assert.equal(preferredAudioCodecs, test.preferredCodecs.audio);
-          assert.equal(preferredVideoCodecs, test.preferredCodecs.video);
-        });
-
-        it('should call setLocalDescription on the underlying RTCPeerConnection with the transformed offer', () => {
+        it('should call setLocalDescription on the underlying RTCPeerConnection with the offer', () => {
           sinon.assert.calledOnce(test.pc.setLocalDescription);
           sinon.assert.calledWith(test.pc.setLocalDescription, test.offers[expectedOfferIndex]);
         });
@@ -1683,7 +1673,7 @@ describe('PeerConnectionV2', () => {
           assert(!result);
         });
 
-        it('should call setRemoteDescrption on the underlying RTCPeerConnection', () => {
+        it('should call setRemoteDescription on the underlying RTCPeerConnection', () => {
           sinon.assert.calledOnce(test.pc.setRemoteDescription);
           sinon.assert.calledWith(test.pc.setRemoteDescription, desc.description);
         });
@@ -1749,8 +1739,6 @@ describe('PeerConnectionV2', () => {
         it('should leave the underlying RTCPeerConnection in signalingState "have-local-offer"', () => {
           assert.equal(test.pc.signalingState, 'have-local-offer');
         });
-
-        itShouldApplyCodecPreferences();
       }
 
       function itShouldEventuallyCreateOffer() {
@@ -2986,3 +2974,41 @@ function makePeerConnection(options) {
 function oneTick() {
   return new Promise(resolve => setTimeout(resolve));
 }
+
+describe('_sortCodecsByPreference', () => {
+  it('should prioritize preferred codecs in order, case-insensitively', () => {
+    const pcv2 = makeTest({ preferredCodecs: { audio: [], video: [] } }).pcv2;
+
+    const availableCodecs = [
+      { mimeType: 'audio/opus' },
+      { mimeType: 'audio/PCMU' },
+      { mimeType: 'audio/PCMA' }
+    ];
+
+    // Intentionally mixing case and object/string formats
+    const preferredCodecs = [
+      'pcmu',
+      { codec: 'OPUS' }
+    ];
+
+    const sorted = pcv2._sortCodecsByPreference(availableCodecs, preferredCodecs);
+
+    assert.equal(sorted[0].mimeType, 'audio/PCMU');
+    assert.equal(sorted[1].mimeType, 'audio/opus');
+    assert.equal(sorted[2].mimeType, 'audio/PCMA');
+  });
+
+  it('should handle empty preferred codecs gracefully', () => {
+    const pcv2 = makeTest({ preferredCodecs: { audio: [], video: [] } }).pcv2;
+
+    const availableCodecs = [
+      { mimeType: 'audio/opus' },
+      { mimeType: 'audio/PCMU' }
+    ];
+
+    const preferredCodecs = [];
+
+    const sorted = pcv2._sortCodecsByPreference(availableCodecs, preferredCodecs);
+    assert.deepEqual(sorted, availableCodecs);
+  });
+});
