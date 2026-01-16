@@ -12,7 +12,7 @@ import {
 import { applyNoiseCancellation } from './media/track/noisecancellationimpl';
 
 const { buildLogLevels } = require('./util');
-const { getUserMedia, MediaStreamTrack } = require('./webrtc');
+const { getUserMedia } = require('./webrtc');
 
 const {
   LocalAudioTrack,

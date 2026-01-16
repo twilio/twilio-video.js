@@ -4,25 +4,17 @@
 /* eslint-disable no-undef */
 'use strict';
 
-var assert = require('assert');
-var MediaStream = require('../../../../es5/webrtc/mediastream');
-var MediaStreamTrack = require('../../../../es5/webrtc/mediastreamtrack');
-var RTCIceCandidate = require('../../../../es5/webrtc/rtcicecandidate');
-var RTCSessionDescription = require('../../../../es5/webrtc/rtcsessiondescription');
-var RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
-var util = require('../../../lib/webrtc/util');
-var { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
-var { getSdpFormat } = require('../../../../es5/webrtc/util/sdp');
+const assert = require('assert');
+const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
+const { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
 
-const detectSilence = require('../../../lib/webrtc/detectsilence');
-
-var sdpTypes = [
+const sdpTypes = [
   'answer',
   'offer',
   'rollback'
 ];
 
-var signalingStates = [
+const signalingStates = [
   'closed',
   'have-local-offer',
   'have-remote-offer',
@@ -33,7 +25,6 @@ const guess = guessBrowser();
 const isChrome = guess === 'chrome';
 const isFirefox = guess === 'firefox';
 const isSafari = guess === 'safari';
-const sdpFormat = getSdpFormat();
 
 const chromeVersion = isChrome && typeof navigator === 'object'
   ? navigator.userAgent.match(/Chrom(e|ium)\/(\d+)\./)[2]
@@ -43,7 +34,7 @@ const firefoxVersion = isFirefox && typeof navigator === 'object'
   ? navigator.userAgent.match(/Firefox\/(\d+)\./)[1]
   : null;
 
-describe(`RTCPeerConnection(${sdpFormat})`, function() {
+describe('RTCPeerConnection', function() {
   after(() => {
     if (typeof gc === 'function') {
       gc();
@@ -151,7 +142,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  describe('#createOffer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let offer1;
     let offer2;
 
@@ -180,7 +171,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
+  describe('#createAnswer, called twice from signaling state "stable" without calling #setLocalDescription', () => {
     let answer1;
     let answer2;
 
@@ -229,7 +220,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  (isSafari && sdpFormat === 'planb' ? describe.skip : describe)('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
+  describe('#setRemoteDescription, called twice from signaling state "stable" with the same MediaStreamTrack IDs but different SSRCs', () => {
     let offer1;
     let offer2;
 
@@ -265,16 +256,8 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     //
     //   Chrome's WebRTC implementation treats changing the SSRC as removing a track
     //   with the old SSRC and adding a track with the new one. This probably isn't
-    //   the right thing to do (especially when we go to Unified Plan SDP) but it's
-    //   the way it's worked for a while.
-    //
-    (isFirefox || isSafari || (isChrome && sdpFormat === 'unified')
-      ? it
-      : it.skip
-    )('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
-      const getRemoteTracks = pc => sdpFormat === 'planb'
-        ? flatMap(pc.getRemoteStreams(), stream => stream.getTracks())
-        : flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
+    it('should create a single MediaStreamTrack for each MediaStreamTrack ID in the SDP, regardless of SSRC changes', async () => {
+      const getRemoteTracks = pc => flatMap(pc.getTransceivers(), ({ receiver }) => receiver.track);
       const pc = new RTCPeerConnection({ iceServers: [] });
 
       await pc.setRemoteDescription(offer1);
@@ -452,7 +435,7 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
     });
   });
 
-  if (RTCPeerConnection.prototype.addTransceiver && sdpFormat !== 'planb') {
+  if (RTCPeerConnection.prototype.addTransceiver) {
     describe('RTCRtpTransceiver', () => {
       describe('addTransceiver(kind, init)', () => {
         const kind = 'audio';
@@ -574,11 +557,11 @@ describe(`RTCPeerConnection(${sdpFormat})`, function() {
 
         // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
         // with stopped RTCRtpTransceivers this scenario fails. So this test is
-        // disabled for Safari unified plan.
+        // disabled for Safari.
         //
         // Bug: https://bugs.chromium.org/p/webrtc/issues/detail?id=9954
         //
-        (isSafari && sdpFormat === 'unified' ? it.skip : it)('Scenario 2', async () => {
+        (isSafari ? it.skip : it)('Scenario 2', async () => {
           const configuration = {
             bundlePolicy: 'max-bundle',
             rtcpMuxPolicy: 'require'
@@ -753,16 +736,12 @@ function testGetSenders(signalingState) {
     // NOTE(mmalavalli): Safari 12.2+ and Firefox 67+ implement the spec-compliant
     // version of RTCPeerConnection.getSenders() for signalingState "closed".
     const isSpecCompliantForClosed = signalingState === 'closed'
-      && sdpFormat === 'unified'
       && (isSafari || (isFirefox && firefoxVersion > 66));
 
     it(`should return ${isSpecCompliantForClosed ? 'an empty list' : 'a list of senders'}`, () => {
       const actualSenders = test.peerConnection.getSenders();
       if (isFirefox && signalingState === 'have-remote-offer') {
         assert.equal(actualSenders.length, senders.length);
-        return;
-      } else if (isSafari && sdpFormat === 'planb' && signalingState === 'have-local-offer') {
-        assert.equal(actualSenders.length, senders.length + 1);
         return;
       }
       if (isSpecCompliantForClosed) {
@@ -973,7 +952,7 @@ function testDtlsRoleNegotiation() {
           });
         });
 
-        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
+        it('RTCPeerConnection 1 answers with "a=setup:passive"', () => {
           return pc1.createAnswer().then(answer => {
             assert(answer.sdp.match(/a=setup:passive/));
           });
@@ -1019,7 +998,7 @@ function testGlare() {
           });
         });
 
-        (isSafari && sdpFormat === 'planb' ? it.skip : it)('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
+        it('RTCPeerConnection 1 calls createOffer and setLocalDescription', () => {
           return pc1.createOffer().then(offer => {
             return pc1.setLocalDescription(offer);
           });
@@ -1533,10 +1512,7 @@ function makeTest(options) {
 o=- 2018425083800689377 2 IN IP4 127.0.0.1\r
 s=-\r
 t=0 0\r
-a=group:BUNDLE ${isFirefox && firefoxVersion < 63
-  ? 'sdparta_0'
-  : sdpFormat === 'unified'
-    ? '0' : 'audio'}\r
+a=group:BUNDLE ${isFirefox && firefoxVersion < 63 ? 'sdparta_0' : '0'}\r
 a=msid-semantic: WMS\r
 m=audio 9 UDP/TLS/RTP/SAVPF 111 103 104 9 0 8 106 105 13 110 112 113 126\r
 c=IN IP4 0.0.0.0\r
@@ -1544,10 +1520,7 @@ a=rtcp:9 IN IP4 0.0.0.0\r
 a=ice-ufrag:hml5\r
 a=ice-pwd:VSJteFVvAyoewWkSfaxKgU6C\r
 a=ice-options:trickle\r
-a=mid:${isFirefox && firefoxVersion < 63
-  ? 'sdparta_0'
-  : sdpFormat === 'unified'
-    ? '0' : 'audio'}\r
+a=mid:${isFirefox && firefoxVersion < 63 ? 'sdparta_0' : '0'}\r
 a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r
 a=recvonly\r
 a=rtcp-mux\r
