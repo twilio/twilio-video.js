@@ -1379,7 +1379,11 @@ function testSetDescription(local, signalingState, sdpType) {
         'have-local-offer': 'stable'
       },
       offer: {
-        'have-local-offer': 'have-remote-offer',
+        // NOTE(mmalavalli): Starting from Firefox 70, calling setRemoteDescription()
+        // from .signalingState "have-local-offer" will result in an implicit rollback
+        // of the local offer instead of raising an exception.
+        // Bugzilla: https://bugzilla.mozilla.org/show_bug.cgi?id=1567951
+        ...(firefoxVersion > 69 ? { 'have-local-offer': 'have-remote-offer' } : {}),
         'have-remote-offer': 'have-remote-offer',
         'stable': 'have-remote-offer'
       },
@@ -1469,8 +1473,8 @@ function testSetDescription(local, signalingState, sdpType) {
           assertEqualDescriptions(test.peerConnection.localDescription, nextDescription);
         });
       } else {
-        it(`should ${sdpType === 'offer' ? 'roll back' : 'not change'} .localDescription`, () => {
-          assertEqualDescriptions(test.peerConnection.localDescription, sdpType === 'offer' ? null : localDescription);
+        it(`should ${firefoxVersion > 69 && sdpType === 'offer' ? 'roll back' : 'not change'} .localDescription`, () => {
+          assertEqualDescriptions(test.peerConnection.localDescription, firefoxVersion > 69 && sdpType === 'offer' ? null : localDescription);
         });
       }
 
