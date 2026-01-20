@@ -209,8 +209,12 @@ jobs:
         default: "group"
       test_stability:
         type: string
+      env:
+        type: string
+        default: "stage"
     environment:
       TEST_TYPE: "integration"
+      ENVIRONMENT: << parameters.env >>
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
       TEST_FILES: << pipeline.parameters.test_files >>
@@ -488,13 +492,14 @@ workflows:
           context: dockerhub-pulls
       - run-integration-tests:
           context: dockerhub-pulls
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>) << matrix.env >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
+              env: ["stage", "prod"]
           requires: [Build, UnitTests]
 
   Healthcheck_Workflow:
@@ -510,13 +515,14 @@ workflows:
           context: dockerhub-pulls
       - run-integration-tests:
           context: dockerhub-pulls
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>) << matrix.env >>
           matrix:
             parameters:
               browser: ["chrome"]
               bver: ["stable"]
               topology: ["group"]
               test_stability: ["stable"]
+              env: ["stage", "prod"]
           requires: [Build]
 
   Qe-trigger-test:
