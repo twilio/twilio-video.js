@@ -19,7 +19,7 @@ apt-get install -y iproute2 &&\
 echo "Installing google-chrome-$BVER from apt-get" &&\
 apt-get install -y google-chrome-$BVER &&\
 rm -rf /var/lib/apt/lists/* &&\
-apt-get install -y iptables xvfb libgbm-dev &&\
+apt-get install -y iptables xvfb libgbm-dev libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth &&\
 adduser user1 &&\
 adduser user1 sudo &&\
 su - user1
