@@ -702,7 +702,7 @@ describe('Room', function() {
     });
   });
 
-  (defaults.topology === 'group' ? describe : describe.skip)('large rooms', () => {
+  (defaults.topology === 'group' && defaults.environment !== 'prod' ? describe : describe.skip)('large rooms', () => {
     let roomSid = null;
     let aliceRoom = null;
     let bobRoom = null;
@@ -782,7 +782,7 @@ describe('Room', function() {
     });
   });
 
-  (defaults.topology === 'group' ? describe : describe.skip)('large rooms ParticipantMaxTracksExceededError', () => {
+  (defaults.topology === 'group' && defaults.environment !== 'prod' ? describe : describe.skip)('large rooms ParticipantMaxTracksExceededError', () => {
     [1, 2, 5].forEach(nTracksToPublishLater => {
       it(`throws ParticipantMaxTracksExceededError when publishing ${nTracksToPublishLater} tracks when they exceed the limit:`, async () => {
 
