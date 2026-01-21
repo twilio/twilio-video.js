@@ -13,7 +13,7 @@ RUN echo "Installing Chrome: $BVER" \
 && apt-get install -y google-chrome-$BVER \
 && rm -rf /var/lib/apt/lists/* \
 && echo "Installing xvfb from apt-get" \
-&& apt-get install -y xvfb
+&& apt-get install -y xvfb libgbm-dev
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
