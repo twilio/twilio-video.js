@@ -1,10 +1,11 @@
 #!/bin/bash
 # builds container image for integration tests,
 # if browser version has changed, pushes the newly generated container to twilio docker hub
-# uses: $BROWSER $BVER $CIRCLECI $DOCKER_USERNAME $DOCKER_PASSWORD
+# uses: $BROWSER $BVER $CIRCLECI $DOCKER_USERNAME $DOCKER_PASSWORD $FORCE_PUSH_DOCKER_IMAGE
 
 echo "current directory:"
 echo $PWD
+echo "FORCE_PUSH_DOCKER_IMAGE=${FORCE_PUSH_DOCKER_IMAGE}"
 
 mkdir -p ./logs
 
@@ -30,7 +31,7 @@ echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 echo "========================================================="
 echo ${NEW_VERSION} > ./logs/newversion.txt
 
-if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
+if [[ "${NEW_VERSION}" == "${OLD_VERSION}" && "${FORCE_PUSH_DOCKER_IMAGE}" != "true" ]]; then
     echo "========================================================="
     echo "No version change detected. Exiting"
     echo "========================================================="
