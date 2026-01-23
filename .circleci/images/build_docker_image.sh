@@ -5,6 +5,7 @@
 
 echo "current directory:"
 echo $PWD
+echo "FORCE_PUSH_DOCKER_IMAGE=${FORCE_PUSH_DOCKER_IMAGE}"
 
 mkdir -p ./logs
 
@@ -30,11 +31,7 @@ echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 echo "========================================================="
 echo ${NEW_VERSION} > ./logs/newversion.txt
 
-if [ "${FORCE_PUSH_DOCKER_IMAGE}" == "true" ]; then
-    echo "=========================================================="
-    echo "FORCE_PUSH_DOCKER_IMAGE=true: Skipping version check, proceeding with push"
-    echo "========================================================="
-elif [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
+if [[ "${NEW_VERSION}" == "${OLD_VERSION}" && "${FORCE_PUSH_DOCKER_IMAGE}" != "true" ]]; then
     echo "========================================================="
     echo "No version change detected. Exiting"
     echo "========================================================="
