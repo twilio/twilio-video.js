@@ -9,6 +9,24 @@ function Event(type) {
   this.type = type;
 }
 
+class MediaStreamTrack {
+  constructor() {
+    this.id = util.makeUUID();
+    this.kind = 'audio';
+    this.enabled = true;
+    this.muted = false;
+    this.readyState = 'live';
+  }
+
+  clone() {
+    return new MediaStreamTrack();
+  }
+
+  stop() {
+    this.readyState = 'ended';
+  }
+}
+
 class MediaStream {
   constructor() {
     this.ended = false;
@@ -101,6 +119,25 @@ class RTCSessionDescription {
     return {
       type: this.type,
       sdp: this.sdp
+    };
+  }
+}
+
+class RTCIceCandidate {
+  constructor(init) {
+    init = init || {};
+    this.candidate = init.candidate || '';
+    this.sdpMid = init.sdpMid || null;
+    this.sdpMLineIndex = init.sdpMLineIndex || null;
+    this.usernameFragment = init.usernameFragment || null;
+  }
+
+  toJSON() {
+    return {
+      candidate: this.candidate,
+      sdpMid: this.sdpMid,
+      sdpMLineIndex: this.sdpMLineIndex,
+      usernameFragment: this.usernameFragment
     };
   }
 }
@@ -266,9 +303,11 @@ function mockWebRTC(_global = globalThis) {
   // Starting Node.js 21 the global object contains a readonly property called 'navigator'
   if (_global.navigator) { delete _global.navigator; }
   _global.navigator = navigator;
+  _global.MediaStreamTrack = MediaStreamTrack;
   _global.webkitMediaStream = MediaStream;
   _global.MediaStream = MediaStream;
   _global.RTCDataChannel = RTCDataChannel;
+  _global.RTCIceCandidate = RTCIceCandidate;
   _global.RTCRtpSender = RTCRtpSender;
   _global.RTCRtpTransceiver = RTCRtpTransceiver;
   _global.RTCPeerConnection = RTCPeerConnection;
@@ -284,11 +323,13 @@ function mockWebRTC(_global = globalThis) {
 
 module.exports = mockWebRTC;
 module.exports.WebSocket = WebSocket;
+module.exports.MediaStreamTrack = MediaStreamTrack;
 module.exports.MediaStream = MediaStream;
 module.exports.webkitMediaStream = MediaStream;
 module.exports.getUserMedia = getUserMedia;
 module.exports.navigator = navigator;
 module.exports.RTCDataChannel = RTCDataChannel;
+module.exports.RTCIceCandidate = RTCIceCandidate;
 module.exports.RTCRtpSender = RTCRtpSender;
 module.exports.RTCRtpTransceiver = RTCRtpTransceiver;
 module.exports.DUMMY_SDP = DUMMY_SDP;
