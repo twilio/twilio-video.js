@@ -18,9 +18,9 @@ echo "Installing iproute2 from apt-get" &&\
 apt-get install -y iproute2 &&\
 echo "Installing google-chrome-$BVER from apt-get" &&\
 apt-get install -y google-chrome-$BVER &&\
-rm -rf /var/lib/apt/lists/* &&\
 # cypress testing dependencies
-apt-get install -y iptables xvfb libgbm-dev libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth &&\
+apt-get install -y iptables xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth &&\
+rm -rf /var/lib/apt/lists/* &&\
 adduser user1 &&\
 adduser user1 sudo &&\
 su - user1
@@ -28,5 +28,14 @@ su - user1
 # Switch back to user - circleci
 USER circleci
 
-# specify default command to run container w/o arguments.
+# start xvfb automatically to avoid needing to express in circle.yml
+ENV DISPLAY :99
+RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
+  && chmod +x /tmp/entrypoint \
+        && sudo mv /tmp/entrypoint /docker-entrypoint.sh
+
+# ensure that the build agent doesn't override the entrypoint
+LABEL com.circleci.preserve-entrypoint=true
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["bash"]

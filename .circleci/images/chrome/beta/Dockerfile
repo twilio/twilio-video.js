@@ -11,9 +11,10 @@ RUN echo "Installing Chrome: $BVER" \
 && apt-get update \
 && echo "Installing google-chrome-$BVER from apt-get" \
 && apt-get install -y google-chrome-$BVER \
-&& rm -rf /var/lib/apt/lists/* \
 && echo "Installing xvfb from apt-get" \
-&& apt-get install -y xvfb libgbm-dev libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth # cypress testing dependencies
+# cypress testing dependencies
+&& apt-get install -y xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth \
+&& rm -rf /var/lib/apt/lists/*
 
 # start xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
@@ -25,4 +26,4 @@ RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/en
 LABEL com.circleci.preserve-entrypoint=true
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["/bin/sh"]
+CMD ["bash"]
