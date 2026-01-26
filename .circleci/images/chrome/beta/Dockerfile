@@ -12,7 +12,8 @@ RUN echo "Installing Chrome: $BVER" \
 && echo "Installing google-chrome-$BVER from apt-get" \
 && apt-get install -y google-chrome-$BVER \
 && echo "Installing xvfb from apt-get" \
-&& apt-get install -y xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth \ # cypress testing dependencies
+# cypress testing dependencies
+&& apt-get install -y xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth \
 && rm -rf /var/lib/apt/lists/*
 
 # start xvfb automatically to avoid needing to express in circle.yml
