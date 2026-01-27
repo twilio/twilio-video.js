@@ -1,12 +1,12 @@
 FROM cimg/node:current-browsers
 
 #
-# Install Java 11 LTS / OpenJDK 11
+# Install Java 11 LTS / OpenJDK 11 and dependencies
 #
 RUN sudo apt-get update && \
 	sudo apt-get install -y openjdk-11-jre openjdk-11-jre-headless openjdk-11-jdk openjdk-11-jdk-headless && \
-	sudo apt-get install -y bzip2 xvfb libgbm-dev libgbm1 libgtk-3-0 libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth || \
-	sudo apt-get install -y bzip2 xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth # for extracting firefox, running chrome, and cypress testing dependencies
+	sudo apt-get install -y bzip2 xvfb libgbm-dev libgbm1 libnotify-dev libnss3 libxss1 libxtst6 xauth && \
+	(sudo apt-get install -y libgtk-3-0 libasound2 || sudo apt-get install -y libgtk-3-0t64 libasound2t64) # for extracting firefox, running chrome, and cypress testing dependencies
 
 #
 # install firefox
@@ -16,8 +16,8 @@ RUN FIREFOX_URL="https://download.mozilla.org/?product=firefox-latest-ssl&os=lin
   && curl --silent --show-error --location --fail --retry 3 --output /tmp/firefox.tar.bz2 $ACTUAL_URL \
   && sudo tar -xvjf /tmp/firefox.tar.bz2 -C /opt \
   && sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox \
-  && (sudo apt-get install -y libgtk-3-0 libasound2 libdbus-glib-1-2 libdbus-1-3 || \
-      sudo apt-get install -y libgtk-3-0t64 libasound2t64 libdbus-glib-1-2 libdbus-1-3) \
+  && sudo apt-get update \
+  && sudo apt-get install -y libdbus-glib-1-2 libdbus-1-3 \
   && rm -rf /tmp/firefox.* \
   && firefox --version
 
