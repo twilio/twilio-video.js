@@ -1,4 +1,4 @@
-FROM cimg/node:lts
+FROM cimg/node:current-browsers
 
 #
 # Install Java 11 LTS / OpenJDK 11
