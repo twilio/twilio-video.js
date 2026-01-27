@@ -30,16 +30,12 @@ USER root
 
 # Install and enable iptables
 RUN echo "Setting up iptables..." &&\
-wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - &&\
 apt-get update &&\
 apt-get install -y iproute2 &&\
 apt-get install -y iptables &&\
 ldconfig &&\
-echo "Checking libgbm:" && ls -la /usr/lib/x86_64-linux-gnu/libgbm* || echo "libgbm not found in /usr/lib/x86_64-linux-gnu" &&\
-find /usr -name "libgbm*" 2>/dev/null &&\
-adduser user1 &&\
-adduser user1 sudo &&\
-su - user1
+adduser --disabled-password --gecos "" user1 &&\
+adduser user1 sudo
 
 # Switch back to user - circleci
 USER circleci
