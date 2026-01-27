@@ -1,5 +1,5 @@
 # https://hub.docker.com/r/browserless/chrome/dockerfile/
-FROM cimg/node:current-browsers
+FROM cimg/node:lts
 
 # install selected browser / version
 ENV BROWSER='chrome'
