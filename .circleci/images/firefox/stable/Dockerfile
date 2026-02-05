@@ -5,7 +5,8 @@ FROM cimg/node:current-browsers
 #
 RUN sudo apt-get update && \
 	sudo apt-get install -y openjdk-11-jre openjdk-11-jre-headless openjdk-11-jdk openjdk-11-jdk-headless && \
-	sudo apt-get install -y bzip2 xvfb libgbm-dev libgbm1 libnotify-dev libnss3 libxss1 libxtst6 xauth && \
+	sudo apt-get install -y bzip2 xvfb libgbm-dev libgbm1 libnotify-dev libnss3 libxss1 libxtst6 xauth \
+		dbus dbus-x11 && \
 	(sudo apt-get install -y libgtk-3-0 libasound2 || sudo apt-get install -y libgtk-3-0t64 libasound2t64) # for extracting firefox, running chrome, and cypress testing dependencies
 
 #
@@ -40,9 +41,9 @@ adduser user1 sudo
 # Switch back to user - circleci
 USER circleci
 
-# start xvfb automatically to avoid needing to express in circle.yml
+# start dbus and xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
-RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
+RUN printf '#!/bin/sh\nmkdir -p /run/dbus\ndbus-daemon --system --fork 2>/dev/null || true\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
   && chmod +x /tmp/entrypoint \
         && sudo mv /tmp/entrypoint /docker-entrypoint.sh
 

@@ -10,7 +10,8 @@ RUN if grep -q Debian /etc/os-release && grep -q stretch /etc/os-release; then \
 		sudo add-apt-repository -y ppa:openjdk-r/ppa; \
 	fi && \
 	sudo apt-get update && sudo apt-get install -y openjdk-11-jre openjdk-11-jre-headless openjdk-11-jdk openjdk-11-jdk-headless && \
-	sudo apt-get install -y bzip2 libgconf-2-4 xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth # for extracting firefox, running chrome, and cypress testing dependencies
+	sudo apt-get install -y bzip2 libgconf-2-4 xvfb libgbm-dev libgbm1 libgtk-3-0t64 libnotify-dev libnss3 libxss1 libasound2t64 libxtst6 xauth \
+		dbus dbus-x11 # for extracting firefox, running chrome, and cypress testing dependencies
 
 #
 # install firefox
@@ -28,9 +29,9 @@ ENV BROWSER='firefox'
 ENV BVER='beta'
 ENV FIREFOX_BIN=/opt/firefox/firefox
 
-# start xvfb automatically to avoid needing to express in circle.yml
+# start dbus and xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
-RUN printf '#!/bin/sh\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
+RUN printf '#!/bin/sh\nmkdir -p /run/dbus\ndbus-daemon --system --fork 2>/dev/null || true\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
   && chmod +x /tmp/entrypoint \
         && sudo mv /tmp/entrypoint /docker-entrypoint.sh
 
