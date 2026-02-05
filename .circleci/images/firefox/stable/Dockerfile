@@ -14,8 +14,8 @@ RUN sudo apt-get update && \
 #
 RUN FIREFOX_URL="https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-US" \
   && ACTUAL_URL=$(curl -Ls -o /dev/null -w %{url_effective} $FIREFOX_URL) \
-  && curl --silent --show-error --location --fail --retry 3 --output /tmp/firefox.tar.xz $ACTUAL_URL \
-  && sudo tar -xvJf /tmp/firefox.tar.xz -C /opt \
+  && curl --silent --show-error --location --fail --retry 3 --output /tmp/firefox.tar $ACTUAL_URL \
+  && sudo tar -xvf /tmp/firefox.tar -C /opt \
   && sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox \
   && sudo apt-get update \
   && sudo apt-get install -y libdbus-glib-1-2 libdbus-1-3 \
