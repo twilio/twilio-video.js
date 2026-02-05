@@ -31,7 +31,7 @@ USER circleci
 
 # start dbus and xvfb automatically to avoid needing to express in circle.yml
 ENV DISPLAY :99
-RUN printf '#!/bin/sh\nmkdir -p /run/dbus\ndbus-daemon --system --fork 2>/dev/null || true\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
+RUN printf '#!/bin/sh\nsudo mkdir -p /run/dbus\nsudo dbus-daemon --system --fork 2>/dev/null || true\nXvfb :99 -screen 0 1280x1024x24 &\nexec "$@"\n' > /tmp/entrypoint \
   && chmod +x /tmp/entrypoint \
         && sudo mv /tmp/entrypoint /docker-entrypoint.sh
 
