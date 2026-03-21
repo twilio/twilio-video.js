@@ -2,11 +2,15 @@ import { defineConfig } from 'tsdown';
 import fs from 'fs';
 import path from 'path';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const rootDir = import.meta.dirname;
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
 const license = fs.readFileSync('./LICENSE.md', 'utf8');
 
 const bannerComment = `/*! ${pkg.name}.js ${pkg.version}\n\n${license}\n */`;
+// The UMD wrapper captures `module.exports` from the IIFE output.
+// This depends on lib/index.ts using `module.exports = ...` (CJS).
+// If that file is ever changed to `export default`, the wrapper will
+// silently produce an empty `Twilio.Video` object.
 const umdHeader = `${bannerComment}
 (function(root) {
   var module = { exports: {} };
@@ -37,7 +41,7 @@ const browserBundleBase = {
   banner: umdHeader,
   footer: umdFooter,
   alias: {
-    ws: path.resolve(__dirname, 'src/ws.js'),
+    ws: path.resolve(rootDir, 'src/ws.js'),
   },
   deps: {
     alwaysBundle: [/^events$/, /^util$/, /^ws$/],
