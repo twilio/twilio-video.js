@@ -1,7 +1,7 @@
 'use strict';
 
-import { AudioProcessor } from '../tsdef/AudioProcessor';
-import { NoiseCancellationOptions } from '../tsdef/types';
+import type { AudioProcessor } from '../tsdef/AudioProcessor';
+import type { NoiseCancellationOptions } from '../tsdef/types';
 
 const dynamicImport = require('./util/dynamicimport');
 const Log = require('./util/log');
