@@ -9,6 +9,7 @@ Changes
 -------
 - Removed legacy Plan-B SDP support.
 - Removed legacy WebRTC shims for Chrome.
+- Replaced dynamic `RegExp` construction with literal string replacement in `enableDtxForOpus`.
 
 2.34.0 (January 8, 2026)
 ====================
