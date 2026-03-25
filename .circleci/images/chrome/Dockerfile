@@ -10,7 +10,7 @@ USER root
 # Add Google Chrome repository using modern key management
 RUN wget -q -O /tmp/google-chrome.asc https://dl-ssl.google.com/linux/linux_signing_key.pub \
   && install -D -o root -g root -m 644 /tmp/google-chrome.asc /etc/apt/keyrings/google-chrome.asc \
-  && echo "deb [signed-by=/etc/apt/keyrings/google-chrome.asc] http://dl.google.com/linux/chrome/deb/ stable main" \
+  && echo "deb [signed-by=/etc/apt/keyrings/google-chrome.asc] https://dl.google.com/linux/chrome/deb/ stable main" \
      > /etc/apt/sources.list.d/google-chrome.list \
   && rm /tmp/google-chrome.asc
 
