@@ -12,20 +12,20 @@ mkdir -p ./logs
 # first get the version of current image.
 echo "Checking Current version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
-docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
-OLD_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+OLD_VERSION=$(docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "========================================================="
 echo "Found old version for ${BROWSER}-${BVER} = ${OLD_VERSION}"
 echo "========================================================="
 echo ${OLD_VERSION} > ./logs/oldversion.txt
 
 echo "Building new image for ${BROWSER}-${BVER}"
-docker-compose --file=.circleci/images/docker-compose.yml build browserContainer
+docker compose --file=.circleci/images/docker-compose.yml build browserContainer
 
 echo "Checking New version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
-docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
-NEW_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+NEW_VERSION=$(docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "========================================================="
 echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 echo "========================================================="
