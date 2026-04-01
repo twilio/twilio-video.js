@@ -3,11 +3,11 @@ const TwilioConnection = require('../twilioconnection.js');
 const { ICE_VERSION } = require('../util/constants');
 const { createTwilioError, SignalingConnectionError } = require('../util/twilio-video-errors');
 
-import { RTCIceServer, RTCStats } from './rtctypes';
+import type { RTCIceServer, RTCStats } from './rtctypes';
 import { EventEmitter } from 'events';
 
 
-export { RTCStats, RTCIceServer };
+export type { RTCStats, RTCIceServer };
 export function getTurnCredentials(token: string, wsServer: string): Promise<RTCIceServer[]> {
   return new Promise((resolve, reject) => {
     const eventObserver = new EventEmitter();

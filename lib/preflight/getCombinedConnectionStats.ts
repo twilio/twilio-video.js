@@ -1,4 +1,4 @@
-import { RTCIceCandidateStats, SelectedIceCandidatePairStats,  } from '../../tsdef/PreflightTypes';
+import type { RTCIceCandidateStats, SelectedIceCandidatePairStats } from '../../tsdef/PreflightTypes';
 import type { RTCIceCandidatePairStats } from './rtctypes';
 
 interface RTCStatsReport {

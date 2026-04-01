@@ -10,6 +10,7 @@ Changes
 - Removed legacy Plan-B SDP support.
 - Removed legacy WebRTC shims for Chrome.
 - Replaced dynamic `RegExp` construction with literal string replacement in `enableDtxForOpus`.
+- Raised CJS build target from ES5 to ES2015, reducing output size by ~17%.
 
 2.34.0 (January 8, 2026)
 ====================
