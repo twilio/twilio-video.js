@@ -88,7 +88,6 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "tslib": "^2.8.1",
     "twilio": "^3.49.0",
     "twilio-release-tool": "^1.0.2",
     "typescript": "5.9.3",
@@ -145,15 +144,18 @@
     "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "typecheck": "npm run patch-linkifyit-111 && tsc tsdef/twilio-video-tests.ts --noEmit --lib es2018,dom && tsc --noEmit",
-    "build:es5": "npm run typecheck && tsc && rollup -c rollup.config.mjs",
+    "build:es5": "npm run clean && npm run typecheck && tsc && rollup -c rollup.config.mjs",
     "build": "npm-run-all clean lint docs test:unit test:integration build:es5 test:umd",
     "build:quick": "npm-run-all clean lint docs build:es5",
     "docs": "node ./scripts/docs.js ./dist/docs",
-    "watch": "rollup -c rollup.config.mjs --watch",
+    "watch:tsc": "tsc -w",
+    "watch:rollup": "rollup -c rollup.config.mjs --watch",
+    "watch": "npm-run-all -p watch:tsc watch:rollup",
     "clean": "rimraf ./coverage ./es5 ./dist"
   },
   "dependencies": {
     "events": "^3.3.0",
+    "tslib": "^2.8.1",
     "util": "^0.12.4",
     "ws": "^8.18.3"
   },

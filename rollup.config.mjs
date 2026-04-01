@@ -9,8 +9,8 @@ import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const pkg = JSON.parse(readFileSync('./package.json', 'utf8'));
-const license = readFileSync('./LICENSE.md', 'utf8');
+const pkg = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf8'));
+const license = readFileSync(path.resolve(__dirname, 'LICENSE.md'), 'utf8');
 
 const bannerComment = `/*! ${pkg.name}.js ${pkg.version}\n\n${license}\n */`;
 // The UMD wrapper captures `module.exports` from the IIFE output.
