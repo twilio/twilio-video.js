@@ -13,7 +13,6 @@ test/lib/sdkdriver/test/integration/browser/index.js
 npm-debug.log
 test.json
 nodemon.json
-yarn.lock
 .env
 .idea
 .vscode
