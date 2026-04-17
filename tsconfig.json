@@ -2,16 +2,16 @@
   "compilerOptions": {
     "allowJs": true,
     "checkJs": false,
-    "declaration": false,
-    "target": "es5",
+    "target": "es2015",
     "lib": ["es2019", "dom"],
-    "downlevelIteration": true,
     "module": "commonjs",
     "moduleResolution": "node",
+    "outDir": "es5",
+    "sourceMap": true,
+    "declaration": false,
+    "importHelpers": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "outDir": "./es5",
-    "sourceMap": true,
     "strictNullChecks": true
   },
   "include": [

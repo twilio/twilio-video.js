@@ -1,7 +1,7 @@
 'use strict';
 
-import { NoiseCancellation, NoiseCancellationOptions, NoiseCancellationVendor } from '../../../tsdef/types';
-import { AudioProcessor } from '../../../tsdef/AudioProcessor';
+import type { NoiseCancellation, NoiseCancellationOptions, NoiseCancellationVendor } from '../../../tsdef/types';
+import type { AudioProcessor } from '../../../tsdef/AudioProcessor';
 import { createNoiseCancellationAudioProcessor } from '../../noisecancellationadapter';
 const Log = require('../../util/log');
 

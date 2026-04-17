@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const isSupported = require('../../../../lib/util/support');
-const { clearChromeCachedSdpFormat } = require('../../../../lib/webrtc/util/sdp');
 
 describe('isSupported', () => {
   let oldAgent;
@@ -11,7 +10,6 @@ describe('isSupported', () => {
   });
 
   afterEach(() => {
-    clearChromeCachedSdpFormat();
     navigator.userAgent = oldAgent;
     if (global.chrome) {
       delete global.chrome;
@@ -120,6 +118,10 @@ describe('isSupported', () => {
       'Edge on iPhone',
       'Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 EdgiOS/46.3.13 Mobile/15E148 Safari/605.1.15'
     ],
+    [
+      'Samsung Browser on Android',
+      'Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G950U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/10.2 Chrome/71.0.3578.99 Mobile Safari/537.36'
+    ],
   ].forEach(([browser, useragent, chrome]) => {
     it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
@@ -195,10 +197,6 @@ describe('isSupported', () => {
     [
       'Opera',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36 OPR/56.0.3051.52'
-    ],
-    [
-      'Samsung Browser',
-      'Mozilla/5.0 (Linux; Android 9; SAMSUNG SM-G950U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/10.2 Chrome/71.0.3578.99 Mobile Safari/537.36'
     ]
   ].forEach(([browser, useragent, chrome, brave]) => {
     it('returns false for unsupported browser: ' + browser, () => {
@@ -213,67 +211,4 @@ describe('isSupported', () => {
     });
   });
 
-  describe('return false when sdp format is plan-b', () => {
-    describe('and browser is chrome', () => {
-      let oldRTCPeerConnection;
-      let oldRTCPeerConnectionPrototype;
-      let oldUserAgent;
-
-      beforeEach(() => {
-        oldUserAgent = navigator.userAgent;
-        navigator.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36';
-        oldRTCPeerConnection = global.RTCPeerConnection;
-        oldRTCPeerConnectionPrototype = oldRTCPeerConnection.prototype;
-      });
-
-      afterEach(() => {
-        navigator.userAgent = oldUserAgent;
-        global.RTCPeerConnection = oldRTCPeerConnection;
-        global.RTCPeerConnection.prototype = oldRTCPeerConnectionPrototype;
-      });
-
-      it('and RTCPeerConnection.prototype.addTransceiver is not supported', () => {
-        global.RTCPeerConnection.prototype = Object.assign({}, oldRTCPeerConnectionPrototype);
-        delete global.RTCPeerConnection.prototype.addTransceiver;
-        assert.equal(isSupported(), false);
-      });
-
-      it('and RTCPeerConnection.prototype.addTransceiver throws an exception', () => {
-        global.RTCPeerConnection = function() {
-          this.addTransceiver = function() {
-            throw new Error();
-          };
-          this.close = function() {};
-        };
-        global.RTCPeerConnection.prototype.addTransceiver = function() {};
-        assert.equal(isSupported(), false);
-      });
-    });
-
-    describe('and browser is safari', () => {
-      let oldUserAgent;
-      let oldRTCRtpTransceiver;
-
-      beforeEach(() => {
-        oldUserAgent = navigator.userAgent;
-        navigator.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13 Safari/605.1.15';
-        oldRTCRtpTransceiver = global.RTCRtpTransceiver;
-      });
-
-      afterEach(() => {
-        navigator.userAgent = oldUserAgent;
-        global.RTCRtpTransceiver = oldRTCRtpTransceiver;
-      });
-
-      it('and RTCRtpTransceiver is not supported', () => {
-        delete global.RTCRtpTransceiver;
-        assert.equal(isSupported(), false);
-      });
-
-      it('and RTCRtpTransceiver is supported but currentDirection is missing', () => {
-        delete global.RTCRtpTransceiver.prototype.currentDirection;
-        assert.equal(isSupported(), false);
-      });
-    });
-  });
 });

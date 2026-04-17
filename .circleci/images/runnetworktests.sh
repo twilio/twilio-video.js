@@ -21,10 +21,10 @@ cat package.json | grep version
 echo "Test files:"
 echo $TEST_FILES
 
-echo "Installing dependancies"
+echo "Installing dependencies"
 
-# install dependancies.
-npm install --no-optional --legacy-peer-deps
+# install dependencies.
+npm ci
 
 echo "Building Project"
 # build the project.

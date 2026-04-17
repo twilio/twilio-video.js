@@ -3,7 +3,7 @@
 const assert = require('assert');
 const { guessBrowser } = require('../../../../es5/webrtc/util');
 const { getMediaSections, setSimulcast } = require('../../../../es5/util/sdp');
-const { RTCPeerConnection, RTCSessionDescription } = require('../../../../es5/webrtc/index');
+const { RTCPeerConnection } = require('../../../../es5/webrtc/index');
 
 const isChrome = guessBrowser() === 'chrome';
 
