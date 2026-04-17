@@ -53,7 +53,7 @@ network)
   echo "Running network tests"
   # network tets run inside a container with docker socket mapped in the container.
   echo "${DOCKER_HUB_PASSWORD}" | docker login --username "${DOCKER_HUB_USERNAME}" --password-stdin
-  docker-compose --file=.circleci/images/docker-compose.yml run integrationTests
+  docker compose --file=.circleci/images/docker-compose.yml run integrationTests
   ;;
 integration)
   echo "Testing integration tests"

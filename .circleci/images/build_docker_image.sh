@@ -1,36 +1,37 @@
 #!/bin/bash
 # builds container image for integration tests,
 # if browser version has changed, pushes the newly generated container to twilio docker hub
-# uses: $BROWSER $BVER $CIRCLECI $DOCKER_HUB_USERNAME $DOCKER_HUB_PASSWORD
+# uses: $BROWSER $BVER $CIRCLECI $DOCKER_HUB_USERNAME $DOCKER_HUB_PASSWORD $FORCE_PUSH_DOCKER_IMAGE $SLACK_WEBHOOK
 
 echo "current directory:"
 echo $PWD
+echo "FORCE_PUSH_DOCKER_IMAGE=${FORCE_PUSH_DOCKER_IMAGE}"
 
 mkdir -p ./logs
 
 # first get the version of current image.
 echo "Checking Current version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
-docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
-OLD_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+OLD_VERSION=$(docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "========================================================="
 echo "Found old version for ${BROWSER}-${BVER} = ${OLD_VERSION}"
 echo "========================================================="
 echo ${OLD_VERSION} > ./logs/oldversion.txt
 
 echo "Building new image for ${BROWSER}-${BVER}"
-docker-compose --file=.circleci/images/docker-compose.yml build browserContainer
+docker compose --file=.circleci/images/docker-compose.yml build browserContainer
 
 echo "Checking New version for ${BROWSER}-${BVER}"
 # first run ensures that we do not get output from docker pull
-docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion
-NEW_VERSION=$(docker-compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
+docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion
+NEW_VERSION=$(docker compose --file=.circleci/images/docker-compose.yml run --rm getVersion)
 echo "========================================================="
 echo "Found new version for ${BROWSER}-${BVER} = ${NEW_VERSION}"
 echo "========================================================="
 echo ${NEW_VERSION} > ./logs/newversion.txt
 
-if [ "${NEW_VERSION}" == "${OLD_VERSION}" ]; then
+if [[ "${NEW_VERSION}" == "${OLD_VERSION}" && "${FORCE_PUSH_DOCKER_IMAGE}" != "true" ]]; then
     echo "========================================================="
     echo "No version change detected. Exiting"
     echo "========================================================="

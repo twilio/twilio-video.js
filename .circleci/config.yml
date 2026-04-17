@@ -28,6 +28,9 @@ parameters:
   backend_group_workflow: # runs Group only JS integration.
     type: boolean
     default: false
+  build_docker_images: # manually trigger docker image builds
+    type: boolean
+    default: false
   tag:
     type: string
     default: "" # use something like: "2.0.0-beta15" when invoking with parameters.
@@ -206,8 +209,12 @@ jobs:
         default: "group"
       test_stability:
         type: string
+      env:
+        type: string
+        default: "stage"
     environment:
       TEST_TYPE: "integration"
+      ENVIRONMENT: << parameters.env >>
       TOPOLOGY: << parameters.topology >>
       TEST_STABILITY: << parameters.test_stability >>
       TEST_FILES: << pipeline.parameters.test_files >>
@@ -301,6 +308,19 @@ workflows:
             branches:
               only:
                 - master
+    jobs:
+      - Build-Docker-Test-Image:
+          context: dockerhub-push
+          matrix:
+            parameters:
+              browser: ["chrome", "firefox"]
+              bver: ["stable", "unstable", "beta"]
+  # Manually trigger Docker image builds on any branch via API:
+  # curl -X POST "https://circleci.com/api/v2/project/gh/twilio/twilio-video.js/pipeline" \
+  #   -H "Circle-Token: $CIRCLECI_TOKEN" -H "Content-Type: application/json" \
+  #   -d '{"branch": "your-branch", "parameters": {"build_docker_images": true, "pr_workflow": false}}'
+  Build_Docker_Images_Manual:
+    when: << pipeline.parameters.build_docker_images >>
     jobs:
       - Build-Docker-Test-Image:
           context: dockerhub-push
@@ -485,13 +505,14 @@ workflows:
           context: dockerhub-pulls
       - run-integration-tests:
           context: dockerhub-pulls
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>) << matrix.env >>
           matrix:
             parameters:
               browser: ["chrome", "firefox"]
               bver: ["stable", "unstable", "beta"]
               topology: ["group", "peer-to-peer"]
               test_stability: ["stable"]
+              env: ["stage", "prod"]
           requires: [Build, UnitTests]
 
   Healthcheck_Workflow:
@@ -507,13 +528,14 @@ workflows:
           context: dockerhub-pulls
       - run-integration-tests:
           context: dockerhub-pulls
-          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>)
+          name: << matrix.test_stability >> integration << matrix.topology >> tests on << matrix.browser >>(<< matrix.bver >>) << matrix.env >>
           matrix:
             parameters:
               browser: ["chrome"]
               bver: ["stable"]
               topology: ["group"]
               test_stability: ["stable"]
+              env: ["stage", "prod"]
           requires: [Build]
 
   Qe-trigger-test:
