@@ -1,4 +1,4 @@
-FROM cimg/node:current-browsers
+FROM cimg/node:24.15.0-browsers@sha256:992b985d8f2f5dc239ced6c2e8008cb83c4763afb57f2e8ec8908095e0ebacfe
 
 #
 # Install Java 11 LTS / OpenJDK 11
