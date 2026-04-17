@@ -85,7 +85,7 @@ executors:
       <<: *defaultEnv
   machine-executor:
     machine:
-      image: ubuntu-2404:current
+      image: ubuntu-2404:2025.09.1
     environment:
       <<: *defaultEnv
 commands:
@@ -152,9 +152,6 @@ commands:
   umd-tests:
     steps:
       - build
-      - run:
-          name: Installing UMD test dependencies
-          command: npm run test:umd:install
       - run:
           name: Running UMD Tests
           command: npm run test:umd
