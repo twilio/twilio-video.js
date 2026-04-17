@@ -77,7 +77,7 @@ executors:
       <<: *defaultEnv
   generic-executor:
     docker:
-      - image: alpine:3.21
+      - image: alpine:3.21@sha256:48b0309ca019d89d40f670aa1bc06e426dc0931948452e8491e3d65087abc07d
         auth:
           username: $DOCKER_HUB_USERNAME
           password: $DOCKER_HUB_PASSWORD
@@ -280,7 +280,7 @@ jobs:
 
   trigger-qe-tests:
     docker:
-      - image: circleci/node:latest
+      - image: cimg/node:24.15.0@sha256:0a67b6fa151ceac233d469a5915ca75a4a1c9e3854502ed7cc236f18c3a4f5c3
         auth:
           username: $DOCKER_HUB_USERNAME
           password: $DOCKER_HUB_PASSWORD
