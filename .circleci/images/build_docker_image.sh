@@ -1,7 +1,7 @@
 #!/bin/bash
 # builds container image for integration tests,
 # if browser version has changed, pushes the newly generated container to twilio docker hub
-# uses: $BROWSER $BVER $CIRCLECI $DOCKER_USERNAME $DOCKER_PASSWORD
+# uses: $BROWSER $BVER $CIRCLECI $DOCKER_HUB_USERNAME $DOCKER_HUB_PASSWORD
 
 echo "current directory:"
 echo $PWD
