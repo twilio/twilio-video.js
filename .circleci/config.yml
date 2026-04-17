@@ -450,7 +450,7 @@ workflows:
           requires: [Release dry run]
       - ExecuteRelease:
           dryRun: false
-          context: [sdk_js, dockerhub-pulls]
+          context: [vblocks-js, dockerhub-pulls]
           requires: [hold]
 
   Release-candidate:
