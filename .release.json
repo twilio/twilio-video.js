@@ -41,8 +41,7 @@
     "publish": {
       "commands": [
         "git checkout ${RELEASE_VERSION}",
-        "echo \"//registry.npmjs.org/:_authToken=${NPM_AUTH_TOKEN}\" >~/.npmrc",
-        "npm publish"
+        "NPM_ID_TOKEN=$(circleci run oidc get --claims '{\"aud\":\"npm:registry.npmjs.org\"}') npm publish"
       ]
     }
   }
