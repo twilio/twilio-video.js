@@ -2,7 +2,7 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
-2.35.0 (In Progress)
+2.35.0 (April 29, 2026)
 ====================
 
 Changes
@@ -11,6 +11,7 @@ Changes
 - Removed legacy WebRTC shims for Chrome.
 - Replaced dynamic `RegExp` construction with literal string replacement in `enableDtxForOpus`.
 - Raised CJS build target from ES5 to ES2015, reducing output size by ~17%.
+- `isSupported` now returns `true` for Samsung Internet.
 
 2.34.0 (January 8, 2026)
 ====================
