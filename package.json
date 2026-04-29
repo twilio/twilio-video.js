@@ -144,7 +144,7 @@
     "test:framework": "npm-run-all test:framework:install test:framework:no-framework test:framework:react",
     "test": "npm-run-all test:unit test:integration",
     "typecheck": "npm run patch-linkifyit-111 && tsc tsdef/twilio-video-tests.ts --noEmit --lib es2018,dom && tsc --noEmit",
-    "build:es5": "npm run clean && npm run typecheck && tsc && rollup -c rollup.config.mjs",
+    "build:es5": "rimraf ./es5 && npm run typecheck && tsc && rollup -c rollup.config.mjs",
     "build": "npm-run-all clean lint docs test:unit test:integration build:es5 test:umd",
     "build:quick": "npm-run-all clean lint docs build:es5",
     "docs": "node ./scripts/docs.js ./dist/docs",
