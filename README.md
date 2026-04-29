@@ -21,15 +21,14 @@ View [CHANGELOG.md](https://github.com/twilio/twilio-video.js/blob/master/CHANGE
 Browser Support
 ---------------
 
-|             | Chrome | Edge (Chromium) | Firefox | Safari | WebView |
-| ------------|--------|-----------------|---------|--------|---------|
-| **Android** | ✓      | -               | ✓       | -      | -       |
-| **iOS**     | ✓      | ✓               | *       | ✓      | ✓       |
-| **Linux**   | ✓      | -               | ✓       | -      | -       |
-| **macOS**   | ✓      | ✓ **            | ✓       | ✓      | -       |
-| **Windows** | ✓      | ✓ **            | ✓       | -      | -       |
-
-\*\* twilio-video.js supports the [Chromium-based Edge](https://www.microsoftedgeinsider.com/) browser.
+|                      | Windows | macOS | Linux | iOS | Android |
+| -------------------- | ------- | ----- | ----- | --- | ------- |
+| **Chrome**           | ✓       | ✓     | ✓     | ✓   | ✓       |
+| **Edge**             | ✓       | ✓     | -     | ✓   | -       |
+| **Safari**           | -       | ✓     | -     | ✓   | -       |
+| **Firefox**          | ✓       | ✓     | ✓     | -   | ✓       |
+| **Samsung Internet** | -       | -     | -     | -   | ✓       |
+| **WebView**          | -       | -     | -     | ✓   | -       |
 
 Installation
 ------------
@@ -74,7 +73,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//sdk.twilio.com/js/video/releases/2.34.0/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.35.0/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
