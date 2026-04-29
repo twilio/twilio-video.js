@@ -1,0 +1,1 @@
+{"version":3,"file":"networkqualitysendstats.js","sourceRoot":"","sources":["../../lib/stats/networkqualitysendstats.js"],"names":[],"mappings":"AAAA,YAAY,CAAC;AAEb,MAAM,6BAA6B,GAAG,OAAO,CAAC,iCAAiC,CAAC,CAAC;AAEjF;;;GAGG;AACH,MAAM,uBAAwB,SAAQ,6BAA6B;IACjE;;;OAGG;IACH,YAAY,eAAe;QACzB,KAAK,CAAC,eAAe,CAAC,CAAC;IACzB,CAAC;CACF;AAED,MAAM,CAAC,OAAO,GAAG,uBAAuB,CAAC"}
