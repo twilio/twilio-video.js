@@ -16,10 +16,18 @@ const Log = require('../../util/log');
  * const { connect, createLocalAudioTrack } = require('twilio-video');
  *
  * // Create a LocalAudioTrack with Krisp noise cancellation enabled.
+ * // Supported plugin versions: @twilio/krisp-audio-plugin 1.x or 2.x.
  * const localAudioTrack = await createLocalAudioTrack({
  *   noiseCancellationOptions: {
- *     sdkAssetsPath: 'path/to/hosted/twilio/krisp/audio/plugin/1.0.0/dist',
+ *     sdkAssetsPath: 'path/to/hosted/twilio/krisp/audio/plugin/{version}/dist',
  *     vendor: 'krisp'
+ *   },
+ *   // Required for @twilio/krisp-audio-plugin 2.x only, so Krisp receives
+ *   // the raw microphone signal. Omit these for 1.x.
+ *   audio: {
+ *     echoCancellation: false,
+ *     noiseSuppression: false,
+ *     autoGainControl: false
  *   }
  * });
  *
@@ -130,7 +138,7 @@ export class NoiseCancellationImpl implements NoiseCancellation {
     const track = await reacquire();
     this._sourceTrack = track;
 
-    const processedTrack = await this._processor.connect(track);
+    const processedTrack = this._processor.connect(track);
     if (processorWasEnabled) {
       this._processor.enable();
     } else {
