@@ -73,6 +73,11 @@ export async function createNoiseCancellationAudioProcessor(
       log.debug('Loaded noise cancellation sdk:', dynamicModule);
 
       const maybeLegacyPlugin = dynamicModule.default as NoiseCancellationPlugin | LegacyPlugin;
+
+      if (!maybeLegacyPlugin || typeof maybeLegacyPlugin.getVersion !== 'function') {
+        throw new Error(`Invalid noise cancellation plugin module: ${sdkFilePath}`);
+      }
+
       const pluginVersion = maybeLegacyPlugin.getVersion();
 
       ensureVersionCompatible({ supportedVersions, pluginVersion });
