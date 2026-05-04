@@ -20,7 +20,9 @@ const PLUGIN_CONFIG = {
 };
 
 const parseVersion = (version: string): number[] => {
-  const parts = version.split('.').map(v => Number(v));
+  // Strip semver pre-release suffix (e.g. "2.0.0-rc.1") before parsing.
+  const core = version.split('-')[0];
+  const parts = core.split('.').map(v => Number(v));
   if (parts.length !== 3 || parts.some(Number.isNaN)) {
     throw new Error(`Unsupported Plugin version format: ${version}`);
   }
