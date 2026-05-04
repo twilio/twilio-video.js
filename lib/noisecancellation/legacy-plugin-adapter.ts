@@ -16,7 +16,7 @@ export type LegacyPlugin = {
   setLogging(enable: boolean): void;
   isSupported(audioContext: AudioContext): boolean;
   getVersion(): string;
-}
+};
 
 export class LegacyPluginAdapter implements NoiseCancellationPlugin {
   private readonly legacy: LegacyPlugin;
