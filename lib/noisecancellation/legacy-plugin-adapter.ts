@@ -47,7 +47,8 @@ export class LegacyPluginAdapter implements NoiseCancellationPlugin {
   }
 
   destroy(): Promise<void> {
-    this.legacy.destroy();
-    return Promise.resolve();
+    return Promise.resolve().then(() => {
+      this.legacy.destroy();
+    });
   }
 }
