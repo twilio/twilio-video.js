@@ -38,7 +38,10 @@ export class LegacyPluginAdapter implements NoiseCancellationPlugin {
 
   isSupported(): boolean {
     const holder = {};
-    const ctx = AudioContextFactory.getOrCreate(holder);
+    const ctx: AudioContext | null = AudioContextFactory.getOrCreate(holder);
+    if (!ctx) {
+      return false;
+    }
     try {
       return this.legacy.isSupported(ctx);
     } finally {
