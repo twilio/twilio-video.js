@@ -33,32 +33,35 @@ describe('UMD', function() {
       ['unminified', 'index'],
       ['minified', 'min']
     ].forEach(([mode, filename]) => {
-      it(`should receive a video object with ${publicVars.join(', ')} properties (${mode})`, done => {
-        const onConsole = async msg => {
-          const handle = msg.args()[0];
-          if (!handle) {
-            return;
-          }
-          let res;
-          try {
-            res = await handle.jsonValue();
-          } catch {
-            return;
-          }
-          if (!res || !res.status) {
-            return;
-          }
-          page.off('console', onConsole);
-          if (res.status !== 'success') {
-            done(new Error(res.reason));
-          } else if (res.version !== version) {
-            done(new Error(`Version mismatch. res.version=${res.version}, package version=${version}`));
-          } else {
-            done();
-          }
-        };
-        page.on('console', onConsole);
-        page.goto(`file:${join(__dirname, 'require-browser', `${filename}.html`)}`);
+      it(`should receive a video object with ${publicVars.join(', ')} properties (${mode})`, async () => {
+        const result = new Promise((resolve, reject) => {
+          const onConsole = async msg => {
+            const handle = msg.args()[0];
+            if (!handle) {
+              return;
+            }
+            let res;
+            try {
+              res = await handle.jsonValue();
+            } catch {
+              return;
+            }
+            if (!res || !res.status) {
+              return;
+            }
+            page.off('console', onConsole);
+            if (res.status !== 'success') {
+              reject(new Error(res.reason));
+            } else if (res.version !== version) {
+              reject(new Error(`Version mismatch. res.version=${res.version}, package version=${version}`));
+            } else {
+              resolve();
+            }
+          };
+          page.on('console', onConsole);
+        });
+        await page.goto(`file:${join(__dirname, 'require-browser', `${filename}.html`)}`);
+        await result;
       });
     });
 
