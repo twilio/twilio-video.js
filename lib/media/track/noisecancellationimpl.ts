@@ -24,11 +24,9 @@ const Log = require('../../util/log');
  *   },
  *   // Required for @twilio/krisp-audio-plugin 2.x only, so Krisp receives
  *   // the raw microphone signal. Omit these for 1.x.
- *   audio: {
- *     echoCancellation: false,
- *     noiseSuppression: false,
- *     autoGainControl: false
- *   }
+ *   echoCancellation: false,
+ *   noiseSuppression: false,
+ *   autoGainControl: false
  * });
  *
  * if (!localAudioTrack.noiseCancellation) {
