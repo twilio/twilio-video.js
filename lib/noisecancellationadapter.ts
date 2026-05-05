@@ -81,6 +81,7 @@ export async function createNoiseCancellationAudioProcessor(
       }
 
       const pluginVersion = maybeLegacyPlugin.getVersion();
+      log.debug('Plugin Version =', pluginVersion);
 
       ensureVersionCompatible({ supportedVersions, pluginVersion });
 
