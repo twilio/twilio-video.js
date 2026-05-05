@@ -48,7 +48,7 @@ const ensureVersionCompatible = ({ supportedVersions, pluginVersion }: {
 };
 
 const adaptPlugin = (maybeLegacyPlugin: NoiseCancellationPlugin | LegacyPlugin, major: number): NoiseCancellationPlugin => {
-  return major >= 2
+  return major === 2
     ? maybeLegacyPlugin as NoiseCancellationPlugin
     : new LegacyPluginAdapter(maybeLegacyPlugin as LegacyPlugin);
 };
