@@ -10,12 +10,15 @@ require('./spec/createlocaltrack');
 require('./spec/encodingparameters');
 require('./spec/localparticipant');
 require('./spec/networkqualityconfiguration');
+require('./spec/noisecancellationadapter');
 require('./spec/room');
 require('./spec/remoteparticipant');
 require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 require('./spec/transceiver');
 require('./spec/twilioconnection');
+
+require('./spec/noisecancellation/legacy-plugin-adapter');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');
@@ -28,6 +31,7 @@ require('./spec/media/track/mediatrack');
 require('./spec/media/track/localdatatrack');
 require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localaudiotrack');
+require('./spec/media/track/noisecancellationimpl');
 require('./spec/media/track/localvideotrack');
 require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/receiver');
