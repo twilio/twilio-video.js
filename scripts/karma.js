@@ -63,9 +63,13 @@ async function main() {
     root: `${process.cwd()}/test/`
   }, resolve));
 
+  // Firefox has a historical WebRTC memory leak that requires respawning Karma
+  // per spec file. Other browsers run all files in a single Karma session.
+  const fileBatches = process.env.BROWSER === 'firefox' ? files.map(f => [f]) : [files];
+
   let processExitCode = 0;
-  for (const file of files) {
-    const config = parseConfig(configFile, { files: [file] });
+  for (const batch of fileBatches) {
+    const config = parseConfig(configFile, { files: batch });
 
     // eslint-disable-next-line no-await-in-loop
     const exitCode = await new Promise(resolve => {
@@ -76,11 +80,9 @@ async function main() {
     });
 
     if (exitCode && !processExitCode) {
-      // NOTE(mpatwardhan) if tests fail for one file,
-      // note the exitcode but continue running for rest
-      // of the files.
+      // On failure, note the exit code but keep running remaining batches.
       processExitCode = exitCode;
-      console.log('Failed for file:', file);
+      console.log('Failed for batch:', batch);
     }
   }
 
