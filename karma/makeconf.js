@@ -49,7 +49,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
   return function conf(config) {
     const files = getTestFiles(config, defaultFile);
     const preprocessors = files.reduce((preprocessors, file) => {
-      return Object.assign({ [file]: 'browserify' });
+      preprocessors[file] = 'browserify';
+      return preprocessors;
     }, {});
 
     let browsers = {
