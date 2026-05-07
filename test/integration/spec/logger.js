@@ -3,9 +3,8 @@
 const assert = require('assert');
 const sinon = require('sinon');
 
-const { Logger } = require('../../../es5');
+const { Logger, connect } = require('../../../es5');
 const defaults = require('../../lib/defaults');
-const defaultConnect = require('../../../es5').connect;
 const getToken = require('../../lib/token');
 const { createRoom, completeRoom } = require('../../lib/rest');
 const { randomName } = require('../../lib/util');
@@ -13,14 +12,8 @@ const { randomName } = require('../../lib/util');
 describe('logger', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
-  let connectCount = 0;
   const DEFAULT_LOGGER_NAME = 'twilio-video';
   const consoleMethods = ['debug', 'info', 'warn', 'error', 'log'];
-
-  const connect = (...args) => {
-    connectCount++;
-    return defaultConnect(...args);
-  };
 
   let logger;
   let loggerCb;
@@ -216,15 +209,30 @@ describe('logger', function() {
     const loggerName1 = DEFAULT_LOGGER_NAME + '-alice';
     const loggerName2 = DEFAULT_LOGGER_NAME + '-bob';
 
-    let logger1;
     let room1;
     let room2;
 
-    beforeEach(() => {
-      loadPlugin(loggerName1);
-      loadPlugin(loggerName2);
+    const spyOnLogger = loggerName => {
+      const spy = sinon.spy();
+      const logger = Logger.getLogger(loggerName);
+      const originalFactory = logger.methodFactory;
+      logger.methodFactory = function(methodName, level, name) {
+        const method = originalFactory(methodName, level, name);
+        return function(datetime, logLevel, component, message, data) {
+          spy({ datetime, logLevel, component, message, data });
+          method(datetime, logLevel, component, message, data);
+        };
+      };
+      logger.setLevel('info');
+      return { logger, spy };
+    };
 
-      logger1 = Logger.getLogger(loggerName1);
+    let alice;
+    let bob;
+
+    beforeEach(() => {
+      alice = spyOnLogger(loggerName1);
+      bob = spyOnLogger(loggerName2);
     });
 
     afterEach(async () => {
@@ -241,52 +249,27 @@ describe('logger', function() {
       room2 = null;
     });
 
-    it('should not render logs that are turned off', async () => {
-      logger1.setLevel('silent');
+    it('should drop all logs when the logger is silent', async () => {
+      alice.logger.setLevel('silent');
       room1 = await connect(token, Object.assign({ name: sid, loggerName: loggerName1 }, defaults));
-      room2 = await connect(token, Object.assign({ name: sid, loggerName: loggerName2 }, defaults));
 
-      let shouldHaveConnectComponentLogs = false;
-      consoleMethods.forEach(method => {
-        console[method].getCalls().forEach(callStub => {
-          const prefix = callStub.args[0];
-          const componentName = callStub.args[3];
-          if (!componentName.includes('connect')) {
-            return;
-          }
-          shouldHaveConnectComponentLogs = true;
-
-          // The SDK adds a counter at the end to distinguish connect count.
-          // Let's use that to determine which participant the log is coming from.
-          assert(componentName.includes('#' + connectCount));
-          assert.equal(prefix, loggerName2);
-        });
-      });
-
-      assert(shouldHaveConnectComponentLogs);
+      sinon.assert.notCalled(alice.spy);
     });
 
-    it('should decorate the correct log for each individual component', async () => {
+    it('should route each participant\'s logs only to its own logger', async () => {
       room1 = await connect(token, Object.assign({ name: sid, loggerName: loggerName1 }, defaults));
       room2 = await connect(token, Object.assign({ name: sid, loggerName: loggerName2 }, defaults));
 
-      let shouldHaveConnectComponentLogs = false;
-      consoleMethods.forEach(method => {
-        console[method].getCalls().forEach(callStub => {
-          const prefix = callStub.args[0];
-          const componentName = callStub.args[3];
-          if (!componentName.includes('connect')) {
-            return;
-          }
-          shouldHaveConnectComponentLogs = true;
-          if (prefix === loggerName1) {
-            assert(componentName.includes('#' + (connectCount - 1)));
-          } else if (prefix === loggerName2) {
-            assert(componentName.includes('#' + connectCount));
-          }
-        });
-      });
-      assert(shouldHaveConnectComponentLogs);
+      const componentsOf = spy => new Set(spy.getCalls().map(c => c.args[0].component));
+      const aliceComponents = componentsOf(alice.spy);
+      const bobComponents = componentsOf(bob.spy);
+
+      const aliceConnect = [...aliceComponents].filter(c => c.startsWith('[connect #'));
+      const bobConnect = [...bobComponents].filter(c => c.startsWith('[connect #'));
+
+      assert.equal(aliceConnect.length, 1, `alice connect components: ${aliceConnect}`);
+      assert.equal(bobConnect.length, 1, `bob connect components: ${bobConnect}`);
+      assert.notEqual(aliceConnect[0], bobConnect[0]);
     });
   });
 });
