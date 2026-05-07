@@ -33,10 +33,6 @@ function filterTests(paths) {
   return paths;
 }
 
-// NOTE(mroberts): We have a memory leak, either in twilio-video.js or in
-// Firefox, that causes Firefox to slow down after running a bunch of tests that
-// exercise WebRTC APIs. To workaround this, we spawn Karma for each integration
-// test module.
 async function main() {
   let dockerProxy = null;
   if (isDocker) {
@@ -63,28 +59,13 @@ async function main() {
     root: `${process.cwd()}/test/`
   }, resolve));
 
-  // Firefox has a historical WebRTC memory leak that requires respawning Karma
-  // per spec file. Other browsers run all files in a single Karma session.
-  const fileBatches = process.env.BROWSER === 'firefox' ? files.map(f => [f]) : [files];
-
-  let processExitCode = 0;
-  for (const batch of fileBatches) {
-    const config = parseConfig(configFile, { files: batch });
-
-    // eslint-disable-next-line no-await-in-loop
-    const exitCode = await new Promise(resolve => {
-      const server = new Server(config, resolve);
-      server.start();
-      process.once('exit', () => stopper.stop(config));
-      process.once('SIGINT', () => process.exit());
-    });
-
-    if (exitCode && !processExitCode) {
-      // On failure, note the exit code but keep running remaining batches.
-      processExitCode = exitCode;
-      console.log('Failed for batch:', batch);
-    }
-  }
+  const config = parseConfig(configFile, { files });
+  const processExitCode = await new Promise(resolve => {
+    const server = new Server(config, resolve);
+    server.start();
+    process.once('exit', () => stopper.stop(config));
+    process.once('SIGINT', () => process.exit());
+  });
 
   if (dockerProxy) {
     dockerProxy.stopServer();
