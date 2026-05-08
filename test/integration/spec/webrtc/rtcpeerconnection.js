@@ -79,6 +79,7 @@ describe('RTCPeerConnection', function() {
         const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo');
         assert.equal(dataChannel.maxPacketLifeTime, null);
+        pc.close();
       });
     });
 
@@ -87,6 +88,7 @@ describe('RTCPeerConnection', function() {
         const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo');
         assert.equal(dataChannel.maxRetransmits, null);
+        pc.close();
       });
     });
 
@@ -94,6 +96,7 @@ describe('RTCPeerConnection', function() {
       const pc = new RTCPeerConnection();
       const dataChannel = pc.createDataChannel('foo');
       assert.equal(dataChannel.ordered, true);
+      pc.close();
     });
 
     describe('called setting maxPacketLifeTime', () => {
@@ -102,6 +105,7 @@ describe('RTCPeerConnection', function() {
         const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { maxPacketLifeTime });
         assert.equal(dataChannel.maxPacketLifeTime, maxPacketLifeTime);
+        pc.close();
       });
     });
 
@@ -111,6 +115,7 @@ describe('RTCPeerConnection', function() {
         const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { maxRetransmits });
         assert.equal(dataChannel.maxRetransmits, maxRetransmits);
+        pc.close();
       });
     });
 
@@ -120,6 +125,7 @@ describe('RTCPeerConnection', function() {
         const pc = new RTCPeerConnection();
         const dataChannel = pc.createDataChannel('foo', { ordered });
         assert.equal(dataChannel.ordered, ordered);
+        pc.close();
       });
     });
 
@@ -130,6 +136,7 @@ describe('RTCPeerConnection', function() {
           maxPacketLifeTime: 3,
           maxRetransmits: 3
         }));
+        pc.close();
       });
     });
   });
@@ -275,6 +282,7 @@ describe('RTCPeerConnection', function() {
         const trackBefore = tracksBefore[i];
         assert.equal(trackAfter, trackBefore);
       });
+      pc.close();
     });
   });
 
@@ -283,9 +291,26 @@ describe('RTCPeerConnection', function() {
   describe('Glare', () => testGlare());
 
   describe('"datachannel" event', () => {
+    let trackedPeerConnections;
+
+    beforeEach(() => {
+      trackedPeerConnections = [];
+    });
+
+    afterEach(() => {
+      trackedPeerConnections.forEach(pc => pc.close());
+      trackedPeerConnections = [];
+    });
+
+    const setupPcPair = () => {
+      const pair = createPeerConnections();
+      trackedPeerConnections.push(...pair);
+      return pair;
+    };
+
     describe('when maxPacketLifeTime is not set', () => {
       it('sets maxPacketLifeTime to null', async () => {
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -296,7 +321,7 @@ describe('RTCPeerConnection', function() {
 
     describe('when maxRetransmits is not set', () => {
       it('sets maxRetransmits to null', async () => {
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -307,7 +332,7 @@ describe('RTCPeerConnection', function() {
 
     describe('when ordered is not set', () => {
       it('sets ordered to true', async () => {
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo');
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -319,7 +344,7 @@ describe('RTCPeerConnection', function() {
     describe('when maxPacketLifeTime is set', () => {
       (isFirefox ? it.skip : it)('sets maxPacketLifeTime to the specified value', async () => {
         const maxPacketLifeTime = 3;
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo', { maxPacketLifeTime });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -331,7 +356,7 @@ describe('RTCPeerConnection', function() {
     describe('when maxRetransmits is set', () => {
       (isFirefox ? it.skip : it)('sets maxRetransmits to the specified value', async () => {
         const maxRetransmits = 3;
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo', { maxRetransmits });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -343,7 +368,7 @@ describe('RTCPeerConnection', function() {
     describe('when ordered is set to false', () => {
       it('sets ordered to true', async () => {
         const ordered = false;
-        const [offerer, answerer] = createPeerConnections();
+        const [offerer, answerer] = setupPcPair();
         offerer.createDataChannel('foo', { ordered });
         const dataChannelPromise = waitForDataChannel(answerer);
         await negotiate(offerer, answerer);
@@ -360,59 +385,70 @@ describe('RTCPeerConnection', function() {
         const pc2 = new RTCPeerConnection({ iceServers: [] });
 
         const stream = new MediaStream();
+        const sourceStreams = [];
 
-        const [localAudioTrack] = (await makeStream({ audio: true, fake: true })).getAudioTracks();
-        stream.addTrack(localAudioTrack);
+        try {
+          const audioSource = await makeStream({ audio: true, fake: true });
+          sourceStreams.push(audioSource);
+          const [localAudioTrack] = audioSource.getAudioTracks();
+          stream.addTrack(localAudioTrack);
 
-        pc1.addTrack(localAudioTrack, stream);
-        const trackEvent1 = waitForEvent(pc2, 'track');
+          pc1.addTrack(localAudioTrack, stream);
+          const trackEvent1 = waitForEvent(pc2, 'track');
 
-        const offer1 = await pc1.createOffer();
-        await Promise.all([
-          pc1.setLocalDescription(offer1),
-          pc2.setRemoteDescription(offer1)
-        ]);
+          const offer1 = await pc1.createOffer();
+          await Promise.all([
+            pc1.setLocalDescription(offer1),
+            pc2.setRemoteDescription(offer1)
+          ]);
 
-        const answer1 = await pc2.createAnswer();
+          const answer1 = await pc2.createAnswer();
 
-        const { track: remoteAudioTrack, transceiver: transceiver1 } = await trackEvent1;
+          const { track: remoteAudioTrack, transceiver: transceiver1 } = await trackEvent1;
 
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver1 || !transceiver1.mid) {
-          assert.equal(remoteAudioTrack.id, localAudioTrack.id);
+          // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
+          // in twilio-video.js if you want behavior like this.
+          if (!transceiver1 || !transceiver1.mid) {
+            assert.equal(remoteAudioTrack.id, localAudioTrack.id);
+          }
+
+          await Promise.all([
+            pc1.setRemoteDescription(answer1),
+            pc2.setLocalDescription(answer1)
+          ]);
+
+          const videoSource = await makeStream({ video: true, fake: true });
+          sourceStreams.push(videoSource);
+          const [localVideoTrack] = videoSource.getVideoTracks();
+          stream.addTrack(localVideoTrack);
+          pc1.addTrack(localVideoTrack, stream);
+          const trackEvent2 = waitForEvent(pc2, 'track');
+
+          const offer2 = await pc1.createOffer();
+          await Promise.all([
+            pc1.setLocalDescription(offer2),
+            pc2.setRemoteDescription(offer2)
+          ]);
+
+          const answer2 = await pc2.createAnswer();
+
+          const { track: remoteVideoTrack, transceiver: transceiver2 } = await trackEvent2;
+
+          // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
+          // in twilio-video.js if you want behavior like this.
+          if (!transceiver2 || !transceiver2.mid) {
+            assert.equal(remoteVideoTrack.id, localVideoTrack.id);
+          }
+
+          await Promise.all([
+            pc1.setRemoteDescription(answer2),
+            pc2.setLocalDescription(answer2)
+          ]);
+        } finally {
+          pc1.close();
+          pc2.close();
+          sourceStreams.forEach(s => s.getTracks().forEach(t => t.stop()));
         }
-
-        await Promise.all([
-          pc1.setRemoteDescription(answer1),
-          pc2.setLocalDescription(answer1)
-        ]);
-
-        const [localVideoTrack] = (await makeStream({ video: true, fake: true })).getVideoTracks();
-        stream.addTrack(localVideoTrack);
-        pc1.addTrack(localVideoTrack, stream);
-        const trackEvent2 = waitForEvent(pc2, 'track');
-
-        const offer2 = await pc1.createOffer();
-        await Promise.all([
-          pc1.setLocalDescription(offer2),
-          pc2.setRemoteDescription(offer2)
-        ]);
-
-        const answer2 = await pc2.createAnswer();
-
-        const { track: remoteVideoTrack, transceiver: transceiver2 } = await trackEvent2;
-
-        // NOTE(mroberts): This only holds pre-WebRTC 1.0; see the TrackMatcher
-        // in twilio-video.js if you want behavior like this.
-        if (!transceiver2 || !transceiver2.mid) {
-          assert.equal(remoteVideoTrack.id, localVideoTrack.id);
-        }
-
-        await Promise.all([
-          pc1.setRemoteDescription(answer2),
-          pc2.setLocalDescription(answer2)
-        ]);
       });
     });
   });
@@ -446,6 +482,12 @@ describe('RTCPeerConnection', function() {
         before(() => {
           pc = new RTCPeerConnection();
           transceiver = pc.addTransceiver(kind, {});
+        });
+
+        after(() => {
+          if (pc) {
+            pc.close();
+          }
         });
 
         it('returns an RTCRtpTransceiver', () => {
@@ -485,12 +527,22 @@ describe('RTCPeerConnection', function() {
         let pc;
         let track;
         let transceiver;
+        let sourceStream;
 
         before(async () => {
           pc = new RTCPeerConnection();
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
-          [track] = await stream.getAudioTracks();
+          sourceStream = await navigator.mediaDevices.getUserMedia({ audio: true, fake: true });
+          [track] = await sourceStream.getAudioTracks();
           transceiver = pc.addTransceiver(track, {});
+        });
+
+        after(() => {
+          if (pc) {
+            pc.close();
+          }
+          if (sourceStream) {
+            sourceStream.getTracks().forEach(t => t.stop());
+          }
         });
 
         it('returns an RTCRtpTransceiver', () => {
@@ -553,6 +605,9 @@ describe('RTCPeerConnection', function() {
           const t2 = pc1.addTransceiver('audio');
           await negotiate(pc1, pc2);
           assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 1);
+
+          pc1.close();
+          pc2.close();
         });
 
         // NOTE(mmalavalli): Because of a bug where "max-bundle" does not work
@@ -584,6 +639,9 @@ describe('RTCPeerConnection', function() {
           const t3 = pc1.addTransceiver('audio');
           await negotiate(pc1, pc2);
           assert.equal(pc1.localDescription.sdp.match(/\r\nm=/g).length, 2);
+
+          pc1.close();
+          pc2.close();
         });
       });
     });
@@ -618,6 +676,8 @@ function testConstructor() {
   beforeEach(() => {
     return makeTest().then(_test => test = _test);
   });
+
+  afterEach(() => test && test.close());
 
   it('should return an instance of RTCPeerConnection', () => {
     assert(test.peerConnection instanceof RTCPeerConnection);
@@ -706,6 +766,8 @@ function testAddIceCandidate(signalingState) {
       });
     });
 
+    afterEach(() => test && test.close());
+
     if (shouldFail) {
       it('should return a Promise that rejects with an error', () => {
         assert(error instanceof Error);
@@ -732,6 +794,15 @@ function testGetSenders(signalingState) {
     signalingState === 'closed' && test.peerConnection.close();
   });
 
+  after(() => {
+    if (test) {
+      test.close();
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  });
+
   context(`"${signalingState}"`, () => {
     // NOTE(mmalavalli): Safari 12.2+ and Firefox 67+ implement the spec-compliant
     // version of RTCPeerConnection.getSenders() for signalingState "closed".
@@ -754,11 +825,12 @@ function testGetSenders(signalingState) {
 }
 
 function testGetReceivers(signalingState) {
+  var pc1;
   var pc2;
   var stream;
 
   before(async () => {
-    const pc1 = new RTCPeerConnection({ iceServers: [] });
+    pc1 = new RTCPeerConnection({ iceServers: [] });
     pc2 = new RTCPeerConnection({ iceServers: [] });
     stream = await makeStream({ audio: true, video: true });
     addStream(pc1, stream);
@@ -786,6 +858,18 @@ function testGetReceivers(signalingState) {
         await pc2.createAnswer();
         break;
       }
+    }
+  });
+
+  after(() => {
+    if (pc1) {
+      pc1.close();
+    }
+    if (pc2) {
+      pc2.close();
+    }
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
     }
   });
 
@@ -913,11 +997,13 @@ function testDtlsRoleNegotiation() {
   describe('RTCPeerConnection 1 offers with "a=setup:actpass", and', () => {
     let pc1;
     let pc2;
+    let localStream;
 
     beforeEach(() => {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
+        localStream = stream;
         addStream(pc1, stream);
         addStream(pc2, stream);
         return pc1.createOffer();
@@ -928,6 +1014,18 @@ function testDtlsRoleNegotiation() {
           pc2.setRemoteDescription(offer)
         ]);
       });
+    });
+
+    afterEach(() => {
+      if (pc1) {
+        pc1.close();
+      }
+      if (pc2) {
+        pc2.close();
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
     });
 
     describe('RTCPeerConnection 2 answers with "a=setup:active"; then', () => {
@@ -967,11 +1065,13 @@ function testGlare() {
     let pc1;
     let pc2;
     let offer;
+    let localStream;
 
     beforeEach(() => {
       pc1 = new RTCPeerConnection({ iceServers: [] });
       pc2 = new RTCPeerConnection({ iceServers: [] });
       return makeStream().then(stream => {
+        localStream = stream;
         addStream(pc1, stream);
         addStream(pc2, stream);
         return Promise.all([
@@ -982,6 +1082,18 @@ function testGlare() {
         offer = offers[1];
         return pc1.setLocalDescription(offers[0]);
       });
+    });
+
+    afterEach(() => {
+      if (pc1) {
+        pc1.close();
+      }
+      if (pc2) {
+        pc2.close();
+      }
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
     });
 
     describe('RTCPeerConnection 1 rolls back and calls setRemoteDescription; then', () => {
@@ -1041,10 +1153,18 @@ function testAddTrack() {
     trackToAdd = stream.getTracks()[0];
   });
 
+  after(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  });
+
   beforeEach(async () => {
     test = await makeTest();
     tracks = getTracks(test.peerConnection);
   });
+
+  afterEach(() => test && test.close());
 
   [
     [
@@ -1104,12 +1224,20 @@ function testRemoveTrack() {
     localAudioTrack = stream.getAudioTracks()[0];
   });
 
+  after(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+  });
+
   beforeEach(async () => {
     test = await makeTest();
     const senders = addStream(test.peerConnection, stream);
     localAudioSender = senders.find(sender => sender.track.kind === 'audio');
     localVideoSender = senders.find(sender => sender.track.kind === 'video');
   });
+
+  afterEach(() => test && test.close());
 
   [
     [
@@ -1222,6 +1350,8 @@ function testCreateAnswer(signalingState) {
     });
   });
 
+  afterEach(() => test && test.close());
+
   if (shouldFail) {
     it('should return a Promise that rejects with an Error', () => {
       assert(error instanceof Error);
@@ -1305,6 +1435,8 @@ function testCreateOffer(signalingState) {
 
     });
   });
+
+  afterEach(() => test && test.close());
 
   if (shouldFail) {
     it('should return a Promise that rejects with an Error', () => {
@@ -1439,6 +1571,8 @@ function testSetDescription(local, signalingState, sdpType) {
 
       });
     });
+
+    afterEach(() => test && test.close());
 
     if (shouldFail) {
       it('should return a Promise that rejects with an Error', () => {
