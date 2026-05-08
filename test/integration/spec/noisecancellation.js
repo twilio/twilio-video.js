@@ -112,6 +112,7 @@ describe(`in ${defaults.topology} room`, function()  {
 
   let audioTrack;
   let roomSid;
+  let aliceRoom;
   const noiseCancellationAllowed = defaults.topology !== 'peer-to-peer';
   [true, false].forEach(trackPublishedDuringConnect => {
     describe(`when tracks published ${trackPublishedDuringConnect ? 'during' : 'after'} connect`, () => {
@@ -121,7 +122,7 @@ describe(`in ${defaults.topology} room`, function()  {
         roomSid = await createRoom(randomName(), defaults.topology);
 
         assert.strictEqual(audioTrack.noiseCancellation.isEnabled, true, 'audioTrack.noiseCancellation is not enabled');
-        const aliceRoom = await connect(getToken('Alice'), {
+        aliceRoom = await connect(getToken('Alice'), {
           ...defaults,
           tracks: trackPublishedDuringConnect ? [audioTrack] : [],
           name: roomSid,
@@ -131,6 +132,17 @@ describe(`in ${defaults.topology} room`, function()  {
 
         if (!trackPublishedDuringConnect) {
           await waitFor(aliceRoom.localParticipant.publishTrack(audioTrack), `alice to publish track again in ${roomSid}`);
+        }
+      });
+
+      after(() => {
+        if (aliceRoom) {
+          aliceRoom.disconnect();
+          aliceRoom = null;
+        }
+        if (audioTrack) {
+          audioTrack.stop();
+          audioTrack = null;
         }
       });
 
