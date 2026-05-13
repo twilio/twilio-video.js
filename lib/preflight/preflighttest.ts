@@ -1,11 +1,11 @@
 import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL, DEFAULT_REALM, SDK_NAME, SDK_VERSION } from '../util/constants';
 import type { PreflightOptions, PreflightTestReport, ProgressEvent, RTCIceCandidateStats, SelectedIceCandidatePairStats, Stats } from '../../tsdef/PreflightTypes';
+import { type TurnCredentials, getTurnCredentials } from './getturncredentials';
 import type { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
 import type { TwilioError } from '../../tsdef/TwilioError';
 import { calculateMOS } from './mos';
 import { getCombinedConnectionStats } from './getCombinedConnectionStats';
-import { getTurnCredentials, type TurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
 import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
