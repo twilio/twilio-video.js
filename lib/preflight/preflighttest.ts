@@ -323,6 +323,7 @@ export class PreflightTest extends EventEmitter {
   private async _runPreflightTest(token: string, environment: string, wsServer: string, configuredRegion: string) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
+    let selectedEdge: string | undefined;
     const { reportToInsights } = this._setupInsights({ token, environment });
     try {
       let elements = [];
@@ -332,7 +333,8 @@ export class PreflightTest extends EventEmitter {
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      const { iceServers, selectedEdge }: TurnCredentials = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
+      const { iceServers, selectedEdge: edge }: TurnCredentials = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
+      selectedEdge = edge;
 
       this._connectTiming.stop();
       this._updateProgress(PreflightProgress.connected);
@@ -402,7 +404,7 @@ export class PreflightTest extends EventEmitter {
       this.emit('completed', report);
 
     } catch (error) {
-      const preflightReport = this._generatePreflightReport(undefined, undefined, configuredRegion);
+      const preflightReport = this._generatePreflightReport(undefined, selectedEdge, configuredRegion);
       reportToInsights({ report: { ...preflightReport, error: error?.toString() } });
       this.emit('failed', error, preflightReport);
     } finally {
@@ -541,6 +543,9 @@ function initCollectedStats() : PreflightStats {
  * @property {SelectedIceCandidatePairStats} selectedIceCandidatePairStats - Stats for the ice candidates that were used for the connection.
  * @property {Array<ProgressEvent>} [progressEvents] - {@link ProgressEvent} events detected during the test.
  * Use this information to determine which steps were completed and which ones were not.
+ * @property {string} [selectedEdge] - The Twilio TURN edge that handled the connection (e.g. 'ashburn', 'dublin').
+ * Derived from the TURN server hostname in the iced response. Undefined if the test did not complete successfully.
+ * @property {string} [configuredRegion] - The region option passed to {@link runPreflight} (defaults to 'gll').
  */
 
 /**

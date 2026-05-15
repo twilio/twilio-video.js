@@ -34,4 +34,17 @@ describe('extractEdgeFromIceServers', () => {
   it('returns undefined when urls is an empty array', () => {
     assert.strictEqual(extractEdgeFromIceServers([{ urls: [] }]), undefined);
   });
+
+  it('skips stun: entries and returns the first turn: hostname prefix', () => {
+    assert.strictEqual(extractEdgeFromIceServers([
+      { urls: 'stun:stun.twilio.com:3478' },
+      { urls: 'turn:ashburn.turn.twilio.com:3478?transport=udp' }
+    ]), 'ashburn');
+  });
+
+  it('returns undefined when all entries are stun: URLs', () => {
+    assert.strictEqual(extractEdgeFromIceServers([
+      { urls: 'stun:stun.twilio.com:3478' }
+    ]), undefined);
+  });
 });

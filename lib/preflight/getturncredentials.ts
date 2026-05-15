@@ -15,18 +15,22 @@ export interface TurnCredentials {
 }
 
 export function extractEdgeFromIceServers(iceServers: RTCIceServer[]): string | undefined {
-  if (!iceServers.length) {
-    return undefined;
-  }
-  const firstUrl = ([] as string[]).concat(iceServers[0].urls)[0];
-  if (!firstUrl) {
-    return undefined;
-  }
   // TURN URLs have the format turn:<hostname>:<port>?transport=<protocol>
   // The URL API cannot parse turn: scheme, so use string parsing instead.
-  const withoutScheme = firstUrl.replace(/^turns?:/, '');
-  const hostname = withoutScheme.split(':')[0];
-  return hostname.split('.')[0] || undefined;
+  for (const server of iceServers) {
+    const urls = ([] as string[]).concat(server.urls);
+    const turnUrl = urls.find(u => /^turns?:/.test(u));
+    if (!turnUrl) {
+      continue;
+    }
+    const withoutScheme = turnUrl.replace(/^turns?:/, '');
+    const hostname = withoutScheme.split(':')[0];
+    const edge = hostname.split('.')[0];
+    if (edge) {
+      return edge;
+    }
+  }
+  return undefined;
 }
 
 export function getTurnCredentials(token: string, wsServer: string): Promise<TurnCredentials> {
