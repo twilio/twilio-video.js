@@ -75,6 +75,7 @@ require('./spec/util/backoff');
 require('./spec/util/browserdetection');
 require('./spec/util/eventobserver');
 require('./spec/util/documentvisibilitymonitor');
+require('./spec/util/dynamicimport');
 require('./spec/util/insightspublisher');
 require('./spec/util/log');
 require('./spec/util/movingaveragedelta');
