@@ -8,14 +8,19 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+env:
+  ARTIFACTORY_URL: ${{ vars.ARTIFACTORY_URL }}
+
 jobs:
   check:
     name: ${{ matrix.name }}
+    if: ${{ !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest-large
     strategy:
       fail-fast: false
@@ -33,6 +38,9 @@ jobs:
               npm run test:serversiderender
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - name: Artifactory OIDC Auth
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        uses: ./.github/actions/artifactory-oidc
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 22
