@@ -1,0 +1,63 @@
+name: 'Artifactory OIDC Auth'
+description: 'Exchange GitHub OIDC token for Artifactory access token and configure npm'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Exchange OIDC token for Artifactory access token
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # jq is used throughout; fail early with a clear message if it's absent
+        # (present on ubuntu-latest today, but not guaranteed on every runner).
+        if ! command -v jq >/dev/null 2>&1; then
+          echo "::error::jq is required by the artifactory-oidc action but was not found on the runner."
+          exit 1
+        fi
+
+        # Normalize the base URL: strip any trailing slashes so REGISTRY and the
+        # //host/... auth line never end up with double slashes.
+        BASE_URL=$(echo "${ARTIFACTORY_URL}" | sed -E 's#/+$##')
+        if [ -z "$BASE_URL" ]; then
+          echo "::error::ARTIFACTORY_URL is empty."
+          exit 1
+        fi
+        # HOST is scheme-stripped and path-stripped (everything before the first /).
+        HOST=$(echo "${BASE_URL}" | sed -E 's#^https?://##; s#/.*$##')
+
+        # 1. Request a GitHub OIDC JWT with Artifactory as the audience.
+        GITHUB_JWT=$(curl -sS \
+          -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${BASE_URL}" \
+          | jq -r '.value')
+        echo "::add-mask::$GITHUB_JWT"
+
+        # 2. Exchange it for an Artifactory access token. The body MUST be JSON
+        #    and MUST include provider_name, or JFrog issues no token.
+        RESP=$(curl -sS "${BASE_URL}/access/api/v1/oidc/token" \
+          -H 'Content-Type: application/json' \
+          -d "{\"grant_type\":\"urn:ietf:params:oauth:grant-type:token-exchange\",
+               \"subject_token_type\":\"urn:ietf:params:oauth:token-type:id_token\",
+               \"subject_token\":\"${GITHUB_JWT}\",
+               \"provider_name\":\"github-actions\"}")
+        ART_TOKEN=$(echo "$RESP" | jq -r '.access_token // empty')
+
+        if [ -z "$ART_TOKEN" ]; then
+          echo "::error::OIDC token exchange failed. Redacted response below:"
+          # Redact every key whose name contains "token" (access_token,
+          # refresh_token, id_token, ...). Withhold entirely if not valid JSON —
+          # never print a raw, unredacted body.
+          echo "$RESP" | jq 'walk(if type == "object" then with_entries(if (.key | test("token"; "i")) then .value = "<redacted>" else . end) else . end)' 2>/dev/null \
+            || echo "::error::(response withheld — not valid JSON)"
+          exit 1
+        fi
+        echo "::add-mask::$ART_TOKEN"
+
+        # 3. Point npm/yarn at the curated Artifactory registry for this job.
+        REGISTRY="${BASE_URL}/artifactory/api/npm/virtual-npm-thirdparty/"
+        {
+          echo "registry=${REGISTRY}"
+          echo "//${HOST}/artifactory/api/npm/virtual-npm-thirdparty/:_authToken=${ART_TOKEN}"
+        } > ~/.npmrc
+        echo "::notice::npm configured to use Artifactory registry"
