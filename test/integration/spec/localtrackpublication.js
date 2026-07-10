@@ -52,7 +52,7 @@ describe('LocalTrackPublication', function() {
     const options = Object.assign({ name: roomSid }, defaults);
 
     // BOB joins a room
-    const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [] }, options));
+    const bobRoom = await connect(await getToken('Bob'), Object.assign({ tracks: [] }, options));
 
     // Bob publishes a track at low priority.
     const bobVideoTrackA = await createLocalVideoTrack(Object.assign({ name: 'trackA' }, smallVideoConstraints));
@@ -64,7 +64,7 @@ describe('LocalTrackPublication', function() {
 
     // Alice joins a room after 5 seconds.
     await waitForSometime(5000);
-    const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
+    const aliceRoom = await connect(await getToken('Alice'), Object.assign({ tracks: [] }, options));
     const bobRemote = aliceRoom.participants.get(bobRoom.localParticipant.sid);
 
     // Alice sees bob track.
@@ -117,7 +117,7 @@ describe('LocalTrackPublication', function() {
       const options = Object.assign({ name: roomSid }, defaults);
 
       // Alice joins a room
-      const aliceRoom = await connect(getToken('Alice'), Object.assign({ tracks: [] }, options));
+      const aliceRoom = await connect(await getToken('Alice'), Object.assign({ tracks: [] }, options));
 
       // Alice adds listener for the track Enabled/Disabled events.
       const trackDisabledPromise = waitOnceForRoomEvent(aliceRoom, 'trackDisabled');
@@ -133,7 +133,7 @@ describe('LocalTrackPublication', function() {
         bobLocalAudioTrack.disable();
       }
 
-      const bobRoom = await connect(getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
+      const bobRoom = await connect(await getToken('Bob'), Object.assign({ tracks: [bobLocalAudioTrack] }, options));
 
       // wait for sometime to ensure that neither event fire.
       await waitForNot(trackStateChanged, `Alice received unexpected trackEnabled/Disabled event: ${roomSid}`);
@@ -219,14 +219,14 @@ describe('LocalTrackPublication', function() {
 
         const tracks = [thisTrack];
         const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
+        const thisToken = await getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
         await tracksPublished(thisParticipant, tracks.length);
 
         const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
+        const thoseTokens = await Promise.all(thoseIdentities.map(getToken));
         const thoseOptions = Object.assign({ tracks: [] }, options);
 
         thoseRooms = await waitFor(thoseTokens.map(thatToken => {
