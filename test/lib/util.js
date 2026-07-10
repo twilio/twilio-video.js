@@ -450,14 +450,14 @@ async function setupAliceAndBob({
     name: roomName,
   }, aliceOptions, defaults);
 
-  const aliceRoom = await connect(getToken('Alice'), aliceOptions);
+  const aliceRoom = await connect(await getToken('Alice'), aliceOptions);
   onAliceConnected(aliceRoom);
 
   bobOptions = Object.assign({
     name: roomName,
   }, bobOptions, defaults);
 
-  const bobRoom = await connect(getToken('Bob'), bobOptions);
+  const bobRoom = await connect(await getToken('Bob'), bobOptions);
   onBobConnected(bobRoom);
 
   await waitFor([aliceRoom, bobRoom].map(room => participantsConnected(room, 1)), 'Alice and Bob to connect');
@@ -497,7 +497,7 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
     audio: true,
     video: smallVideoConstraints
   }, testOptions, defaults);
-  const token = getToken(participantNames[0]);
+  const token = await getToken(participantNames[0]);
   options.name = await createRoom(name, options.topology, roomOptions);
   const thisRoom = await connect(token, options);
   if (alone) {
@@ -509,7 +509,7 @@ async function setup({ name, testOptions, otherOptions, nTracks, alone, roomOpti
     video: smallVideoConstraints
   }, otherOptions);
   const thoseOptions = Object.assign({ name: thisRoom.name }, otherOptions, defaults);
-  const thoseTokens = [participantNames[1], participantNames[2]].map(getToken);
+  const thoseTokens = await Promise.all([participantNames[1], participantNames[2]].map(getToken));
   const thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
   await Promise.all([thisRoom].concat(thoseRooms).map(room => {
