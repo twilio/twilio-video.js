@@ -50,7 +50,7 @@ describe('logger', function() {
 
   beforeEach(async () => {
     const identity = randomName();
-    token = getToken(identity);
+    token = await getToken(identity);
     sid = await createRoom(randomName(), defaults.topology);
     consoleMethods.forEach(method => sinon.stub(console, method));
     loadPlugin();

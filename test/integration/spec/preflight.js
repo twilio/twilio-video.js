@@ -62,8 +62,8 @@ describe('preflight', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(60000);
   let token;
-  beforeEach(() => {
-    token = getToken(randomName(), {});
+  beforeEach(async () => {
+    token = await getToken(randomName(), {});
   });
 
   it('completes and generates test report', async () => {
