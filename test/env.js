@@ -3,9 +3,6 @@
 // NOTE(mroberts): We need to do this for envify.
 /* eslint no-process-env:0 */
 const processEnv = {
-  ACCOUNT_SID: process.env.ACCOUNT_SID,
-  API_KEY_SID: process.env.API_KEY_SID,
-  API_KEY_SECRET: process.env.API_KEY_SECRET,
   ECS_SERVER: process.env.ECS_SERVER,
   ENVIRONMENT: process.env.ENVIRONMENT,
   WS_SERVER: process.env.WS_SERVER,
@@ -19,9 +16,6 @@ const processEnv = {
 
 // Copy environment variables
 const env = [
-  ['ACCOUNT_SID',               'accountSid'],
-  ['API_KEY_SID',               'apiKeySid'],
-  ['API_KEY_SECRET',            'apiKeySecret'],
   ['ECS_SERVER',                'ecsServer'],
   ['ENVIRONMENT',               'environment'],
   ['WS_SERVER',                 'wsServer'],
@@ -37,16 +31,5 @@ const env = [
   }
   return env;
 }, {});
-
-// Ensure required variables are present
-[
-  'accountSid',
-  'apiKeySid',
-  'apiKeySecret'
-].forEach(function forEachRequiredKey(key) {
-  if (!(key in env)) {
-    throw new Error('Missing ' + key);
-  }
-});
 
 module.exports = env;
