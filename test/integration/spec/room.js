@@ -64,7 +64,7 @@ describe('Room', function() {
         sid = await createRoom(randomName(), defaults.topology, { RecordParticipantsOnConnect: recordingEnabledAtCreate });
         localTracks = await createLocalTracks();
         const options = Object.assign({ name: sid, tracks: trackSharedAtConnect ? localTracks : [] }, defaults);
-        room = await connect(getToken(randomName()), options);
+        room = await connect(await getToken(randomName()), options);
       });
 
       it(`.isRecording should initially be set to ${recordingEnabledAtCreate && trackSharedAtConnect}`, () => {
@@ -165,7 +165,7 @@ describe('Room', function() {
 
     before(async () => {
       const identities = [randomName(), randomName(), randomName()];
-      const tokens = identities.map(getToken);
+      const tokens = await Promise.all(identities.map(getToken));
       sid = await createRoom(randomName(), defaults.topology);
       rooms = await Promise.all(tokens.map(token => connect(token, Object.assign({ name: sid }, defaults))));
       await Promise.all(rooms.map(room => participantsConnected(room, rooms.length - 1)));
@@ -308,7 +308,7 @@ describe('Room', function() {
       rooms = await waitFor(localTracks.map(async (localTrack, i) => {
         // 3. Connect to Room with specified LocalTrack.
         const identity = randomName();
-        const token = getToken(identity);
+        const token = await getToken(identity);
         const room = await connect(token, Object.assign({
           name: sid,
           tracks: [localTrack]
@@ -432,7 +432,7 @@ describe('Room', function() {
   describe('"disconnected" event', () => {
     it('is raised whenever the LocalParticipant is disconnected via the REST API', async () => {
       const sid = await createRoom(randomName(), defaults.topology);
-      const room = await connect(getToken(randomName()), Object.assign({ name: sid }, defaults));
+      const room = await connect(await getToken(randomName()), Object.assign({ name: sid }, defaults));
       const errorPromise = new Promise(resolve => room.once('disconnected', (room, error) => resolve(error)));
       await completeRoom(sid);
       const error = await errorPromise;
@@ -444,9 +444,9 @@ describe('Room', function() {
     it('is raised whenever the dominant speaker in the Room changes', async () => {
       const sid = await waitFor(createRoom(randomName(), defaults.topology), 'creating room');
       const options = Object.assign({ name: sid }, defaults);
-      const thisRoom = await waitFor(connect(getToken('Alice'), Object.assign({ tracks: [] }, options)), `Alice connecting to the room: ${sid}`);
+      const thisRoom = await waitFor(connect(await getToken('Alice'), Object.assign({ tracks: [] }, options)), `Alice connecting to the room: ${sid}`);
       const tracks = [await createLocalAudioTrack({ fake: true })];
-      const thatRoom = await waitFor(connect(getToken('Bob'), Object.assign({ tracks }, options), `Bob connecting to the room: ${sid}`));
+      const thatRoom = await waitFor(connect(await getToken('Bob'), Object.assign({ tracks }, options), `Bob connecting to the room: ${sid}`));
       await waitFor(participantsConnected(thisRoom, 1), `Alice receives participantsConnected: ${sid}`);
       const thatParticipant = thisRoom.participants.get(thatRoom.localParticipant.sid);
       await waitFor(dominantSpeakerChanged(thisRoom, thatParticipant), `Alice receives dominantSpeakerChanged: ${sid}`);
@@ -466,7 +466,7 @@ describe('Room', function() {
     before(async () => {
       sid = await createRoom(randomName(), defaults.topology);
       const options = Object.assign({ name: sid }, defaults);
-      thisRoom = await connect(getToken(randomName()), options);
+      thisRoom = await connect(await getToken(randomName()), options);
     });
 
     after(() => {
@@ -476,7 +476,7 @@ describe('Room', function() {
 
     it('is raised whenever a RemoteParticipant connects to the Room', async () => {
       const participantConnected = new Promise(resolve => thisRoom.once('participantConnected', resolve));
-      thatRoom = await connect(getToken(randomName()), Object.assign({ name: sid }, defaults));
+      thatRoom = await connect(await getToken(randomName()), Object.assign({ name: sid }, defaults));
       thisParticipant = await participantConnected;
       thatParticipant = thatRoom.localParticipant;
       assert(thisParticipant instanceof RemoteParticipant);
@@ -510,7 +510,7 @@ describe('Room', function() {
 
     before(async () => {
       const identities = [randomName(), randomName()];
-      const tokens = identities.map(getToken);
+      const tokens = await Promise.all(identities.map(getToken));
       sid = await createRoom(randomName(), defaults.topology);
 
       [thisRoom, thatRoom] = await Promise.all(tokens.map(token => connect(token, Object.assign({ name: sid }, defaults))));
@@ -720,7 +720,7 @@ describe('Room', function() {
       track = await createLocalAudioTrack({ fake: true });
 
       // alice join the room
-      aliceRoom = await connect(getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+      aliceRoom = await connect(await getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
     });
 
     after(async () => {
@@ -732,7 +732,7 @@ describe('Room', function() {
     it('emits participantConnected when a participant joins with a track', async () => {
       const charlieConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
       const charlieTrack = await createLocalAudioTrack({ fake: true });
-      charlieRoom = await connect(getToken('Charlie'), Object.assign({ name: roomSid }, defaults, { tracks: [charlieTrack] }));
+      charlieRoom = await connect(await getToken('Charlie'), Object.assign({ name: roomSid }, defaults, { tracks: [charlieTrack] }));
 
       await waitFor(charlieConnectedPromise, `waiting for participantConnected for Charlie: ${roomSid}`);
 
@@ -743,7 +743,7 @@ describe('Room', function() {
 
     it('does not emit participantConnected when a participant joins with no tracks', async () => {
       const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
-      bobRoom = await connect(getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+      bobRoom = await connect(await getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
 
       await waitForNot(bobConnectedPromise, `received unexpected participantConnected: ${roomSid}`);
     });
@@ -794,11 +794,11 @@ describe('Room', function() {
         assert(roomDetails.max_participants === 51);
 
         // alice join the room
-        const aliceRoom = await connect(getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+        const aliceRoom = await connect(await getToken('Alice'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
 
         // bob joins room with 0 tracks
         const bobConnectedPromise = new Promise(resolve => aliceRoom.once('participantConnected', resolve));
-        const bobRoom = await connect(getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
+        const bobRoom = await connect(await getToken('Bob'), Object.assign({ name: roomSid }, defaults, { tracks: [] }));
 
         // it does not invoke participantConnected.
         await waitForNot(bobConnectedPromise, `received unexpected participantConnected: ${roomSid}`);
