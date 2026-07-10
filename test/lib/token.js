@@ -1,75 +1,37 @@
 'use strict';
 
-const AccessToken = require('twilio').jwt.AccessToken;
-const credentials = require('../env');
-
-const defaults = Object.assign({
-  grant: 'video',
-  ttl: 60 * 1000
-}, credentials);
+const callVendor = require('./vendor');
 
 /**
  * @typedef {object} CreateTokenOptions
- * @property {string} accountSid
- * @property {string} apiKeySecret
- * @property {string} apiKeySid
- * @property {string} configurationProfileSid
  * @property {?string} [grant="video"] - one of "video", "conversations", or null
  * @property {number} [ttl=60000]
  * @property {?string} room
  */
 
+const defaultOptions = {
+  grant: 'video',
+  ttl: 60 * 1000
+};
+
 /**
- * Create an Access Token. Options specified in {@link CreateTokenOptions} take
- * precedence over environment variables, which take precedence over hard-coded
- * defaults. If any option is unspecified which lacks a default value, this
- * function throws.
+ * Request an Access Token from the e2e credential-vending Function. Options
+ * specified in {@link CreateTokenOptions} take precedence over hard-coded
+ * defaults.
  * @param {string} identity
  * @param {CreateTokenOptions} [options]
- * @throws Error
+ * @returns {Promise<string>} the Access Token JWT
  */
-function createToken(identity, options) {
-  options = Object.assign({}, defaults, options);
+async function createToken(identity, options) {
+  options = Object.assign({}, defaultOptions, options);
 
-  const {
-    accountSid,
-    apiKeySecret,
-    apiKeySid,
-    configurationProfileSid,
-    ttl
-  } = options;
-
-  const accessToken = new AccessToken(
-    accountSid,
-    apiKeySid,
-    apiKeySecret,
-    { ttl });
-
-  accessToken.identity = identity;
-
-  let grant = options.grant;
-  const room = options.room;
-  switch (grant) {
-    case 'conversations':
-      grant = new AccessToken.ConversationsGrant({
-        identity,
-        configurationProfileSid
-      });
-      break;
-    case 'video':
-      grant = new AccessToken.VideoGrant({
-        identity, room
-      });
-      break;
-    default:
-      // Do nothing.
-  }
-
-  if (grant) {
-    accessToken.addGrant(grant);
-  }
-
-  return accessToken.toJwt('HS256');
+  const { token } = await callVendor('mint-token', {
+    identity,
+    grant: options.grant,
+    room: options.room,
+    ttl: options.ttl
+  });
+  return token;
 }
 
 module.exports = createToken;
