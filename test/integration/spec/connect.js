@@ -54,12 +54,14 @@ describe('connect', function() {
     [
       'with an invalid API Key secret',
       { apiKeySecret: 'foo' },
-      20107
+      20107,
+      true
     ],
     [
       'with an invalid API Key SID',
       { apiKeySid: 'foo' },
-      20103
+      20103,
+      true
     ],
     [
       'with an expired Access Token',
@@ -71,8 +73,10 @@ describe('connect', function() {
       { grant: null },
       20106
     ]
-  ].forEach(([description, extraOptions, expectedCode]) => {
-    describe(`called ${description}`, () => {
+  ].forEach(([description, extraOptions, expectedCode, skip]) => {
+    // NOTE(lrivas): getToken() can't mint an invalid token anymore. Skipped
+    // until we decide how to reproduce that scenario again.
+    (skip ? describe.skip : describe)(`called ${description}`, () => {
       let token;
       let cancelablePromise;
 
