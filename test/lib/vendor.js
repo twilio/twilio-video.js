@@ -2,6 +2,7 @@
 
 const https = require('https');
 const { URL } = require('url');
+const defaults = require('./defaults');
 
 /**
  * Call the e2e credential-vending Function.
@@ -24,7 +25,7 @@ function callVendor(action, params) {
     }
 
     const url = new URL(vendorUrl);
-    const body = JSON.stringify(Object.assign({ action }, params));
+    const body = JSON.stringify(Object.assign({ action, environment: defaults.environment }, params));
 
     const request = https.request({
       method: 'POST',

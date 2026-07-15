@@ -60,7 +60,26 @@ describe('callVendor', () => {
     assert.equal(config.headers['Content-Type'], 'application/json');
 
     const body = JSON.parse(fakeRequest.write.firstCall.args[0]);
-    assert.deepStrictEqual(body, { action: 'mint-token', identity: 'Alice' });
+    assert.deepStrictEqual(body, { action: 'mint-token', environment: 'prod', identity: 'Alice' });
+  });
+
+  it('sends the ENVIRONMENT env var as the environment field', async () => {
+    process.env.ENVIRONMENT = 'stage';
+    delete require.cache[require.resolve('../../lib/vendor')];
+    delete require.cache[require.resolve('../../lib/defaults')];
+    delete require.cache[require.resolve('../../env')];
+    // eslint-disable-next-line global-require
+    const callVendorStage = require('../../lib/vendor');
+
+    fakeResponse.statusCode = 200;
+    const promise = callVendorStage('mint-token', { identity: 'Alice' });
+    fakeResponse.emit('data', JSON.stringify({ token: 'fake-jwt' }));
+    fakeResponse.emit('end');
+    await promise;
+
+    const body = JSON.parse(fakeRequest.write.firstCall.args[0]);
+    assert.equal(body.environment, 'stage');
+    delete process.env.ENVIRONMENT;
   });
 
   it('rejects when the Function returns a non-2xx status', async () => {
