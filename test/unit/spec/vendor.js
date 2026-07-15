@@ -2,27 +2,21 @@
 
 const assert = require('assert');
 const sinon = require('sinon');
-const https = require('https');
-const { EventEmitter } = require('events');
 
 describe('callVendor', () => {
   let callVendor;
-  let requestStub;
-  let fakeRequest;
-  let fakeResponse;
+  let fetchStub;
+
+  function fakeResponse(status, body) {
+    return {
+      ok: status >= 200 && status < 300,
+      status,
+      text: async () => body
+    };
+  }
 
   beforeEach(() => {
-    fakeRequest = new EventEmitter();
-    fakeRequest.write = sinon.stub();
-    fakeRequest.end = sinon.stub();
-
-    fakeResponse = new EventEmitter();
-    fakeResponse.setEncoding = sinon.stub();
-
-    requestStub = sinon.stub(https, 'request').callsFake((config, callback) => {
-      callback(fakeResponse);
-      return fakeRequest;
-    });
+    fetchStub = sinon.stub(global, 'fetch');
 
     delete require.cache[require.resolve('../../lib/vendor')];
     delete require.cache[require.resolve('../../env')];
@@ -35,7 +29,7 @@ describe('callVendor', () => {
   });
 
   afterEach(() => {
-    requestStub.restore();
+    fetchStub.restore();
     delete process.env.VENDOR_URL;
     delete process.env.VENDOR_TOKEN;
     delete process.env.ACCOUNT_SID;
@@ -43,23 +37,19 @@ describe('callVendor', () => {
   });
 
   it('POSTs the action and params as a JSON body to VENDOR_URL with a Bearer Authorization header', async () => {
-    fakeResponse.statusCode = 200;
-    const promise = callVendor('mint-token', { identity: 'Alice' });
-    fakeResponse.emit('data', JSON.stringify({ token: 'fake-jwt' }));
-    fakeResponse.emit('end');
+    fetchStub.resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
 
-    const result = await promise;
+    const result = await callVendor('mint-token', { identity: 'Alice' });
     assert.equal(result.token, 'fake-jwt');
 
-    assert.equal(requestStub.callCount, 1);
-    const [config] = requestStub.firstCall.args;
+    assert.equal(fetchStub.callCount, 1);
+    const [url, config] = fetchStub.firstCall.args;
+    assert.equal(url, 'https://vendor.example.test/vend');
     assert.equal(config.method, 'POST');
-    assert.equal(config.hostname, 'vendor.example.test');
-    assert.equal(config.path, '/vend');
     assert.equal(config.headers.Authorization, 'Bearer fake-oidc-token');
     assert.equal(config.headers['Content-Type'], 'application/json');
 
-    const body = JSON.parse(fakeRequest.write.firstCall.args[0]);
+    const body = JSON.parse(config.body);
     assert.deepStrictEqual(body, { action: 'mint-token', environment: 'prod', identity: 'Alice' });
   });
 
@@ -71,24 +61,19 @@ describe('callVendor', () => {
     // eslint-disable-next-line global-require
     const callVendorStage = require('../../lib/vendor');
 
-    fakeResponse.statusCode = 200;
-    const promise = callVendorStage('mint-token', { identity: 'Alice' });
-    fakeResponse.emit('data', JSON.stringify({ token: 'fake-jwt' }));
-    fakeResponse.emit('end');
-    await promise;
+    fetchStub.resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
+    await callVendorStage('mint-token', { identity: 'Alice' });
 
-    const body = JSON.parse(fakeRequest.write.firstCall.args[0]);
+    const [, config] = fetchStub.firstCall.args;
+    const body = JSON.parse(config.body);
     assert.equal(body.environment, 'stage');
     delete process.env.ENVIRONMENT;
   });
 
   it('rejects when the Function returns a non-2xx status', async () => {
-    fakeResponse.statusCode = 401;
-    const promise = callVendor('mint-token', { identity: 'Alice' });
-    fakeResponse.emit('data', JSON.stringify({ error: 'invalid OIDC claim' }));
-    fakeResponse.emit('end');
+    fetchStub.resolves(fakeResponse(401, JSON.stringify({ error: 'invalid OIDC claim' })));
 
-    await assert.rejects(promise, /invalid OIDC claim/);
+    await assert.rejects(callVendor('mint-token', { identity: 'Alice' }), /invalid OIDC claim/);
   });
 
   it('rejects when VENDOR_URL is not set', async () => {
