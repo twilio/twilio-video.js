@@ -5,13 +5,13 @@ const callVendor = require('./vendor');
 /**
  * @typedef {object} CreateTokenOptions
  * @property {?string} [grant="video"] - one of "video", "conversations", or null
- * @property {number} [ttl=60000]
+ * @property {number} [ttl=3600] - in seconds
  * @property {?string} room
  */
 
 const defaultOptions = {
   grant: 'video',
-  ttl: 60 * 1000
+  ttl: 3600
 };
 
 /**

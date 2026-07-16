@@ -38,10 +38,10 @@ describe('getToken', () => {
     });
   });
 
-  it('applies default grant "video" and ttl 60000 when not specified', async () => {
+  it('applies default grant "video" and ttl 3600 when not specified', async () => {
     await getToken('Alice');
     const [, params] = vendorStub.firstCall.args;
     assert.equal(params.grant, 'video');
-    assert.equal(params.ttl, 60000);
+    assert.equal(params.ttl, 3600);
   });
 });

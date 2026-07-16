@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [dev, stage, prod]
+        environment: [stage, prod]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -46,7 +46,7 @@ jobs:
       - name: Mint GitHub OIDC token for the e2e credential vendor
         id: mint-vendor-token
         env:
-          VENDOR_AUDIENCE: ${{ vars.VENDOR_URL }}
+          VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
         run: |
           set -euo pipefail
           if [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
@@ -66,7 +66,7 @@ jobs:
 
       - name: Run e2e integration tests
         env:
-          VENDOR_URL: ${{ vars.VENDOR_URL }}
+          VENDOR_URL: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
           VENDOR_TOKEN: ${{ steps.mint-vendor-token.outputs.token }}
           ENVIRONMENT: ${{ matrix.environment }}
         run: npm run test:integration
