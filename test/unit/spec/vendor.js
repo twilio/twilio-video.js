@@ -11,7 +11,7 @@ describe('callVendor', () => {
     return {
       ok: status >= 200 && status < 300,
       status,
-      text: async () => body
+      text: () => Promise.resolve(body)
     };
   }
 
@@ -24,7 +24,6 @@ describe('callVendor', () => {
     process.env.VENDOR_TOKEN = 'fake-oidc-token';
     process.env.ACCOUNT_SID = 'ACxxx';
     process.env.API_KEY_SID = 'SKxxx';
-    // eslint-disable-next-line global-require
     callVendor = require('../../lib/vendor');
   });
 
@@ -58,7 +57,6 @@ describe('callVendor', () => {
     delete require.cache[require.resolve('../../lib/vendor')];
     delete require.cache[require.resolve('../../lib/defaults')];
     delete require.cache[require.resolve('../../env')];
-    // eslint-disable-next-line global-require
     const callVendorStage = require('../../lib/vendor');
 
     fetchStub.resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
@@ -80,7 +78,6 @@ describe('callVendor', () => {
     delete process.env.VENDOR_URL;
     delete require.cache[require.resolve('../../lib/vendor')];
     delete require.cache[require.resolve('../../env')];
-    // eslint-disable-next-line global-require
     const callVendorNoUrl = require('../../lib/vendor');
     await assert.rejects(callVendorNoUrl('mint-token', {}), /VENDOR_URL/);
   });
