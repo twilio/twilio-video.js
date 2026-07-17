@@ -51,6 +51,7 @@ jobs:
       # GHA container jobs skip the image's own ENTRYPOINT (which normally starts
       # these), so they're started explicitly here instead.
       - name: Start Xvfb and dbus
+        shell: bash
         run: |
           sudo dbus-daemon --system --fork
           Xvfb $DISPLAY -screen 0 1280x1024x24 &
@@ -58,6 +59,7 @@ jobs:
 
       - name: Mint GitHub OIDC token for the e2e credential vendor
         id: mint-vendor-token
+        shell: bash
         env:
           VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
         run: |
