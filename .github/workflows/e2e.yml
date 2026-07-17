@@ -21,6 +21,11 @@ jobs:
     name: e2e (${{ matrix.environment }})
     if: ${{ !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest-large
+    container:
+      image: twilio/twilio-video-browsers:chrome-stable
+    env:
+      BROWSER: chrome
+      DISPLAY: ':99'
     permissions:
       contents: read
       id-token: write
@@ -42,6 +47,14 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      # GHA container jobs skip the image's own ENTRYPOINT (which normally starts
+      # these), so they're started explicitly here instead.
+      - name: Start Xvfb and dbus
+        run: |
+          sudo dbus-daemon --system --fork
+          Xvfb $DISPLAY -screen 0 1280x1024x24 &
+          sleep 1
 
       - name: Mint GitHub OIDC token for the e2e credential vendor
         id: mint-vendor-token
