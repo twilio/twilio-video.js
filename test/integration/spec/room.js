@@ -702,7 +702,9 @@ describe('Room', function() {
     });
   });
 
-  (defaults.topology === 'group' && defaults.environment !== 'prod' ? describe : describe.skip)('large rooms', () => {
+  // Requires Large Room support enabled on the Twilio account; this can be
+  // unskipped once the flag is turned on again.
+  describe.skip('large rooms', () => {
     let roomSid = null;
     let aliceRoom = null;
     let bobRoom = null;
@@ -782,7 +784,9 @@ describe('Room', function() {
     });
   });
 
-  (defaults.topology === 'group' && defaults.environment !== 'prod' ? describe : describe.skip)('large rooms ParticipantMaxTracksExceededError', () => {
+  // Requires Large Room support enabled on the Twilio account; this can be
+  // unskipped once the flag is turned on again.
+  describe.skip('large rooms ParticipantMaxTracksExceededError', () => {
     [1, 2, 5].forEach(nTracksToPublishLater => {
       it(`throws ParticipantMaxTracksExceededError when publishing ${nTracksToPublishLater} tracks when they exceed the limit:`, async () => {
 
