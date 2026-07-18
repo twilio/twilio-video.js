@@ -540,7 +540,8 @@ describe('connect', function() {
       if (rooms) {
         rooms.forEach(room => room.disconnect());
       }
-      sid = sid || (rooms && rooms[0] && rooms[0].sid);
+      // Rooms auto-created by connect() have emptyRoomTimeout 0, so they're already
+      // gone once disconnect() empties them -- only REST-created Rooms need cleanup.
       return sid ? completeRoom(sid) : Promise.resolve();
     });
 
