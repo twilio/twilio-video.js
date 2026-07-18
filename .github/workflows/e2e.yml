@@ -18,7 +18,7 @@ env:
 
 jobs:
   e2e:
-    name: e2e (${{ matrix.environment }})
+    name: e2e (${{ matrix.environment }}, ${{ matrix.topology }})
     if: ${{ !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest-large
     container:
@@ -33,6 +33,7 @@ jobs:
       fail-fast: false
       matrix:
         environment: [stage]
+        topology: [group, peer-to-peer]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -85,4 +86,5 @@ jobs:
           VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
           VENDOR_TOKEN: ${{ steps.mint-vendor-token.outputs.token }}
           ENVIRONMENT: ${{ matrix.environment }}
+          TOPOLOGY: ${{ matrix.topology }}
         run: npm run test:integration
