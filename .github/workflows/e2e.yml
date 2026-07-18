@@ -18,13 +18,13 @@ env:
 
 jobs:
   e2e:
-    name: e2e (${{ matrix.environment }}, ${{ matrix.topology }})
+    name: e2e (${{ matrix.environment }}, ${{ matrix.topology }}, ${{ matrix.browser }})
     if: ${{ !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest-large
     container:
-      image: twilio/twilio-video-browsers:chrome-stable
+      image: twilio/twilio-video-browsers:${{ matrix.browser }}-stable
     env:
-      BROWSER: chrome
+      BROWSER: ${{ matrix.browser }}
       DISPLAY: ':99'
     permissions:
       contents: read
@@ -34,6 +34,7 @@ jobs:
       matrix:
         environment: [stage]
         topology: [group, peer-to-peer]
+        browser: [chrome, firefox]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
