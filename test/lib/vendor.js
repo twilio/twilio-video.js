@@ -7,8 +7,10 @@ const defaults = require('./defaults');
 // stale token.
 const TOKEN_MAX_AGE_MS = 4 * 60 * 1000;
 
-let cachedToken = process.env.VENDOR_TOKEN;
-let cachedTokenMintedAt = cachedToken ? Date.now() : 0;
+// Each spec file gets a fresh page (scripts/karma.js), re-evaluating this module,
+// so a cached token can't be trusted as fresh on load -- always mint on first use.
+let cachedToken = null;
+let cachedTokenMintedAt = 0;
 
 /**
  * Fetch a fresh vendor OIDC token from the local karma middleware, which mints
@@ -20,6 +22,9 @@ async function mintVendorToken() {
   const { token, error } = await response.json();
   if (error) {
     throw new Error(`callVendor: failed to mint a fresh vendor token: ${error}`);
+  }
+  if (!token) {
+    throw new Error('callVendor: /mint-vendor-token returned no token');
   }
   return token;
 }
@@ -49,9 +54,6 @@ async function callVendor(action, params) {
   }
 
   const vendorToken = await getVendorToken();
-  if (!vendorToken) {
-    throw new Error('callVendor: VENDOR_TOKEN is not set');
-  }
 
   const body = JSON.stringify(Object.assign({ action, environment: defaults.environment }, params));
 
