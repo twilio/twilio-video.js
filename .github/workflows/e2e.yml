@@ -82,6 +82,7 @@ jobs:
       - name: Run e2e integration tests
         env:
           VENDOR_URL: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
+          VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
           VENDOR_TOKEN: ${{ steps.mint-vendor-token.outputs.token }}
           ENVIRONMENT: ${{ matrix.environment }}
         run: npm run test:integration

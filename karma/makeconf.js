@@ -15,6 +15,43 @@ function getTestFiles(config, defaultFile) {
   return files;
 }
 
+/**
+ * Mint a fresh vendor OIDC token on demand, so the browser-side test suite never
+ * runs on a single token past GitHub Actions' ~5 minute OIDC token lifetime.
+ * Falls back to VENDOR_TOKEN as-is when no runner OIDC request token is present
+ * (local runs with DISABLE_OIDC_CHECK=true).
+ * @returns {Promise<string>}
+ */
+async function mintVendorToken() {
+  const requestToken = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;
+  const requestUrl = process.env.ACTIONS_ID_TOKEN_REQUEST_URL;
+  if (!requestToken || !requestUrl) {
+    return process.env.VENDOR_TOKEN;
+  }
+  const audience = encodeURIComponent(process.env.VENDOR_AUDIENCE);
+  const response = await fetch(`${requestUrl}&audience=${audience}`, {
+    headers: { Authorization: `bearer ${requestToken}` }
+  });
+  const body = await response.json();
+  return body.value;
+}
+
+function createMintVendorTokenMiddleware() {
+  return function(request, response, next) {
+    if (request.url !== '/mint-vendor-token') {
+      next();
+      return;
+    }
+    mintVendorToken().then(token => {
+      response.writeHead(200, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ token }));
+    }, error => {
+      response.writeHead(500, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: error.message }));
+    });
+  };
+}
+
 let testRun = 0;
 function generateReportName(files) {
   const strTestRun = (testRun++).toString();
@@ -105,6 +142,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     config.set({
       basePath: '',
       frameworks: ['browserify', 'mocha'],
+      plugins: ['karma-*', { 'middleware:mintVendorToken': ['factory', createMintVendorTokenMiddleware] }],
+      beforeMiddleware: ['mintVendorToken'],
       client: {
         mocha: mochaOptions
       },

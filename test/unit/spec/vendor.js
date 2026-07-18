@@ -11,7 +11,8 @@ describe('callVendor', () => {
     return {
       ok: status >= 200 && status < 300,
       status,
-      text: () => Promise.resolve(body)
+      text: () => Promise.resolve(body),
+      json: () => Promise.resolve(JSON.parse(body))
     };
   }
 
@@ -80,5 +81,43 @@ describe('callVendor', () => {
     delete require.cache[require.resolve('../../env')];
     const callVendorNoUrl = require('../../lib/vendor');
     await assert.rejects(callVendorNoUrl('mint-token', {}), /VENDOR_URL/);
+  });
+
+  describe('token refresh', () => {
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers({ now: Date.now(), toFake: ['Date'] });
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
+    it('reuses the cached VENDOR_TOKEN for calls made within its max age', async () => {
+      fetchStub.resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
+
+      await callVendor('mint-token', { identity: 'Alice' });
+      clock.tick(60 * 1000);
+      await callVendor('mint-token', { identity: 'Bob' });
+
+      assert.equal(fetchStub.callCount, 2);
+      fetchStub.getCalls().forEach(call => {
+        assert.equal(call.args[1].headers.Authorization, 'Bearer fake-oidc-token');
+      });
+    });
+
+    it('mints a fresh token once the cached one exceeds its max age', async () => {
+      fetchStub.withArgs('/mint-vendor-token').resolves(fakeResponse(200, JSON.stringify({ token: 'refreshed-token' })));
+      fetchStub.withArgs('https://vendor.example.test/vend').resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
+
+      await callVendor('mint-token', { identity: 'Alice' });
+      clock.tick(5 * 60 * 1000);
+      await callVendor('mint-token', { identity: 'Bob' });
+
+      const vendorCalls = fetchStub.getCalls().filter(call => call.args[0] === 'https://vendor.example.test/vend');
+      assert.equal(vendorCalls[0].args[1].headers.Authorization, 'Bearer fake-oidc-token');
+      assert.equal(vendorCalls[1].args[1].headers.Authorization, 'Bearer refreshed-token');
+    });
   });
 });
