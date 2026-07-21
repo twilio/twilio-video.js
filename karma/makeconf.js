@@ -32,6 +32,9 @@ async function mintVendorToken() {
   const response = await fetch(`${requestUrl}&audience=${audience}`, {
     headers: { Authorization: `bearer ${requestToken}` }
   });
+  if (!response.ok) {
+    throw new Error(`OIDC token request failed: ${response.status}`);
+  }
   const body = await response.json();
   return body.value;
 }
@@ -182,6 +185,11 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         xmlVersion: null // use '1' if reporting to be per SonarQube 6.2 XML format
       },
       port: 9876,
+      // Karma's dev server exposes an unauthenticated route for OIDC token minting
+      // (createMintVendorTokenMiddleware, below); binding it to loopback-only keeps
+      // that route unreachable from outside this machine/container.
+      listenAddress: '127.0.0.1',
+      hostname: 'localhost',
       colors: true,
       autoWatch: true,
       browsers,
