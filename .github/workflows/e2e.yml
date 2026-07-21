@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [stage]
+        environment: [stage, prod]
         topology: [group, peer-to-peer]
         browser: [chrome, firefox]
         bver: [stable, beta, unstable]
