@@ -1,16 +1,18 @@
 'use strict';
 
-const defaults = require('./defaults');
+// Browser-only: the relative fetch URL below requires a page origin, so this
+// throws under Node's own fetch.
 
 // GitHub Actions OIDC tokens are valid for only ~5 minutes; re-mint if the cached
 // one is older than this so a multi-minute test run never signs requests with a
-// stale token.
+// stale token. 4 min leaves a 1-min margin before that ~5-min expiry.
 const TOKEN_MAX_AGE_MS = 4 * 60 * 1000;
 
 // Each spec file gets a fresh page (scripts/karma.js), re-evaluating this module,
 // so a cached token can't be trusted as fresh on load -- always mint on first use.
 let cachedToken = null;
 let cachedTokenMintedAt = 0;
+let cachedTokenPromise = null;
 
 /**
  * Fetch a fresh vendor OIDC token from the local karma middleware, which mints
@@ -32,12 +34,26 @@ async function mintVendorToken() {
 /**
  * @returns {Promise<string>} a vendor OIDC token no older than TOKEN_MAX_AGE_MS
  */
-async function getVendorToken() {
-  if (!cachedToken || Date.now() - cachedTokenMintedAt > TOKEN_MAX_AGE_MS) {
-    cachedToken = await mintVendorToken();
-    cachedTokenMintedAt = Date.now();
+function getVendorToken() {
+  if (cachedTokenPromise) {
+    return cachedTokenPromise;
   }
-  return cachedToken;
+  if (cachedToken && Date.now() - cachedTokenMintedAt <= TOKEN_MAX_AGE_MS) {
+    return Promise.resolve(cachedToken);
+  }
+  // Cache the in-flight promise (not just the eventual token) so concurrent
+  // callers awaiting a stale/missing token share one mint instead of racing
+  // to mint their own.
+  cachedTokenPromise = mintVendorToken().then(token => {
+    cachedToken = token;
+    cachedTokenMintedAt = Date.now();
+    cachedTokenPromise = null;
+    return token;
+  }, error => {
+    cachedTokenPromise = null;
+    throw error;
+  });
+  return cachedTokenPromise;
 }
 
 /**
@@ -55,7 +71,7 @@ async function callVendor(action, params) {
 
   const vendorToken = await getVendorToken();
 
-  const body = JSON.stringify(Object.assign({ action, environment: defaults.environment }, params));
+  const body = JSON.stringify(Object.assign({ action }, params));
 
   const response = await fetch(vendorUrl, {
     method: 'POST',

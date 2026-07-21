@@ -48,23 +48,7 @@ describe('callVendor', () => {
     assert.equal(config.headers['Content-Type'], 'application/json');
 
     const body = JSON.parse(config.body);
-    assert.deepStrictEqual(body, { action: 'mint-token', environment: 'prod', identity: 'Alice' });
-  });
-
-  it('sends the ENVIRONMENT env var as the environment field', async () => {
-    process.env.ENVIRONMENT = 'stage';
-    delete require.cache[require.resolve('../../lib/vendor')];
-    delete require.cache[require.resolve('../../lib/defaults')];
-    delete require.cache[require.resolve('../../env')];
-    const callVendorStage = require('../../lib/vendor');
-
-    fetchStub.withArgs('https://vendor.example.test/vend').resolves(fakeResponse(200, JSON.stringify({ token: 'fake-jwt' })));
-    await callVendorStage('mint-token', { identity: 'Alice' });
-
-    const [, config] = fetchStub.withArgs('https://vendor.example.test/vend').firstCall.args;
-    const body = JSON.parse(config.body);
-    assert.equal(body.environment, 'stage');
-    delete process.env.ENVIRONMENT;
+    assert.deepStrictEqual(body, { action: 'mint-token', identity: 'Alice' });
   });
 
   it('rejects when the Function returns a non-2xx status', async () => {
@@ -117,6 +101,16 @@ describe('callVendor', () => {
       const vendorCalls = fetchStub.withArgs('https://vendor.example.test/vend').getCalls();
       assert.equal(vendorCalls[0].args[1].headers.Authorization, 'Bearer fake-oidc-token');
       assert.equal(vendorCalls[1].args[1].headers.Authorization, 'Bearer refreshed-token');
+    });
+
+    it('mints only once when called concurrently with no cached token', async () => {
+      await Promise.all([
+        callVendor('mint-token', { identity: 'Alice' }),
+        callVendor('mint-token', { identity: 'Bob' }),
+        callVendor('mint-token', { identity: 'Charlie' })
+      ]);
+
+      assert.equal(fetchStub.withArgs('/mint-vendor-token').callCount, 1);
     });
   });
 });
