@@ -95,7 +95,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     let browsers = {
       chrome: [isDocker ? 'ChromeInDocker' : 'ChromeWebRTC'],
       edge: ['EdgeWebRTC'],
-      electron: ['ElectronWebRTC'],
       firefox: [isDocker ? 'FirefoxInDocker' : 'FirefoxWebRTC'],
       safari: ['Safari']
     };
@@ -108,7 +107,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     } else if (isDocker) {
       browsers = ['ChromeInDocker', 'FirefoxInDocker'];
     } else if (process.platform === 'darwin') {
-      browsers = ['ChromeWebRTC', 'EdgeWebRTC', 'ElectronWebRTC', 'FirefoxWebRTC', 'Safari'];
+      browsers = ['ChromeWebRTC', 'EdgeWebRTC', 'FirefoxWebRTC', 'Safari'];
     } else {
       browsers = ['ChromeWebRTC', 'FirefoxWebRTC'];
     }
@@ -224,10 +223,6 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
             '--use-fake-device-for-media-stream',
             '--use-fake-ui-for-media-stream'
           ]
-        },
-        ElectronWebRTC: {
-          base: 'Electron',
-          flags: ['--default-user-agent']
         },
         FirefoxInDocker: {
           base: 'Firefox',
