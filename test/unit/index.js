@@ -16,6 +16,9 @@ require('./spec/queueingeventemitter');
 require('./spec/statemachine');
 require('./spec/transceiver');
 require('./spec/twilioconnection');
+require('./spec/vendor');
+require('./spec/token');
+require('./spec/rest');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');

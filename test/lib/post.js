@@ -2,17 +2,12 @@
 
 const https = require('https');
 
-const { apiKeySecret, apiKeySid } = require('../env');
 const { environment } = require('../lib/defaults');
 const { version } = require('../../package.json');
 
 const HOST_NAME_ECS = environment === 'prod'
   ? 'ecs.us1.twilio.com'
   : `ecs.${environment}-us1.twilio.com`;
-
-const HOST_NAME_REST = environment === 'prod'
-  ? 'video.twilio.com'
-  : `video.${environment}.twilio.com`;
 
 /**
  * Make an HTTP(s) request.
@@ -67,18 +62,6 @@ function stringifyFormData(data) {
 }
 
 /**
- * Make an HTTP(S) get request.
- * @param {*} config
- * @returns {Promise<*>}
- */
-function get(config) {
-  return request(Object.assign({
-    method: 'GET'
-  }, config));
-}
-
-
-/**
  * Make an HTTP(S) post request.
  * @param {*} config
  * @param data
@@ -110,40 +93,4 @@ function postECS(token) {
   });
 }
 
-/**
- * Make an REST request.
- * @param {string} path
- * @param {*} data
- * @returns {Promise<*>}
- */
-function postREST(path, data) {
-  return post({
-    auth: `${apiKeySid}:${apiKeySecret}`,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    hostname: HOST_NAME_REST,
-    path
-  }, data);
-}
-
-/**
- * Make an REST request.
- * @param {string} path
- * @returns {Promise<*>}
- */
-function getREST(path) {
-  return get({
-    auth: `${apiKeySid}:${apiKeySecret}`,
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    },
-    hostname: HOST_NAME_REST,
-    path
-  });
-}
-
 exports.ecs = postECS;
-exports.rest = postREST;
-exports.getREST = getREST;
-

@@ -206,7 +206,7 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
         await waitFor(startedPromise, `Bob's LocalTrack to start: ${roomSid}`);
 
         // Charlie joins a room after sometime.
-        const charlieRoom = await connect(getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
+        const charlieRoom = await connect(await getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
 
         await waitFor(participantsConnected(charlieRoom, 2), `Charlie to see Alice and Bob connected: ${roomSid}`);
 
@@ -273,7 +273,7 @@ const { connect, createLocalAudioTrack, createLocalVideoTrack } = require('../..
 
       // Charlie joins a room after sometime.
       await waitForSometime(5000);
-      const charlieRoom = await connect(getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
+      const charlieRoom = await connect(await getToken('Charlie'), Object.assign({ tracks: [], name: roomName }, defaults));
 
       // wait for Charlie to see Bob an Alice
       await waitFor(participantsConnected(charlieRoom, 2), `Charlie to see Alice and Bob connected: ${roomSid}`);

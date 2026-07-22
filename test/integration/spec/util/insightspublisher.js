@@ -8,11 +8,7 @@ const defaults = require('../../../lib/defaults');
 const getToken = require('../../../lib/token');
 const { a } = require('../../../lib/util');
 
-const tokens = new Map([
-  ['expired', getToken('foo', { ttl: 60 * -1000 })],
-  ['invalid', 'foo'],
-  ['valid', getToken('foo')]
-]);
+let tokens;
 
 const options = Object.assign({
   environment: 'prod'
@@ -25,6 +21,14 @@ if (defaults.wsServerInsights) {
 describe('InsightsPublisher', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(30000);
+
+  before(async () => {
+    tokens = new Map([
+      ['expired', await getToken('foo', { ttl: 60 * -1000 })],
+      ['invalid', 'foo'],
+      ['valid', await getToken('foo')]
+    ]);
+  });
 
   describe('connect', () => {
     ['valid', 'expired', 'invalid'].forEach(tokenType => {

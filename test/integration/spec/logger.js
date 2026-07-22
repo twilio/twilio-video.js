@@ -50,7 +50,7 @@ describe('logger', function() {
 
   beforeEach(async () => {
     const identity = randomName();
-    token = getToken(identity);
+    token = await getToken(identity);
     sid = await createRoom(randomName(), defaults.topology);
     consoleMethods.forEach(method => sinon.stub(console, method));
     loadPlugin();
@@ -227,16 +227,14 @@ describe('logger', function() {
       logger1 = Logger.getLogger(loggerName1);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
       if (room1) {
         room1.disconnect();
       }
       if (room2) {
         room2.disconnect();
       }
-      if (room1 || room2) {
-        await completeRoom(sid);
-      }
+      // the outer afterEach already completes sid for every test in this file
       room1 = null;
       room2 = null;
     });
