@@ -1,0 +1,63 @@
+name: Release
+
+# Publishes a tagged release to npm.
+#
+# Fired by prepare-release.yml pushing a tag. The tagged commit already contains
+# the fully built tree, so this workflow only publishes. The job holding the
+# publishing credential runs no third-party code.
+#
+# The tag pattern matches final releases only. A prerelease version
+# (2.36.0-rc.1, 2.36.0-beta.1) gets its tag and its built tree from
+# prepare-release.yml and stops there.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+# Serialize releases. A second tag pushed while one is mid-flight queues behind
+# it rather than racing it for the `latest` dist-tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+# No default permissions; the job below declares exactly what it needs.
+permissions: {}
+
+jobs:
+  deploy:
+    name: Publish to npm
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 20
+    if: github.repository_owner == 'twilio'
+    # Both a manual-approval gate and a claim the npm trusted publisher matches
+    # on. It must stay declared here: the OIDC token only carries the environment
+    # claim when the job asks for the environment.
+    environment:
+      name: production
+      url: https://www.npmjs.com/package/twilio-video/v/${{ github.ref_name }}
+    permissions:
+      contents: read # the tag already exists
+      id-token: write # required for npm OIDC trusted publishing
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          # npm >= 11.5.1, bundled with Node 24, is required for OIDC trusted
+          # publishing.
+          node-version: 24
+
+      # Used over a plain `npm publish` for two guarantees: the tag must match
+      # package.json's version, and the publish runs with --ignore-scripts.
+      #
+      # tag-prefix is empty because this repo's tags are bare versions (1.2.3),
+      # not v-prefixed.
+      - name: Validate tag and publish to npm
+        uses: twilio/sdk-actions/npm-publish@26f95a54e57993c1bf3b26bec2905f395814c23a # v1.0.0
+        with:
+          registry: https://registry.npmjs.org
+          validate-tag: 'true'
+          tag-prefix: ''
+          access: 'public'
+          provenance: 'true'

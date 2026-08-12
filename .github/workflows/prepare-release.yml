@@ -1,0 +1,223 @@
+name: Prepare Release
+
+# Builds a release: bumps the version, builds the SDK, commits the built tree,
+# and pushes a version tag.
+#
+# Dispatch this FROM the branch you are releasing (normally `develop`) — pick it
+# in the "Run workflow" dropdown. The commits and the tag are pushed back to
+# whatever ref the run was dispatched from, so the branch selected there is the
+# branch that gets the release. Any branch can be released, including a
+# maintenance branch.
+#
+# This workflow does not publish. Pushing the tag is what triggers release.yml,
+# and only a final X.Y.Z tag matches its filter — so a prerelease version stops
+# here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Version to release (e.g. 2.36.0 or 2.36.0-rc.1)"
+        required: true
+      development_version:
+        description: "Optional: next dev version to commit after the release (e.g. 2.36.1-dev). Leave blank to skip."
+        required: false
+      dry_run:
+        description: "Build and pack only — commit nothing, tag nothing, publish nothing."
+        required: false
+        type: boolean
+        default: false
+
+# No default permissions; each job below declares exactly what it needs.
+permissions: {}
+
+env:
+  ARTIFACTORY_URL: ${{ vars.ARTIFACTORY_URL }}
+
+jobs:
+  # The only job that installs dependencies, and it has no write access.
+  build:
+    name: Build release tree
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write # for the OIDC registry exchange below
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # The repo-local action, which reads the ARTIFACTORY_URL env var set above.
+      - name: Artifactory OIDC Auth
+        uses: ./.github/actions/artifactory-oidc
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts is strictly required
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # Passed as env, referenced as "$VAR" — never interpolated into a run script.
+      - name: Bump version
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: npm version --no-git-tag-version "$RELEASE_VERSION"
+
+      - name: Build
+        run: npm run build:quick
+
+      # :quick, because build:quick already built es5/. `test:unit` would rebuild
+      # it, discarding the tree this job uploads.
+      - name: Unit tests
+        run: npm run test:unit:quick -- ./test/unit/*
+
+      - name: Server-side render tests
+        run: npm run test:serversiderender
+
+      # The tagged commit is expected to carry the complete built SDK, so an
+      # incomplete tree has to fail here rather than reach a tag.
+      - name: Verify the release tree was built
+        run: |
+          set -euo pipefail
+
+          for RELEASE_FILE in \
+            package.json \
+            package-lock.json \
+            dist/twilio-video.js \
+            dist/twilio-video.min.js
+          do
+            if [ ! -s "$RELEASE_FILE" ]; then
+              echo "::error::${RELEASE_FILE} is missing or empty after the build."
+              exit 1
+            fi
+          done
+
+          for RELEASE_DIR in es5 dist/docs
+          do
+            if [ -z "$(ls -A "$RELEASE_DIR" 2>/dev/null)" ]; then
+              echo "::error::${RELEASE_DIR}/ is missing or empty after the build."
+              exit 1
+            fi
+          done
+
+      # A publish cannot be undone, so this makes it possible to prove the tree
+      # builds and see exactly what would ship without writing anything anywhere.
+      - name: Dry run — pack and preview the publish
+        if: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          echo "::notice::Version: $(node -p "require('./package.json').version")"
+          npm pack --dry-run
+          npm publish --dry-run --registry https://registry.npmjs.org --ignore-scripts --access public
+
+      - name: Upload release tree
+        if: ${{ !inputs.dry_run }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-tree
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 7
+          path: |
+            package.json
+            package-lock.json
+            dist/
+            es5/
+
+  # Holds the push credential; runs no third-party code.
+  commit-tag-push:
+    name: Commit, tag and push
+    needs: build
+    if: ${{ !inputs.dry_run }}
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    # Passed as env, referenced as "$VAR" — never interpolated into a run script.
+    env:
+      RELEASE_VERSION: ${{ inputs.release_version }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Download release tree
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-tree
+
+      # Matches the author on the existing release commits.
+      - name: Configure git identity
+        run: |
+          set -euo pipefail
+
+          git config user.name "twilio-ci"
+          git config user.email "twilio-ci@twilio.com"
+
+      # dist/ and es5/ are gitignored, hence -f. Committing the built output is
+      # intentional: the tagged tree is expected to contain the built SDK, so it
+      # can be consumed directly from the tag.
+      #
+      # --no-verify because pre-commit.sh rejects commits on release branches.
+      # Hooks aren't installed on a fresh checkout, so this only matters if these
+      # steps are ever run by hand.
+      - name: Commit the release
+        run: |
+          set -euo pipefail
+
+          git add package.json package-lock.json
+          git add -f dist es5
+          git commit --no-verify -m "$RELEASE_VERSION"
+          echo "::notice::Release commit: $(git rev-parse HEAD)"
+
+      # Lightweight and un-prefixed, matching the existing tags.
+      - name: Tag the release
+        run: git tag "$RELEASE_VERSION"
+
+      # Explicit refspecs: the checkout may be a detached HEAD rather than on a
+      # named branch, so push back to the ref this run was dispatched from
+      # instead of relying on `HEAD` inferring one.
+      #
+      # Branch first, then tag, so the tag is never briefly unreachable. A final
+      # X.Y.Z tag landing here is what triggers release.yml.
+      - name: Push the release commit and tag
+        run: |
+          set -euo pipefail
+
+          git push origin "HEAD:${GITHUB_REF}"
+          git push origin "refs/tags/${RELEASE_VERSION}"
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        if: ${{ inputs.development_version != '' }}
+        with:
+          node-version: 22
+
+      # The inverse of the release commit: bump to the next -dev version and drop
+      # the built tree again, returning the branch to a clean working state.
+      # Pushed after the tag, so the tag keeps pointing at the built commit.
+      - name: Commit the development version
+        if: ${{ inputs.development_version != '' }}
+        env:
+          DEVELOPMENT_VERSION: ${{ inputs.development_version }}
+        run: |
+          set -euo pipefail
+
+          npm version --no-git-tag-version "$DEVELOPMENT_VERSION"
+          git rm -r --quiet --ignore-unmatch dist es5
+          git add package.json package-lock.json
+          git commit --no-verify -m "$DEVELOPMENT_VERSION"
+          git push origin "HEAD:${GITHUB_REF}"
+          echo "::notice::Development commit: $(git rev-parse HEAD)"
+
+      # A tag that is not reachable from the branch is easy to create by mistake
+      # and hard to notice afterwards.
+      - name: Verify the tag is reachable from the branch
+        run: |
+          set -euo pipefail
+
+          if ! git merge-base --is-ancestor "$RELEASE_VERSION" HEAD; then
+            echo "::error::tag ${RELEASE_VERSION} is not an ancestor of ${GITHUB_REF} — it would be orphaned."
+            exit 1
+          fi
+          echo "::notice::tag ${RELEASE_VERSION} is reachable from ${GITHUB_REF}."
