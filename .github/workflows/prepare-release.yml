@@ -61,8 +61,18 @@ jobs:
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
           DEVELOPMENT_VERSION: ${{ inputs.development_version }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
           set -euo pipefail
+
+          # The dry-run guards match on 'true', so any other string releases for real.
+          case "${DRY_RUN:-false}" in
+            true|false) ;;
+            *)
+              echo "::error::dry_run must be exactly true or false."
+              exit 1
+              ;;
+          esac
 
           SEMVER='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'
           for INPUT_VERSION in "$RELEASE_VERSION" "${DEVELOPMENT_VERSION:-}"
@@ -234,10 +244,46 @@ jobs:
             exit 1
           fi
 
+      # The download overwrites but never deletes, so stale files from a build
+      # still tracked from a previous release would be staged alongside this one.
+      - name: Clear any previously committed build output
+        run: |
+          set -euo pipefail
+
+          git rm -r --quiet --ignore-unmatch --cached dist es5
+          rm -rf dist es5
+
       - name: Download release tree
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-tree
+
+      # The download above overwrites package.json, so check it before tagging.
+      - name: Verify the downloaded tree is the expected package
+        run: |
+          set -euo pipefail
+
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          if [ "$PACKAGE_NAME" != twilio-video ]; then
+            echo "::error::downloaded package.json is for ${PACKAGE_NAME}, not twilio-video."
+            exit 1
+          fi
+
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$PACKAGE_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::downloaded package.json is ${PACKAGE_VERSION}, not ${RELEASE_VERSION}."
+            exit 1
+          fi
+
+          node -e '
+            const scripts = require("./package.json").scripts || {};
+            for (const name of ["install", "preinstall", "postinstall", "prepare", "prepublishOnly"]) {
+              if (scripts[name]) {
+                console.error("::error::downloaded package.json has an unexpected lifecycle script: " + name);
+                process.exit(1);
+              }
+            }
+          '
 
       # Matches the author on the existing release commits.
       - name: Configure git identity
