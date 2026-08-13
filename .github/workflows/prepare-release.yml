@@ -21,11 +21,19 @@ on:
       development_version:
         description: "Optional: next dev version to commit after the release (e.g. 2.36.1-dev). Leave blank to skip."
         required: false
+      # Guards on this read `github.event.inputs.dry_run`, not `inputs.dry_run`:
+      # the event payload is always the string "true"/"false", whereas `inputs`
+      # is a real boolean from the UI but a (truthy) string from the dispatch API.
       dry_run:
         description: "Build and pack only — commit nothing, tag nothing, publish nothing."
         required: false
         type: boolean
         default: false
+
+# Never cancel: two runs would build from the same base and race each other's push.
+concurrency:
+  group: prepare-release-${{ github.ref }}
+  cancel-in-progress: false
 
 # No default permissions; each job below declares exactly what it needs.
 permissions: {}
@@ -43,11 +51,10 @@ jobs:
       contents: read
       id-token: write # for the OIDC registry exchange below
     steps:
-      # First, so a bad input fails before the install below.
-      #
+      # Runs before the install so a bad input fails fast. Exact versions only:
       # `npm version` also accepts aliases (patch, minor, from-git), which would
-      # set a package version different from the literal string used below as the
-      # commit message and tag name. Both inputs must be exact versions.
+      # set a version different from the literal string used below as the commit
+      # message and tag name.
       #
       # Passed as env, referenced as "$VAR" — never interpolated into a run script.
       - name: Validate the version inputs
@@ -60,15 +67,45 @@ jobs:
           SEMVER='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'
           for INPUT_VERSION in "$RELEASE_VERSION" "${DEVELOPMENT_VERSION:-}"
           do
-            if [ -n "$INPUT_VERSION" ] && ! printf '%s' "$INPUT_VERSION" | grep -qE "$SEMVER"; then
+            [ -n "$INPUT_VERSION" ] || continue
+
+            # grep is line-oriented even with -x, so a multi-line input would pass on
+            # one matching line.
+            if [ "$(printf '%s' "$INPUT_VERSION" | wc -l)" -ne 0 ] \
+              || ! printf '%s' "$INPUT_VERSION" | grep -qxE "$SEMVER"; then
               echo "::error::${INPUT_VERSION} is not an exact version (expected 2.36.0 or 2.36.0-rc.1)."
               exit 1
             fi
           done
 
+          # The push steps use GITHUB_REF as a refspec target, so a tag dispatch
+          # would try to push a commit onto a tag.
+          case "$GITHUB_REF" in
+            refs/heads/*) ;;
+            *)
+              echo "::error::Dispatch this workflow from a branch, not ${GITHUB_REF}."
+              exit 1
+              ;;
+          esac
+
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      # The repo-local action, which reads the ARTIFACTORY_URL env var set above.
+      # sort -V is not strict semver: it orders 2.36.0-rc.1 after 2.36.0. It still
+      # catches the transposed or stale number this guards against.
+      - name: Verify the release version moves forward
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          HIGHEST_VERSION="$(printf '%s\n%s\n' "$CURRENT_VERSION" "$RELEASE_VERSION" | sort -V | tail -n1)"
+
+          if [ "$RELEASE_VERSION" = "$CURRENT_VERSION" ] || [ "$HIGHEST_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::${RELEASE_VERSION} is not greater than the current version ${CURRENT_VERSION}."
+            exit 1
+          fi
+
       - name: Artifactory OIDC Auth
         uses: ./.github/actions/artifactory-oidc
 
@@ -82,10 +119,34 @@ jobs:
         run: npm ci --ignore-scripts
 
       # --ignore-scripts: this bump only rewrites package.json.
-      - name: Bump version
+      - name: Set the release version
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
-        run: npm version --no-git-tag-version --ignore-scripts "$RELEASE_VERSION"
+        run: |
+          set -euo pipefail
+
+          npm version --no-git-tag-version --ignore-scripts "$RELEASE_VERSION"
+
+          # Prereleases neither publish nor become the CDN's advertised version.
+          case "$RELEASE_VERSION" in
+            *-*)
+              echo "::notice::${RELEASE_VERSION} is a prerelease — leaving README.md and CHANGELOG.md alone."
+              exit 0
+              ;;
+          esac
+
+          # `npm version` rewrites package.json only.
+          sed -i -E "s|(releases/)[0-9]+\.[0-9]+\.[0-9]+(/twilio-video)|\1${RELEASE_VERSION}\2|g" README.md
+          if ! grep -qF "releases/${RELEASE_VERSION}/twilio-video" README.md; then
+            echo "::error::README.md has no releases/${RELEASE_VERSION}/ CDN URL after the rewrite."
+            exit 1
+          fi
+
+          # CHANGELOG headings read "2.35.0 (April 29, 2026)".
+          if ! grep -q "^${RELEASE_VERSION} (" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no ${RELEASE_VERSION} entry — add one before releasing."
+            exit 1
+          fi
 
       - name: Build
         run: npm run build:quick
@@ -124,10 +185,10 @@ jobs:
             fi
           done
 
-      # A publish cannot be undone, so this makes it possible to prove the tree
-      # builds and see exactly what would ship without writing anything anywhere.
+      # A publish cannot be undone: this proves the tree builds and shows exactly
+      # what would ship, without writing anything anywhere.
       - name: Dry run — pack and preview the publish
-        if: ${{ inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run == 'true' }}
         run: |
           set -euo pipefail
 
@@ -136,7 +197,7 @@ jobs:
           npm publish --dry-run --registry https://registry.npmjs.org --ignore-scripts --access public
 
       - name: Upload release tree
-        if: ${{ !inputs.dry_run }}
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-tree
@@ -146,6 +207,8 @@ jobs:
           path: |
             package.json
             package-lock.json
+            README.md
+            CHANGELOG.md
             dist/
             es5/
 
@@ -153,7 +216,7 @@ jobs:
   commit-tag-push:
     name: Commit, tag and push
     needs: build
-    if: ${{ !inputs.dry_run }}
+    if: ${{ github.event.inputs.dry_run != 'true' }}
     runs-on: ubuntu-latest-large
     timeout-minutes: 15
     permissions:
@@ -163,6 +226,17 @@ jobs:
       RELEASE_VERSION: ${{ inputs.release_version }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # The checkout fetches no tags, so a local `git tag` would not notice a tag that
+      # already exists on origin.
+      - name: Verify the tag does not already exist
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+            echo "::error::tag ${RELEASE_VERSION} already exists on origin."
+            exit 1
+          fi
 
       - name: Download release tree
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -188,7 +262,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          git add package.json package-lock.json
+          git add package.json package-lock.json README.md CHANGELOG.md
           git add -f dist es5
           git commit --no-verify -m "$RELEASE_VERSION"
           echo "::notice::Release commit: $(git rev-parse HEAD)"
@@ -201,13 +275,12 @@ jobs:
       # named branch, so push back to the ref this run was dispatched from
       # instead of relying on `HEAD` inferring one.
       #
-      # Branch first, then tag, so the tag is never briefly unreachable.
+      # --atomic: a rejected tag must not leave the release commit pushed alone.
       - name: Push the release commit and tag
         run: |
           set -euo pipefail
 
-          git push origin "HEAD:${GITHUB_REF}"
-          git push origin "refs/tags/${RELEASE_VERSION}"
+          git push --atomic origin "HEAD:${GITHUB_REF}" "refs/tags/${RELEASE_VERSION}"
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         if: ${{ inputs.development_version != '' }}
@@ -231,14 +304,15 @@ jobs:
           git push origin "HEAD:${GITHUB_REF}"
           echo "::notice::Development commit: $(git rev-parse HEAD)"
 
-      # A tag that is not reachable from the branch is easy to create by mistake
-      # and hard to notice afterwards.
-      - name: Verify the tag is reachable from the branch
+      # Against origin, not local refs: comparing the tag this job just created to
+      # its own HEAD would be true by construction.
+      - name: Verify the tag is reachable from the branch on origin
         run: |
           set -euo pipefail
 
-          if ! git merge-base --is-ancestor "$RELEASE_VERSION" HEAD; then
-            echo "::error::tag ${RELEASE_VERSION} is not an ancestor of ${GITHUB_REF} — it would be orphaned."
+          git fetch --no-tags origin "${GITHUB_REF}"
+          if ! git merge-base --is-ancestor "refs/tags/${RELEASE_VERSION}" FETCH_HEAD; then
+            echo "::error::tag ${RELEASE_VERSION} is not reachable from ${GITHUB_REF} on origin — it is orphaned."
             exit 1
           fi
-          echo "::notice::tag ${RELEASE_VERSION} is reachable from ${GITHUB_REF}."
+          echo "::notice::tag ${RELEASE_VERSION} is reachable from ${GITHUB_REF} on origin."

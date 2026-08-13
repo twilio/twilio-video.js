@@ -8,19 +8,16 @@ name: Release
 #
 # Dispatch is manual because GitHub suppresses events from a workflow pushing
 # with the default GITHUB_TOKEN, so a tag trigger would never fire.
-#
-# Only a final X.Y.Z tag publishes; the guard below rejects anything else.
 
 on:
   workflow_dispatch:
 
-# Serialize releases. A second run dispatched while one is mid-flight queues
-# behind it rather than racing it for the `latest` dist-tag.
+# Serialize releases: a second run queues rather than racing the first for the
+# `latest` dist-tag.
 concurrency:
   group: release
   cancel-in-progress: false
 
-# No default permissions; the job below declares exactly what it needs.
 permissions: {}
 
 jobs:
@@ -28,10 +25,11 @@ jobs:
     name: Publish to npm
     runs-on: ubuntu-latest-large
     timeout-minutes: 20
+    # Both at job level: `environment:` resolves before any step runs, so a
+    # first-step guard would gate on approval first, and the OIDC token only
+    # carries the environment claim when the job itself asks for the environment
+    # — which is what the npm trusted publisher matches on.
     if: github.repository_owner == 'twilio'
-    # Both a manual-approval gate and a claim the npm trusted publisher matches
-    # on. It must stay declared here: the OIDC token only carries the environment
-    # claim when the job asks for the environment.
     environment:
       name: production
       url: https://www.npmjs.com/package/twilio-video/v/${{ github.ref_name }}
@@ -51,7 +49,34 @@ jobs:
             exit 1
           fi
 
+      # Full commit history for the reachability check below; blob:none skips the
+      # built dist/ and es5/ trees committed on every past release tag.
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      # The check above constrains the tag's name, not where it came from. To
+      # release from a maintenance branch, add it to the refspecs and the loop.
+      - name: Verify the tag is reachable from a release branch
+        run: |
+          set -euo pipefail
+
+          # Explicit refspecs: a tag checkout may leave no origin/* refs.
+          git fetch --no-tags origin \
+            "+refs/heads/master:refs/remotes/origin/master" \
+            "+refs/heads/develop:refs/remotes/origin/develop"
+
+          for RELEASE_BRANCH in origin/master origin/develop
+          do
+            if git merge-base --is-ancestor "$GITHUB_SHA" "$RELEASE_BRANCH"; then
+              echo "::notice::${GITHUB_REF_NAME} is reachable from ${RELEASE_BRANCH}."
+              exit 0
+            fi
+          done
+
+          echo "::error::${GITHUB_REF_NAME} (${GITHUB_SHA}) is not reachable from master or develop."
+          exit 1
 
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
@@ -61,9 +86,7 @@ jobs:
 
       # Used over a plain `npm publish` for two guarantees: the tag must match
       # package.json's version, and the publish runs with --ignore-scripts.
-      #
-      # tag-prefix is empty because this repo's tags are bare versions (1.2.3),
-      # not v-prefixed.
+      # tag-prefix is empty because this repo's tags are bare versions (1.2.3).
       - name: Validate tag and publish to npm
         uses: twilio/sdk-actions/npm-publish@26f95a54e57993c1bf3b26bec2905f395814c23a # v1.0.0
         with:
