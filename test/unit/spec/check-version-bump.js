@@ -83,7 +83,7 @@ describe('check-version-bump', () => {
 
     describe('rejects a version that does not move forward', () => {
       [
-        // The real typo released on 2023-10-03: 2.8.2-rc1 instead of 2.28.2-rc1.
+        // A transposed minor: 2.8.2-rc1 in place of 2.28.2-rc1.
         ['2.28.2-dev', '2.8.2-rc1'],
         ['2.35.0', '2.35.0'],
         ['2.35.1-dev', '2.35.0'],

@@ -90,9 +90,8 @@ jobs:
 
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      # Catches the transposed or stale number — this repo once released 2.8.2-rc1
-      # in place of 2.28.2-rc1. Runs before the install, so the script it calls
-      # takes no dependencies.
+      # Catches a transposed or stale version number. Runs before the install, so
+      # the script it calls takes no dependencies.
       - name: Verify the release version moves forward
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
