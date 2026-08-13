@@ -90,21 +90,18 @@ jobs:
 
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-      # sort -V is not strict semver: it orders 2.36.0-rc.1 after 2.36.0. It still
-      # catches the transposed or stale number this guards against.
+      # Catches the transposed or stale number — this repo once released 2.8.2-rc1
+      # in place of 2.28.2-rc1. Runs before the install, so the script it calls
+      # takes no dependencies.
       - name: Verify the release version moves forward
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           set -euo pipefail
 
-          CURRENT_VERSION="$(node -p "require('./package.json').version")"
-          HIGHEST_VERSION="$(printf '%s\n%s\n' "$CURRENT_VERSION" "$RELEASE_VERSION" | sort -V | tail -n1)"
-
-          if [ "$RELEASE_VERSION" = "$CURRENT_VERSION" ] || [ "$HIGHEST_VERSION" != "$RELEASE_VERSION" ]; then
-            echo "::error::${RELEASE_VERSION} is not greater than the current version ${CURRENT_VERSION}."
-            exit 1
-          fi
+          node ./scripts/check-version-bump.js \
+            "$(node -p "require('./package.json').version")" \
+            "$RELEASE_VERSION"
 
       - name: Artifactory OIDC Auth
         uses: ./.github/actions/artifactory-oidc

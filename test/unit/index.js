@@ -19,6 +19,7 @@ require('./spec/twilioconnection');
 require('./spec/vendor');
 require('./spec/token');
 require('./spec/rest');
+require('./spec/check-version-bump');
 
 require('./spec/data/transceiver');
 require('./spec/data/sender');
