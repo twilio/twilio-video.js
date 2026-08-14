@@ -25,7 +25,11 @@ describe('UMD', function() {
     let page;
 
     beforeEach(async () => {
-      browser = await puppeteer.launch({ headless: true });
+      browser = await puppeteer.launch({
+        headless: true,
+        // CI environments do not provide a usable Chromium sandbox.
+        args: process.env.CI ? ['--no-sandbox'] : []
+      });
       page = await browser.newPage();
     });
 
