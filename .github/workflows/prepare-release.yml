@@ -1,0 +1,360 @@
+name: Prepare Release
+
+# Builds a release: bumps the version, builds the SDK, commits the built tree,
+# and pushes a version tag.
+#
+# Dispatch this FROM the branch you are releasing (normally `develop`) — pick it
+# in the "Run workflow" dropdown. The commits and the tag are pushed back to
+# whatever ref the run was dispatched from, so the branch selected there is the
+# branch that gets the release. Any branch can be released, including a
+# maintenance branch.
+#
+# This workflow does not publish. To publish, dispatch release.yml from the tag
+# this pushed; it accepts only a final X.Y.Z tag, so a prerelease stops here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Version to release (e.g. 2.36.0 or 2.36.0-rc.1)"
+        required: true
+      development_version:
+        description: "Optional: next dev version to commit after the release (e.g. 2.36.1-dev). Leave blank to skip."
+        required: false
+      # Guards on this read `github.event.inputs.dry_run`, not `inputs.dry_run`:
+      # the event payload is always the string "true"/"false", whereas `inputs`
+      # is a real boolean from the UI but a (truthy) string from the dispatch API.
+      dry_run:
+        description: "Build and pack only — commit nothing, tag nothing, publish nothing."
+        required: false
+        type: boolean
+        default: false
+
+# Never cancel: two runs would build from the same base and race each other's push.
+concurrency:
+  group: prepare-release-${{ github.ref }}
+  cancel-in-progress: false
+
+# No default permissions; each job below declares exactly what it needs.
+permissions: {}
+
+env:
+  ARTIFACTORY_URL: ${{ vars.ARTIFACTORY_URL }}
+
+jobs:
+  # The only job that installs dependencies. Keep it read-only.
+  build:
+    name: Build release tree
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write # for the OIDC registry exchange below
+    steps:
+      # Runs before the install so a bad input fails fast. Exact versions only:
+      # `npm version` also accepts aliases (patch, minor, from-git), which would
+      # set a version different from the literal string used below as the commit
+      # message and tag name.
+      #
+      # Passed as env, referenced as "$VAR" — never interpolated into a run script.
+      - name: Validate the version inputs
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          DEVELOPMENT_VERSION: ${{ inputs.development_version }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          # The dry-run guards match on 'true', so any other string releases for real.
+          case "${DRY_RUN:-false}" in
+            true|false) ;;
+            *)
+              echo "::error::dry_run must be exactly true or false."
+              exit 1
+              ;;
+          esac
+
+          SEMVER='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'
+          for INPUT_VERSION in "$RELEASE_VERSION" "${DEVELOPMENT_VERSION:-}"
+          do
+            [ -n "$INPUT_VERSION" ] || continue
+
+            # grep is line-oriented even with -x, so a multi-line input would pass on
+            # one matching line.
+            if [ "$(printf '%s' "$INPUT_VERSION" | wc -l)" -ne 0 ] \
+              || ! printf '%s' "$INPUT_VERSION" | grep -qxE "$SEMVER"; then
+              echo "::error::${INPUT_VERSION} is not an exact version (expected 2.36.0 or 2.36.0-rc.1)."
+              exit 1
+            fi
+          done
+
+          # The push steps use GITHUB_REF as a refspec target, so a tag dispatch
+          # would try to push a commit onto a tag.
+          case "$GITHUB_REF" in
+            refs/heads/*) ;;
+            *)
+              echo "::error::Dispatch this workflow from a branch, not ${GITHUB_REF}."
+              exit 1
+              ;;
+          esac
+
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # Catches a transposed or stale version number. Runs before the install, so
+      # the script it calls takes no dependencies.
+      - name: Verify the release version moves forward
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+
+          node ./scripts/check-version-bump.js \
+            "$(node -p "require('./package.json').version")" \
+            "$RELEASE_VERSION"
+
+      - name: Artifactory OIDC Auth
+        uses: ./.github/actions/artifactory-oidc
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      # --ignore-scripts is strictly required
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      # --ignore-scripts: this bump only rewrites package.json.
+      - name: Set the release version
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+
+          npm version --no-git-tag-version --ignore-scripts "$RELEASE_VERSION"
+
+          # Prereleases neither publish nor become the CDN's advertised version.
+          case "$RELEASE_VERSION" in
+            *-*)
+              echo "::notice::${RELEASE_VERSION} is a prerelease — leaving README.md and CHANGELOG.md alone."
+              exit 0
+              ;;
+          esac
+
+          # `npm version` rewrites package.json only.
+          sed -i -E "s|(releases/)[0-9]+\.[0-9]+\.[0-9]+(/twilio-video)|\1${RELEASE_VERSION}\2|g" README.md
+          if ! grep -qF "releases/${RELEASE_VERSION}/twilio-video" README.md; then
+            echo "::error::README.md has no releases/${RELEASE_VERSION}/ CDN URL after the rewrite."
+            exit 1
+          fi
+
+          # CHANGELOG headings read "2.35.0 (April 29, 2026)".
+          if ! grep -q "^${RELEASE_VERSION} (" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no ${RELEASE_VERSION} entry — add one before releasing."
+            exit 1
+          fi
+
+      - name: Build
+        run: npm run build:quick
+
+      # :quick, because build:quick already built es5/. `test:unit` would rebuild
+      # it, discarding the tree this job uploads.
+      - name: Unit tests
+        run: npm run test:unit:quick -- ./test/unit/*
+
+      - name: Server-side render tests
+        run: npm run test:serversiderender
+
+      # The tagged commit is expected to carry the complete built SDK, so an
+      # incomplete tree has to fail here rather than reach a tag.
+      - name: Verify the release tree was built
+        run: |
+          set -euo pipefail
+
+          for RELEASE_FILE in \
+            package.json \
+            package-lock.json \
+            dist/twilio-video.js \
+            dist/twilio-video.min.js
+          do
+            if [ ! -s "$RELEASE_FILE" ]; then
+              echo "::error::${RELEASE_FILE} is missing or empty after the build."
+              exit 1
+            fi
+          done
+
+          for RELEASE_DIR in es5 dist/docs
+          do
+            if [ -z "$(ls -A "$RELEASE_DIR" 2>/dev/null)" ]; then
+              echo "::error::${RELEASE_DIR}/ is missing or empty after the build."
+              exit 1
+            fi
+          done
+
+      # A publish cannot be undone: this proves the tree builds and shows exactly
+      # what would ship, without writing anything anywhere.
+      - name: Dry run — pack and preview the publish
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          set -euo pipefail
+
+          echo "::notice::Version: $(node -p "require('./package.json').version")"
+          npm pack --dry-run
+          npm publish --dry-run --registry https://registry.npmjs.org --ignore-scripts --access public
+
+      - name: Upload release tree
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-tree
+          if-no-files-found: error
+          include-hidden-files: false
+          retention-days: 7
+          path: |
+            package.json
+            package-lock.json
+            README.md
+            CHANGELOG.md
+            dist/
+            es5/
+
+  # Runs git only. Do not add an install or build step here.
+  commit-tag-push:
+    name: Commit, tag and push
+    needs: build
+    if: ${{ github.event.inputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    # Passed as env, referenced as "$VAR" — never interpolated into a run script.
+    env:
+      RELEASE_VERSION: ${{ inputs.release_version }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      # The checkout fetches no tags, so a local `git tag` would not notice a tag that
+      # already exists on origin.
+      - name: Verify the tag does not already exist
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_VERSION}" >/dev/null 2>&1; then
+            echo "::error::tag ${RELEASE_VERSION} already exists on origin."
+            exit 1
+          fi
+
+      # The download overwrites but never deletes, so stale files from a build
+      # still tracked from a previous release would be staged alongside this one.
+      - name: Clear any previously committed build output
+        run: |
+          set -euo pipefail
+
+          git rm -r --quiet --ignore-unmatch --cached dist es5
+          rm -rf dist es5
+
+      - name: Download release tree
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-tree
+
+      # The download above overwrites package.json, so check it before tagging.
+      - name: Verify the downloaded tree is the expected package
+        run: |
+          set -euo pipefail
+
+          PACKAGE_NAME="$(node -p "require('./package.json').name")"
+          if [ "$PACKAGE_NAME" != twilio-video ]; then
+            echo "::error::downloaded package.json is for ${PACKAGE_NAME}, not twilio-video."
+            exit 1
+          fi
+
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if [ "$PACKAGE_VERSION" != "$RELEASE_VERSION" ]; then
+            echo "::error::downloaded package.json is ${PACKAGE_VERSION}, not ${RELEASE_VERSION}."
+            exit 1
+          fi
+
+          node -e '
+            const scripts = require("./package.json").scripts || {};
+            for (const name of ["install", "preinstall", "postinstall", "prepare", "prepublishOnly"]) {
+              if (scripts[name]) {
+                console.error("::error::downloaded package.json has an unexpected lifecycle script: " + name);
+                process.exit(1);
+              }
+            }
+          '
+
+      # Matches the author on the existing release commits.
+      - name: Configure git identity
+        run: |
+          set -euo pipefail
+
+          git config user.name "twilio-ci"
+          git config user.email "twilio-ci@twilio.com"
+
+      # dist/ and es5/ are gitignored, hence -f. Committing the built output is
+      # intentional: the tagged tree is expected to contain the built SDK, so it
+      # can be consumed directly from the tag.
+      #
+      # --no-verify because pre-commit.sh rejects commits on release branches.
+      # Hooks aren't installed on a fresh checkout, so this only matters if these
+      # steps are ever run by hand.
+      - name: Commit the release
+        run: |
+          set -euo pipefail
+
+          git add package.json package-lock.json README.md CHANGELOG.md
+          git add -f dist es5
+          git commit --no-verify -m "$RELEASE_VERSION"
+          echo "::notice::Release commit: $(git rev-parse HEAD)"
+
+      # Lightweight and un-prefixed, matching the existing tags.
+      - name: Tag the release
+        run: git tag "$RELEASE_VERSION"
+
+      # Explicit refspecs: the checkout may be a detached HEAD rather than on a
+      # named branch, so push back to the ref this run was dispatched from
+      # instead of relying on `HEAD` inferring one.
+      #
+      # --atomic: a rejected tag must not leave the release commit pushed alone.
+      - name: Push the release commit and tag
+        run: |
+          set -euo pipefail
+
+          git push --atomic origin "HEAD:${GITHUB_REF}" "refs/tags/${RELEASE_VERSION}"
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        if: ${{ inputs.development_version != '' }}
+        with:
+          node-version: 22
+
+      # The inverse of the release commit: bump to the next -dev version and drop
+      # the built tree again, returning the branch to a clean working state.
+      # Pushed after the tag, so the tag keeps pointing at the built commit.
+      - name: Commit the development version
+        if: ${{ inputs.development_version != '' }}
+        env:
+          DEVELOPMENT_VERSION: ${{ inputs.development_version }}
+        run: |
+          set -euo pipefail
+
+          npm version --no-git-tag-version --ignore-scripts "$DEVELOPMENT_VERSION"
+          git rm -r --quiet --ignore-unmatch dist es5
+          git add package.json package-lock.json
+          git commit --no-verify -m "$DEVELOPMENT_VERSION"
+          git push origin "HEAD:${GITHUB_REF}"
+          echo "::notice::Development commit: $(git rev-parse HEAD)"
+
+      # Against origin, not local refs: comparing the tag this job just created to
+      # its own HEAD would be true by construction.
+      - name: Verify the tag is reachable from the branch on origin
+        run: |
+          set -euo pipefail
+
+          git fetch --no-tags origin "${GITHUB_REF}"
+          if ! git merge-base --is-ancestor "refs/tags/${RELEASE_VERSION}" FETCH_HEAD; then
+            echo "::error::tag ${RELEASE_VERSION} is not reachable from ${GITHUB_REF} on origin — it is orphaned."
+            exit 1
+          fi
+          echo "::notice::tag ${RELEASE_VERSION} is reachable from ${GITHUB_REF} on origin."

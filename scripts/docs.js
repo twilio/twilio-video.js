@@ -118,7 +118,9 @@ Object.keys(TwilioErrors).forEach(function(error) {
   privateConstructors.push(error);
 });
 
-spawnSync('node', [
+// Checked because a jsdoc failure is otherwise silent: it leaves an empty docs
+// directory behind while this script still exits 0.
+const jsdoc = spawnSync('node', [
   require.resolve('jsdoc/jsdoc'),
   '-d', docs,
   '-c', './jsdoc.conf',
@@ -127,6 +129,13 @@ spawnSync('node', [
 ].concat(publicClasses), {
   stdio: 'inherit'
 });
+
+if (jsdoc.error || jsdoc.status !== 0) {
+  console.error('jsdoc failed ('
+    + (jsdoc.error ? jsdoc.error.message : 'status ' + jsdoc.status + (jsdoc.signal ? ', signal ' + jsdoc.signal : ''))
+    + '); ' + docs + ' is incomplete.');
+  process.exit(1);
+}
 
 vfs.src(path.join(docs, '*.html'))
   .pipe(map(transform))

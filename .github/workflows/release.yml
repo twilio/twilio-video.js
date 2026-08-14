@@ -1,0 +1,116 @@
+name: Release
+
+# Publishes a tagged release to npm.
+#
+# Dispatch this FROM the release tag prepare-release.yml pushed — pick the tag in
+# the "Run workflow" dropdown. That commit already contains the built tree, so
+# this workflow only publishes — do not add an install or build step here.
+#
+# Dispatch is manual because GitHub suppresses events from a workflow pushing
+# with the default GITHUB_TOKEN, so a tag trigger would never fire.
+
+on:
+  workflow_dispatch:
+
+# Serialize releases: a second run queues rather than racing the first for the
+# `latest` dist-tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    name: Publish to npm
+    runs-on: ubuntu-latest-large
+    timeout-minutes: 20
+    # Both at job level: `environment:` resolves before any step runs, so a
+    # first-step guard would gate on approval first, and the OIDC token only
+    # carries the environment claim when the job itself asks for the environment
+    # — which is what the npm trusted publisher matches on.
+    if: github.repository_owner == 'twilio'
+    environment:
+      name: production
+      url: https://www.npmjs.com/package/twilio-video/v/${{ github.ref_name }}
+    permissions:
+      contents: read # the tag already exists
+      id-token: write # required for npm OIDC trusted publishing
+    steps:
+      # Replaces the tag-pattern filter a push trigger would have applied.
+      - name: Verify the run was dispatched from a final release tag
+        run: |
+          set -euo pipefail
+
+          # A branch ref keeps its refs/heads/ prefix here and fails the same check.
+          TAG="${GITHUB_REF#refs/tags/}"
+          if ! printf '%s' "$TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Dispatch this workflow from a final X.Y.Z release tag, not ${GITHUB_REF} — prereleases are not published."
+            exit 1
+          fi
+
+      # Full commit history for the reachability check below; blob:none skips the
+      # built dist/ and es5/ trees committed on every past release tag.
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          fetch-depth: 0
+          filter: blob:none
+
+      # The check above constrains the tag's name, not where it came from. To
+      # release from a maintenance branch, add it to the refspecs and the loop.
+      - name: Verify the tag is reachable from a release branch
+        run: |
+          set -euo pipefail
+
+          # Explicit refspecs: a tag checkout may leave no origin/* refs.
+          git fetch --no-tags origin \
+            "+refs/heads/master:refs/remotes/origin/master" \
+            "+refs/heads/develop:refs/remotes/origin/develop"
+
+          for RELEASE_BRANCH in origin/master origin/develop
+          do
+            if git merge-base --is-ancestor "$GITHUB_SHA" "$RELEASE_BRANCH"; then
+              echo "::notice::${GITHUB_REF_NAME} is reachable from ${RELEASE_BRANCH}."
+              exit 0
+            fi
+          done
+
+          echo "::error::${GITHUB_REF_NAME} (${GITHUB_SHA}) is not reachable from master or develop."
+          exit 1
+
+      # The checks above constrain where the tag came from, not what is in it: a
+      # tag missing es5/ would publish a package whose `main` resolves to nothing.
+      - name: Verify the tag carries a built tree
+        run: |
+          set -euo pipefail
+
+          for RELEASE_FILE in dist/twilio-video.js dist/twilio-video.min.js
+          do
+            if [ ! -s "$RELEASE_FILE" ]; then
+              echo "::error::${RELEASE_FILE} is missing or empty at ${GITHUB_REF_NAME}; this tag was not built by prepare-release.yml."
+              exit 1
+            fi
+          done
+
+          if [ ! -s "$(node -p "require('./package.json').main")" ]; then
+            echo "::error::package.json main does not resolve to a file at ${GITHUB_REF_NAME}."
+            exit 1
+          fi
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          # npm >= 11.5.1, bundled with Node 24, is required for OIDC trusted
+          # publishing.
+          node-version: 24
+
+      # Used over a plain `npm publish` for two guarantees: the tag must match
+      # package.json's version, and the publish runs with --ignore-scripts.
+      # tag-prefix is empty because this repo's tags are bare versions (1.2.3).
+      - name: Validate tag and publish to npm
+        uses: twilio/sdk-actions/npm-publish@26f95a54e57993c1bf3b26bec2905f395814c23a # v1.0.0
+        with:
+          registry: https://registry.npmjs.org
+          validate-tag: 'true'
+          tag-prefix: ''
+          access: 'public'
+          provenance: 'true'
