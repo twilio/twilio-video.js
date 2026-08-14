@@ -25,7 +25,11 @@ describe('UMD', function() {
     let page;
 
     beforeEach(async () => {
-      browser = await puppeteer.launch({ headless: true });
+      browser = await puppeteer.launch({
+        headless: true,
+        // Chromium's sandbox fails on GitHub's Ubuntu runners; the page is local.
+        args: process.env.CI === 'true' ? ['--no-sandbox'] : []
+      });
       page = await browser.newPage();
     });
 
