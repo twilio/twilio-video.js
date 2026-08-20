@@ -82,7 +82,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
 
       async function setup() {
         const thisTracks = await createLocalTracks({ audio: true, fake: true });
-        thisRoom = await connect(getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
+        thisRoom = await connect(await getToken(randomName()), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
         const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
           assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
           assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
@@ -96,7 +96,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
               resolve([level, stats]);
             }))) : Promise.resolve([]);
         const thatTracks = await createLocalTracks({ audio: true, fake: true });
-        thatRoom = await connect(getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
+        thatRoom = await connect(await getToken(randomName()), Object.assign({ tracks: thatTracks }, options));
         [localNqLevel, localNqStats] = await localNqLevelPromise;
         [remoteNqLevel, remoteNqStats] = await remoteNqLevelPromise;
       }
@@ -143,7 +143,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
         const nqConfig = false;
         const options = Object.assign({ name: randomName() }, defaults);
         const thisTracks = await createLocalTracks({ audio: true, fake: true });
-        thisRoom = await connect(getToken('Alice_Old'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
+        thisRoom = await connect(await getToken('Alice_Old'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
         const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
           assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
           assert.deepStrictEqual(stats, thisRoom.localParticipant.networkQualityStats);
@@ -151,7 +151,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
         }));
 
         const thatTracks = await createLocalTracks({ audio: true, fake: true });
-        thatRoom = await connect(getToken('Bob_Old'), Object.assign({ tracks: thatTracks }, options));
+        thatRoom = await connect(await getToken('Bob_Old'), Object.assign({ tracks: thatTracks }, options));
         await waitForNot(localNqLevelPromise, 'networkQualityLevelChanged was not expected');
       });
 
@@ -173,7 +173,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
           let nqConfig = testCase.initialConfig;
           const options = Object.assign({ name: randomName() }, defaults);
           const thisTracks = await createLocalTracks({ audio: true, fake: true });
-          thisRoom = await connect(getToken('Alice'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
+          thisRoom = await connect(await getToken('Alice'), Object.assign({ tracks: thisTracks }, options, { networkQuality: nqConfig }));
 
           const localNqLevelPromise = new Promise(resolve => thisRoom.localParticipant.once('networkQualityLevelChanged', (level, stats) => {
             assert.equal(level, thisRoom.localParticipant.networkQualityLevel);
@@ -182,7 +182,7 @@ describe('LocalParticipant: networkQualityLevel', function() {
           }));
 
           const thatTracks = await createLocalTracks({ audio: true, fake: true });
-          thatRoom = await connect(getToken('Bob'), Object.assign({ tracks: thatTracks }, options));
+          thatRoom = await connect(await getToken('Bob'), Object.assign({ tracks: thatTracks }, options));
 
           let [localNqLevel, localNqStats] = await waitFor(localNqLevelPromise, 'networkQualityLevelChanged is now expected');
           verifyNetworkQualityStats(localNqStats, localNqLevel, nqConfig.local);

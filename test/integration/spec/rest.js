@@ -41,7 +41,7 @@ describe('REST APIs', function() {
     before(async () => {
       sid = await createRoom(randomName(), 'group-small');
       const options = Object.assign({ name: sid, tracks: [] }, defaults);
-      await Promise.all([1, 2, 3, 4].map(randomName).map(getToken).map(token => connect(token, options)));
+      await Promise.all((await Promise.all([1, 2, 3, 4].map(randomName).map(getToken))).map(token => connect(token, options)));
     });
 
     context('when a fifth Participant tries to connect to a Small Group Room', () => {
@@ -50,7 +50,7 @@ describe('REST APIs', function() {
       before(async () => {
         try {
           const options = Object.assign({ name: sid, tracks: [] }, defaults);
-          await connect(getToken(randomName()), options);
+          await connect(await getToken(randomName()), options);
         } catch (e) {
           error = e;
         }
@@ -74,7 +74,7 @@ describe('REST APIs', function() {
     before(async () => {
       sid = await createRoom(randomName(), defaults.topology);
       const options = Object.assign({ audio: true, name: sid, video: smallVideoConstraints }, defaults);
-      const tokens = [1, 2].map(randomName).map(getToken);
+      const tokens = await Promise.all([1, 2].map(randomName).map(getToken));
       rooms = await Promise.all(tokens.map(token => connect(token, options)));
       await Promise.all(rooms.map(room => participantsConnected(room, 1)));
       await Promise.all(rooms.map(({ participants }) => [...participants.values()][0]).map(participant => tracksSubscribed(participant, 2)));

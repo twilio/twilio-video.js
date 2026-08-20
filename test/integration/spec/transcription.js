@@ -86,7 +86,7 @@ const {
 
   it('should not receive transcription when no audio is published', async () => {
     const roomName = randomName();
-    const room = await connect(getToken(roomName), {
+    const room = await connect(await getToken(roomName), {
       ...defaults,
       name: roomName,
       receiveTranscriptions: true,
@@ -99,7 +99,7 @@ const {
 
   it('should not receive transcription when receiveTranscriptions is set to false', async () => {
     const roomName = randomName();
-    const room = await connect(getToken(roomName), {
+    const room = await connect(await getToken(roomName), {
       ...defaults,
       name: roomName,
       receiveTranscriptions: false,

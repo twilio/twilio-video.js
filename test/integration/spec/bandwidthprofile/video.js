@@ -182,7 +182,7 @@ describe('BandwidthProfileOptions: video', function() {
         const sid = await createRoom(randomName(), defaults.topology);
         try {
           const options = Object.assign({ name: sid, bandwidthProfile: { video: { trackSwitchOffMode } } }, defaults);
-          const room = await connect(getToken(randomName()), options);
+          const room = await connect(await getToken(randomName()), options);
           room.disconnect();
         } catch (err) {
           throw new Error(err.message + ': ' + sid);

@@ -208,7 +208,7 @@ describe('RemoteVideoTrack', function() {
       }, defaults);
 
       // Alice joins room first.
-      aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
+      aliceRoom = await waitFor(connect(await getToken('Alice'), connectOptions), 'Alice to connect to room');
 
       // JSDK-2707 caused track signaling to not get setup for late RemoteParticipant.
       // to force the repro this wait is needed.
@@ -216,7 +216,7 @@ describe('RemoteVideoTrack', function() {
       const roomSid = aliceRoom.sid;
 
       // Bob joins room later.
-      bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `Bob to join room: ${roomSid}`);
+      bobRoom = await waitFor(connect(await getToken('Bob'), connectOptions), `Bob to join room: ${roomSid}`);
 
       // wait for Bob and alice to see each other connected.
       await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${roomSid}`);
@@ -283,7 +283,7 @@ describe('RemoteVideoTrack', function() {
       }, defaults);
 
       // alice joins room first.
-      aliceRoom = await connect(getToken('Alice'), firstParticipantOptions);
+      aliceRoom = await connect(await getToken('Alice'), firstParticipantOptions);
       const roomSid = aliceRoom.sid;
 
       if (!dataTrackCreatedDuringConnect && dataTrackCreatedByFirstParticipant) {
@@ -297,7 +297,7 @@ describe('RemoteVideoTrack', function() {
       }, defaults);
 
       // bob joins room later.
-      bobRoom = await waitFor(connect(getToken('Bob'), secondParticipantOptions), `Bob to connect to room: ${roomSid}`);
+      bobRoom = await waitFor(connect(await getToken('Bob'), secondParticipantOptions), `Bob to connect to room: ${roomSid}`);
       assert.equal(bobRoom.sid, roomSid);
 
       if (!dataTrackCreatedDuringConnect && !dataTrackCreatedByFirstParticipant) {

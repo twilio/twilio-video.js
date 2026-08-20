@@ -121,7 +121,7 @@ describe(`in ${defaults.topology} room`, function()  {
         roomSid = await createRoom(randomName(), defaults.topology);
 
         assert.strictEqual(audioTrack.noiseCancellation.isEnabled, true, 'audioTrack.noiseCancellation is not enabled');
-        const aliceRoom = await connect(getToken('Alice'), {
+        const aliceRoom = await connect(await getToken('Alice'), {
           ...defaults,
           tracks: trackPublishedDuringConnect ? [audioTrack] : [],
           name: roomSid,
