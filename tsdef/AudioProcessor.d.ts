@@ -50,9 +50,9 @@ export interface AudioProcessor {
 
   /**
    * destroys the processor freeing up any resources
-   * @returns {Promise<void>}
+   * @returns {void}
    */
-  destroy: () => Promise<void>;
+  destroy: () => void;
 
   /**
    * enables/disables logging

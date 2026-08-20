@@ -2,6 +2,41 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.36.0 (in progress)
+====================
+
+New Features
+------------
+- Added support for `@twilio/krisp-audio-plugin` 2.x. Version 1.x remains supported, so
+  existing applications continue to work without changes.
+
+  The 2.x plugin expects the raw microphone signal, so disable the browser's own audio
+  processing when using it:
+
+  ```js
+  const localAudioTrack = await createLocalAudioTrack({
+    noiseCancellationOptions: {
+      sdkAssetsPath: 'path/to/hosted/twilio/krisp/audio/plugin/{version}/dist',
+      vendor: 'krisp'
+    },
+    // Required for 2.x only — omit these for 1.x.
+    echoCancellation: false,
+    noiseSuppression: false,
+    autoGainControl: false
+  });
+  ```
+
+Bug Fixes
+---------
+- Fixed loading of the noise cancellation plugin when the SDK is bundled by tools that
+  rewrite dynamic imports. The module path is now passed as an argument to the import
+  function instead of being embedded in its body.
+
+Changes
+-------
+- Updated `ws` to address a security advisory. This affects the Node.js build only;
+  browser builds do not include `ws`.
+
 2.35.0 (April 29, 2026)
 ====================
 
