@@ -56,7 +56,7 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
     async function setup() {
       sid = await createRoom(name, defaults.topology);
       const options = Object.assign({ name: sid, tracks: [] }, defaults);
-      const token = getToken(randomName());
+      const token = await getToken(randomName());
       [room, tracks] = await waitFor([
         connect(token, options),
         createLocalTracks({ audio: true, video: smallVideoConstraints })
@@ -136,7 +136,7 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
       before(async () => {
         anotherSid =  await createRoom(randomName(), defaults.topology);
         const options = Object.assign({ name: anotherSid, tracks: [] }, defaults);
-        const token = getToken(randomName());
+        const token = await getToken(randomName());
         [anotherRoom] = await waitFor([
           connect(token, options),
           setup()
@@ -301,14 +301,14 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           : [];
 
         const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
+        const thisToken = await getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         thisParticipant = thisRoom.localParticipant;
         await waitFor(tracksPublished(thisParticipant, tracks.length), `tracksPublished: ${sid}`);
 
         const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
+        const thoseTokens = await Promise.all(thoseIdentities.map(getToken));
         const thoseOptions = Object.assign({ tracks: [] }, options);
 
         thoseRooms = await waitFor(thoseTokens.map(thatToken => {
@@ -581,14 +581,14 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
 
         const tracks = [thisTrack];
         const thisIdentity = identities[0];
-        const thisToken = getToken(thisIdentity);
+        const thisToken = await getToken(thisIdentity);
         const theseOptions = Object.assign({ tracks }, options);
         thisRoom = await connect(thisToken, theseOptions);
         const alice  = thisRoom.localParticipant;
         await tracksPublished(alice, tracks.length);
 
         const thoseIdentities = identities.slice(1);
-        const thoseTokens = thoseIdentities.map(getToken);
+        const thoseTokens = await Promise.all(thoseIdentities.map(getToken));
         const thoseOptions = Object.assign({ tracks: [] }, options);
 
         const [bobRoom, charlieRoom] = await waitFor(thoseTokens.map(thatToken => {

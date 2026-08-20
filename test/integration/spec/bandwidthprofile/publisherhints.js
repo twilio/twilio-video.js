@@ -156,7 +156,7 @@ describe('preferredVideoCodecs = auto', function() {
       (isFirefox ? it.skip : it)(testCase, async () => {
         const roomSid = await createRoom(randomName(), defaults.topology, roomOptions);
         const aliceLocalVideo = await waitFor(createLocalVideoTrack(), 'alice local video track');
-        const room = await connect(getToken('Alice'), {
+        const room = await connect(await getToken('Alice'), {
           ...defaults,
           tracks: [aliceLocalVideo],
           name: roomSid,
@@ -201,7 +201,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().height, height);
         assert.strictEqual(aliceLocalVideo.mediaStreamTrack.getSettings().width, width);
 
-        const aliceRoom = await connect(getToken('Alice'), {
+        const aliceRoom = await connect(await getToken('Alice'), {
           ...defaults,
           tracks: [aliceLocalVideo],
           name: roomSid,
@@ -249,7 +249,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         const { height, width } = aliceLocalVideo.mediaStreamTrack.getSettings();
         assert.strictEqual(height, 720);
         assert.strictEqual(width, 1280);
-        aliceRoom = await connect(getToken('Alice'), {
+        aliceRoom = await connect(await getToken('Alice'), {
           ...defaults,
           tracks: [aliceLocalVideo],
           name: roomSid,
@@ -283,7 +283,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
         let bobRoom = null;
         before(async () => {
           aliceVideoTrackPublication = [...aliceRoom.localParticipant.tracks.values()][0];
-          bobRoom = await connect(getToken('Bob'), {
+          bobRoom = await connect(await getToken('Bob'), {
             ...defaults,
             tracks: [],
             name: roomSid,
@@ -342,7 +342,7 @@ if (defaults.topology !== 'peer-to-peer' && !isFirefox) {
           let charlieRoom = null;
           let aliceRemoteVideoForCharlie = null;
           before(async () => {
-            charlieRoom = await connect(getToken('Charlie'), {
+            charlieRoom = await connect(await getToken('Charlie'), {
               ...defaults,
               tracks: [],
               name: roomSid,

@@ -1,60 +1,61 @@
 'use strict';
 
-const { rest, getREST } = require('./post');
+const callVendor = require('./vendor');
 
 /**
- * Complete a Room using the REST API.
+ * Complete a Room using the REST API, via the vendor Function.
  * @param {string} nameOrSid
  * @returns {Promise<void>}
  */
 function completeRoom(nameOrSid) {
-  return rest(`/v1/Rooms/${nameOrSid}`, {
-    Status: 'completed'
-  });
-}
-
-function getRoom(roomSid) {
-  return getREST(`/v1/Rooms/${roomSid}`);
+  return callVendor('complete-room', { nameOrSid });
 }
 
 /**
- * Create a Room using the REST API.
+ * Get a Room using the REST API, via the vendor Function.
+ * @param {string} roomSid
+ * @returns {Promise<*>}
+ */
+function getRoom(roomSid) {
+  return callVendor('get-room', { roomSid });
+}
+
+/**
+ * Create a Room using the REST API, via the vendor Function.
  * @param {string} name
  * @param {'group' | 'group-small' | 'peer-to-peer'} type
  * @param {object} roomOptions
  * @returns {Promise<Room.SID>}
  */
 async function createRoom(name, type, roomOptions) {
-  const roomsResults =  await rest('/v1/Rooms', Object.assign({
-    Type: type,
-    UniqueName: name
-  }, roomOptions));
+  const roomResult = await callVendor('create-room', { name, type, roomOptions });
 
-  const { sid, status } = roomsResults;
+  const { sid, status } = roomResult;
   if (status === 'in-progress') {
     return sid;
   }
 
-  console.warn(`Could not create ${type} Room: ${name}: `, roomsResults);
+  console.warn(`Could not create ${type} Room: ${name}: `, roomResult);
   throw new Error(`Could not create ${type} Room: ${name}`);
 }
 
 /**
- * Update the subscription status of a RemoteTrack using the REST API.
+ * Update the subscription status of a RemoteTrack, via the vendor Function.
  * @param {RemoteTrackPublication} publication
  * @param {Room} room
  * @param {'subscribe' | 'unsubscribe'} trackAction
  */
 function subscribedTracks(publication, room, trackAction) {
   const { localParticipant, sid } = room;
-  return rest(`/v1/Rooms/${sid}/Participants/${localParticipant.sid}/SubscribedTracks`, {
-    Status: trackAction,
-    Track: publication.trackSid
+  return callVendor(`${trackAction}-track`, {
+    roomSid: sid,
+    participantSid: localParticipant.sid,
+    trackSid: publication.trackSid
   });
 }
 
 /**
- * Unsubscribe from a RemoteTrack using the REST API.
+ * Unsubscribe from a RemoteTrack, via the vendor Function.
  * @param {RemoteTrackPublication} publication
  * @param {Room} room
  */
@@ -63,7 +64,7 @@ function unsubscribeTrack(publication, room) {
 }
 
 /**
- * Subscribe to a RemoteTrack using the REST API.
+ * Subscribe to a RemoteTrack, via the vendor Function.
  * @param {RemoteTrackPublication} publication
  * @param {Room} room
  */
@@ -71,17 +72,12 @@ function subscribeTrack(publication, room) {
   return subscribedTracks(publication, room, 'subscribe');
 }
 
-
 function startRecording(room) {
-  return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
-    Rules: '[{ "type": "include", "all": "true" }]'
-  });
+  return callVendor('start-recording', { roomSid: room.sid });
 }
 
 function stopRecording(room) {
-  return rest(`/v1/Rooms/${room.sid}/RecordingRules`, {
-    Rules: '[{ "type": "exclude", "all": "true" }]'
-  });
+  return callVendor('stop-recording', { roomSid: room.sid });
 }
 
 exports.startRecording = startRecording;

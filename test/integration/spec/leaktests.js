@@ -38,10 +38,10 @@ function getTracksOfKind(participant, kind) {
       tracks: [localAudioTrack, localVideoTrack]
     }, defaults);
 
-    const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
+    const aliceRoom = await waitFor(connect(await getToken('Alice'), connectOptions), 'Alice to connect to room');
     async function joinRoomAndEnsureTracksStarted(i) {
       console.log(`${i}] connecting to room ${aliceRoom.sid}`);
-      const bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `${i}] Bob to join room: ${aliceRoom.sid}`);
+      const bobRoom = await waitFor(connect(await getToken('Bob'), connectOptions), `${i}] Bob to join room: ${aliceRoom.sid}`);
 
       // wait for Bob to see alice connected.
       await waitFor(participantsConnected(bobRoom, 1), `${i}] Bob to see Alice connected: ${aliceRoom.sid}`);
@@ -79,8 +79,8 @@ function getTracksOfKind(participant, kind) {
       tracks: []
     }, defaults);
 
-    const aliceRoom = await waitFor(connect(getToken('Alice'), connectOptions), 'Alice to connect to room');
-    const bobRoom = await waitFor(connect(getToken('Bob'), connectOptions), `Bob to join room: ${aliceRoom.sid}`);
+    const aliceRoom = await waitFor(connect(await getToken('Alice'), connectOptions), 'Alice to connect to room');
+    const bobRoom = await waitFor(connect(await getToken('Bob'), connectOptions), `Bob to join room: ${aliceRoom.sid}`);
     // wait for Bob to see alice connected.
     await waitFor(participantsConnected(bobRoom, 1), `Bob to see Alice connected: ${aliceRoom.sid}`);
 

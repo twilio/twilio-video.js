@@ -53,8 +53,8 @@ function runFrameworkTest(options) {
       return driver.quit();
     });
 
-    beforeEach(() => {
-      token = getToken('twilio-video.js-framework-test');
+    beforeEach(async () => {
+      token = await getToken('twilio-video.js-framework-test');
       environment = process.env.ENVIRONMENT;
 
       if (environment && environment !== 'prod') {

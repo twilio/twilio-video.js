@@ -90,7 +90,7 @@ async function setup(setupOptions) {
       video: smallVideoConstraints
     }, options, defaults);
 
-    const token = getToken(identity);
+    const token = await getToken(identity);
 
     if (region) {
       options.iceTransportPolicy = 'relay';
@@ -153,7 +153,7 @@ describe('VIDEO-8315: IceConnectionMonitor Test', function() {
       video: smallVideoConstraints
     }, defaults);
 
-    const room = await connect(getToken('Alice'), options);
+    const room = await connect(await getToken('Alice'), options);
     await waitForMediaFlow(room, true);
 
     // disconnect network
@@ -206,7 +206,7 @@ describe('network:', function() {
     const start = new Date();
     let room = null;
     try {
-      room = await connect(getToken('Alice'), options);
+      room = await connect(await getToken('Alice'), options);
     } catch (error) {
       // this exception is expected.
       const end = new Date();

@@ -64,13 +64,13 @@ describe('LocalParticipant: regressions', function() {
 
       // Answerer
       const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
-      thatRoom = await connect(getToken(randomName()), thoseOptions);
+      thatRoom = await connect(await getToken(randomName()), thoseOptions);
 
       [thisTrack1] = await createLocalTracks(constraints);
 
       // Offerer
       const theseOptions = Object.assign({ name: sid, tracks: [thisTrack1] }, defaults);
-      thisRoom = await connect(getToken(randomName()), theseOptions);
+      thisRoom = await connect(await getToken(randomName()), theseOptions);
       thisParticipant = thisRoom.localParticipant;
 
       await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
@@ -206,7 +206,7 @@ describe('LocalParticipant: regressions', function() {
 
         // Answerer
         const thoseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
-        thatRoom = await connect(getToken(randomName()), thoseOptions);
+        thatRoom = await connect(await getToken(randomName()), thoseOptions);
 
         [thisLocalTrack1, thisLocalTrack2] = [
           await createLocalTrack1(),
@@ -215,7 +215,7 @@ describe('LocalParticipant: regressions', function() {
 
         // Offerer
         const theseOptions = Object.assign({ name: sid, tracks: [] }, defaults);
-        thisRoom = await connect(getToken(randomName()), theseOptions);
+        thisRoom = await connect(await getToken(randomName()), theseOptions);
         thisParticipant = thisRoom.localParticipant;
 
         await Promise.all([thisRoom, thatRoom].map(room => participantsConnected(room, 1)));
@@ -341,11 +341,11 @@ describe('LocalParticipant: regressions', function() {
           name: sid,
           video: smallVideoConstraints
         }, initialEncodingParameters, defaults);
-        const token = getToken(randomName());
+        const token = await getToken(randomName());
         thisRoom = await connect(token, options);
 
         const thoseOptions = Object.assign({ name: options.name, tracks: [] }, defaults);
-        const thoseTokens = [randomName(), randomName()].map(getToken);
+        const thoseTokens = await Promise.all([randomName(), randomName()].map(getToken));
         thoseRooms = await Promise.all(thoseTokens.map(token => connect(token, thoseOptions)));
 
         await participantsConnected(thisRoom, thoseRooms.length);
@@ -461,7 +461,7 @@ describe('LocalParticipant: regressions', function() {
             track.once(event, () => {
               room.localParticipant.unpublishTrack(track);
             });
-            room = await connect(getToken('foo'), Object.assign({
+            room = await connect(await getToken('foo'), Object.assign({
               name: randomName(),
               tracks: [track]
             }, defaults));
@@ -487,7 +487,7 @@ describe('LocalParticipant: regressions', function() {
 
       // Step 1: Connect to a Room with a LocalAudioTrack.
       const options = Object.assign({ audio: true, fake: true, name: sid }, defaults);
-      const token = getToken(randomName());
+      const token = await getToken(randomName());
       room = await connect(token, options);
 
       // Step 2: Try to publish two LocalVideoTracks.
@@ -522,7 +522,7 @@ describe('LocalParticipant: regressions', function() {
       const tracks = [audioTrack, await createLocalVideoTrack()];
       let videoTrack;
 
-      const rooms = await Promise.all([randomName(), randomName()].map(getToken).map((token, i) => connect(token, Object.assign({
+      const rooms = await Promise.all((await Promise.all([randomName(), randomName()].map(getToken))).map((token, i) => connect(token, Object.assign({
         name,
         tracks: i === 0 ? [audioTrack] : tracks
       }, defaults))));
@@ -563,7 +563,7 @@ describe('LocalParticipant: regressions', function() {
     before(async () => {
       try {
         localAudioTrack = await createLocalAudioTrack({ fake: true });
-        const token = getToken(randomName());
+        const token = await getToken(randomName());
         const options = Object.assign({ tracks: [localAudioTrack] }, defaults);
 
         room = await setupRoom(token, options);
