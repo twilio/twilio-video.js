@@ -1,11 +1,11 @@
 import { DEFAULT_ENVIRONMENT, DEFAULT_LOGGER_NAME, DEFAULT_LOG_LEVEL, DEFAULT_REALM, SDK_NAME, SDK_VERSION } from '../util/constants';
 import type { PreflightOptions, PreflightTestReport, ProgressEvent, RTCIceCandidateStats, SelectedIceCandidatePairStats, Stats } from '../../tsdef/PreflightTypes';
+import { type TurnCredentials, getTurnCredentials } from './getturncredentials';
 import type { StatsReport } from '../../tsdef/types';
 import { Timer } from './timer';
 import type { TwilioError } from '../../tsdef/TwilioError';
 import { calculateMOS } from './mos';
 import { getCombinedConnectionStats } from './getCombinedConnectionStats';
-import { getTurnCredentials } from './getturncredentials';
 import { makeStat } from './makestat';
 import { syntheticAudio } from './syntheticaudio';
 import { syntheticVideo } from './syntheticvideo';
@@ -137,7 +137,7 @@ export class PreflightTest extends EventEmitter {
     this._testDuration = duration;
     this._instanceId = nInstances++;
     this._testTiming.start();
-    this._runPreflightTest(token, environment, wsServer);
+    this._runPreflightTest(token, environment, wsServer, region);
   }
 
   toString(): string {
@@ -151,7 +151,7 @@ export class PreflightTest extends EventEmitter {
     this._stopped = true;
   }
 
-  private _generatePreflightReport(collectedStats?: PreflightStats) : PreflightTestReportInternal  {
+  private _generatePreflightReport(collectedStats?: PreflightStats, selectedEdge?: string, configuredRegion?: string) : PreflightTestReportInternal  {
     this._testTiming.stop();
     return {
       testTiming: this._testTiming.getTimeMeasurement(),
@@ -170,6 +170,8 @@ export class PreflightTest extends EventEmitter {
       selectedIceCandidatePairStats: collectedStats ? collectedStats.selectedIceCandidatePairStats : null,
       iceCandidateStats: collectedStats ? collectedStats.iceCandidateStats : [],
       progressEvents: this._progressEvents,
+      selectedEdge,
+      configuredRegion,
       // NOTE(mpatwardhan): internal properties.
       mos: makeStat(collectedStats?.mos),
     };
@@ -318,9 +320,10 @@ export class PreflightTest extends EventEmitter {
     };
   }
 
-  private async _runPreflightTest(token: string, environment: string, wsServer: string) {
+  private async _runPreflightTest(token: string, environment: string, wsServer: string, configuredRegion: string) {
     let localTracks: MediaStreamTrack[] = [];
     let pcs: RTCPeerConnection[] = [];
+    let selectedEdge: string | undefined;
     const { reportToInsights } = this._setupInsights({ token, environment });
     try {
       let elements = [];
@@ -330,7 +333,8 @@ export class PreflightTest extends EventEmitter {
       this.emit('debug', { localTracks });
 
       this._connectTiming.start();
-      let iceServers = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
+      const { iceServers, selectedEdge: edge }: TurnCredentials = await this._executePreflightStep('Get turn credentials', () => getTurnCredentials(token, wsServer), new SignalingConnectionTimeoutError());
+      selectedEdge = edge;
 
       this._connectTiming.stop();
       this._updateProgress(PreflightProgress.connected);
@@ -395,12 +399,12 @@ export class PreflightTest extends EventEmitter {
       const collectedStats = await this._executePreflightStep('Collect stats for duration',
         () => this._collectRTCStatsForDuration(this._testDuration, initCollectedStats(), senderPC, receiverPC));
 
-      const report = await this._executePreflightStep('Generate report', () => this._generatePreflightReport(collectedStats));
+      const report = await this._executePreflightStep('Generate report', () => this._generatePreflightReport(collectedStats, selectedEdge, configuredRegion));
       reportToInsights({ report });
       this.emit('completed', report);
 
     } catch (error) {
-      const preflightReport = this._generatePreflightReport();
+      const preflightReport = this._generatePreflightReport(undefined, selectedEdge, configuredRegion);
       reportToInsights({ report: { ...preflightReport, error: error?.toString() } });
       this.emit('failed', error, preflightReport);
     } finally {
@@ -539,6 +543,9 @@ function initCollectedStats() : PreflightStats {
  * @property {SelectedIceCandidatePairStats} selectedIceCandidatePairStats - Stats for the ice candidates that were used for the connection.
  * @property {Array<ProgressEvent>} [progressEvents] - {@link ProgressEvent} events detected during the test.
  * Use this information to determine which steps were completed and which ones were not.
+ * @property {string} [selectedEdge] - The Twilio TURN edge that handled the connection (e.g. 'ashburn', 'dublin').
+ * Derived from the TURN server hostname in the iced response. Undefined if the test did not complete successfully.
+ * @property {string} [configuredRegion] - The region option passed to {@link runPreflight} (defaults to 'gll').
  */
 
 /**

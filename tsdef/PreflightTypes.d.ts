@@ -57,4 +57,6 @@ export interface PreflightTestReport {
   iceCandidateStats: RTCIceCandidateStats[];
   selectedIceCandidatePairStats: SelectedIceCandidatePairStats | null;
   progressEvents: ProgressEvent[];
+  selectedEdge?: string;
+  configuredRegion?: string;
 }

@@ -2,6 +2,13 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.35.1 (May 13, 2026)
+====================
+
+New Features
+------------
+- Added `selectedEdge` and `configuredRegion` to `PreflightTestReport`. `selectedEdge` indicates the Twilio TURN edge that handled the connection (e.g. `ashburn`, `dublin`), derived from the TURN server hostname in the `iced` response. `configuredRegion` reflects the `region` option passed to `runPreflight` (defaulting to `gll`).
+
 2.35.0 (April 29, 2026)
 ====================
 

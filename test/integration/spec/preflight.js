@@ -43,7 +43,7 @@ function assertIceCandidate(candidate) {
   assert.strictEqual(typeof candidate.candidateType, 'string', `candidate.candidateType=${typeof candidate.candidateType}`);
 }
 
-function validateReport(report)  {
+function validateReport(report, options = {})  {
   console.log('report: ', JSON.stringify(report, null, 4));
   assertTimeMeasurement(report.testTiming);
   assertTimeMeasurement(report.networkTiming.connect);
@@ -56,6 +56,9 @@ function validateReport(report)  {
   assert(report.iceCandidateStats.length > 0);
   assertProgressEvents(report.progressEvents);
   report.iceCandidateStats.forEach(iceCandidate => assertIceCandidate(iceCandidate));
+  assert.strictEqual(typeof report.selectedEdge, 'string', 'report.selectedEdge should be a string');
+  assert(report.selectedEdge.length > 0, 'report.selectedEdge should not be empty');
+  assert.strictEqual(report.configuredRegion, options.region || 'gll', `report.configuredRegion should be ${options.region || 'gll'}`);
 }
 
 describe('preflight', function() {
@@ -78,7 +81,7 @@ describe('preflight', function() {
     });
 
     preflight.on('completed', report => {
-      validateReport(report);
+      validateReport(report, options);
 
       assert.deepStrictEqual(expectedProgress.sort(), progressReceived.sort());
       deferred.resolve();
@@ -127,6 +130,8 @@ describe('preflight', function() {
 
     assert.strictEqual(errorResult.toString(), 'TwilioError 20101: Invalid Access Token');
     assert.strictEqual(typeof reportResult, 'object');
+    assert.strictEqual(reportResult.configuredRegion, 'gll', 'failure report should include configuredRegion');
+    assert.strictEqual(reportResult.selectedEdge, undefined, 'failure report should not include selectedEdge');
   });
 });
 
