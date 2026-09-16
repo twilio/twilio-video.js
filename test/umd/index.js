@@ -33,18 +33,35 @@ describe('UMD', function() {
       ['unminified', 'index'],
       ['minified', 'min']
     ].forEach(([mode, filename]) => {
-      it(`should receive a video object with ${publicVars.join(', ')} properties (${mode})`, done => {
-        page.on('console', async msg => {
-          const res = msg.args()[0] ? await msg.args()[0].jsonValue() : { reason: 'Unknown' };
-          if (res.status === 'success') {
-            if (res.version === version) {
-              return done();
+      it(`should receive a video object with ${publicVars.join(', ')} properties (${mode})`, async () => {
+        const result = new Promise((resolve, reject) => {
+          const onConsole = async msg => {
+            const handle = msg.args()[0];
+            if (!handle) {
+              return;
             }
-            return done(new Error(`Version mismatch. res.version=${res.version}, package version=${version}`));
-          }
-          return done(new Error(res.reason));
+            let res;
+            try {
+              res = await handle.jsonValue();
+            } catch {
+              return;
+            }
+            if (!res || !res.status) {
+              return;
+            }
+            page.off('console', onConsole);
+            if (res.status !== 'success') {
+              reject(new Error(res.reason));
+            } else if (res.version !== version) {
+              reject(new Error(`Version mismatch. res.version=${res.version}, package version=${version}`));
+            } else {
+              resolve();
+            }
+          };
+          page.on('console', onConsole);
         });
-        page.goto(`file:${join(__dirname, 'require-browser', `${filename}.html`)}`);
+        await page.goto(`file:${join(__dirname, 'require-browser', `${filename}.html`)}`);
+        await result;
       });
     });
 
