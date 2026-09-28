@@ -23,4 +23,19 @@ describe('dynamicImport', () => {
 
     assert.strictEqual(global.__dynamicImportProbe, false);
   });
+
+  it('does not use the Function constructor when loaded', () => {
+    global.location = 'https://localhost/';
+
+    // Simulate a Content Security Policy without 'unsafe-eval', which blocks the Function constructor.
+    const { Function: OriginalFunction } = global;
+    global.Function = function() {
+      throw new EvalError('Evaluating a string as JavaScript is not allowed');
+    };
+    try {
+      assert.doesNotThrow(() => require(MODULE_PATH));
+    } finally {
+      global.Function = OriginalFunction;
+    }
+  });
 });
