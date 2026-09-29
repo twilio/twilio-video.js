@@ -4,6 +4,7 @@
 
 const isDocker = require('is-docker')();
 const { basename, resolve: resolvePath } = require('path');
+const vendLocally = require('../test/lib/localvendor');
 
 function getTestFiles(config, defaultFile) {
   let files = [];
@@ -39,10 +40,20 @@ async function mintVendorToken() {
   return body.value;
 }
 
+// Rejects DNS-rebinding requests, which arrive same-origin under a foreign Host.
+function hasLocalHostHeader(request) {
+  return /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(request.headers.host);
+}
+
 function createMintVendorTokenMiddleware() {
   return function(request, response, next) {
     if (request.url !== '/mint-vendor-token') {
       next();
+      return;
+    }
+    if (!hasLocalHostHeader(request)) {
+      response.writeHead(403, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify({ error: 'mintVendorToken: expected a localhost Host header' }));
       return;
     }
     mintVendorToken().then(token => {
@@ -51,6 +62,39 @@ function createMintVendorTokenMiddleware() {
     }, error => {
       response.writeHead(500, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify({ error: error.message }));
+    });
+  };
+}
+
+/**
+ * Serve vending requests from local credentials when VENDOR_URL is unset.
+ * JSON-only, so cross-origin pages hit a CORS preflight this route never grants.
+ */
+function createVendLocallyMiddleware() {
+  return function(request, response, next) {
+    if (request.url !== '/vend-locally') {
+      next();
+      return;
+    }
+    const respond = (status, body) => {
+      response.writeHead(status, { 'Content-Type': 'application/json' });
+      response.end(JSON.stringify(body));
+    };
+    if (!hasLocalHostHeader(request)) {
+      respond(403, { error: 'localVendor: expected a localhost Host header' });
+      return;
+    }
+    if (request.method !== 'POST' || request.headers['content-type'] !== 'application/json') {
+      respond(415, { error: 'localVendor: expected a JSON POST' });
+      return;
+    }
+    const chunks = [];
+    request.on('data', chunk => chunks.push(chunk));
+    request.on('end', () => {
+      Promise.resolve().then(() => {
+        const { action, ...params } = JSON.parse(Buffer.concat(chunks).toString());
+        return vendLocally(action, params);
+      }).then(({ status, body }) => respond(status, body), error => respond(500, { error: error.message }));
     });
   };
 }
@@ -144,8 +188,11 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
     config.set({
       basePath: '',
       frameworks: ['browserify', 'mocha'],
-      plugins: ['karma-*', { 'middleware:mintVendorToken': ['factory', createMintVendorTokenMiddleware] }],
-      beforeMiddleware: ['mintVendorToken'],
+      plugins: ['karma-*', {
+        'middleware:mintVendorToken': ['factory', createMintVendorTokenMiddleware],
+        'middleware:vendLocally': ['factory', createVendLocallyMiddleware]
+      }],
+      beforeMiddleware: ['mintVendorToken', 'vendLocally'],
       client: {
         mocha: mochaOptions
       },
@@ -184,9 +231,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
         xmlVersion: null // use '1' if reporting to be per SonarQube 6.2 XML format
       },
       port: 9876,
-      // Karma's dev server exposes an unauthenticated route for OIDC token minting
-      // (createMintVendorTokenMiddleware, below); binding it to loopback-only keeps
-      // that route unreachable from outside this machine/container.
+      // Loopback-only, since the vending middlewares above are unauthenticated.
       listenAddress: '127.0.0.1',
       hostname: 'localhost',
       colors: true,
