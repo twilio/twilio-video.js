@@ -13,6 +13,7 @@ const {
   isChromeScreenShareTrack,
   createRoomConnectingEventPayload,
   createRoomConnectedEventPayload,
+  isNonArrayObject,
 } = require('../../../../lib/util');
 
 const { sessionSID } = require('../../../../lib/util/sid');
@@ -141,6 +142,11 @@ describe('util', () => {
         expectedPayload: { networkQualityConfiguration: { local: 0, remote: 0 } },
       },
       {
+        testCase: 'networkQuality null',
+        connectOptions: { networkQuality: null },
+        expectedPayload: { networkQualityConfiguration: { local: 0, remote: 0 } },
+      },
+      {
         testCase: 'networkQuality custom',
         connectOptions: { networkQuality: { local: 2, remote: 2 } },
         expectedPayload: { networkQualityConfiguration: { local: 2, remote: 2 } },
@@ -249,6 +255,24 @@ describe('util', () => {
         assert.equal(event.level, 'info');
         assert.equal(event.group, 'room');
         assert.deepStrictEqual(event.payload, expectedOutput);
+      });
+    });
+  });
+
+  describe('isNonArrayObject', () => {
+    [
+      [{}, true],
+      [{ foo: 'bar' }, true],
+      [null, false],
+      [undefined, false],
+      [[], false],
+      [['foo'], false],
+      ['foo', false],
+      [1, false],
+      [true, false],
+    ].forEach(([value, expected]) => {
+      it(`should return ${expected} for ${JSON.stringify(value)}`, () => {
+        assert.strictEqual(isNonArrayObject(value), expected);
       });
     });
   });

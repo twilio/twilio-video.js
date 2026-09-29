@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.36.1 (in progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed an issue where passing `null` as the `options` argument to `connect()` threw a synchronous `TypeError` ("Cannot read properties of null") instead of returning a rejected promise. Passing `networkQuality: null` in `ConnectOptions` no longer throws while the SDK builds its connection events, and is now treated the same as `networkQuality: false`.
+
 2.36.0 (September 11, 2026)
 ====================
 

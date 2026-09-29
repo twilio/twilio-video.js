@@ -31,7 +31,7 @@ const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xI
 describe('connect', () => {
   describe('called with options that is not an object', () => {
     it('should return a rejected CancelablePromise', async () => {
-      const invalidOptions = [1, 'foo', false, ['bar']];
+      const invalidOptions = [null, 1, 'foo', false, ['bar']];
       const failedConnectAttempts = invalidOptions.map(options => connect(token, options).then(() => {
         throw new Error('Unexpected resolution');
       }, error => error));
