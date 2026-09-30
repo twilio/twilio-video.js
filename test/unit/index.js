@@ -37,6 +37,7 @@ require('./spec/media/track/localmediatrack');
 require('./spec/media/track/localaudiotrack');
 require('./spec/media/track/noisecancellationimpl');
 require('./spec/media/track/localvideotrack');
+require('./spec/media/track/restartwheninadvertentlystopped');
 require('./spec/media/track/localtrackpublication');
 require('./spec/media/track/receiver');
 require('./spec/media/track/remotedatatrack');
