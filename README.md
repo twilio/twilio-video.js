@@ -200,6 +200,11 @@ BROWSER=<Browser you'd like to use> \
 npm run test:integration
 ```
 
+When run this way, the local Karma server mints Access Tokens and makes REST API
+calls with these credentials, so they never reach the browser. If `VENDOR_URL` is
+set, requests go to that credential service instead and the credentials above are
+ignored. CI uses this.
+
 You can add these optional variables to control the integration test execution :
 - Topology : Decides which type of rooms to test against.
 - Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code to debug.

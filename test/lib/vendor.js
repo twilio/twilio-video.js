@@ -57,7 +57,8 @@ function getVendorToken() {
 }
 
 /**
- * Call the e2e credential-vending Function.
+ * Call the credential vendor at VENDOR_URL, or the local karma middleware
+ * (see test/lib/localvendor.js) when it's unset.
  * @param {string} action
  * @param {object} params
  * @returns {Promise<*>} the parsed JSON response body
@@ -65,20 +66,16 @@ function getVendorToken() {
 async function callVendor(action, params) {
   const vendorUrl = process.env.VENDOR_URL;
 
-  if (!vendorUrl) {
-    throw new Error('callVendor: VENDOR_URL is not set');
+  const headers = { 'Content-Type': 'application/json' };
+  if (vendorUrl) {
+    headers.Authorization = `Bearer ${await getVendorToken()}`;
   }
-
-  const vendorToken = await getVendorToken();
 
   const body = JSON.stringify(Object.assign({ action }, params));
 
-  const response = await fetch(vendorUrl, {
+  const response = await fetch(vendorUrl || '/vend-locally', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${vendorToken}`
-    },
+    headers,
     body
   });
 
