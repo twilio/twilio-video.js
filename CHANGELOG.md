@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.37.0 (In Progress)
+====================
+
+New Features
+------------
+### Enhanced Telemetry
+- When `insights` is enabled, the SDK now reports the error that caused a Room to disconnect (its `code` and `message`). Disconnects without an error, such as calling `room.disconnect()`, report no error, as before.
+
 2.36.0 (September 11, 2026)
 ====================
 
