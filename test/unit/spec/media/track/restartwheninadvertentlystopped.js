@@ -64,18 +64,21 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
     return mediaStreamTrack;
   }
 
-  function createTrack(LocalMediaTrack, kind, options = {}) {
-    const getUserMedia = sinon.spy(constraints => fakeGetUserMedia(constraints).then(stream => {
+  function quietGetUserMedia(constraints) {
+    return fakeGetUserMedia(constraints).then(stream => {
       stream.getTracks().forEach(stopQuietly);
       return stream;
-    }));
+    });
+  }
+
+  function createTrack(LocalMediaTrack, kind, options = {}) {
+    const getUserMedia = sinon.spy(options.getUserMedia || quietGetUserMedia);
     const gUMSilentTrackWorkaround = sinon.spy((_log, gum, constraints) => gum(constraints));
     const track = new LocalMediaTrack(stopQuietly(new MediaStreamTrack(kind)), Object.assign({
       log,
-      getUserMedia,
       gUMSilentTrackWorkaround,
       workaroundWebKitBug1208516: true
-    }, options));
+    }, options, { getUserMedia }));
     sinon.spy(track, '_restart');
     return { track, getUserMedia, gUMSilentTrackWorkaround };
   }
@@ -98,10 +101,11 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
 
   describe('LocalAudioTrack', () => {
     let track;
+    let getUserMedia;
     let gUMSilentTrackWorkaround;
 
     beforeEach(() => {
-      ({ track, gUMSilentTrackWorkaround } = createTrack(LocalAudioTrack, 'audio'));
+      ({ track, getUserMedia, gUMSilentTrackWorkaround } = createTrack(LocalAudioTrack, 'audio'));
     });
 
     afterEach(() => {
@@ -114,8 +118,8 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
       await waitForSometime(100);
       sinon.assert.calledOnce(track._restart);
       sinon.assert.calledWith(track._restart, undefined, { silentTrackRetries: 0 });
-      sinon.assert.calledOnce(gUMSilentTrackWorkaround);
-      assert.strictEqual(gUMSilentTrackWorkaround.args[0][3], 0);
+      sinon.assert.calledOnce(getUserMedia);
+      sinon.assert.notCalled(gUMSilentTrackWorkaround);
     });
 
     it('does not check silence on the first "unmute" of a track re-acquired for silence', async () => {
@@ -224,8 +228,13 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
     });
 
     // sinon 4 has no clock.tickAsync(): fake the timers and Date, and let promises settle between ticks.
+    // The time of the last microphone acquisition is shared by all tracks, so each fake clock starts
+    // well after any earlier acquisition (at real time, or on a previous fake clock); otherwise it
+    // would look recent.
+    let fakeNow = 0;
     async function withFakeClock(fn) {
-      const clock = sinon.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      const now = Math.max(fakeNow, Date.now() + 10000);
+      const clock = sinon.useFakeTimers({ now, toFake: ['setTimeout', 'clearTimeout', 'Date'] });
       const flush = () => new Promise(resolve => setImmediate(resolve));
       const tick = ms => Array.from({ length: Math.ceil(ms / 10) }).reduce(
         promise => promise.then(() => { clock.tick(10); return flush(); }),
@@ -233,13 +242,25 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
       try {
         await fn(tick);
       } finally {
+        fakeNow = Date.now() + 10000;
         clock.restore();
       }
     }
 
     // On iOS, acquiring the microphone while the camera is capturing mutes the camera.
     function acquireMicrophone() {
-      createTrack(LocalAudioTrack, 'audio', { workaroundWebKitBug1208516: false }).track.stop();
+      createTrack(LocalAudioTrack, 'audio', {
+        isCreatedByCreateLocalTracks: true,
+        workaroundWebKitBug1208516: false
+      }).track.stop();
+    }
+
+    // Rejects the first `failures` calls, as getUserMedia does when the camera is unavailable.
+    function getUserMediaFailing(failures) {
+      let calls = 0;
+      return constraints => ++calls <= failures
+        ? Promise.reject(new Error('NotReadableError'))
+        : quietGetUserMedia(constraints);
     }
 
     it('restarts a camera still muted 1 s after a "mute" that followed a microphone acquisition', () => withFakeClock(async tick => {
@@ -281,6 +302,104 @@ describe('restartWhenInadvertentlyStopped (VIDEO-14942)', () => {
       track.mediaStreamTrack.setMuted(true);
       await tick(1300);
       sinon.assert.calledTwice(track._restart);
+    }));
+
+    // A WebAudio destination track has no capture device, so its settings have no deviceId.
+    function createNonCaptureAudioTrack() {
+      const mediaStreamTrack = stopQuietly(new MediaStreamTrack('audio'));
+      mediaStreamTrack.getSettings = () => ({});
+      return new LocalAudioTrack(mediaStreamTrack, { log, workaroundWebKitBug1208516: false });
+    }
+
+    it('does not count a LocalAudioTrack with no capture device (e.g. WebAudio) as a microphone acquisition', () => withFakeClock(async tick => {
+      ({ track } = createTrack(LocalVideoTrack, 'video'));
+      createNonCaptureAudioTrack().stop();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300);
+      sinon.assert.notCalled(track._restart);
+    }));
+
+    it('counts a LocalAudioTrack the app created from its own microphone MediaStreamTrack as a microphone acquisition', () => withFakeClock(async tick => {
+      ({ track } = createTrack(LocalVideoTrack, 'video'));
+      new LocalAudioTrack(stopQuietly(new MediaStreamTrack('audio')), { log, workaroundWebKitBug1208516: false }).stop();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300);
+      sinon.assert.calledOnce(track._restart);
+    }));
+
+    it('does not restart again a camera that comes back muted from a restart on page visible', () => withFakeClock(async tick => {
+      ({ track } = createTrack(LocalVideoTrack, 'video', {
+        // A call holds the camera: every re-acquired camera track starts muted.
+        getUserMedia: constraints => quietGetUserMedia(constraints).then(stream => {
+          stream.getTracks()[0].muted = true;
+          return stream;
+        })
+      }));
+      track.mediaStreamTrack.muted = true;
+      setVisibility('hidden');
+      // The audio track is re-acquired on the same visibility change.
+      acquireMicrophone();
+      setVisibility('visible');
+      await tick(300);
+      sinon.assert.calledOnce(track._restart);
+
+      await tick(2000);
+      sinon.assert.calledOnce(track._restart);
+    }));
+
+    it('does not listen to the re-acquired camera when the track was stopped during the restart', () => withFakeClock(async tick => {
+      let resolveGetUserMedia;
+      ({ track } = createTrack(LocalVideoTrack, 'video', {
+        getUserMedia: constraints => new Promise(resolve => { resolveGetUserMedia = () => resolve(quietGetUserMedia(constraints)); })
+      }));
+      acquireMicrophone();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300);
+      sinon.assert.calledOnce(track._restart);
+
+      track.stop();
+      resolveGetUserMedia();
+      await tick(100);
+      silentVideo = true;
+      unmute(track);
+      await tick(300);
+      sinon.assert.calledOnce(track._restart);
+    }));
+
+    it('does not retry a failed muted-camera restart after the track is stopped', () => withFakeClock(async tick => {
+      let rejectGetUserMedia;
+      ({ track } = createTrack(LocalVideoTrack, 'video', {
+        getUserMedia: () => new Promise((resolve, reject) => { rejectGetUserMedia = reject; })
+      }));
+      acquireMicrophone();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300);
+      sinon.assert.calledOnce(track._restart);
+
+      track.stop();
+      rejectGetUserMedia(new Error('NotReadableError'));
+      await tick(10000);
+      sinon.assert.calledOnce(track._restart);
+    }));
+
+    it('retries a muted-camera restart whose getUserMedia fails, so the camera does not stay stopped', () => withFakeClock(async tick => {
+      ({ track } = createTrack(LocalVideoTrack, 'video', { getUserMedia: getUserMediaFailing(2) }));
+      acquireMicrophone();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300);
+      assert.strictEqual(track.isStopped, true);
+
+      await tick(1000 + 2000 + 500);
+      sinon.assert.calledThrice(track._restart);
+      assert.strictEqual(track.isStopped, false);
+    }));
+
+    it('stops retrying a muted-camera restart after 3 failed retries', () => withFakeClock(async tick => {
+      ({ track } = createTrack(LocalVideoTrack, 'video', { getUserMedia: getUserMediaFailing(Infinity) }));
+      acquireMicrophone();
+      track.mediaStreamTrack.setMuted(true);
+      await tick(1300 + 1000 + 2000 + 4000 + 10000);
+      assert.strictEqual(track._restart.callCount, 4);
     }));
 
     it('does not restart a camera that is unmuted within 1 s', () => withFakeClock(async tick => {
