@@ -2,6 +2,14 @@ The Twilio Programmable Video SDKs use [Semantic Versioning](http://www.semver.o
 
 **Version 1.x reached End of Life on September 8th, 2021.** See the changelog entry [here](https://www.twilio.com/changelog/end-of-life-complete-for-unsupported-versions-of-the-programmable-video-sdk). Support for the 1.x version ended on December 4th, 2020.
 
+2.36.1 (In Progress)
+====================
+
+Bug Fixes
+---------
+
+- Fixed an issue where, on iOS, the local video flickered and the microphone was acquired repeatedly while another app, such as a phone or FaceTime call, was using the microphone. The SDK now re-acquires a silent microphone track once instead of retrying, and restarts the camera if acquiring the microphone muted it.
+
 2.36.0 (September 11, 2026)
 ====================
 
