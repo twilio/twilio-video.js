@@ -1,7 +1,7 @@
 twilio-video.js
 ===============
 
-[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![CircleCI](https://dl.circleci.com/status-badge/img/gh/twilio/twilio-video.js/tree/master.svg?style=shield)](https://circleci.com/gh/twilio/twilio-video.js/tree/master)
+[![NPM](https://img.shields.io/npm/v/twilio-video.svg)](https://www.npmjs.com/package/twilio-video) [![CI](https://github.com/twilio/twilio-video.js/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/twilio/twilio-video.js/actions/workflows/ci.yml)
 
 twilio-video.js allows you to add real-time voice and video to your web apps.
 
@@ -73,7 +73,7 @@ Releases of twilio-video.js are hosted on a CDN, and you can include these
 directly in your web app using a &lt;script&gt; tag.
 
 ```html
-<script src="//sdk.twilio.com/js/video/releases/2.36.0/twilio-video.min.js"></script>
+<script src="//sdk.twilio.com/js/video/releases/2.36.1/twilio-video.min.js"></script>
 ```
 
 Using this method, twilio-video.js will set a browser global:
@@ -199,6 +199,11 @@ API_KEY_SECRET=<Your api key secret> \
 BROWSER=<Browser you'd like to use> \
 npm run test:integration
 ```
+
+When run this way, the local Karma server mints Access Tokens and makes REST API
+calls with these credentials, so they never reach the browser. If `VENDOR_URL` is
+set, requests go to that credential service instead and the credentials above are
+ignored. CI uses this.
 
 You can add these optional variables to control the integration test execution :
 - Topology : Decides which type of rooms to test against.

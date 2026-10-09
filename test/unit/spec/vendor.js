@@ -57,12 +57,21 @@ describe('callVendor', () => {
     await assert.rejects(callVendor('mint-token', { identity: 'Alice' }), /invalid OIDC claim/);
   });
 
-  it('rejects when VENDOR_URL is not set', async () => {
+  it('POSTs to the local vending middleware, without minting a vendor token, when VENDOR_URL is not set', async () => {
     delete process.env.VENDOR_URL;
     delete require.cache[require.resolve('../../lib/vendor')];
-    delete require.cache[require.resolve('../../env')];
-    const callVendorNoUrl = require('../../lib/vendor');
-    await assert.rejects(callVendorNoUrl('mint-token', {}), /VENDOR_URL/);
+    const callVendorLocal = require('../../lib/vendor');
+    fetchStub.withArgs('/vend-locally').resolves(fakeResponse(200, JSON.stringify({ token: 'local-jwt' })));
+
+    const result = await callVendorLocal('mint-token', { identity: 'Alice' });
+    assert.equal(result.token, 'local-jwt');
+
+    const [, config] = fetchStub.withArgs('/vend-locally').firstCall.args;
+    assert.equal(config.method, 'POST');
+    assert.equal(config.headers.Authorization, undefined);
+    assert.equal(config.headers['Content-Type'], 'application/json');
+    assert.deepStrictEqual(JSON.parse(config.body), { action: 'mint-token', identity: 'Alice' });
+    assert.equal(fetchStub.withArgs('/mint-vendor-token').callCount, 0);
   });
 
   it('rejects when minting a vendor token fails', async () => {

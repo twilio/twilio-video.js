@@ -94,3 +94,4 @@ function postECS(token) {
 }
 
 exports.ecs = postECS;
+exports.stringifyFormData = stringifyFormData;

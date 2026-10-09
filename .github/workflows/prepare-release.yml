@@ -148,9 +148,13 @@ jobs:
             exit 1
           fi
 
-          # CHANGELOG headings read "2.35.0 (April 29, 2026)".
-          if ! grep -q "^${RELEASE_VERSION} (" CHANGELOG.md; then
-            echo "::error::CHANGELOG.md has no ${RELEASE_VERSION} entry — add one before releasing."
+          # CHANGELOG headings read "2.35.0 (April 29, 2026)". Requiring a
+          # 4-digit year rejects the "2.35.0 (in progress)" placeholder, which a
+          # bare "^${RELEASE_VERSION} (" prefix would accept, shipping a tarball
+          # and tag whose top entry still says the release is unreleased.
+          ESCAPED_VERSION=$(printf '%s' "$RELEASE_VERSION" | sed 's/[.]/\\./g')
+          if ! grep -qE "^${ESCAPED_VERSION} \(.*[0-9]{4}\)" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no dated ${RELEASE_VERSION} entry (still \"in progress\"?); date it before releasing."
             exit 1
           fi
 
@@ -329,22 +333,28 @@ jobs:
         with:
           node-version: 22
 
-      # The inverse of the release commit: bump to the next -dev version and drop
-      # the built tree again, returning the branch to a clean working state.
+      # The inverse of the release commit: drop the built tree again, and bump to
+      # the next -dev version when one was given. Untracking the tree is not
+      # optional, so this runs either way; only the bump is conditional.
       # Pushed after the tag, so the tag keeps pointing at the built commit.
-      - name: Commit the development version
-        if: ${{ inputs.development_version != '' }}
+      - name: Restore the branch to a clean state
         env:
           DEVELOPMENT_VERSION: ${{ inputs.development_version }}
         run: |
           set -euo pipefail
 
-          npm version --no-git-tag-version --ignore-scripts "$DEVELOPMENT_VERSION"
+          if [ -n "${DEVELOPMENT_VERSION:-}" ]; then
+            npm version --no-git-tag-version --ignore-scripts "$DEVELOPMENT_VERSION"
+            git add package.json package-lock.json
+            COMMIT_MESSAGE="$DEVELOPMENT_VERSION"
+          else
+            COMMIT_MESSAGE="Remove ${RELEASE_VERSION} build output"
+          fi
+
           git rm -r --quiet --ignore-unmatch dist es5
-          git add package.json package-lock.json
-          git commit --no-verify -m "$DEVELOPMENT_VERSION"
+          git commit --no-verify -m "$COMMIT_MESSAGE"
           git push origin "HEAD:${GITHUB_REF}"
-          echo "::notice::Development commit: $(git rev-parse HEAD)"
+          echo "::notice::Post-release commit: $(git rev-parse HEAD)"
 
       # Against origin, not local refs: comparing the tag this job just created to
       # its own HEAD would be true by construction.

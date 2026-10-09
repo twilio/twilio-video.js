@@ -9,6 +9,7 @@ const ParticipantSignaling = require('../../../lib/signaling/participant');
 const LocalParticipantSignaling = require('../../../lib/signaling/v2/localparticipant');
 const RemoteParticipantSignaling = require('../../../lib/signaling/remoteparticipant');
 const RoomSignaling = require('../../../lib/signaling/room');
+const telemetry = require('../../../lib/insights/telemetry');
 
 const {
   MediaConnectionError,
@@ -252,6 +253,40 @@ describe('Room', () => {
         assert.equal(spy.args[0][0], room);
         assert(spy.args[0][1] instanceof SignalingConnectionDisconnectedError);
         assert.equal(spy.args[0][1].code, 53001);
+      });
+    });
+
+    context('telemetry', () => {
+      const disconnectedEvent = { group: 'room', name: 'disconnected' };
+      let errorSpy;
+      let infoSpy;
+
+      beforeEach(() => {
+        errorSpy = sinon.spy(telemetry, 'error');
+        infoSpy = sinon.spy(telemetry, 'info');
+      });
+
+      afterEach(() => {
+        errorSpy.restore();
+        infoSpy.restore();
+      });
+
+      it('should emit a room error event with the error code and message before the room disconnected event', () => {
+        signaling.preempt('disconnected', null, [new MediaConnectionError()]);
+        sinon.assert.calledOnce(errorSpy);
+        sinon.assert.calledWithExactly(errorSpy, {
+          group: 'room',
+          name: 'error',
+          payload: { code: 53405, message: 'Media connection failed or Media activity ceased' }
+        });
+        sinon.assert.calledWithExactly(infoSpy, disconnectedEvent);
+        assert(errorSpy.calledBefore(infoSpy.withArgs(disconnectedEvent)));
+      });
+
+      it('should emit only the room disconnected event when disconnected without an error', () => {
+        signaling.preempt('disconnected');
+        sinon.assert.notCalled(errorSpy);
+        sinon.assert.calledWithExactly(infoSpy, disconnectedEvent);
       });
     });
 
