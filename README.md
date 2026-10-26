@@ -11,7 +11,7 @@ twilio-video.js allows you to add real-time voice and video to your web apps.
 * [Quickstart and Examples](//github.com/twilio/video-quickstart-js/tree/master)
 * [React-based Multi-party Video App](https://github.com/twilio/twilio-video-app-react)
 
-**We want your feedback!** Please feel free to open a [GitHub issue](https://github.com/twilio/twilio-video.js/issues) for suggested improvements or feature requests. If you need technical support, contact [help@twilio.com](mailto:help@twilio.com).
+For bug reports, feature feedback, and support options, see [Community Contributions and Support](#community-contributions-and-support).
 
 Changelog
 ---------
@@ -235,12 +235,24 @@ Related
 - [Twilio Video Room Monitor](https://github.com/twilio/twilio-video-room-monitor.js)
 - [Twilio RTC Diagnostics SDK](https://github.com/twilio/rtc-diagnostics)
 
-Contributing
-------------
+<a id="contributing"></a>
 
-Bug fixes welcome! If you're not familiar with the GitHub pull
-request/contribution process,
-[this is a nice tutorial](https://gun.io/blog/how-to-github-fork-branch-and-pull-request/).
+Community Contributions and Support
+-----------------------------------
+
+This repository is publicly available and maintained by Twilio under a limited external contribution model.
+
+Due to limited maintenance capacity, external pull requests are not currently accepted.
+
+GitHub Issues may be used to report reproducible bugs or provide feature feedback about this SDK. Issues are reviewed on a best-effort basis, with no SLA or guaranteed response.
+
+GitHub Issues are not an official Twilio support channel. For production issues, general usage questions, or account-specific assistance, please contact [Twilio Support](https://help.twilio.com/). If you have a Twilio account manager, you may also escalate through them.
+
+Do not share [Personally Identifiable Information (PII)](https://www.twilio.com/docs/glossary/what-is-personally-identifiable-information-pii) or sensitive account information, including access tokens, API keys, and credentials, in issues, logs, or screenshots.
+
+Report security vulnerabilities privately through [Twilio's Vulnerability Disclosure Program](https://www.twilio.com/en-us/security/vulnerability-disclosure-program), rather than public GitHub Issues.
+
+See [CONTRIBUTING.md](https://github.com/twilio/twilio-video.js/blob/master/CONTRIBUTING.md) for reporting guidance.
 
 License
 -------
