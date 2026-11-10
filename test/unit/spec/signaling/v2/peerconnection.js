@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const util = require('../../../../../lib/webrtc/util');
 
 const EventTarget = require('../../../../../lib/eventtarget');
+const telemetry = require('../../../../../lib/insights/telemetry');
 const IceConnectionMonitor = require('../../../../../lib/signaling/v2/iceconnectionmonitor.js');
 const PeerConnectionV2 = require('../../../../../lib/signaling/v2/peerconnection');
 const { MediaClientLocalDescFailedError } = require('../../../../../lib/util/twilio-video-errors');
@@ -779,6 +780,88 @@ describe('PeerConnectionV2', () => {
       sinon.assert.notCalled(dataTrackSender1.removeDataChannel);
       sinon.assert.calledOnce(dataTrackSender2.removeDataChannel);
       sinon.assert.calledWith(dataTrackSender2.removeDataChannel, test.pc.dataChannels[1]);
+    });
+  });
+
+  describe('#close, DTLS transport telemetry', () => {
+    let dtlsTransport;
+    let dtlsStateStub;
+    let test;
+
+    beforeEach(async () => {
+      dtlsStateStub = sinon.stub(telemetry.pc, 'dtlsTransportState');
+      dtlsTransport = new EventTarget();
+      dtlsTransport.state = 'connected';
+
+      test = makeTest({ offers: 1 });
+      test.pc.senders[0].transport = dtlsTransport;
+      await test.pcv2.offer();
+      await test.pcv2.update(test.state().setDescription(makeAnswer(), 1));
+      dtlsStateStub.resetHistory();
+    });
+
+    afterEach(() => {
+      dtlsStateStub.restore();
+    });
+
+    function closedRecordCount() {
+      return dtlsStateStub.getCalls().filter(call => call.args[1] === 'closed').length;
+    }
+
+    it('records "closed" once when the browser does not fire a statechange event on close()', () => {
+      test.pc.close = () => {
+        dtlsTransport.state = 'closed';
+        test.pc.signalingState = 'closed';
+      };
+      test.pcv2.close();
+      assert.strictEqual(closedRecordCount(), 1);
+    });
+
+    it('records "closed" once in Chrome when the browser does not fire a statechange event on close()', async () => {
+      // isChrome is captured when the module loads, so load a copy that sees Chrome.
+      const modulePath = require.resolve('../../../../../lib/signaling/v2/peerconnection');
+      const guessBrowserStub = sinon.stub(util, 'guessBrowser').returns('chrome');
+      let ChromePeerConnectionV2;
+      try {
+        delete require.cache[modulePath];
+        ChromePeerConnectionV2 = require(modulePath);
+      } finally {
+        guessBrowserStub.restore();
+        delete require.cache[modulePath];
+      }
+
+      const chromeTest = makeTest({ offers: 1, PeerConnectionV2: ChromePeerConnectionV2 });
+      chromeTest.pc.senders[0].transport = dtlsTransport;
+      await chromeTest.pcv2.offer();
+      await chromeTest.pcv2.update(chromeTest.state().setDescription(makeAnswer(), 1));
+      dtlsStateStub.resetHistory();
+
+      chromeTest.pc.close = () => {
+        dtlsTransport.state = 'closed';
+        chromeTest.pc.signalingState = 'closed';
+      };
+      chromeTest.pcv2.close();
+      assert.strictEqual(closedRecordCount(), 1);
+    });
+
+    it('records "closed" once when the browser fires statechange after close() returns', () => {
+      test.pc.close = () => {
+        dtlsTransport.state = 'closed';
+        test.pc.signalingState = 'closed';
+      };
+      test.pcv2.close();
+      dtlsTransport.dispatchEvent({ type: 'statechange' });
+      assert.strictEqual(closedRecordCount(), 1);
+    });
+
+    it('records "closed" once when the browser fires statechange from inside close()', () => {
+      test.pc.close = () => {
+        dtlsTransport.state = 'closed';
+        dtlsTransport.dispatchEvent({ type: 'statechange' });
+        test.pc.signalingState = 'closed';
+      };
+      test.pcv2.close();
+      assert.strictEqual(closedRecordCount(), 1);
     });
   });
 
@@ -2695,7 +2778,7 @@ function makePeerConnectionV2(options) {
     options.options.enableDscp = options.enableDscp;
   }
 
-  return new PeerConnectionV2(options.id, makeEncodingParameters(options), options.preferredCodecs, options.options);
+  return new (options.PeerConnectionV2 || PeerConnectionV2)(options.id, makeEncodingParameters(options), options.preferredCodecs, options.options);
 }
 
 /**
