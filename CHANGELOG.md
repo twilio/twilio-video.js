@@ -9,6 +9,7 @@ Bug Fixes
 ---------
 
 - Applying `preferredAudioCodecs` and `preferredVideoCodecs` to session descriptions in peer-to-peer rooms now takes time proportional to the length of each m= line.
+- Fixed an issue introduced in 2.36.0 where the SDK failed to load with an `EvalError` on pages whose Content Security Policy doesn't allow `unsafe-eval`, even when noise cancellation was not used.
 
 2.36.1 (October 9, 2026)
 ====================
