@@ -28,7 +28,7 @@ Browser Support
 | **Safari**           | -       | ✓     | -     | ✓   | -       |
 | **Firefox**          | ✓       | ✓     | ✓     | -   | ✓       |
 | **Samsung Internet** | -       | -     | -     | -   | ✓       |
-| **WebView**          | -       | -     | -     | ✓   | -       |
+| **WebView**          | -       | -     | -     | ✓   | ✓       |
 
 Installation
 ------------
