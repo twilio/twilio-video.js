@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const { isIOSChrome } = require('../../../../lib/webrtc/util');
-const { isIpad, isIphone, rebrandedChromeBrowser } = require('../../../../lib/util/browserdetection');
+const { isAndroidWebView, isIpad, isIphone, rebrandedChromeBrowser } = require('../../../../lib/util/browserdetection');
 
 // eslint-disable-next-line no-warning-comments
 // TODO(joma): Move the contents of this file to twilio-webrtc.js.
@@ -218,7 +218,7 @@ describe('Browser Detection', () => {
         'Android WebView',
         'chrome',
         'Mozilla/5.0 (Linux; Android 13; Pixel 4a; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36',
-        null
+        'version'
       ],
       [
         'Chrome on Android',
@@ -248,6 +248,55 @@ describe('Browser Detection', () => {
       it(`returns ${expected} for ${testCase}`, () => {
         navigator.userAgent = useragent;
         assert.equal(rebrandedChromeBrowser(browser), expected);
+      });
+    });
+  });
+
+  describe('isAndroidWebView', () => {
+    let oldAgent;
+    beforeEach(() => {
+      oldAgent = navigator.userAgent;
+    });
+
+    afterEach(() => {
+      navigator.userAgent = oldAgent;
+    });
+
+    [
+      [
+        'Android WebView',
+        'Mozilla/5.0 (Linux; Android 12; Pixel 5 Build/SQ1A.220205.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/129.0.6668.100 Mobile Safari/537.36',
+        true
+      ],
+      [
+        'Android WebView with reduced user agent',
+        'Mozilla/5.0 (Linux; Android 10; K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.0.0 Mobile Safari/537.36',
+        true
+      ],
+      [
+        'Android WebView with an app token appended',
+        'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36 MyApp/1.0',
+        true
+      ],
+      [
+        'Chrome on Android',
+        'Mozilla/5.0 (Linux; Android 9; moto g(7) power) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.96 Mobile Safari/537.36',
+        false
+      ],
+      [
+        'MIUI Browser',
+        'Mozilla/5.0 (Linux; U; Android 12; en-us; 2201117TG Build/SKQ1.211006.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.127 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.20.0-gn',
+        false
+      ],
+      [
+        'Chrome on Mac',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36',
+        false
+      ],
+    ].forEach(([testCase, useragent, expected]) => {
+      it(`returns ${expected} for ${testCase}`, () => {
+        navigator.userAgent = useragent;
+        assert.equal(isAndroidWebView(), expected);
       });
     });
   });

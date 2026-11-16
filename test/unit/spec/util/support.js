@@ -134,6 +134,14 @@ describe('isSupported', () => {
       'Android WebView - Android 11',
       'Mozilla/5.0 (Linux; Android 11; Pixel 5; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.91 Mobile Safari/537.36'
     ],
+    [
+      'Android WebView with an app token appended',
+      'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36 MyApp/1.0'
+    ],
+    [
+      'Facebook in-app browser on Android WebView',
+      'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.5845.163 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/431.0.0.33.111;]'
+    ],
   ].forEach(([browser, useragent, chrome]) => {
     it('returns true for supported browser: ' + browser, () => {
       navigator.userAgent = useragent;
@@ -215,8 +223,8 @@ describe('isSupported', () => {
       'Mozilla/5.0 (Linux; U; Android 12; en-us; 2201117TG Build/SKQ1.211006.001) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/100.0.4896.127 Mobile Safari/537.36 XiaoMi/MiuiBrowser/13.20.0-gn'
     ],
     [
-      'Facebook in-app browser on Android WebView',
-      'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/116.0.5845.163 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/431.0.0.33.111;]'
+      'Unbranded Chromium with a Version token (not a WebView)',
+      'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36'
     ]
   ].forEach(([browser, useragent, chrome, brave]) => {
     it('returns false for unsupported browser: ' + browser, () => {
