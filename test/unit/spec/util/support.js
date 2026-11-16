@@ -135,6 +135,10 @@ describe('isSupported', () => {
       'Mozilla/5.0 (Linux; Android 11; Pixel 5; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.91 Mobile Safari/537.36'
     ],
     [
+      'Android WebView - moto g(30)',
+      'Mozilla/5.0 (Linux; Android 12; moto g(30) Build/S0RRS32.38-11-1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36'
+    ],
+    [
       'Android WebView with an app token appended',
       'Mozilla/5.0 (Linux; Android 13; Pixel 7 Build/TQ3A.230805.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36 MyApp/1.0'
     ],

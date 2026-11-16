@@ -269,6 +269,11 @@ describe('Browser Detection', () => {
         true
       ],
       [
+        'Android WebView on a device model with parentheses',
+        'Mozilla/5.0 (Linux; Android 12; moto g(30) Build/S0RRS32.38-11-1; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.7871.124 Mobile Safari/537.36',
+        true
+      ],
+      [
         'Android WebView with reduced user agent',
         'Mozilla/5.0 (Linux; Android 10; K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/150.0.0.0 Mobile Safari/537.36',
         true
