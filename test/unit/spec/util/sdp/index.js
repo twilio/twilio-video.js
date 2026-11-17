@@ -45,6 +45,47 @@ describe('setCodecPreferences', () => {
       });
     });
   });
+
+  context('when rewriting the m= line', () => {
+    function makeAudioSdp(mLine) {
+      return [
+        'v=0',
+        'o=- 0 0 IN IP4 127.0.0.1',
+        's=-',
+        't=0 0',
+        mLine,
+        'a=rtpmap:111 opus/48000/2',
+        'a=rtpmap:0 PCMU/8000',
+        'a=rtpmap:8 PCMA/8000',
+        ''
+      ].join('\r\n');
+    }
+
+    function getMLine(sdp) {
+      return sdp.split('\r\n')[4];
+    }
+
+    it('should keep the media, port and protocol fields ahead of the reordered payload types', () => {
+      const sdp = makeAudioSdp('m=audio 9 UDP/TLS/RTP/SAVPF 111 0 8');
+      const mLine = getMLine(setCodecPreferences(sdp, [{ codec: 'PCMU' }], []));
+      assert.equal(mLine, 'm=audio 9 UDP/TLS/RTP/SAVPF 0 111 8');
+    });
+
+    it('should leave an m= line that does not end in payload types unchanged', () => {
+      const sdp = makeAudioSdp('m=audio 9 UDP/TLS/RTP/SAVPF 111 0 8x');
+      const mLine = getMLine(setCodecPreferences(sdp, [{ codec: 'PCMU' }], []));
+      assert.equal(mLine, 'm=audio 9 UDP/TLS/RTP/SAVPF 111 0 8x');
+    });
+
+    it('should rewrite a long m= line in linear time', () => {
+      // Long enough that parsing with super-linear cost takes several seconds.
+      const payloadTypes = Array.from({ length: 14 }, (_, i) => 100 + i).join(' ');
+      const sdp = makeAudioSdp(`m=audio 9 UDP/TLS/RTP/SAVPF ${payloadTypes}x`);
+      const start = Date.now();
+      setCodecPreferences(sdp, [{ codec: 'PCMU' }], []);
+      assert(Date.now() - start < 1000, `took ${Date.now() - start} ms`);
+    });
+  });
 });
 
 describe('setSimulcast', () => {
