@@ -1,0 +1,1 @@
+{"version":3,"file":"networkqualityvideostats.js","sourceRoot":"","sources":["../../lib/stats/networkqualityvideostats.js"],"names":[],"mappings":"AAAA,YAAY,CAAC;AAEb,MAAM,wBAAwB,GAAG,OAAO,CAAC,4BAA4B,CAAC,CAAC;AAEvE;;GAEG;AACH,MAAM,wBAAyB,SAAQ,wBAAwB;IAC7D;;;OAGG;IACH,YAAY,WAAW;QACrB,KAAK,CAAC,WAAW,CAAC,CAAC;IACrB,CAAC;CACF;AAED,MAAM,CAAC,OAAO,GAAG,wBAAwB,CAAC"}
