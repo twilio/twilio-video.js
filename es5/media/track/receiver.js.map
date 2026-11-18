@@ -1,1 +1,0 @@
-{"version":3,"file":"receiver.js","sourceRoot":"","sources":["../../../lib/media/track/receiver.js"],"names":[],"mappings":"AAAA,YAAY,CAAC;AAEb,MAAM,qBAAqB,GAAG,OAAO,CAAC,eAAe,CAAC,CAAC;AAEvD;;;GAGG;AACH,MAAM,kBAAmB,SAAQ,qBAAqB;IACpD;;;;OAIG;IACH,YAAY,EAAE,EAAE,gBAAgB;QAC9B,KAAK,CAAC,EAAE,EAAE,gBAAgB,CAAC,CAAC;IAC9B,CAAC;CACF;AAED,MAAM,CAAC,OAAO,GAAG,kBAAkB,CAAC"}
