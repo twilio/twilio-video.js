@@ -1,0 +1,23 @@
+name: Healthcheck
+
+on:
+  schedule:
+    # Off the hour: top-of-hour runs can be delayed or dropped.
+    - cron: '23 14 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Calls e2e.yml instead of copying its steps: the e2e credential vendor only
+  # issues credentials to jobs defined in e2e.yml.
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      topologies: '["group"]'
+      browsers: '["chrome"]'
+      bvers: '["stable"]'
