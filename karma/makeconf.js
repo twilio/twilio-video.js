@@ -194,6 +194,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       }],
       beforeMiddleware: ['mintVendorToken', 'vendLocally'],
       client: {
+        // CI logs are public; keep the browser console out of them.
+        captureConsole: !process.env.CI,
         mocha: mochaOptions
       },
       failOnEmptyTestSuite: false,
