@@ -78,10 +78,16 @@ describe('IceConnectionMonitor', () => {
       });
     });
 
-    it('starts the timer', () => {
+    it('starts the timer', async () => {
+      const getStatsCalled = defer();
+      test.pc.getStats = () => {
+        getStatsCalled.resolve();
+        return Promise.resolve(new Map());
+      };
       assert.equal(monitor._timer, null);
       monitor.start(() => {});
       assert.notEqual(monitor._timer, null);
+      await getStatsCalled.promise;
     });
 
     context('in disconnected state', () => {
