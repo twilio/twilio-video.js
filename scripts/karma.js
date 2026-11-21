@@ -8,6 +8,9 @@ const { join } = require('path');
 
 const staticServer = require('node-http-server');
 
+const { shardFiles } = require('./shard');
+const timings = require('../test/integration/timings.json');
+
 const configFile = join(__dirname, '..', process.argv[2]);
 const integrationTests = join(__dirname, '..', 'test', 'integration', 'spec');
 const dockerIntegrationTests = join(__dirname, '..', 'test', 'integration', 'spec', 'docker');
@@ -53,7 +56,13 @@ async function main() {
     }
   }
 
-  const files = filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests));
+  const files = shardFiles(
+    filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests)),
+    process.env.TEST_SHARD,
+    timings);
+  if (process.env.TEST_SHARD) {
+    console.log(`TEST_SHARD ${process.env.TEST_SHARD} runs:\n${files.join('\n')}`);
+  }
 
   // NOTE(mmalavalli): Deploy the file server. This is used to serve static assets
   // like images, music files, etc. which are used by some integration tests.

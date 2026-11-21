@@ -209,11 +209,13 @@ You can add these optional variables to control the integration test execution :
 - Topology : Decides which type of rooms to test against.
 - Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code to debug.
 - Test Files : Allows you to limit the test to just one file.
+- Test Shard : Runs only shard <n> of <total> of the spec files, balanced by test/integration/timings.json.
 
 ```
 TOPOLOGY=<peer-to-peer|group>
 DEBUG=1
 TEST_FILES=<path_ to_the_file>
+TEST_SHARD=<n>/<total>
 ```
 
 Tips

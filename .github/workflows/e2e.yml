@@ -32,7 +32,7 @@ env:
 
 jobs:
   e2e:
-    name: e2e (${{ matrix.environment }}, ${{ matrix.topology }}, ${{ matrix.browser }}, ${{ matrix.bver }})
+    name: e2e (${{ matrix.environment }}, ${{ matrix.topology }}, ${{ matrix.browser }}, ${{ matrix.bver }}, ${{ matrix.shard }}/3)
     # Covers every step below, including ones with no OIDC/credential access of
     # their own.
     if: ${{ !github.event.pull_request.head.repo.fork }}
@@ -52,6 +52,8 @@ jobs:
         topology: ${{ fromJSON(inputs.topologies || '["group", "peer-to-peer"]') }}
         browser: ${{ fromJSON(inputs.browsers || '["chrome", "firefox"]') }}
         bver: ${{ fromJSON(inputs.bvers || '["stable", "beta", "unstable"]') }}
+        # scripts/karma.js splits the spec files across shards by test/integration/timings.json.
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
@@ -105,4 +107,5 @@ jobs:
           ENVIRONMENT: ${{ matrix.environment }}
           TOPOLOGY: ${{ matrix.topology }}
           TEST_STABILITY: stable
+          TEST_SHARD: ${{ matrix.shard }}/3
         run: npm run test:integration
