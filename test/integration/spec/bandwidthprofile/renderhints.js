@@ -342,7 +342,7 @@ describe('BandwidthProfileOptions: renderHints', function() {
       };
 
       const bobLogger = Logger.getLogger('BobLogger');
-      bobLogger.setLevel('debug');
+      bobLogger.setLevel('info');
 
       const { roomSid, aliceRemote, aliceRoom, bobRoom } = await setupAliceAndBob({ aliceOptions,  bobOptions });
       await waitFor(tracksSubscribed(aliceRemote, 1), `Bob to subscribe to Alice's track: ${roomSid}`);
