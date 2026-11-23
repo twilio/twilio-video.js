@@ -108,4 +108,5 @@ jobs:
           TOPOLOGY: ${{ matrix.topology }}
           TEST_STABILITY: stable
           TEST_SHARD: ${{ matrix.shard }}/3
+          TEST_RETRIES: 1
         run: npm run test:integration

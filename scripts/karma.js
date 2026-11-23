@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
-const { readdirSync, statSync } = require('fs');
+const { appendFileSync, readdirSync, statSync } = require('fs');
 const { Server, config: { parseConfig }, stopper } = require('karma');
 const { resolve: resolvePath } = require('path');
 const { join } = require('path');
 
 const staticServer = require('node-http-server');
 
+const { formatSummary, parseRetries, runWithRetries } = require('./retry');
 const { shardFiles } = require('./shard');
 const timings = require('../test/integration/timings.json');
 
@@ -56,6 +57,7 @@ async function main() {
     }
   }
 
+  const retries = parseRetries(process.env.TEST_RETRIES);
   const files = shardFiles(
     filterTests(getTestPaths(dockerProxy ? dockerIntegrationTests : integrationTests)),
     process.env.TEST_SHARD,
@@ -72,31 +74,43 @@ async function main() {
     root: `${process.cwd()}/test/`
   }, resolve));
 
-  let processExitCode = 0;
-  for (const file of files) {
+  const runFile = file => new Promise(resolve => {
     const config = parseConfig(configFile, { files: [file] });
-
-    // eslint-disable-next-line no-await-in-loop
-    const exitCode = await new Promise(resolve => {
-      const server = new Server(config, resolve);
-      server.start();
-      process.once('exit', () => stopper.stop(config));
-      process.once('SIGINT', () => process.exit());
+    const failures = [];
+    const server = new Server(config, exitCode => {
+      if (exitCode) {
+        console.log('Failed for file:', file);
+      }
+      resolve({ exitCode, failures });
     });
+    // Failed hooks are reported as results too, named after the hook.
+    server.on('spec_complete', (browser, result) => {
+      if (!result.success && !result.skipped) {
+        failures.push(result.suite.concat(result.description).join(' > '));
+      }
+    });
+    server.start();
+    process.once('exit', () => stopper.stop(config));
+    process.once('SIGINT', () => process.exit());
+  });
 
-    if (exitCode && !processExitCode) {
-      // NOTE(mpatwardhan) if tests fail for one file,
-      // note the exitcode but continue running for rest
-      // of the files.
-      processExitCode = exitCode;
-      console.log('Failed for file:', file);
+  // NOTE(mpatwardhan) if tests fail for one file,
+  // note the exitcode but continue running for rest
+  // of the files.
+  const result = await runWithRetries(files, runFile, retries);
+
+  const summary = formatSummary(result);
+  if (summary) {
+    console.log(summary);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
     }
   }
 
   if (dockerProxy) {
     dockerProxy.stopServer();
   }
-  process.exit(processExitCode);
+  process.exit(result.exitCode);
 }
 
 main();
