@@ -33,7 +33,7 @@ async function getSimulcastLayerReport(room) {
 
 // waits for active layers to match the condition, samples every incrementalWaitTime.
 // resolves when active layers matches the condition. rejects after totalWaitTimeMS
-async function waitForActiveLayers({ room, condition, incrementalWaitTime = 5 * SECOND, totalWaitTimeMS = 30 * SECOND }) {
+async function waitForActiveLayers({ room, condition, incrementalWaitTime = 2 * SECOND, totalWaitTimeMS = 30 * SECOND }) {
   let waitTime = 0;
   while (totalWaitTimeMS > waitTime) {
     // eslint-disable-next-line no-await-in-loop

@@ -666,6 +666,24 @@ async function waitForSometime(timeoutMS = 10 * second) {
 }
 
 /**
+ * Returns a promise that resolves once predicate() returns true, checking every 100 ms.
+ * Rejects with the given message if predicate() is still false after timeoutMS.
+ * @param {function(): boolean} predicate
+ * @param {string} message - indicates the message logged in case of failure.
+ * @param {number} timeoutMS - time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+async function waitUntil(predicate, message, timeoutMS = 10 * second) {
+  const deadline = Date.now() + timeoutMS;
+  while (!predicate()) {
+    if (Date.now() >= deadline) {
+      throw new Error(`Timed out waiting for : ${message}`);
+    }
+    await waitForSometime(100);
+  }
+}
+
+/**
  * Returns a Promise that is resolved after the given event is fired once.
  * @param {EventEmitter} emitter
  * @param {string} event
@@ -810,6 +828,7 @@ exports.setup = setup;
 exports.waitFor = waitFor;
 exports.waitForEvent = waitForEvent;
 exports.waitForSometime = waitForSometime;
+exports.waitUntil = waitUntil;
 exports.waitForNot = waitForNot;
 exports.waitOnceForRoomEvent = waitOnceForRoomEvent;
 exports.waitToGoOnline = waitToGoOnline;
