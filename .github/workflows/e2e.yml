@@ -35,7 +35,8 @@ jobs:
     name: e2e (${{ matrix.environment }}, ${{ matrix.topology }}, ${{ matrix.browser }}, ${{ matrix.bver }}, ${{ matrix.shard }}/3)
     # Covers every step below, including ones with no OIDC/credential access of
     # their own.
-    if: ${{ !github.event.pull_request.head.repo.fork }}
+    # Disabled while measuring the Safari job. Drop before merging.
+    if: ${{ false && !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest-large
     container:
       image: twilio/twilio-video-browsers:${{ matrix.browser }}-${{ matrix.bver }}
