@@ -99,6 +99,15 @@ transform: scaleX(-1)
 
 ### Safari mobile
 <details>
+<summary>iOS 27.0 to 27.2: Remote audio doesn't play after attaching a RemoteAudioTrack</summary>
+<p>
+
+   On iOS 27.0 to 27.2, the audio element returned by `RemoteAudioTrack.attach()` can stay paused even while the page is capturing the microphone, so you can't hear the other Participants. This affects Safari and other iOS browsers that use WebKit. It's caused by a WebKit regression ([bug](https://bugs.webkit.org/show_bug.cgi?id=326969)) that is fixed in the iOS 27.3 beta.
+
+   As a workaround, call `play()` on the audio element after attaching it. While the page captures the microphone or camera, iOS allows this without a user interaction. If `play()` rejects (usually with `NotAllowedError`, when nothing is being captured) and the element is still paused, call `play()` again from a user interaction, as the autoplay policy example under "All browsers" below does.
+</p>
+</details>
+<details>
 <summary>iOS 17: Media issues</summary>
 <p>
   Please refer to this [GitHub Issue](https://github.com/twilio/twilio-video.js/issues/2023) for details.
@@ -267,7 +276,9 @@ policies here:
 
 Playback of RemoteAudioTracks should not be affected in Chrome and Firefox. Safari will
 pause \<audio\> elements that play back RemoteAudioTracks if no local media is being captured.
-They can be played by the application after a user interaction.
+They can be played by the application after a user interaction. On iOS 27.0 to 27.2, Safari
+also doesn't autoplay them while local media is being captured; see the iOS 27.0 to 27.2 entry
+under "Safari mobile" above.
 
 ```js
 remoteParticipant.on('trackSubscribed', track => {
@@ -276,7 +287,7 @@ remoteParticipant.on('trackSubscribed', track => {
     isUserInteractionRequired(audioEl).then(isRequired => {
       if (isRequired) {
         const playbackButton = /* Get the playback button */;
-        playBackButton.onclick = () => audioEl.play();
+        playbackButton.onclick = () => audioEl.play();
       }
     });
   }
@@ -291,7 +302,11 @@ function isUserInteractionRequired(audioEl) {
       new Promise(resolve => audioEl.onplay = resolve),
       new Promise(resolve => setTimeout(resolve, 500))
     ]).then(() => {
-      return audioEl.paused;
+      if (!audioEl.paused) {
+        return false;
+      }
+      // Autoplay can fail where play() is still allowed (for example, iOS 27.0 to 27.2 while capturing).
+      return audioEl.play().then(() => false, () => audioEl.paused);
     });
   }
   return audioEl.play().catch(error => {
