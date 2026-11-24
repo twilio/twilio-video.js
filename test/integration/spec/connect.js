@@ -804,7 +804,7 @@ describe('connect', function() {
         x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
       ]
     ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
-      const expectedNetworkPriority = isChrome
+      const expectedNetworkPriority = isChrome || isSafari
         ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
         : undefined;
 

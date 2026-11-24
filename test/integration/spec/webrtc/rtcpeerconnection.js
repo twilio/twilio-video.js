@@ -7,6 +7,7 @@
 const assert = require('assert');
 const RTCPeerConnection = require('../../../../es5/webrtc/rtcpeerconnection');
 const { flatMap, guessBrowser } = require('../../../../es5/webrtc/util');
+const { a } = require('../../../lib/util');
 
 const sdpTypes = [
   'answer',
@@ -897,7 +898,7 @@ function testClose(signalingState) {
       }
 
       events.forEach(event => {
-        it('should raise ' + util.a(event) + ' ' + event + ' event', () => {
+        it('should raise ' + a(event) + ' ' + event + ' event', () => {
           return test.waitFor(event);
         });
       });
