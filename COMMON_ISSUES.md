@@ -102,9 +102,9 @@ transform: scaleX(-1)
 <summary>iOS 27.0 to 27.2: Remote audio doesn't play after attaching a RemoteAudioTrack</summary>
 <p>
 
-   On iOS 27.0 to 27.2, the audio element returned by `RemoteAudioTrack.attach()` can stay paused even while the page is capturing the microphone, so you can't hear the other Participants. This affects Safari and other iOS browsers that use WebKit. It's caused by a WebKit regression ([bug](https://bugs.webkit.org/show_bug.cgi?id=326969)) that is fixed in the iOS 27.3 beta.
+   On iOS 27.0 to 27.2, the audio element returned by `RemoteAudioTrack.attach()` can stay paused even while the page is capturing the microphone. This may result in the user being unable to hear the other Participants. This affects Safari and other iOS browsers that use WebKit and is caused by a WebKit regression ([bug](https://bugs.webkit.org/show_bug.cgi?id=326969)). This regression is fixed in the iOS 27.3 beta.
 
-   As a workaround, call `play()` on the audio element after attaching it. While the page captures the microphone or camera, iOS allows this without a user interaction. If `play()` rejects (usually with `NotAllowedError`, when nothing is being captured) and the element is still paused, call `play()` again from a user interaction, as the autoplay policy example under "All browsers" below does.
+   As a workaround, call `play()` on the audio element after attaching it. If the page is actively capturing microphone or camera input, iOS will allow this without a user interaction. If `play()` rejects (usually with `NotAllowedError` when no microphone or camera input is being captured) and the element is still paused, call `play()` again after a user interaction. See the autoplay policy example under "All browsers" below.
 </p>
 </details>
 <details>
@@ -276,9 +276,7 @@ policies here:
 
 Playback of RemoteAudioTracks should not be affected in Chrome and Firefox. Safari will
 pause \<audio\> elements that play back RemoteAudioTracks if no local media is being captured.
-They can be played by the application after a user interaction. On iOS 27.0 to 27.2, Safari
-also doesn't autoplay them while local media is being captured; see the iOS 27.0 to 27.2 entry
-under "Safari mobile" above.
+The RemoteAudioTracks can be played by the application after a user interaction. On iOS 27.0 to 27.2, Safari is also restricted from autoplaying tracks while local media is being captured; see the iOS 27.0 to 27.2 entry under "Safari mobile" above.
 
 ```js
 remoteParticipant.on('trackSubscribed', track => {
