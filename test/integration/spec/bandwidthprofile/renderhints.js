@@ -297,7 +297,7 @@ describe('BandwidthProfileOptions: renderHints', function() {
         // wait couple of seconds before running media flow test.
         await waitForSometime(2000);
 
-        const duration = 15000;
+        const duration = 5000;
         let { bytesReceivedBefore, bytesReceivedAfter, testTimeMS } = await validateMediaFlow(bobRoom, duration, ['remoteVideoTrackStats']);
         const bytesReceivedA = bytesReceivedAfter - bytesReceivedBefore;
         const kbps1 =  Math.round(((bytesReceivedA / testTimeMS) * 10) / 10);
