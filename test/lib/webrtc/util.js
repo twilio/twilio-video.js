@@ -277,7 +277,7 @@ const activeIceCandidatePairStatsNullProps = {
 const localCandidateStatsNullProps = {
   chrome: () => new Set(['relayProtocol', 'url']),
   firefox: version => version < 65 ? new Set(['priority', 'relayProtocol', 'url', 'networkType']) : new Set(['relayProtocol', 'url', 'networkType']),
-  safari: () => new Set(['ip', 'relayProtocol', 'url'])
+  safari: () => new Set(['ip', 'relayProtocol', 'url', 'networkType'])
 };
 
 const remoteCandidateStatsNullProps = {
