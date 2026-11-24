@@ -22,6 +22,7 @@ require('./spec/localvendor');
 require('./spec/token');
 require('./spec/rest');
 require('./spec/check-version-bump');
+require('./spec/retry');
 require('./spec/shard');
 
 require('./spec/noisecancellation/legacy-plugin-adapter');

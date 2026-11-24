@@ -210,12 +210,14 @@ You can add these optional variables to control the integration test execution :
 - Debug : To get better source mapping, and the browser does not close after tests are run which allows you to easily step through code to debug.
 - Test Files : Allows you to limit the test to just one file.
 - Test Shard : Runs only shard <n> of <total> of the spec files, balanced by test/integration/timings.json.
+- Test Retries : Reruns a failed spec file up to <n> more times (default 0). A file that passes on a rerun counts as passed, and is listed with the tests that failed before it passed.
 
 ```
 TOPOLOGY=<peer-to-peer|group>
 DEBUG=1
 TEST_FILES=<path_ to_the_file>
 TEST_SHARD=<n>/<total>
+TEST_RETRIES=<n>
 ```
 
 Tips
