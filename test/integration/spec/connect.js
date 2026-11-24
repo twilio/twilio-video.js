@@ -39,7 +39,9 @@ const {
   smallVideoConstraints,
   tracksSubscribed,
   tracksPublished,
-  waitFor
+  waitFor,
+  waitForSometime,
+  waitUntil
 } = require('../../lib/util');
 
 const { trackPriority: { PRIORITY_STANDARD } } = require('../../../es5/util/constants');
@@ -802,6 +804,10 @@ describe('connect', function() {
         x => `when VP8 simulcast is ${x ? 'enabled' : 'not enabled'}`
       ]
     ], ([dscpTaggingOption, shouldEnableDscp, shouldEnableVP8Simulcast]) => {
+      const expectedNetworkPriority = isChrome
+        ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
+        : undefined;
+
       let peerConnections;
       let thisRoom;
       let thoseRooms;
@@ -822,13 +828,17 @@ describe('connect', function() {
         });
 
         // NOTE(mpatwardhan): RTCRtpSender.setParameters() is an asynchronous operation,
-        // so wait for a little while until the changes are applied.
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // so wait until the changes are applied. Only "high" differs from the browser's
+        // default, so the other cases have nothing to poll for and wait a fixed time.
+        if (expectedNetworkPriority === 'high') {
+          await waitUntil(() => {
+            const senders = flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track);
+            return senders.length > 0 && senders.every(sender => sender.getParameters().encodings[0]?.networkPriority === 'high');
+          }, `networkPriority to be set to "high": ${thisRoom.sid}`);
+        } else {
+          await waitForSometime(2000);
+        }
       });
-
-      const expectedNetworkPriority = isChrome
-        ? { false: 'low', true: 'high' }[!!shouldEnableDscp]
-        : undefined;
 
       it(`networkPriority should ${expectedNetworkPriority ? `be set to "${expectedNetworkPriority}"` : 'not be set'} for RTCRtpEncodingParameters of the first encoding layer`, () => {
         flatMap(peerConnections, pc => pc.getSenders()).filter(sender => sender.track).forEach(sender => {

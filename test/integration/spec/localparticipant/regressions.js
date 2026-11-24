@@ -30,7 +30,9 @@ const {
   smallVideoConstraints,
   tracksSubscribed,
   trackStarted,
-  waitForTracks
+  waitForSometime,
+  waitForTracks,
+  waitUntil
 } = require('../../../lib/util');
 
 describe('LocalParticipant: regressions', function() {
@@ -360,8 +362,24 @@ describe('LocalParticipant: regressions', function() {
 
         if (isRTCRtpSenderParamsSupported) {
           // NOTE(mmalavalli): If applying bandwidth constraints using RTCRtpSender.setParameters(),
-          // which is an asynchronous operation, wait for a little while until the changes are applied.
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          // which is an asynchronous operation, wait until the changes are applied.
+          const expectedMaxBitrates = {};
+          ['audio', 'video'].forEach(kind => {
+            expectedMaxBitrates[kind] = typeof maxBitrates[kind] === 'undefined'
+              ? initialEncodingParameters[`max${capitalize(kind)}Bitrate`]
+              : maxBitrates[kind] || undefined;
+          });
+          await waitUntil(() => {
+            const theseSenders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
+            return theseSenders.length > 0 && theseSenders.every(sender => {
+              return sender.getParameters().encodings.every(({ maxBitrate }) => maxBitrate === expectedMaxBitrates[sender.track.kind]);
+            });
+          }, `maxBitrates to be applied: ${sid}`);
+          // NOTE(lrivas): A preserved .maxBitrate already has its expected value, so the poll can't
+          // tell whether setParameters() changed it later. Give it a fixed time to show up.
+          if (typeof maxBitrates.audio === 'undefined' || typeof maxBitrates.video === 'undefined') {
+            await waitForSometime(2000);
+          }
           senders = flatMap(peerConnections, pc => pc.getSenders().filter(sender => sender.track));
           return;
         }
