@@ -268,6 +268,7 @@ const activeIceCandidatePairStatsNullProps = {
     'consentRequestsSent',
     'lastPacketReceivedTimestamp',
     'lastPacketSentTimestamp',
+    'priority',
     'readable',
     'retransmissionsReceived',
     'retransmissionsSent'
