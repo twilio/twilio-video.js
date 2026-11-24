@@ -861,16 +861,17 @@ describe('connect', function() {
   describe('called with EncodingParameters', () => {
     const minAudioBitrate = 6000;
     const minVideoBitrate = 20000;
-    combinationContext([
-      [
-        [undefined, null, minAudioBitrate, 0],
-        x => `when .maxAudioBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
-      ],
-      [
-        [undefined, null, minVideoBitrate, 0],
-        x => `when .maxVideoBitrate is ${typeof x === 'undefined' ? 'absent' : x}`
-      ]
-    ], ([maxAudioBitrate, maxVideoBitrate]) => {
+    const describeBitrate = x => typeof x === 'undefined' ? 'absent' : x;
+    // NOTE(lrivas): Each case connects its own Room, so instead of every combination this
+    // covers each value of each option once, plus one option limited while the other is not.
+    [
+      [undefined, undefined],
+      [null, null],
+      [minAudioBitrate, minVideoBitrate],
+      [0, 0],
+      [minAudioBitrate, undefined],
+      [undefined, minVideoBitrate]
+    ].forEach(([maxAudioBitrate, maxVideoBitrate]) => context(`when .maxAudioBitrate is ${describeBitrate(maxAudioBitrate)} and .maxVideoBitrate is ${describeBitrate(maxVideoBitrate)}`, () => {
       const encodingParameters = [
         ['maxAudioBitrate', maxAudioBitrate],
         ['maxVideoBitrate', maxVideoBitrate]
@@ -985,7 +986,7 @@ describe('connect', function() {
         }
         return Promise.resolve();
       });
-    });
+    }));
   });
 
   describe('called with preferred audio and video codecs', () => {
