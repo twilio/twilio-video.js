@@ -48,7 +48,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [stage, prod]
+        # PRs run prod only. Stage runs on master pushes and in the daily healthcheck (group, chrome, stable).
+        environment: ${{ fromJSON(github.event_name == 'pull_request' && '["prod"]' || '["stage", "prod"]') }}
         topology: ${{ fromJSON(inputs.topologies || '["group", "peer-to-peer"]') }}
         browser: ${{ fromJSON(inputs.browsers || '["chrome", "firefox"]') }}
         bver: ${{ fromJSON(inputs.bvers || '["stable", "beta", "unstable"]') }}
