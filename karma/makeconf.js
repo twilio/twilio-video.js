@@ -99,6 +99,80 @@ function createVendLocallyMiddleware() {
   };
 }
 
+/**
+ * Drives Safari through safaridriver, which grants getUserMedia to pages it
+ * controls. Needs `sudo safaridriver --enable` and safaridriver listening at
+ * SAFARIDRIVER_URL (default http://127.0.0.1:4444).
+ */
+function SafariWebDriverLauncher(baseBrowserDecorator, logger) {
+  baseBrowserDecorator(this);
+  const log = logger.create('launcher.safaridriver');
+  const driverUrl = process.env.SAFARIDRIVER_URL || 'http://127.0.0.1:4444';
+  // Resolves to the session URL. safaridriver allows one session at a time, so
+  // every session must be deleted before the next spec file starts one.
+  let session = null;
+
+  function describe(error) {
+    return error.cause ? `${error.message}: ${error.cause.message}` : error.message;
+  }
+
+  function endSession() {
+    const pending = session;
+    session = null;
+    if (!pending) {
+      return Promise.resolve();
+    }
+    return pending
+      .then(url => request('DELETE', url), () => {})
+      .catch(error => log.warn(describe(error)));
+  }
+
+  async function request(method, url, body) {
+    const response = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body && JSON.stringify(body)
+    });
+    const { value } = await response.json();
+    if (!response.ok) {
+      throw new Error(`safaridriver ${method} ${url} failed: ${value && value.message}`);
+    }
+    return value;
+  }
+
+  this.name = 'SafariWebDriver';
+
+  this._start = url => {
+    const pending = request('POST', `${driverUrl}/session`, {
+      capabilities: { alwaysMatch: { browserName: 'safari' } }
+    }).then(({ sessionId }) => `${driverUrl}/session/${sessionId}`);
+    session = pending;
+
+    // A kill while the session was being created has already deleted it.
+    pending.then(sessionUrl => session === pending
+      ? request('POST', `${sessionUrl}/url`, { url })
+      : null
+    ).catch(error => {
+      if (session !== pending) {
+        return null;
+      }
+      log.error(describe(error));
+      // _done() makes karma skip the kill handler on retry, so delete here.
+      return endSession().then(() => this._done('failure'));
+    });
+  };
+
+  // Karma's process launcher reports done when the browser process exits.
+  // There is no process here, so report it once the session is deleted.
+  this.on('kill', done => {
+    endSession().then(() => {
+      this._done();
+      done();
+    });
+  });
+}
+SafariWebDriverLauncher.$inject = ['baseBrowserDecorator', 'logger'];
+
 let testRun = 0;
 function generateReportName(files) {
   const strTestRun = (testRun++).toString();
@@ -140,7 +214,7 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       chrome: [isDocker ? 'ChromeInDocker' : 'ChromeWebRTC'],
       edge: ['EdgeWebRTC'],
       firefox: [isDocker ? 'FirefoxInDocker' : 'FirefoxWebRTC'],
-      safari: ['Safari']
+      safari: ['SafariWebDriver']
     };
 
     if (process.env.BROWSER) {
@@ -190,7 +264,8 @@ function makeConf(defaultFile, browserNoActivityTimeout, requires) {
       frameworks: ['browserify', 'mocha'],
       plugins: ['karma-*', {
         'middleware:mintVendorToken': ['factory', createMintVendorTokenMiddleware],
-        'middleware:vendLocally': ['factory', createVendLocallyMiddleware]
+        'middleware:vendLocally': ['factory', createVendLocallyMiddleware],
+        'launcher:SafariWebDriver': ['type', SafariWebDriverLauncher]
       }],
       beforeMiddleware: ['mintVendorToken', 'vendLocally'],
       client: {

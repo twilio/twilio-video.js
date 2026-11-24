@@ -111,3 +111,77 @@ jobs:
           TEST_SHARD: ${{ matrix.shard }}/3
           TEST_RETRIES: 1
         run: npm run test:integration
+
+  e2e-safari:
+    name: e2e-safari (${{ matrix.environment }}, ${{ matrix.topology }}, ${{ matrix.shard }}/3)
+    # Healthcheck passes `browsers` without safari, which skips this job.
+    if: ${{ !github.event.pull_request.head.repo.fork && contains(fromJSON(inputs.browsers || '["safari"]'), 'safari') }}
+    runs-on: macos-arm
+    timeout-minutes: 120
+    env:
+      BROWSER: safari
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [prod]
+        topology: ${{ fromJSON(inputs.topologies || '["group", "peer-to-peer"]') }}
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Artifactory OIDC Auth
+        uses: ./.github/actions/artifactory-oidc
+
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Enable safaridriver
+        run: |
+          sudo safaridriver --enable
+          safaridriver --version
+          sw_vers
+          uname -m
+
+      - name: Mint GitHub OIDC token for the e2e credential vendor
+        id: mint-vendor-token
+        shell: bash
+        env:
+          VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            echo "::error::id-token permission not granted; cannot mint an OIDC token."
+            exit 1
+          fi
+          TOKEN=$(curl -sS \
+            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=${VENDOR_AUDIENCE}" \
+            | jq -r '.value')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
+            echo "::error::Failed to mint OIDC token for the e2e vendor."
+            exit 1
+          fi
+          echo "::add-mask::$TOKEN"
+          echo "token=$TOKEN" >> "$GITHUB_OUTPUT"
+
+      - name: Run e2e integration tests
+        shell: bash
+        env:
+          VENDOR_URL: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
+          VENDOR_AUDIENCE: ${{ matrix.environment == 'stage' && vars.VENDOR_URL_STAGE || vars.VENDOR_URL_PROD }}
+          VENDOR_TOKEN: ${{ steps.mint-vendor-token.outputs.token }}
+          ENVIRONMENT: ${{ matrix.environment }}
+          TOPOLOGY: ${{ matrix.topology }}
+          TEST_STABILITY: stable
+          TEST_SHARD: ${{ matrix.shard }}/3
+        run: |
+          safaridriver -p 4444 &
+          npm run test:integration
