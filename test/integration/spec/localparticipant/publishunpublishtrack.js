@@ -36,9 +36,18 @@ const {
   tracksPublished,
   tracksUnpublished,
   waitFor,
-  waitForSometime,
-  waitForTracks
+  waitForTracks,
+  waitUntil
 } = require('../../../lib/util');
+
+// Resolves once no RTCPeerConnection of the Room has an SDP negotiation in progress. A
+// PeerConnectionV2 is "updating" while it creates an offer, before its signalingState
+// leaves "stable".
+function negotiationComplete(room, message) {
+  return waitUntil(() => [...room._signaling._peerConnectionManager._peerConnections.values()].every(pcv2 => {
+    return pcv2.state !== 'updating' && pcv2._peerConnection.signalingState === 'stable';
+  }), message);
+}
 
 describe('LocalParticipant: publishUnpublishTrack', function() {
   // eslint-disable-next-line no-invalid-this
@@ -341,8 +350,7 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           // NOTE(mmalavalli): Even though the "trackUnpublished" events are
           // fired on the RemoteParticipants, we need to make sure that the
           // SDP negotiation is complete before we re-publish the LocalTrack.
-          // Therefore we wait for 4 seconds.
-          await waitForSometime(4000);
+          await negotiationComplete(thisRoom, `SDP negotiation to complete: ${sid}`);
         }
 
         const thisLocalTrackPublicationPromise = priority ? thisParticipant.publishTrack(thisTrack, { priority }) : thisParticipant.publishTrack(thisTrack);
@@ -622,8 +630,7 @@ describe('LocalParticipant: publishUnpublishTrack', function() {
           // NOTE(mmalavalli): Even though the "trackUnpublished" events are
           // fired on the RemoteParticipants, we need to make sure that the
           // SDP negotiation is complete before we re-publish the LocalTrack.
-          // Therefore we wait for 4 seconds.
-          await waitForSometime(4000);
+          await negotiationComplete(thisRoom, `SDP negotiation to complete: ${sid}`);
 
           await waitFor(alice.publishTrack(thisTrack), `Track to get re-published: ${sid}`);
 
